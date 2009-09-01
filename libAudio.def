@@ -1,0 +1,104 @@
+EXPORTS
+	Audio_OpenR @1
+	Audio_GetFileInfo @2
+	Audio_FillBuffer @3
+	Audio_CloseFileR @4
+	Audio_Play @5
+	Is_Audio @6
+
+	OggVorbis_OpenR @7
+	OggVorbis_GetFileInfo @8
+	OggVorbis_FillBuffer @9
+	OggVorbis_CloseFileR @10
+	OggVorbis_Play @11
+	Is_OggVorbis @12
+
+	FLAC_OpenR @13
+	FLAC_GetFileInfo @14
+	FLAC_FillBuffer @15
+	FLAC_CloseFileR @16
+	FLAC_Play @17
+	Is_FLAC @18
+
+	WAV_OpenR @19
+	WAV_GetFileInfo @20
+	WAV_FillBuffer @21
+	WAV_CloseFileR @22
+	WAV_Play @23
+	Is_WAV @24
+
+	AAC_OpenR @25
+	AAC_GetFileInfo @26
+	AAC_FillBuffer @27
+	AAC_CloseFileR @28
+	AAC_Play @29
+	Is_AAC @30
+
+	MP3_OpenR @31
+	MP3_GetFileInfo @32
+	MP3_FillBuffer @33
+	MP3_CloseFileR @34
+	MP3_Play @35
+	Is_MP3 @36
+
+	MPC_OpenR @37
+	MPC_GetFileInfo @38
+	MPC_FillBuffer @39
+	;MPC_CloseFileR @40
+	MPC_Play @41
+	Is_MPC @42
+
+	WavPack_OpenR @43
+	WavPack_GetFileInfo @44
+	WavPack_FillBuffer @45
+	WavPack_CloseFileR @46
+	WavPack_Play @47
+	Is_WavPack @48
+
+	;Shorten_OpenR @49
+	;Shorten_GetFileInfo @50
+	;Shorten_FillBuffer @51
+	;Shorten_CloseFileR @52
+	;Shorten_Play @53
+	;Is_Shorten @54
+
+	OptimFROG_OpenR @55
+	OptimFROG_GetFileInfo @56
+	OptimFROG_FillBuffer @57
+	OptimFROG_CloseFileR @58
+	OptimFROG_Play @59
+	Is_OptimFROG @60
+
+	;RealAudio_OpenR @61
+	;RealAudio_GetFileInfo @62
+	;RealAudio_FillBuffer @63
+	;RealAudio_CloseFileR @64
+	;RealAudio_Play @65
+	;Is_RealAudio @66
+
+	WMA_OpenR @67
+	WMA_GetFileInfo @68
+	WMA_FillBuffer @69
+	;WMA_CloseFileR @70
+	WMA_Play @71
+	Is_WMA @72
+
+	Audio_OpenW @73
+	Audio_SetFileInfo @74
+	Audio_WriteBuffer @75
+	Audio_CloseFileW @76
+
+	OggVorbis_OpenW @77
+	OggVorbis_SetFileInfo @78
+	OggVorbis_WriteBuffer @79
+	OggVorbis_CloseFileW @80
+
+	FLAC_OpenW @81
+	FLAC_SetFileInfo @82
+	FLAC_WriteBuffer @83
+	FLAC_CloseFileW @84
+
+	AAC_OpenW @85
+	AAC_SetFileInfo @86
+	AAC_WriteBuffer @87
+	AAC_CloseFileW @88
