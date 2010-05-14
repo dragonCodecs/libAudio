@@ -214,6 +214,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\loadM4A.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\loadMP3.cpp"
 					>
 				</File>
@@ -254,15 +258,15 @@
 				Name="savers"
 				>
 				<File
-					RelativePath=".\saveAAC.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\saveAudio.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\saveFLAC.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\saveM4A.cpp"
 					>
 				</File>
 				<File

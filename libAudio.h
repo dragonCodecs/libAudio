@@ -87,21 +87,29 @@ libAUDIO_API int WAV_CloseFileR(void *p_WAVFile);
 libAUDIO_API void WAV_Play(void *p_WAVFile);
 libAUDIO_API bool Is_WAV(char *FileName);
 
-// AAC/M4A API
+// M4A API
 
 // Read/Playback
+libAUDIO_API void *M4A_OpenR(char *FileName);
+libAUDIO_API FileInfo *M4A_GetFileInfo(void *p_M4AFile);
+libAUDIO_API long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen);
+libAUDIO_API int M4A_CloseFileR(void *p_M4AFile);
+libAUDIO_API void M4A_Play(void *p_M4AFile);
+libAUDIO_API bool Is_M4A(char *FileName);
+
+// Write/Encode
+libAUDIO_API void *M4A_OpenW(char *FileName);
+libAUDIO_API void M4A_SetFileInfo(void *p_M4AFile, FileInfo *p_FI);
+libAUDIO_API long M4A_WriteBuffer(void *p_M4AFile, BYTE *InBuffer, int nInBufferLen);
+libAUDIO_API int M4A_CloseFileW(void *p_M4AFile);
+
+// AAC API
 libAUDIO_API void *AAC_OpenR(char *FileName);
 libAUDIO_API FileInfo *AAC_GetFileInfo(void *p_AACFile);
 libAUDIO_API long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen);
 libAUDIO_API int AAC_CloseFileR(void *p_AACFile);
 libAUDIO_API void AAC_Play(void *p_AACFile);
 libAUDIO_API bool Is_AAC(char *FileName);
-
-// Write/Encode
-libAUDIO_API void *AAC_OpenW(char *FileName);
-libAUDIO_API void AAC_SetFileInfo(void *p_AACFile, FileInfo *p_FI);
-libAUDIO_API long AAC_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen);
-libAUDIO_API int AAC_CloseFileW(void *p_AACFile);
 
 // MP3 API
 
@@ -185,11 +193,12 @@ libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr, int Type);
 #define AUDIO_FLAC			2
 #define AUDIO_WAVE			3
 #define AUDIO_MP4			4
-#define AUDIO_AAC			AUDIO_MP4
-#define AUDIO_MP3			5
-#define AUDIO_IT			6
-#define AUDIO_MUSEPACK		7
-#define AUDIO_WAVPACK		8
-#define AUDIO_OPTIMFROG		9
-#define AUDIO_REALAUDIO		10
-#define AUDIO_WMA			11
+#define AUDIO_M4A			AUDIO_MP4
+#define AUDIO_AAC			5
+#define AUDIO_MP3			6
+#define AUDIO_IT			7
+#define AUDIO_MUSEPACK		8
+#define AUDIO_WAVPACK		9
+#define AUDIO_OPTIMFROG		10
+#define AUDIO_REALAUDIO		11
+#define AUDIO_WMA			12

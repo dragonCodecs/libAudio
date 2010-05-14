@@ -8,7 +8,7 @@ libAUDIO_API void *Audio_OpenW(char *FileName, int Type)
 	else if (Type == AUDIO_FLAC)
 		return FLAC_OpenW(FileName);
 	else if (Type == AUDIO_AAC)
-		return AAC_OpenW(FileName);
+		return M4A_OpenW(FileName);
 	else
 		return NULL;
 }
@@ -20,7 +20,7 @@ libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type)
 	else if (Type == AUDIO_FLAC)
 		FLAC_SetFileInfo(p_AudioPtr, p_FI);
 	else if (Type == AUDIO_AAC)
-		AAC_SetFileInfo(p_AudioPtr, p_FI);
+		M4A_SetFileInfo(p_AudioPtr, p_FI);
 }
 
 libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, BYTE *InBuffer, int nInBufferLen, int Type)
@@ -30,7 +30,7 @@ libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, BYTE *InBuffer, int nInBuf
 	else if (Type == AUDIO_FLAC)
 		return FLAC_WriteBuffer(p_AudioPtr, InBuffer, nInBufferLen);
 	else if (Type == AUDIO_AAC)
-		return AAC_WriteBuffer(p_AudioPtr, InBuffer, nInBufferLen);
+		return M4A_WriteBuffer(p_AudioPtr, InBuffer, nInBufferLen);
 	else
 		return -2;
 }
@@ -42,7 +42,7 @@ libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr, int Type)
 	else if (Type == AUDIO_FLAC)
 		return FLAC_CloseFileW(p_AudioPtr);
 	else if (Type == AUDIO_AAC)
-		return AAC_CloseFileW(p_AudioPtr);
+		return M4A_CloseFileW(p_AudioPtr);
 	else
 		return 0;
 }

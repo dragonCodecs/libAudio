@@ -4844,7 +4844,7 @@ bool ISoundFile::ProcessRow()
 	PerformMixPlugsDump(MixPlugins);
 	PerformHeadersDump(Headers);
 	PerformInstrumentDump(Ins, p_IF);
-	exit(0);
+	//exit(0);
 	return ProcessEffects();
 }
 
@@ -4852,7 +4852,7 @@ bool ISoundFile::ReadNote()
 {
 	Channel *chn;
 	DWORD MasterVol;
-	if (SongFlags & SONG_PAUSED)
+	if ((SongFlags & SONG_PAUSED) != 0)
 	{
 		TickCount = 0;
 		if (MusicSpeed == 0)

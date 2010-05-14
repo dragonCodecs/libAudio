@@ -8,7 +8,7 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
-typedef struct _AAC_Enc_Intern
+typedef struct _M4A_Enc_Intern
 {
 	faacEncHandle p_enc;
 	FILE *f_AAC;
@@ -18,18 +18,18 @@ typedef struct _AAC_Enc_Intern
 	MP4TrackId track;
 	bool err;
 	int Channels;
-} AAC_Enc_Intern;
+} M4A_Enc_Intern;
 
-void *AAC_OpenW(char *FileName)
+void *M4A_OpenW(char *FileName)
 {
-	AAC_Enc_Intern *ret = NULL;
+	M4A_Enc_Intern *ret = NULL;
 	FILE *f_AAC = NULL;
 
 	f_AAC = fopen(FileName, "wb+");
 	if (f_AAC == NULL)
 		return ret;
 
-	ret = (AAC_Enc_Intern *)malloc(sizeof(AAC_Enc_Intern));
+	ret = (M4A_Enc_Intern *)malloc(sizeof(M4A_Enc_Intern));
 	if (ret == NULL)
 		return ret;
 
@@ -41,9 +41,9 @@ void *AAC_OpenW(char *FileName)
 	return ret;
 }
 
-void AAC_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
+void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 {
-	AAC_Enc_Intern *p_AF = (AAC_Enc_Intern *)p_AACFile;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 	faacEncConfigurationPtr p_conf;
 	UCHAR *ASC;
 	ULONG lenASC;
@@ -99,9 +99,9 @@ void AAC_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	free(ASC);
 }
 
-long AAC_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
+long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 {
-	AAC_Enc_Intern *p_AF = (AAC_Enc_Intern *)p_AACFile;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 	int nOB, j = 0;
 	UCHAR *OB = NULL;
 
@@ -157,9 +157,9 @@ long AAC_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 	return nInBufferLen;
 }
 
-int AAC_CloseFileW(void *p_AACFile)
+int M4A_CloseFileW(void *p_AACFile)
 {
-	AAC_Enc_Intern *p_AF = (AAC_Enc_Intern *)p_AACFile;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 	int ret = 0;
 
 	MP4Close(p_AF->p_mp4);

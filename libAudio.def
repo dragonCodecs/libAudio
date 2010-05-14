@@ -27,12 +27,12 @@ EXPORTS
 	WAV_Play @23
 	Is_WAV @24
 
-	AAC_OpenR @25
-	AAC_GetFileInfo @26
-	AAC_FillBuffer @27
-	AAC_CloseFileR @28
-	AAC_Play @29
-	Is_AAC @30
+	M4A_OpenR @25
+	M4A_GetFileInfo @26
+	M4A_FillBuffer @27
+	M4A_CloseFileR @28
+	M4A_Play @29
+	Is_M4A @30
 
 	MP3_OpenR @31
 	MP3_GetFileInfo @32
@@ -83,22 +83,29 @@ EXPORTS
 	WMA_Play @71
 	Is_WMA @72
 
-	Audio_OpenW @73
-	Audio_SetFileInfo @74
-	Audio_WriteBuffer @75
-	Audio_CloseFileW @76
+	AAC_OpenR @73
+	AAC_GetFileInfo @74
+	AAC_FillBuffer @75
+	AAC_CloseFileR @76
+	AAC_Play @77
+	Is_AAC @78
 
-	OggVorbis_OpenW @77
-	OggVorbis_SetFileInfo @78
-	OggVorbis_WriteBuffer @79
-	OggVorbis_CloseFileW @80
+	Audio_OpenW @79
+	Audio_SetFileInfo @80
+	Audio_WriteBuffer @81
+	Audio_CloseFileW @82
 
-	FLAC_OpenW @81
-	FLAC_SetFileInfo @82
-	FLAC_WriteBuffer @83
-	FLAC_CloseFileW @84
+	OggVorbis_OpenW @83
+	OggVorbis_SetFileInfo @84
+	OggVorbis_WriteBuffer @85
+	OggVorbis_CloseFileW @86
 
-	AAC_OpenW @85
-	AAC_SetFileInfo @86
-	AAC_WriteBuffer @87
-	AAC_CloseFileW @88
+	FLAC_OpenW @87
+	FLAC_SetFileInfo @88
+	FLAC_WriteBuffer @89
+	FLAC_CloseFileW @90
+
+	M4A_OpenW @92
+	M4A_SetFileInfo @93
+	M4A_WriteBuffer @94
+	M4A_CloseFileW @95

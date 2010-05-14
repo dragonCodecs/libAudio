@@ -423,10 +423,10 @@ bool Is_MP3(char *FileName)
 	fclose(f_MP3);
 
 	if (strncmp(ID3, "ID3", 3) != 0 &&
-		(MP3Sig[0] != 0xFF && MP3Sig[1] != 0xFA &&
-		MP3Sig[2] != 0x90 && MP3Sig[3] != 0x0C) &&
-		(MP3Sig[0] != 0x0C && MP3Sig[1] != 0x90 &&
-		MP3Sig[2] != 0xFA && MP3Sig[3] != 0xFF))
+		(MP3Sig[0] != 0xFF || MP3Sig[1] != 0xFA ||
+		MP3Sig[2] != 0x90 || MP3Sig[3] != 0x0C) &&
+		(MP3Sig[0] != 0x0C || MP3Sig[1] != 0x90 ||
+		MP3Sig[2] != 0xFA || MP3Sig[3] != 0xFF))
 		return false;
 
 	return true;

@@ -7,117 +7,55 @@
 #include <alc.h>
 
 #include <neaacdec.h>
-#include <mp4ff.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
+
+/* Following 2 definitions are taken from aacinfo.c from faad2: */
+#define ADIF_MAX_SIZE 30 /* Should be enough */
+//#define ADTS_MAX_SIZE 10 /* Should be enough */
+
+/* ffmpeg's aac_parser.c specifies the following for ADTS_MAX_SIZE: */
+#define ADTS_MAX_SIZE 7
 
 typedef struct _AAC_Intern
 {
 	FILE *f_AAC;
 	NeAACDecHandle p_dec;
-	mp4ff_t *p_mp4;
 	FileInfo *p_FI;
-	int nTrack, nLoops, nCurrLoop;
-	mp4ff_callback_t *callbacks;
+	int nLoop, nCurrLoop;
+	bool eof;
 	BYTE buffer[8192];
+	BYTE FrameHeader[ADTS_MAX_SIZE];
 	Playback *p_Playback;
 } AAC_Intern;
-
-int GetAACTrack(mp4ff_t *infile)
-{
-    /* find AAC track */
-    int i, rc;
-    int numTracks = mp4ff_total_tracks(infile);
-
-    for (i = 0; i < numTracks; i++)
-    {
-        UCHAR *buff = NULL;
-        UINT buff_size = 0;
-        mp4AudioSpecificConfig mp4ASC;
-
-        mp4ff_get_decoder_config(infile, i, &buff, &buff_size);
-
-        if (buff != NULL)
-        {
-            rc = NeAACDecAudioSpecificConfig(buff, buff_size, &mp4ASC);
-            free(buff);
-
-            if (rc < 0)
-                continue;
-            return i;
-        }
-    }
-
-    /* can't decode this */
-    return -1;
-}
-
-uint32_t f_fread(void *UserData, void *Buffer, uint32_t Length)
-{
-	return fread(Buffer, 1, Length, (FILE *)UserData);
-}
-
-uint32_t f_fseek(void *UserData, uint64_t Pos)
-{
-	return fseek((FILE *)UserData, (long)Pos, SEEK_SET);
-}
 
 void *AAC_OpenR(char *FileName)
 {
 	AAC_Intern *ret = NULL;
 	FILE *f_AAC = NULL;
-	mp4ff_callback_t *callbacks = (mp4ff_callback_t*)malloc(sizeof(mp4ff_callback_t));
-	if (callbacks == NULL)
-		return ret;
 
 	ret = (AAC_Intern *)malloc(sizeof(AAC_Intern));
 	if (ret == NULL)
 		return ret;
 
-	f_AAC = ret->f_AAC = fopen(FileName, "rb");
+	ret->f_AAC = f_AAC = fopen(FileName, "rb");
 	if (f_AAC == NULL)
-		return NULL;
+	{
+		free(ret);
+		return f_AAC;
+	}
 
-	memset(callbacks, 0x00, sizeof(*callbacks));
-	callbacks->read = f_fread;
-	callbacks->seek = f_fseek;
-	callbacks->user_data = f_AAC;
-	ret->callbacks = callbacks;
-
+	ret->eof = false;
 	ret->p_dec = NeAACDecOpen();
-	ret->p_mp4 = mp4ff_open_read(callbacks);
-	ret->nTrack = GetAACTrack(ret->p_mp4);
 
 	return ret;
 }
-
-/*long InterpretFormat(BYTE oF)
-{
-	switch (oF)
-	{
-		case FAAD_FMT_16BIT:
-			return 16;
-		case FAAD_FMT_24BIT:
-			return 24;
-		case FAAD_FMT_32BIT:
-			return 32;
-		case FAAD_FMT_DOUBLE:
-			return (sizeof(double) * 8);
-		case FAAD_FMT_FLOAT:
-			return (sizeof(float) * 8);
-
-		default:
-			return 0;
-	}
-}*/
 
 FileInfo *AAC_GetFileInfo(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 	FileInfo *ret = NULL;
-	UCHAR *Buff = NULL;
-	UINT nBuffLen = 0;
 	NeAACDecConfiguration *ADC;
 
 	p_AF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
@@ -125,21 +63,11 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 		return ret;
 	memset(ret, 0x00, sizeof(FileInfo));
 
-	mp4ff_get_decoder_config(p_AF->p_mp4, p_AF->nTrack, &Buff, &nBuffLen);
-	NeAACDecInit2(p_AF->p_dec, Buff, nBuffLen, (ULONG *)&ret->BitRate, (UCHAR *)&ret->Channels);
+	fread(p_AF->FrameHeader, ADTS_MAX_SIZE, 1, p_AF->f_AAC);
+	fseek(p_AF->f_AAC, -(ADTS_MAX_SIZE), SEEK_CUR);
+	NeAACDecInit(p_AF->p_dec, p_AF->FrameHeader, ADTS_MAX_SIZE, (ULONG *)&ret->BitRate, (BYTE *)&ret->Channels);
 	ADC = NeAACDecGetCurrentConfiguration(p_AF->p_dec);
-
-	mp4ff_meta_get_album(p_AF->p_mp4, &ret->Album);
-	mp4ff_meta_get_artist(p_AF->p_mp4, &ret->Artist);
-	mp4ff_meta_get_title(p_AF->p_mp4, &ret->Title);
-	//ret->BitRate = mp4ff_get_avg_bitrate(p_AF->p_mp4, p_AF->nTrack);
-	//ret->BitsPerSample = InterpretFormat(ADC->outputFormat);
 	ret->BitsPerSample = 16;
-	ret->OtherComments.push_back("");
-	mp4ff_meta_get_comment(p_AF->p_mp4, &ret->OtherComments[0]);
-	ret->nOtherComments = (ret->OtherComments[0] == NULL ? 0 : 1);
-	p_AF->nLoops = mp4ff_num_samples(p_AF->p_mp4, p_AF->nTrack);
-	p_AF->nCurrLoop = 0;
 
 	p_AF->p_Playback = new Playback(ret, AAC_FillBuffer, p_AF->buffer, 8192, p_AACFile);
 	ADC->outputFormat = FAAD_FMT_16BIT;
@@ -157,55 +85,122 @@ int AAC_CloseFileR(void *p_AACFile)
 	delete p_AF->p_Playback;
 
 	NeAACDecClose(p_AF->p_dec);
-	mp4ff_close(p_AF->p_mp4);
 
 	ret = fclose(f_AAC);
 	free(p_AF);
 	return ret;
 }
 
+typedef struct _BitStream
+{
+	BYTE *Data;
+	long NumBit;
+	long Size;
+	long CurrentBit;
+} BitStream;
+
+BitStream *OpenBitStream(int size, BYTE *buffer)
+{
+	BitStream *BS = (BitStream *)malloc(sizeof(BitStream));
+	BS->Size = size;
+	BS->NumBit = size * 8;
+	BS->CurrentBit = 0;
+	BS->Data = buffer;
+	return BS;
+}
+
+void CloseBitStream(BitStream *BS)
+{
+	free(BS);
+}
+
+ULONG GetBit(BitStream *BS, int NumBits)
+{
+	int Num = 0;
+	ULONG ret = 0;
+
+	if (NumBits == 0)
+		return 0;
+	while (Num < NumBits)
+	{
+		int Byte = BS->CurrentBit / 8;
+		int Bit = 7 - (BS->CurrentBit % 8);
+		ret = ret << 1;
+		ret += ((BS->Data[Byte] & (1 << Bit)) >> Bit);
+		BS->CurrentBit++;
+		if (BS->CurrentBit == BS->NumBit)
+			return ret;
+		Num++;
+	}
+	return ret;
+}
+
+void SkipBit(BitStream *BS, int NumBits)
+{
+	BS->CurrentBit += NumBits;
+}
+
 long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 	FILE *f_AAC = p_AF->f_AAC;
-	BYTE *OBuf = OutBuffer;
-	static bool eof = false;
+	BYTE *OBuf = OutBuffer, *FrameHeader = p_AF->FrameHeader;
 
-	while ((OBuf - OutBuffer) < nOutBufferLen && eof == false)
+	if (p_AF->eof == true)
+		return -2;
+	while ((OBuf - OutBuffer) < nOutBufferLen && p_AF->eof == false)
 	{
-		if (p_AF->nCurrLoop < p_AF->nLoops)
+		static BYTE *Buff2 = NULL;
+		BYTE *Buff = NULL;
+		UINT FrameLength = 0, read = 0;
+		NeAACDecFrameInfo FI;
+		BitStream *BS = OpenBitStream(ADTS_MAX_SIZE, FrameHeader);
+
+		read = fread(FrameHeader, 1, ADTS_MAX_SIZE, f_AAC);
+		if (feof(f_AAC) != FALSE)
 		{
-			int i = 0;
-			UCHAR *Buff = NULL;
-			UINT nBuff = 0;
-			NeAACDecFrameInfo FI;
-			static BYTE *Buff2 = NULL;
-
-			if (mp4ff_read_sample(p_AF->p_mp4, p_AF->nTrack, p_AF->nCurrLoop, &Buff, &nBuff) == 0)
+			p_AF->eof = true;
+			if (read != ADTS_MAX_SIZE)
 			{
-				eof = true;
-				return -2;
+				CloseBitStream(BS);
+				return OBuf - OutBuffer;
 			}
-
-			Buff2 = (BYTE *)NeAACDecDecode(p_AF->p_dec, &FI, Buff, nBuff);
-			free(Buff);
-			p_AF->nCurrLoop++;
-
-			if (FI.error != 0)
-			{
-				printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
-				/*printf("\nPress Any Key To Continue....\n");
-				getch();
-				exit(FI.error);*/
-				continue;
-			}
-
-			memcpy(OBuf, Buff2, (FI.samples * (p_AF->p_FI->BitsPerSample / 8)));
-			OBuf += (FI.samples * (p_AF->p_FI->BitsPerSample / 8));
-//			free(Buff2);
+			continue;
 		}
-		else if (p_AF->nCurrLoop == p_AF->nLoops)
-			return -1;
+		read = (UINT)GetBit(BS, 12);
+		if (read != 0xFFF)
+		{
+			p_AF->eof = true;
+			CloseBitStream(BS);
+			continue;
+		}
+		SkipBit(BS, 18);
+		FrameLength = (UINT)GetBit(BS, 13);
+		CloseBitStream(BS);
+		Buff = (BYTE *)malloc(FrameLength);
+		memcpy(Buff, FrameHeader, ADTS_MAX_SIZE);
+		read = fread(Buff + ADTS_MAX_SIZE, 1, FrameLength - ADTS_MAX_SIZE, f_AAC);
+		if (feof(f_AAC) != FALSE)
+		{
+			p_AF->eof = true;
+			if (read != FrameLength)
+			{
+				free(Buff);
+				return OBuf - OutBuffer;
+			}
+		}
+
+		Buff2 = (BYTE *)NeAACDecDecode(p_AF->p_dec, &FI, Buff, FrameLength);
+		free(Buff);
+
+		if (FI.error != 0)
+		{
+			printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
+			continue;
+		}
+
+		memcpy(OBuf, Buff2, (FI.samples * (p_AF->p_FI->BitsPerSample / 8)));
+		OBuf += (FI.samples * (p_AF->p_FI->BitsPerSample / 8));
 	}
 
 	return OBuf - OutBuffer;
@@ -218,33 +213,22 @@ void AAC_Play(void *p_AACFile)
 	p_AF->p_Playback->Play();
 }
 
-// Standard "ftyp" Atom for a MOV based MP4 AAC file:
-// 00 00 00 20 66 74 79 70 4D 34 41 20 
-// .  .  .     f  t  y  p  M  4  A     
-
 bool Is_AAC(char *FileName)
 {
 	FILE *f_AAC = fopen(FileName, "rb");
-	CHAR Len[4];
-	char TypeSig[4];
-	char FileType[4];
+	BYTE sig[2];
 
 	if (f_AAC == NULL)
 		return false;
 
-	// How to deal with endieness:
-	fread(&Len, 4, 1, f_AAC);
-	//if (Len[3] != 32)
-	//	return false;
-
-	fread(TypeSig, 4, 1, f_AAC);
-	fread(FileType, 4, 1, f_AAC);
+	fread(sig, 2, 1, f_AAC);
 	fclose(f_AAC);
 
-	if (strncmp(TypeSig, "ftyp", 4) != 0 ||
-		(strncmp(FileType, "M4A ", 4) != 0 &&
-		strncmp(FileType, "mp42", 4) != 0))
+	// Detect an ADTS header:
+	sig[1] = sig[1] & 0xF6;
+	if (sig[0] != 0xFF || sig[1] != 0xF0)
 		return false;
+	// not going to bother detecting ADIF yet..
 
 	return true;
 }

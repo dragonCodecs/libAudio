@@ -154,12 +154,38 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuf
 	}
 }
 
+#ifdef __NICE_OUTPUT__
+void DoDisplay(int *p_CN, int *p_P, char *Chars)
+{
+	int lenChars = strlen(Chars);
+	if (((*p_P) % lenChars) == 0)
+	{
+		fprintf(stdout, "%c\b", Chars[(*p_CN)]);
+		fflush(stdout);
+		(*p_CN)++;
+		if (*p_CN == lenChars)
+			*p_CN = 0;
+	}
+	(*p_P)++;
+	if (*p_P == lenChars)
+		*p_P = 0;
+}
+#endif
+
 void Playback::Play()
 {
 	long bufret = 1;
 	int nBuffs = 0, Playing;
 	int Fmt = GetBuffFmt(p_FI->BitsPerSample, p_FI->Channels);
+#ifdef __NICE_OUTPUT__
+	static char *ProgressChars = "\xB3/\-\\";
+	int CharNum = 0, Proc = 0;
+#endif
 
+#ifdef __NICE_OUTPUT__
+	fprintf(stdout, "Playing: *\b");
+	fflush(stdout);
+#endif
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
@@ -167,6 +193,9 @@ void Playback::Play()
 		alSourceQueueBuffers(sourceNum, 1, &buffers[0]);
 		nBuffs++;
 	}
+#ifdef __NICE_OUTPUT__
+	DoDisplay(&CharNum, &Proc, ProgressChars);
+#endif
 
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
@@ -175,6 +204,9 @@ void Playback::Play()
 		alSourceQueueBuffers(sourceNum, 1, &buffers[1]);
 		nBuffs++;
 	}
+#ifdef __NICE_OUTPUT__
+	DoDisplay(&CharNum, &Proc, ProgressChars);
+#endif
 
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
@@ -183,6 +215,9 @@ void Playback::Play()
 		alSourceQueueBuffers(sourceNum, 1, &buffers[2]);
 		nBuffs++;
 	}
+#ifdef __NICE_OUTPUT__
+	DoDisplay(&CharNum, &Proc, ProgressChars);
+#endif
 
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
@@ -191,6 +226,9 @@ void Playback::Play()
 		alSourceQueueBuffers(sourceNum, 1, &buffers[3]);
 		nBuffs++;
 	}
+#ifdef __NICE_OUTPUT__
+	DoDisplay(&CharNum, &Proc, ProgressChars);
+#endif
 
 	alSourcePlay(sourceNum);
 
@@ -211,6 +249,9 @@ void Playback::Play()
 				nBuffs -= (Processed + 1);
 				goto finish;
 			}
+#ifdef __NICE_OUTPUT__
+			DoDisplay(&CharNum, &Proc, ProgressChars);
+#endif
 			alBufferData(buffer, Fmt, this->buffer, nBufferLen, p_FI->BitRate);
 			alSourceQueueBuffers(sourceNum, 1, &buffer);
 
@@ -222,6 +263,10 @@ void Playback::Play()
 	}
 
 finish:
+#ifdef __NICE_OUTPUT__
+	fprintf(stdout, "*\n");
+	fflush(stdout);
+#endif
 	alGetSourcei(sourceNum, AL_SOURCE_STATE, &Playing);
 	if (Playing != AL_PLAYING)
 		alSourcePlay(sourceNum);
