@@ -32,16 +32,20 @@ void *Audio_OpenR(char *FileName, int *Type)
 		*Type = AUDIO_MP3;
 		return MP3_OpenR(FileName);
 	}
+#ifdef _WINDOWS
 	else if (Is_IT(FileName) == true)
 	{
 		*Type = AUDIO_IT;
 		return IT_OpenR(FileName);
 	}
+#endif
+#ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)
 	{
 		*Type = AUDIO_MUSEPACK;
 		return MPC_OpenR(FileName);
 	}
+#endif
 	else if (Is_WavPack(FileName) == true)
 	{
 		*Type = AUDIO_WAVPACK;
@@ -53,11 +57,13 @@ void *Audio_OpenR(char *FileName, int *Type)
 		return OptimFROG_OpenR(FileName);
 	}
 	// Add RealAudio call here once decoder is complete
+#ifdef _WINDOWS
 	else if (Is_WMA(FileName) == true)
 	{
 		*Type = AUDIO_WMA;
 		return WMA_OpenR(FileName);
 	}
+#endif
 
 	return NULL;
 }
@@ -76,17 +82,23 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr, int Type)
 		return AAC_GetFileInfo(p_AudioPtr);
 	else if (Type == AUDIO_MP3)
 		return MP3_GetFileInfo(p_AudioPtr);
+#ifdef _WINDOWS
 	else if (Type == AUDIO_IT)
 		return IT_GetFileInfo(p_AudioPtr);
+#endif
+#ifndef __NO_MPC__
 	else if (Type == AUDIO_MUSEPACK)
 		return MPC_GetFileInfo(p_AudioPtr);
+#endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_GetFileInfo(p_AudioPtr);
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_GetFileInfo(p_AudioPtr);
 	// Add RealAudio call here once decoder is complete
+#ifdef _WINDOWS
 	else if (Type == AUDIO_WMA)
 		return WMA_GetFileInfo(p_AudioPtr);
+#endif
 
 	return NULL;
 }
@@ -105,17 +117,23 @@ long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen, int 
 		return AAC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 	else if (Type == AUDIO_MP3)
 		return MP3_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+#ifdef _WINDOWS
 	else if (Type == AUDIO_IT)
 		return IT_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+#endif
+#ifndef __NO_MPC__
 	else if (Type == AUDIO_MUSEPACK)
 		return MPC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+#endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 	// Add RealAudio call here once decoder is complete
+#ifdef _WINDOWS
 	else if (Type == AUDIO_WMA)
 		return WMA_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+#endif
 
 	return 0;
 }
@@ -134,10 +152,14 @@ int Audio_CloseFileR(void *p_AudioPtr, int Type)
 		return AAC_CloseFileR(p_AudioPtr);
 	else if (Type == AUDIO_MP3)
 		return MP3_CloseFileR(p_AudioPtr);
+#ifdef _WINDOWS
 	else if (Type == AUDIO_IT)
 		return IT_CloseFileR(p_AudioPtr);
-	//if (Type == AUDIO_MUSEPACK)
-	//	return MPC_CloseFileR(p_AudioPtr);
+#endif
+#ifndef __NO_MPC__
+	if (Type == AUDIO_MUSEPACK)
+		return MPC_CloseFileR(p_AudioPtr);
+#endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_CloseFileR(p_AudioPtr);
 	else if (Type == AUDIO_OPTIMFROG)
@@ -160,17 +182,23 @@ void Audio_Play(void *p_AudioPtr, int Type)
 		return AAC_Play(p_AudioPtr);
 	else if (Type == AUDIO_MP3)
 		return MP3_Play(p_AudioPtr);
+#ifdef _WINDOWS
 	else if (Type == AUDIO_IT)
 		return IT_Play(p_AudioPtr);
+#endif
+#ifndef __NO_MPC__
 	else if (Type == AUDIO_MUSEPACK)
 		return MPC_Play(p_AudioPtr);
+#endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_Play(p_AudioPtr);
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_Play(p_AudioPtr);
+#ifdef _WINDOWS
 	// Add RealAudio here once decoder is complete
 	else if (Type == AUDIO_WMA)
 		return WMA_Play(p_AudioPtr);
+#endif
 
 	return;
 }
@@ -189,15 +217,19 @@ bool Is_Audio(char *FileName)
 		return true;
 	else if (Is_MP3(FileName) == true)
 		return true;
+#ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)
 		return true;
+#endif
 	else if (Is_WavPack(FileName) == true)
 		return true;
 	else if (Is_OptimFROG(FileName) == true)
 		return true;
+#ifdef _WINDOWS
 	// Add RealAudio call here when decoder is complete
 	else if (Is_WMA(FileName) == true)
 		return true;
+#endif
 
 	return false;
 }

@@ -1,5 +1,9 @@
 #include <faac.h>
+#ifdef _WINDOWS
 #include <mp4.h>
+#else
+#include <mp4v2/mp4v2.h>
+#endif
 
 #ifdef strncasecmp
 #undef strncasecmp

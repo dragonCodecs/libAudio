@@ -1,7 +1,16 @@
 #include <stdio.h>
+#ifdef _WINDOWS
 #include <windows.h>
-#include <al.h>
-#include <alc.h>
+#define _usleep _sleep
+#else
+#include <ctype.h>
+#include <time.h>
+#define _usleep(milisec) \
+	{\
+		struct timespec req = {0, milisec}; \
+		nanosleep(&req, NULL); \
+	}
+#endif
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
@@ -259,7 +268,7 @@ void Playback::Play()
 
 		if (Playing != AL_PLAYING)
 			alSourcePlay(sourceNum);
-		Sleep(40);
+		_usleep(40);
 	}
 
 finish:
@@ -282,7 +291,7 @@ finish:
 			nBuffs--;
 		}
 
-		Sleep(40);
+		_usleep(40);
 	}
 }
 

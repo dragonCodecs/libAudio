@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include <conio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
+#include <conio.h>
 #include <windows.h>
-
-#include <al.h>
-#include <alc.h>
+#endif
+#include <string.h>
 
 #include <neaacdec.h>
 #include <mp4ff.h>
@@ -121,6 +121,7 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 	FileInfo *ret = NULL;
+	char *value;
 	UCHAR *Buff = NULL;
 	UINT nBuffLen = 0;
 	NeAACDecConfiguration *ADC;
@@ -140,9 +141,14 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	//ret->BitRate = mp4ff_get_avg_bitrate(p_MF->p_mp4, p_MF->nTrack);
 	//ret->BitsPerSample = InterpretFormat(ADC->outputFormat);
 	ret->BitsPerSample = 16;
-	ret->OtherComments.push_back("");
-	mp4ff_meta_get_comment(p_MF->p_mp4, &ret->OtherComments[0]);
-	ret->nOtherComments = (ret->OtherComments[0] == NULL ? 0 : 1);
+	mp4ff_meta_get_comment(p_MF->p_mp4, &value);
+	if (value == NULL)
+		ret->nOtherComments = 0;
+	else
+	{
+		ret->nOtherComments = 1;
+		ret->OtherComments.push_back(value);
+	}
 	p_MF->nLoops = mp4ff_num_samples(p_MF->p_mp4, p_MF->nTrack);
 	p_MF->nCurrLoop = 0;
 

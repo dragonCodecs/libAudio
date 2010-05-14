@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
@@ -38,6 +40,9 @@ bool Is_RealAudio(char *FileName)
 {
 	FILE *f_RLA = fopen(FileName, "rb");
 	char RLASig[4];
+
+	if (f_RLA == NULL)
+		return false;
 
 	fread(RLASig, 4, 1, f_RLA);
 	fclose(f_RLA);

@@ -1,0 +1,14 @@
+# libAudio pkg-config file
+
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libAudio
+Description: libAudio is a powerfull, but simplistic, audio loading and playing library
+Version: 0.1.43
+Requires:
+Conflicts:
+Libs: -L${libdir} -lAudio
+Cflags: -I${includedir}

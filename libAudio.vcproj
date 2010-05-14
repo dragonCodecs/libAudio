@@ -40,7 +40,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)Depends\&quot;"
-				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32"
+				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32;__NO_MPC__"
 				RuntimeLibrary="3"
 				DefaultCharIsUnsigned="true"
 				AssemblerOutput="2"
@@ -128,7 +128,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)Depends\&quot;"
-				PreprocessorDefinitions="_WINDOWS;_WIN32;NDEBUG;libAUDIO;WIN32;"
+				PreprocessorDefinitions="_WINDOWS;_WIN32;NDEBUG;libAUDIO;WIN32;__NO_MPC__"
 				RuntimeLibrary="2"
 				DefaultCharIsUnsigned="true"
 				WarningLevel="3"
@@ -224,6 +224,20 @@
 				<File
 					RelativePath=".\loadMPC.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\loadOggVorbis.cpp"
@@ -240,6 +254,22 @@
 				<File
 					RelativePath=".\loadShorten.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\loadWAV.cpp"

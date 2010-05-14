@@ -2,7 +2,10 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
 #include <windows.h>
+#endif
+#include <string.h>
 
 #include <FLAC/all.h>
 
@@ -143,7 +146,7 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 					{
 						int nOCText = strlen(p_FI->Title);
 						int nCText = strlen(p_comments[nComment] + 6);
-						realloc(p_FI->Title, nOCText + nCText + 4);
+						p_FI->Title = (char *)realloc(p_FI->Title, nOCText + nCText + 4);
 						memcpy(p_FI->Title + nOCText, " / ", 3);
 						memcpy(p_FI->Title + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 					}
@@ -156,7 +159,7 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 					{
 						int nOCText = strlen(p_FI->Artist);
 						int nCText = strlen(p_comments[nComment] + 7);
-						realloc(p_FI->Artist, nOCText + nCText + 4);
+						p_FI->Artist = (char *)realloc(p_FI->Artist, nOCText + nCText + 4);
 						memcpy(p_FI->Artist + nOCText, " / ", 3);
 						memcpy(p_FI->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 					}
@@ -169,7 +172,7 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 					{
 						int nOCText = strlen(p_FI->Album);
 						int nCText = strlen(p_comments[nComment] + 6);
-						realloc(p_FI->Album, nOCText + nCText + 4);
+						p_FI->Album = (char *)realloc(p_FI->Album, nOCText + nCText + 4);
 						memcpy(p_FI->Album + nOCText, " / ", 3);
 						memcpy(p_FI->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 					}

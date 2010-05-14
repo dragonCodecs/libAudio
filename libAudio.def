@@ -41,12 +41,12 @@ EXPORTS
 	MP3_Play @35
 	Is_MP3 @36
 
-	MPC_OpenR @37
-	MPC_GetFileInfo @38
-	MPC_FillBuffer @39
-	;MPC_CloseFileR @40
-	MPC_Play @41
-	Is_MPC @42
+;	MPC_OpenR @37
+;	MPC_GetFileInfo @38
+;	MPC_FillBuffer @39
+;	MPC_CloseFileR @40
+;	MPC_Play @41
+;	Is_MPC @42
 
 	WavPack_OpenR @43
 	WavPack_GetFileInfo @44

@@ -1,9 +1,11 @@
-#include "ogg\ogg.h"
-#include "vorbis\vorbisenc.h"
+#include <ogg/ogg.h>
+#include <vorbis/vorbisenc.h>
+#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+#include <stdlib.h>
 #include <time.h>
 
 typedef struct _OV_Intern

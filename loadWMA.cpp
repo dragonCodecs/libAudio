@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "libAudio.h"
 #include "libAudio_Common.h"
 #include "loadWMA.h"
@@ -2314,10 +2316,13 @@ bool Is_WMA(char *FileName)
 {
 	FILE *f_WMA = fopen(FileName, "rb");
 	char WMA_Sig[16];
-	char Sig[] = { 0x30, 0x26, 0xB2, 0x75,
+	static const char Sig[] = { 0x30, 0x26, 0xB2, 0x75,
 		0x8E, 0x66, 0xCF, 0x11,
 		0xA6, 0xD9, 0x00, 0xAA,
 		0x00, 0x62, 0xCE, 0x6C };
+
+	if (f_WMA == NULL)
+		return false;
 
 	fread(WMA_Sig, 16, 1, f_WMA);
 	fclose(f_WMA);

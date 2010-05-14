@@ -1,0 +1,12 @@
+dlname='libAudio.so' 
+library_names='libAudio.so.0.1.43 libAudio.so.0.1 libAudio.so.0 libAudio.so'
+old_library='libAudio.a'
+dependancy_libs='-lopenal -logg -lvorbis -lvorbisfile'
+installed=yes
+current=0
+age=1
+revision=43
+shouldnotlink=no
+dlopen=''
+dlpreopen=''
+libdir='/usr/lib'

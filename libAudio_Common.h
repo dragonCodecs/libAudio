@@ -1,8 +1,18 @@
+#ifndef __libAudio_Common_H__
+#define __libAudio_Common_H__
+
 #include <stdio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
 #include <windows.h>
 #include <al.h>
 #include <alc.h>
+#define __CDECL__ __cdecl
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+#define __CDECL__
+#endif
 
 extern int strncasecmp(const char *s1, const char *s2, unsigned int n);
 extern int fseek_wrapper(void *p_file, __int64 offset, int origin);
@@ -15,9 +25,7 @@ extern void Deinitialize_OpenAL(ALCdevice **pp_Dev, ALCcontext **pp_Ctx, UINT So
 extern void UnqueueBuffer(UINT Source, UINT *BuffNum);*/
 extern int GetBuffFmt(int BPS, int Channels);
 
-#ifndef FB_Func
-typedef long (__cdecl *FB_Func)(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen);
-#endif
+typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen);
 
 class Playback
 {
@@ -39,3 +47,5 @@ public:
 	void Play();
 	~Playback();
 };
+
+#endif /* __libAudio_Common_H__ */

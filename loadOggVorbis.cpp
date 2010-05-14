@@ -1,8 +1,19 @@
-#include "ogg\ogg.h"
-#include "vorbis\vorbisfile.h"
+#include <ogg/ogg.h>
+#include <vorbis/vorbisfile.h>
+#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
+
+#ifdef _WINDOWS
+#ifndef __CDECL__
+#define __CDECL__ __cdecl
+#endif
+#else
+#ifndef __CDECL__
+#define __CDECL__
+#endif
+#endif
 
 typedef struct _OggVorbis_Intern
 {
@@ -25,10 +36,10 @@ void *OggVorbis_OpenR(char *FileName)
 		return ret;
 	memset(ret, 0x00, sizeof(OggVorbis_Intern));
 
-	callbacks.close_func = (int (__cdecl *)(void *))fclose;
-	callbacks.read_func = (size_t (__cdecl *)(void *, size_t, size_t, void *))fread;
+	callbacks.close_func = (int (__CDECL__ *)(void *))fclose;
+	callbacks.read_func = (size_t (__CDECL__ *)(void *, size_t, size_t, void *))fread;
 	callbacks.seek_func = fseek_wrapper;
-	callbacks.tell_func = (long (__cdecl *)(void *))ftell;
+	callbacks.tell_func = (long (__CDECL__ *)(void *))ftell;
 	ov_open_callbacks(f_Ogg, (OggVorbis_File *)ret, NULL, 0, callbacks);
 
 	return ret;
@@ -69,7 +80,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 			{
 				int nOCText = strlen(ret->Title);
 				int nCText = strlen(p_comments[nComment] + 6);
-				realloc(ret->Title, nOCText + nCText + 4);
+				ret->Title = (char *)realloc(ret->Title, nOCText + nCText + 4);
 				memcpy(ret->Title + nOCText, " / ", 3);
 				memcpy(ret->Title + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 			}
@@ -82,7 +93,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 			{
 				int nOCText = strlen(ret->Artist);
 				int nCText = strlen(p_comments[nComment] + 7);
-				realloc(ret->Artist, nOCText + nCText + 4);
+				ret->Artist = (char *)realloc(ret->Artist, nOCText + nCText + 4);
 				memcpy(ret->Artist + nOCText, " / ", 3);
 				memcpy(ret->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 			}
@@ -95,7 +106,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 			{
 				int nOCText = strlen(ret->Album);
 				int nCText = strlen(p_comments[nComment] + 6);
-				realloc(ret->Album, nOCText + nCText + 4);
+				ret->Album = (char *)realloc(ret->Album, nOCText + nCText + 4);
 				memcpy(ret->Album + nOCText, " / ", 3);
 				memcpy(ret->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 			}

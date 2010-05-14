@@ -1,15 +1,19 @@
 #include <stdio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
 #include <windows.h>
-
-#include <al.h>
-#include <alc.h>
+#endif
+#include <string.h>
 
 #include <mad.h>
 #include <id3tag.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
+
+#ifndef SHRT_MAX
+#define SHRT_MAX 0x7FFF
+#endif
 
 typedef struct _MP3_Intern
 {
@@ -84,6 +88,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 
 	f_id3 = id3_file_open(/*fileno(p_MF->f_MP3)*/p_MF->f_name, ID3_FILE_MODE_READONLY);
 	id_tag = id3_file_tag(f_id3);
+#ifdef _WINDOWS
 	id_frame = id3_tag_findframe(id_tag, "TLEN", 0);
 	if (id_frame != NULL)
 	{
@@ -106,6 +111,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 			}
 		}
 	}
+#endif
 
 	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_ALBUM, 0);
 	if (id_frame != NULL)
@@ -238,15 +244,9 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 				if (Comment != NULL)
 				{
 					if (ret->OtherComments.size() == 0)
-					{
-						ret->OtherComments.push_back("");
-						ret->nOtherComments = 1;
-					}
-					else
-						ret->OtherComments.push_back("");
+						ret->nOtherComments = 0;
 
-					
-					ret->OtherComments[ret->nOtherComments] = strdup((char *)Comment);
+					ret->OtherComments.push_back(strdup((char *)Comment));
 					free(Comment);
 					Comment = NULL;
 					ret->nOtherComments++;
@@ -412,22 +412,20 @@ bool Is_MP3(char *FileName)
 {
 	FILE *f_MP3 = fopen(FileName, "rb");
 	char ID3[3];
-	char MP3Sig[4];
+	char MP3Sig[2];
 
 	if (f_MP3 == NULL)
 		return false;
 
 	fread(ID3, 3, 1, f_MP3);
 	fseek(f_MP3, 0, SEEK_SET);
-	fread(MP3Sig, 4, 1, f_MP3);
+	fread(MP3Sig, 2, 1, f_MP3);
 	fclose(f_MP3);
 
-	if (strncmp(ID3, "ID3", 3) != 0 &&
-		(MP3Sig[0] != 0xFF || MP3Sig[1] != 0xFA ||
-		MP3Sig[2] != 0x90 || MP3Sig[3] != 0x0C) &&
-		(MP3Sig[0] != 0x0C || MP3Sig[1] != 0x90 ||
-		MP3Sig[2] != 0xFA || MP3Sig[3] != 0xFF))
-		return false;
+	if (strncmp(ID3, "ID3", 3) == 0)
+		return true;
+	if ((((((short)MP3Sig[0]) << 8) | MP3Sig[1]) & 0xFFFA) == 0xFFFA)
+		return true;
 
-	return true;
+	return false;
 }

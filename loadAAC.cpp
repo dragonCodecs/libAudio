@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include <conio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
+#include <conio.h>
 #include <windows.h>
-
-#include <al.h>
-#include <alc.h>
+#endif
+#include <string.h>
 
 #include <neaacdec.h>
 

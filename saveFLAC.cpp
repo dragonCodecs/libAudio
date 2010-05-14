@@ -1,4 +1,5 @@
 #include <FLAC/all.h>
+#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"

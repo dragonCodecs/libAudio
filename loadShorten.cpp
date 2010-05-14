@@ -1,8 +1,10 @@
-#include "libAudio.h"
-#include "libAudio_Common.h"
+#include <string.h>
 
 #define HAVE_CONFIG_H
 #include <Shorten/shorten.h>
+
+#include "libAudio.h"
+#include "libAudio_Common.h"
 
 typedef struct _Shorten_Intern
 {
@@ -31,6 +33,9 @@ bool Is_Shorten(char *FileName)
 {
 	FILE *f_SHN = fopen(FileName, "rb");
 	char ShortenSig[4];
+
+	if (f_SHN == NULL)
+		return false;
 
 	fread(ShortenSig, 4, 1, f_SHN);
 	fclose(f_SHN);

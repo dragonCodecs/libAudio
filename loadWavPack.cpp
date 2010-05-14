@@ -1,6 +1,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <wavpack.h>
+#include <wavpack/wavpack.h>
+#include <string.h>
+#include <string>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
@@ -204,6 +206,9 @@ bool Is_WavPack(char *FileName)
 {
 	FILE *f_WVP = fopen(FileName, "rb");
 	char WavPackSig[4];
+
+	if (f_WVP == NULL)
+		return false;
 
 	fread(WavPackSig, 4, 1, f_WVP);
 	fclose(f_WVP);

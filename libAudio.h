@@ -25,26 +25,56 @@ typedef struct FileInfo
 		#define libAUDIO_API __declspec(dllimport)
 	#endif
 #else
-	#ifdef libAUDIO
-		#define libAUDIO_API __attribute__((dllexport)) extern
+	#ifdef __cplusplus
+		#define libAUDIO_API extern "C"
 	#else
-		#define libAUDIO_API __attribute__((dllimport)) extern
+		#define libAUDIO_API extern
 	#endif
 #endif
 
+#ifndef _WINDOWS
+#include <inttypes.h>
+
+#ifndef __int64
+#define __int64 int64_t
+#endif
 #ifndef BYTE
-typedef unsigned char BYTE;
+#define BYTE uint8_t
+#define TRUE 1
+#define FALSE 0
 #endif
-
 #ifndef UINT
-typedef unsigned int UINT;
+#define UINT uint32_t
+#endif
+#ifndef ULONG
+#define ULONG unsigned long
+#endif
+#ifndef UCHAR
+#define UCHAR uint8_t
+#endif
+#ifndef CHAR
+#define CHAR int8_t
+#endif
+#ifndef INT
+#define INT int32_t
+#endif
+#ifndef UINT64
+#define UINT64 uint64_t
+#endif
+#ifndef WORD
+#define WORD uint16_t
+#endif
+#ifndef DWORD
+#define DWORD uint32_t
+#endif
+#else
+#include <windows.h>
 #endif
 
-#define libAudioVersion "0.0.1.0"
+#define libAudioVersion "0.1.43"
 #define libAudioVersion_Major 0
-#define libAudioVersion_Minor 0
-#define libAudioVersion_Rev_Major 1
-#define libAudioVersion_Rev_Minor 0
+#define libAudioVersion_Minor 1
+#define libAudioVersion_Rev 43
 
 // OggVorbis API
 
@@ -134,7 +164,7 @@ libAUDIO_API bool Is_IT(char *FileName);
 libAUDIO_API void *MPC_OpenR(char *FileName);
 libAUDIO_API FileInfo *MPC_GetFileInfo(void *p_MPCFile);
 libAUDIO_API long MPC_FillBuffer(void *p_MPCFile, BYTE *OutBuffer, int nOutBufferLen);
-//
+libAUDIO_API int MPC_CloseFileR(void *p_MPCFile);
 libAUDIO_API void MPC_Play(void *p_MPCFile);
 libAUDIO_API bool Is_MPC(char *FileName);
 

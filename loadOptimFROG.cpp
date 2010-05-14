@@ -1,6 +1,7 @@
-#include <sys\stat.h>
-#include <sys\types.h>
-#include <OptimFROG\OptimFROG.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <OptimFROG/OptimFROG.h>
+#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
@@ -15,12 +16,12 @@ typedef struct _OFROG_Intern
 	BYTE buffer[8192];
 } OFROG_Intern;
 
-UCHAR f_fclose(void *Inst)
+UCHAR __fclose(void *Inst)
 {
 	return (fclose((FILE *)Inst) == 0 ? TRUE : FALSE);
 }
 
-int f_fread(void *Inst, void *dest, UINT count)
+int __fread(void *Inst, void *dest, UINT count)
 {
 	int ret = fread(dest, 1, count, (FILE *)Inst);
 	int err = ferror((FILE *)Inst);
@@ -31,17 +32,17 @@ int f_fread(void *Inst, void *dest, UINT count)
 	return -1;
 }
 
-UCHAR f_feof(void *Inst)
+UCHAR __feof(void *Inst)
 {
 	return (feof((FILE *)Inst) == 0 ? FALSE : TRUE);
 }
 
-UCHAR f_fseekable(void *Inst)
+UCHAR __fseekable(void *Inst)
 {
 	return (fseek((FILE *)Inst, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
 }
 
-__int64 f_flen(void *Inst)
+__int64 __flen(void *Inst)
 {
 	struct stat stats;
 
@@ -49,12 +50,12 @@ __int64 f_flen(void *Inst)
 	return stats.st_size;
 }
 
-__int64 f_ftell(void *Inst)
+__int64 __ftell(void *Inst)
 {
 	return ftell((FILE *)Inst);
 }
 
-UCHAR f_fseek(void *Inst, __int64 pos)
+UCHAR __fseek(void *Inst, __int64 pos)
 {
 	return (fseek((FILE *)Inst, (long)pos, SEEK_SET) == 0 ? TRUE : FALSE);
 }
@@ -76,13 +77,13 @@ void *OptimFROG_OpenR(char *FileName)
 	ret->p_dec = OptimFROG_createInstance();
 
 	ret->callbacks = (ReadInterface *)malloc(sizeof(ReadInterface));
-	ret->callbacks->close = f_fclose;
-	ret->callbacks->read = f_fread;
-	ret->callbacks->eof = f_feof;
-	ret->callbacks->seekable = f_fseekable;
-	ret->callbacks->length = f_flen;
-	ret->callbacks->getPos = f_ftell;
-	ret->callbacks->seek = f_fseek;
+	ret->callbacks->close = __fclose;
+	ret->callbacks->read = __fread;
+	ret->callbacks->eof = __feof;
+	ret->callbacks->seekable = __fseekable;
+	ret->callbacks->length = __flen;
+	ret->callbacks->getPos = __ftell;
+	ret->callbacks->seek = __fseek;
 
 	OptimFROG_openExt(ret->p_dec, ret->callbacks, ret->f_OFG, TRUE);
 
@@ -175,6 +176,9 @@ bool Is_OptimFROG(char *FileName)
 {
 	FILE *f_OFG = fopen(FileName, "rb");
 	char OFGSig[4];
+
+	if (f_OFG == NULL)
+		return false;
 
 	fread(OFGSig, 4, 1, f_OFG);
 	fclose(f_OFG);
