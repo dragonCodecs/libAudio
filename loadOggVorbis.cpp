@@ -6,9 +6,10 @@
 #include "libAudio_Common.h"
 
 #ifdef _WINDOWS
-#ifndef __CDECL__
-#define __CDECL__ __cdecl
+#ifdef __CDECL__
+#undef __CDECL__
 #endif
+#define __CDECL__ __cdecl
 #else
 #ifndef __CDECL__
 #define __CDECL__
