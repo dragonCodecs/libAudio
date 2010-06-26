@@ -217,6 +217,9 @@ libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type);
 libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, BYTE *InBuffer, int nInBufferLen, int Type);
 libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr, int Type);
 
+// Set this to a non-zero value if using your own payback routines. This must be set by a call to *_GetFileInfo().
+libAUDIO_API BYTE ExternalPlayback;
+
 // Master Audio API Defines
 
 #define AUDIO_OGG_VORBIS	1

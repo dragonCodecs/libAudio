@@ -69,7 +69,8 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 	ADC = NeAACDecGetCurrentConfiguration(p_AF->p_dec);
 	ret->BitsPerSample = 16;
 
-	p_AF->p_Playback = new Playback(ret, AAC_FillBuffer, p_AF->buffer, 8192, p_AACFile);
+	if (ExternalPlayback == 0)
+		p_AF->p_Playback = new Playback(ret, AAC_FillBuffer, p_AF->buffer, 8192, p_AACFile);
 	ADC->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(p_AF->p_dec, ADC);
 

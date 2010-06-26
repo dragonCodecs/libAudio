@@ -122,7 +122,8 @@ FileInfo *OptimFROG_GetFileInfo(void *p_OFGFile)
 	free(p_OFI);
 	free(p_OFT);
 
-	p_OF->p_Playback = new Playback(ret, OptimFROG_FillBuffer, p_OF->buffer, 8192, p_OFGFile);
+	if (ExternalPlayback == 0)
+		p_OF->p_Playback = new Playback(ret, OptimFROG_FillBuffer, p_OF->buffer, 8192, p_OFGFile);
 
 	return ret;
 }

@@ -75,6 +75,7 @@ void *M4A_OpenR(char *FileName)
 	ret = (M4A_Intern *)malloc(sizeof(M4A_Intern));
 	if (ret == NULL)
 		return ret;
+	memset(ret, 0x00, sizeof(M4A_Intern));
 
 	f_M4A = ret->f_M4A = fopen(FileName, "rb");
 	if (f_M4A == NULL)
@@ -152,7 +153,8 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	p_MF->nLoops = mp4ff_num_samples(p_MF->p_mp4, p_MF->nTrack);
 	p_MF->nCurrLoop = 0;
 
-	p_MF->p_Playback = new Playback(ret, M4A_FillBuffer, p_MF->buffer, 8192, p_M4AFile);
+	if (ExternalPlayback == 0)
+		p_MF->p_Playback = new Playback(ret, M4A_FillBuffer, p_MF->buffer, 8192, p_M4AFile);
 	ADC->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(p_MF->p_dec, ADC);
 

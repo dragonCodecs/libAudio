@@ -138,7 +138,8 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 		}
 	}
 
-	p_WF->p_Playback = new Playback(ret, WavPack_FillBuffer, p_WF->buffer, 8192, p_WVPFile);
+	if (ExternalPlayback == 0)
+		p_WF->p_Playback = new Playback(ret, WavPack_FillBuffer, p_WF->buffer, 8192, p_WVPFile);
 
 	return ret;
 }

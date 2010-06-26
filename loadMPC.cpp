@@ -119,7 +119,8 @@ FileInfo *MPC_GetFileInfo(void *p_MFCFile)
 	ret->BitRate = p_MF->info->sample_freq;
 	ret->Channels = p_MF->info->channels;
 
-	p_MF->p_Playback = new Playback(ret, MPC_FillBuffer, p_MF->buffer, 8192, p_MFCFile);
+	if (ExternalPlayback == 0)
+		p_MF->p_Playback = new Playback(ret, MPC_FillBuffer, p_MF->buffer, 8192, p_MFCFile);
 
 	return ret;
 }

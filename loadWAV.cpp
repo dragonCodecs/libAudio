@@ -111,7 +111,8 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	ret->TotalTime /= ret->Channels;
 	ret->TotalTime /= (ret->BitsPerSample / 8);
 
-	p_WF->p_Playback = new Playback(ret, WAV_FillBuffer, p_WF->buffer, 8192, p_WAVFile);
+	if (ExternalPlayback == 0)
+		p_WF->p_Playback = new Playback(ret, WAV_FillBuffer, p_WF->buffer, 8192, p_WAVFile);
 
 	return ret;
 }

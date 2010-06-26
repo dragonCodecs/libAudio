@@ -568,7 +568,8 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 		}
 	}
 
-	p_IF->p_Playback = new Playback(ret, IT_FillBuffer, p_IF->buffer, 8192, p_ITFile);
+	if (ExternalPlayback == 0)
+		p_IF->p_Playback = new Playback(ret, IT_FillBuffer, p_IF->buffer, 8192, p_ITFile);
 	p_IF->p_SndFile = new ISoundFile(p_IF);
 	p_IF->p_Source = new Source(p_IF->p_SndFile);
 	//PrintPaterns(p_IF->p_Paterns, p_IF->p_Head->patnum, ret);
@@ -607,6 +608,8 @@ bool Is_IT(char *FileName)
 {
 	FILE *f_IT = fopen(FileName, "rb");
 	CHAR ITSig[4];
+	if (f_IT == NULL)
+		return false;
 
 	fread(ITSig, 4, 1, f_IT);
 	fclose(f_IT);

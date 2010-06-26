@@ -269,7 +269,8 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	ret->BitsPerSample = 16;
 	ret->Channels = (p_MF->p_Frame->header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
 
-	p_MF->p_Playback = new Playback(ret, MP3_FillBuffer, p_MF->buffer, 8192, p_MP3File);
+	if (ExternalPlayback == 0)
+		p_MF->p_Playback = new Playback(ret, MP3_FillBuffer, p_MF->buffer, 8192, p_MP3File);
 	p_MF->p_FI = ret;
 
 	return ret;

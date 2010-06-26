@@ -120,7 +120,8 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 		nComment++;
 	}
 
-	p_VF->p_Playback = new Playback(ret, OggVorbis_FillBuffer, p_VF->buffer, 8192, p_VorbisFile);
+	if (ExternalPlayback == 0)
+		p_VF->p_Playback = new Playback(ret, OggVorbis_FillBuffer, p_VF->buffer, 8192, p_VorbisFile);
 
 	return ret;
 }

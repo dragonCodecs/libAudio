@@ -277,8 +277,6 @@ finish:
 	fflush(stdout);
 #endif
 	alGetSourcei(sourceNum, AL_SOURCE_STATE, &Playing);
-	if (Playing != AL_PLAYING)
-		alSourcePlay(sourceNum);
 	while (nBuffs > 0)
 	{
 		int Processed;
@@ -291,6 +289,8 @@ finish:
 			nBuffs--;
 		}
 
+		if (Playing != AL_PLAYING)
+			alSourcePlay(sourceNum);
 		_usleep(40);
 	}
 }

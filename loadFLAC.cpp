@@ -122,7 +122,8 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 			p_FI->Channels = p_md->channels;
 			p_FI->BitRate = p_md->sample_rate;
 			p_FI->BitsPerSample = p_md->bits_per_sample;
-			p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->buffer, 16384, ClientData);
+			if (ExternalPlayback == 0)
+				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->buffer, 16384, ClientData);
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:

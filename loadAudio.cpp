@@ -1,5 +1,7 @@
 #include "libAudio.h"
 
+BYTE ExternalPlayback = 0;
+
 void *Audio_OpenR(char *FileName, int *Type)
 {
 	if (Is_OggVorbis(FileName) == true)
