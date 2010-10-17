@@ -61,12 +61,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libVorbis.lib Ogg.lib libVorbisFile.lib libFLAC_Dynamic.lib libfaad_d.lib libfaac_d.lib mp4ff.lib libMP4v2_d.lib libmad.lib libid3tag.lib zdll.lib libmpcdec_d.lib libwavpack_d.lib libshorten_d.lib OptimFROG.lib OpenAL32.lib advapi32.lib ws2_32.lib User32.lib"
+				AdditionalDependencies="libVorbis.lib Ogg.lib libVorbisFile.lib libFLAC_Dynamic.lib libfaad_d.lib libfaac_d.lib mp4ff.lib libMP4v2_d.lib libmad.lib libid3tag.lib zdll.lib libmpcdec_d.lib wavpackdll_d.lib libshorten_d.lib OptimFROG.lib OpenAL32.lib advapi32.lib ws2_32.lib User32.lib"
 				Version="0.0.1"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)Depends\&quot;"
 				ModuleDefinitionFile="$(InputDir)libAudio.def"
-				DelayLoadDLLs="libVorbis.dll; Ogg.dll; libVorbisFile.dll; libFLAC_Dynamic.dll; OpenAL32.dll; advapi32.dll; zlib1.dll; OptimFROG.dll; libMP4v2_d.dll"
+				DelayLoadDLLs="libVorbis.dll; Ogg.dll; libVorbisFile.dll; libFLAC_Dynamic.dll; OpenAL32.dll; advapi32.dll; zlib1.dll; OptimFROG.dll; libMP4v2_d.dll; wavpackdll_d.dll"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
@@ -96,7 +96,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying in .dlls from Depends directory to output directory"
-				CommandLine="xcopy &quot;$(SolutionDir)Depends\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;del &quot;$(OutDir)\libmp4v2.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libFLAC++_dynamic.dll&quot;&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(SolutionDir)Depends\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;del &quot;$(OutDir)\libmp4v2.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libFLAC++_dynamic.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\wavpackdll.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -146,11 +146,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libVorbis.lib Ogg.lib libVorbisFile.lib libFLAC_Dynamic.lib libfaad.lib libfaac.lib mp4ff.lib libMP4v2.lib libmad.lib libid3tag.lib zdll.lib libmpcdec.lib libwavpack.lib OptimFROG.lib OpenAL32.lib advapi32.lib"
+				AdditionalDependencies="libVorbis.lib Ogg.lib libVorbisFile.lib libFLAC_Dynamic.lib libfaad.lib libfaac.lib mp4ff.lib libMP4v2.lib libmad.lib libid3tag.lib zdll.lib libmpcdec.lib wavpackdll.lib OptimFROG.lib OpenAL32.lib advapi32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)Depends\&quot;"
 				ModuleDefinitionFile="$(InputDir)libAudio.def"
-				DelayLoadDLLs="libVorbis.dll; Ogg.dll; libVorbisFile.dll; libFLAC_Dynamic.dll; OpenAL32.dll; advapi32.dll; zlib1.dll; OptimFROG.dll; libMP4v2.dll"
+				DelayLoadDLLs="libVorbis.dll; Ogg.dll; libVorbisFile.dll; libFLAC_Dynamic.dll; OpenAL32.dll; advapi32.dll; zlib1.dll; OptimFROG.dll; libMP4v2.dll; wavpackdll.dll"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -224,20 +224,6 @@
 				<File
 					RelativePath=".\loadMPC.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\loadOggVorbis.cpp"
