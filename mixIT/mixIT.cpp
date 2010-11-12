@@ -1,12 +1,11 @@
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
 #include <windows.h>
+#endif
 #include <assert.h>
 #include <math.h>
-
-#include <al.h>
-#include <alc.h>
 
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
@@ -265,7 +264,7 @@
 #define MIXING_CLIPMIN		-0x07FFFFFF
 #define MIXING_CLIPMAX		0x07FFFFFF
 
-typedef DWORD (__cdecl *ConvertProc)(void *, int *, DWORD);
+typedef DWORD (__CDECL__ *ConvertProc)(void *, int *, DWORD);
 
 BYTE PortaVolCmd[16] =
 {
@@ -730,7 +729,7 @@ float MixFloatBuffer[MIXBUFFERSIZE * 2];
 #include "rvb_mix.h"
 #pragma warning(default : 4799 4731)
 
-typedef void (__cdecl *MixInterface)(Channel *, int *, int *);
+typedef void (__CDECL__ *MixInterface)(Channel *, int *, int *);
 
 MixInterface MixFunctionTable[80] = 
 {
@@ -816,7 +815,7 @@ MixInterface MMXFunctionTable[80] =
 	FilterMono8BitFIRFilterRampMix, FilterMono16BitFIRFilterRampMix, FilterStereo8BitFIRFilterRampMix, FilterStereo16BitFIRFilterRampMix
 };
 
-void __cdecl X86_InitMixBuffer(int *Buffer, UINT Samples)
+void __CDECL__ X86_InitMixBuffer(int *Buffer, UINT Samples)
 {
 	__asm
 	{
@@ -848,7 +847,7 @@ done:
 	}
 }
 
-void __cdecl X86_MonoFromStereo(int *MixBuff, UINT Samples)
+void __CDECL__ X86_MonoFromStereo(int *MixBuff, UINT Samples)
 {
 	__asm
 	{
@@ -868,7 +867,7 @@ st_loop:
 	}
 }
 
-void __cdecl X86_StereoFill(int *Buffer, UINT Samples, long *ROffs, long *LOffs)
+void __CDECL__ X86_StereoFill(int *Buffer, UINT Samples, long *ROffs, long *LOffs)
 {
 	__asm
 	{
@@ -940,7 +939,7 @@ done:
 	}
 }
 
-DWORD __cdecl X86_Convert32To8(void *_out, int *_in, DWORD SampleCount)
+DWORD __CDECL__ X86_Convert32To8(void *_out, int *_in, DWORD SampleCount)
 {
 	DWORD result;
 
@@ -978,7 +977,7 @@ done:
 	return result;
 }
 
-DWORD __cdecl X86_Convert32To16(void *_out, int *_in, DWORD SampleCount)
+DWORD __CDECL__ X86_Convert32To16(void *_out, int *_in, DWORD SampleCount)
 {
 	DWORD result;
 
@@ -1016,7 +1015,7 @@ done:
 	return result;
 }
 
-void __cdecl X86_EndChannelOffs(Channel *chn, int *Buffer, UINT Samples)
+void __CDECL__ X86_EndChannelOffs(Channel *chn, int *Buffer, UINT Samples)
 {
 	__asm
 	{
