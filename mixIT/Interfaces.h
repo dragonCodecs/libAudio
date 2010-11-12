@@ -29,13 +29,6 @@ public:
 	virtual BOOL CanRecieveMidiEvents() = 0;
 };
 
-class ISoundSource
-{
-public:
-	virtual ULONG AudioRead(void *Data, ULONG Size) = 0;
-	virtual void AudioDone(ULONG BytesWriten) = 0;//, ULONG nLatency) = 0;
-};
-
 typedef struct _MixPluginState
 {
 	DWORD Flags;

@@ -25,7 +25,8 @@
 
 #define SNDMIX_ENDSAMPLELOOP \
 		Pos += chn->Inc; \
-	} while (vol < BuffMax); \
+	} \
+	while (vol < BuffMax); \
 	chn->Pos += Pos >> 16; \
 	chn->PosLo = Pos & 0xFFFF;
 
@@ -69,7 +70,7 @@
 
 // Begin / End interface
 #define BEGIN_MIX_INTERFACE(func) \
-	void __CDECL__ func (Channel *chn, int *Buff, int *BuffMax) \
+	void __CDECL__ func(Channel *chn, int *Buff, int *BuffMax) \
 	{ \
 		long Pos;
 
@@ -377,8 +378,8 @@
 
 // sinc
 #define SNDMIX_INITSINCTABLE \
-	char *sinc = (char *)(chn->Inc > 0x13000 || chn->Inc < -0x13000 ? (chn->Inc > 0x18000 || chn->Inc < -0x18000 ? \
-	DownSample2x : DownSample13x) : KaiserSinc);
+	char *sinc = (char *)(chn->Inc > 0x13000 || chn->Inc < -0x13000 ? \
+		(chn->Inc > 0x18000 || chn->Inc < -0x18000 ? DownSample2x : DownSample13x) : KaiserSinc);
 
 // Interfaces
 // Mono

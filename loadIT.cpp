@@ -519,7 +519,6 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 	if (ExternalPlayback == 0)
 		p_IF->p_Playback = new Playback(ret, IT_FillBuffer, p_IF->buffer, 8192, p_ITFile);
 	p_IF->p_SndFile = new ISoundFile(p_IF);
-	p_IF->p_Source = new Source(p_IF->p_SndFile);
 	//PrintPaterns(p_IF->p_Paterns, p_IF->p_Head->patnum, ret);
 
 	return ret;
@@ -531,7 +530,6 @@ int IT_CloseFileR(void *p_ITFile)
 
 	delete p_IF->p_Playback;
 	delete p_IF->p_SndFile;
-	delete p_IF->p_Source;
 
 	return fclose(p_IF->f_IT);
 }

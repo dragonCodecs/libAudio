@@ -427,11 +427,6 @@ WORD FreqTable[16] =
 	0,0,0,0
 };
 
-BYTE autovib[8] =
-{
-	0, 3, 1, 4, 2, 0, 0, 0
-};
-
 signed char VibratoTable[256] =
 {
 	0,-2,-3,-5,-6,-8,-9,-11,-12,-14,-16,-17,-19,-20,-22,-23,
@@ -749,7 +744,7 @@ MixInterface MixFunctionTable[80] =
 	Mono8BitHQMix, Mono16BitHQMix, Stereo8BitHQMix, Stereo16BitHQMix,
 	Mono8BitHQRampMix, Mono16BitHQRampMix, Stereo8BitHQRampMix, Stereo16BitHQRampMix,
 	// Filter HQ SRC
-	FilterMono8BitLinearMix, FilterMono16BitLinearMix, FilterStereo8BitLinearMix,
+	FilterMono8BitLinearMix, FilterMono16BitLinearMix, FilterStereo8BitLinearMix, FilterStereo16BitLinearMix,
 	FilterMono8BitLinearRampMix, FilterMono16BitLinearRampMix, FilterStereo8BitLinearMix, FilterStereo16BitLinearMix,
 	// Kaiser SRC
 	Mono8BitKaiserMix, Mono16BitKaiserMix, Stereo8BitKaiserMix, Stereo16BitKaiserMix,
@@ -802,7 +797,7 @@ MixInterface MMXFunctionTable[80] =
 	MMX_FilterMono8BitLinearMix, MMX_FilterMono16BitLinearMix, FilterStereo8BitLinearMix,
 	MMX_FilterMono8BitLinearRampMix, MMX_FilterMono16BitLinearRampMix, FilterStereo8BitLinearMix, FilterStereo16BitLinearMix,
 	// Kaiser SRC
-	MMX_Mono8BitKaiserMix, MMX_Mono16BitKaiserMix, Stereo8BitKaiserMix, Stereo16BitKaiserMix,
+MMX_Mono8BitKaiserMix, MMX_Mono16BitKaiserMix, Stereo8BitKaiserMix, Stereo16BitKaiserMix,
 	MMX_Mono8BitKaiserRampMix, MMX_Mono16BitKaiserRampMix, Stereo8BitKaiserRampMix, Stereo16BitKaiserRampMix,
 	// Filter Kaiser SRC
 	FilterMono8BitKaiserMix, FilterMono16BitKaiserMix, FilterStereo8BitKaiserMix, FilterStereo16BitKaiserMix,
@@ -814,6 +809,9 @@ MixInterface MMXFunctionTable[80] =
 	FilterMono8BitFIRFilterMix, FilterMono16BitFIRFilterMix, FilterStereo8BitFIRFilterMix, FilterStereo16BitFIRFilterMix,
 	FilterMono8BitFIRFilterRampMix, FilterMono16BitFIRFilterRampMix, FilterStereo8BitFIRFilterRampMix, FilterStereo16BitFIRFilterRampMix
 };
+
+BYTE autovibit2xm[8] = {0, 3, 1, 4, 2, 0, 0, 0};
+BYTE autovibxm2it[8] = {0, 2, 4, 1, 3, 0, 0, 0};
 
 void __CDECL__ X86_InitMixBuffer(int *Buffer, UINT Samples)
 {
@@ -1260,10 +1258,10 @@ void ISoundFile::ResetMidiCfg()
 		sprintf(&MidiCfg.MidiZXXExt[i * 32], "F0F001%02X", i * 8);
 }
 
-DWORD ISoundFile::OutChannels = 2;
+DWORD ISoundFile::OutChannels = 0;
 DWORD ISoundFile::SoundSetup = 0;
 DWORD ISoundFile::SysInfo = 0;
-DWORD ISoundFile::BitsPerSample = 16;
+DWORD ISoundFile::BitsPerSample = 0;
 UINT ISoundFile::MaxMixChannels = 32;
 UINT ISoundFile::VolumeRampSamples = 42;
 UINT ISoundFile::AGC = AGC_UNITY;
@@ -1275,191 +1273,7 @@ UINT ISoundFile::XBassRange = DEFAULT_XBASS_RANGE;
 UINT ISoundFile::ProLogicDepth = 12;
 UINT ISoundFile::ProLogicDelay = 20;
 UINT ISoundFile::ReverbType = 0;
-DWORD ISoundFile::Quality = QUALITY_MEGABASS | QUALITY_SURROUND;
-
-/*void PerformChannelDump(Channel Chns[256])
-{
-	FILE *fOut = fopen("ITM_Channels.log", "wb");
-	fwrite("Dump of channels:", 17, 1, fOut);
-
-	for (int i = 0; i < 256; i++)
-	{
-		fprintf(fOut, "\n\tChannel %d\n", i);
-		fprintf(fOut, "CurrentSample = 0x%08X\n", Chns[i].CurrentSample);
-		fprintf(fOut, "Pos = %d\n", Chns[i].Pos);
-		fprintf(fOut, "PosLo = %d\n", Chns[i].PosLo & 0xFFFF);
-		fprintf(fOut, "Inc = %d\n", Chns[i].Inc);
-		fprintf(fOut, "RightVol = %d, LeftVol = %d\n", Chns[i].RightVol, Chns[i].LeftVol);
-		fprintf(fOut, "RightRamp = %d, LeftRamp = %d\n", Chns[i].RightRamp, Chns[i].LeftRamp);
-		fprintf(fOut, "Length = %d\n", Chns[i].Length);
-		fprintf(fOut, "Flags = 0x%08X\n", Chns[i].Flags);
-		fprintf(fOut, "LoopStart = %d, LoopEnd = %d\n", Chns[i].LoopStart, Chns[i].LoopEnd);
-		fprintf(fOut, "RampRightVol = %d, RampLeftVol = %d\n", Chns[i].RampRightVol, Chns[i].RampLeftVol);
-		fprintf(fOut, "Filter_Y1 = %d, Filter_Y2 = %d, Filter_Y3 = %d, Filter_Y4 = %d\n",
-			Chns[i].Filter_Y1, Chns[i].Filter_Y2, Chns[i].Filter_Y3, Chns[i].Filter_Y4);
-		fprintf(fOut, "Filter_A0 = %d, Filter_B0 = %d, Filter_B1 = %d, Filter_HP = %d\n",
-			Chns[i].Filter_A0, Chns[i].Filter_B0, Chns[i].Filter_B1, Chns[i].Filter_HP);
-		fprintf(fOut, "ROffs = %d, LOffs = %d\n", Chns[i].ROfs, Chns[i].LOfs);
-		fprintf(fOut, "RampLength = %d\n", Chns[i].RampLength);
-		fprintf(fOut, "Sample = 0x%08X\n", Chns[i].Sample);
-		fprintf(fOut, "NewRightVol = %d, NewLeftVol = %d\n", Chns[i].NewRightVol, Chns[i].NewLeftVol);
-		fprintf(fOut, "RealVolume = %d, RealPan = %d\n", Chns[i].RealVolume, Chns[i].RealPan);
-		fprintf(fOut, "Volume = %d, Pan = %d, FadeOutVol = %d\n", Chns[i].Volume, Chns[i].Pan, Chns[i].FadeOutVol);
-		fprintf(fOut, "Period = %d, C5Speed = %d, PoramentoDest = %d\n", Chns[i].Period, Chns[i].C4Speed,
-			Chns[i].PortamentoDest);
-		fprintf(fOut, "Header = 0x%08X\n", Chns[i].Header);
-		fprintf(fOut, "Instrument = 0x%08X\n", Chns[i].Instrument);
-		fprintf(fOut, "VolEnvPosition = %d, PanEnvPosition = %d, PitchEnvPosition = %d\n",Chns[i].VolEnvPosition,
-			Chns[i].PanEnvPosition, Chns[i].PitchEnvPosition);
-		fprintf(fOut, "MasterChn = %d\n", Chns[i].MasterChn);
-		fprintf(fOut, "GlobalVol = %d, InsVol = %d\n", Chns[i].GlobalVol, Chns[i].InsVol);
-		fprintf(fOut, "FineTune = %d\n"/*, Transpose = %d\n"*//*, Chns[i].FineTune);//, Chns[i].Transpose);
-		fprintf(fOut, "PortamentoSlide = %d, AutoVibDepth = %d\n", Chns[i].PortamentoSlide, Chns[i].AutoVibDepth);
-		fprintf(fOut, "AutoVibPos = %d, VibratoPos = %d, TremoloPos = %d, PanbrelloPos = %d\n", Chns[i].AutoVibPos,
-			Chns[i].VibratoPos, Chns[i].TremoloPos, Chns[i].PanbrelloPos);
-		fprintf(fOut, "VolSwing = %d, PanSwing = %d\n", Chns[i].VolSwing, Chns[i].PanSwing);
-		fprintf(fOut, "CutSwing = %d, ResSwing = %d\n", Chns[i].CutSwing, Chns[i].ResSwing);
-		fprintf(fOut, "Note = %d, NNA = %d\n", Chns[i].Note, Chns[i].NNA);
-		fprintf(fOut, "NewNote = %d, NewIns = %d, Command = %d, Arpeggio = %d\n", Chns[i].NewNote, Chns[i].NewInst,
-			Chns[i].Command, Chns[i].Arpeggio);
-		fprintf(fOut, "OldVolumeSlide = %d, OldFineVolUpDown = %d\n", Chns[i].OldVolumeSlide, Chns[i].OldFineVolUpDown);
-		fprintf(fOut, "OldPortaUpDown = %d, OldFinePortaUpDown = %d\n", Chns[i].OldPortaUpDown, Chns[i].OldFinePortaUpDown);
-		fprintf(fOut, "OldPanSlide = %d, OldChnVolSlide = %d\n", Chns[i].OldPanSlide, Chns[i].OldChnVolSlide);
-		fprintf(fOut, "VibratoType = %d, VibratoSpeed = %d, VibratoDepth = %d\n", Chns[i].VibratoType, Chns[i].VibratoSpeed,
-			Chns[i].VibratoDepth);
-		fprintf(fOut, "TremoloType = %d, TremoloSpeed = %d, TremoloDepth = %d\n", Chns[i].TremoloType, Chns[i].TremoloSpeed,
-			Chns[i].TremoloDepth);
-		fprintf(fOut, "PanbrelloType = %d, PanbrelloSpeed = %d, PanbrelloDepth = %d\n", Chns[i].PanbrelloType, Chns[i].PanbrelloSpeed,
-			Chns[i].PanbrelloDepth);
-		fprintf(fOut, "OldCmdEx = %d, OldVolParam = %d, OldTempo = %d\n", Chns[i].OldCmdEx, Chns[i].OldVolParam, Chns[i].OldTempo);
-		fprintf(fOut, "OldOffset = %d, OldHiOffset = %d\n", Chns[i].OldOffset, Chns[i].OldHiOffset);
-		fprintf(fOut, "CutOff = %d, Resonance = %d\n", Chns[i].CutOff, Chns[i].Resonance);
-		fprintf(fOut, "RetrigCount = %d, RetrigParam = %d\n", Chns[i].RetrigCount, Chns[i].RetrigParam);
-		fprintf(fOut, "TremorCount = %d, TremorParam = %d\n", Chns[i].TremorCount, Chns[i].TremorParam);
-		fprintf(fOut, "PatternLoop = %d, PatternLoopCount = %d\n", Chns[i].PaternLoop, Chns[i].PaternLoopCount);
-		fprintf(fOut, "RowNote = %d, RowInstr = %d\n", Chns[i].RowNote, Chns[i].RowInstr);
-		fprintf(fOut, "RowVolCmd = %d, RowVolume = %d\n", Chns[i].RowVolCmd, Chns[i].RowVolume);
-		fprintf(fOut, "RowCommand = %d, RowParam = %d\n", Chns[i].RowCommand, Chns[i].RowParam);
-		fprintf(fOut, "ActiveMacro = %d, FilterMode = %d\n", Chns[i].ActiveMacro, Chns[i].FilterMode);
-		fprintf(fOut, "PlugParamValueStep = %f\n", Chns[i].PlugParamValueStep);
-		fprintf(fOut, "PlugInitialParamValue = %f\n", Chns[i].PlugInitialParamValue);
-	}
-	fclose(fOut);
-}*/
-
-/*void PerformMixPlugsDump(MixPlugin MixPlugins[MAX_MIXPLUGINS])
-{
-	FILE *fOut = fopen("ITM_MixPlugins.log", "wb");
-	fwrite("Dump of MixPlugins:\n", 20, 1, fOut);
-	for (int i = 0; i < MAX_MIXPLUGINS; i++)
-	{
-		fprintf(fOut, "\n\tPlugin %d\n", i);
-		fprintf(fOut, "PluginDataSize = %d\n", MixPlugins[i].PluginDataSize);
-		fprintf(fOut, "PluginData = 0x%08X\n", MixPlugins[i].PluginData);
-		fprintf(fOut, "\n\t\tInfo:\n");
-		fprintf(fOut, "\tPluginID1 = %d\n", MixPlugins[i].Info.PluginID1);
-		fprintf(fOut, "\tPluginID2 = %d\n", MixPlugins[i].Info.PluginID2);
-		fprintf(fOut, "\tInputRouting = %d\n", MixPlugins[i].Info.InputRouting);
-		fprintf(fOut, "\tOutputRouting = %d\n", MixPlugins[i].Info.OutputRouting);
-		fprintf(fOut, "\tName = %s\n", MixPlugins[i].Info.Name);
-		fprintf(fOut, "\tLibraryName = %s\n", MixPlugins[i].Info.LibraryName);
-		fprintf(fOut, "\nDryRatio = %f\n", MixPlugins[i].DryRatio);
-		fprintf(fOut, "defaultProgram = %d\n", MixPlugins[i].defaultProgram);
-	}
-	fclose(fOut);
-}*/
-
-/*void ISoundFile::PerformSoundFileDump()
-{
-	FILE *fOut = fopen("ITM_ISoundFile.log", "wb");
-	fwrite("Dump of ISoundFile:\n", 20, 1, fOut);
-	fprintf(fOut, "XBassDepth = %d, XBassRange = %d\n", this->XBassDepth, this->XBassRange);
-	fprintf(fOut, "StereoSeparation = %d, VolumeRampSamples = %d, AGC = %d\n", this->StereoSeparation, this->VolumeRampSamples,
-		this->AGC);
-	fprintf(fOut, "MaxMixChannels = %d\n", this->MaxMixChannels);
-	fprintf(fOut, "ReverbDepth = %d, ReverbType = %d\n", this->ReverbDepth, this->ReverbType);
-	fprintf(fOut, "SoundSetup = 0x%08X, SysInfo = 0x%08X, OutChannels = %d, BitsPerSample = %d, Quality = 0x%08X\n",
-		this->SoundSetup, this->SysInfo, this->OutChannels, this->BitsPerSample, this->Quality);
-	fprintf(fOut, "ProLogicDepth = %d, ProLogicDelay = %d\n", this->ProLogicDepth, this->ProLogicDelay);
-	fprintf(fOut, "SongFlags = 0x%08X\n", this->SongFlags);
-	fprintf(fOut, "Channels = %d, Instruments = %d\n", this->Channels, this->Instruments);
-	fprintf(fOut, "BufferCount = %d, TickCount = %d, PatternDelay = %d, FrameDelay = %d\n", this->BufferCount,
-		this->TickCount, this->PatternDelay, this->FrameDelay);
-	fprintf(fOut, "Row = %d, NextRow = %d, TotalSampleCount = %d\n", this->Row, this->NextRow, this->TotalSampleCount);
-	fprintf(fOut, "MusicSpeed = %d, MusicTemp = %d\n", this->MusicSpeed, this->MusicTempo);
-	fprintf(fOut, "TotalCount = %d, MaxOrderPosition = %d\n", this->TotalCount, this->MaxOrderPosition);
-	fprintf(fOut, "Pattern = %d, CurrentPattern = %d, NextPattern = %d, RestartPos = %d, SeqOverride = %d\n",
-		this->Pattern, this->CurrentPattern, this->NextPattern, this->RestartPos, this->SeqOverride);
-	fprintf(fOut, "PatternTransitionOccured = %s\n", (this->PatternTransitionOccurred == true ? "true" : "false"));
-	fprintf(fOut, "Order = %d, TempoMode = %d, PlugMixMode = %d\n", this->Order, this->TempoMode, this->PlugMixMode);
-	fprintf(fOut, "\n\tChnSettings:");
-	for (int i = 0; i < MAX_BASECHANNELS; i++)
-	{
-		fprintf(fOut, "\n\t\tChannel %d\n", i);
-		fprintf(fOut, "\tPan = %d\n", this->ChnSettings[i].Pan);
-		fprintf(fOut, "\tVolume = %d\n", this->ChnSettings[i].Volume);
-		fprintf(fOut, "\tFlags = 0x%08X\n", this->ChnSettings[i].Flags);
-		fprintf(fOut, "\tMixPlugin = %d\n", this->ChnSettings[i].MixPlugin);
-	}
-	fprintf(fOut, "\nMinPeriod = %d, MaxPeriod = %d, RepeatCount = %d\n", this->MinPeriod, this->MaxPeriod, this->RepeatCount);
-	fprintf(fOut, "\nGlobalVolume = %d, OldGlbVolSlide = %d\n", this->GlobalVolume, this->OldGlbVolSlide);
-	fprintf(fOut, "\n\tMidiConfig:\n");
-	fprintf(fOut, "\t\tMidiGlb = %s\n", this->MidiCfg.MidiGlb);
-	fprintf(fOut, "\t\tMidiSFXExt = %s\n", this->MidiCfg.MidiSFXExt);
-	fprintf(fOut, "\t\tMidiZXXExt = %s\n", this->MidiCfg.MidiZXXExt);
-	fprintf(fOut, "\nGlobalFadeSamples = %d, GlobalFadeMaxSamples = %d\n", this->GlobalFadeSamples, this->GlobalFadeMaxSamples);
-	fprintf(fOut, "\n\tChannelMuteTogglePending:");
-	for (int i = 0; i < MAX_CHANNELS; i++)
-	{
-		fprintf(fOut, "\n\t\tChannel %d\n", i);
-		fprintf(fOut, "\t%s\n", (this->ChannelMuteTogglePending[i] == true ? "true" : "false"));
-		fprintf(fOut, "\tChnMix = %d\n", this->ChnMix[i]);
-	}
-	fprintf(fOut, "\nBufferDif = %f\n", this->BufferDiff);
-	fprintf(fOut, "RowsPerBeat = %d, TempoFactor = %d, SamplesPerTick = %d\n", this->RowsPerBeat, this->TempoFactor,
-		this->SamplesPerTick);
-	fprintf(fOut, "MasterVolume = %d, SongPreAmp = %d, SamplesToGlobalVolRampDest = %d\n", this->MasterVolume, this->SongPreAmp,
-		this->SamplesToGlobalVolRampDest);
-	fprintf(fOut, "GlobalVolumeDest = %d\n", this->GlobalVolumeDest);
-	fprintf(fOut, "HighResRampingGlobalVolume = %d\n", this->HighResRampingGlobalVolume);
-	fprintf(fOut, "MixChannels = %d, MixStat = 0x%08X, FreqFactor = %d\n", this->MixChannels, this->MixStat, this->FreqFactor);
-	fclose(fOut);
-}*/
-
-/*void PerformInstrumentDump(ITSampleStruct *Ins, IT_Intern *p_IF)
-{
-	FILE *fOut = fopen("ITM_Instruments.log", "wb");
-	fwrite("Dump of Instruments:\n", 20, 1, fOut);
-	for (int i = 0; i < p_IF->p_Head->smpnum; i++)
-	{
-		fprintf(fOut, "\n\tInstrument %d\n", i);
-		fprintf(fOut, "id = %s, filename = %s\n", Ins[i].id, Ins[i].filename);
-		fprintf(fOut, "zero = %d, gvl = %d\n", Ins[i].zero, Ins[i].gvl);
-		fprintf(fOut, "flags = 0x%08X, vol = %d\n", Ins[i].flags, Ins[i].vol);
-		fprintf(fOut, "name = %s, cvt = %d\n", Ins[i].name, Ins[i].cvt);
-		fprintf(fOut, "dfp = %d, length = %d\n", Ins[i].dfp, Ins[i].length);
-		fprintf(fOut, "loopbegin = %d, loopend = %d\n", Ins[i].loopbegin, Ins[i].loopend);
-		fprintf(fOut, "C5Speed = %d, susloopbegin = %d\n", Ins[i].C5Speed, Ins[i].susloopbegin);
-		fprintf(fOut, "susloopend = %d, samplepointer = %d\n", Ins[i].susloopend, Ins[i].samplepointer);
-		fprintf(fOut, "vis = %d, vid = %d, vir = %d, vit = %d\n", Ins[i].vis, Ins[i].vid, Ins[i].vir, Ins[i].vit);
-	}
-	fclose(fOut);
-}*/
-
-/*void PerformHeadersDump(ITInstrument *Headers[MAX_INSTRUMENTS])
-{
-	FILE *fOut = fopen("ITM_Headers.log", "wb");
-	fwrite("Dump of Headers:\n", 17, 1, fOut);
-	for (int i = 0; i < MAX_INSTRUMENTS; i++)
-	{
-		fprintf(fOut, "\n\tHeader %d\n", i);
-		if (Headers[i] != NULL)
-			fprintf(fOut, "id = %s, filename = %s\n", Headers[i]->id, Headers[i]->filename);
-		else
-			fprintf(fOut, "Unused\n");
-	}
-	fclose(fOut);
-}*/
+DWORD ISoundFile::Quality = QUALITY_MEGABASS;// | QUALITY_SURROUND;
 
 void ISoundFile::SetCurrentPos(UINT Pos)
 {
@@ -1571,12 +1385,13 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 		SoundSetup |= SOUNDSETUP_ENABLEMMX;
 	UpdateAudioParameters(true);
 	p_IF = p_ITFile;
-	SongFlags = 0;
 	BufferCount = 0;
 	MusicSpeed = p_IF->p_Head->speed;
 	MusicTempo = p_IF->p_Head->tempo;
 	Channels = p_IF->nChannels;
 	Instruments = p_IF->p_Head->smpnum;
+	OutChannels = p_IF->p_FI->Channels;
+	BitsPerSample = p_IF->p_FI->BitsPerSample;
 	SongFlags = 0;
 	if (p_IF->p_Head->flags & 0x08) SongFlags |= SONG_LINEARSLIDES;
 	if (p_IF->p_Head->flags & 0x10) SongFlags |= SONG_ITOLDEFFECTS;
@@ -1716,8 +1531,6 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 	RecalculateGainForAllPlugs();
 	InitPlayer(true);
 	SetCurrentPos(0);
-
-	//PerformChannelDump(Chns);
 }
 
 bool ISoundFile::SetResamplingMode(UINT Mode)
@@ -1773,7 +1586,6 @@ void ISoundFile::UpdateAudioParameters(bool Reset)
 		SetResamplingMode(SRCMODE_LINEAR);
 	SetDspEffects((Quality & QUALITY_SURROUND) != 0, (Quality & QUALITY_REVERB) != 0, (Quality & QUALITY_MEGABASS) != 0,
 		(Quality & QUALITY_NOISEREDUCTION) != 0, (Quality & QUALITY_EQ) != 0);
-	//SetAGC(
 	if (Reset == true)
 		InitPlayer(true);
 }
@@ -2766,6 +2578,41 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 	}
 }
 
+inline BYTE ISoundFile::SampleToChannelFlags(const ITSampleStruct * const smp)
+{
+	BYTE ret = 0;
+	if ((smp->flags & 0x10) != 0)
+		ret |= CHN_LOOP;
+	if ((smp->flags & 0x20) != 0)
+		ret |= CHN_SUSTAINLOOP;
+	if ((smp->flags & 0x40) != 0)
+		ret |= CHN_PINGPONGLOOP;
+	if ((smp->flags & 0x80) != 0)
+		ret |= CHN_PINGPONGSUSTAIN;
+	if ((smp->dfp & 0x80) != 0)
+		ret |= CHN_PANNING;
+	if ((smp->flags & 0x02) != 0)
+		ret |= CHN_16BIT;
+	if ((smp->flags & 0x04) != 0)
+		ret |= CHN_STEREO;
+	return ret;
+}
+
+inline BYTE ISoundFile::SampleToMixVibType(const ITSampleStruct * const smp)
+{
+	return autovibit2xm[smp->vit & 7];
+}
+
+inline BYTE ISoundFile::SampleToMixVibDepth(const ITSampleStruct * const smp)
+{
+	return smp->vid & 0x7F;
+}
+
+inline BYTE ISoundFile::SampleToMixVibSweep(const ITSampleStruct * const smp)
+{
+	return (smp->vir + 3) / 4;
+}
+
 void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool UpdVol, bool ResetEnv)
 {
 	bool InstrumentChanged = false;
@@ -2859,7 +2706,7 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 	else
 	{
 		chn->Flags &= ~(CHN_KEYOFF | CHN_NOTEFADE | CHN_VOLENV | CHN_PANENV | CHN_PITCHENV);
-		chn->Flags = (chn->Flags & 0xFFFFFF00) | (smp->flags & 0xFF);
+		chn->Flags = (chn->Flags & 0xFFFFFF00) | SampleToChannelFlags(smp);
 		if (env != NULL)
 		{
 			if ((env->volenv.flags & 1) != 0)
@@ -4281,7 +4128,7 @@ bool ISoundFile::ProcessEffects()
 			if (instr != 0)
 			{
 				ITSampleStruct *smp = chn->Instrument;
-				InstrumentChange(chn, instr, Porta, true);
+				InstrumentChange(chn, instr - 1, Porta, true);
 				chn->NewInst = 0;
 				if (smp != chn->Instrument && note != 0 && note < 0x80)
 					Porta = false;
@@ -4290,7 +4137,7 @@ bool ISoundFile::ProcessEffects()
 			{
 				if (instr == 0 && chn->NewInst != 0 && note < 0x80)
 				{
-					InstrumentChange(chn, chn->NewInst, Porta, false, true);
+					InstrumentChange(chn, chn->NewInst - 1, Porta, false, true);
 					chn->NewInst = 0;
 				}
 				NoteChange(i, note, Porta, true);
@@ -5278,20 +5125,22 @@ skipchn:
 				chn->RealPan = pdelta;
 			}
 			PeriodFrac = 0;
-			if (chn->Instrument != NULL && (chn->Instrument->vid & 0x7F) != 0)
+			if (chn->Instrument != NULL && SampleToMixVibDepth(chn->Instrument) != 0)
 			{
-				ITSampleStruct *smp = chn->Instrument;
 				int val, n, df1, df2;
-				if ((smp->vir + 3) / 4 == 0)
-					chn->AutoVibDepth = (smp->vid & 0x7f) << 8;
+				ITSampleStruct *smp = chn->Instrument;
+				BYTE VibDepth = SampleToMixVibDepth(smp);
+				BYTE VibSweep = SampleToMixVibSweep(smp);
+				if (VibSweep == 0)
+					chn->AutoVibDepth = VibDepth << 8;
 				else
 				{
-					chn->AutoVibDepth += ((smp->vir + 3) / 4) << 3;
-					if ((chn->AutoVibDepth >> 8) > (smp->vid & 0x7f))
-						chn->AutoVibDepth = (smp->vid & 0x7f) << 8;
+					chn->AutoVibDepth += VibSweep << 3;
+					if ((chn->AutoVibDepth >> 8) > VibDepth)
+						chn->AutoVibDepth = VibDepth << 8;
 				}
 				chn->AutoVibPos += smp->vis;
-				switch (autovib[smp->vit & 7])
+				switch (SampleToMixVibType(smp))
 				{
 					case 4:
 					{
@@ -5867,8 +5716,8 @@ UINT ISoundFile::CreateStereoMix(int count)
 	chnsUsed = chnsMixed = 0;
 	for (UINT i = 0; i < MixChannels; i++)
 	{
-		MixInterface *MixFuncTable;
-		Channel *chn = &Chns[ChnMix[i]];
+		const MixInterface *MixFuncTable;
+		Channel * const chn = &Chns[ChnMix[i]];
 		UINT Flags, MasterChn, MixPlugin, rampSamples, addmix;
 		long SmpCount;
 		int samples;
@@ -5927,67 +5776,69 @@ UINT ISoundFile::CreateStereoMix(int count)
 		}
 		Surround = (buff == MixRearBuffer ? true : false);
 		chnsUsed++;
-SampleLooping:
-		rampSamples = samples;
-		if (chn->RampLength > 0)
+		do
 		{
-			if ((long)rampSamples > chn->RampLength)
-				rampSamples = chn->RampLength;
-		}
-		if ((SmpCount = GetSampleCount(chn, rampSamples)) <= 0)
-		{
-			chn->CurrentSample = NULL;
-			chn->Length = chn->Pos = chn->PosLo = 0;
-			chn->RampLength = 0;
-			X86_EndChannelOffs(chn, buff, samples);
-			*OffsR += chn->ROfs;
-			*OffsL += chn->LOfs;
-			chn->ROfs = chn->LOfs = 0;
-			chn->Flags &= ~CHN_PINGPONGFLAG;
-			continue;
-		}
-		if ((chnsMixed >= MaxMixChannels && (SoundSetup & SNDMIX_DIRECTTODISK) == 0) || (chn->RampLength == 0 && (chn->LeftVol | chn->RightVol) == 0))
-		{
-			long delta = (chn->Inc * SmpCount) + chn->PosLo;
-			chn->PosLo = delta & 0xFFFF;
-			chn->Pos += delta >> 16;
-			chn->ROfs = chn->LOfs = 0;
-			buff += SmpCount * 2;
-			addmix = 0;
-		}
-		else
-		{
-			MixInterface MixFunc;
-			int *BuffMax;
-			MixFunc = (chn->RampLength != 0 ? MixFuncTable[Flags | MIXNDX_RAMP] : MixFuncTable[Flags]);
-			BuffMax = buff + (SmpCount * 2);
-			chn->ROfs = -(*(BuffMax - 2));
-			chn->LOfs = -(*(BuffMax - 1));
-			MixFunc(chn, buff, BuffMax);
-			chn->ROfs += *(BuffMax - 2);
-			chn->LOfs += *(BuffMax - 1);
-			buff = BuffMax;
-			addmix = 1;
-		}
-		samples -= SmpCount;
-		if (chn->RampLength != 0)
-		{
-			chn->RampLength -= SmpCount;
-			if (chn->RampLength <= 0)
+			rampSamples = samples;
+			if (chn->RampLength > 0)
 			{
+				if ((long)rampSamples > chn->RampLength)
+					rampSamples = chn->RampLength;
+			}
+			if ((SmpCount = GetSampleCount(chn, rampSamples)) <= 0)
+			{
+				chn->CurrentSample = NULL;
+				chn->Length = chn->Pos = chn->PosLo = 0;
 				chn->RampLength = 0;
-				chn->RightVol = chn->NewRightVol;
-				chn->LeftVol = chn->NewLeftVol;
-				chn->RightRamp = chn->LeftRamp = 0;
-				if ((chn->Flags & CHN_NOTEFADE) != 0 && chn->FadeOutVol == 0)
+				X86_EndChannelOffs(chn, buff, samples);
+				*OffsR += chn->ROfs;
+				*OffsL += chn->LOfs;
+				chn->ROfs = chn->LOfs = 0;
+				chn->Flags &= ~CHN_PINGPONGFLAG;
+				samples = 0;
+				continue;
+			}
+			if ((chnsMixed >= MaxMixChannels && (SoundSetup & SNDMIX_DIRECTTODISK) == 0) || (chn->RampLength == 0 && (chn->LeftVol | chn->RightVol) == 0))
+			{
+				long delta = (chn->Inc * SmpCount) + chn->PosLo;
+				chn->PosLo = delta & 0xFFFF;
+				chn->Pos += delta >> 16;
+				chn->ROfs = chn->LOfs = 0;
+				buff += SmpCount * 2;
+				addmix = 0;
+			}
+			else
+			{
+				MixInterface MixFunc;
+				int *BuffMax;
+				MixFunc = (chn->RampLength != 0 ? MixFuncTable[Flags | MIXNDX_RAMP] : MixFuncTable[Flags]);
+				BuffMax = buff + (SmpCount * 2);
+				chn->ROfs = -(*(BuffMax - 2));
+				chn->LOfs = -(*(BuffMax - 1));
+				MixFunc(chn, buff, BuffMax);
+				chn->ROfs += *(BuffMax - 2);
+				chn->LOfs += *(BuffMax - 1);
+				buff = BuffMax;
+				addmix = 1;
+			}
+			samples -= SmpCount;
+			if (chn->RampLength != 0)
+			{
+				chn->RampLength -= SmpCount;
+				if (chn->RampLength <= 0)
 				{
-					chn->Length = 0;
-					chn->CurrentSample = NULL;
+					chn->RampLength = 0;
+					chn->RightVol = chn->NewRightVol;
+					chn->LeftVol = chn->NewLeftVol;
+					chn->RightRamp = chn->LeftRamp = 0;
+					if ((chn->Flags & CHN_NOTEFADE) != 0 && chn->FadeOutVol == 0)
+					{
+						chn->Length = 0;
+						chn->CurrentSample = NULL;
+					}
 				}
 			}
 		}
-		if (samples > 0)
-			goto SampleLooping;
+		while (samples > 0);
 		chnsMixed += addmix;
 	}
 	if ((SysInfo & SYSMIX_ENABLEMMX) != 0 && (SoundSetup & SNDMIX_ENABLEMMX) != 0)
@@ -6316,14 +6167,15 @@ void ISoundFile::ApplyGlobalVolume(int *SoundBuffer, long TotalSampleCount)
 
 UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 {
-	ConvertProc Cvt = X86_Convert32To8;
+	ConvertProc Cvt = X86_Convert32To16;
 	UINT MaxPlugins = MAX_MIXPLUGINS;
-	UINT SampleSize = 4, Max = BuffLen / 4, Read, Count;
+	UINT SampleSize = 2 * p_IF->p_FI->Channels;
+	UINT Max = BuffLen / SampleSize, Read, Count;
 	UINT SampleCount, Stat = 0;
 
 	while (MaxPlugins > 0 && MixPlugins[MaxPlugins - 1].MixPlugin == NULL)
 		MaxPlugins--;
-	Cvt = X86_Convert32To16;
+	MixStat = 0;
 	if (Max == 0 || Buffer == NULL || Channels == 0)
 		return 0;
 	Read = Max;
@@ -6414,28 +6266,12 @@ MixDone:
 	return Max - Read;
 }
 
-Source::Source(ISoundFile *SndFile)
-{
-	SoundFile = SndFile;
-}
-
-ULONG Source::AudioRead(void *Data, ULONG Size)
-{
-	DWORD SamplesRead = SoundFile->Read((BYTE *)Data, Size);
-	return SamplesRead * 4;
-}
-
-void Source::AudioDone(ULONG BytesWriten)
-{
-	nBytesWriten = BytesWriten;
-}
-
 DWORD FillITBuffer(IT_Intern *p_IF)
 {
 	DWORD Read = 0;
 
-	Read = p_IF->p_Source->AudioRead(p_IF->buffer, 8192);
-	p_IF->p_Source->AudioDone(Read);
+	Read = p_IF->p_SndFile->Read(p_IF->buffer, 8192);
+	Read *= 2 * p_IF->p_FI->Channels;
 	if (Read == 0)
 		return -2;
 	return Read;

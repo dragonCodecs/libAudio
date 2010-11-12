@@ -50,8 +50,6 @@ typedef struct _ENVIRONMENTREVERB
 
 class IPlayConfig;
 class ISoundFile;
-class ISoundSource;
-class Source;
 
 typedef bool (__CDECL__ *PluginCreateProc)(MixPlugin *);
 
@@ -252,7 +250,6 @@ typedef struct _IT_Intern
 	Names PatName;
 	ISoundFile *p_SndFile;
 	MidiConfig *p_MidiCfg;
-	Source *p_Source;
 } IT_Intern;
 
 typedef struct _Channel
@@ -440,6 +437,10 @@ class ISoundFile
 	bool SetResamplingMode(UINT Mode);
 	void SetDspEffects(bool Surround, bool Reverb, bool MegaBass, bool NR, bool EQ);
 	void SetCurrentPos(UINT Pos);
+	inline BYTE SampleToChannelFlags(const ITSampleStruct * const smp);
+	inline BYTE SampleToMixVibType(const ITSampleStruct * const smp);
+	inline BYTE SampleToMixVibDepth(const ITSampleStruct * const smp);
+	inline BYTE SampleToMixVibSweep(const ITSampleStruct * const smp);
 
 public:
 	ISoundFile(IT_Intern *p_ITFile);
@@ -448,17 +449,6 @@ public:
 	void SndMixInitializeTables();
 	void InitializeDSP(bool Reset);
 	void InitializeReverb(bool Reset);
-};
-
-class Source : public ISoundSource
-{
-	ISoundFile *SoundFile;
-	DWORD nBytesWriten;
-
-public:
-	Source(ISoundFile *SndFile);
-	ULONG AudioRead(void *Data, ULONG Size);
-	void AudioDone(ULONG BytesWriten);
 };
 
 #pragma pack(pop)
