@@ -69,7 +69,7 @@
 
 // Begin / End interface
 #define BEGIN_MIX_INTERFACE(func) \
-	void __cdecl func(Channel *chn, int *Buff, int *BuffMax) \
+	void __CDECL__ func (Channel *chn, int *Buff, int *BuffMax) \
 	{ \
 		long Pos;
 
