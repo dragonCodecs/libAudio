@@ -67,6 +67,12 @@ typedef struct FileInfo
 #ifndef DWORD
 #define DWORD uint32_t
 #endif
+#ifndef BOOL
+#define BOOL uint8_t
+#endif
+#ifndef USHORT
+#define USHORT uint16_t
+#endif
 #else
 #include <windows.h>
 #endif

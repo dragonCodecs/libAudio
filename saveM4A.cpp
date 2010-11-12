@@ -1,3 +1,5 @@
+#ifndef __NO_SAVE_M4A__
+
 #include <faac.h>
 #ifdef _WINDOWS
 #include <mp4.h>
@@ -173,3 +175,5 @@ int M4A_CloseFileW(void *p_AACFile)
 	free(p_AF);
 	return ret;
 }
+
+#endif /*__NO_SAVE_M4A__*/
