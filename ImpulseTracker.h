@@ -24,7 +24,7 @@ typedef struct _SNDMIX_REVERB_PROPERTIES
 typedef struct _SNDMIX_RVBPRESET
 {
 	SNDMIX_REVERB_PROPERTIES Preset;
-	char *Name;
+	const char *Name;
 } SNDMIX_RVBPRESET;
 
 typedef struct _ENVIRONMENTREFLECTION
@@ -53,7 +53,7 @@ class ISoundFile;
 class ISoundSource;
 class Source;
 
-typedef bool (__cdecl *PluginCreateProc)(MixPlugin *);
+typedef bool (__CDECL__ *PluginCreateProc)(MixPlugin *);
 
 #define MAX_PATTERN_ROWS		1024
 #define MAX_ORDERS				256
@@ -367,7 +367,7 @@ class ISoundFile
 	void SetupChannelFilter(Channel *chn, bool Reset, int flt_modifier = 256);
 	bool MuteChannel(UINT nChn, bool Mute);
 	bool IsChannelMuted(UINT nChn);
-	void ISoundFile::HandlePatternTransitionEvents();
+	void HandlePatternTransitionEvents();
 	UINT GetPeriodFromNote(UINT note, int FineTune, UINT C4Speed);
 	UINT GetNoteFromPeriod(UINT period);
 	UINT GetFreqFromPeriod(UINT period, UINT C4Speed, int PeriodFrac);
@@ -416,7 +416,7 @@ class ISoundFile
 	bool ReadNote();
 	bool FadeSong(UINT msec);
 	UINT GetResamplingFlag(Channel *chn);
-	static long __fastcall GetSampleCount(Channel *chn, long Samples);
+	static long __FASTCALL__ GetSampleCount(Channel *chn, long Samples);
 	void ProcessReverb(UINT Samples);
 	UINT CreateStereoMix(int count);
 	void StereoMixToFloat(int *Src, float *Out1, float *Out2, UINT Count);

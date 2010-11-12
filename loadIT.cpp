@@ -1,11 +1,11 @@
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <malloc.h>
+#ifdef _WINDOWS
 #include <windows.h>
+#endif
 #include <math.h>
-
-#include <al.h>
-#include <alc.h>
+#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
@@ -165,11 +165,11 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 	memset(ret, 0x00, sizeof(FileInfo));
 
 	fread(p_IF->p_Head, sizeof(ITFileHeader), 1, f_IT);
-	if (strncmp(p_IF->p_Head->id, "IMPM", 4) != 0 ||
+	if (strncmp((const char *)p_IF->p_Head->id, "IMPM", 4) != 0 ||
 		p_IF->p_Head->reserved1 != 0x1004)
 		return NULL;
 
-	ret->Title = p_IF->p_Head->songname;
+	ret->Title = (char *)p_IF->p_Head->songname;
 	ret->BitRate = 44100;
 	ret->BitsPerSample = 16;
 	ret->Channels = 2;
@@ -562,7 +562,7 @@ bool Is_IT(char *FileName)
 	fread(ITSig, 4, 1, f_IT);
 	fclose(f_IT);
 
-	if (strncmp(ITSig, "IMPM", 4) != 0)
+	if (strncmp((const char *)ITSig, "IMPM", 4) != 0)
 		return false;
 
 	return true;
