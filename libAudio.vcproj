@@ -41,11 +41,13 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)Depends\&quot;"
 				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32;__NO_MPC__"
+				StringPooling="true"
 				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="true"
 				DefaultCharIsUnsigned="true"
 				AssemblerOutput="2"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				CompileAs="0"
 			/>
 			<Tool
@@ -63,7 +65,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libVorbis.lib Ogg.lib libVorbisFile.lib libFLAC_Dynamic.lib libfaad_d.lib libfaac_d.lib mp4ff.lib libMP4v2_d.lib libmad.lib libid3tag.lib zdll.lib libmpcdec_d.lib wavpackdll_d.lib libshorten_d.lib OptimFROG.lib OpenAL32.lib advapi32.lib ws2_32.lib User32.lib"
 				Version="0.0.1"
-				LinkIncremental="1"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)Depends\&quot;"
 				ModuleDefinitionFile="$(InputDir)libAudio.def"
 				DelayLoadDLLs="libVorbis.dll; Ogg.dll; libVorbisFile.dll; libFLAC_Dynamic.dll; OpenAL32.dll; advapi32.dll; zlib1.dll; OptimFROG.dll; libMP4v2_d.dll; wavpackdll_d.dll"

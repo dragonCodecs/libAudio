@@ -11,61 +11,6 @@
 #include "libAudio_Common.h"
 #include "ImpulseTracker.h"
 
-/*static const double FrequencyMult[255] = 
-{
-	1, 1, 1,
-	(16.35 / 523.25), (17.32 / 523.25),
-	(18.35 / 523.25), (19.45 / 523.25),
-	(20.60 / 523.25), (21.83 / 523.25),
-	(23.12 / 523.25), (24.50 / 523.25),
-	(25.96 / 523.25), (27.50 / 523.25),
-	(29.14 / 523.25), (30.87 / 523.25),
-	(32.70 / 523.25), (34.65 / 523.25),
-	(36.71 / 523.25), (38.89 / 523.25),
-	(41.20 / 523.25), (43.65 / 523.25),
-	(46.25 / 523.25), (49.00 / 523.25),
-	(51.91 / 523.25), (55.00 / 523.25),
-	(58.27 / 523.25), (61.74 / 523.25),
-	(65.41 / 523.25), (69.30 / 523.25),
-	(73.42 / 523.25), (77.78 / 523.25),
-	(82.41 / 523.25), (87.31 / 523.25),
-	(92.50 / 523.25), (98.00 / 523.25),
-	(103.83 / 523.25), (110.00 / 523.25),
-	(116.54 / 523.25), (123.47 / 523.25),
-	(130.81 / 523.25), (138.59 / 523.25),
-	(146.83 / 523.25), (174.61 / 523.25),
-	(185.00 / 523.25), (196.00 / 523.25),
-	(207.65 / 523.25), (220.00 / 523.25),
-	(233.08 / 523.25), (246.94 / 523.25),
-	(261.63 / 523.25), (277.18 / 523.25),
-	(293.66 / 523.25), (311.13 / 523.25),
-	(329.63 / 523.25), (349.23 / 523.25),
-	(369.99 / 523.25), (392.00 / 523.25),
-	(415.30 / 523.25), (440.00 / 523.25),
-	(466.16 / 523.25), (493.88 / 523.25),
-	1.0,
-	(554.37 / 523.25), (587.33 / 523.25),
-	(622.25 / 523.25), (659.26 / 523.25),
-	(698.46 / 523.25), (739.99 / 523.25),
-	(783.99 / 523.25), (830.61 / 523.25),
-	(880.00 / 523.25), (932.33 / 523.25),
-	(987.77 / 523.25), (1046.50 / 523.25),
-	(1108.73 / 523.25), (1174.66 / 523.25),
-	(1244.51 / 523.25), (1318.51 / 523.25),
-	(1396.91 / 523.25), (1479.98 / 523.25),
-	(1567.98 / 523.25), (1661.22 / 523.25),
-	(1760.00 / 523.25), (1864.66 / 523.25),
-	(1975.53 / 523.25), (2093.00 / 523.25),
-	(2217.46 / 523.25), (2349.32 / 523.25),
-	(2489.02 / 523.25), (2637.02 / 523.25),
-	(2793.83 / 523.25), (2959.96 / 523.25),
-	(3135.96 / 523.25),	(3322.44 / 523.25),
-	(3520.00 / 523.25), (3729.31 / 523.25),
-	(3951.07 / 523.25), (4186.01 / 523.25),
-	(4434.92 / 523.25), (4698.64 / 523.25),
-	(4978.03 / 523.25)
-};*/
-
 #define VOLCMD_VOLUME		1
 #define VOLCMD_PANNING		2
 #define VOLCMD_VOLSLIDEUP	3
@@ -227,14 +172,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 	ret->Title = p_IF->p_Head->songname;
 	ret->BitRate = 44100;
 	ret->BitsPerSample = 16;
-	for (int i = 0; i < 64; i++)
-	{
-		if (p_IF->p_Head->chnpan[i] > 128)
-		{
-			ret->Channels = i;
-			break;
-		}
-	}
+	ret->Channels = 2;
 	p_IF->p_FI = ret;
 
 	if (p_IF->p_Head->msgoffset != 0)
@@ -374,7 +312,21 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 		printf("\n");
 	}
 
-	//LoadMixPlugins(f_IT);
+	// This code works flawlessly on a properly encoded/saved
+	// .IT file. MPT Compatability files from the current release
+	// do not follow the standard properly, so this messes up.
+	for (int i = 0; i < 64; i++)
+	{
+		if (p_IF->p_Head->chnpan[i] > 128)
+		{
+			p_IF->nChannels = i;
+			break;
+		}
+	}
+	if (p_IF->nChannels == 0)
+		p_IF->nChannels = 64;
+	if (p_IF->nChannels < 4)
+		p_IF->nChannels = 4;
 
 	if (p_IF->p_Head->patnum != 0)
 	{
@@ -393,16 +345,16 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 				continue;
 
 			fseek(f_IT, p_IF->p_PaternOffsets[i], SEEK_SET);
-			fread(&p_IF->p_Paterns[i].PatLen, 2, 1, f_IT);
-			fread(&p_IF->p_Paterns[i].nRows, 2, 1, f_IT);
-			Rows = p_IF->p_Paterns[i].nRows;
-			Len = p_IF->p_Paterns[i].PatLen;
+			fread(&Len, 2, 1, f_IT);
+			p_IF->p_Paterns[i].PatLen = Len;
+			fread(&Rows, 2, 1, f_IT);
+			p_IF->p_Paterns[i].nRows = Rows;
 			fseek(f_IT, 4, SEEK_CUR);
 
-			p_IF->p_Paterns[i].p_Commands = (Command *)malloc(sizeof(Command) * ret->Channels * p_IF->p_Paterns[i].nRows);
+			p_IF->p_Paterns[i].p_Commands = (Command *)malloc(sizeof(Command) * p_IF->nChannels * p_IF->p_Paterns[i].nRows);
 			memset(ChanMask, 0x00, sizeof(ChanMask));
 			memset(LastVal, 0x00, sizeof(LastVal));
-			memset(p_IF->p_Paterns[i].p_Commands, 0x00, sizeof(Command) * ret->Channels * p_IF->p_Paterns[i].nRows);
+			memset(p_IF->p_Paterns[i].p_Commands, 0x00, sizeof(Command) * p_IF->nChannels * p_IF->p_Paterns[i].nRows);
 			Commands = p_IF->p_Paterns[i].p_Commands;
 
 			while (nRows < Rows)
@@ -425,7 +377,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 				if (nChan != 0)
 					nChan = (nChan - 1) & 0x3F;
 				// Set up the Position number
-				nPatPos = (nRows * ret->Channels) + nChan;
+				nPatPos = (nRows * p_IF->nChannels) + nChan;
 				// Check for ChanMask
 				if ((b & 0x80) != 0)
 				{
@@ -435,23 +387,19 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 					j++;
 				}
 				// Check for a repeated note
-				if ((ChanMask[nChan] & 0x10) != 0 && nChan < ret->Channels)
-				{
+				if ((ChanMask[nChan] & 0x10) != 0 && nChan < p_IF->nChannels)
 					Commands[nPatPos].note = LastVal[nChan].note;
-				}
 				// Check for a repeated instrument
-				if ((ChanMask[nChan] & 0x20) != 0 && nChan < ret->Channels)
-				{
+				if ((ChanMask[nChan] & 0x20) != 0 && nChan < p_IF->nChannels)
 					Commands[nPatPos].instr = LastVal[nChan].instr;
-				}
 				// Check for repeated volume command
-				if ((ChanMask[nChan] & 0x40) != 0 && nChan < ret->Channels)
+				if ((ChanMask[nChan] & 0x40) != 0 && nChan < p_IF->nChannels)
 				{
 					Commands[nPatPos].vol = LastVal[nChan].vol;
 					Commands[nPatPos].volcmd = LastVal[nChan].volcmd;
 				}
 				// Check for repeated parameter command
-				if ((ChanMask[nChan] & 0x80) != 0 && nChan < ret->Channels)
+				if ((ChanMask[nChan] & 0x80) != 0 && nChan < p_IF->nChannels)
 				{
 					Commands[nPatPos].command = LastVal[nChan].command;
 					Commands[nPatPos].param = LastVal[nChan].param;
@@ -465,7 +413,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 					fread(&note, 1, 1, f_IT);
 					j++;
 
-					if (nChan < ret->Channels)
+					if (nChan < p_IF->nChannels)
 					{
 						if (note < 0x80)
 							note++;
@@ -482,7 +430,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 					fread(&instr, 1, 1, f_IT);
 					j++;
 
-					if (nChan < ret->Channels)
+					if (nChan < p_IF->nChannels)
 					{
 						Commands[nPatPos].instr = instr;
 						LastVal[nChan].instr = instr;
@@ -497,7 +445,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 					fread(&vol, 1, 1, f_IT);
 					j++;
 
-					if (nChan < ret->Channels)
+					if (nChan < p_IF->nChannels)
 					{
 						if (vol <= 64)
 						{

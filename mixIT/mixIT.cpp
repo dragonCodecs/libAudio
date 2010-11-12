@@ -1278,18 +1278,7 @@ UINT ISoundFile::ProLogicDelay = 20;
 UINT ISoundFile::ReverbType = 0;
 DWORD ISoundFile::Quality = QUALITY_MEGABASS | QUALITY_SURROUND;
 
-/*void CSoundFile::BuildDefaultInstrument()
-{
-	memset(&defaultInstrument, 0, sizeof(ITInstrument));
-	defaultInstrument.nResampling = SRCMODE_DEFAULT;
-	defaultInstrument.nFilterMode = FLTMODE_UNCHANGED;
-	defaultInstrument.nPPC = 5*12;
-	defaultInstrument.nGlobalVol=128;
-	defaultInstrument.nPan = 0x20 << 2;
-	defaultInstrument.nIFC = 0xFF;
-}*/
-
-void PerformChannelDump(Channel Chns[256])
+/*void PerformChannelDump(Channel Chns[256])
 {
 	FILE *fOut = fopen("ITM_Channels.log", "wb");
 	fwrite("Dump of channels:", 17, 1, fOut);
@@ -1325,7 +1314,7 @@ void PerformChannelDump(Channel Chns[256])
 			Chns[i].PanEnvPosition, Chns[i].PitchEnvPosition);
 		fprintf(fOut, "MasterChn = %d\n", Chns[i].MasterChn);
 		fprintf(fOut, "GlobalVol = %d, InsVol = %d\n", Chns[i].GlobalVol, Chns[i].InsVol);
-		fprintf(fOut, "FineTune = %d, Transpose = %d\n", Chns[i].FineTune, Chns[i].Transpose);
+		fprintf(fOut, "FineTune = %d\n"/*, Transpose = %d\n"*//*, Chns[i].FineTune);//, Chns[i].Transpose);
 		fprintf(fOut, "PortamentoSlide = %d, AutoVibDepth = %d\n", Chns[i].PortamentoSlide, Chns[i].AutoVibDepth);
 		fprintf(fOut, "AutoVibPos = %d, VibratoPos = %d, TremoloPos = %d, PanbrelloPos = %d\n", Chns[i].AutoVibPos,
 			Chns[i].VibratoPos, Chns[i].TremoloPos, Chns[i].PanbrelloPos);
@@ -1357,9 +1346,9 @@ void PerformChannelDump(Channel Chns[256])
 		fprintf(fOut, "PlugInitialParamValue = %f\n", Chns[i].PlugInitialParamValue);
 	}
 	fclose(fOut);
-}
+}*/
 
-void PerformMixPlugsDump(MixPlugin MixPlugins[MAX_MIXPLUGINS])
+/*void PerformMixPlugsDump(MixPlugin MixPlugins[MAX_MIXPLUGINS])
 {
 	FILE *fOut = fopen("ITM_MixPlugins.log", "wb");
 	fwrite("Dump of MixPlugins:\n", 20, 1, fOut);
@@ -1379,9 +1368,9 @@ void PerformMixPlugsDump(MixPlugin MixPlugins[MAX_MIXPLUGINS])
 		fprintf(fOut, "defaultProgram = %d\n", MixPlugins[i].defaultProgram);
 	}
 	fclose(fOut);
-}
+}*/
 
-void ISoundFile::PerformSoundFileDump()
+/*void ISoundFile::PerformSoundFileDump()
 {
 	FILE *fOut = fopen("ITM_ISoundFile.log", "wb");
 	fwrite("Dump of ISoundFile:\n", 20, 1, fOut);
@@ -1436,9 +1425,9 @@ void ISoundFile::PerformSoundFileDump()
 	fprintf(fOut, "HighResRampingGlobalVolume = %d\n", this->HighResRampingGlobalVolume);
 	fprintf(fOut, "MixChannels = %d, MixStat = 0x%08X, FreqFactor = %d\n", this->MixChannels, this->MixStat, this->FreqFactor);
 	fclose(fOut);
-}
+}*/
 
-void PerformInstrumentDump(ITSampleStruct *Ins, IT_Intern *p_IF)
+/*void PerformInstrumentDump(ITSampleStruct *Ins, IT_Intern *p_IF)
 {
 	FILE *fOut = fopen("ITM_Instruments.log", "wb");
 	fwrite("Dump of Instruments:\n", 20, 1, fOut);
@@ -1456,9 +1445,9 @@ void PerformInstrumentDump(ITSampleStruct *Ins, IT_Intern *p_IF)
 		fprintf(fOut, "vis = %d, vid = %d, vir = %d, vit = %d\n", Ins[i].vis, Ins[i].vid, Ins[i].vir, Ins[i].vit);
 	}
 	fclose(fOut);
-}
+}*/
 
-void PerformHeadersDump(ITInstrument *Headers[MAX_INSTRUMENTS])
+/*void PerformHeadersDump(ITInstrument *Headers[MAX_INSTRUMENTS])
 {
 	FILE *fOut = fopen("ITM_Headers.log", "wb");
 	fwrite("Dump of Headers:\n", 17, 1, fOut);
@@ -1466,14 +1455,12 @@ void PerformHeadersDump(ITInstrument *Headers[MAX_INSTRUMENTS])
 	{
 		fprintf(fOut, "\n\tHeader %d\n", i);
 		if (Headers[i] != NULL)
-		{
 			fprintf(fOut, "id = %s, filename = %s\n", Headers[i]->id, Headers[i]->filename);
-		}
 		else
 			fprintf(fOut, "Unused\n");
 	}
 	fclose(fOut);
-}
+}*/
 
 void ISoundFile::SetCurrentPos(UINT Pos)
 {
@@ -1589,7 +1576,7 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 	BufferCount = 0;
 	MusicSpeed = p_IF->p_Head->speed;
 	MusicTempo = p_IF->p_Head->tempo;
-	Channels = p_IF->p_FI->Channels;
+	Channels = p_IF->nChannels;
 	Instruments = p_IF->p_Head->smpnum;
 	SongFlags = 0;
 	if (p_IF->p_Head->flags & 0x08) SongFlags |= SONG_LINEARSLIDES;
@@ -1625,7 +1612,7 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 	PatternDelay = 0;
 	FrameDelay = 0;
 	NextRow = Row = 0;
-	TotalSampleCount = 0;
+	TotalSampleCount = TotalCount = 0;
 	Pattern = CurrentPattern = NextPattern = 0;
 	RestartPos = 0;
 	SongPreAmp = 100;
@@ -1664,7 +1651,7 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 		Chns[i].Volume = 256;
 		Chns[i].CutOff = 0x7F;
 	}
-	for (UINT i = 0; i < MAX_INSTRUMENTS; i++)
+	for (UINT i = 0; i < p_IF->p_Head->smpnum; i++)
 	{
 		if (p_IF->p_Samples[i].PCM != NULL)
 		{
@@ -2787,7 +2774,7 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 	ITSampleStruct *smp;
 	UINT note;
 
-	if (instr >= Instruments)
+	if (instr >= MAX_INSTRUMENTS)
 		return;
 	env = Headers[instr];
 	smp = &Ins[instr];
@@ -2902,7 +2889,7 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 	chn->C4Speed = smp->C5Speed;
 	chn->Sample = p_IF->p_Samples[(smp - p_IF->p_Samp)].PCM;
 	//chn->Transpose = smp->
-	//chn->FineTune = smp->
+	chn->FineTune = 0;
 	if ((chn->Flags & CHN_SUSTAINLOOP) != 0)
 	{
 		chn->LoopStart = smp->susloopbegin;
@@ -2974,7 +2961,7 @@ int ISoundFile::PatternLoop(Channel *chn, UINT param)
 
 void ISoundFile::NoteChange(UINT nChn, int note, bool Porta, bool ResetEnv, bool Manual)
 {
-	Channel *chn = &Chns[nChn];
+	Channel * const chn = &Chns[nChn];
 	ITSampleStruct *smp = chn->Instrument;
 	ITInstrument *env = chn->Header;
 	UINT period;
@@ -4286,7 +4273,7 @@ bool ISoundFile::ProcessEffects()
 				}
 				else if (instr < MAX_SAMPLES) chn->Volume = Ins[instr].vol << 2;
 			}
-			if (instr >= Instruments) instr = 0;
+			if (instr >= MAX_INSTRUMENTS) instr = 0;
 			if (note >= 0xFE) instr = 0;
 			if (note != 0 && note <= 128)
 				chn->NewNote = note;
@@ -4307,7 +4294,7 @@ bool ISoundFile::ProcessEffects()
 					InstrumentChange(chn, chn->NewInst, Porta, false, true);
 					chn->NewInst = 0;
 				}
-				NoteChange(Channels, note, Porta, true);
+				NoteChange(i, note, Porta, true);
 			}
 			if (volcmd == VOLCMD_VOLUME)
 			{
@@ -4839,12 +4826,6 @@ bool ISoundFile::ProcessRow()
 				SongFlags |= SONG_FIRSTTICK;
 		}
 	}
-	PerformChannelDump(Chns);
-	PerformSoundFileDump();
-	PerformMixPlugsDump(MixPlugins);
-	PerformHeadersDump(Headers);
-	PerformInstrumentDump(Ins, p_IF);
-	//exit(0);
 	return ProcessEffects();
 }
 
@@ -5582,8 +5563,7 @@ skipchn:
 			}
 			chn->RampRightVol = chn->RightVol << VOLUMERAMPPRECISION;
 			chn->RampLeftVol = chn->LeftVol << VOLUMERAMPPRECISION;
-			ChnMix[MixChannels] = i;
-			MixChannels++;
+			ChnMix[MixChannels++] = i;
 		}
 		else
 			chn->LeftVol = chn->RightVol = chn->Length = 0;
@@ -5938,7 +5918,7 @@ UINT ISoundFile::CreateStereoMix(int count)
 				}
 			}
 		}
-		if (buff = MixReverbBuffer)
+		if (buff == MixReverbBuffer)
 		{
 			if (ReverbSend == 0)
 				X86_StereoFill(MixReverbBuffer, count, &RvbROffsVol, &RvbLOffsVol);
@@ -5982,8 +5962,8 @@ SampleLooping:
 			int *BuffMax;
 			MixFunc = (chn->RampLength != 0 ? MixFuncTable[Flags | MIXNDX_RAMP] : MixFuncTable[Flags]);
 			BuffMax = buff + (SmpCount * 2);
-			chn->ROfs = - *(BuffMax - 2);
-			chn->LOfs = - *(BuffMax - 1);
+			chn->ROfs = -(*(BuffMax - 2));
+			chn->LOfs = -(*(BuffMax - 1));
 			MixFunc(chn, buff, BuffMax);
 			chn->ROfs += *(BuffMax - 2);
 			chn->LOfs += *(BuffMax - 1);
@@ -6352,7 +6332,7 @@ UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 		goto MixDone;
 	while (Read > 0)
 	{
-		UINT TotalSampleCount;
+		UINT _TotalSampleCount;
 		if (BufferCount == 0)
 		{
 			if ((SongFlags & SONG_FADINGSONG) != 0)
@@ -6386,7 +6366,6 @@ UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 		SampleCount = Count;
 		ReverbSend = 0;
 		X86_StereoFill(MixSoundBuffer, SampleCount, &DryROffsVol, &DryLOffsVol);
-		assert(Count <= MIXBUFFERSIZE);
 		if (OutChannels >= 2)
 		{
 			SampleCount *= 2;
@@ -6407,20 +6386,20 @@ UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 		}
 		if ((SoundSetup & SNDMIX_AGC) != 0)
 			ProcessAGC(SampleCount);
-		TotalSampleCount = SampleCount;
+		_TotalSampleCount = SampleCount;
 		if (OutChannels > 2)
 		{
 			X86_InterleaveFrontRear(MixSoundBuffer, MixRearBuffer, SampleCount);
-			TotalSampleCount *= 2;
+			_TotalSampleCount *= 2;
 		}
 		if (BitsPerSample <= 16)
 		{
 			if ((SoundSetup & SNDMIX_HQRESAMPLER) != 0 && (SoundSetup & SNDMIX_DIRECTTODISK) != 0)
-				X86_Dither(MixSoundBuffer, TotalSampleCount, BitsPerSample);
+				X86_Dither(MixSoundBuffer, _TotalSampleCount, BitsPerSample);
 		}
 		if (Config->Get_GlobalVolumeAppliesToMaster() == true)
-			ApplyGlobalVolume(MixSoundBuffer, TotalSampleCount);
-		Buffer += Cvt(Buffer, MixSoundBuffer, TotalSampleCount);
+			ApplyGlobalVolume(MixSoundBuffer, _TotalSampleCount);
+		Buffer += Cvt(Buffer, MixSoundBuffer, _TotalSampleCount);
 		Read -= Count;
 		BufferCount -= Count;
 		this->TotalSampleCount += Count;

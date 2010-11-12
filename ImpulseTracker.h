@@ -69,6 +69,8 @@ typedef bool (__cdecl *PluginCreateProc)(MixPlugin *);
 #define MAX_PLUGPRESETS			1000
 #define MAX_GLOBAL_VOLUME		256
 
+#pragma pack(push, 1)
+
 // Impulse File Header
 typedef struct _ITFileHeader
 {
@@ -235,6 +237,7 @@ typedef struct _IT_Intern
 	FileInfo *p_FI;
 	Playback *p_Playback;
 	BYTE buffer[8192];
+	int nChannels;
 	ITFileHeader *p_Head;
 	UINT *p_InstOffsets;
 	ITOldInstrument *p_OldIns;
@@ -282,7 +285,7 @@ typedef struct _Channel
 	DWORD VolEnvPosition, PanEnvPosition, PitchEnvPosition;
 	DWORD MasterChn;
 	long GlobalVol, InsVol;
-	long FineTune, Transpose;
+	long FineTune/*, Transpose*/;
 	long PortamentoSlide, AutoVibDepth;
 	UINT AutoVibPos, VibratoPos, TremoloPos, PanbrelloPos;
 	long VolSwing, PanSwing;
@@ -344,7 +347,6 @@ class ISoundFile
 	long MinPeriod, MaxPeriod, RepeatCount;
 	ITSampleStruct *Ins;
 	ITInstrument *Headers[MAX_INSTRUMENTS];
-	//ITInstrument defaultInstrument;
 	MixPlugin MixPlugins[MAX_MIXPLUGINS];
 	UINT GlobalVolume, OldGlbVolSlide;
 	MidiConfig MidiCfg;
@@ -438,7 +440,6 @@ class ISoundFile
 	bool SetResamplingMode(UINT Mode);
 	void SetDspEffects(bool Surround, bool Reverb, bool MegaBass, bool NR, bool EQ);
 	void SetCurrentPos(UINT Pos);
-	void PerformSoundFileDump();
 
 public:
 	ISoundFile(IT_Intern *p_ITFile);
@@ -459,5 +460,7 @@ public:
 	ULONG AudioRead(void *Data, ULONG Size);
 	void AudioDone(ULONG BytesWriten);
 };
+
+#pragma pack(pop)
 
 DWORD FillITBuffer(IT_Intern *p_IF);
