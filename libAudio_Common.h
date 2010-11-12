@@ -8,10 +8,12 @@
 #include <al.h>
 #include <alc.h>
 #define __CDECL__ __cdecl
+#define __FASTCALL__ __fastcall
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
 #define __CDECL__
+#define __FASTCALL__ inline
 #endif
 
 extern int strncasecmp(const char *s1, const char *s2, unsigned int n);
