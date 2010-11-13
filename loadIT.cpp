@@ -152,6 +152,42 @@ void PrintPaterns(Patern *p_Paterns, UINT nPaterns, FileInfo *p_FI)
 	}
 }
 
+void IT_ReadSample(ITSampleStruct *smp, SampleData *data, FILE *f_IT)
+{
+	if ((smp->flags & 0x08) == 0) // Not a compressed sample?
+	{
+		smp->length *= (data->BPS / 8);
+		data->length = smp->length;// * (data->BPS / 8);
+		data->PCM = (BYTE *)malloc(data->length * 2);
+		memset(data->PCM, 0x00, data->length * 2);
+		fread(data->PCM, data->length, 1, f_IT);
+		if ((smp->cvt & 0x01) == 0) // Unsigned?
+		{
+			UINT i;
+			if (data->BPS == 8)
+			{
+				for (i = 0; i < smp->length; i++)
+					data->PCM[i] = (BYTE)(((short)(data->PCM[i])) - 0x80);
+			}
+			else
+			{
+				for (i = 0; i < smp->length; i++)
+				{
+					short val = ((short *)data->PCM)[i];
+					((short *)data->PCM)[i] = (short)(((int)val) - 0x8000);
+				}
+			}
+		}
+	}
+	else // Compressed in some way
+	{
+	}
+}
+
+#ifdef _WINDOWS
+#define snprintf _snprintf
+#endif
+
 FileInfo *IT_GetFileInfo(void *p_ITFile)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
@@ -296,15 +332,17 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 			memset(&p_IF->p_Samp[i], 0x00, sizeof(ITSampleStruct));
 			fseek(f_IT, p_IF->p_SampOffsets[i], SEEK_SET);
 			fread(&p_IF->p_Samp[i], sizeof(ITSampleStruct), 1, f_IT);
+			if (p_IF->p_Samp[i].C5Speed == 0)
+				p_IF->p_Samp[i].C5Speed = 8363;
+			else if (p_IF->p_Samp[i].C5Speed < 256)
+				p_IF->p_Samp[i].C5Speed = 256;
+			else
+				p_IF->p_Samp[i].C5Speed /= 2;
 
 			// And now the data
 			fseek(f_IT, p_IF->p_Samp[i].samplepointer, SEEK_SET);
 			p_IF->p_Samples[i].BPS = ((p_IF->p_Samp[i].flags & 0x02) != 0 ? 16 : 8);
-			p_IF->p_Samples[i].BitRate = p_IF->p_Samp[i].C5Speed;
-			p_IF->p_Samples[i].length = p_IF->p_Samp[i].length * (p_IF->p_Samples[i].BPS / 8);
-			p_IF->p_Samples[i].PCM = (BYTE *)malloc(p_IF->p_Samples[i].length);
-			if ((p_IF->p_Samp[i].flags & 0x08) == 0)
-				fread(p_IF->p_Samples[i].PCM, p_IF->p_Samples[i].length, 1, f_IT);
+			IT_ReadSample(&p_IF->p_Samp[i], &p_IF->p_Samples[i], f_IT);
 
 			printf("%02i: ", i);
 			printf("%s\n", p_IF->p_Samp[i].name);
@@ -537,9 +575,9 @@ int IT_CloseFileR(void *p_ITFile)
 long IT_FillBuffer(void *p_ITFile, BYTE *OutBuffer, int OutBufferLen)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	DWORD Read;
-
-	Read = FillITBuffer(p_IF);
+	DWORD Read = FillITBuffer(p_IF);
+	if (Read != 0)
+		memcpy(OutBuffer, p_IF->buffer, 8192);
 	return Read;
 }
 

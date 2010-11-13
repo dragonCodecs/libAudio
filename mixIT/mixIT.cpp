@@ -180,7 +180,6 @@
 #define SNDMIX_FIRFILTERSRCMODE	0x000800
 #define SNDMIX_HQRESAMPLER		(SNDMIX_SPLINESRCMODE|SNDMIX_POLYPHASESRCMODE|SNDMIX_FIRFILTERSRCMODE)
 #define SNDMIX_ULTRAHQSRCMODE	(SNDMIX_POLYPHASESRCMODE|SNDMIX_FIRFILTERSRCMODE)
-#define SNDMIX_DIRECTTODISK		0x010000
 #define SNDMIX_ENABLEMMX		0x020000
 #define SNDMIX_NOBACKWARDJUMPS	0x040000
 #define SNDMIX_MAXDEFAULTPAN	0x080000
@@ -1267,13 +1266,12 @@ UINT ISoundFile::VolumeRampSamples = 42;
 UINT ISoundFile::AGC = AGC_UNITY;
 UINT ISoundFile::StereoSeparation = 128;
 UINT ISoundFile::ReverbDepth = 8;
-PluginCreateProc ISoundFile::MixPluginCreateProc = NULL;
 UINT ISoundFile::XBassDepth = DEFAULT_XBASS_DEPTH;
 UINT ISoundFile::XBassRange = DEFAULT_XBASS_RANGE;
 UINT ISoundFile::ProLogicDepth = 12;
 UINT ISoundFile::ProLogicDelay = 20;
 UINT ISoundFile::ReverbType = 0;
-DWORD ISoundFile::Quality = QUALITY_MEGABASS;// | QUALITY_SURROUND;
+DWORD ISoundFile::Quality = 0;//QUALITY_MEGABASS;// | QUALITY_SURROUND;
 
 void ISoundFile::SetCurrentPos(UINT Pos)
 {
@@ -1387,7 +1385,11 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 	p_IF = p_ITFile;
 	BufferCount = 0;
 	MusicSpeed = p_IF->p_Head->speed;
+	if (MusicSpeed == 0)
+		MusicSpeed = 6;
 	MusicTempo = p_IF->p_Head->tempo;
+	if (MusicTempo < 32)
+		MusicTempo = 125;
 	Channels = p_IF->nChannels;
 	Instruments = p_IF->p_Head->smpnum;
 	OutChannels = p_IF->p_FI->Channels;
@@ -1399,10 +1401,10 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 	if (p_IF->p_Head->flags & 0x80) SongFlags |= SONG_EMBEDMIDICFG;
 	if (p_IF->p_Head->flags & 0x1000) SongFlags |= SONG_EXFILTERRANGE;
 	MixChannels = 0;
-	FreqFactor = TempoFactor = 128;
+	FreqFactor = 128;
 	MasterVolume = 128;
-	MinPeriod = 16;
-	MaxPeriod = 32767;
+	MinPeriod = 8;
+	MaxPeriod = 0xF000;
 	RepeatCount = 0;
 	SeqOverride = 0;
 	PatternTransitionOccurred = false;
@@ -1415,8 +1417,6 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 	memset(Headers, 0x00, sizeof(Headers));
 	Order = p_IF->p_PaternOrder;
 	Patterns = p_IF->p_Paterns;
-	memset(MixPlugins, 0x00, sizeof(MixPlugins));
-	memset(ChannelMuteTogglePending, 0x00, sizeof(ChannelMuteTogglePending));
 	for (int i = 0; i < p_IF->p_Head->insnum; i++)
 		Headers[i] = &p_IF->p_Ins[i];
 	PlugMixMode = plugmix_mode_117RC2;
@@ -1510,25 +1510,13 @@ ISoundFile::ISoundFile(IT_Intern *p_ITFile)
 		}
 		default:
 		{
-			SamplesPerTick = (44100 * 5 * TempoFactor) / (MusicTempo << 8);
+			/*44100 * 5 * 128 = 28224000*/
+			SamplesPerTick = (28224000) / (MusicTempo << 8);
 		}
 	}
 	if (RestartPos >= MAX_ORDERS || Order[RestartPos] >= MAX_PATTERNS)
 		RestartPos = 0;
-	if (MixPluginCreateProc != NULL)
-	{
-		for (UINT Plug = 0; Plug < MAX_MIXPLUGINS; Plug++)
-		{
-			if (MixPlugins[Plug].Info.PluginID1 != 0 || MixPlugins[Plug].Info.PluginID2 != 0)
-			{
-				MixPluginCreateProc(&MixPlugins[Plug]);
-				if (MixPlugins[Plug].MixPlugin != NULL)
-					MixPlugins[Plug].MixPlugin->RestoreAllParameters(MixPlugins[Plug].defaultProgram);
-			}
-		}
-	}
 	Config->SetPluginMixLevels(PlugMixMode);
-	RecalculateGainForAllPlugs();
 	InitPlayer(true);
 	SetCurrentPos(0);
 }
@@ -1663,20 +1651,6 @@ DWORD ISoundFile::InitSysInfo()
 	OSVERSIONINFO vi;
 	DWORD d = 0, ProcSupport;
 
-#ifdef _DEBUG
-	if ((sizeof(Channel) & 0x1F) != 0)
-	{
-		char s[64];
-		sprintf(s, "Channel not aligned: sizeof(Channel) = %d", sizeof(Channel));
-		//MessageBox(NULL, s, "libAudio", MB_OK | MB_ICONEXCLAMATION);
-	}
-	if ((((DWORD)(void *)FastSinc) & 7) != 0)
-	{
-		char s[64];
-		sprintf(s, "FastSinc is not aligned (%08X)!", FastSinc);
-		MessageBox(NULL, s, "libAudio", MB_OK | MB_ICONEXCLAMATION);
-	}
-#endif
 	memset(&vi, 0x00, sizeof(vi));
 	vi.dwOSVersionInfoSize = sizeof(vi);
 	GetVersionEx(&vi);
@@ -2085,19 +2059,6 @@ void ISoundFile::InitializeDSP(bool Reset)
 		XBassFlt_X1 = XBassFlt_Y1 = DCRFlt_X1l = DCRFlt_X1r = DCRFlt_Y1l = DCRFlt_Y1r = 0;
 }
 
-void ISoundFile::RecalculateGainForAllPlugs()
-{
-	for (UINT Plug = 0; Plug < MAX_MIXPLUGINS; Plug++)
-	{
-		IMixPlugin *Plugin;
-		if (MixPlugins[Plug].MixPlugin == NULL)
-			continue;
-		Plugin = MixPlugins[Plug].MixPlugin;
-		if (MixPlugins[Plug].MixState != NULL)
-			Plugin->RecalculateGain();
-	}
-}
-
 DWORD ISoundFile::CutOffToFrequency(UINT CutOff, int flt_modifier)
 {
 	float fc;
@@ -2197,7 +2158,6 @@ void ISoundFile::HandlePatternTransitionEvents()
 {
 	if (PatternTransitionOccurred == true)
 	{
-		UINT i;
 		if (SeqOverride > 0 && SeqOverride <= MAX_ORDERS)
 		{
 			if ((SongFlags & SONG_PATTERNLOOP) != 0)
@@ -2205,16 +2165,6 @@ void ISoundFile::HandlePatternTransitionEvents()
 			NextPattern = SeqOverride - 1;
 			SeqOverride = 0;
 		}
-
-		for (i = 0; i < Channels; i++)
-		{
-			if (ChannelMuteTogglePending[i] == true)
-			{
-				MuteChannel(i, IsChannelMuted(i));
-				ChannelMuteTogglePending[i] = false;
-			}
-		}
-
 		PatternTransitionOccurred = false;
 	}
 }
@@ -2225,14 +2175,12 @@ UINT ISoundFile::GetPeriodFromNote(UINT note, int FineTune, UINT C4Speed)
 		return 0;
 	note--;
 	if ((SongFlags & SONG_LINEARSLIDES) != 0)
-	{
 		return (FreqTable[note % 12] << 5) >> (note / 12);
-	}
 	else
 	{
 		if (C4Speed == 0)
 			C4Speed = 8363;
-		return muldiv(8363, FreqTable[note % 12] << 5, C4Speed << (note / 12));
+		return muldiv(8363, (FreqTable[note % 12] << 5), C4Speed << (note / 12));
 	}
 }
 
@@ -2257,74 +2205,10 @@ UINT ISoundFile::GetFreqFromPeriod(UINT period, UINT C4Speed, int PeriodFrac)
 	{
 		if (C4Speed == 0)
 			C4Speed = 8363;
-		return muldiv(C4Speed, 1712 << 8, (period << 8) + PeriodFrac);
+		return muldiv(C4Speed, 1712L << 8, (period << 8) + PeriodFrac);
 	}
 	else
-		return muldiv(8363, 1712 << 8, (period << 8) + PeriodFrac);
-}
-
-UINT ISoundFile::GetChannelPlugin(UINT nChn, bool respectMutes)
-{
-	Channel *chn = &Chns[nChn];
-	UINT Plugin;
-
-	if (nChn >= Channels && chn != NULL && chn->MasterChn > 0)
-		nChn = chn->MasterChn - 1;
-	if ((respectMutes == true && (chn->Flags && CHN_MUTE) != 0) || (chn->Flags & CHN_NOFX) != 0)
-		Plugin = 0;
-	else
-		Plugin = ChnSettings[nChn].MixPlugin;
-	return Plugin;
-}
-
-UINT ISoundFile::GetActiveInstrumentPlugin(UINT nChn, bool respectMutes)
-{
-	Channel *chn = &Chns[nChn];
-	UINT Plugin = 0;
-	if (chn != NULL && chn->Header != NULL && chn->Instrument != NULL)
-	{
-		if (respectMutes == true && (chn->Instrument->flags & ENV_MUTE) != 0)
-			Plugin = 0;
-		else
-			Plugin = chn->Header->mch - 128;
-	}
-	return Plugin;
-}
-
-UINT ISoundFile::GetBestPlugin(UINT nChn, UINT priority, bool respectMutes)
-{
-	UINT Plugin = 0;
-	if (nChn > Channels)
-		return 0;
-
-	switch (priority)
-	{
-		case CHANNEL_ONLY:
-		{
-			Plugin = GetChannelPlugin(nChn, respectMutes);
-			break;
-		}
-		case INSTRUMENT_ONLY:
-		{
-			Plugin = GetActiveInstrumentPlugin(nChn, respectMutes);
-			break;
-		}
-		case PRIORITISE_INSTRUMENT:
-		{
-			Plugin = GetActiveInstrumentPlugin(nChn, respectMutes);
-			if (Plugin == 0 || Plugin > MAX_MIXPLUGINS)
-				Plugin = GetChannelPlugin(nChn, respectMutes);
-			break;
-		}
-		case PRIORITISE_CHANNEL:
-		{
-			Plugin = GetChannelPlugin(nChn, respectMutes);
-			if (Plugin == 0 || Plugin > MAX_MIXPLUGINS)
-				Plugin = GetActiveInstrumentPlugin(nChn, respectMutes);
-			break;
-		}
-	}
-	return Plugin;
+		return muldiv(8363, 1712L << 8, (period << 8) + PeriodFrac);
 }
 
 void ISoundFile::KeyOff(UINT nChn)
@@ -2406,8 +2290,6 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 	Channel *chn = &Chns[nChn], *p;
 	ITInstrument *Header;
 	BYTE *Sample;
-	bool applyDNAtoPlug, applyNNAtoPlug;
-	IMixPlugin *Plugin;
 
 	if (note > 0x80 || note < 1)
 		return;
@@ -2439,7 +2321,6 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 	{
 		if (i >= Channels || p == chn)
 		{
-			applyDNAtoPlug = false;
 			if ((p->MasterChn == nChn + 1 || p == chn) && p->Header != NULL)
 			{
 				bool OK = false;
@@ -2449,8 +2330,6 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 					{
 						if (note != 0 && p->Note == note && Header == p->Header)
 							OK = true;
-						if ((Header->mch - 128) != 0)
-							applyDNAtoPlug = true;
 						break;
 					}
 					case DCT_SAMPLE:
@@ -2463,33 +2342,17 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 					{
 						if (Header == p->Header)
 							OK = true;
-						if ((Header->mch - 128) != 0)
-							applyDNAtoPlug = true;
 						break;
 					}
 					case DCT_PLUGIN:
 					{
 						if ((Header->mch - 128) != 0 && Header->mch == p->Header->mch)
-						{
-							applyDNAtoPlug = true;
 							OK = true;
-						}
 						break;
 					}
 				}
 				if (OK == true)
 				{
-					if (applyDNAtoPlug)
-					{
-						if (p->Header->dca == DNA_NOTECUT ||
-							p->Header->dca == DNA_NOTEOFF ||
-							p->Header->dca == DNA_NOTEFADE)
-						{
-							Plugin = MixPlugins[Header->mch - 128].MixPlugin;
-							if (Plugin != NULL && p->Note != 0)
-								Plugin->MidiCommand(p->Header->mch, p->Header->mpr, p->Header->mbank, p->Note + 0xFF, 0, i);
-						}
-					}
 					switch (p->Header->dca)
 					{
 						case DNA_NOTECUT:
@@ -2518,19 +2381,7 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 			}
 		}
 	}
-	applyNNAtoPlug = false;
-	Plugin = NULL;
-	if (chn->Header != NULL && chn->Header->mch > 0 && chn->Header->mch < 17 && chn->Note > 0 && chn->Note < 128)
-	{
-		UINT nPlugin = GetBestPlugin(nChn, PRIORITISE_INSTRUMENT, RESPECT_MUTES);
-		if (nPlugin != 0 && nPlugin <= MAX_MIXPLUGINS)
-		{
-			Plugin = MixPlugins[nPlugin - 1].MixPlugin;
-			if (Plugin != NULL)
-				applyNNAtoPlug = Plugin->isPlaying(chn->Note, chn->Header->mch, nChn);
-		}
-	}
-	if ((chn->Volume != 0 && chn->Length != 0) || applyNNAtoPlug)
+	if (chn->Volume != 0 && chn->Length != 0)
 	{
 		UINT n = GetNNAChannel(nChn);
 		if (n != 0)
@@ -2542,14 +2393,6 @@ void ISoundFile::CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut)
 
 			p->MasterChn = nChn + 1;
 			p->Command = 0;
-
-			if (applyNNAtoPlug == true && Plugin != NULL)
-			{
-				if (chn->NNA == NNA_NOTEOFF || chn->NNA == NNA_NOTECUT || chn->NNA == NNA_NOTEFADE)
-				{
-					Plugin->MidiCommand(chn->Header->mch, chn->Header->mpr, chn->Header->mbank, 0xFF, 0, nChn);
-				}
-			}
 			switch (chn->NNA)
 			{
 				case NNA_NOTEOFF:
@@ -2613,12 +2456,12 @@ inline BYTE ISoundFile::SampleToMixVibSweep(const ITSampleStruct * const smp)
 	return (smp->vir + 3) / 4;
 }
 
-void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool UpdVol, bool ResetEnv)
+void ISoundFile::InstrumentChange(Channel *chn, UINT instr_, bool Porta, bool UpdVol, bool ResetEnv)
 {
 	bool InstrumentChanged = false;
 	ITInstrument *env;
 	ITSampleStruct *smp;
-	UINT note;
+	UINT note, instr = instr_ - 1;
 
 	if (instr >= MAX_INSTRUMENTS)
 		return;
@@ -2631,7 +2474,7 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 		if (env->keyboard[(note - 1) * 2] >= 0xFE)
 			return;
 		n = env->keyboard[(note - 1) * 2 + 1];
-		smp = ((n != 0 && n < MAX_SAMPLES) ? &Ins[n] : NULL);
+		smp = ((n != 0 && n <= p_IF->p_Head->smpnum) ? &Ins[n - 1] : NULL);
 	}
 	else if (Instruments != 0)
 	{
@@ -2640,7 +2483,11 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 		smp = NULL;
 	}
 	if (UpdVol == true)
+	{
 		chn->Volume = (smp != NULL ? smp->vol << 2 : 0);
+		if (chn->Volume > 256)
+			chn->Volume = 256;
+	}
 	if (env != chn->Header)
 	{
 		InstrumentChanged = true;
@@ -2657,12 +2504,20 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 		{
 			chn->InsVol = (smp->gvl * env->gbv) >> 6;
 			if (smp->dfp < 0x80)
+			{
 				chn->Pan = (smp->dfp & 0x7F) << 2;
+				if (chn->Pan > 256)
+					chn->Pan = 256;
+			}
 		}
 		else
 			chn->InsVol = smp->gvl;
 		if ((smp->flags & CHN_PANNING) != 0)
+		{
 			chn->Pan = (smp->dfp & 0x7F) << 2;
+			if (chn->Pan > 256)
+				chn->Pan = 256;
+		}
 	}
 	if (ResetEnv == true)
 	{
@@ -2733,8 +2588,7 @@ void ISoundFile::InstrumentChange(Channel *chn, UINT instr, bool Porta, bool Upd
 	chn->LoopStart = smp->loopbegin;
 	chn->LoopEnd = smp->loopend;
 	chn->C4Speed = smp->C5Speed;
-	chn->Sample = p_IF->p_Samples[(smp - p_IF->p_Samp)].PCM;
-	//chn->Transpose = smp->
+	chn->Sample = p_IF->p_Samples[instr].PCM;
 	chn->FineTune = 0;
 	if ((chn->Flags & CHN_SUSTAINLOOP) != 0)
 	{
@@ -2761,17 +2615,6 @@ void ISoundFile::ProcessMidiOut(UINT nChn, Channel *chn)
 		ITInstrument *env = chn->Header;
 		if (cmd->instr != 0 && cmd->instr < p_IF->p_Head->smpnum)
 			env = Headers[cmd->instr];
-		if (env != NULL && env->mch >= 1 && env->mch <= 16)
-		{
-			UINT nPlugin = GetBestPlugin(nChn, PRIORITISE_INSTRUMENT, RESPECT_MUTES);
-			if (nPlugin != 0 && nPlugin < MAX_MIXPLUGINS)
-			{
-				UINT Note = ((chn->Flags & CHN_MUTE) != 0 ? 0xFF : cmd->note);
-				IMixPlugin *Plugin = MixPlugins[nPlugin - 1].MixPlugin;
-				if (Plugin != NULL)
-					Plugin->MidiCommand(env->mch, env->mpr, env->mbank, Note, chn->Volume, nChn);
-			}
-		}
 	}
 }
 
@@ -2927,8 +2770,6 @@ void ISoundFile::NoteChange(UINT nChn, int note, bool Porta, bool ResetEnv, bool
 				}
 				if (env->rp != 0)
 					chn->PanSwing = (env->rp * ((rand() & 0xFF) - 0x7F)) / 128;
-				// Cuttof Swing goes here
-				// Resonance Swing goes here
 			}
 			chn->AutoVibDepth = 0;
 			chn->AutoVibPos = 0;
@@ -3285,20 +3126,6 @@ void ISoundFile::Panbrello(Channel *chn, UINT param)
 	chn->Flags |= CHN_PANBRELLO;
 }
 
-void ISoundFile::MidiPortamento(Channel *chn, int param)
-{
-	ITInstrument *Header = chn->Header;
-	if (Header != NULL && Header->mch > 0 && Header->mch < 17)
-	{
-		UINT Plug = Header->mch;
-		if (Plug != 0 && Plug < MAX_MIXPLUGINS)
-		{
-			IMixPlugin *Plugin = MixPlugins[Plug - 1].MixPlugin;
-			Plugin->MidiPitchBend(Header->mch, param, 0);
-		}
-	}
-}
-
 void ISoundFile::ExtraFinePortamentoUp(Channel *chn, UINT param)
 {
 	if ((SongFlags & SONG_FIRSTTICK) != 0)
@@ -3365,7 +3192,6 @@ void ISoundFile::FinePortamentoDown(Channel *chn, UINT param)
 
 void ISoundFile::PortamentoUp(Channel *chn, UINT param)
 {
-	MidiPortamento(chn, param);
 	if (param != 0)
 		chn->OldPortaUpDown = param;
 	else
@@ -3387,7 +3213,6 @@ void ISoundFile::PortamentoUp(Channel *chn, UINT param)
 
 void ISoundFile::PortamentoDown(Channel *chn, UINT param)
 {
-	MidiPortamento(chn, -(int)param);
 	if (param != 0)
 		chn->OldPortaUpDown = param;
 	else
@@ -3868,43 +3693,6 @@ void ISoundFile::ProcessSmoothMidiMacro(UINT nChn, char *MidiMacro, UINT param)
 			}
 			break;
 		}
-		case 0x03:
-		{
-			UINT Plug = GetBestPlugin(nChn, PRIORITISE_CHANNEL, EVEN_IF_MUTED);
-			if (Plug != 0 && Plug <= MAX_MIXPLUGINS)
-			{
-				IMixPlugin *Plugin;
-				if ((SongFlags & SONG_FIRSTTICK) != 0)
-				{
-					chn->PlugInitialParamValue = MixPlugins[Plug - 1].DryRatio;
-					chn->PlugParamValueStep = ((1 - ((float)Param / 127.0F)) - chn->PlugInitialParamValue) / (float)MusicSpeed;
-				}
-				Plugin = MixPlugins[Plug - 1].MixPlugin;
-				if (Plugin != NULL && MixPlugins[Plug - 1].MixState != NULL)
-					MixPlugins[Plug - 1].DryRatio = chn->PlugInitialParamValue + (float)(TickCount + 1) * chn->PlugParamValueStep;
-			}
-			break;
-		}
-		default:
-		{
-			if ((InternalCode & 0x80) != 0)
-			{
-				UINT Plug = GetBestPlugin(nChn, PRIORITISE_CHANNEL, EVEN_IF_MUTED);
-				if (Plug != 0 && Plug <= MAX_MIXPLUGINS)
-				{
-					IMixPlugin *Plugin = MixPlugins[Plug - 1].MixPlugin;
-					if (Plugin != 0 && MixPlugins[Plug - 1].MixState != NULL)
-					{
-						if ((SongFlags & SONG_FIRSTTICK) != 0)
-						{
-							chn->PlugInitialParamValue = (float)Plugin->GetZxxParameter(InternalCode & 0x7F);
-							chn->PlugParamValueStep = (float)((int)(Param & 0x7F) - chn->PlugInitialParamValue) / (float)MusicSpeed;
-						}
-						Plugin->SetZxxParameter(InternalCode & 0x7F, (UINT)(chn->PlugInitialParamValue + (TickCount + 1) * chn->PlugParamValueStep + 0.5));
-					}
-				}
-			}
-		}
 	}
 }
 
@@ -3959,19 +3747,6 @@ void ISoundFile::ProcessMidiMacro(UINT nChn, char *MidiMacro, UINT param)
 
 				if (Bytes >= 3)
 				{
-					UINT MasterCh = (nChn < Channels ? nChn + 1 : chn->MasterChn);
-					if (MasterCh != 0 && MasterCh <= Channels)
-					{
-						UINT Plug = ChnSettings[MasterCh - 1].MixPlugin;
-						if ((chn->Flags & CHN_NOFX) != 0)
-							Plug = 0;
-						if (Plug != 0 && Plug <= MAX_MIXPLUGINS)
-						{
-							IMixPlugin *Plugin = MixPlugins[Plug - 1].MixPlugin;
-							if (Plugin != NULL && MixPlugins[Plug - 1].MixState != NULL)
-								Plugin->MidiSend(MidiCode);
-						}
-					}
 					Bytes = 0;
 					MidiCode = 0;
 				}
@@ -4035,29 +3810,6 @@ void ISoundFile::ProcessMidiMacro(UINT nChn, char *MidiMacro, UINT param)
 				SetupChannelFilter(chn, ((chn->Flags & CHN_FILTER) != 0 ? false : true));
 				break;
 			}
-			case 0x03:
-			{
-				UINT Plug = GetBestPlugin(nChn, PRIORITISE_CHANNEL, EVEN_IF_MUTED);
-				if (Plug != 0 && Plug <= MAX_MIXPLUGINS)
-				{
-					if (Param < 0x80)
-						MixPlugins[Plug - 1].DryRatio = 1.0F - ((float)Param / 127.0F);
-				}
-				break;
-			}
-			default:
-			{
-				if ((InternalCode & 0x80) != 0)
-				{
-					UINT Plug = GetBestPlugin(nChn, PRIORITISE_CHANNEL, EVEN_IF_MUTED);
-					if (Plug != 0 && Plug <= MAX_MIXPLUGINS)
-					{
-						IMixPlugin *Plugin = MixPlugins[Plug - 1].MixPlugin;
-						if (Plugin != NULL && MixPlugins[Plug - 1].MixState != NULL)
-							Plugin->SetZxxParameter(InternalCode & 0x7F, Param & 0x7F);
-					}
-				}
-			}
 		}
 	}
 }
@@ -4117,7 +3869,8 @@ bool ISoundFile::ProcessEffects()
 					if (chn->Instrument != NULL)
 						chn->Volume = chn->Instrument->vol << 2;
 				}
-				else if (instr < MAX_SAMPLES) chn->Volume = Ins[instr].vol << 2;
+				else if (instr < MAX_SAMPLES)
+					chn->Volume = Ins[instr - 1].vol << 2;
 			}
 			if (instr >= MAX_INSTRUMENTS) instr = 0;
 			if (note >= 0xFE) instr = 0;
@@ -4128,7 +3881,7 @@ bool ISoundFile::ProcessEffects()
 			if (instr != 0)
 			{
 				ITSampleStruct *smp = chn->Instrument;
-				InstrumentChange(chn, instr - 1, Porta, true);
+				InstrumentChange(chn, instr, Porta, true);
 				chn->NewInst = 0;
 				if (smp != chn->Instrument && note != 0 && note < 0x80)
 					Porta = false;
@@ -4137,7 +3890,7 @@ bool ISoundFile::ProcessEffects()
 			{
 				if (instr == 0 && chn->NewInst != 0 && note < 0x80)
 				{
-					InstrumentChange(chn, chn->NewInst - 1, Porta, false, true);
+					InstrumentChange(chn, chn->NewInst, Porta, false, true);
 					chn->NewInst = 0;
 				}
 				NoteChange(i, note, Porta, true);
@@ -4532,24 +4285,9 @@ bool ISoundFile::ProcessEffects()
 	return true;
 }
 
-void ISoundFile::StopAllVSTi()
-{
-	for (UINT Plug = 0; Plug < MAX_MIXPLUGINS; Plug++)
-	{
-		IMixPlugin *Plugin;
-		if (MixPlugins[Plug].MixPlugin == NULL)
-			continue;
-		Plugin = MixPlugins[Plug].MixPlugin;
-		if (MixPlugins[Plug].MixState != NULL)
-			Plugin->HardAllNotesOff();
-	}
-	TotalSampleCount = 0;
-}
-
 bool ISoundFile::ProcessRow()
 {
 	TickCount++;
-
 	if (TickCount >= MusicSpeed * (PatternDelay + 1) + FrameDelay)
 	{
 		Command *cmd;
@@ -4574,7 +4312,6 @@ bool ISoundFile::ProcessRow()
 						return false;
 					if (RestartPos == 0)
 					{
-						StopAllVSTi();
 						MusicSpeed = p_IF->p_Head->speed;
 						MusicTempo = p_IF->p_Head->tempo;
 						GlobalVolume = p_IF->p_Head->globalvol;
@@ -4629,7 +4366,7 @@ bool ISoundFile::ProcessRow()
 		NextRow = Row + 1;
 		if (NextRow >= Patterns[Pattern].nRows)
 		{
-			if ((SongFlags & SONG_PATTERNLOOP) != 0)
+			if ((SongFlags & SONG_PATTERNLOOP) == 0)
 				NextPattern = CurrentPattern + 1;
 			NextRow = 0;
 			PatternTransitionOccurred = true;
@@ -4656,15 +4393,6 @@ bool ISoundFile::ProcessRow()
 	SongFlags |= SONG_FIRSTTICK;
 	if (TickCount != 0)
 	{
-		if (TickCount > MusicSpeed * (PatternDelay + 1) + FrameDelay - 1)
-		{
-			if ((SongFlags & SONG_STEP) != 0)
-			{
-				SongFlags &= ~SONG_STEP;
-				SongFlags |= SONG_PAUSED;
-			}
-		}
-
 		SongFlags &= ~SONG_FIRSTTICK;
 		if (TickCount < MusicSpeed * (PatternDelay + 1))
 		{
@@ -4722,7 +4450,8 @@ bool ISoundFile::ReadNote()
 		case tempo_mode_classic:
 		default:
 		{
-			BufferCount = (220500 * TempoFactor) / (MusicTempo << 8);
+			/*44100 * 5 * 128 = 28224000*/
+			BufferCount = (28224000) / (MusicTempo << 8);
 			break;
 		}
 	}
@@ -4953,7 +4682,6 @@ skipchn:
 				chn->FadeOutVol = vol = 0;
 			if (vol != 0)
 			{
-				UINT Plugin = GetBestPlugin(i, PRIORITISE_INSTRUMENT, RESPECT_MUTES);
 				if (Config->Get_GlobalVolumeAppliesToMaster() == true)
 					chn->RealVolume = muldiv(vol * MAX_GLOBAL_VOLUME, chn->GlobalVol * chn->InsVol, 1 << 20);
 				else
@@ -5170,6 +4898,7 @@ skipchn:
 				if (n < 0)
 				{
 					UINT n1 = (-n) >> 8;
+					n = -n;
 					df1 = LinearSlideUpTable[n1];
 					df2 = LinearSlideUpTable[n1 + 1];
 				}
@@ -5293,7 +5022,7 @@ skipchn:
 		chn->CurrentSample = ((chn->Sample != NULL && chn->Length != 0 && chn->Inc != 0) ? chn->Sample : NULL);
 		if (chn->CurrentSample != NULL)
 		{
-			UINT ChnMasterVol = ((chn->Flags & CHN_EXTRALOUD) != 0 ? 0x100 : MasterVol);
+			UINT ChnMasterVol = MasterVol;//((chn->Flags & CHN_EXTRALOUD) != 0 ? 0x100 : MasterVol);
 			if (OutChannels >= 2)
 			{
 				long realvol;
@@ -5336,9 +5065,9 @@ skipchn:
 				chn->Flags &= ~(CHN_NOIDO | CHN_HQSRC);
 				if (chn->Inc == 0x10000)
 					chn->Flags |= CHN_NOIDO;
-				else if ((SoundSetup & SNDMIX_HQRESAMPLER) != 0 && ((SoundSetup & SNDMIX_DIRECTTODISK) != 0 || MixChannels < 8))
+				else if ((SoundSetup & SNDMIX_HQRESAMPLER) != 0 && MixChannels < 8)
 				{
-					if ((SoundSetup & SNDMIX_DIRECTTODISK) == 0 && (SoundSetup & SNDMIX_ULTRAHQSRCMODE) == 0)
+					if ((SoundSetup & SNDMIX_ULTRAHQSRCMODE) == 0)
 					{
 						int fmax = 0x20000;
 						if ((SysInfo & SYSMIX_SLOWCPU) != 0)
@@ -5379,7 +5108,7 @@ skipchn:
 					RampLength = 1;
 				RightDelta = (chn->NewRightVol - chn->RightVol) << VOLUMERAMPPRECISION;
 				LeftDelta = (chn->NewLeftVol - chn->LeftVol) << VOLUMERAMPPRECISION;
-				if ((SoundSetup & SNDMIX_DIRECTTODISK) != 0 || ((SysInfo & (SYSMIX_ENABLEMMX | SYSMIX_FASTCPU)) != 0 && (SoundSetup & SNDMIX_HQRESAMPLER) != 0 && enableCustomRamp == false))
+				if (((SysInfo & (SYSMIX_ENABLEMMX | SYSMIX_FASTCPU)) != 0 && (SoundSetup & SNDMIX_HQRESAMPLER) != 0 && enableCustomRamp == false))
 				{
 					if ((chn->RightVol | chn->LeftVol) != 0 && (chn->NewRightVol | chn->NewLeftVol) != 0 && (chn->Flags & CHN_FASTVOLRAMP) == 0)
 					{
@@ -5417,7 +5146,7 @@ skipchn:
 			chn->LeftVol = chn->RightVol = chn->Length = 0;
 	}
 done:
-	if (MixChannels >= MaxMixChannels && (SoundSetup & SNDMIX_DIRECTTODISK) == 0)
+	if (MixChannels >= MaxMixChannels)
 	{
 		for (UINT i = 0; i < MixChannels; i++)
 		{
@@ -5718,7 +5447,7 @@ UINT ISoundFile::CreateStereoMix(int count)
 	{
 		const MixInterface *MixFuncTable;
 		Channel * const chn = &Chns[ChnMix[i]];
-		UINT Flags, MasterChn, MixPlugin, rampSamples, addmix;
+		UINT Flags, MasterChn, rampSamples, addmix;
 		long SmpCount;
 		int samples;
 		int *buff;
@@ -5750,22 +5479,6 @@ UINT ISoundFile::CreateStereoMix(int count)
 			buff = MixSoundBuffer;
 		if ((chn->Flags & CHN_REVERB) != 0 && (SysInfo & SYSMIX_ENABLEMMX) != 0)
 			buff = MixReverbBuffer;
-		MixPlugin = GetBestPlugin(ChnMix[i], PRIORITISE_INSTRUMENT, RESPECT_MUTES);
-		if (MixPlugin > 0 && MixPlugin < MAX_MIXPLUGINS)
-		{
-			MixPluginState *Plugin = MixPlugins[MixPlugin - 1].MixState;
-			if (Plugin != NULL && Plugin->MixBuffer != NULL)
-			{
-				buff = Plugin->MixBuffer;
-				OffsR = &Plugin->VolDecayR;
-				OffsL = &Plugin->VolDecayL;
-				if ((Plugin->Flags & MIXPLUG_MIXREADY) == 0)
-				{
-					X86_StereoFill(buff, count, OffsR, OffsL);
-					Plugin->Flags |= MIXPLUG_MIXREADY;
-				}
-			}
-		}
 		if (buff == MixReverbBuffer)
 		{
 			if (ReverbSend == 0)
@@ -5797,7 +5510,7 @@ UINT ISoundFile::CreateStereoMix(int count)
 				samples = 0;
 				continue;
 			}
-			if ((chnsMixed >= MaxMixChannels && (SoundSetup & SNDMIX_DIRECTTODISK) == 0) || (chn->RampLength == 0 && (chn->LeftVol | chn->RightVol) == 0))
+			if (chnsMixed >= MaxMixChannels || (chn->RampLength == 0 && (chn->LeftVol | chn->RightVol) == 0))
 			{
 				long delta = (chn->Inc * SmpCount) + chn->PosLo;
 				chn->PosLo = delta & 0xFFFF;
@@ -5875,107 +5588,6 @@ void ISoundFile::FloatToStereoMix(float *In1, float *In2, int *Out, UINT Count)
 		}
 	}
 	X86_FloatToStereoMix(In1, In2, Out, Count, Config->Get_FloatToInt());
-}
-
-void ISoundFile::ProcessPlugins(UINT Count)
-{
-	float *MixL, *MixR;
-	for (UINT Plug = 0; Plug < MAX_MIXPLUGINS; Plug++)
-	{
-		MixPlugin * Plugin = &MixPlugins[Plug];
-		if (Plugin->MixPlugin != NULL && Plugin->MixState != NULL && Plugin->MixState->MixBuffer != NULL && Plugin->MixState->OutBufferL != NULL && Plugin->MixState->OutBufferR != NULL)
-		{
-			MixPluginState *State = Plugin->MixState;
-
-			if (Plugin->MixPlugin->IsSongPlaying() == false)
-			{
-				Plugin->MixPlugin->NotifySongPlaying(true);
-				Plugin->MixPlugin->Resume();
-			}
-			if ((State->Flags & MIXPLUG_MIXREADY) != 0)
-				StereoMixToFloat(State->MixBuffer, State->OutBufferL, State->OutBufferR, Count);
-			else if ((State->VolDecayR | State->VolDecayL) != 0)
-			{
-				X86_StereoFill(State->MixBuffer, Count, &State->VolDecayR, &State->VolDecayL);
-				StereoMixToFloat(State->MixBuffer, State->OutBufferL, State->OutBufferR, Count);
-			}
-			else
-			{
-				memset(State->OutBufferL, 0x00, Count * sizeof(float));
-				memset(State->OutBufferR, 0x00, Count * sizeof(float));
-			}
-			State->Flags &= ~MIXPLUG_MIXREADY;
-		}
-	}
-	StereoMixToFloat(MixSoundBuffer, MixFloatBuffer, MixFloatBuffer + MIXBUFFERSIZE, Count);
-	MixL = MixFloatBuffer;
-	MixR = MixFloatBuffer + MIXBUFFERSIZE;
-	for (UINT Plug = 0; Plug < MAX_MIXPLUGINS; Plug++)
-	{
-		MixPlugin *Plugin = &MixPlugins[Plug];
-		if (Plugin->MixPlugin != NULL && Plugin->MixState != NULL &&
-			Plugin->MixState->MixBuffer != NULL &&
-			Plugin->MixState->OutBufferL != NULL &&
-			Plugin->MixState->OutBufferR != NULL)
-		{
-			bool MasterMix = false;
-			IMixPlugin *Object = Plugin->MixPlugin;
-			MixPluginState *State = Plugin->MixState;
-			float *OutL, *OutR;
-			if (MixL == Plugin->MixState->OutBufferL)
-			{
-				MasterMix = true;
-				MixL = MixFloatBuffer;
-				MixR = MixFloatBuffer + MIXBUFFERSIZE;
-			}
-			OutL = MixL;
-			OutR = MixR;
-			if ((Plugin->Info.OutputRouting & 0x80) != 0)
-			{
-				UINT Output = Plugin->Info.OutputRouting & 0x7F;
-				if (Output > Plug && Output < MAX_MIXPLUGINS && MixPlugins[Output].MixState != NULL)
-				{
-					MixPluginState *OutState = MixPlugins[Output].MixState;
-					if (OutState->OutBufferL != NULL && OutState->OutBufferR != NULL)
-					{
-						OutL = OutState->OutBufferL;
-						OutR = OutState->OutBufferR;
-					}
-				}
-			}
-			if ((Plugin->Info.InputRouting & MIXPLUG_INPUTF_MASTEREFFECT) != 0)
-			{
-				if (MasterMix == false)
-				{
-					float *InL = State->OutBufferL;
-					float *InR = State->OutBufferR;
-					for (UINT i = 0; i < Count; i++)
-					{
-						InL[i] += MixL[i];
-						InR[i] += MixR[i];
-						MixL[i] = 0;
-						MixR[i] = 0;
-					}
-				}
-				MixL = OutL;
-				MixR = OutR;
-			}
-			if ((Plugin->Info.InputRouting & MIXPLUG_INPUTF_BYPASS) != 0)
-			{
-				float *InL = State->OutBufferL;
-				float *InR = State->OutBufferR;
-				for (UINT i = 0; i < Count; i++)
-				{
-					OutL[i] += InL[i];
-					OutR[i] += InR[i];
-				}
-			}
-			else
-				Object->Process(OutL, OutR, Count);
-		}
-	}
-	FloatToStereoMix(MixL, MixR, MixSoundBuffer, Count);
-	InitPlugins = false;
 }
 
 void ISoundFile::ProcessStereoSurround(int Count)
@@ -6168,13 +5780,10 @@ void ISoundFile::ApplyGlobalVolume(int *SoundBuffer, long TotalSampleCount)
 UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 {
 	ConvertProc Cvt = X86_Convert32To16;
-	UINT MaxPlugins = MAX_MIXPLUGINS;
 	UINT SampleSize = 2 * p_IF->p_FI->Channels;
 	UINT Max = BuffLen / SampleSize, Read, Count;
 	UINT SampleCount, Stat = 0;
 
-	while (MaxPlugins > 0 && MixPlugins[MaxPlugins - 1].MixPlugin == NULL)
-		MaxPlugins--;
 	MixStat = 0;
 	if (Max == 0 || Buffer == NULL || Channels == 0)
 		return 0;
@@ -6222,16 +5831,12 @@ UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 			SampleCount *= 2;
 			MixStat += CreateStereoMix(Count);
 			ProcessReverb(Count);
-			if (MaxPlugins != 0)
-				ProcessPlugins(Count);
 			ProcessStereoDSP(Count);
 		}
 		else
 		{
 			MixStat += CreateStereoMix(Count);
 			ProcessReverb(Count);
-			if (MaxPlugins != 0)
-				ProcessPlugins(Count);
 			X86_MonoFromStereo(MixSoundBuffer, Count);
 			ProcessMonoDSP(Count);
 		}
@@ -6242,11 +5847,6 @@ UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 		{
 			X86_InterleaveFrontRear(MixSoundBuffer, MixRearBuffer, SampleCount);
 			_TotalSampleCount *= 2;
-		}
-		if (BitsPerSample <= 16)
-		{
-			if ((SoundSetup & SNDMIX_HQRESAMPLER) != 0 && (SoundSetup & SNDMIX_DIRECTTODISK) != 0)
-				X86_Dither(MixSoundBuffer, _TotalSampleCount, BitsPerSample);
 		}
 		if (Config->Get_GlobalVolumeAppliesToMaster() == true)
 			ApplyGlobalVolume(MixSoundBuffer, _TotalSampleCount);

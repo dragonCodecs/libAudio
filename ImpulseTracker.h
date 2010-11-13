@@ -1,4 +1,4 @@
-#ifndef __INTERFACES_H__
+/*#ifndef __INTERFACES_H__
 #define __INTERFACES_H__
 #include "mixIT/Interfaces.h"
 #endif /*__INTERFACES__H__*/
@@ -51,7 +51,7 @@ typedef struct _ENVIRONMENTREVERB
 class IPlayConfig;
 class ISoundFile;
 
-typedef bool (__CDECL__ *PluginCreateProc)(MixPlugin *);
+//typedef bool (__CDECL__ *PluginCreateProc)(MixPlugin *);
 
 #define MAX_PATTERN_ROWS		1024
 #define MAX_ORDERS				256
@@ -63,7 +63,6 @@ typedef bool (__CDECL__ *PluginCreateProc)(MixPlugin *);
 #define MAX_ENVPOINTS			32
 #define MIN_PERIOD				0x0020
 #define MAX_PERIOD				0xFFFF
-#define MAX_MIXPLUGINS			100
 #define MAX_PLUGPRESETS			1000
 #define MAX_GLOBAL_VOLUME		256
 
@@ -211,7 +210,6 @@ typedef struct _Patern
 typedef struct _SampleData
 {
 	char BPS;
-	int BitRate;
 	BYTE *PCM;
 	int length;
 } SampleData;
@@ -282,7 +280,7 @@ typedef struct _Channel
 	DWORD VolEnvPosition, PanEnvPosition, PitchEnvPosition;
 	DWORD MasterChn;
 	long GlobalVol, InsVol;
-	long FineTune/*, Transpose*/;
+	long FineTune;
 	long PortamentoSlide, AutoVibDepth;
 	UINT AutoVibPos, VibratoPos, TremoloPos, PanbrelloPos;
 	long VolSwing, PanSwing;
@@ -315,7 +313,6 @@ typedef struct _ChannelSettings
 	UINT Pan;
 	UINT Volume;
 	DWORD Flags;
-	UINT MixPlugin;
 	char *Name;
 } ChannelSettings;
 
@@ -326,7 +323,6 @@ class ISoundFile
 	static UINT MaxMixChannels;
 	static UINT ReverbDepth, ReverbType;
 	static DWORD SoundSetup, SysInfo, OutChannels, BitsPerSample, Quality;
-	static PluginCreateProc MixPluginCreateProc;
 	static UINT ProLogicDepth, ProLogicDelay;
 	IT_Intern *p_IF;
 	DWORD SongFlags;
@@ -344,13 +340,11 @@ class ISoundFile
 	long MinPeriod, MaxPeriod, RepeatCount;
 	ITSampleStruct *Ins;
 	ITInstrument *Headers[MAX_INSTRUMENTS];
-	MixPlugin MixPlugins[MAX_MIXPLUGINS];
 	UINT GlobalVolume, OldGlbVolSlide;
 	MidiConfig MidiCfg;
 	DWORD GlobalFadeSamples, GlobalFadeMaxSamples;
-	bool ChannelMuteTogglePending[MAX_CHANNELS];
 	double BufferDiff;
-	UINT RowsPerBeat, TempoFactor, SamplesPerTick;
+	UINT RowsPerBeat, SamplesPerTick;
 	UINT MasterVolume, SongPreAmp, SamplesToGlobalVolRampDest;
 	UINT GlobalVolumeDest;
 	long HighResRampingGlobalVolume;
@@ -359,7 +353,6 @@ class ISoundFile
 	IPlayConfig *Config;
 
 	void ResetMidiCfg();
-	void RecalculateGainForAllPlugs();
 	DWORD CutOffToFrequency(UINT CutOff, int flt_modifier);
 	void SetupChannelFilter(Channel *chn, bool Reset, int flt_modifier = 256);
 	bool MuteChannel(UINT nChn, bool Mute);
@@ -368,9 +361,6 @@ class ISoundFile
 	UINT GetPeriodFromNote(UINT note, int FineTune, UINT C4Speed);
 	UINT GetNoteFromPeriod(UINT period);
 	UINT GetFreqFromPeriod(UINT period, UINT C4Speed, int PeriodFrac);
-	UINT GetChannelPlugin(UINT nChn, bool respectMutes);
-	UINT GetActiveInstrumentPlugin(UINT nChn, bool respectMutes);
-	UINT GetBestPlugin(UINT nChn, UINT priority, bool respectMutes);
 	void KeyOff(UINT nChn);
 	UINT GetNNAChannel(UINT nChn);
 	void CheckNNA(UINT nChn, BYTE instr, BYTE note, bool ForceCut);
@@ -393,7 +383,6 @@ class ISoundFile
 	void Tremolo(Channel *chn, UINT param);
 	void ChannelVolSlide(Channel *chn, UINT param);
 	void Panbrello(Channel *chn, UINT param);
-	void MidiPortamento(Channel *chn, int param);
 	void ExtraFinePortamentoUp(Channel *chn, UINT param);
 	void ExtraFinePortamentoDown(Channel *chn, UINT param);
 	void FinePortamentoUp(Channel *chn, UINT param);
@@ -418,7 +407,6 @@ class ISoundFile
 	UINT CreateStereoMix(int count);
 	void StereoMixToFloat(int *Src, float *Out1, float *Out2, UINT Count);
 	void FloatToStereoMix(float *In1, float *In2, int *Out, UINT Count);
-	void ProcessPlugins(UINT Count);
 	void ProcessStereoSurround(int Count);
 	void ProcessQuadSurround(int Count);
 	void ProcessStereoDSP(int Count);
@@ -431,7 +419,6 @@ class ISoundFile
 	long BToLinear(long Scale, long dB);
 	float BToLinear(long dB);
 	inline void I3dl2_to_Generic(SNDMIX_REVERB_PROPERTIES *Reverb, ENVIRONMENTREVERB *Rvb, float OutputFreq, long MinRefDelay, long MaxRefDelay, long MinRvbDelay, long MaxRvbDelay, long TankLength);
-	void StopAllVSTi();
 	DWORD InitSysInfo();
 	void UpdateAudioParameters(bool Reset);
 	bool SetResamplingMode(UINT Mode);

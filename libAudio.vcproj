@@ -303,10 +303,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\mixIT\Interfaces.h"
-						>
-					</File>
-					<File
 						RelativePath=".\mixIT\mixIT.cpp"
 						>
 					</File>
