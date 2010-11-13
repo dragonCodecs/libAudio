@@ -11,8 +11,10 @@ INCDIR = /usr/include/
 
 #WMA = loadWMA.o
 WMA = 
+#IT = loadIT.o mixIT/mixIT.o
+IT = 
 H = libAudio.h
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadIT.o mixIT/mixIT.o loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o $(IT) loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -66,8 +68,8 @@ loadM4A.o: loadM4A.cpp
 loadMP3.o: loadMP3.cpp
 loadMPC.o: loadMPC.cpp
 loadFLAC.o: loadFLAC.cpp
-loadIT.o: loadIT.cpp
-mixIT/mixIT.o: mixIT/mixIT.cpp
+#loadIT.o: loadIT.cpp
+#mixIT/mixIT.o: mixIT/mixIT.cpp
 loadWavPack.o: loadWavPack.cpp
 loadOptimFROG.o: loadOptimFROG.cpp
 loadShorten.o: loadShorten.cpp
