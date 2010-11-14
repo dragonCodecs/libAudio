@@ -7,6 +7,16 @@
 #include "libAudio_Common.h"
 #include "ProTracker.h"
 
+#ifndef _WINDOWS
+#ifdef CHAR
+#undef CHAR
+#endif
+#define CHAR char
+#ifndef max
+#define max(a, b) (a > b ? a : b)
+#endif
+#endif
+
 void *MOD_OpenR(char *FileName)
 {
 	MOD_Intern *ret = NULL;
