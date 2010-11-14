@@ -14,7 +14,7 @@ WMA =
 #IT = loadIT.o mixIT/mixIT.o
 IT = 
 H = libAudio.h
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadMOD.o $(IT) loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadMOD.o moduleMixer/moduleMixer.o $(IT) loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -69,6 +69,7 @@ loadMP3.o: loadMP3.cpp
 loadMPC.o: loadMPC.cpp
 loadFLAC.o: loadFLAC.cpp
 loadMOD.o: loadMOD.cpp
+moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp
 loadWavPack.o: loadWavPack.cpp
