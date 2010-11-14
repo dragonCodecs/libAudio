@@ -173,7 +173,18 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 
 long MOD_FillBuffer(void *p_MODFile, BYTE *OutBuffer, int nOutBufferLen)
 {
-	return -2;
+	long ret = 0, Read;
+	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
+	do
+	{
+		Read = FillMODBuffer(p_MF, nOutBufferLen - ret);
+		if (Read >= 0 && OutBuffer != p_MF->buffer)
+			memcpy(OutBuffer + ret, p_MF->buffer, Read);
+		if (Read >= 0)
+			ret += Read;
+	}
+	while (ret < nOutBufferLen && Read >= 0);
+	return (ret == 0 ? Read : ret);
 }
 
 int MOD_CloseFileR(void *p_MODFile)

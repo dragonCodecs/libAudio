@@ -11,6 +11,8 @@
 
 typedef struct _Channel
 {
+	BYTE *Sample, *NewSample;
+	UINT LoopStart, LoopEnd;
 } Channel;
 
 typedef struct _MixerState
@@ -63,4 +65,22 @@ void DestroyMixer(void *Mixer)
 	free(p_Mixer->Chns);
 	free(p_Mixer->ChnMix);
 	free(p_Mixer);
+}
+
+long Read(void *Mixer, BYTE *Buffer, UINT BufferLen)
+{
+	MixerState *p_Mixer = (MixerState *)Mixer;
+	return 0;
+}
+
+long FillMODBuffer(MOD_Intern *p_MF, long toRead)
+{
+	long read;
+	if (p_MF->p_Mixer == NULL)
+		return -1;
+	read = Read(p_MF->p_Mixer, p_MF->buffer, toRead);
+	read *= (p_MF->p_FI->BitsPerSample / 8) * p_MF->p_FI->Channels;
+	if (read == 0)
+		return -2;
+	return read;
 }
