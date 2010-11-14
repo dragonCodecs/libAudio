@@ -160,10 +160,19 @@ libAUDIO_API bool Is_MP3(char *FileName);
 
 libAUDIO_API void *IT_OpenR(char *FileName);
 libAUDIO_API FileInfo *IT_GetFileInfo(void *p_ITFile);
-libAUDIO_API long IT_FillBuffer(void *ITFile, BYTE *OutBuffer, int nOutBufferLen);
-libAUDIO_API int IT_CloseFileR(void *ITFile);
-libAUDIO_API void IT_Play(void *IT_File);
+libAUDIO_API long IT_FillBuffer(void *p_ITFile, BYTE *OutBuffer, int nOutBufferLen);
+libAUDIO_API int IT_CloseFileR(void *p_ITFile);
+libAUDIO_API void IT_Play(void *p_ITFile);
 libAUDIO_API bool Is_IT(char *FileName);
+
+// MOD API
+
+libAUDIO_API void *MOD_OpenR(char *FileName);
+libAUDIO_API FileInfo *MOD_GetFileInfo(void *p_MODFile);
+libAUDIO_API long MOD_FillBuffer(void *p_MODFile, BYTE *OutBuffer, int nOutBufferLen);
+libAUDIO_API int MOD_CloseFileR(void *p_MODFile);
+libAUDIO_API void MOD_Play(void *p_MODFile);
+libAUDIO_API bool Is_MOD(char *FileName);
 
 // MPC API
 
@@ -241,3 +250,4 @@ libAUDIO_API BYTE ExternalPlayback;
 #define AUDIO_OPTIMFROG		10
 #define AUDIO_REALAUDIO		11
 #define AUDIO_WMA			12
+#define AUDIO_MOD			13

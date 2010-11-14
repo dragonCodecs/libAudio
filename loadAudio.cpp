@@ -34,13 +34,18 @@ void *Audio_OpenR(char *FileName, int *Type)
 		*Type = AUDIO_MP3;
 		return MP3_OpenR(FileName);
 	}
-#ifdef _WINDOWS
+#ifndef __NO_IT__
 	else if (Is_IT(FileName) == true)
 	{
 		*Type = AUDIO_IT;
 		return IT_OpenR(FileName);
 	}
 #endif
+	else if (Is_MOD(FileName) == true)
+	{
+		*Type = AUDIO_MOD;
+		return MOD_OpenR(FileName);
+	}
 #ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)
 	{
@@ -84,10 +89,12 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr, int Type)
 		return AAC_GetFileInfo(p_AudioPtr);
 	else if (Type == AUDIO_MP3)
 		return MP3_GetFileInfo(p_AudioPtr);
-#ifdef _WINDOWS
+#ifndef __NO_IT__
 	else if (Type == AUDIO_IT)
 		return IT_GetFileInfo(p_AudioPtr);
 #endif
+	else if (Type == AUDIO_MOD)
+		return MOD_GetFileInfo(p_AudioPtr);
 #ifndef __NO_MPC__
 	else if (Type == AUDIO_MUSEPACK)
 		return MPC_GetFileInfo(p_AudioPtr);
@@ -119,10 +126,12 @@ long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen, int 
 		return AAC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 	else if (Type == AUDIO_MP3)
 		return MP3_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#ifdef _WINDOWS
+#ifndef __NO_IT__
 	else if (Type == AUDIO_IT)
 		return IT_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 #endif
+	else if (Type == AUDIO_MOD)
+		return MOD_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 #ifndef __NO_MPC__
 	else if (Type == AUDIO_MUSEPACK)
 		return MPC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
@@ -154,10 +163,12 @@ int Audio_CloseFileR(void *p_AudioPtr, int Type)
 		return AAC_CloseFileR(p_AudioPtr);
 	else if (Type == AUDIO_MP3)
 		return MP3_CloseFileR(p_AudioPtr);
-#ifdef _WINDOWS
+#ifndef __NO_IT__
 	else if (Type == AUDIO_IT)
 		return IT_CloseFileR(p_AudioPtr);
 #endif
+	else if (Type == AUDIO_MOD)
+		return MOD_CloseFileR(p_AudioPtr);
 #ifndef __NO_MPC__
 	if (Type == AUDIO_MUSEPACK)
 		return MPC_CloseFileR(p_AudioPtr);
@@ -184,10 +195,12 @@ void Audio_Play(void *p_AudioPtr, int Type)
 		return AAC_Play(p_AudioPtr);
 	else if (Type == AUDIO_MP3)
 		return MP3_Play(p_AudioPtr);
-#ifdef _WINDOWS
+#ifndef __NO_IT__
 	else if (Type == AUDIO_IT)
 		return IT_Play(p_AudioPtr);
 #endif
+	else if (Type == AUDIO_MOD)
+		return MOD_Play(p_AudioPtr);
 #ifndef __NO_MPC__
 	else if (Type == AUDIO_MUSEPACK)
 		return MPC_Play(p_AudioPtr);
@@ -218,6 +231,12 @@ bool Is_Audio(char *FileName)
 	else if (Is_AAC(FileName) == true)
 		return true;
 	else if (Is_MP3(FileName) == true)
+		return true;
+#ifndef __NO_IT__
+	else if (Is_IT(FileName) == true)
+		return true;
+#endif
+	else if (Is_MOD(FileName) == true)
 		return true;
 #ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)

@@ -40,7 +40,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)Depends\&quot;"
-				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32;__NO_MPC__"
+				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32;__NO_MPC__;__NO_IT__"
 				StringPooling="true"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
@@ -214,9 +214,21 @@
 				<File
 					RelativePath=".\loadIT.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\loadM4A.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\loadMOD.cpp"
 					>
 				</File>
 				<File
@@ -301,23 +313,67 @@
 					<File
 						RelativePath=".\mixIT\fir_mix.h"
 						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\mixIT\mixIT.cpp"
 						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\mixIT\mmx_mix.h"
 						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\mixIT\rvb_mix.h"
 						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\mixIT\std_mix.h"
 						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
 					</File>
+				</Filter>
+				<Filter
+					Name="MOD"
+					>
 				</Filter>
 			</Filter>
 		</Filter>
@@ -333,6 +389,14 @@
 			<File
 				RelativePath=".\ImpulseTracker.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\libAudio.h"
@@ -344,6 +408,10 @@
 			</File>
 			<File
 				RelativePath=".\loadWMA.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProTracker.h"
 				>
 			</File>
 			<File
