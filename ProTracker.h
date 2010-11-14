@@ -48,6 +48,7 @@ typedef struct _MOD_Intern
 	BYTE nPatterns;
 	MODPattern *p_Patterns;
 	BYTE **p_PCM;
+	void *p_Mixer;
 } MOD_Intern;
 
 #pragma pack(pop)

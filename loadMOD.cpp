@@ -6,6 +6,7 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 #include "ProTracker.h"
+#include "moduleMixer/moduleMixer.h"
 
 #ifndef _WINDOWS
 #ifdef CHAR
@@ -165,6 +166,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 
 	if (ExternalPlayback == 0)
 		p_MF->p_Playback = new Playback(ret, MOD_FillBuffer, p_MF->buffer, 8192, p_MODFile);
+	CreateMixer(p_MF);
 
 	return ret;
 }
@@ -176,18 +178,23 @@ long MOD_FillBuffer(void *p_MODFile, BYTE *OutBuffer, int nOutBufferLen)
 
 int MOD_CloseFileR(void *p_MODFile)
 {
+	UINT i;
 	int ret = 0;
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
 	if (p_MF == NULL)
 		return 0;
 
 	delete p_MF->p_Playback;
+	DestroyMixer(p_MF->p_Mixer);
 
+	for (i = 0; i < p_MF->nSamples; i++)
+		free(p_MF->p_PCM[i]);
+	for (i = 0; i < p_MF->nPatterns; i++)
+		free(p_MF->p_Patterns[i].Commands);
 	free(p_MF->p_Header);
 	free(p_MF->p_Samples);
 	free(p_MF->p_PCM);
-	free(p_MF->p_Patterns); // TODO: Extend this memory manager
-	// to fully free p_Patterns' multiple levels.
+	free(p_MF->p_Patterns);
 	ret = fclose(p_MF->f_MOD);
 	free(p_MF);
 	return ret;

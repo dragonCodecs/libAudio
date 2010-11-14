@@ -371,10 +371,18 @@
 						</FileConfiguration>
 					</File>
 				</Filter>
-				<Filter
-					Name="MOD"
+			</Filter>
+			<Filter
+				Name="moduleMixer"
+				>
+				<File
+					RelativePath=".\moduleMixer\moduleMixer.cpp"
 					>
-				</Filter>
+				</File>
+				<File
+					RelativePath=".\moduleMixer\moduleMixer.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
