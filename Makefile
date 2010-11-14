@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -c `pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack` -DHAVE_STDINT_H -DlibAUDIO -D__NO_SAVE_M4A__ -o $*.o
+CFLAGS = -c `pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack` -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_SAVE_M4A__ -o $*.o
 LIBS = -lstdc++ `pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack` -lmpcdec -lfaac -lmp4v2 -lfaad -lmp4ff -lOptimFROG -lmad -lid3tag
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)
 AR = ar cr
@@ -14,7 +14,7 @@ WMA =
 #IT = loadIT.o mixIT/mixIT.o
 IT = 
 H = libAudio.h
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o $(IT) loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadMOD.o $(IT) loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -68,6 +68,7 @@ loadM4A.o: loadM4A.cpp
 loadMP3.o: loadMP3.cpp
 loadMPC.o: loadMPC.cpp
 loadFLAC.o: loadFLAC.cpp
+loadMOD.o: loadMOD.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp
 loadWavPack.o: loadWavPack.cpp
