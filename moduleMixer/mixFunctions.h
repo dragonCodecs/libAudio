@@ -357,15 +357,15 @@ void InitialiseTables()
 
 // Volume
 #define SNDMIX_STOREMONOVOL \
-	vol[0] += vol_ * (chn->RightVol << 2); \
-	vol[1] += vol_ * (chn->LeftVol << 2); \
+	vol[0] += vol_ * (chn->RightVol << 4); \
+	vol[1] += vol_ * (chn->LeftVol << 4); \
 	vol += 2;
 
 #define SNDMIX_RAMPMONOVOL \
 	RampLeftVol += chn->LeftRamp; \
 	RampRightVol += chn->RightRamp; \
-	vol[0] += vol_ * (RampRightVol << 2); \
-	vol[1] += vol_ * (RampLeftVol << 2); \
+	vol[0] += vol_ * (RampRightVol << 4); \
+	vol[1] += vol_ * (RampLeftVol << 4); \
 	vol += 2;
 
 // sinc

@@ -25,6 +25,7 @@ inline int abs(int x)
 #define CHN_ARPEGGIO		0x04
 #define CHN_VIBRATO			0x08
 #define CHN_VOLUMERAMP		0x10
+#define CHN_FASTVOLRAMP		0x20
 
 #define CMD_ARPEGGIO		0
 #define CMD_PORTAMENTOUP	1
@@ -487,6 +488,8 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note)
 			chn->Pos = chn->Length;
 	}
 	chn->RetrigCount = 0;
+	chn->Flags |= CHN_FASTVOLRAMP;
+	chn->LeftVol = chn->RightVol = 0;
 }
 
 void ProcessExtendedCommand(MixerState *p_Mixer, Channel *chn, BYTE param)
@@ -570,6 +573,24 @@ int PatternLoop(MixerState *p_Mixer, UINT param)
 	return -1;
 }
 
+void VolumeSlide(MixerState *p_Mixer, Channel *chn, BYTE param)
+{
+	if (p_Mixer->TickCount != 0)
+	{
+		short NewVolume = chn->Volume;
+		if ((param & 0xF0) != 0)
+			NewVolume += (short)((param & 0xF0) >> 8);
+		else
+			NewVolume -= (short)(param & 0x0F);
+		chn->Flags |= CHN_FASTVOLRAMP;
+		if (NewVolume < 0)
+			NewVolume = 0;
+		else if (NewVolume > 64)
+			NewVolume = 64;
+		chn->Volume = (BYTE)NewVolume;
+	}
+}
+
 BOOL ProcessEffects(MixerState *p_Mixer)
 {
 	int PositionJump = -1, BreakRow = -1, PatternLoopRow = -1;
@@ -582,6 +603,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 		BYTE param = (chn->RowEffect & 0xFF);
 		UINT StartTick = 0;
 
+		chn->Flags &= ~CHN_FASTVOLRAMP;
 		if (cmd == CMD_EXTENDED)
 		{
 			BYTE excmd = (param & 0xF0) >> 4;
@@ -614,7 +636,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				SampleChange(p_Mixer, chn, sample);
 				chn->NewSamp = 0;
 			}
-			if (note != -1)
+			if (note != 0xFF)
 			{
 				if (sample == 0 && chn->NewSamp != 0)
 				{
@@ -665,6 +687,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					if (p_Mixer->TickCount != 0)
 						break;
 					chn->Pan = param;
+					chn->Flags |= CHN_FASTVOLRAMP;
 					break;
 				}
 				case CMD_OFFSET:
@@ -673,6 +696,8 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_VOLUMESLIDE:
 				{
+					if (param != 0)
+						VolumeSlide(p_Mixer, chn, param);
 					break;
 				}
 				case CMD_POSITIONJUMP:
@@ -684,10 +709,14 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_VOLUME:
 				{
-					BYTE NewVolume = param;
-					if (NewVolume > 64)
-						NewVolume = 64;
-					chn->Volume = NewVolume;
+					if (p_Mixer->TickCount == 0)
+					{
+						BYTE NewVolume = param;
+						if (NewVolume > 64)
+							NewVolume = 64;
+						chn->Volume = NewVolume;
+						chn->Flags |= CHN_FASTVOLRAMP;
+					}
 					break;
 				}
 				case CMD_PATTERNBREAK:
@@ -853,10 +882,13 @@ BOOL ReadNote(MixerState *p_Mixer)
 				inc = 0xFF0000;
 			chn->Increment = (inc + 1) & ~3;
 		}
-		chn->Flags &= ~CHN_VOLUMERAMP;
 		if (chn->Volume != 0 || chn->LeftVol != 0 || chn->RightVol != 0)
 			chn->Flags |= CHN_VOLUMERAMP;
+		else
+			chn->Flags &= ~CHN_VOLUMERAMP;
 		chn->NewLeftVol = chn->NewRightVol = 0;
+		if ((chn->Increment >> 16) + 1 >= (int)(chn->LoopEnd - chn->LoopStart))
+			chn->Flags &= ~CHN_LOOP;
 		chn->Sample = ((chn->NewSample != NULL && chn->Length != 0 && chn->Increment != 0) ? chn->NewSample : NULL);
 		if (chn->Sample != NULL)
 		{
@@ -867,19 +899,25 @@ BOOL ReadNote(MixerState *p_Mixer)
 			}
 			else
 				chn->NewLeftVol = chn->NewRightVol = chn->Volume;
-			chn->NewLeftVol <<= 2;
-			chn->NewRightVol <<= 2;
 			chn->RightRamp = chn->LeftRamp = 0;
 			if ((chn->Flags & CHN_VOLUMERAMP) != 0 && (chn->LeftVol != chn->NewLeftVol || chn->RightVol != chn->NewRightVol))
 			{
-				short LeftDelta, RightDelta;
+				int LeftDelta, RightDelta;
 				UINT RampLength = 42;
 				LeftDelta = (chn->NewLeftVol - chn->LeftVol);
 				RightDelta = (chn->NewRightVol - chn->RightVol);
+				if ((chn->LeftVol | chn->RightVol) != 0 && (chn->NewLeftVol | chn->NewRightVol) != 0 && (chn->Flags & CHN_FASTVOLRAMP) != 0)
+				{
+					RampLength = p_Mixer->BufferCount;
+					if (RampLength > 512)
+						RampLength = 512;
+					else if (RampLength < 42)
+						RampLength = 42;
+				}
 				chn->LeftRamp = LeftDelta / RampLength;
 				chn->RightRamp = RightDelta / RampLength;
-				chn->LeftVol = chn->NewLeftVol - (chn->LeftVol * RampLength);
-				chn->RightVol = chn->NewRightVol - (chn->RightVol * RampLength);
+				chn->LeftVol = chn->NewLeftVol - (chn->LeftRamp * RampLength);
+				chn->RightVol = chn->NewRightVol - (chn->RightRamp * RampLength);
 				if ((chn->LeftRamp | chn->RightRamp) != 0)
 					chn->RampLength = RampLength;
 				else
@@ -1044,6 +1082,7 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 				chn->Sample = NULL;
 				chn->Length = chn->Pos = chn->PosLo = 0;
 				chn->RampLength = 0;
+				//EndChannelOffs(chn, buff, samples);
 				samples = 0;
 				continue;
 			}
