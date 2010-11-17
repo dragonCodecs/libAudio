@@ -10,10 +10,11 @@
 #include "moduleMixer.h"
 
 #ifndef _WINDOWS
-#include <limits.h>
 inline int abs(int x)
 {
-	return x & INT_MAX;
+	if (x < 0)
+		return -x;
+	return x;
 }
 #endif
 
@@ -228,7 +229,7 @@ r_neg:
 		"b_neg:\n"
 		"\txor edx, ecx\n"
 		"\tor ecx, ecx\n"
-		"\tmov sign, edx\n"
+		"\tmov edi, edx\n"
 		"\tjge c_neg\n"
 		"\tneg ecx\n"
 		"c_neg:\n"
@@ -240,14 +241,13 @@ r_neg:
 		"diverr:\n"
 		"\tmov eax, 0x7FFFFFFF\n"
 		"ok:\n"
-		"\tmov edx, sign\n"
+		"\tmov edx, edi\n"
 		"\tor edx, edx\n"
 		"\tjge r_neg\n"
 		"\tneg eax\n"
 		"r_neg:\n"
-		"\tmov result, eax\n"
-		".att_syntax\n" : [result] "=a" (result) : [a] "a" (a),
-		[b] "b" (b), [c] "c" (c) : "edx");
+		".att_syntax\n" : [sign] "=D" (sign), [result] "=a" (result) : [a] "a" (a),
+		[b] "b" (b), [c] "c" (c), "D" (sign) : "edx");
 #endif
 	return result;
 }
@@ -289,6 +289,7 @@ done:
 	}
 #else
 	asm(".intel_syntax noprefix\n"
+		"\tpush edi\n"
 		"cliploop:\n"
 		"\tmov eax, dword ptr [edx]\n"
 		"\tadd ebx, 2\n"
@@ -311,11 +312,10 @@ done:
 		"\tmov eax, (0x07FFFFFF)\n"
 		"\tjmp cliprecover\n"
 		"done:\n"
-		"\tmov eax, SampleCount\n"
+		"\tpop eax\n"
 		"\tadd eax, eax\n"
-		"\tmov result, eax\n"
 		".att_syntax\n" : [result] "=a" (result) : [_out] "b" (_out), 
-		[_in] "d" (_in) , [SampleCount] "D" (SampleCount) : );
+		[_in] "d" (_in), [SampleCount] "D" (SampleCount) : );
 #endif
 	return result;
 }
