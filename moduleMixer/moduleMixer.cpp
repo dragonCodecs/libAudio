@@ -247,7 +247,6 @@ r_neg:
 		"r_neg:\n"
 		"\tmov result, eax" : [result] "=a" (result) : [a] "a" (a),
 		[b] "b" (b), [c] "c" (c) : "edx");
-		);
 #endif
 	return result;
 }
