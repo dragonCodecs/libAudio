@@ -379,14 +379,6 @@ const UINT PreAmpTable[16] =
 	0xB0, 0xB4, 0xB8, 0xBC
 };
 
-const UINT PreAmpAGCTable[16] =
-{
-	0x60, 0x60, 0x60, 0x64,
-	0x68, 0x70, 0x78, 0x80,
-	0x84, 0x88, 0x8C, 0x90,
-	0x92, 0x94, 0x96, 0x98
-};
-
 short SinusTable[64] =
 {
 	0,12,25,37,49,60,71,81,90,98,106,112,117,122,125,126,
@@ -2693,7 +2685,7 @@ void ISoundFile::NoteChange(UINT nChn, int note, bool Porta, bool ResetEnv, bool
 			chn->Length = smp->length;
 			chn->LoopEnd = smp->length;
 			chn->LoopStart = 0;
-			chn->Flags = (chn->Flags & 0xFFFFFF00) | (smp->flags & 0xFF);
+			chn->Flags = (chn->Flags & 0xFFFFFF00) | SampleToChannelFlags(smp);
 			if (chn->Flags & CHN_SUSTAINLOOP)
 			{
 				chn->LoopStart = smp->susloopbegin;
@@ -4473,7 +4465,7 @@ bool ISoundFile::ReadNote()
 		MasterVol = (RealMasterVol * SongPreAmp) >> 6;
 		if ((SongFlags & SONG_GLOBALFADE) != 0 && GlobalFadeMaxSamples != 0)
 			MasterVol = muldiv(MasterVol, GlobalFadeSamples, GlobalFadeMaxSamples);
-		Attenuation = ((SoundSetup & SNDMIX_AGC) ? PreAmpAGCTable[Chn32 >> 1] : PreAmpTable[Chn32 >> 1]);
+		Attenuation = PreAmpTable[Chn32 >> 1];
 		if (Attenuation < 1)
 			Attenuation = 1;
 		MasterVol = (MasterVol << 7) / Attenuation;
@@ -5840,8 +5832,6 @@ UINT ISoundFile::Read(BYTE *Buffer, UINT BuffLen)
 			X86_MonoFromStereo(MixSoundBuffer, Count);
 			ProcessMonoDSP(Count);
 		}
-		if ((SoundSetup & SNDMIX_AGC) != 0)
-			ProcessAGC(SampleCount);
 		_TotalSampleCount = SampleCount;
 		if (OutChannels > 2)
 		{

@@ -111,6 +111,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 		smp->LoopLen = BE2LE(smp->LoopLen);
 		if (smp->Volume > 64)
 			smp->Volume = 64;
+		smp->FineTune &= 0x0F;
 	}
 
 	fread(((BYTE *)p_MF->p_Header) + 20, 130, 1, f_MOD);
@@ -118,6 +119,8 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 		fseek(f_MOD, 4, SEEK_CUR);
 	if (p_MF->p_Header->nOrders > 128)
 		p_MF->p_Header->nOrders = 128;
+	if (p_MF->p_Header->RestartPos > 127)
+		p_MF->p_Header->RestartPos = 127;
 
 	// Count the number of patterns present
 	for (i = 0, maxPattern = 0; i < p_MF->p_Header->nOrders; i++)

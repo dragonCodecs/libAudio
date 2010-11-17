@@ -376,6 +376,10 @@
 				Name="moduleMixer"
 				>
 				<File
+					RelativePath=".\moduleMixer\mixFunctions.h"
+					>
+				</File>
+				<File
 					RelativePath=".\moduleMixer\moduleMixer.cpp"
 					>
 				</File>
