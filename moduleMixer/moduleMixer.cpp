@@ -9,6 +9,14 @@
 #include "../ProTracker.h"
 #include "moduleMixer.h"
 
+#ifndef _WINDOWS
+#include <limits.h>
+inline int abs(int x)
+{
+	return x & INT_MAX;
+}
+#endif
+
 #define SNG_ENDREACHED		1
 
 #define CHN_LOOP			0x01
