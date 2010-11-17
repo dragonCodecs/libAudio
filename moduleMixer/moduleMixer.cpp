@@ -371,15 +371,14 @@ inline BYTE PeriodToNoteIndex(WORD Period)
 		return -1;
 }
 
-void SampleChange(MixerState *p_Mixer, Channel *chn, UINT sample_, BOOL UpdVol)
+void SampleChange(MixerState *p_Mixer, Channel *chn, UINT sample_)
 {
 	MODSample *smp;
 	UINT note, sample = sample_ - 1;
 
 	smp = &p_Mixer->Samp[sample];
 	note = chn->NewNote;
-	if (UpdVol == TRUE)
-		chn->Volume = smp->Volume;
+	chn->Volume = smp->Volume;
 	chn->NewSamp = 0;
 	chn->Samp = smp;
 	chn->Length = smp->Length * 2;
@@ -434,7 +433,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note)
 			{
 				chn->Flags &= ~CHN_LOOP;
 				chn->LoopStart = 0;
-				chn->LoopEnd = smp->Length;
+				chn->LoopEnd = smp->Length * 2;
 			}
 			chn->Pos = 0;
 			chn->PosLo = 0;
@@ -567,14 +566,14 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 			if (sample != 0)
 			{
 				MODSample *smp = chn->Samp;
-				SampleChange(p_Mixer, chn, sample, FALSE);
+				SampleChange(p_Mixer, chn, sample);
 				chn->NewSamp = 0;
 			}
 			if (note != -1)
 			{
 				if (sample == 0 && chn->NewSamp != 0)
 				{
-					SampleChange(p_Mixer, chn, chn->NewSamp, TRUE);
+					SampleChange(p_Mixer, chn, chn->NewSamp);
 					chn->NewSamp = 0;
 				}
 				NoteChange(p_Mixer, i, note);
@@ -822,11 +821,9 @@ BOOL ReadNote(MixerState *p_Mixer)
 				chn->NewRightVol = (chn->Volume * (128 - chn->Pan)) >> 7;
 			}
 			else
-				chn->NewLeftVol = chn->NewRightVol = chn->Volume << 1;
+				chn->NewLeftVol = chn->NewRightVol = chn->Volume;
 			chn->NewLeftVol <<= 2;
 			chn->NewRightVol <<= 2;
-			// Maybe need to >>= NewLeftVol/NewRightVol
-			// by 4 (MIXING_ATTENUATION)?
 			chn->RightRamp = chn->LeftRamp = 0;
 			if ((chn->Flags & CHN_VOLUMERAMP) != 0 && (chn->LeftVol != chn->NewLeftVol || chn->RightVol != chn->NewRightVol))
 			{
@@ -981,8 +978,9 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 		UINT samples, rampSamples, Flags;
 		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
 		int *buff = p_Mixer->MixBuffer;
-		//if (chn->Sample == NULL)
-		if (chn->Sample == NULL || p_Mixer->ChnMix[i] != 0)
+		if (chn->Sample == NULL)
+		//if (chn->Sample == NULL || p_Mixer->ChnMix[i] != 0)
+		//if (chn->Sample == NULL || p_Mixer->ChnMix[i] == 0 || p_Mixer->ChnMix[i] == 3)
 			continue;
 		samples = count;
 		channelsUsed++;
