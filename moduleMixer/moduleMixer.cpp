@@ -215,7 +215,7 @@ r_neg:
 		mov result, eax
 	}
 #else
-	asm(".intel_syntax"
+	asm(".intel_syntax noprefix\n"
 		"\tor eax, eax\n"
 		"\tmov edx, eax\n"
 		"\tjge a_neg\n"
@@ -245,7 +245,8 @@ r_neg:
 		"\tjge r_neg\n"
 		"\tneg eax\n"
 		"r_neg:\n"
-		"\tmov result, eax" : [result] "=a" (result) : [a] "a" (a),
+		"\tmov result, eax\n"
+		".att_syntax\n" : [result] "=a" (result) : [a] "a" (a),
 		[b] "b" (b), [c] "c" (c) : "edx");
 #endif
 	return result;
@@ -287,7 +288,7 @@ done:
 		mov result, eax
 	}
 #else
-	asm(".intel_syntax"
+	asm(".intel_syntax noprefix\n"
 		"cliploop:\n"
 		"\tmov eax, dword ptr [edx]\n"
 		"\tadd ebx, 2\n"
@@ -312,7 +313,8 @@ done:
 		"done:\n"
 		"\tmov eax, SampleCount\n"
 		"\tadd eax, eax\n"
-		"\tmov result, eax" : [result] "=a" (result) : [_out] "b" (_out), 
+		"\tmov result, eax\n"
+		".att_syntax\n" : [result] "=a" (result) : [_out] "b" (_out), 
 		[_in] "d" (_in) , [SampleCount] "D" (SampleCount) : );
 #endif
 	return result;
