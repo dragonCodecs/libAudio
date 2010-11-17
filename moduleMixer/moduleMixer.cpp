@@ -177,6 +177,7 @@ MixInterface MixFunctionTable[32] =
 int muldiv(long a, long b, long c)
 {
 	int sign, result;
+#ifdef _WINDOWS
 	__asm
 	{
 		mov eax, a
@@ -213,6 +214,41 @@ ok:
 r_neg:
 		mov result, eax
 	}
+#else
+	asm(".intel_syntax"
+		"\tor eax, eax\n"
+		"\tmov edx, eax\n"
+		"\tjge a_neg\n"
+		"\tneg eax\n"
+		"a_neg:\n"
+		"\txor edx, ebx\n"
+		"\tor ebx, ebx\n"
+		"\tjge b_neg\n"
+		"\tneg ebx\n"
+		"b_neg:\n"
+		"\txor edx, ecx\n"
+		"\tor ecx, ecx\n"
+		"\tmov sign, edx\n"
+		"\tjge c_neg\n"
+		"\tneg ecx\n"
+		"c_neg:\n"
+		"\tmul ebx\n"
+		"\tcmp edx, ecx\n"
+		"\tjae diverr\n" // unsigned jge
+		"\tdiv ecx\n"
+		"\tjmp ok\n"
+		"diverr:\n"
+		"\tmov eax, 0x7FFFFFFF\n"
+		"ok:\n"
+		"\tmov edx, sign\n"
+		"\tor edx, edx\n"
+		"\tjge r_neg\n"
+		"\tneg eax\n"
+		"r_neg:\n"
+		"\tmov result, eax" : [result] "=a" (result) : [a] "a" (a),
+		[b] "b" (b), [c] "c" (c) : "edx");
+		);
+#endif
 	return result;
 }
 
