@@ -617,13 +617,13 @@ inline void TonePortamento(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE
 	{
 		if (chn->Period < chn->PortamentoDest)
 		{
-			chn->Period += chn->PortamentoSlide << 2;
+			chn->Period += chn->PortamentoSlide << 1;
 			if (chn->Period > chn->PortamentoDest)
 				chn->Period = chn->PortamentoDest;
 		}
 		else if (chn->Period > chn->PortamentoDest)
 		{
-			chn->Period -= chn->PortamentoSlide << 2;
+			chn->Period -= chn->PortamentoSlide << 1;
 			if (chn->Period < chn->PortamentoDest)
 				chn->Period = chn->PortamentoDest;
 		}
@@ -722,7 +722,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				{
 					if (param != 0)
 						VolumeSlide(TRUE, chn, param);
-					TonePortamento(p_Mixer, TRUE, chn, 0);
+					TonePortamento(p_Mixer, p_Mixer->TickCount > StartTick, chn, 0);
 					break;
 				}
 				case CMD_TREMOLO:
