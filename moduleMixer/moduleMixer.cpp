@@ -90,8 +90,7 @@ typedef struct _Channel
 	BYTE RetrigCount, RetrigParam;
 	BYTE LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
-	BYTE PortamentoSlide;
-	WORD RowEffect;
+	WORD RowEffect, PortamentoSlide;
 	short LeftRamp, RightRamp;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
@@ -608,22 +607,22 @@ inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE
 		chn->Period += param;
 }
 
-inline void TonePortamento(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 {
 	if (param != 0)
-		chn->PortamentoSlide = param;
+		chn->PortamentoSlide = param << 2;
 	chn->Flags |= CHN_PORTAMENTO;
-	if (chn->Period != 0 && chn->PortamentoDest != 0 && (DoSlide || p_Mixer->MusicSpeed == 1))
+	if (chn->Period != 0 && chn->PortamentoDest != 0)
 	{
 		if (chn->Period < chn->PortamentoDest)
 		{
-			chn->Period += chn->PortamentoSlide << 1;
+			chn->Period += chn->PortamentoSlide;
 			if (chn->Period > chn->PortamentoDest)
 				chn->Period = chn->PortamentoDest;
 		}
 		else if (chn->Period > chn->PortamentoDest)
 		{
-			chn->Period -= chn->PortamentoSlide << 1;
+			chn->Period -= chn->PortamentoSlide;
 			if (chn->Period < chn->PortamentoDest)
 				chn->Period = chn->PortamentoDest;
 		}
@@ -707,7 +706,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_TONEPORTAMENTO:
 				{
-					TonePortamento(p_Mixer, p_Mixer->TickCount > StartTick, chn, param);
+					TonePortamento(p_Mixer, chn, param);
 					break;
 				}
 				case CMD_VIBRATO:
@@ -722,7 +721,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				{
 					if (param != 0)
 						VolumeSlide(TRUE, chn, param);
-					TonePortamento(p_Mixer, p_Mixer->TickCount > StartTick, chn, 0);
+					TonePortamento(p_Mixer, chn, 0);
 					break;
 				}
 				case CMD_TREMOLO:
