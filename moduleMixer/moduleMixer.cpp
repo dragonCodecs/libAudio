@@ -720,6 +720,9 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_VIBRATOVOL:
 				{
+					if (param != 0)
+						VolumeSlide(TRUE, chn, param);
+					TonePortamento(p_Mixer, TRUE, chn, 0);
 					break;
 				}
 				case CMD_TREMOLO:
