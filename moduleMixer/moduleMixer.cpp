@@ -26,6 +26,8 @@ inline int abs(int x)
 #define CHN_VIBRATO			0x08
 #define CHN_VOLUMERAMP		0x10
 #define CHN_FASTVOLRAMP		0x20
+#define CHN_PORTAMENTO		0x40
+#define CHN_GLISSANDO		0x80
 
 #define CMD_ARPEGGIO		0
 #define CMD_PORTAMENTOUP	1
@@ -83,11 +85,12 @@ typedef struct _Channel
 	MODSample *Samp;
 	BYTE RowNote, RowSample, Volume;
 	BYTE FineTune, Flags, Pan;
-	UINT Period, Pos, PosLo;
+	UINT Period, Pos, PosLo, PortamentoDest;
 	int Increment;
 	BYTE RetrigCount, RetrigParam;
 	BYTE LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
+	BYTE PortamentoSlide;
 	WORD RowEffect;
 	short LeftRamp, RightRamp;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
@@ -450,7 +453,7 @@ UINT GetPeriodFromNote(BYTE Note, BYTE FineTune)
 		return Periods[Note] << 2;
 }
 
-void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note)
+void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 {
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
@@ -463,7 +466,9 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note)
 		return;
 	if (period != 0)
 	{
-		chn->Period = period;
+		if (cmd != CMD_TONEPORTAMENTO && cmd != CMD_TONEPORTAVOL)
+			chn->Period = period;
+		chn->PortamentoDest = period;
 		if (chn->Length == 0)
 		{
 			chn->Samp = smp;
@@ -573,7 +578,7 @@ int PatternLoop(MixerState *p_Mixer, UINT param)
 	return -1;
 }
 
-void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
+inline void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
 {
 	if (DoSlide != FALSE)
 	{
@@ -591,21 +596,38 @@ void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
 	}
 }
 
-inline void DoFreqSlide(Channel *chn, short param)
-{
-	chn->Period += param;
-}
-
-void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
 {
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
-		DoFreqSlide(chn, -(short)param);
+		chn->Period -= param;
 }
 
-void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
 {
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
-		DoFreqSlide(chn, param);
+		chn->Period += param;
+}
+
+inline void TonePortamento(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+{
+	if (param != 0)
+		chn->PortamentoSlide = param;
+	chn->Flags |= CHN_PORTAMENTO;
+	if (chn->Period != 0 && chn->PortamentoDest != 0 && (DoSlide || p_Mixer->MusicSpeed == 1))
+	{
+		if (chn->Period < chn->PortamentoDest)
+		{
+			chn->Period += chn->PortamentoSlide;
+			if (chn->Period > chn->PortamentoDest)
+				chn->Period = chn->PortamentoDest;
+		}
+		else if (chn->Period > chn->PortamentoDest)
+		{
+			chn->Period -= chn->PortamentoSlide;
+			if (chn->Period < chn->PortamentoDest)
+				chn->Period = chn->PortamentoDest;
+		}
+	}
 }
 
 BOOL ProcessEffects(MixerState *p_Mixer)
@@ -660,7 +682,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					SampleChange(p_Mixer, chn, chn->NewSamp);
 					chn->NewSamp = 0;
 				}
-				NoteChange(p_Mixer, i, note);
+				NoteChange(p_Mixer, i, note, cmd);
 			}
 		}
 		if (cmd != 0 || (cmd == 0 && param != 0))
@@ -685,6 +707,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_TONEPORTAMENTO:
 				{
+					TonePortamento(p_Mixer, p_Mixer->TickCount > StartTick, chn, param);
 					break;
 				}
 				case CMD_VIBRATO:
@@ -840,6 +863,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 			if (chn->RowSample > p_Mixer->Samples)
 				chn->RowSample = 0;
 			chn->RowEffect = Commands[i][p_Mixer->Row].Effect;
+			chn->Flags &= ~(CHN_TREMOLO | CHN_PORTAMENTO | CHN_GLISSANDO);
 		}
 	}
 	if (p_Mixer->MusicSpeed == 0)
