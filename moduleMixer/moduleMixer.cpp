@@ -573,9 +573,9 @@ int PatternLoop(MixerState *p_Mixer, UINT param)
 	return -1;
 }
 
-void VolumeSlide(MixerState *p_Mixer, Channel *chn, BYTE param)
+void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
 {
-	if (p_Mixer->TickCount != 0)
+	if (DoSlide != FALSE)
 	{
 		short NewVolume = chn->Volume;
 		if ((param & 0xF0) != 0)
@@ -589,6 +589,23 @@ void VolumeSlide(MixerState *p_Mixer, Channel *chn, BYTE param)
 			NewVolume = 64;
 		chn->Volume = (BYTE)NewVolume;
 	}
+}
+
+inline void DoFreqSlide(Channel *chn, short param)
+{
+	chn->Period += param;
+}
+
+void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+{
+	if (DoSlide || p_Mixer->MusicSpeed == 1)
+		DoFreqSlide(chn, -(short)param);
+}
+
+void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+{
+	if (DoSlide || p_Mixer->MusicSpeed == 1)
+		DoFreqSlide(chn, param);
 }
 
 BOOL ProcessEffects(MixerState *p_Mixer)
@@ -627,7 +644,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 			BYTE note = chn->RowNote;
 			if (sample != 0)
 				chn->NewSamp = sample;
-			if (note == -1 && sample != 0)
+			if (note == 0xFF && sample != 0)
 				chn->Volume = p_Mixer->Samp[sample - 1].Volume;
 			chn->NewNote = note;
 			if (sample != 0)
@@ -656,10 +673,14 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_PORTAMENTOUP:
 				{
+					if (param != 0)
+						PortamentoUp(p_Mixer, p_Mixer->TickCount > StartTick, chn, param);
 					break;
 				}
 				case CMD_PORTAMENTODOWN:
 				{
+					if (param != 0)
+						PortamentoDown(p_Mixer, p_Mixer->TickCount > StartTick, chn, param);
 					break;
 				}
 				case CMD_TONEPORTAMENTO:
@@ -697,7 +718,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				case CMD_VOLUMESLIDE:
 				{
 					if (param != 0)
-						VolumeSlide(p_Mixer, chn, param);
+						VolumeSlide(p_Mixer->TickCount > StartTick, chn, param);
 					break;
 				}
 				case CMD_POSITIONJUMP:
