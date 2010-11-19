@@ -95,6 +95,7 @@ typedef struct _Channel
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
+	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 } Channel;
 
 typedef struct _MixerState
@@ -745,6 +746,11 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_VIBRATO:
 				{
+					if ((param & 0x0F) != 0)
+						chn->VibratoDepth = param & 0x0F;
+					if ((param & 0xF0) != 0)
+						chn->VibratoSpeed = param >> 4;
+					chn->Flags |= CHN_VIBRATO;
 					break;
 				}
 				case CMD_TONEPORTAVOL:
@@ -945,14 +951,15 @@ BOOL ReadNote(MixerState *p_Mixer)
 				if (vol > 0)
 				{
 					BYTE TremoloType = chn->TremoloType & 0x03;
+					BYTE TremoloDepth = chn->TremoloDepth << 2;
 					if (TremoloType == 1)
-						vol += (RampDownTable[TremoloPos] * chn->TremoloDepth) >> 8;
+						vol += (RampDownTable[TremoloPos] * TremoloDepth) >> 8;
 					else if (TremoloType == 2)
-						vol += (SquareTable[TremoloPos] * chn->TremoloDepth) >> 8;
+						vol += (SquareTable[TremoloPos] * TremoloDepth) >> 8;
 //					else if (TremoloType == 3)
 //						vol += (RandomTable[TremoloPos] * chn->TremoloDepth) >> 8;
 					else
-						vol += (SinusTable[TremoloPos] * chn->TremoloDepth) >> 8;
+						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8;
 				}
 				if (p_Mixer->TickCount != 0)
 					chn->TremoloPos = (TremoloPos + chn->TremoloSpeed) & 0x3F;
@@ -972,7 +979,21 @@ BOOL ReadNote(MixerState *p_Mixer)
 			}
 			if ((chn->Flags & CHN_VIBRATO) != 0)
 			{
-				// Vibrato handling here
+				CHAR Delta;
+				BYTE VibratoPos = chn->VibratoPos;
+				BYTE VibratoType = chn->VibratoType & 0x03;
+				if (VibratoType == 1)
+					Delta = RampDownTable[VibratoPos];
+				else if (VibratoType == 2)
+					Delta = SquareTable[VibratoPos];
+				//else if (VibratoType == 3)
+				//	Delta = RandomTable[VibratoPos];
+				else
+					Delta = SinusTable[VibratoPos];
+				Delta = (Delta * chn->VibratoDepth) >> 7;
+				period += Delta;
+				if (p_Mixer->TickCount != 0)
+					chn->VibratoPos = (VibratoPos + chn->VibratoSpeed) & 0x3F;
 			}
 			if (period > 3424)
 				period = 3424;
