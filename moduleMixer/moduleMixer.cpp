@@ -94,6 +94,7 @@ typedef struct _Channel
 	short LeftRamp, RightRamp;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
+	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 } Channel;
 
 typedef struct _MixerState
@@ -155,6 +156,34 @@ const BYTE PreAmpTable[16] =
 	0xA0, 0xA4, 0xA8, 0xAC,
 	0xB0, 0xB4, 0xB8, 0xBC
 };
+
+const signed char SinusTable[64] =
+{
+	0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
+	127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
+	0, -12, -25, -37, -49, -60, -71, -81, -90, -98, -106, -112, -117, -122, -125, -126,
+	-127, -126, -125, -122, -117, -112, -106, -98, -90, -81, -71, -60, -49, -37, -25, -12
+};
+
+const signed char RampDownTable[64] =
+{
+	124, 120, 116, 112, 108, 104, 100, 96, 92, 88, 84, 80, 76, 72, 68, 64,
+	60, 56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4, 0,
+	-4, -8, -12, -16, -20, -24, -28, -32, -36, -40, -44, -48, -52, -56, -60, -64,
+	-68, -72, -76, -80, -84, -88, -92, -96, -100, -104, -108, -112, -116, -120, -124, -128
+};
+
+const signed char SquareTable[64] =
+{
+	127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
+	127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
+	-127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127,
+	-127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127
+};
+
+/*const signed char RandomTable[64] =
+{
+};*/
 
 #include "mixFunctions.h"
 
@@ -468,7 +497,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 		if (cmd != CMD_TONEPORTAMENTO && cmd != CMD_TONEPORTAVOL)
 			chn->Period = period;
 		chn->PortamentoDest = period;
-		if (chn->Length == 0)
+		if (chn->PortamentoDest == chn->Period || chn->Length == 0)
 		{
 			chn->Samp = smp;
 			chn->NewSample = p_Mixer->SamplePCM[smp - p_Mixer->Samp];
@@ -487,12 +516,17 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 			}
 			chn->Pos = 0;
 			chn->PosLo = 0;
+			if ((chn->TremoloType & 0x04) != 0)
+				chn->TremoloPos = 0;
 		}
 		if (chn->Pos > chn->Length)
 			chn->Pos = chn->Length;
 	}
-	chn->RetrigCount = 0;
-	chn->Flags |= CHN_FASTVOLRAMP;
+	if (chn->PortamentoDest == chn->Period)
+	{
+		chn->RetrigCount = 0;
+		chn->Flags |= CHN_FASTVOLRAMP;
+	}
 	chn->LeftVol = chn->RightVol = 0;
 }
 
@@ -715,17 +749,22 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_TONEPORTAVOL:
 				{
-					break;
-				}
-				case CMD_VIBRATOVOL:
-				{
 					if (param != 0)
 						VolumeSlide(TRUE, chn, param);
 					TonePortamento(p_Mixer, chn, 0);
 					break;
 				}
+				case CMD_VIBRATOVOL:
+				{
+					break;
+				}
 				case CMD_TREMOLO:
 				{
+					if ((param & 0x0F) != 0)
+						chn->TremoloDepth = param & 0x0F;
+					if ((param & 0xF0) != 0)
+						chn->TremoloSpeed = param >> 4;
+					chn->Flags |= CHN_TREMOLO;
 					break;
 				}
 				case CMD_PANNING:
@@ -900,12 +939,28 @@ BOOL ReadNote(MixerState *p_Mixer)
 		{
 			UINT inc, freq;
 			int vol = chn->Volume, period;
-			if (vol > 64)
-				vol = 64;
 			if ((chn->Flags & CHN_TREMOLO) != 0)
 			{
-				// Tremolo handling here
+				BYTE TremoloPos = chn->TremoloPos;
+				if (vol > 0)
+				{
+					BYTE TremoloType = chn->TremoloType & 0x03;
+					if (TremoloType == 1)
+						vol += (RampDownTable[TremoloPos] * chn->TremoloDepth) >> 8;
+					else if (TremoloType == 2)
+						vol += (SquareTable[TremoloPos] * chn->TremoloDepth) >> 8;
+//					else if (TremoloType == 3)
+//						vol += (RandomTable[TremoloPos] * chn->TremoloDepth) >> 8;
+					else
+						vol += (SinusTable[TremoloPos] * chn->TremoloDepth) >> 8;
+				}
+				if (p_Mixer->TickCount != 0)
+					chn->TremoloPos = (TremoloPos + chn->TremoloSpeed) & 0x3F;
 			}
+			if (vol < 0)
+				vol = 0;
+			if (vol > 64)
+				vol = 64;
 			if (vol != 0)
 				chn->Volume = vol;
 			if (chn->Period < 14)
