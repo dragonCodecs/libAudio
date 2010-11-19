@@ -75,7 +75,7 @@ inline int abs(int x)
 #define MIXNDX_RAMP			0x10
 
 #define MAX_VOLUME			64
-#define MIXBUFFERSIZE 512
+#define MIXBUFFERSIZE		512
 
 typedef struct _Channel
 {
@@ -182,9 +182,16 @@ const signed char SquareTable[64] =
 	-127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127, -127
 };
 
-/*const signed char RandomTable[64] =
+// Temp. table. Will rewrite this via using a randomisation
+// function to generate 64 signed char datapoints. Table will
+// have it's pointer stored inside the MixerState
+const signed char RandomTable[64] =
 {
-};*/
+	98, -127, -43, 88, 102, 41, -65, -94, 125, 20, -71, -86, -70, -32, -16, -96,
+	17, 72, 107, -5, 116, -69, -62, -40, 10, -61, 65, 109, -18, -38, -13, -76,
+	-23, 88, 21, -94, 8, 106, 21, -112, 6, 109, 20, -88, -30, 9, -127, 118,
+	42, -34, 89, -4, -51, -72, 21, -29, 112, 123, 84, -101, -92, 98, -54, -95
+};
 
 #include "mixFunctions.h"
 
@@ -956,8 +963,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 						vol += (RampDownTable[TremoloPos] * TremoloDepth) >> 8;
 					else if (TremoloType == 2)
 						vol += (SquareTable[TremoloPos] * TremoloDepth) >> 8;
-//					else if (TremoloType == 3)
-//						vol += (RandomTable[TremoloPos] * chn->TremoloDepth) >> 8;
+					else if (TremoloType == 3)
+						vol += (RandomTable[TremoloPos] * chn->TremoloDepth) >> 8;
 					else
 						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8;
 				}
@@ -986,8 +993,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 					Delta = RampDownTable[VibratoPos];
 				else if (VibratoType == 2)
 					Delta = SquareTable[VibratoPos];
-				//else if (VibratoType == 3)
-				//	Delta = RandomTable[VibratoPos];
+				else if (VibratoType == 3)
+					Delta = RandomTable[VibratoPos];
 				else
 					Delta = SinusTable[VibratoPos];
 				Delta = (Delta * chn->VibratoDepth) >> 7;
