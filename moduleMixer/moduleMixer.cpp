@@ -769,6 +769,9 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_VIBRATOVOL:
 				{
+					if (param != 0)
+						VolumeSlide(TRUE, chn, param);
+					chn->Flags |= CHN_VIBRATO;
 					break;
 				}
 				case CMD_TREMOLO:
