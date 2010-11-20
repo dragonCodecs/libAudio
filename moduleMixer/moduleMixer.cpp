@@ -538,7 +538,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 	chn->LeftVol = chn->RightVol = 0;
 }
 
-void ProcessExtendedCommand(MixerState *p_Mixer, Channel *chn, BYTE param)
+void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, BYTE param)
 {
 	BYTE cmd = (param & 0xF0) >> 8;
 	param &= 0x0F;
@@ -550,10 +550,28 @@ void ProcessExtendedCommand(MixerState *p_Mixer, Channel *chn, BYTE param)
 		}
 		case CMDEX_FINEPORTAUP:
 		{
+			if (p_Mixer->TickCount == 0)
+			{
+				if (chn->Period != 0 && param != 0)
+				{
+					chn->Period -= param << 2;
+					if (chn->Period < 14)
+						chn->Period = 14;
+				}
+			}
 			break;
 		}
 		case CMDEX_FINEPORTADOWN:
 		{
+			if (p_Mixer->TickCount == 0)
+			{
+				if (chn->Period != 0 && param != 0)
+				{
+					chn->Period += param << 2;
+					if (chn->Period > 3424)
+						chn->Period = 3424;
+				}
+			}
 			break;
 		}
 		case CMDEX_GLISSANDO:
@@ -566,6 +584,7 @@ void ProcessExtendedCommand(MixerState *p_Mixer, Channel *chn, BYTE param)
 		}
 		case CMDEX_FINETUNE:
 		{
+			chn->FineTune = param;
 			break;
 		}
 		case CMDEX_TREMOLOWAVE:
@@ -640,13 +659,21 @@ inline void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
 inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
 {
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
+	{
 		chn->Period -= param;
+		if (chn->Period < 14)
+			chn->Period = 14;
+	}
 }
 
 inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
 {
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
+	{
 		chn->Period += param;
+		if (chn->Period > 3424)
+			chn->Period = 3424;
+	}
 }
 
 inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
@@ -793,6 +820,12 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_OFFSET:
 				{
+					if (p_Mixer->TickCount != 0)
+						break;
+					chn->Pos = param << 8;
+					chn->PosLo = 0;
+					if (chn->Pos > chn->Length)
+						chn->Pos = chn->Length;
 					break;
 				}
 				case CMD_VOLUMESLIDE:
@@ -830,7 +863,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_EXTENDED:
 				{
-					ProcessExtendedCommand(p_Mixer, chn, param);
+					ProcessExtendedCommand(p_Mixer, p_Mixer->TickCount > StartTick, chn, param);
 					break;
 				}
 				case CMD_SPEED:
