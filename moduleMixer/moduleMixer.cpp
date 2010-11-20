@@ -580,15 +580,18 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, BYTE
 		}
 		case CMDEX_VIBRATOWAVE:
 		{
+			chn->VibratoType = param & 0x07;
 			break;
 		}
 		case CMDEX_FINETUNE:
 		{
 			chn->FineTune = param;
+			chn->Period = GetPeriodFromNote(chn->Note, chn->FineTune);
 			break;
 		}
 		case CMDEX_TREMOLOWAVE:
 		{
+			chn->TremoloType = param & 0x07;
 			break;
 		}
 		case CMDEX_RETRIGER:
