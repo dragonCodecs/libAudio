@@ -1114,8 +1114,7 @@ BOOL ReadNote(MixerState *p_Mixer)
 				vol = 0;
 			if (vol > 64)
 				vol = 64;
-			if (vol != 0)
-				chn->Volume = vol;
+			chn->Volume = vol;
 			if (chn->Period < 14)
 				chn->Period = 14;
 			period = chn->Period;
@@ -1141,6 +1140,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 				if (p_Mixer->TickCount != 0)
 					chn->VibratoPos = (VibratoPos + chn->VibratoSpeed) & 0x3F;
 			}
+			if (period < 14)
+				period = 14;
 			if (period > 3424)
 				period = 3424;
 			freq = GetFreqFromPeriod(period);
