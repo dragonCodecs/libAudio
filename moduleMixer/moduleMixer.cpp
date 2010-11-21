@@ -1056,7 +1056,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 			if (chn->RowSample > p_Mixer->Samples)
 				chn->RowSample = 0;
 			chn->RowEffect = Commands[i][p_Mixer->Row].Effect;
-			chn->Flags &= ~(CHN_TREMOLO | CHN_PORTAMENTO | CHN_GLISSANDO);
+			chn->Flags &= ~(CHN_TREMOLO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 		}
 	}
 	if (p_Mixer->MusicSpeed == 0)
