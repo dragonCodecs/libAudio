@@ -1064,13 +1064,6 @@ BOOL ProcessRow(MixerState *p_Mixer)
 	return ProcessEffects(p_Mixer);
 }
 
-inline UINT GetFreqFromPeriod(UINT period)
-{
-	if (period == 0)
-		return 0;
-	return 14187580L / period;
-}
-
 BOOL ReadNote(MixerState *p_Mixer)
 {
 	Channel *chn;
@@ -1144,7 +1137,7 @@ BOOL ReadNote(MixerState *p_Mixer)
 				period = 14;
 			if (period > 3424)
 				period = 3424;
-			freq = GetFreqFromPeriod(period);
+			freq = 14187580L / period;
 			inc = muldiv(freq, 0x10000, p_Mixer->MixRate);
 			if (inc >= 0xFFB0 && inc <= 0x10090)
 				inc = 0x10000;
