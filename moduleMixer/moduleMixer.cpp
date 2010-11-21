@@ -87,7 +87,7 @@ typedef struct _Channel
 	BYTE FineTune, Flags, Pan;
 	UINT Period, Pos, PosLo, PortamentoDest;
 	int Increment;
-	BYTE RetrigCount, RetrigParam;
+	BYTE RetrigCount, RetrigParam, Arpeggio;
 	BYTE LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
 	WORD RowEffect, PortamentoSlide;
@@ -862,6 +862,10 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 			{
 				case CMD_ARPEGGIO:
 				{
+					if (p_Mixer->TickCount != 0 || chn->Period == 0 || chn->Note == 0xFF || param == 0)
+						break;
+					chn->Flags |= CHN_ARPEGGIO;
+					chn->Arpeggio = param;
 					break;
 				}
 				case CMD_PORTAMENTOUP:
@@ -1056,7 +1060,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 			if (chn->RowSample > p_Mixer->Samples)
 				chn->RowSample = 0;
 			chn->RowEffect = Commands[i][p_Mixer->Row].Effect;
-			chn->Flags &= ~(CHN_TREMOLO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
+			chn->Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 		}
 	}
 	if (p_Mixer->MusicSpeed == 0)
@@ -1113,7 +1117,11 @@ BOOL ReadNote(MixerState *p_Mixer)
 			period = chn->Period;
 			if ((chn->Flags & CHN_ARPEGGIO) != 0)
 			{
-				// Arpeggio handling here
+				BYTE n = p_Mixer->TickCount % 3;
+				if (n == 1)
+					period = GetPeriodFromNote(chn->Note + (chn->Arpeggio >> 4), chn->FineTune);
+				else if (n == 2)
+					period = GetPeriodFromNote(chn->Note + (chn->Arpeggio & 0x0F), chn->FineTune);
 			}
 			if ((chn->Flags & CHN_VIBRATO) != 0)
 			{
