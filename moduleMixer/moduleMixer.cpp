@@ -87,8 +87,7 @@ typedef struct _Channel
 	BYTE FineTune, Flags, Pan;
 	UINT Period, Pos, PosLo, PortamentoDest;
 	int Increment;
-	BYTE RetrigCount, RetrigParam, Arpeggio;
-	BYTE LeftVol, RightVol, RampLength;
+	BYTE Arpeggio, LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
 	WORD RowEffect, PortamentoSlide;
 	short LeftRamp, RightRamp;
@@ -603,14 +602,11 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 			chn->Pos = chn->Length;
 	}
 	if (chn->PortamentoDest == chn->Period)
-	{
-		chn->RetrigCount = 0;
 		chn->Flags |= CHN_FASTVOLRAMP;
-	}
 	chn->LeftVol = chn->RightVol = 0;
 }
 
-void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, BYTE param)
+void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT i, BYTE param)
 {
 	BYTE cmd = (param & 0xF0) >> 8;
 	param &= 0x0F;
@@ -618,6 +614,9 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, BYTE
 	{
 		case CMDEX_FILTER:
 		{
+			// Could implement a 7Khz lowpass filter
+			// For this, or just do what MPT does - ignore it.
+			// XXX: Currently we ignore this.
 			break;
 		}
 		case CMDEX_FINEPORTAUP:
@@ -672,6 +671,8 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, BYTE
 		}
 		case CMDEX_RETRIGER:
 		{
+			if (param != 0 && (p_Mixer->TickCount % param) == 0)
+				NoteChange(p_Mixer, i, chn->NewNote, 0);
 			break;
 		}
 		case CMDEX_FINEVOLUP:
@@ -929,7 +930,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				{
 					if (p_Mixer->TickCount != 0)
 						break;
-					chn->Pos = param << 8;
+					chn->Pos = ((UINT)param) << 9;
 					chn->PosLo = 0;
 					if (chn->Pos > chn->Length)
 						chn->Pos = chn->Length;
@@ -970,7 +971,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_EXTENDED:
 				{
-					ProcessExtendedCommand(p_Mixer, p_Mixer->TickCount > StartTick, chn, param);
+					ProcessExtendedCommand(p_Mixer, p_Mixer->TickCount > StartTick, chn, i, param);
 					break;
 				}
 				case CMD_SPEED:
