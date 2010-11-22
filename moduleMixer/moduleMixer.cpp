@@ -575,7 +575,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 	MODSample *smp = chn->Samp;
 
 	oldCmd = ((chn->OldEffect) >> 4) & 0xFF;
-	if (chn->LoopEnd != 0 && oldCmd != ((CMD_EXTENDED << 4) | CMDEX_RETRIGER))
+	if (oldCmd != ((CMD_EXTENDED << 4) | CMDEX_RETRIGER))
 	{
 		free(chn->Decay); // If Decay is not already free()'ed, do so
 		chn->Decay = (SampleDecay *)malloc(sizeof(SampleDecay));
@@ -1379,6 +1379,8 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 	{
 		free(chn->Decay);
 		chn->Decay = NULL;
+		// Fool the engine (as it were) to not try decaying again if the next note is a retriggered note
+		chn->OldEffect = (CMD_EXTENDED << 4) | CMD_RETRIG;
 	}
 }
 
