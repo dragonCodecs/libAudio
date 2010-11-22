@@ -1345,6 +1345,12 @@ inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
 			mov LeftSample, eax
 			mov RightSample, ebx
 		}
+#else
+		asm(".intel_syntax noprefix\n"
+			"\tsar eax, 8\n"
+			"\tsar ebx, 8\n"
+			".att_syntax\n" : [LeftSample] "=a" (LeftSample), [RightSample] "=b" (RightSample) :
+			"a" (LeftSample), "b" (RightSample));
 #endif
 		buff[0] += LeftSample;
 		buff[1] += RightSample;
