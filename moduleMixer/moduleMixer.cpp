@@ -77,6 +77,11 @@ inline int abs(int x)
 #define MAX_VOLUME			64
 #define MIXBUFFERSIZE		512
 
+typedef struct _SampleDecay
+{
+	int LastLeftSample, LastRightSample;
+} SampleDecay;
+
 typedef struct _Channel
 {
 	BYTE *Sample, *NewSample;
@@ -89,13 +94,14 @@ typedef struct _Channel
 	int Increment;
 	BYTE Arpeggio, LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
-	WORD RowEffect, PortamentoSlide;
+	WORD RowEffect, PortamentoSlide, OldEffect;
 	short LeftRamp, RightRamp;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 	int LastLeftSample, LastRightSample;
+	SampleDecay *Decay;
 } Channel;
 
 typedef struct _MixerState
@@ -563,10 +569,19 @@ inline UINT GetPeriodFromNote(BYTE Note, BYTE FineTune)
 
 void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 {
+	UINT period;
+	BYTE oldCmd;
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
-	UINT period;
 
+	oldCmd = ((chn->OldEffect) >> 4) & 0xFF;
+	if (chn->LoopEnd != 0 && oldCmd != ((CMD_EXTENDED << 4) | CMDEX_RETRIGER))
+	{
+		free(chn->Decay); // If Decay is not already free()'ed, do so
+		chn->Decay = (SampleDecay *)malloc(sizeof(SampleDecay));
+		chn->Decay->LastLeftSample = chn->LastLeftSample;
+		chn->Decay->LastRightSample = chn->LastRightSample;
+	}
 	chn->Note = note;
 	chn->NewSamp = 0;
 	period = GetPeriodFromNote(note, chn->FineTune);
@@ -1066,6 +1081,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 			chn->RowSample = Commands[i][p_Mixer->Row].Sample;
 			if (chn->RowSample > p_Mixer->Samples)
 				chn->RowSample = 0;
+			chn->OldEffect = chn->RowEffect;
 			chn->RowEffect = Commands[i][p_Mixer->Row].Effect;
 			chn->Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 		}
@@ -1328,6 +1344,44 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 	return Max - Read;
 }
 
+inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
+{
+	int LeftSample = chn->Decay->LastLeftSample;
+	int RightSample = chn->Decay->LastRightSample;
+	int *buff = MixBuff;
+	while ((LeftSample != 0 || RightSample != 0) && samples > 0)
+	{
+#ifdef _WINDOWS
+		__asm
+		{
+			mov eax, LeftSample
+			mov ebx, RightSample
+			sar eax, 8
+			sar ebx, 8
+			mov LeftSample, eax
+			mov RightSample, ebx
+		}
+#else
+		asm(".intel_syntax noprefix\n"
+			"\tsar eax, 8\n"
+			"\tsar ebx, 8\n"
+			".att_syntax\n" : [LeftSample] "=a" (LeftSample), [RightSample] "=b" (RightSample) :
+			"a" (LeftSample), "b" (RightSample));
+#endif
+		buff[0] += LeftSample;
+		buff[1] += RightSample;
+		buff += 2;
+		samples--;
+	}
+	chn->Decay->LastLeftSample = LeftSample;
+	chn->Decay->LastRightSample = RightSample;
+	if (LeftSample == 0 && RightSample == 0)
+	{
+		free(chn->Decay);
+		chn->Decay = NULL;
+	}
+}
+
 inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
 {
 	int LeftSample = chn->LastLeftSample;
@@ -1401,6 +1455,8 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 				samples = 0;
 				continue;
 			}
+			if (chn->Decay != NULL)
+				DoDecay(chn, buff, samples);
 			if (chn->RampLength == 0 && (chn->LeftVol | chn->RightVol) == 0)
 			{
 				int delta = (chn->Increment * SampleCount) + chn->PosLo;
