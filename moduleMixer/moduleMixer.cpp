@@ -1359,6 +1359,12 @@ inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
 	}
 	chn->LastLeftSample = LeftSample;
 	chn->LastRightSample = RightSample;
+	if (LeftSample == 0 && RightSample == 0)
+	{
+		chn->Sample = NULL;
+		chn->Length = chn->Pos = chn->PosLo = 0;
+		chn->RampLength = 0;
+	}
 }
 
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
@@ -1390,10 +1396,8 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			SampleCount = GetSampleCount(chn, rampSamples);
 			if (SampleCount <= 0)
 			{
-				chn->Sample = NULL;
-				chn->Length = chn->Pos = chn->PosLo = 0;
-				chn->RampLength = 0;
-				EndChannelOut(chn, buff, samples);
+				if (chn->LastLeftSample != 0 || chn->LastRightSample != 0)
+					EndChannelOut(chn, buff, samples);
 				samples = 0;
 				continue;
 			}
