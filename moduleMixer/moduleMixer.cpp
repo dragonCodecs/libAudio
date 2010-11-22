@@ -95,6 +95,7 @@ typedef struct _Channel
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
+	int LastLeftSample, LastRightSample;
 } Channel;
 
 typedef struct _MixerState
@@ -1327,6 +1328,30 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 	return Max - Read;
 }
 
+inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
+{
+	int LeftSample = chn->LastLeftSample;
+	int RightSample = chn->LastRightSample;
+	int *buff = MixBuff;
+	while (LeftSample != 0 || RightSample != 0)
+	{
+#ifdef _WINDOWS
+		__asm
+		{
+			mov eax, LeftSample
+			mov ebx, RightSample
+			sar eax, 8
+			sar ebx, 8
+			mov LeftSample, eax
+			mov RightSample, ebx
+		}
+#endif
+		buff[0] += LeftSample;
+		buff[1] += RightSample;
+		samples--;
+	}
+}
+
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
 {
 	UINT i, channelsUsed = 0, channelsMixed = 0;
@@ -1359,7 +1384,7 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 				chn->Sample = NULL;
 				chn->Length = chn->Pos = chn->PosLo = 0;
 				chn->RampLength = 0;
-				//EndChannelOffs(chn, buff, samples);
+				EndChannelOut(chn, buff, samples);
 				samples = 0;
 				continue;
 			}
@@ -1376,6 +1401,8 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 				int *BuffMax = buff + (SampleCount * 2);
 				MixFunc(chn, buff, BuffMax);
 				buff = BuffMax;
+				chn->LastLeftSample = *(buff - 2);
+				chn->LastRightSample = *(buff - 1);
 			}
 			samples -= SampleCount;
 			if (chn->RampLength != 0)
