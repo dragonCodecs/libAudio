@@ -689,6 +689,11 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 		}
 		case CMDEX_CUT:
 		{
+			if (p_Mixer->TickCount == param)
+			{
+				chn->Volume = 0;
+				chn->Flags |= CHN_FASTVOLRAMP;
+			}
 			break;
 		}
 		case CMDEX_INVERTLOOP:
