@@ -94,7 +94,7 @@ typedef struct _Channel
 	int Increment;
 	BYTE Arpeggio, LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
-	WORD RowEffect, PortamentoSlide, OldEffect;
+	WORD RowEffect, PortamentoSlide;
 	short LeftRamp, RightRamp;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
@@ -567,15 +567,13 @@ inline UINT GetPeriodFromNote(BYTE Note, BYTE FineTune)
 		return Periods[Note] << 2;
 }
 
-void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
+void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDecay)
 {
 	UINT period;
-	BYTE oldCmd;
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
 
-	oldCmd = ((chn->OldEffect) >> 4) & 0xFF;
-	if (oldCmd != ((CMD_EXTENDED << 4) | CMDEX_RETRIGER))
+	if (DoDecay == TRUE)
 	{
 		free(chn->Decay); // If Decay is not already free()'ed, do so
 		chn->Decay = (SampleDecay *)malloc(sizeof(SampleDecay));
@@ -688,7 +686,7 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 		case CMDEX_RETRIGER:
 		{
 			if (param != 0 && (p_Mixer->TickCount % param) == 0)
-				NoteChange(p_Mixer, i, chn->NewNote, 0);
+				NoteChange(p_Mixer, i, chn->NewNote, 0, FALSE);
 			break;
 		}
 		case CMDEX_FINEVOLUP:
@@ -875,7 +873,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					SampleChange(p_Mixer, chn, chn->NewSamp);
 					chn->NewSamp = 0;
 				}
-				NoteChange(p_Mixer, i, note, cmd);
+				NoteChange(p_Mixer, i, note, cmd, TRUE);
 			}
 		}
 		if (cmd != 0 || (cmd == 0 && param != 0))
@@ -1081,7 +1079,6 @@ BOOL ProcessRow(MixerState *p_Mixer)
 			chn->RowSample = Commands[i][p_Mixer->Row].Sample;
 			if (chn->RowSample > p_Mixer->Samples)
 				chn->RowSample = 0;
-			chn->OldEffect = chn->RowEffect;
 			chn->RowEffect = Commands[i][p_Mixer->Row].Effect;
 			chn->Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 		}
@@ -1379,8 +1376,6 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 	{
 		free(chn->Decay);
 		chn->Decay = NULL;
-		// Fool the engine (as it were) to not try decaying again if the next note is a retriggered note
-		chn->OldEffect = (CMD_EXTENDED << 4) | CMDEX_RETRIGER;
 	}
 }
 
