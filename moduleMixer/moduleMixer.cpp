@@ -1356,15 +1356,15 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		{
 			mov eax, LeftSample
 			mov ebx, RightSample
-			sar eax, 8
-			sar ebx, 8
+			sar eax, 1
+			sar ebx, 1
 			mov LeftSample, eax
 			mov RightSample, ebx
 		}
 #else
 		asm(".intel_syntax noprefix\n"
-			"\tsar eax, 8\n"
-			"\tsar ebx, 8\n"
+			"\tsar eax, 1\n"
+			"\tsar ebx, 1\n"
 			".att_syntax\n" : [LeftSample] "=a" (LeftSample), [RightSample] "=b" (RightSample) :
 			"a" (LeftSample), "b" (RightSample));
 #endif
