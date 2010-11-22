@@ -1380,7 +1380,7 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		free(chn->Decay);
 		chn->Decay = NULL;
 		// Fool the engine (as it were) to not try decaying again if the next note is a retriggered note
-		chn->OldEffect = (CMD_EXTENDED << 4) | CMD_RETRIG;
+		chn->OldEffect = (CMD_EXTENDED << 4) | CMDEX_RETRIGER;
 	}
 }
 
