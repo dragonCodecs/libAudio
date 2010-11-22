@@ -1354,6 +1354,7 @@ inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
 #endif
 		buff[0] += LeftSample;
 		buff[1] += RightSample;
+		buff += 2;
 		samples--;
 	}
 	chn->LastLeftSample = LeftSample;
