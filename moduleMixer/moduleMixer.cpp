@@ -1356,6 +1356,8 @@ inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
 		buff[1] += RightSample;
 		samples--;
 	}
+	chn->LastLeftSample = LeftSample;
+	chn->LastRightSample = RightSample;
 }
 
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
