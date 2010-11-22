@@ -1333,7 +1333,7 @@ inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
 	int LeftSample = chn->LastLeftSample;
 	int RightSample = chn->LastRightSample;
 	int *buff = MixBuff;
-	while (LeftSample != 0 || RightSample != 0)
+	while (LeftSample != 0 || RightSample != 0 && samples > 0)
 	{
 #ifdef _WINDOWS
 		__asm
