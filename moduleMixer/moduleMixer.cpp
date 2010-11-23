@@ -1371,7 +1371,7 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 			buff[1] += vol * (RampLeftVol << 4);
 			buff += 2;
 			Pos += Decay->Increment;
-			if ((Pos >> 16) >= chn->LoopEnd && chn->LoopEnd != 0)
+			if ((Pos >> 16) >= chn->LoopEnd)
 				Pos = chn->LoopStart << 16;
 			samples--;
 		}
@@ -1462,7 +1462,15 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 				continue;
 			}
 			if (chn->Decay != NULL)
-				DoDecay(chn, buff, samples);
+			{
+				if (chn->Decay->LoopEnd != 0)
+					DoDecay(chn, buff, samples);
+				else
+				{
+					free(chn->Decay);
+					chn->Decay = NULL;
+				}
+			}
 			if (chn->RampLength == 0 && (chn->LeftVol | chn->RightVol) == 0)
 			{
 				int delta = (chn->Increment * SampleCount) + chn->PosLo;
