@@ -1366,11 +1366,13 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		{
 			int vol = p[Pos >> 16] << 8;
 			RampLeftVol -= (RampLeftVol > 1 ? 2 : RampLeftVol);
-			RampRightVol += (RampRightVol > 1 ? 2 : RampRightVol);
+			RampRightVol -= (RampRightVol > 1 ? 2 : RampRightVol);
 			buff[0] += vol * (RampRightVol << 4);
 			buff[1] += vol * (RampLeftVol << 4);
 			buff += 2;
 			Pos += Decay->Increment;
+			if ((Pos >> 16) >= chn->LoopEnd && chn->LoopEnd != 0)
+				Pos = chn->LoopStart << 16;
 			samples--;
 		}
 		while (samples != 0 && (RampRightVol != 0 || RampLeftVol != 0));
