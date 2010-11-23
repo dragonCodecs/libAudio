@@ -83,7 +83,6 @@ typedef struct _SampleDecay
 	UINT LoopStart, LoopEnd, Length;
 	int Increment;
 	UINT Pos, PosLo;
-	short LeftRamp, RightRamp;
 } SampleDecay;
 
 typedef struct _Channel
@@ -591,8 +590,6 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 		Decay->RightVol = chn->RightVol;
 		Decay->Pos = chn->Pos;
 		Decay->PosLo = chn->PosLo;
-		Decay->LeftRamp = -(chn->LeftVol / 42);
-		Decay->RightRamp = -(chn->RightVol / 42);
 	}
 	chn->Note = note;
 	chn->NewSamp = 0;
@@ -1358,7 +1355,7 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 {
 	SampleDecay *Decay = chn->Decay;
-	if (Decay->Sample != NULL && (Decay->LeftRamp != 0 || Decay->RightRamp != 0))
+	if (Decay->Sample != NULL && (Decay->LeftVol != 0 || Decay->RightVol != 0))
 	{
 		int *buff = MixBuff;
 		int RampLeftVol = Decay->LeftVol;
@@ -1368,8 +1365,8 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		do
 		{
 			int vol = p[Pos >> 16] << 8;
-			RampLeftVol += (-chn->LeftRamp < RampLeftVol ? chn->LeftRamp : -RampLeftVol);
-			RampRightVol += (-chn->RightRamp < RampRightVol ? chn->RightRamp : -RampRightVol);
+			RampLeftVol -= (RampLeftVol > 1 ? 2 : RampLeftVol);
+			RampRightVol += (RampRightVol > 1 ? 2 : RampRightVol);
 			buff[0] += vol * (RampRightVol << 4);
 			buff[1] += vol * (RampLeftVol << 4);
 			buff += 2;
