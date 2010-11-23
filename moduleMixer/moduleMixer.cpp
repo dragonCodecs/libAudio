@@ -1382,6 +1382,8 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		Decay->LeftVol = RampLeftVol;
 		Decay->RightVol = RampRightVol;
 	}
+	else
+		Decay->Sample = NULL;
 	if ((Decay->LeftVol == 0 && Decay->RightVol == 0) || Decay->Sample == NULL)
 	{
 		free(Decay);
