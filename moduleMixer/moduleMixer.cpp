@@ -1365,8 +1365,8 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		do
 		{
 			int vol = p[Pos >> 16] << 8;
-			RampLeftVol -= (RampLeftVol > 1 ? 2 : RampLeftVol);
-			RampRightVol -= (RampRightVol > 1 ? 2 : RampRightVol);
+			RampLeftVol -= (RampLeftVol > 0 ? 1 : 0);
+			RampRightVol -= (RampRightVol > 0 ? 1 : 0);
 			buff[0] += vol * (RampRightVol << 4);
 			buff[1] += vol * (RampLeftVol << 4);
 			buff += 2;
