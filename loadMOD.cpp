@@ -18,7 +18,7 @@
 #endif
 #endif
 
-void *MOD_OpenR(char *FileName)
+void *MOD_OpenR(const char *FileName)
 {
 	MOD_Intern *ret = NULL;
 	FILE *f_MOD = NULL;
@@ -221,7 +221,7 @@ void MOD_Play(void *p_MODFile)
 	p_MF->p_Playback->Play();
 }
 
-bool Is_MOD(char *FileName)
+bool Is_MOD(const char *FileName)
 {
 	FILE *f_MOD = fopen(FileName, "rb");
 	CHAR MODMagic[4];

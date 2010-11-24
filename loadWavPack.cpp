@@ -59,7 +59,7 @@ int f_fcanseek(void *p_file)
 	return (fseek((FILE *)p_file, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
 }
 
-void *WavPack_OpenR(char *FileName)
+void *WavPack_OpenR(const char *FileName)
 {
 	WavPack_Intern *ret = NULL;
 	FILE *f_WVP = NULL, *f_WVPC = NULL;
@@ -203,7 +203,7 @@ void WavPack_Play(void *p_WVPFile)
 	p_WF->p_Playback->Play();
 }
 
-bool Is_WavPack(char *FileName)
+bool Is_WavPack(const char *FileName)
 {
 	FILE *f_WVP = fopen(FileName, "rb");
 	char WavPackSig[4];

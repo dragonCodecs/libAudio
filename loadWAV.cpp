@@ -23,7 +23,7 @@ typedef struct _WAV_Intern
 	bool usesFloat;
 } WAV_Intern;
 
-void *WAV_OpenR(char *FileName)
+void *WAV_OpenR(const char *FileName)
 {
 	WAV_Intern *ret = NULL;
 	char tmp[4];
@@ -215,7 +215,7 @@ void WAV_Play(void *p_WAVFile)
 	p_WF->p_Playback->Play();
 }
 
-bool Is_WAV(char *FileName)
+bool Is_WAV(const char *FileName)
 {
 	FILE *f_WAV = fopen(FileName, "rb");
 	char RIFFSig[4];

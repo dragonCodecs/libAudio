@@ -50,7 +50,7 @@ void f_fmetadata(const FLAC__StreamEncoder *p_enc, const FLAC__StreamMetadata *p
 {
 }
 
-void *FLAC_OpenW(char *FileName)
+void *FLAC_OpenW(const char *FileName)
 {
 	FLAC_Encoder_Context *ret = NULL;
 

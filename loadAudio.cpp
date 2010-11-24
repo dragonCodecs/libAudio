@@ -2,7 +2,7 @@
 
 BYTE ExternalPlayback = 0;
 
-void *Audio_OpenR(char *FileName, int *Type)
+void *Audio_OpenR(const char *FileName, int *Type)
 {
 	if (Is_OggVorbis(FileName) == true)
 	{
@@ -218,7 +218,7 @@ void Audio_Play(void *p_AudioPtr, int Type)
 	return;
 }
 
-bool Is_Audio(char *FileName)
+bool Is_Audio(const char *FileName)
 {
 	if (Is_OggVorbis(FileName) == true)
 		return true;

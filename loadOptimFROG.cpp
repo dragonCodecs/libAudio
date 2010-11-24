@@ -60,7 +60,7 @@ UCHAR __fseek(void *Inst, __int64 pos)
 	return (fseek((FILE *)Inst, (long)pos, SEEK_SET) == 0 ? TRUE : FALSE);
 }
 
-void *OptimFROG_OpenR(char *FileName)
+void *OptimFROG_OpenR(const char *FileName)
 {
 	OFROG_Intern *ret;
 	FILE *f_OFG;
@@ -173,7 +173,7 @@ void OptimFROG_Play(void *p_OFGFile)
 	p_OF->p_Playback->Play();
 }
 
-bool Is_OptimFROG(char *FileName)
+bool Is_OptimFROG(const char *FileName)
 {
 	FILE *f_OFG = fopen(FileName, "rb");
 	char OFGSig[4];

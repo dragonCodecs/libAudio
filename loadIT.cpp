@@ -49,7 +49,7 @@
 #define CMD_PANBRELLO		89
 #define CMD_MIDI			90
 
-void *IT_OpenR(char *FileName)
+void *IT_OpenR(const char *FileName)
 {
 	IT_Intern *ret = NULL;
 	FILE *f_IT = NULL;
@@ -588,7 +588,7 @@ void IT_Play(void *p_ITFile)
 	p_IF->p_Playback->Play();
 }
 
-bool Is_IT(char *FileName)
+bool Is_IT(const char *FileName)
 {
 	FILE *f_IT = fopen(FileName, "rb");
 	CHAR ITSig[4];

@@ -21,7 +21,7 @@ typedef struct _OV_Intern
 	FileInfo *p_FI;
 } OV_Intern;
 
-void *OggVorbis_OpenW(char *FileName)
+void *OggVorbis_OpenW(const char *FileName)
 {
 	OV_Intern *ret = NULL;
 

@@ -73,7 +73,7 @@ UCHAR f_fcanseek(mpc_reader *p_MFCFile)
 	return (fseek(p_MF->f_MPC, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
 }
 
-void *MPC_OpenR(char *FileName)
+void *MPC_OpenR(const char *FileName)
 {
 	MPC_Intern *ret = NULL;
 	FILE *f_MPC = NULL;
@@ -204,7 +204,7 @@ void MPC_Play(void *p_MFCFile)
 	p_MF->p_Playback->Play();
 }
 
-bool Is_MPC(char *FileName)
+bool Is_MPC(const char *FileName)
 {
 	FILE *f_MPC = fopen(FileName, "rb");
 	char MPCSig[3];

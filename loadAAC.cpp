@@ -30,7 +30,7 @@ typedef struct _AAC_Intern
 	Playback *p_Playback;
 } AAC_Intern;
 
-void *AAC_OpenR(char *FileName)
+void *AAC_OpenR(const char *FileName)
 {
 	AAC_Intern *ret = NULL;
 	FILE *f_AAC = NULL;
@@ -214,7 +214,7 @@ void AAC_Play(void *p_AACFile)
 	p_AF->p_Playback->Play();
 }
 
-bool Is_AAC(char *FileName)
+bool Is_AAC(const char *FileName)
 {
 	FILE *f_AAC = fopen(FileName, "rb");
 	BYTE sig[2];

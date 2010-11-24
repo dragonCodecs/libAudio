@@ -64,7 +64,7 @@ uint32_t f_fseek(void *UserData, uint64_t Pos)
 	return fseek((FILE *)UserData, (long)Pos, SEEK_SET);
 }
 
-void *M4A_OpenR(char *FileName)
+void *M4A_OpenR(const char *FileName)
 {
 	M4A_Intern *ret = NULL;
 	FILE *f_M4A = NULL;
@@ -231,10 +231,10 @@ void M4A_Play(void *p_M4AFile)
 }
 
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
-// 00 00 00 20 66 74 79 70 4D 34 41 20 
-// .  .  .     f  t  y  p  M  4  A     
+// 00 00 00 20 66 74 79 70 4D 34 41 20
+// .  .  .     f  t  y  p  M  4  A
 
-bool Is_M4A(char *FileName)
+bool Is_M4A(const char *FileName)
 {
 	FILE *f_M4A = fopen(FileName, "rb");
 	CHAR Len[4];

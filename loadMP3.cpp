@@ -43,7 +43,7 @@ short FixedToShort(mad_fixed_t Fixed)
 	return (signed short)Fixed;
 }
 
-void *MP3_OpenR(char *FileName)
+void *MP3_OpenR(const char *FileName)
 {
 	MP3_Intern *ret = NULL;
 	FILE *f_MP3 = NULL;
@@ -409,7 +409,7 @@ void MP3_Play(void *p_MP3File)
 	p_MF->p_Playback->Play();
 }
 
-bool Is_MP3(char *FileName)
+bool Is_MP3(const char *FileName)
 {
 	FILE *f_MP3 = fopen(FileName, "rb");
 	char ID3[3];

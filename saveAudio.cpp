@@ -1,7 +1,7 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
-libAUDIO_API void *Audio_OpenW(char *FileName, int Type)
+libAUDIO_API void *Audio_OpenW(const char *FileName, int Type)
 {
 	if (Type == AUDIO_OGG_VORBIS)
 		return OggVorbis_OpenW(FileName);

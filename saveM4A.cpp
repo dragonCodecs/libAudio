@@ -26,7 +26,7 @@ typedef struct _M4A_Enc_Intern
 	int Channels;
 } M4A_Enc_Intern;
 
-void *M4A_OpenW(char *FileName)
+void *M4A_OpenW(const char *FileName)
 {
 	M4A_Enc_Intern *ret = NULL;
 	FILE *f_AAC = NULL;

@@ -201,7 +201,7 @@ void f_error(const FLAC__StreamDecoder *p_dec, FLAC__StreamDecoderErrorStatus er
 {
 }
 
-void *FLAC_OpenR(char *FileName)
+void *FLAC_OpenR(const char *FileName)
 {
 	FLAC_Decoder_Context *ret = NULL;
 	FLAC__StreamDecoder *p_dec = NULL;
@@ -306,7 +306,7 @@ void FLAC_Play(void *p_FLACFile)
 	p_FF->p_Playback->Play();
 }
 
-bool Is_FLAC(char *FileName)
+bool Is_FLAC(const char *FileName)
 {
 	FILE *f_FLAC = fopen(FileName, "rb");
 	char FLACSig[4];

@@ -23,7 +23,7 @@ typedef struct _OggVorbis_Intern
 	Playback *p_Playback;
 } OggVorbis_Intern;
 
-void *OggVorbis_OpenR(char *FileName)
+void *OggVorbis_OpenR(const char *FileName)
 {
 	OggVorbis_Intern *ret = NULL;
 	ov_callbacks callbacks;
@@ -161,7 +161,7 @@ void OggVorbis_Play(void *p_VorbisFile)
 	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Play();
 }
 
-bool Is_OggVorbis(char *FileName)
+bool Is_OggVorbis(const char *FileName)
 {
 	FILE *f_Ogg = fopen(FileName, "rb");
 	char OggSig[4];
