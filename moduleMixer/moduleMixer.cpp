@@ -1360,7 +1360,7 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		int *buff = MixBuff;
 		int RampLeftVol = Decay->LeftVol;
 		int RampRightVol = Decay->RightVol;
-		UINT Pos = Decay->PosLo;
+		UINT Pos = (Decay->Pos << 16) | Decay->PosLo;
 		signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
 		do
 		{
