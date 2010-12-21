@@ -1,20 +1,35 @@
-CC = gcc
-CFLAGS = -c `pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack` -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_SAVE_M4A__ -o $*.o
-LIBS = -lstdc++ `pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack` -lmpcdec -lfaac -lmp4v2 -lfaad -lmp4ff -lOptimFROG -lmad -lid3tag
+GCC ?= gcc
+GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
+ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
+GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
+else
+GCC_FLAGS = 
+endif
+CC = $(GCC) $(GCC_FLAGS)
+EXTRA_CFLAGS = $(shell pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack)
+CFLAGS = -c $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_SAVE_M4A__ -D__NO_OptimFROG__ -o $*.o
+EXTRA_LIBS = $(shell pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack)
+LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4ff -lmad -lid3tag
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)
 AR = ar cr
 RANLIB = ranlib
 LN = ln -sfT
-LIBDIR = /usr/lib/
-PKGDIR = /usr/lib/pkgconfig/
+LIBDIR ?= /usr/lib
+PKGDIR = $(LIBDIR)/pkgconfig/
 INCDIR = /usr/include/
+INSTALL = install -m644
+STRIP = strip -x
 
 #WMA = loadWMA.o
 WMA = 
 #IT = loadIT.o mixIT/mixIT.o
 IT = 
+#SHORTEN = loadShorten.o
+SHORTEN = 
+#OPTIMFROG = loadOptimFROG.o
+OPTIMFROG = 
 H = libAudio.h
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadMOD.o moduleMixer/moduleMixer.o $(IT) loadWavPack.o loadOptimFROG.o loadShorten.o loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadMOD.o moduleMixer/moduleMixer.o $(IT) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -26,35 +41,40 @@ SOMAJ = libAudio.so
 A = libAudio.a
 LA = libAudio.la
 PC = libAudio.pc
+IN = libAudio.pc.in
 
 default: all
 
-all: $(O) $(SO)
+all: $(O) $(SO) $(PC)
 
 install: all
-	cp $(SO) $(LIBDIR)
-	cp $(PC) $(PKGDIR)
-	cp $(H) $(INCDIR)
-	chmod +r $(INCDIR)$(H)
-	$(LN) $(LIBDIR)$(SO) $(LIBDIR)$(SOREV)
-	$(LN) $(LIBDIR)$(SOREV) $(LIBDIR)$(SOMIN)
-	$(LN) $(LIBDIR)$(SOMIN) $(LIBDIR)$(SOMAJ)
+	$(INSTALL) $(SO) $(LIBDIR)
+	$(INSTALL) $(PC) $(PKGDIR)
+	$(INSTALL) $(H) $(INCDIR)
+	$(LN) $(LIBDIR)/$(SO) $(LIBDIR)/$(SOREV)
+	$(LN) $(LIBDIR)/$(SOREV) $(LIBDIR)/$(SOMIN)
+	$(LN) $(LIBDIR)/$(SOMIN) $(LIBDIR)/$(SOMAJ)
 
 uninstall:
-	rm $(LIBDIR)$(SOMAJ)*
-	rm $(LIBDIR)$(A)
-	rm $(LIBDIR)$(LA)
-	rm $(PKGDIR)$(PC)
+	rm $(LIBDIR)/$(SOMAJ)*
+	rm $(LIBDIR)/$(A)
+	rm $(LIBDIR)/$(LA)
+	rm $(PKGDIR)/$(PC)
 
 libAudio.so$(VER):
 	rm -f $(SO) $(A)
 	$(AR) $(A) $(O)
 	$(RANLIB) $(A)
 	$(CC) $(LFLAGS)
+	$(STRIP) $(SO)
+
+libAudio.pc:
+	$(SHELL) -c "sed -e 's:@LIBDIR@:$(LIBDIR):g' $(IN) > $(PC)"
 
 clean:
-	rm -f *.o *.so* *.a *~
+	rm -f *.o *.so* *.a *~ *.pc
 	@cd mixIT && rm -f *.o *~
+	@cd moduleMixer && rm -f *.o *~
 
 .cpp.o:
 	$(CC) $(CFLAGS) $*.cpp

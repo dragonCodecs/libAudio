@@ -25,10 +25,15 @@ typedef struct FileInfo
 		#define libAUDIO_API __declspec(dllimport)
 	#endif
 #else
-	#ifdef __cplusplus
-		#define libAUDIO_API extern "C"
+	#if __GNUC__ >= 4
+		#define DEFAULT_VISIBILITY __attribute__ ((visibility("default")))
 	#else
-		#define libAUDIO_API extern
+		#define DEFAULT_VISIBILITY
+	#endif
+	#ifdef __cplusplus
+		#define libAUDIO_API extern "C" DEFAULT_VISIBILITY
+	#else
+		#define libAUDIO_API extern DEFAULT_VISIBILITY
 	#endif
 #endif
 

@@ -58,11 +58,13 @@ void *Audio_OpenR(const char *FileName, int *Type)
 		*Type = AUDIO_WAVPACK;
 		return WavPack_OpenR(FileName);
 	}
+#ifndef __NO_OptimFROG__
 	else if (Is_OptimFROG(FileName) == true)
 	{
 		*Type = AUDIO_OPTIMFROG;
 		return OptimFROG_OpenR(FileName);
 	}
+#endif
 	// Add RealAudio call here once decoder is complete
 #ifdef _WINDOWS
 	else if (Is_WMA(FileName) == true)
@@ -101,8 +103,10 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr, int Type)
 #endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_GetFileInfo(p_AudioPtr);
+#ifndef __NO_OptimFROG__
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_GetFileInfo(p_AudioPtr);
+#endif
 	// Add RealAudio call here once decoder is complete
 #ifdef _WINDOWS
 	else if (Type == AUDIO_WMA)
@@ -138,8 +142,10 @@ long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen, int 
 #endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+#ifndef __NO_OptimFROG__
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+#endif
 	// Add RealAudio call here once decoder is complete
 #ifdef _WINDOWS
 	else if (Type == AUDIO_WMA)
@@ -175,8 +181,10 @@ int Audio_CloseFileR(void *p_AudioPtr, int Type)
 #endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_CloseFileR(p_AudioPtr);
+#ifndef __NO_OptimFROG__
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_CloseFileR(p_AudioPtr);
+#endif
 
 	return 0;
 }
@@ -207,8 +215,10 @@ void Audio_Play(void *p_AudioPtr, int Type)
 #endif
 	else if (Type == AUDIO_WAVPACK)
 		return WavPack_Play(p_AudioPtr);
+#ifndef __NO_OptimFROG__
 	else if (Type == AUDIO_OPTIMFROG)
 		return OptimFROG_Play(p_AudioPtr);
+#endif
 #ifdef _WINDOWS
 	// Add RealAudio here once decoder is complete
 	else if (Type == AUDIO_WMA)
@@ -244,8 +254,10 @@ bool Is_Audio(const char *FileName)
 #endif
 	else if (Is_WavPack(FileName) == true)
 		return true;
+#ifndef __NO_OptimFROG__
 	else if (Is_OptimFROG(FileName) == true)
 		return true;
+#endif
 #ifdef _WINDOWS
 	// Add RealAudio call here when decoder is complete
 	else if (Is_WMA(FileName) == true)

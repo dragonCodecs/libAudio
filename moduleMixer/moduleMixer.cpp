@@ -410,7 +410,11 @@ done:
 	}
 #else
 	asm(".intel_syntax noprefix\n"
+#ifdef __x86_64__
+		"\tpush rdi\n"
+#else
 		"\tpush edi\n"
+#endif
 		"cliploop:\n"
 		"\tmov eax, dword ptr [edx]\n"
 		"\tadd ebx, 2\n"
@@ -433,7 +437,11 @@ done:
 		"\tmov eax, (0x07FFFFFF)\n"
 		"\tjmp cliprecover\n"
 		"done:\n"
+#ifdef __x86_64__
+		"\tpop rax\n"
+#else
 		"\tpop eax\n"
+#endif
 		"\tadd eax, eax\n"
 		".att_syntax\n" : [result] "=a" (result) : [_out] "b" (_out), 
 		[_in] "d" (_in), [SampleCount] "D" (SampleCount) : );
