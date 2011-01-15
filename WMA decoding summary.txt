@@ -1,0 +1,6 @@
+WMA:
+	Hufman decode (need to get the hufman tables out of the libAVCodec WMA decoder)
+	Glue the coeficients and exponents back together.
+	Put the channels back into their original state from the MDCT encoding stage.
+	IMDCT, seems like it's fairly easy to do.
+	De-Window, this is addative and will recover the original data. We have to set up a bit-pool for this.

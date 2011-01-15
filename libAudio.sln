@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual C++ Express 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libAudio", "libAudio\libAudio.vcproj", "{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libAudio_TestApp", "libAudio_TestApp\libAudio_TestApp.vcproj", "{8354A29C-9799-41A5-B03D-84EAE7C12EC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F} = {DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libAudio_ReEncode_Ogg", "libAudio_ReEncode_Ogg\libAudio_ReEncode_Ogg.vcproj", "{3C0C8A09-DCB1-4CC1-B759-AA027A051D19}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F} = {DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WMADemux", "WMADemux\WMADemux.vcproj", "{2F669329-A908-4D81-8C2C-ABE52459DF1E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WMADecode", "WMADecode\WMADecode.vcproj", "{D81D3F40-5D02-4192-B592-97A0F2F16CE9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spectrometer", "Spectrometer\Spectrometer.vcproj", "{2C38964E-5E29-4DE7-84A9-FD000420A9AF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F} = {DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}.Debug|Win32.Build.0 = Debug|Win32
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}.Release|Win32.ActiveCfg = Release|Win32
+		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}.Release|Win32.Build.0 = Release|Win32
+		{8354A29C-9799-41A5-B03D-84EAE7C12EC8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8354A29C-9799-41A5-B03D-84EAE7C12EC8}.Debug|Win32.Build.0 = Debug|Win32
+		{8354A29C-9799-41A5-B03D-84EAE7C12EC8}.Release|Win32.ActiveCfg = Release|Win32
+		{8354A29C-9799-41A5-B03D-84EAE7C12EC8}.Release|Win32.Build.0 = Release|Win32
+		{3C0C8A09-DCB1-4CC1-B759-AA027A051D19}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3C0C8A09-DCB1-4CC1-B759-AA027A051D19}.Debug|Win32.Build.0 = Debug|Win32
+		{3C0C8A09-DCB1-4CC1-B759-AA027A051D19}.Release|Win32.ActiveCfg = Release|Win32
+		{3C0C8A09-DCB1-4CC1-B759-AA027A051D19}.Release|Win32.Build.0 = Release|Win32
+		{2F669329-A908-4D81-8C2C-ABE52459DF1E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2F669329-A908-4D81-8C2C-ABE52459DF1E}.Debug|Win32.Build.0 = Debug|Win32
+		{2F669329-A908-4D81-8C2C-ABE52459DF1E}.Release|Win32.ActiveCfg = Release|Win32
+		{2F669329-A908-4D81-8C2C-ABE52459DF1E}.Release|Win32.Build.0 = Release|Win32
+		{D81D3F40-5D02-4192-B592-97A0F2F16CE9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D81D3F40-5D02-4192-B592-97A0F2F16CE9}.Debug|Win32.Build.0 = Debug|Win32
+		{D81D3F40-5D02-4192-B592-97A0F2F16CE9}.Release|Win32.ActiveCfg = Release|Win32
+		{D81D3F40-5D02-4192-B592-97A0F2F16CE9}.Release|Win32.Build.0 = Release|Win32
+		{2C38964E-5E29-4DE7-84A9-FD000420A9AF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2C38964E-5E29-4DE7-84A9-FD000420A9AF}.Debug|Win32.Build.0 = Debug|Win32
+		{2C38964E-5E29-4DE7-84A9-FD000420A9AF}.Release|Win32.ActiveCfg = Release|Win32
+		{2C38964E-5E29-4DE7-84A9-FD000420A9AF}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

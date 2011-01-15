@@ -1,0 +1,458 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<meta name="Author" content="Florin Ghido">
+<title>OptimFROG Interface Documentation</title>
+</head>
+<body>
+
+<p align="center"><font size="+3">OptimFROG Interface Documentation</font>
+<br>
+<br>
+Version: 1.200, Date: 2005.07.17<br>
+OptimFROG Lossless/DualStream Audio Compressor, version 4.510 [2005.07.17]<br>
+Copyright (C) 1996-2005 Florin Ghido, all rights reserved.<br>
+Visit <a href="http://www.LosslessAudio.org">http://www.LosslessAudio.org</A> for updates
+</p>
+<br>
+This OptimFROG interface is a <font color="red">release version</font> and binary compatibility will be assured with future releases. This means that applications compiled with this or future releases will work seamlessly using the DLL of any future release. No changes will be made to this interface, aside from problem fixes and adding new features.<br>
+This release version <font color="red">is not binary compatible with the 1.000e</font> (the first, experimental version), so you are strongly encouraged to recompile your application (without any source file modifications on your side required in order to recompile).<br>
+<br>
+This interface is simple to use and provides full functionality of OptimFROG for both Lossless and DualStream files (decode only for the moment) in the C++ and C languages with BCC, MinGW and VC compilers and the possibility to use it with any Windows compiler.<br>
+File information retrieval, ID3v1.0, ID3v1.1, and APEv2.0 tags reading, 64 bit file support, fast seek, custom reading stream functions, bitstream error resilience are only a few relevant features of this interface and OptimFROG.<br>
+With OptimFROG you obtain asymptotically the best lossless audio compression ratios.<br>
+<br>
+OptimFROG IS DISTRIBUTED "AS IS". NO WARRANTY OF ANY KIND IS EXPRESSED
+OR IMPLIED. YOU USE IT AT YOUR OWN RISK. THE AUTHOR WILL NOT BE LIABLE
+FOR DATA LOSS, DAMAGES, LOSS OF PROFITS OR ANY OTHER KIND OF LOSS WHILE
+USING OR MISUSING THIS SOFTWARE. USE OF THIS SOFTWARE INDICATES YOU
+AGREED TO THIS.
+<br>
+<br>
+<font size="+1">Quick contents:</font><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#structures"><font size="+1">OptimFROG interface data structures</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#functions"><font size="+1">OptimFROG interface functions</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#codes"><font size="+1">OptimFROG interface return result codes</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#list"><font size="+1">Contents of the OptimFROG interface package</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#todo"><font size="+1">OptimFROG interface TODO list</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#bugs"><font size="+1">Reporting OptimFROG interface problems and bugs</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#plugins"><font size="+1">For plug-ins developers</font></a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#license"><font size="+1">OptimFROG interface license</font></a><br>
+<br>
+<br>
+<br>
+<br>
+
+
+<a name="structures"><font size="+2">OptimFROG interface data structures</font>
+
+<font color="blue"><pre>
+typedef struct
+{
+  condition_t (*close)(void* instance);
+  sInt32_t (*read)(void* instance, void* destBuffer, uInt32_t count);
+  condition_t (*eof)(void* instance);
+  condition_t (*seekable)(void* instance);
+  sInt64_t (*length)(void* instance);
+  sInt64_t (*getPos)(void* instance);
+  condition_t (*seek)(void* instance, sInt64_t pos);
+} ReadInterface;
+</pre></font>
+
+This structure is used to create custom stream reading functions for use with the OpimFROG_openExt function. The read, length and getPos functions return -1 on errors. The eof function is not used for the moment. For a detailed example of how to use this, please see the foobar2000 decoder plug-in source.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+typedef struct
+{
+  uInt32_t keyCount;
+  char* keys[64];
+  char* values[64];
+} OptimFROG_Tags;
+</pre></font>
+
+This structure is used to retrieve information about the tags (ID3v1.0, ID3v1.1, and APEv2.0 are supported) which are present in an OFR/OFS file. The keyCount contains the number of the tag keys. The key-value pairs are keys[0] and values[0], ..., up to keys[keyCount-1] and values[keyCount-1].<br>
+If no tags are found in the file (or in case of an error), the keyCount is set to 0.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+typedef struct
+{
+  uInt32_t channels;
+  uInt32_t samplerate;
+  uInt32_t bitspersample;
+  uInt32_t bitrate;
+
+  uInt32_t version;
+  char* method;
+  char* speedup;
+
+  sInt64_t noPoints;
+  sInt64_t originalSize;
+  sInt64_t compressedSize;
+  sInt64_t length_ms;
+
+  char* sampleType;
+  char* channelConfig;
+} OptimFROG_Info;
+</pre></font>
+
+This structure is used to retrieve information about the format, compression and size of an OFR/OFS file. All throughout this interface only "points" are used for counting the number of samples. The "point" has the advantage of simpler operation and cannot produce problems because the number of samples is not a multiple of the number of channels. A "point" is a group of samples with number equal with the number of channels which represents the same time instant. For example, a stereo "point" contains two samples.<br>
+The bitspersample is the number of bits used for the *container* data type of the sample values, and is always a multiple of 8 (integer number of bytes). For example, a 20 bit file will have bitspersample 24 bits.<br>
+The bitrate is expressed in kbits/sec where 1 kbit = 1000 bits. It is important to note that 1 kbit is *not* equal with 1024 bits.<br>
+The compressed size is set to 0 if the underlying stream cannot report the compressed file size, and the bitrate is set to the bitrate of the uncompressed data.<br>
+The sampleType is a textual representation of the data format, useful for example when interested in finding the actual data type (differentiating between SINT16 and UINT16, for example is not possible using only the bitspersample field).
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+typedef void (*OptimFROG_callBack)(void* callBackParam, Float64_t percentage);
+</pre></font>
+This is used for reporting progress information during some functions. The function is called by the internal engine to report progress state. The callBackParam parameter is the value passed as callback when the function which reports progress was called. This is useful, for example, to display the progress into a GUI interface, where a handle of the current window or custom class address is needed for the display process. The percentage value is between 0 and 100 inclusive.
+<br>
+<br>
+<br>
+<br>
+
+
+<a name="functions"><font size="+2">OptimFROG interface functions</font>
+
+
+<font color="blue"><pre>
+uInt32_t OptimFROG_getVersion();
+</pre></font>
+Returns the OptimFROG.dll engine version as an integer, i.e. 4510 represents version 4.510.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+void* OptimFROG_createInstance();
+</pre></font>
+Creates an instance of a decoder object for later use in the other functions. If the object cannot be created (mostly because of not enough memory), NULL is returned.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+void OptimFROG_destroyInstance(void* decoderInstance);
+</pre></font>
+Destroys an instance of a decoder object, freeing all the memory and resources associated with it.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_openExt(void* decoderInstance,ReadInterface* rInt,
+                              void* readerInstance, condition_t readTags = C_FALSE);
+</pre></font>
+Opens extended an OFR/OFS stream, using the rInt ReadInterface functions for reading from the underlying stream, using the stream instance readerInstance. The readTags specifies if the tags should be read from the stream, if possible.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_open(void* decoderInstance, char* fileName,
+                           condition_t readTags = C_FALSE);
+</pre></font>
+Opens an OFR/OFS file named fileName, using the default internal underlying stream. The readTags specifies if the tags should be read from the file, if possible.
+<br>
+<br>
+<br>
+<br>
+
+
+<font color="blue"><pre>
+condition_t OptimFROG_close(void* decoderInstance);
+</pre></font>
+Closes an instance of a decoder object, releasing the stream resources associated with it.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+sInt32_t OptimFROG_readHead(void* decoderInstance, void* headData, uInt32_t maxSize);
+</pre></font>
+Reads the header data of the original file (i.e. the original file header for WAVE files). The maxSize represents the maximum size which can be put in the headData buffer. If the result of the function is bigger than maxSize, then the buffer is *not* modified and you must call the function again with a sufficient maxSize value (and a bigger buffer).
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+sInt32_t OptimFROG_readTail(void* decoderInstance, void* tailData, uInt32_t maxSize);
+</pre></font>
+Reads the footer data of the original file (i.e. the original file footer, like cuesheets for WAVE files). The maxSize represents the maximum size which can be put in the tailData buffer. If the result of the function is bigger than maxSize, then the buffer is *not* modified and you must call again with a sufficient maxSize value (and a bigger buffer).
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_seekable(void* decoderInstance);
+</pre></font>
+Checks whether the instance is seekable, checking the ability to seek of the underlying stream.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_seekPoint(void* decoderInstance, sInt64_t point);
+</pre></font>
+Seeks to the point "point" position in the data. If the underlying stream is not seekable, the decoder enters a state where you cannot read anymore from it. You should not attempt a seek if the OptimFROG_seekable returns it is not seekable.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_seekTime(void* decoderInstance, sInt64_t milliseconds);
+</pre></font>
+Seeks to the milliseconds position in the data. If the underlying stream is not seekable, the decoder enters a state where you cannot read anymore from it. You should not attempt a seek if the OptimFROG_seekable returns it is not seekable.
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+sInt64_t OptimFROG_getPos(void* decoderInstance);
+</pre></font>
+Returns the current "point" position from the instance. This function does not fail, even when the underlying stream is not seekable.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_recoverableErrors(void* decoderInstance);
+</pre></font>
+Tells whether recoverable errors appeared in the file (i.e. a broken data block, which is replaced with silence).
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+sInt32_t OptimFROG_read(void* decoderInstance, void* data, uInt32_t noPoints,
+                        condition_t max16bit = C_FALSE);
+</pre></font>
+Reads up to noPoints points from the instance, less if there are less remaining points in the instance. The data is packed exactly as in the original file. If you set the max16bit flag, the data which is 24 bit or 32 bit is converted to 16 bit values (and packed as it would be 16 bit). The data buffer must have enough size available to hold the data put, i.e. should have the size noPoints*(info.bits/8)*info.channels in bytes. In the case of unrecoverable errors, this function returns -1.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_getInfo(void* decoderInstance, OptimFROG_Info* info);
+</pre></font>
+Fills the info structure with information from the instance. The information is computed internally only once, after opening the file, so further calls will return exactly the same data. The bitrate field value is the average bitrate over the entire file.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+condition_t OptimFROG_getTags(void* decoderInstance, OptimFROG_Tags* tags);
+</pre></font>
+Fills the tags structure with information from the instance. If the file was open with readTags set to C_FALSE, the tags structure returned will be empty.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+void OptimFROG_freeTags(OptimFROG_Tags* tags);
+</pre></font>
+Releases the memory allocated for the key and value pairs in the tags structure.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+sInt32_t OptimFROG_decodeFile(char* sourceFile, char* destinationFile,
+                              OptimFROG_callBack callBack = C_NULL,
+                              void* callBackParam = C_NULL);
+</pre></font>
+Decodes an entire file with the name sourceFile to the file named destinationFile. If you want progress information you must supply a callback function. The function returns a result code with the significance described in the next paragraph.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+sInt32_t OptimFROG_infoFile(char* sourceFile, OptimFROG_Info* info,
+                            OptimFROG_Tags* tags = C_NULL);
+</pre></font>
+Fills the info structure and the tags structure with information from the specified file with the name sourceFile. If tags is NULL (i.e. you are not interested in the tags), the tags information is not read from the file and returned. The function returns a result code with the significance described in the next paragraph.
+<br>
+<br>
+<br>
+<br>
+
+
+<a name="codes"><font size="+2">OptimFROG interface return result codes</font>
+<br>
+<br>
+The return result codes are used by the OptimFROG_decodeFile and OptimFROG_infoFile functions.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+#define OptimFROG_NoError 0
+</pre></font>
+No errors detected.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+#define OptimFROG_MemoryError 1
+</pre></font>
+The process failed because of insufficient memory.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+#define OptimFROG_OpenError 2
+</pre></font>
+The process failed because the source file cannot be open.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+#define OptimFROG_WriteError 3
+</pre></font>
+The process failed because the destination file cannot be open or a write failed on the destination file.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+#define OptimFROG_FatalError 4
+</pre></font>
+The process failed because of an fatal error, like an truncated source file.
+<br>
+<br>
+<br>
+<br>
+
+<font color="blue"><pre>
+#define OptimFROG_RecoverableError 5
+</pre></font>
+One or several recoverable errors appeared (i.e. broken data blocks, which are replaced with silence).
+<br>
+<br>
+<br>
+<br>
+
+
+<a name="list"><font size="+2">Contents of the OptimFROG interface package</font>
+<br>
+<br>
+The OptimFROG interface package contains the following files:
+<ul>
+<li>foo_ofr/foo_ofr.cpp - source code file for the foobar2000 decoder plug-in
+<li>foo_ofr/foo_ofr.dsp - Visual C++ 6.0 project file for the foobar2000 decoder plug-in
+<li>foo_ofr.dll - built foobar2000 decoder plug-in binary
+<li>MakeBCC.bat - batch file to compile the sample command line decoders with BCC</li>
+<li>MakeMinGW.bat - batch file to compile the sample command line decoders with MinGW</li>
+<li>MakeVC.bat - batch file to compile the sample command line decoders with VC</li>
+<li>OFROGDec.cpp - source code file for the sample command line decoder</li>
+<li>OFROGDec.dsp - Visual C++ 6.0 project file for the sample command line decoder</li>
+<li>OFROGDec.dsw - Visual C++ 6.0 workspace file for the sample command line decoder</li>
+<li>OFROGDec.exe - built sample command line decoder</li>
+<li>OFROGDecSim.cpp - source code file for the simple sample command line decoder</li>
+<li>OFROGDecSim.dsp - Visual C++ 6.0 project file for the simple sample command line decoder</li>
+<li>OFROGDecSim.dsw - Visual C++ 6.0 workspace file for the simple sample command line decoder</li>
+<li>OFROGDecSim.exe - built simple sample command line decoder</li>
+<li>OptimFROG.dll - the OptimFROG interface  dynamic library</li>
+<li>OptimFROG.h - the OptimFROG interface C++ and C header file</li>
+<li>OptimFROG.html - this documentation file</li>
+<li>OptimFROG.lib - the OptimFROG interface import library for VC and MinGW (COFF format)</li>
+<li>OptimFROGB.lib - the OptimFROG interface import library for BCC (OMF format)</li>
+</ul>
+
+BCC is the free (available at <a href="http://www.borland.com/products/downloads/download_cbuilder.html">http://www.borland.com/products/downloads/download_cbuilder.html</a>) Borland C++ 5.5 command line compiler (version 5.5.1 was tested). You must have bcc32.exe (and optionally coff2omf.exe) in your search path, together with other required environment compiler settings.<br>
+MinGW is the free C++ (available at <a href="http://www.mingw.org">http://www.mingw.org</a>) GCC 3.2.1 command line compiler (version 3.2.1 was tested). You must have gcc.exe in your search path, together with other required compiler environment settings.<br>
+VC is the Visual C++ 6.0 command line compiler (version 12.00.8804 was tested, Service Pack 5 and Processor Pack). You must have cl.exe in your search path, together with other required compiler environment settings.<br>
+To compile the foo_ofr plug-in you must move the directory foo_ofr/ to the 0.8.x-SDK/foobar2000/ directory, and then move the OptimFROG_SDK/ directory to the 0.8.x-SDK/ directory. After that, you must open the workspace foobar2000.dsw and insert the new foo_ofr.dsp project into it. Add to the foo_ofr project the dependencies foobar2000_SDK and foobar2000_component_client, set the active configuration to Release, and then you can build directly.
+<br>
+<br>
+<br>
+<br>
+
+<a name="todo"><font size="+2">OptimFROG interface TODO list</font>
+<br>
+<br>
+My current TODO list is:<br>
+<ul>
+<li>adding encoding support to the interface</li>
+<li>dBpowerAMP, Winamp3, Winamp2, XMPlay input plug-ins source using the interface</li>
+<li>Linux .so dynamic library
+<li>you suggest an item here
+</ul>
+<br>
+<br>
+
+<a name="bugs"><font size="+2">Reporting OptimFROG interface problems or bugs</font>
+<br>
+<br>
+Please report any problems or bugs, to help improve the OptimFROG interface and the OptimFROG product itself. You may send a report of the problem or bug at FlorinGhido@yahoo.com, attaching example illustrating files as needed. If the total size of the files is greater than 1 MB, please do not send them attached, but we will arrange in the next e-mails how can I get them.<br>
+Thank you very much for your help in improving OptimFROG.
+<br>
+<br>
+<br>
+<br>
+
+<a name="plugins"><font size="+2">For plug-ins developers</font>
+<br>
+<br>
+Please do not modify (including decompression or recompression) in any way the contents or change the name of the OptimFROG.dll file.<br>
+For the foobar2000, dBpowerAMP, Winamp3, Winamp2, XMPlay input plug-ins, I will prepare shortly the source code required (slightly modifying my existing versions) to work with the new OptimFROG interface, so it is not needed to create new plug-ins for them.<br>
+The intention to create and release such interface was motivated by different parties who were highly interested in including OptimFROG support in their products and the fact that overall development will be greatly accelerated and the quality of the product will be even greater.<br>
+You can reach me at <a href="mailto:FlorinGhido@yahoo.com">FlorinGhido@yahoo.com</a> for answering your questions and helping at developing new plug-ins and extensions for OptimFROG.<br>
+If needed, the compressed file format specification for OptimFROG 4.50x is freely available on demand.<br>
+Thank you very much for your help in improving and extending OptimFROG.
+<br>
+<br>
+<br>
+<br>
+
+<a name="license"><font size="+2">OptimFROG interface license</font>
+<br>
+<br>
+1. OptimFROG is free for personal and non-commercial use.<br>
+2. You are hereby permitted to include the package or any part of it for non-commercial use in another products, in source code form in source release products (when needed to compile the product or any parts of it), or in binary form (without modifying or renaming the OptimFROG.dll file) in binary release products. However, you are required to send an e-mail message to me at FlorinGhido@yahoo.com, specifying a) your name, b) the name of the product, c) the web address where the product may be downloaded, d) whether you want to be (manually) e-mailed on new releases of the package.<br>
+3. You may not charge a fee or request donations for the package itself (or for the files repackaged).<br>
+4. You may not use the package or any part of it for commercial purposes without prior written permission of the author.<br>
+5. You may not publish or distribute the package by itself, whether modified or in its original form, on BBS, FTP, and WEB sites. However, you may link directly to the file download link from the original site.<br>
+<br>
+Use of this software implies you agreed to this.<br>
+
+
+</body>
+</html>

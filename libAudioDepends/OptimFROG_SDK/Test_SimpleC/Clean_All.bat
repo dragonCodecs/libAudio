@@ -1,0 +1,1 @@
+del *.exe *.obj *.tds

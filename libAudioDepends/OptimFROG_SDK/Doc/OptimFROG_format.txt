@@ -1,0 +1,235 @@
+OptimFROG Lossless Audio Compressor, version 4.510 [2005.07.17]
+Copyright (C) 1996-2005 Florin Ghido, all rights reserved.
+
+
+This document contains the compressed file format specification for
+OFR 4.5xx, and may be subject to change without prior notice.
+
+Unless given express permission, this information is confidential,
+until will be officially made public. Use of any of this information
+implies you agreed to this.
+
+OptimFROG IS DISTRIBUTED "AS IS". NO WARRANTY OF ANY KIND IS EXPRESSED
+OR IMPLIED. YOU USE IT AT YOUR OWN RISK. THE AUTHOR WILL NOT BE LIABLE
+FOR DATA LOSS, DAMAGES, LOSS OF PROFITS OR ANY OTHER KIND OF LOSS WHILE
+USING OR MISUSING THIS SOFTWARE. USE OF THIS SOFTWARE INDICATES YOU
+AGREED TO THIS.
+
+
+
+OFR 4.5xx compressed file format specification
+==============================================
+
+The OFR 4.5xx compressed file format was designed to be very flexible,
+efficient, to permit adding new file formats, algorithm improvements
+and additional (user) data without breaking backwards compatibility.
+
+
+Sample is meant to specify a single sample value, not a sample point
+(a value for each channel). For example, to calculate the duration of
+some audio file you must compute samples/(channels*frequency).
+
+
+All the data in the OFR file is stored in blocks.
+
+Every block has the following general fixed structure:
+
+	4 bytes block ID
+	4 bytes block length in bytes = N
+	N bytes block data
+
+The following block types are currently defined:
+
+
+1. Main block, containing general information about the OFR file and
+   the original audio file:
+
+	4 bytes 'OFR '
+	4 bytes main size = 15
+	6 bytes total number of samples in the audio file
+	1 byte  sample type (see appendix A)
+	1 byte  channel configuration (see appendix B)
+	4 bytes sample rate
+	2 bytes encoder ID (see appendix C)
+	1 byte  compression (see appendix D)
+
+If the main size is greater than 15, there are present additional
+fields, which must be ignored (skipped).
+
+
+2. Head block, containing all the data from the beginning of the audio
+   file until the start of sample data
+
+	4 bytes 'HEAD'
+	4 bytes head size = H
+	H bytes audio file header data
+
+
+3. Data block, containing compressed sample data and having all the
+   information needed for independently decoding the block
+
+	4 bytes 'COMP'
+	4 bytes data size = D
+	4 bytes CRC32 of all the data after it (D - 4 bytes)
+	4 bytes number of samples in the block
+	1 byte  sample type
+	1 byte  channel configuration
+	2 bytes reserved for internal use
+	2 bytes encoder ID
+	D - 14 bytes compressed data stream
+
+
+4. Tail block, containing all the data from the end of the sample data
+   to the end of the audio file:
+
+	4 bytes 'TAIL'
+	4 bytes tail size = T
+	T bytes audio file footer data
+
+
+5. Recovery block, containing recovery information, used to repair
+   header errors and sector level errors:
+
+	4 bytes 'RECV'
+	4 bytes recovery size = R
+	R bytes recovery data
+
+
+6. ID3v1.1/ID3v1.0 block, recognized by the start data 'TAG', and 128
+   bytes in length. Must be (if present) the last block in the OFR
+   file. The decoder will be able to skip this tag.
+
+
+7. ID3v2.x.x block, recognized by the start data 'ID3', and unknown
+   bytes in length. Must be (if present) the first block in the OFR
+   file. The decoder will be able to skip this tag (future versions).
+
+
+8. APEv2 block, recognized by the start data 'APET', and unknown
+   bytes in length. Must be (if present) the last or just before
+   the ID3v1.1/ID3v1.0 block in the OFR file. The decoder will be
+   able to skip this tag.
+
+
+9. MD5 signature block, containing the MD5 hash of the original raw
+   PCM input data:
+
+	4 bytes 'MD5 '
+	4 bytes hash size = 16
+       16 MD5 hash (stored in the displayed order)
+
+
+The layout of the OFR file is not fixed, but the order of the blocks
+must satisfy the following relation:
+['ID3'] 'OFR ' [...] 'HEAD' 'COMP'* 'TAIL' [...] ['MD5 '] ['RECV']
+                                              [...] ['APET'] ['TAG']
+
+
+Appendix A - sample type
+~~~~~~~~~~~~~~~~~~~~~~~~
+Sample type is an extension to the number of bits for a sample, by
+specifying only the type of the container used to store the data.
+The compressor has the possibility to analyze the data and manage
+optimally the situations where the effective number of bits is smaller
+(for example 20 bit samples with the 4 lsb bits set to zero in a
+SINT24 container).
+
+The following sample type values are currently defined:
+
+	UINT8 = 0
+	SINT8
+	UINT16
+	SINT16
+	UINT24
+	SINT24
+	UINT32
+	SINT32
+	FLOAT32_0
+	FLOAT32_16
+	FLOAT32_24
+
+
+Appendix B - channel configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Channel configuration is an extension to the number of channels,
+specifying also the channel mapping, helping the compressor in
+selecting the optimal channel decorrelation scheme. The only required
+information to be correct is that the channel configuration must give
+the correct number of channels (for example, that the audio has 3
+channels, even if the correct mapping is unknown).
+
+The following channel configuration values are currently defined:
+
+	MONO = 0
+	STEREO_LR
+
+
+Appendix C - encoder ID
+~~~~~~~~~~~~~~~~~~~~~~~
+The encoder ID is composed from the encoder version information and
+the encoder build system. They are obtained as follows:
+
+	version = (encoderID >> 4) + 4500
+	system = encoderID & 0xF
+
+The version is represented in the x.xxx format. The build system is an
+identifier for the specific OFR executable used to create the file.
+This is used to easily track system dependent problems and bugs.
+
+The following build system values are currently defined:
+
+	Win32 console = 0
+	Linux console
+	unknown = F
+
+
+Appendix D - compression
+~~~~~~~~~~~~~~~~~~~~~~~~
+The compression is composed from the mode and the speedup parameters.
+They are obtained as follows:
+
+	mode = compression >> 3
+	speedup = compression & 7
+
+The following mode values are currently defined:
+
+	fast = 0
+	normal
+	high
+	extra
+	best
+	ultra
+	insane
+	highnew
+	extranew
+	bestnew
+
+The following speedup values are currently defined:
+
+	1x = 0
+	2x
+	4x
+
+
+Additional notes
+~~~~~~~~~~~~~~~~
+All values are stored in little endian order, i.e. the least
+significant byte first.
+
+When there is an enumeration, the symbolic constants receive
+consecutive integer values.
+
+
+Contact
+=======
+
+If you have any questions, comments, suggestions or problems regarding
+OptimFROG please don't hesitate to contact me at:
+
+  FlorinGhido@yahoo.com
+
+You can always find the newest version of OptimFROG at:
+
+  http://www.LosslessAudio.org
+
+Copyright (C) 1996-2005 Florin Ghido, all rights reserved.
