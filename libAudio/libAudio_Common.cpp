@@ -5,9 +5,11 @@
 #else
 #include <ctype.h>
 #include <time.h>
+#define MSECS_IN_SEC 1000
+#define NSECS_IN_MSEC 1000000
 #define _usleep(milisec) \
 	{\
-		struct timespec req = {0, milisec}; \
+		struct timespec req = {milisec / MSECS_IN_SEC, (milisec % MSECS_IN_SEC) * NSECS_IN_MSEC}; \
 		nanosleep(&req, NULL); \
 	}
 #endif
