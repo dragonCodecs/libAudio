@@ -2,7 +2,7 @@ GCC ?= gcc
 CC = $(GCC)
 EXTRA_CFLAGS = $(shell pkg-config --cflags libAudio)
 CFLAGS = -c $(EXTRA_CFLAGS) -o $*.o
-LIBS = $(shell pkg-config --libs libAudio)
+LIBS = $(shell pkg-config --libs libAudio) -lm
 LFLAGS = $(O) $(LIBS) -o $(EXE)
 
 O = main.o

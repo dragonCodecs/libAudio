@@ -210,7 +210,7 @@ long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 				p_MF->p_Samples = (BYTE *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
 				free(Buff);
 
-				p_MF->nSamples = FI.samples;
+				p_MF->nSamples = FI.samples * 2;
 				p_MF->samplesUsed = 0;
 				if (FI.error != 0)
 				{
@@ -227,9 +227,9 @@ long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 
 		}
 
-		nUsed = min(p_MF->nSamples - p_MF->samplesUsed, (nOutBufferLen - (OBuf - OutBuffer)) / 2);
-		memcpy(OBuf, p_MF->p_Samples + (p_MF->samplesUsed * 2), nUsed * 2);
-		OBuf += nUsed * 2;
+		nUsed = min(p_MF->nSamples - p_MF->samplesUsed, nOutBufferLen - (OBuf - OutBuffer));
+		memcpy(OBuf, p_MF->p_Samples + p_MF->samplesUsed, nUsed);
+		OBuf += nUsed;
 		p_MF->samplesUsed += nUsed;
 	}
 
