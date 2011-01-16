@@ -1,40 +1,46 @@
 #include "libAudio.h"
+#ifdef _WINDOWS
 #include <conio.h>
+#define strncasecmp strnicmp
+#else
+#include <string.h>
+#endif
 #include <string>
+#include <stdio.h>
 
 static BYTE Buffer[8192];
 
 int ToType(char *str)
 {
-	if (strnicmp(str, "AAC", 3) == 0)
+	if (strncasecmp(str, "AAC", 3) == 0)
 		return AUDIO_AAC;
-	else if (strnicmp(str, "MP4", 3) == 0 ||
-		strnicmp(str, "M4A", 3) == 0)
+	else if (strncasecmp(str, "MP4", 3) == 0 ||
+		strncasecmp(str, "M4A", 3) == 0)
 		return AUDIO_MP4;
-	else if (strnicmp(str, "FLAC", 4) == 0)
+	else if (strncasecmp(str, "FLAC", 4) == 0)
 		return AUDIO_FLAC;
-	else if (strnicmp(str, "OGG", 3) == 0)
+	else if (strncasecmp(str, "OGG", 3) == 0)
 		return AUDIO_OGG_VORBIS;
-	else if (strnicmp(str, "MP3", 3) == 0)
+	else if (strncasecmp(str, "MP3", 3) == 0)
 		return AUDIO_MP3;
-	else if (strnicmp(str, "MPC", 3) == 0 ||
-		strnicmp(str, "MUSEPACK", 8) == 0)
+	else if (strncasecmp(str, "MPC", 3) == 0 ||
+		strncasecmp(str, "MUSEPACK", 8) == 0)
 		return AUDIO_MUSEPACK;
-	else if (strnicmp(str, "OFG", 3) == 0 ||
-		strnicmp(str, "OPTIMFROG", 9) == 0)
+	else if (strncasecmp(str, "OFG", 3) == 0 ||
+		strncasecmp(str, "OPTIMFROG", 9) == 0)
 		return AUDIO_OPTIMFROG;
-	else if (strnicmp(str, "WAV", 3) == 0)
+	else if (strncasecmp(str, "WAV", 3) == 0)
 		return AUDIO_WAVE;
-	else if (strnicmp(str, "WPC", 3) == 0 ||
-		strnicmp(str, "WAVPACK", 7) == 0)
+	else if (strncasecmp(str, "WPC", 3) == 0 ||
+		strncasecmp(str, "WAVPACK", 7) == 0)
 		return AUDIO_WAVPACK;
-	else if (strnicmp(str, "WMA", 3) == 0)
+	else if (strncasecmp(str, "WMA", 3) == 0)
 		return AUDIO_WMA;
 	else
 		return AUDIO_OGG_VORBIS;
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int Type = 0, ret = 1, oType = 0, loops = 0;
 	void *AudioFileIn = NULL;
@@ -42,7 +48,7 @@ void main(int argc, char **argv)
 	FileInfo *p_FI = NULL;
 
 	if (argc < 2)
-		return;
+		return -1;
 
 	AudioFileIn = Audio_OpenR(argv[1], &Type);
 	if (argc > 2)
@@ -63,10 +69,10 @@ void main(int argc, char **argv)
 		oType = AUDIO_OGG_VORBIS;
 	}
 	if (AudioFileIn == NULL || AudioFileOut == NULL)
-		return;
+		return -2;
 	p_FI = Audio_GetFileInfo(AudioFileIn, Type);
 	if (p_FI == NULL)
-		return;
+		return -3;
 	Audio_SetFileInfo(AudioFileOut, p_FI, oType);
 
 	printf("Input File %s, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %i\n", argv[1],
@@ -85,6 +91,8 @@ void main(int argc, char **argv)
 	Audio_CloseFileR(AudioFileIn, Type);
 	Audio_CloseFileW(AudioFileOut, oType);
 
+#ifdef _WINDOWS
 	printf("\nPress Any Key To Continue....\n");
 	getch();
+#endif
 }

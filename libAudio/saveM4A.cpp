@@ -1,11 +1,7 @@
 #ifndef __NO_SAVE_M4A__
 
 #include <faac.h>
-#ifdef _WINDOWS
-#include <mp4.h>
-#else
 #include <mp4v2/mp4v2.h>
-#endif
 
 #ifdef strncasecmp
 #undef strncasecmp
@@ -17,7 +13,6 @@
 typedef struct _M4A_Enc_Intern
 {
 	faacEncHandle p_enc;
-	FILE *f_AAC;
 	ULONG MaxInSamp;
 	ULONG MaxOutByte;
 	MP4FileHandle p_mp4;
@@ -26,23 +21,70 @@ typedef struct _M4A_Enc_Intern
 	int Channels;
 } M4A_Enc_Intern;
 
+void *MP4EncOpen(const char *FileName, MP4FileMode Mode);
+int MP4EncSeek(void *MP4File, int64_t pos);
+int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t);
+int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t);
+int MP4EncClose(void *MP4File);
+
+MP4FileProvider MP4EncFunctions =
+{
+	MP4EncOpen,
+	MP4EncSeek,
+	MP4EncRead,
+	MP4EncWrite,
+	MP4EncClose
+};
+
+void *MP4EncOpen(const char *FileName, MP4FileMode Mode)
+{
+	if (Mode != FILEMODE_CREATE)
+		return NULL;
+	return fopen(FileName, "wb+");
+}
+
+int MP4EncSeek(void *MP4File, int64_t pos)
+{
+#ifdef _WINDOWS
+	return (_fseeki64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#else
+	return (fseeko64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#endif
+}
+
+int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t)
+{
+	int ret = fread(DataOut, 1, (size_t)DataOutLen, (FILE *)MP4File);
+	if (ret <= 0 && DataOutLen != 0)
+		return TRUE;
+	*Read = ret;
+	return FALSE;
+}
+
+int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
+{
+	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != DataInLen)
+		return TRUE;
+	*Written = DataInLen;
+	return FALSE;
+}
+
+int MP4EncClose(void *MP4File)
+{
+	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
+}
+
 void *M4A_OpenW(const char *FileName)
 {
 	M4A_Enc_Intern *ret = NULL;
 	FILE *f_AAC = NULL;
 
-	f_AAC = fopen(FileName, "wb+");
-	if (f_AAC == NULL)
-		return ret;
-
 	ret = (M4A_Enc_Intern *)malloc(sizeof(M4A_Enc_Intern));
 	if (ret == NULL)
 		return ret;
 
-	ret->f_AAC = f_AAC;
 	ret->err = false;
-
-	ret->p_mp4 = MP4LatchCreate(f_AAC, fwrite, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
+	ret->p_mp4 = MP4CreateProvider(FileName, &MP4EncFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
 
 	return ret;
 }
@@ -72,7 +114,7 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	if (p_FI->Title != NULL)
 		MP4SetMetadataTool(p_AF->p_mp4, p_FI->Title);
 
-	MP4SetMetadataWriter(p_AF->p_mp4, "libAudio 0.5.78");
+	MP4SetMetadataWriter(p_AF->p_mp4, "libAudio 0.1.44");
 
 	p_conf = faacEncGetCurrentConfiguration(p_AF->p_enc);
 	if (p_conf == NULL)
@@ -166,14 +208,14 @@ long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 int M4A_CloseFileW(void *p_AACFile)
 {
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
-	int ret = 0;
 
+	if (p_AF == NULL)
+		return 0;
 	MP4Close(p_AF->p_mp4);
 	faacEncClose(p_AF->p_enc);
 
-	ret = fclose(p_AF->f_AAC);
 	free(p_AF);
-	return ret;
+	return 0;
 }
 
 #endif /*__NO_SAVE_M4A__*/

@@ -7,7 +7,7 @@ includedir=${prefix}/include
 
 Name: libAudio
 Description: libAudio is a powerfull, but simplistic, audio loading and playing library
-Version: 0.1.43
+Version: 0.1.44
 Requires:
 Conflicts:
 Libs: -L${libdir} -lAudio
