@@ -5,7 +5,7 @@
 
 typedef struct FileInfo
 {
-	double TotalTime;
+	double TotalTime; // in seconds? - probably a good resolution for this.
 	long BitsPerSample;
 	long BitRate;
 	int Channels;

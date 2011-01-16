@@ -27,8 +27,8 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		printf("File %s, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %i\n", argv[i],
-			(int)p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
+		printf("File %s, TotalTime: %g, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %i\n", argv[i],
+			p_FI->TotalTime, (int)p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
 		/*{ // The following code makes the UTF-8 returned in p_FI display correctly under Windows.. the only OS that has a problem with this..
 			wchar_t *Title;
 			int wTitleLen = MultiByteToWideChar(CP_UTF8, 0, p_FI->Title, -1, NULL, NULL);

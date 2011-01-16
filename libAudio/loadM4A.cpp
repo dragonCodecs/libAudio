@@ -7,142 +7,153 @@
 #include <string.h>
 
 #include <neaacdec.h>
-#include <mp4ff.h>
+#include <mp4v2/mp4v2.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 typedef struct _M4A_Intern
 {
-	FILE *f_M4A;
 	NeAACDecHandle p_dec;
-	mp4ff_t *p_mp4;
+	MP4FileHandle p_MP4;
+	MP4TrackId nTrack;
+	uint32_t ActualSampleRate;
+	uint8_t ActualChannels;
 	FileInfo *p_FI;
-	int nTrack, nLoops, nCurrLoop;
+	int nLoops, nCurrLoop, samplesUsed, nSamples;
+	uint8_t *p_Samples;
 	bool eof;
-	mp4ff_callback_t *callbacks;
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	Playback *p_Playback;
 } M4A_Intern;
 
-int GetAACTrack(mp4ff_t *infile)
+void *MP4DecOpen(const char *FileName, MP4FileMode Mode);
+int MP4DecSeek(void *MP4File, int64_t pos);
+int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t);
+int MP4DecWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t);
+int MP4DecClose(void *MP4File);
+
+MP4FileProvider MP4DecFunctions =
 {
-    /* find AAC track */
-    int i, rc;
-    int numTracks = mp4ff_total_tracks(infile);
+	MP4DecOpen,
+	MP4DecSeek,
+	MP4DecRead,
+	MP4DecWrite,
+	MP4DecClose
+};
 
-    for (i = 0; i < numTracks; i++)
-    {
-        UCHAR *buff = NULL;
-        UINT buff_size = 0;
-        mp4AudioSpecificConfig mp4ASC;
-
-        mp4ff_get_decoder_config(infile, i, &buff, &buff_size);
-
-        if (buff != NULL)
-        {
-            rc = NeAACDecAudioSpecificConfig(buff, buff_size, &mp4ASC);
-            free(buff);
-
-            if (rc < 0)
-                continue;
-            return i;
-        }
-    }
-
-    /* can't decode this */
-    return -1;
+void *MP4DecOpen(const char *FileName, MP4FileMode Mode)
+{
+	if (Mode != FILEMODE_READ)
+		return NULL;
+	return fopen(FileName, "rb");
 }
 
-uint32_t f_fread(void *UserData, void *Buffer, uint32_t Length)
+int MP4DecSeek(void *MP4File, int64_t pos)
 {
-	return fread(Buffer, 1, Length, (FILE *)UserData);
+#ifdef _WINDOWS
+	return (_fseeki64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#else
+	return (fseeko64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#endif
 }
 
-uint32_t f_fseek(void *UserData, uint64_t Pos)
+int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t)
 {
-	return fseek((FILE *)UserData, (long)Pos, SEEK_SET);
+	int ret = fread(DataOut, 1, (size_t)DataOutLen, (FILE *)MP4File);
+	if (ret <= 0 && DataOutLen != 0)
+		return TRUE;
+	*Read = ret;
+	return FALSE;
+}
+
+int MP4DecWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
+{
+	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != DataInLen)
+		return TRUE;
+	*Written = DataInLen;
+	return FALSE;
+}
+
+int MP4DecClose(void *MP4File)
+{
+	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
+}
+
+MP4TrackId GetAACTrack(M4A_Intern *ret)
+{
+	/* find AAC track */
+	int i, numTracks = MP4GetNumberOfTracks(ret->p_MP4, NULL, 0);
+
+	for (i = 0; i < numTracks; i++)
+	{
+		NeAACDecConfiguration *ADC;
+		uint8_t *Buff = NULL;
+		uint32_t BuffLen = 0;
+		MP4TrackId Track = MP4FindTrackId(ret->p_MP4, i, NULL, 0);
+		const char *TrackType = MP4GetTrackType(ret->p_MP4, Track);
+
+		if (!MP4_IS_AUDIO_TRACK_TYPE(TrackType))
+			continue;
+
+		MP4GetTrackESConfiguration(ret->p_MP4, Track, &Buff, &BuffLen);
+
+		NeAACDecInit(ret->p_dec, Buff, BuffLen, (unsigned long *)&ret->ActualSampleRate, &ret->ActualChannels);
+		ADC = NeAACDecGetCurrentConfiguration(ret->p_dec);
+		ADC->outputFormat = FAAD_FMT_16BIT;
+		NeAACDecSetConfiguration(ret->p_dec, ADC);
+		free(Buff);
+		return Track;
+	}
+
+	/* can't decode this */
+	return -1;
 }
 
 void *M4A_OpenR(const char *FileName)
 {
 	M4A_Intern *ret = NULL;
 	FILE *f_M4A = NULL;
-	mp4ff_callback_t *callbacks = (mp4ff_callback_t*)malloc(sizeof(mp4ff_callback_t));
-	if (callbacks == NULL)
-		return ret;
 
 	ret = (M4A_Intern *)malloc(sizeof(M4A_Intern));
 	if (ret == NULL)
 		return ret;
 	memset(ret, 0x00, sizeof(M4A_Intern));
 
-	f_M4A = ret->f_M4A = fopen(FileName, "rb");
-	if (f_M4A == NULL)
-	{
-		free(ret);
-		return f_M4A;
-	}
-
-	memset(callbacks, 0x00, sizeof(*callbacks));
-	callbacks->read = f_fread;
-	callbacks->seek = f_fseek;
-	callbacks->user_data = f_M4A;
-	ret->callbacks = callbacks;
-
 	ret->eof = false;
 	ret->p_dec = NeAACDecOpen();
-	ret->p_mp4 = mp4ff_open_read(callbacks);
-	ret->nTrack = GetAACTrack(ret->p_mp4);
+	ret->p_MP4 = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
+	ret->nTrack = GetAACTrack(ret);
 
 	return ret;
 }
 
-/*long InterpretFormat(BYTE oF)
-{
-	switch (oF)
-	{
-		case FAAD_FMT_16BIT:
-			return 16;
-		case FAAD_FMT_24BIT:
-			return 24;
-		case FAAD_FMT_32BIT:
-			return 32;
-		case FAAD_FMT_DOUBLE:
-			return (sizeof(double) * 8);
-		case FAAD_FMT_FLOAT:
-			return (sizeof(float) * 8);
-
-		default:
-			return 0;
-	}
-}*/
-
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
+	uint32_t timescale, duration;
+	char *value;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 	FileInfo *ret = NULL;
-	char *value;
-	UCHAR *Buff = NULL;
-	UINT nBuffLen = 0;
-	NeAACDecConfiguration *ADC;
 
 	p_MF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)
 		return ret;
 	memset(ret, 0x00, sizeof(FileInfo));
 
-	mp4ff_get_decoder_config(p_MF->p_mp4, p_MF->nTrack, &Buff, &nBuffLen);
-	NeAACDecInit2(p_MF->p_dec, Buff, nBuffLen, (ULONG *)&ret->BitRate, (UCHAR *)&ret->Channels);
-	ADC = NeAACDecGetCurrentConfiguration(p_MF->p_dec);
+	ret->BitRate = p_MF->ActualSampleRate;
+	ret->Channels = p_MF->ActualChannels;
 
-	mp4ff_meta_get_album(p_MF->p_mp4, &ret->Album);
-	mp4ff_meta_get_artist(p_MF->p_mp4, &ret->Artist);
-	mp4ff_meta_get_title(p_MF->p_mp4, &ret->Title);
-	//ret->BitRate = mp4ff_get_avg_bitrate(p_MF->p_mp4, p_MF->nTrack);
+	MP4GetMetadataAlbum(p_MF->p_MP4, &ret->Album);
+	MP4GetMetadataArtist(p_MF->p_MP4, &ret->Artist);
+	MP4GetMetadataName(p_MF->p_MP4, &ret->Title);
+	//ret->BitRate = mp4ff_get_avg_bitrate(p_MF->p_MP4, p_MF->nTrack);
 	//ret->BitsPerSample = InterpretFormat(ADC->outputFormat);
 	ret->BitsPerSample = 16;
-	mp4ff_meta_get_comment(p_MF->p_mp4, &value);
+	MP4GetMetadataComment(p_MF->p_MP4, &value);
 	if (value == NULL)
 		ret->nOtherComments = 0;
 	else
@@ -150,13 +161,14 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 		ret->nOtherComments = 1;
 		ret->OtherComments.push_back(value);
 	}
-	p_MF->nLoops = mp4ff_num_samples(p_MF->p_mp4, p_MF->nTrack);
+	timescale = MP4GetTrackTimeScale(p_MF->p_MP4, p_MF->nTrack);
+	duration = MP4GetTrackDuration(p_MF->p_MP4, p_MF->nTrack);
+	ret->TotalTime = ((double)duration) / ((double)timescale);
+	p_MF->nLoops = MP4GetTrackNumberOfSamples(p_MF->p_MP4, p_MF->nTrack);
 	p_MF->nCurrLoop = 0;
 
 	if (ExternalPlayback == 0)
 		p_MF->p_Playback = new Playback(ret, M4A_FillBuffer, p_MF->buffer, 8192, p_M4AFile);
-	ADC->outputFormat = FAAD_FMT_16BIT;
-	NeAACDecSetConfiguration(p_MF->p_dec, ADC);
 
 	return ret;
 }
@@ -164,60 +176,61 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 int M4A_CloseFileR(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	FILE *f_M4A = p_MF->f_M4A;
-	int ret;
 
 	delete p_MF->p_Playback;
 
 	NeAACDecClose(p_MF->p_dec);
-	mp4ff_close(p_MF->p_mp4);
+	MP4Close(p_MF->p_MP4);
 
-	ret = fclose(f_M4A);
 	free(p_MF);
-	return ret;
+	return 0;
 }
 
 long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	FILE *f_M4A = p_MF->f_M4A;
 	BYTE *OBuf = OutBuffer;
 
 	while ((OBuf - OutBuffer) < nOutBufferLen && p_MF->eof == false)
 	{
-		if (p_MF->nCurrLoop < p_MF->nLoops)
+		uint32_t nUsed;
+		if (p_MF->samplesUsed == p_MF->nSamples)
 		{
-			int i = 0;
-			BYTE *Buff = NULL;
-			UINT nBuff = 0;
-			NeAACDecFrameInfo FI;
-			static BYTE *Buff2 = NULL;
-
-			if (mp4ff_read_sample(p_MF->p_mp4, p_MF->nTrack, p_MF->nCurrLoop, &Buff, &nBuff) == 0)
+			if (p_MF->nCurrLoop < p_MF->nLoops)
 			{
-				p_MF->eof = true;
-				return -2;
+				NeAACDecFrameInfo FI;
+				uint8_t *Buff = NULL;
+				uint32_t nBuff = 0;
+				p_MF->nCurrLoop++;
+				if (MP4ReadSample(p_MF->p_MP4, p_MF->nTrack, p_MF->nCurrLoop, &Buff, &nBuff) == false)
+				{
+					p_MF->eof = true;
+					return -2;
+				}
+				p_MF->p_Samples = (BYTE *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
+				free(Buff);
+
+				p_MF->nSamples = FI.samples;
+				p_MF->samplesUsed = 0;
+				if (FI.error != 0)
+				{
+					printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
+					p_MF->nSamples = 0;
+					/*printf("\nPress Any Key To Continue....\n");
+					getch();
+					exit(FI.error);*/
+					continue;
+				}
 			}
+			else if (p_MF->nCurrLoop == p_MF->nLoops)
+				return -1;
 
-			Buff2 = (BYTE *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
-			free(Buff);
-			p_MF->nCurrLoop++;
-
-			if (FI.error != 0)
-			{
-				printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
-				/*printf("\nPress Any Key To Continue....\n");
-				getch();
-				exit(FI.error);*/
-				continue;
-			}
-
-			memcpy(OBuf, Buff2, (FI.samples * (p_MF->p_FI->BitsPerSample / 8)));
-			OBuf += (FI.samples * (p_MF->p_FI->BitsPerSample / 8));
-//			free(Buff2);
 		}
-		else if (p_MF->nCurrLoop == p_MF->nLoops)
-			return -1;
+
+		nUsed = min(p_MF->nSamples - p_MF->samplesUsed, (nOutBufferLen - (OBuf - OutBuffer)) / 2);
+		memcpy(OBuf, p_MF->p_Samples + (p_MF->samplesUsed * 2), nUsed * 2);
+		OBuf += nUsed * 2;
+		p_MF->samplesUsed += nUsed;
 	}
 
 	return OBuf - OutBuffer;

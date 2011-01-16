@@ -2,7 +2,7 @@ default: all
 
 all:
 	@cd libAudio && $(MAKE) all
-	@cd libAudio && sudo $(MAKE) install
+	@cd libAudio && $(MAKE) install
 	@cd libAudio_TestApp && $(MAKE) all
 	@cd libAudio_TestApp && $(MAKE) install
 	@cd libAudio_ReEncode_Ogg && $(MAKE) all
