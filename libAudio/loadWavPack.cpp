@@ -219,3 +219,13 @@ bool Is_WavPack(const char *FileName)
 
 	return true;
 }
+
+API_Functions WavPackDecoder =
+{
+	WavPack_OpenR,
+	WavPack_GetFileInfo,
+	WavPack_FillBuffer,
+	WavPack_CloseFileR,
+	WavPack_Play
+};
+

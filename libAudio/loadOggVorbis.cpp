@@ -180,3 +180,12 @@ bool Is_OggVorbis(const char *FileName)
 	else
 		return true;
 }
+
+API_Functions OggVorbisDecoder =
+{
+	OggVorbis_OpenR,
+	OggVorbis_GetFileInfo,
+	OggVorbis_FillBuffer,
+	OggVorbis_CloseFileR,
+	OggVorbis_Play
+};

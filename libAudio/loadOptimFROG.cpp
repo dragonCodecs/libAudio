@@ -189,3 +189,12 @@ bool Is_OptimFROG(const char *FileName)
 
 	return true;
 }
+
+API_Functions OptimFROGDecoder =
+{
+	OptimFROG_OpenR,
+	OptimFROG_GetFileInfo,
+	OptimFROG_FillBuffer,
+	OptimFROG_CloseFileR,
+	OptimFROG_Play
+};

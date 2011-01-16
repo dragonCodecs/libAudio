@@ -2334,3 +2334,12 @@ bool Is_WMA(char *FileName)
 
 	return true;
 }
+
+API_Functions WMADecoder =
+{
+	WMA_OpenR,
+	WMA_GetFileInfo,
+	WMA_FillBuffer,
+	WMA_CloseFileR,
+	WMA_Play
+};

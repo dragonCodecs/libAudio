@@ -603,3 +603,12 @@ bool Is_IT(const char *FileName)
 
 	return true;
 }
+
+API_Functions ITDecoder =
+{
+	IT_OpenR,
+	IT_GetFileInfo,
+	IT_FillBuffer,
+	IT_CloseFileR,
+	IT_Play
+};

@@ -273,3 +273,12 @@ bool Is_M4A(const char *FileName)
 
 	return true;
 }
+
+API_Functions M4ADecoder =
+{
+	M4A_OpenR,
+	M4A_GetFileInfo,
+	M4A_FillBuffer,
+	M4A_CloseFileR,
+	M4A_Play
+};

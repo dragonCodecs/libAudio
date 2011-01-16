@@ -256,3 +256,12 @@ bool Is_MOD(const char *FileName)
 	else // Probbaly not a MOD, but just as likely with the above tests that it is..
 		return false; // so we can't do old ProTracker MODs with 15 samples and can't take the auto-detect tests 100% seriously.
 }
+
+API_Functions MODDecoder =
+{
+	MOD_OpenR,
+	MOD_GetFileInfo,
+	MOD_FillBuffer,
+	MOD_CloseFileR,
+	MOD_Play
+};

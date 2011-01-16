@@ -430,3 +430,12 @@ bool Is_MP3(const char *FileName)
 
 	return false;
 }
+
+API_Functions MP3Decoder =
+{
+	MP3_OpenR,
+	MP3_GetFileInfo,
+	MP3_FillBuffer,
+	MP3_CloseFileR,
+	MP3_Play
+};

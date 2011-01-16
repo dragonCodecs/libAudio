@@ -222,4 +222,13 @@ bool Is_MPC(const char *FileName)
 
 	return true;
 }
+
+API_Functions MPCDecoder =
+{
+	MPC_OpenR,
+	MPC_GetFileInfo,
+	MPC_FillBuffer,
+	MPC_CloseFileR,
+	MPC_Play
+};
 #endif /* __NO_MPC__ */

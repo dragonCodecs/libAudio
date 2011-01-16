@@ -321,3 +321,12 @@ bool Is_FLAC(const char *FileName)
 	else
 		return true;
 }
+
+API_Functions FLACDecoder =
+{
+	FLAC_OpenR,
+	FLAC_GetFileInfo,
+	FLAC_FillBuffer,
+	FLAC_CloseFileR,
+	FLAC_Play
+};

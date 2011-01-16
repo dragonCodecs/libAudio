@@ -233,3 +233,12 @@ bool Is_AAC(const char *FileName)
 
 	return true;
 }
+
+API_Functions AACDecoder =
+{
+	AAC_OpenR,
+	AAC_GetFileInfo,
+	AAC_FillBuffer,
+	AAC_CloseFileR,
+	AAC_Play
+};

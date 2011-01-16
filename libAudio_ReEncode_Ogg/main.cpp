@@ -42,7 +42,7 @@ int ToType(char *str)
 
 int main(int argc, char **argv)
 {
-	int Type = 0, ret = 1, oType = 0, loops = 0;
+	int ret = 1, Type = 0, loops = 0;
 	void *AudioFileIn = NULL;
 	void *AudioFileOut = NULL;
 	FileInfo *p_FI = NULL;
@@ -50,14 +50,14 @@ int main(int argc, char **argv)
 	if (argc < 2)
 		return -1;
 
-	AudioFileIn = Audio_OpenR(argv[1], &Type);
+	AudioFileIn = Audio_OpenR(argv[1]);
 	if (argc > 2)
 	{
 		if (argc == 3)
-			oType = AUDIO_OGG_VORBIS;
+			Type = AUDIO_OGG_VORBIS;
 		else
-			oType = ToType(argv[3]);
-		AudioFileOut = Audio_OpenW(argv[2], oType);
+			Type = ToType(argv[3]);
+		AudioFileOut = Audio_OpenW(argv[2], Type);
 	}
 	else
 	{
@@ -66,30 +66,30 @@ int main(int argc, char **argv)
 		fnm.append(".ogg");
 		AudioFileOut = Audio_OpenW((char *)fnm.c_str(), AUDIO_OGG_VORBIS);
 		fnm.clear();
-		oType = AUDIO_OGG_VORBIS;
+		Type = AUDIO_OGG_VORBIS;
 	}
 	if (AudioFileIn == NULL || AudioFileOut == NULL)
 		return -2;
-	p_FI = Audio_GetFileInfo(AudioFileIn, Type);
+	p_FI = Audio_GetFileInfo(AudioFileIn);
 	if (p_FI == NULL)
 		return -3;
-	Audio_SetFileInfo(AudioFileOut, p_FI, oType);
+	Audio_SetFileInfo(AudioFileOut, p_FI, Type);
 
 	printf("Input File %s, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %i\n", argv[1],
 		p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
 
 	while (ret > 0)
 	{
-		ret = Audio_FillBuffer(AudioFileIn, Buffer, 8192, Type);
-		Audio_WriteBuffer(AudioFileOut, Buffer, ret, oType);
+		ret = Audio_FillBuffer(AudioFileIn, Buffer, 8192);
+		Audio_WriteBuffer(AudioFileOut, Buffer, ret, Type);
 		loops++;
 		fprintf(stdout, "%fs done\r", ((double)(8192 * loops)) / (double)p_FI->BitRate);
 		fflush(stdout);
 	}
 	fprintf(stdout, "\nTranscode complete!\n");
 
-	Audio_CloseFileR(AudioFileIn, Type);
-	Audio_CloseFileW(AudioFileOut, oType);
+	Audio_CloseFileR(AudioFileIn);
+	Audio_CloseFileW(AudioFileOut, Type);
 
 #ifdef _WINDOWS
 	printf("\nPress Any Key To Continue....\n");

@@ -1,231 +1,128 @@
 #include "libAudio.h"
+#include "libAudio_Common.h"
 
 BYTE ExternalPlayback = 0;
 
-void *Audio_OpenR(const char *FileName, int *Type)
+void *Audio_OpenR(const char *FileName)
 {
+	AudioPointer *ret = (AudioPointer *)malloc(sizeof(AudioPointer));
+	if (ret == NULL)
+		return NULL;
 	if (Is_OggVorbis(FileName) == true)
 	{
-		*Type = AUDIO_OGG_VORBIS;
-		return OggVorbis_OpenR(FileName);
+		ret->API = &OggVorbisDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 	else if (Is_FLAC(FileName) == true)
 	{
-		*Type = AUDIO_FLAC;
-		return FLAC_OpenR(FileName);
+		ret->API = &FLACDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 	else if (Is_WAV(FileName) == true)
 	{
-		*Type = AUDIO_WAVE;
-		return WAV_OpenR(FileName);
+		ret->API = &WAVDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 	else if (Is_M4A(FileName) == true)
 	{
-		*Type = AUDIO_M4A;
-		return M4A_OpenR(FileName);
+		ret->API = &M4ADecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 	else if (Is_AAC(FileName) == true)
 	{
-		*Type = AUDIO_AAC;
-		return AAC_OpenR(FileName);
+		ret->API = &AACDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 	else if (Is_MP3(FileName) == true)
 	{
-		*Type = AUDIO_MP3;
-		return MP3_OpenR(FileName);
+		ret->API = &MP3Decoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #ifndef __NO_IT__
 	else if (Is_IT(FileName) == true)
 	{
-		*Type = AUDIO_IT;
-		return IT_OpenR(FileName);
+		ret->API = &ITDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #endif
 	else if (Is_MOD(FileName) == true)
 	{
-		*Type = AUDIO_MOD;
-		return MOD_OpenR(FileName);
+		ret->API = &MODDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)
 	{
-		*Type = AUDIO_MUSEPACK;
-		return MPC_OpenR(FileName);
+		ret->API = &MPCDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #endif
 	else if (Is_WavPack(FileName) == true)
 	{
-		*Type = AUDIO_WAVPACK;
-		return WavPack_OpenR(FileName);
+		ret->API = &WavPackDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #ifndef __NO_OptimFROG__
 	else if (Is_OptimFROG(FileName) == true)
 	{
-		*Type = AUDIO_OPTIMFROG;
-		return OptimFROG_OpenR(FileName);
+		ret->API = &OptimFROGDecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #endif
 	// Add RealAudio call here once decoder is complete
 #ifdef _WINDOWS
 	else if (Is_WMA(FileName) == true)
 	{
-		*Type = AUDIO_WMA;
-		return WMA_OpenR(FileName);
+		ret->API = &WMADecoder;
+		ret->p_AudioFile = ret->API->OpenR(FileName);
+		return ret;
 	}
 #endif
+	free(ret);
 
 	return NULL;
 }
 
-FileInfo *Audio_GetFileInfo(void *p_AudioPtr, int Type)
+FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
 {
-	if (Type == AUDIO_OGG_VORBIS)
-		return OggVorbis_GetFileInfo(p_AudioPtr);
-	else if (Type == AUDIO_FLAC)
-		return FLAC_GetFileInfo(p_AudioPtr);
-	else if (Type == AUDIO_WAVE)
-		return WAV_GetFileInfo(p_AudioPtr);
-	else if (Type == AUDIO_M4A)
-		return M4A_GetFileInfo(p_AudioPtr);
-	else if (Type == AUDIO_AAC)
-		return AAC_GetFileInfo(p_AudioPtr);
-	else if (Type == AUDIO_MP3)
-		return MP3_GetFileInfo(p_AudioPtr);
-#ifndef __NO_IT__
-	else if (Type == AUDIO_IT)
-		return IT_GetFileInfo(p_AudioPtr);
-#endif
-	else if (Type == AUDIO_MOD)
-		return MOD_GetFileInfo(p_AudioPtr);
-#ifndef __NO_MPC__
-	else if (Type == AUDIO_MUSEPACK)
-		return MPC_GetFileInfo(p_AudioPtr);
-#endif
-	else if (Type == AUDIO_WAVPACK)
-		return WavPack_GetFileInfo(p_AudioPtr);
-#ifndef __NO_OptimFROG__
-	else if (Type == AUDIO_OPTIMFROG)
-		return OptimFROG_GetFileInfo(p_AudioPtr);
-#endif
-	// Add RealAudio call here once decoder is complete
-#ifdef _WINDOWS
-	else if (Type == AUDIO_WMA)
-		return WMA_GetFileInfo(p_AudioPtr);
-#endif
-
-	return NULL;
+	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
+		return NULL;
+	return p_AP->API->GetFileInfo(p_AP->p_AudioFile);
 }
 
-long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen, int Type)
+long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen)
 {
-	if (Type == AUDIO_OGG_VORBIS)
-		return OggVorbis_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-	else if (Type == AUDIO_FLAC)
-		return FLAC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-	else if (Type == AUDIO_WAVE)
-		return WAV_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-	else if (Type == AUDIO_M4A)
-		return M4A_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-	else if (Type == AUDIO_AAC)
-		return AAC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-	else if (Type == AUDIO_MP3)
-		return MP3_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#ifndef __NO_IT__
-	else if (Type == AUDIO_IT)
-		return IT_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#endif
-	else if (Type == AUDIO_MOD)
-		return MOD_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#ifndef __NO_MPC__
-	else if (Type == AUDIO_MUSEPACK)
-		return MPC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#endif
-	else if (Type == AUDIO_WAVPACK)
-		return WavPack_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#ifndef __NO_OptimFROG__
-	else if (Type == AUDIO_OPTIMFROG)
-		return OptimFROG_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#endif
-	// Add RealAudio call here once decoder is complete
-#ifdef _WINDOWS
-	else if (Type == AUDIO_WMA)
-		return WMA_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-#endif
-
-	return 0;
+	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	if (p_AP == NULL || OutBuffer == NULL || p_AP->p_AudioFile == NULL)
+		return -3;
+	return p_AP->API->FillBuffer(p_AP->p_AudioFile, OutBuffer, nOutBufferLen);
 }
 
-int Audio_CloseFileR(void *p_AudioPtr, int Type)
+int Audio_CloseFileR(void *p_AudioPtr)
 {
-	if (Type == AUDIO_OGG_VORBIS)
-		return OggVorbis_CloseFileR(p_AudioPtr);
-	else if (Type == AUDIO_FLAC)
-		return FLAC_CloseFileR(p_AudioPtr);
-	else if (Type == AUDIO_WAVE)
-		return WAV_CloseFileR(p_AudioPtr);
-	else if (Type == AUDIO_M4A)
-		return M4A_CloseFileR(p_AudioPtr);
-	else if (Type == AUDIO_AAC)
-		return AAC_CloseFileR(p_AudioPtr);
-	else if (Type == AUDIO_MP3)
-		return MP3_CloseFileR(p_AudioPtr);
-#ifndef __NO_IT__
-	else if (Type == AUDIO_IT)
-		return IT_CloseFileR(p_AudioPtr);
-#endif
-	else if (Type == AUDIO_MOD)
-		return MOD_CloseFileR(p_AudioPtr);
-#ifndef __NO_MPC__
-	if (Type == AUDIO_MUSEPACK)
-		return MPC_CloseFileR(p_AudioPtr);
-#endif
-	else if (Type == AUDIO_WAVPACK)
-		return WavPack_CloseFileR(p_AudioPtr);
-#ifndef __NO_OptimFROG__
-	else if (Type == AUDIO_OPTIMFROG)
-		return OptimFROG_CloseFileR(p_AudioPtr);
-#endif
-
-	return 0;
+	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
+		return 0;
+	return p_AP->API->CloseFileR(p_AP->p_AudioFile);
 }
 
-void Audio_Play(void *p_AudioPtr, int Type)
+void Audio_Play(void *p_AudioPtr)
 {
-	if (Type == AUDIO_OGG_VORBIS)
-		return OggVorbis_Play(p_AudioPtr);
-	else if (Type == AUDIO_FLAC)
-		return FLAC_Play(p_AudioPtr);
-	else if (Type == AUDIO_WAVE)
-		return WAV_Play(p_AudioPtr);
-	else if (Type == AUDIO_M4A)
-		return M4A_Play(p_AudioPtr);
-	else if (Type == AUDIO_AAC)
-		return AAC_Play(p_AudioPtr);
-	else if (Type == AUDIO_MP3)
-		return MP3_Play(p_AudioPtr);
-#ifndef __NO_IT__
-	else if (Type == AUDIO_IT)
-		return IT_Play(p_AudioPtr);
-#endif
-	else if (Type == AUDIO_MOD)
-		return MOD_Play(p_AudioPtr);
-#ifndef __NO_MPC__
-	else if (Type == AUDIO_MUSEPACK)
-		return MPC_Play(p_AudioPtr);
-#endif
-	else if (Type == AUDIO_WAVPACK)
-		return WavPack_Play(p_AudioPtr);
-#ifndef __NO_OptimFROG__
-	else if (Type == AUDIO_OPTIMFROG)
-		return OptimFROG_Play(p_AudioPtr);
-#endif
-#ifdef _WINDOWS
-	// Add RealAudio here once decoder is complete
-	else if (Type == AUDIO_WMA)
-		return WMA_Play(p_AudioPtr);
-#endif
-
-	return;
+	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
+		p_AP->API->Play(p_AP->p_AudioFile);
 }
 
 bool Is_Audio(const char *FileName)

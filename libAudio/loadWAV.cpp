@@ -234,3 +234,12 @@ bool Is_WAV(const char *FileName)
 	else
 		return true;
 }
+
+API_Functions WAVDecoder =
+{
+	WAV_OpenR,
+	WAV_GetFileInfo,
+	WAV_FillBuffer,
+	WAV_CloseFileR,
+	WAV_Play
+};

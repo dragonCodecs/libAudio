@@ -224,11 +224,11 @@ libAUDIO_API bool Is_WMA(const char *FileName);
 // Master Audio API
 
 // Read/Playback
-libAUDIO_API void *Audio_OpenR(const char *FileName, int *Type);
-libAUDIO_API FileInfo *Audio_GetFileInfo(void *p_AudioPtr, int Type);
-libAUDIO_API long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen, int Type);
-libAUDIO_API int Audio_CloseFileR(void *p_AudioPtr, int Type);
-libAUDIO_API void Audio_Play(void *p_AudioPtr, int Type);
+libAUDIO_API void *Audio_OpenR(const char *FileName);
+libAUDIO_API FileInfo *Audio_GetFileInfo(void *p_AudioPtr);
+libAUDIO_API long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen);
+libAUDIO_API int Audio_CloseFileR(void *p_AudioPtr);
+libAUDIO_API void Audio_Play(void *p_AudioPtr);
 libAUDIO_API bool Is_Audio(const char *FileName);
 
 // Write/Encode

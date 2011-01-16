@@ -9,7 +9,6 @@
 
 int main(int argc, char **argv)
 {
-	int Type = 0;
 	void *AudioFile = NULL;
 	FileInfo *p_FI = NULL;
 
@@ -18,13 +17,13 @@ int main(int argc, char **argv)
 
 	for (int i = 1; i < argc; i++)
 	{
-		AudioFile = Audio_OpenR(argv[i], &Type);
+		AudioFile = Audio_OpenR(argv[i]);
 		if (AudioFile == NULL)
 			continue;
-		p_FI = Audio_GetFileInfo(AudioFile, Type);
+		p_FI = Audio_GetFileInfo(AudioFile);
 		if (p_FI == NULL)
 		{
-			Audio_CloseFileR(AudioFile, Type);
+			Audio_CloseFileR(AudioFile);
 			continue;
 		}
 
@@ -40,9 +39,8 @@ int main(int argc, char **argv)
 			delete [] Title;
 		}*/
 
-		Audio_Play(AudioFile, Type);
-
-		Audio_CloseFileR(AudioFile, Type);
+		Audio_Play(AudioFile);
+		Audio_CloseFileR(AudioFile);
 		AudioFile = NULL;
 	}
 
