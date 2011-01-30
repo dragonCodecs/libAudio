@@ -927,7 +927,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				case CMD_VIBRATO:
 				{
 					if ((param & 0x0F) != 0)
-						chn->VibratoDepth = param & 0x0F;
+						chn->VibratoDepth = (param & 0x0F) * 4;
 					if ((param & 0xF0) != 0)
 						chn->VibratoSpeed = param >> 4;
 					chn->Flags |= CHN_VIBRATO;
@@ -1175,10 +1175,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 					Delta = RandomTable[VibratoPos];
 				else
 					Delta = SinusTable[VibratoPos];
-				Delta = (Delta * chn->VibratoDepth) >> 7;
-				period += Delta;
-				if (p_Mixer->TickCount != 0)
-					chn->VibratoPos = (VibratoPos + chn->VibratoSpeed) & 0x3F;
+				period += ((short)Delta * (short)chn->VibratoDepth) >> 7;
+				chn->VibratoPos = (VibratoPos + chn->VibratoSpeed) & 0x3F;
 			}
 			if (period < 14)
 				period = 14;
