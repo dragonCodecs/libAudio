@@ -1,7 +1,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <wavpack/wavpack.h>
-#include <string.h>
 #include <string>
 
 #include "libAudio.h"

@@ -1,4 +1,3 @@
-#include <string.h>
 
 #define HAVE_CONFIG_H
 #include <Shorten/shorten.h>

@@ -3,12 +3,16 @@
 
 #include <stdio.h>
 #include <malloc.h>
+#include <string.h> 
 #ifdef _WINDOWS
 #include <windows.h>
 #include <al.h>
 #include <alc.h>
 #define __CDECL__ __cdecl
 #define __FASTCALL__ __fastcall
+#define strcasecmp stricmp
+#define strncasecmp strnicmp
+#define snprintf _snprintf
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -16,7 +20,6 @@
 #define __FASTCALL__ inline
 #endif
 
-//extern int strncasecmp(const char *s1, const char *s2, unsigned int n);
 extern int fseek_wrapper(void *p_file, __int64 offset, int origin);
 //extern __int64 ftell_wrapper(void *p_file);
 extern UINT Initialize_OpenAL(ALCdevice **pp_device, ALCcontext **pp_context);

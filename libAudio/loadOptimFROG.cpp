@@ -1,7 +1,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <OptimFROG/OptimFROG.h>
-#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"

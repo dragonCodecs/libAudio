@@ -3,7 +3,6 @@
 #ifdef _WINDOWS
 #include <windows.h>
 #endif
-#include <string.h>
 
 #include <mad.h>
 #include <id3tag.h>

@@ -2,7 +2,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <malloc.h>
-#include <string.h>
 
 #include <MusePack/mpcdec.h>
 

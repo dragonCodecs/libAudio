@@ -1,6 +1,5 @@
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
-#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"

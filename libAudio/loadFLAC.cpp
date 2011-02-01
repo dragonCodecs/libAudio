@@ -5,7 +5,6 @@
 #ifdef _WINDOWS
 #include <windows.h>
 #endif
-#include <string.h>
 
 #include <FLAC/all.h>
 

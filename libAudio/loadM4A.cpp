@@ -4,7 +4,6 @@
 #include <conio.h>
 #include <windows.h>
 #endif
-#include <string.h>
 
 #include <neaacdec.h>
 #include <mp4v2/mp4v2.h>

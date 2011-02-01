@@ -5,7 +5,6 @@
 #ifdef _WINDOWS
 #include <windows.h>
 #else
-#include <string.h>
 #endif
 
 #include "libAudio.h"

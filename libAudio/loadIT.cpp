@@ -5,7 +5,6 @@
 #include <windows.h>
 #endif
 #include <math.h>
-#include <string.h>
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
