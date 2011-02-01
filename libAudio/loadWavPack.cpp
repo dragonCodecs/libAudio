@@ -1,6 +1,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef _WINDOWS
+#include <wavpack.h>
+#else
 #include <wavpack/wavpack.h>
+#endif
 #include <string>
 
 #include "libAudio.h"

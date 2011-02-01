@@ -58,14 +58,12 @@ void *Audio_OpenR(const char *FileName)
 		ret->p_AudioFile = ret->API->OpenR(FileName);
 		return ret;
 	}
-#ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)
 	{
 		ret->API = &MPCDecoder;
 		ret->p_AudioFile = ret->API->OpenR(FileName);
 		return ret;
 	}
-#endif
 	else if (Is_WavPack(FileName) == true)
 	{
 		ret->API = &WavPackDecoder;
@@ -81,7 +79,7 @@ void *Audio_OpenR(const char *FileName)
 	}
 #endif
 	// Add RealAudio call here once decoder is complete
-#ifdef _WINDOWS
+#ifdef __WMA__
 	else if (Is_WMA(FileName) == true)
 	{
 		ret->API = &WMADecoder;

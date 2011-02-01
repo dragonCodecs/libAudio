@@ -39,8 +39,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)Depends\&quot;"
-				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32;__NO_MPC__;__NO_IT__"
+				AdditionalIncludeDirectories="$(SolutionDir)libAudioDepends/libogg-1.1.4/include;$(SolutionDir)libAudioDepends/libvorbis-1.2.3/include;$(SolutionDir)libAudioDepends/flac-1.2.1/include;$(SolutionDir)libAudioDepends/wavpack-4.60.1/include;$(SolutionDir)libAudioDepends/faac-1.28/include;$(SolutionDir)libAudioDepends/faad2-2.7/include;$(SolutionDir)libAudioDepends/libmad-0.15.1b;$(SolutionDir)libAudioDepends/libid3tag-0.15.1b;$(SolutionDir)libAudioDepends/mp4v2-1.9.1/include;$(SolutionDir)libAudioDepends;$(SolutionDir)libAudioDepends/OptimFROG_SDK;$(SolutionDir)libAudioDepends/musepack-8.src/include"
+				PreprocessorDefinitions="_WINDOWS;_WIN32;_DEBUG;libAUDIO;WIN32;__NO_IT__"
 				StringPooling="true"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
@@ -290,6 +290,14 @@
 				<File
 					RelativePath=".\loadWMA.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter

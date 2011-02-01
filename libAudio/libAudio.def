@@ -77,12 +77,12 @@ EXPORTS
 	;RealAudio_Play @66
 	;Is_RealAudio @67
 
-	WMA_OpenR @68
-	WMA_GetFileInfo @69
-	WMA_FillBuffer @70
+	;WMA_OpenR @68
+	;WMA_GetFileInfo @69
+	;WMA_FillBuffer @70
 	;WMA_CloseFileR @71
-	WMA_Play @72
-	Is_WMA @73
+	;WMA_Play @72
+	;Is_WMA @73
 
 	AAC_OpenR @74
 	AAC_GetFileInfo @75

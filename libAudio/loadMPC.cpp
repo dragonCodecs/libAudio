@@ -3,7 +3,11 @@
 #include <sys/types.h>
 #include <malloc.h>
 
+#ifdef _WINDOWS
+#include <mpc/mpcdec.h>
+#else
 #include <MusePack/mpcdec.h>
+#endif
 
 #include "libAudio.h"
 #include "libAudio_Common.h"
