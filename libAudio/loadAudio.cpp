@@ -153,7 +153,7 @@ bool Is_Audio(const char *FileName)
 	else if (Is_OptimFROG(FileName) == true)
 		return true;
 #endif
-#ifdef _WINDOWS
+#ifdef __WMA__
 	// Add RealAudio call here when decoder is complete
 	else if (Is_WMA(FileName) == true)
 		return true;

@@ -12,6 +12,13 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+#ifdef _WINDOWS
+typedef unsigned long long uint64_t;
+typedef unsigned int uint32_t;
+typedef unsigned short uint16_t;
+typedef unsigned char uint8_t;
+#endif
+
 #define SHORT_MAX 0x7FFF
 
 typedef struct _MPC_Intern
@@ -25,7 +32,7 @@ typedef struct _MPC_Intern
 	FileInfo *p_FI;
 	mpc_frame_info *frame;
 	MPC_SAMPLE_FORMAT framebuff[MPC_DECODER_BUFFER_LENGTH];
-	int PCMUsed;
+	uint32_t PCMUsed;
 } MPC_Intern;
 
 short FloatToShort(MPC_SAMPLE_FORMAT Sample)
@@ -145,7 +152,7 @@ long MPC_FillBuffer(void *p_MFCFile, BYTE *OutBuffer, int nOutBufferLen)
 				return -2;
 		}
 
-		for (int i = p_MF->PCMUsed; i < p_MF->frame->samples; i++)
+		for (uint32_t i = p_MF->PCMUsed; i < p_MF->frame->samples; i++)
 		{
 			short Sample = 0;
 
