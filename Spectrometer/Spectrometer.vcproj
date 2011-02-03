@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)libAudio/"
+				AdditionalIncludeDirectories="$(SolutionDir)libAudio"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				ExceptionHandling="1"
@@ -99,7 +99,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying in dependancies to output directory.."
-				CommandLine="xcopy &quot;$(SolutionDir)$(ConfigurationName)\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;cp &quot;$(SolutionDir)../../Gamma/GTK+/GTK++/bin/GTK++_d.dll&quot; &quot;$(OutDir)&quot;"
+				CommandLine="xcopy &quot;$(SolutionDir)$(ConfigurationName)\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;cp &quot;$(SolutionDir)/libAudioDepends/GTK++/bin/GTK++_d.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -133,7 +133,7 @@
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)libAudio/"
+				AdditionalIncludeDirectories="$(SolutionDir)libAudio"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -185,7 +185,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying in GTK++ to output directory"
-				CommandLine="cp &quot;$(SolutionDir)../../Gamma/GTK+/GTK++/bin/GTK++.dll&quot; &quot;$(OutDir)&quot;"
+				CommandLine="cp &quot;$(SolutionDir)libAudioDepends/GTK++/bin/GTK++.dll&quot; &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 	</Configurations>

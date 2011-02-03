@@ -16,7 +16,6 @@ BYTE *Buff;
 void *p_AudioFile;
 pthread_t SoundThread;
 pthread_attr_t ThreadAttr;
-int Type;
 Spectrometer *Interface;
 pthread_mutex_t DrawMutex;
 pthread_mutexattr_t MutexAttr;
@@ -56,7 +55,7 @@ private:
 			}
 			if (p_AudioFile != NULL)
 			{
-				Audio_CloseFileR(p_AudioFile, Type);
+				Audio_CloseFileR(p_AudioFile);
 				p_AudioFile = NULL;
 			}
 			if (Buff != NULL)
@@ -65,7 +64,7 @@ private:
 				Buff = NULL;
 			}
 
-			p_AudioFile = Audio_OpenR(FN, &Type);
+			p_AudioFile = Audio_OpenR(FN);
 			if (p_AudioFile == NULL)
 			{
 				GTKMessageBox *hMsgBox = new GTKMessageBox((GtkWindow *)self->hMainWnd->GetWindow(), GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
@@ -76,7 +75,7 @@ private:
 				FN = NULL;
 				return;
 			}
-			p_FI = Audio_GetFileInfo(p_AudioFile, Type);
+			p_FI = Audio_GetFileInfo(p_AudioFile);
 			Buff = new BYTE[8192];
 			p_Playback = new Playback(p_FI, Callback, Buff, 8192, p_AudioFile);
 
@@ -117,28 +116,7 @@ private:
 		long ret;
 		static GdkRectangle rect = {0, 0, 456, 214};
 		pthread_mutex_lock(&DrawMutex);
-		if (Type == AUDIO_OGG_VORBIS)
-			ret = OggVorbis_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_AAC)
-			ret = AAC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_FLAC)
-			ret = FLAC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_MP3)
-			ret = MP3_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_M4A)
-			ret = M4A_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-/*		else if (Type == AUDIO_MUSEPACK)
-			ret = MPC_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);*/
-		else if (Type == AUDIO_OPTIMFROG)
-			ret = OptimFROG_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_WAVE)
-			ret = WAV_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_WAVPACK)
-			ret = WavPack_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else if (Type == AUDIO_WMA)
-			ret = WMA_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		else
-			ret = 0;
+		ret = Audio_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 		if (ret <= 0)
 		{
 			pthread_mutex_unlock(&DrawMutex);
