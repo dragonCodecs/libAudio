@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libVorbis_d.lib libOGG_d.lib libVorbisFile_d.lib libFLAC_Dynamic.lib libfaad_d.lib libfaac_d.lib libMP4v2_d.lib libmad.lib libid3tag.lib zdll.lib libmpcdec_d.lib wavpackdll_d.lib libshorten_d.lib OptimFROG.lib OpenAL32.lib"
+				AdditionalDependencies="libVorbis_d.lib libOGG_d.lib libVorbisFile_d.lib libFLAC_Dynamic.lib libfaad_d.lib libfaac_d.lib libMP4v2_d.lib libmad_d.lib libid3tag_d.lib zdll.lib libmpcdec_d.lib wavpackdll_d.lib libshorten_d.lib OptimFROG.lib OpenAL32.lib"
 				Version="0.0.1"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)libAudioDepends"
