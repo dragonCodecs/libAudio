@@ -99,7 +99,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying in dependancies to output directory.."
-				CommandLine="xcopy &quot;$(SolutionDir)$(ConfigurationName)\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;cp &quot;$(SolutionDir)/libAudioDepends/GTK++/bin/GTK++_d.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(SolutionDir)$(ConfigurationName)\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;cp &quot;$(SolutionDir)/libAudioDepends/GTK++/bin/GTK++_d.dll&quot; &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
