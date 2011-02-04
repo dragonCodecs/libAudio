@@ -59,14 +59,14 @@
 			<Tool
 				Name="VCPreLinkEventTool"
 				Description="Deleting and cleaning up .dlls in output directory"
-				CommandLine="cd $(OutDir)&#x0D;&#x0A;del *.dll"
+				CommandLine="cd $(OutDir)&#x0D;&#x0A;del *.dll&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libVorbis_d.lib libOGG_d.lib libVorbisFile_d.lib libFLAC_Dynamic.lib libfaad_d.lib libfaac_d.lib libMP4v2_d.lib libmad.lib libid3tag.lib zdll.lib libmpcdec_d.lib wavpackdll_d.lib libshorten_d.lib OptimFROG.lib OpenAL32.lib"
 				Version="0.0.1"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(SolutionDir)libAudioDepends;$(SolutionDir)libAudioDepends/OptimFROG_SDK/OptimFROG"
+				AdditionalLibraryDirectories="$(SolutionDir)libAudioDepends"
 				ModuleDefinitionFile="$(InputDir)libAudio.def"
 				DelayLoadDLLs="libVorbis_d.dll; libOGG_d.dll; libVorbisFile_d.dll; libFLAC_Dynamic.dll; OpenAL32.dll; zlib1.dll; OptimFROG.dll; libMP4v2_d.dll; wavpackdll_d.dll"
 				GenerateDebugInformation="true"
@@ -98,7 +98,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying in .dlls from libAudioDepends directory to output directory"
-				CommandLine="xcopy &quot;$(SolutionDir)libAudioDepends\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;del &quot;$(OutDir)\libmp4v2.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libFLAC++_dynamic.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\wavpackdll.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libogg.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbis.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbisfile.dll&quot;"
+				CommandLine="xcopy &quot;$(SolutionDir)libAudioDepends\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;del &quot;$(OutDir)\libmp4v2.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libFLAC++_dynamic.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\wavpackdll.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libogg.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbis.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbisfile.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -150,13 +150,13 @@
 			<Tool
 				Name="VCPreLinkEventTool"
 				Description="Deleting and cleaning up .dlls in output directory"
-				CommandLine="cd $(OutDir)&#x0D;&#x0A;del *.dll"
+				CommandLine="cd $(OutDir)&#x0D;&#x0A;del *.dll&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libVorbis.lib libOGG.lib libVorbisFile.lib libFLAC_Dynamic.lib libfaad.lib libfaac.lib libMP4v2.lib libmad.lib libid3tag.lib zdll.lib libmpcdec.lib wavpackdll.lib OptimFROG.lib OpenAL32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)libAudioDepends;$(SolutionDir)libAudioDepends/OptimFROG_SDK/OptimFROG"
+				AdditionalLibraryDirectories="$(SolutionDir)libAudioDepends"
 				ModuleDefinitionFile="$(InputDir)libAudio.def"
 				DelayLoadDLLs="libVorbis.dll; libOGG.dll; libVorbisFile.dll; libFLAC_Dynamic.dll; OpenAL32.dll; zlib1.dll; OptimFROG.dll; libMP4v2.dll; wavpackdll.dll"
 				SubSystem="2"
@@ -188,7 +188,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying in .dlls from libAudioDepends directory to output directory"
-				CommandLine="xcopy &quot;$(SolutionDir)libAudioDepends\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;del &quot;$(OutDir)\libmp4v2_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libFLAC++_dynamic.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\wavpackdll_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libogg_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbis_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbisfile_d.dll&quot;"
+				CommandLine="xcopy &quot;$(SolutionDir)libAudioDepends\*.dll&quot; &quot;$(OutDir)&quot; /I /Q /Y&#x0D;&#x0A;del &quot;$(OutDir)\libmp4v2_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libFLAC++_dynamic.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\wavpackdll_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libogg_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbis_d.dll&quot;&#x0D;&#x0A;del &quot;$(OutDir)\libvorbisfile_d.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
