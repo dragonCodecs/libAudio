@@ -218,9 +218,9 @@ public:
 		btnAbout->SetOnClicked(btnAbout_Click, this);
 		fixed->SetLocation(btnAbout, 423, 259);
 		frame = new GTKFrame(fixed, 468, 235, 16, 16, "Visualisation");
-		Spectr = new GTKGLDrawingArea(456, 214, GTKGLWidget::MakeStandardConfig());
-		Spectr->glSetHandler("expose_event", Draw, this);
-		frame->SetLocation((GTKWidget *)Spectr->GetGTKWidget(), 4, 2);
+		Spectr = new GTKGLDrawingArea(456, 214, GLBase::MakeStandardConfig());
+		Spectr->SetHandler("expose_event", Draw, this);
+		frame->SetLocation((GTKWidget *)Spectr, 4, 2);
 
 		p_AudioFile = NULL;
 		Buff = NULL;
@@ -251,7 +251,7 @@ public:
 	{
 		hMainWnd->ShowWindow();
 
-		Surface = ((GTKWidget *)Interface->Spectr->GetGTKWidget())->GetWidget()->window;
+		Surface = ((GTKWidget *)Interface->Spectr)->GetWidget()->window;
 		g_object_ref(G_OBJECT(Surface));
 		Spectr->glBegin();
 
