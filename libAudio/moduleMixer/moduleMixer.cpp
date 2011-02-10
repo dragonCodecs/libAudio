@@ -658,8 +658,8 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 				if (chn->Period != 0 && param != 0)
 				{
 					chn->Period -= param << 2;
-					if (chn->Period < 14)
-						chn->Period = 14;
+					if (chn->Period < 56)
+						chn->Period = 56;
 				}
 			}
 			break;
@@ -671,8 +671,8 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 				if (chn->Period != 0 && param != 0)
 				{
 					chn->Period += param << 2;
-					if (chn->Period > 3424)
-						chn->Period = 3424;
+					if (chn->Period > 13696)
+						chn->Period = 13696;
 				}
 			}
 			break;
@@ -739,6 +739,7 @@ inline int PatternLoop(MixerState *p_Mixer, UINT param)
 {
 	if (param != 0)
 	{
+		p_Mixer->PatternDelay = 0;
 		if (p_Mixer->PatternLoopCount != 0)
 		{
 			p_Mixer->PatternLoopCount--;
@@ -782,8 +783,8 @@ inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE p
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
 	{
 		chn->Period -= param;
-		if (chn->Period < 14)
-			chn->Period = 14;
+		if (chn->Period < 56)
+			chn->Period = 56;
 	}
 }
 
@@ -792,8 +793,8 @@ inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
 	{
 		chn->Period += param;
-		if (chn->Period > 3424)
-			chn->Period = 3424;
+		if (chn->Period > 13696)
+			chn->Period = 13696;
 	}
 }
 
@@ -1018,13 +1019,16 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					 * NewSpeed <= 32 => Speed = NewSpeed (TPR)
 					 * NewSpeed > 32 => Tempo = NewSpeed (BPM)
 					 */
-					BYTE NewSpeed = param;
-					if (NewSpeed == 0)
-						NewSpeed = 1;
-					if (NewSpeed <= 32)
-						p_Mixer->MusicSpeed = NewSpeed;
-					else
-						p_Mixer->MusicTempo = NewSpeed;
+					if (p_Mixer->TickCount == 0)
+					{
+						BYTE NewSpeed = param;
+						if (NewSpeed == 0)
+							NewSpeed = 1;
+						if (NewSpeed <= 32)
+							p_Mixer->MusicSpeed = NewSpeed;
+						else
+							p_Mixer->MusicTempo = NewSpeed;
+					}
 					break;
 				}
 			}
@@ -1069,6 +1073,11 @@ BOOL ProcessRow(MixerState *p_Mixer)
 		UINT i;
 		MODCommand (*Commands)[64];
 		Channel *chn = p_Mixer->Chns;
+		if (p_Mixer->PatternTransitionOccured == TRUE)
+		{
+			p_Mixer->PatternDelay = 0;
+			p_Mixer->PatternTransitionOccured = FALSE;
+		}
 		p_Mixer->TickCount = 0;
 		p_Mixer->Row = p_Mixer->NextRow;
 		if (p_Mixer->CurrentPattern != p_Mixer->NextPattern)
@@ -1150,8 +1159,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 			if (vol > 64)
 				vol = 64;
 			chn->Volume = vol;
-			if (chn->Period < 14)
-				chn->Period = 14;
+			if (chn->Period < 56)
+				chn->Period = 56;
 			period = chn->Period;
 			if ((chn->Flags & CHN_ARPEGGIO) != 0)
 			{
@@ -1177,10 +1186,12 @@ BOOL ReadNote(MixerState *p_Mixer)
 				period += ((short)Delta * (short)chn->VibratoDepth) >> 7;
 				chn->VibratoPos = (VibratoPos + chn->VibratoSpeed) & 0x3F;
 			}
-			if (period < 14)
-				period = 14;
-			if (period > 3424)
-				period = 3424;
+			// 14 << 2 == 56
+			if (period < 56)
+				period = 56;
+			// 3424 << 2 == 13696
+			if (period > 13696)
+				period = 13696;
 			freq = 14187580L / period;
 			inc = muldiv(freq, 0x10000, p_Mixer->MixRate);
 			if (inc >= 0xFFB0 && inc <= 0x10090)
