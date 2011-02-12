@@ -1,9 +1,6 @@
 @echo off
-set oldPWD=%CD%
+setlocal
 cd %~2
-
 xcopy "*.dll" "%~1" /I /Q /Y
-
-cd %oldPWD%
-set oldPWD=
+endlocal
 @echo on
