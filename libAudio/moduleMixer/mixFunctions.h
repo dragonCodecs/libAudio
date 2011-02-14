@@ -243,11 +243,9 @@ void InitialiseTables()
 
 // Begin / End loop
 #define SNDMIX_BEGINSAMPLELOOP \
-	signed char *p = NULL; \
-	int *vol = NULL; \
-	Pos = chn->PosLo; \
-	p = (signed char *)(chn->Sample + chn->Pos); \
-	vol = Buff; \
+	UINT Pos = chn->PosLo; \
+	signed char *p = (signed char *)(chn->Sample + chn->Pos); \
+	int *vol = Buff; \
 	do \
 	{
 
@@ -276,8 +274,7 @@ void InitialiseTables()
 // Begin / End interface
 #define BEGIN_MIX_INTERFACE(func) \
 	void __CDECL__ func(Channel *chn, int *Buff, int *BuffMax) \
-	{ \
-		UINT Pos;
+	{
 
 #define END_MIX_INTERFACE() \
 		SNDMIX_ENDSAMPLELOOP \
