@@ -588,8 +588,9 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 		SampleDecay *Decay;
 		UINT DecayRate = 1, SampleRemaining = chn->Length - chn->Pos;
 		free(chn->Decay); // If Decay is not already free()'ed, do so
+		chn->Decay = NULL;
 		// Don't bother with the following if there is no sample time left and it's not a looped sample
-		if (chn->LoopStart < 1 && SampleRemaining != 0)
+		if (chn->LoopStart > 0 || SampleRemaining == 0)
 		{
 			// Alloc
 			Decay = chn->Decay = (SampleDecay *)malloc(sizeof(SampleDecay));
@@ -1200,6 +1201,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 			freq = 14187580L / period;
 			inc = muldiv(freq, 0x10000, p_Mixer->MixRate);
 			chn->Increment = (inc + 1) & ~3;
+//			if (i == 3 && p_Mixer->TickCount == 0)
+//				printf("Increment: %hu.%hu bytes\n", chn->Increment >> 16, chn->Increment & 0xFFFF);
 		}
 		if (chn->Volume != 0 || chn->LeftVol != 0 || chn->RightVol != 0)
 			chn->Flags |= CHN_VOLUMERAMP;
