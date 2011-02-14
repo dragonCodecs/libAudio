@@ -672,8 +672,8 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 				if (chn->Period != 0 && param != 0)
 				{
 					chn->Period -= param << 2;
-					if (chn->Period < 56)
-						chn->Period = 56;
+					if (chn->Period < 14)
+						chn->Period = 14;
 				}
 			}
 			break;
@@ -753,7 +753,6 @@ inline int PatternLoop(MixerState *p_Mixer, UINT param)
 {
 	if (param != 0)
 	{
-		p_Mixer->PatternDelay = 0;
 		if (p_Mixer->PatternLoopCount != 0)
 		{
 			p_Mixer->PatternLoopCount--;
@@ -797,8 +796,8 @@ inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE p
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
 	{
 		chn->Period -= param;
-		if (chn->Period < 56)
-			chn->Period = 56;
+		if (chn->Period < 14)
+			chn->Period = 14;
 	}
 }
 
@@ -1033,16 +1032,13 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					 * NewSpeed <= 32 => Speed = NewSpeed (TPR)
 					 * NewSpeed > 32 => Tempo = NewSpeed (BPM)
 					 */
-					if (p_Mixer->TickCount == 0)
-					{
-						BYTE NewSpeed = param;
-						if (NewSpeed == 0)
-							NewSpeed = 1;
-						if (NewSpeed <= 32)
-							p_Mixer->MusicSpeed = NewSpeed;
-						else
-							p_Mixer->MusicTempo = NewSpeed;
-					}
+					BYTE NewSpeed = param;
+					if (NewSpeed == 0)
+						NewSpeed = 1;
+					if (NewSpeed <= 32)
+						p_Mixer->MusicSpeed = NewSpeed;
+					else
+						p_Mixer->MusicTempo = NewSpeed;
 					break;
 				}
 			}
@@ -1087,11 +1083,6 @@ BOOL ProcessRow(MixerState *p_Mixer)
 		UINT i;
 		MODCommand (*Commands)[64];
 		Channel *chn = p_Mixer->Chns;
-		if (p_Mixer->PatternTransitionOccured == TRUE)
-		{
-			p_Mixer->PatternDelay = 0;
-			p_Mixer->PatternTransitionOccured = FALSE;
-		}
 		p_Mixer->TickCount = 0;
 		p_Mixer->Row = p_Mixer->NextRow;
 		if (p_Mixer->CurrentPattern != p_Mixer->NextPattern)
@@ -1173,8 +1164,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 			if (vol > 64)
 				vol = 64;
 			chn->Volume = vol;
-			if (chn->Period < 56)
-				chn->Period = 56;
+			if (chn->Period < 14)
+				chn->Period = 14;
 			period = chn->Period;
 			if ((chn->Flags & CHN_ARPEGGIO) != 0)
 			{
@@ -1228,33 +1219,42 @@ BOOL ReadNote(MixerState *p_Mixer)
 			else
 				chn->NewLeftVol = chn->NewRightVol = chn->Volume;
 			chn->RightRamp = chn->LeftRamp = 0;
+			// Do we need to ramp the volume up or down?
 			if ((chn->Flags & CHN_VOLUMERAMP) != 0 && (chn->LeftVol != chn->NewLeftVol || chn->RightVol != chn->NewRightVol))
 			{
 				int LeftDelta, RightDelta;
 				UINT RampLength = 42;
+				// Calculate Volume deltas
 				LeftDelta = (chn->NewLeftVol - chn->LeftVol);
 				RightDelta = (chn->NewRightVol - chn->RightVol);
+				// Check if we need to calculate the RampLength, and do so if need be
 				if ((chn->LeftVol | chn->RightVol) != 0 && (chn->NewLeftVol | chn->NewRightVol) != 0 && (chn->Flags & CHN_FASTVOLRAMP) != 0)
 				{
 					RampLength = p_Mixer->BufferCount;
+					// Clipping:
 					if (RampLength > 512)
 						RampLength = 512;
 					else if (RampLength < 42)
 						RampLength = 42;
 				}
+				// Calculate value to add to the volume to get it closer to the new volume during ramping
 				chn->LeftRamp = LeftDelta / RampLength;
 				chn->RightRamp = RightDelta / RampLength;
+				// Normalise the current volume so that the ramping won't under or over shoot
 				chn->LeftVol = chn->NewLeftVol - (chn->LeftRamp * RampLength);
 				chn->RightVol = chn->NewRightVol - (chn->RightRamp * RampLength);
+				// If the ramp values aren't 0 (ramping already done?)
 				if ((chn->LeftRamp | chn->RightRamp) != 0)
 					chn->RampLength = RampLength;
 				else
 				{
+					// Otherwise the ramping is done, so don't need to make the mixer functions do it for us
 					chn->Flags &= ~CHN_VOLUMERAMP;
 					chn->LeftVol = chn->NewLeftVol;
 					chn->RightVol = chn->NewRightVol;
 				}
 			}
+			// No? ok, scratch the ramping.
 			else
 			{
 				chn->Flags &= ~CHN_VOLUMERAMP;
