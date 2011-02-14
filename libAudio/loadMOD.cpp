@@ -164,13 +164,13 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 			if (strncasecmp((char *)p_MF->p_PCM[i], "ADPCM", 5) == 0)
 			{
 				UINT j;
-				uint8_t *compressionTable = p_MF->p_PCM[i];
-				uint8_t *compBuffer = &p_MF->p_PCM[i][16];
-				uint8_t delta = 0;
+				BYTE *compressionTable = p_MF->p_PCM[i];
+				BYTE *compBuffer = &p_MF->p_PCM[i][16];
+				BYTE delta = 0;
 				realLength -= 16;
 				p_MF->p_Samples[i].Length = realLength;
 				realLength *= 2;
-				p_MF->p_PCM[i] = (uint8_t *)malloc(realLength);
+				p_MF->p_PCM[i] = (BYTE *)malloc(realLength);
 				for (j = 0; j < p_MF->p_Samples[i].Length; j++)
 				{
 					delta += compressionTable[compBuffer[j] & 0x0F];
