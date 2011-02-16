@@ -583,7 +583,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 
 	if (DoDecay == TRUE)
 	{
-		SampleDecay *Decay;
+		SampleDecay *Decay = &chn->Decay;
 		UINT DecayRate = 1, SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
 		// TODO: Change the following if () assumption so that decay is initiated on all samples
 		// This should get rid of all the final mixing errors caused by lack of decay..
