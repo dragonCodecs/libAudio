@@ -102,7 +102,7 @@ typedef struct _Channel
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
-	SampleDecay *Decay;
+	SampleDecay Decay;
 } Channel;
 
 typedef struct _MixerState
@@ -585,19 +585,12 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 	{
 		SampleDecay *Decay;
 		UINT DecayRate = 1, SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
-		free(chn->Decay); // If Decay is not already free()'ed, do so
-		chn->Decay = NULL;
 		// TODO: Change the following if () assumption so that decay is initiated on all samples
 		// This should get rid of all the final mixing errors caused by lack of decay..
-		// TODO: Change the SampleDecay structure pointer to a non-dynamic affair, and use the Decay->Sample member
-		// to determine if the structure is in use an inititalised. This should make a nice saving
-		// on processing time due to allocation/deallocation + it'll make it less error prone
-		// due to all needed memory already being allocated well before this code being run.
 		// Don't bother with the following if there is no sample time left and it's not a looped sample
 		if (chn->LoopStart > 0 || SampleRemaining == 0)
 		{
 			// Alloc
-			Decay = chn->Decay = (SampleDecay *)malloc(sizeof(SampleDecay));
 			// Copy key values needed to keep the note the same and for it to have the same properties
 			Decay->Increment = chn->Increment;
 			Decay->Sample = chn->Sample;
@@ -1385,7 +1378,7 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 
 inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 {
-	SampleDecay *Decay = chn->Decay;
+	SampleDecay *Decay = &chn->Decay;
 	// If we've still got decaying to do
 	if (Decay->Sample != NULL && (Decay->LeftVol != 0 || Decay->RightVol != 0))
 	{
@@ -1426,12 +1419,6 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 	}
 	else
 		Decay->Sample = NULL;
-	// Decaying has finished? free the Decay structure
-	if ((Decay->LeftVol == 0 && Decay->RightVol == 0) || Decay->Sample == NULL)
-	{
-		free(Decay);
-		chn->Decay = NULL;
-	}
 }
 
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
@@ -1445,16 +1432,8 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 		UINT rampSamples, Flags, samples = count;
 		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
 		int *buff = p_Mixer->MixBuffer;
-		if (chn->Decay != NULL)
-		{
-			if (chn->Decay->LoopEnd != 0)
-				DoDecay(chn, buff, samples);
-			else
-			{
-				free(chn->Decay);
-				chn->Decay = NULL;
-			}
-		}
+		if (chn->Decay.Sample != NULL && chn->Decay.LoopEnd != 0)
+			DoDecay(chn, buff, samples);
 		if (chn->Sample == NULL)
 			continue;
 /*		if (p_Mixer->ChnMix[i] == 3)
