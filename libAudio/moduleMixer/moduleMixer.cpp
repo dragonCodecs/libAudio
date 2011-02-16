@@ -102,7 +102,6 @@ typedef struct _Channel
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
-	int LastLeftSample, LastRightSample;
 	SampleDecay *Decay;
 } Channel;
 
@@ -114,7 +113,6 @@ typedef struct _MixerState
 	UINT Row, NextRow;
 	UINT MusicSpeed, MusicTempo;
 	UINT Pattern, CurrentPattern, NextPattern, RestartPos;
-	BOOL PatternTransitionOccured;
 	BYTE *Orders, MaxOrder, PatternDelay;
 	MODSample *Samp;
 	BYTE **SamplePCM;
@@ -586,9 +584,15 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 	if (DoDecay == TRUE)
 	{
 		SampleDecay *Decay;
-		UINT DecayRate = 1, SampleRemaining = chn->Length - chn->Pos;
+		UINT DecayRate = 1, SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
 		free(chn->Decay); // If Decay is not already free()'ed, do so
 		chn->Decay = NULL;
+		// TODO: Change the following if () assumption so that decay is initiated on all samples
+		// This should get rid of all the final mixing errors caused by lack of decay..
+		// TODO: Change the SampleDecay structure pointer to a non-dynamic affair, and use the Decay->Sample member
+		// to determine if the structure is in use an inititalised. This should make a nice saving
+		// on processing time due to allocation/deallocation + it'll make it less error prone
+		// due to all needed memory already being allocated well before this code being run.
 		// Don't bother with the following if there is no sample time left and it's not a looped sample
 		if (chn->LoopStart > 0 || SampleRemaining == 0)
 		{
@@ -1069,7 +1073,6 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					p_Mixer->PatternLoopCount = p_Mixer->PatternLoopStart = 0;
 				p_Mixer->NextPattern = PositionJump;
 				p_Mixer->NextRow = BreakRow;
-				p_Mixer->PatternTransitionOccured = TRUE;
 			}
 		}
 	}
@@ -1085,6 +1088,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 		MODCommand (*Commands)[64];
 		Channel *chn = p_Mixer->Chns;
 		p_Mixer->TickCount = 0;
+		p_Mixer->PatternDelay = 0;
 		p_Mixer->Row = p_Mixer->NextRow;
 		if (p_Mixer->CurrentPattern != p_Mixer->NextPattern)
 			p_Mixer->CurrentPattern = p_Mixer->NextPattern;
@@ -1099,7 +1103,6 @@ BOOL ProcessRow(MixerState *p_Mixer)
 		{
 			p_Mixer->NextPattern = p_Mixer->CurrentPattern + 1;
 			p_Mixer->NextRow = 0;
-			p_Mixer->PatternTransitionOccured = TRUE;
 		}
 		Commands = p_Mixer->Patterns[p_Mixer->Pattern].Commands;
 		for (i = 0; i < p_Mixer->Channels; i++, chn++)
@@ -1201,8 +1204,6 @@ BOOL ReadNote(MixerState *p_Mixer)
 			freq = 14187580L / period;
 			inc = muldiv(freq, 0x10000, p_Mixer->MixRate);
 			chn->Increment = (inc + 1) & ~3;
-//			if (i == 3 && p_Mixer->TickCount == 0)
-//				printf("Increment: %hu.%hu bytes\n", chn->Increment >> 16, chn->Increment & 0xFFFF);
 		}
 		if (chn->Volume != 0 || chn->LeftVol != 0 || chn->RightVol != 0)
 			chn->Flags |= CHN_VOLUMERAMP;
@@ -1365,7 +1366,8 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 		DeltaLo = (Increment & 0xFFFF) * (Samples - 1);
 		PosDest = Pos + DeltaHi + ((PosLo + DeltaLo) >> 16);
 		if (PosDest >= chn->Length)
-			SampleCount = ((((chn->Length - Pos) << 16) - PosLo - 1) / Increment) + 1;
+			SampleCount = chn->Length - chn->Pos;
+//			SampleCount = ((((chn->Length - Pos) << 16) - PosLo - 1) / Increment) + 1;
 	}
 	if (SampleCount <= 1)
 		return 1;
@@ -1432,45 +1434,6 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 	}
 }
 
-inline void EndChannelOut(Channel *chn, int *MixBuff, UINT samples)
-{
-	int LeftSample = chn->LastLeftSample;
-	int RightSample = chn->LastRightSample;
-	int *buff = MixBuff;
-	while ((LeftSample != 0 || RightSample != 0) && samples > 0)
-	{
-#ifdef _WINDOWS
-		__asm
-		{
-			mov eax, LeftSample
-			mov ebx, RightSample
-			sar eax, 8
-			sar ebx, 8
-			mov LeftSample, eax
-			mov RightSample, ebx
-		}
-#else
-		asm(".intel_syntax noprefix\n"
-			"\tsar eax, 8\n"
-			"\tsar ebx, 8\n"
-			".att_syntax\n" : [LeftSample] "=a" (LeftSample), [RightSample] "=b" (RightSample) :
-			"a" (LeftSample), "b" (RightSample));
-#endif
-		buff[0] += LeftSample;
-		buff[1] += RightSample;
-		buff += 2;
-		samples--;
-	}
-	chn->LastLeftSample = LeftSample;
-	chn->LastRightSample = RightSample;
-	if (LeftSample == 0 && RightSample == 0)
-	{
-		chn->Sample = NULL;
-		chn->Length = chn->Pos = chn->PosLo = 0;
-		chn->RampLength = 0;
-	}
-}
-
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
 {
 	UINT i;
@@ -1510,8 +1473,6 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			SampleCount = GetSampleCount(chn, rampSamples);
 			if (SampleCount <= 0)
 			{
-				if (chn->LastLeftSample != 0 || chn->LastRightSample != 0)
-					EndChannelOut(chn, buff, samples);
 				samples = 0;
 				continue;
 			}
@@ -1521,10 +1482,10 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			{
 				MixInterface MixFunc = (chn->RampLength != 0 ? MixFunctionTable[Flags | MIXNDX_RAMP] : MixFunctionTable[Flags]);
 				int *BuffMax = buff + (SampleCount * 2);
+//				if (p_Mixer->ChnMix[i] == 3)
+//					printf("Samples used: %u, Pos: %hu.%hu bytes\n", SampleCount * 2, chn->Pos, chn->PosLo);
 				MixFunc(chn, buff, BuffMax);
 				buff = BuffMax;
-				chn->LastLeftSample = *(buff - 2);
-				chn->LastRightSample = *(buff - 1);
 			}
 			samples -= SampleCount;
 			if (chn->RampLength != 0)
