@@ -1402,7 +1402,7 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 {
 	SampleDecay *Decay = &chn->Decay;
 	// If we've still got decaying to do
-	if (Decay->Sample != NULL)
+	if ((Decay->LeftVol | Decay->RightVol) != 0)
 	{
 		int *buff = MixBuff;
 		int RampLeftVol = Decay->LeftVol;
