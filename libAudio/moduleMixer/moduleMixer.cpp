@@ -79,9 +79,9 @@ inline int abs(int x)
 typedef struct _SampleDecay
 {
 	BYTE *Sample, LeftVol, RightVol, DecayRate;
-	UINT LoopStart, LoopEnd, Length;
-	int Increment;
-	UINT Pos, PosLo;
+	UINT LoopStart, LoopEnd, Length, Pos, PosLo;
+	UINT InitialSampleRemaining;
+	int Increment, FinalSample;
 } SampleDecay;
 
 typedef struct _Channel
@@ -585,30 +585,30 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 	{
 		SampleDecay *Decay = &chn->Decay;
 		UINT DecayRate = 1, SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
-		// TODO: Change the following if () assumption so that decay is initiated on all samples
-		// This should get rid of all the final mixing errors caused by lack of decay..
-		// Don't bother with the following if there is no sample time left and it's not a looped sample
-		if (chn->LoopStart > 0 || SampleRemaining == 0)
+		// Copy key values needed to keep the note the same and for it to have the same properties
+		Decay->Increment = chn->Increment;
+		Decay->Sample = chn->Sample;
+		Decay->LoopStart = chn->LoopStart;
+		Decay->LoopEnd = chn->LoopEnd;
+		Decay->Length = chn->Length;
+		Decay->InitialSampleRemaining = SampleRemaining;
+		Decay->FinalSample = 0;
+		// Work out how fast we need to decay
+		SampleRemaining = chn->Length - chn->Pos;
+		if (chn->LoopStart < 1 && SampleRemaining <= 64 && SampleRemaining > 1)
+			DecayRate = 64 / SampleRemaining;
+		else if (chn->LoopStart < 1 && SampleRemaining < 2)
 		{
-			// Alloc
-			// Copy key values needed to keep the note the same and for it to have the same properties
-			Decay->Increment = chn->Increment;
-			Decay->Sample = chn->Sample;
-			Decay->LoopStart = chn->LoopStart;
-			Decay->LoopEnd = chn->LoopEnd;
-			Decay->Length = chn->Length;
-			// Work out how fast we need to decay
-			SampleRemaining = chn->Length - chn->Pos;
-			if (chn->LoopStart < 1 && SampleRemaining <= 64 && SampleRemaining > 0)
-				DecayRate = 64 / SampleRemaining;
-			Decay->DecayRate = DecayRate;
-			// Grab the current volume levels to operate on
-			Decay->LeftVol = chn->LeftVol;
-			Decay->RightVol = chn->RightVol;
-			// And the current playback possition of the sample
-			Decay->Pos = chn->Pos;
-			Decay->PosLo = chn->PosLo;
+			Decay->FinalSample = ((signed char *)chn->Sample)[chn->Length - 1] << 8;
+			DecayRate = 16;
 		}
+		Decay->DecayRate = DecayRate;
+		// Grab the current volume levels to operate on
+		Decay->LeftVol = chn->LeftVol;
+		Decay->RightVol = chn->RightVol;
+		// And the current playback possition of the sample
+		Decay->Pos = chn->Pos;
+		Decay->PosLo = chn->PosLo;
 	}
 	chn->Note = note;
 	chn->NewSamp = 0;
@@ -1376,50 +1376,67 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 	return Max - Read;
 }
 
+#define SAMPLE_LOOP(vol_val) \
+	do \
+	{ \
+		int vol = (vol_val); \
+		/* Ramp */ \
+		RampLeftVol -= Decay->DecayRate; \
+		RampRightVol -= Decay->DecayRate; \
+		/* Clip */ \
+		if (RampLeftVol < 0) \
+			RampLeftVol = 0; \
+		if (RampRightVol < 0) \
+			RampRightVol = 0; \
+		/* Generate audio */ \
+		buff[0] += vol * (RampRightVol << 4); \
+		buff[1] += vol * (RampLeftVol << 4); \
+		/* Move position */ \
+		buff += 2; \
+		ADJUST_POS \
+		samples--; \
+	} \
+	while (samples != 0 && (RampRightVol != 0 || RampLeftVol != 0))
+
 inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 {
 	SampleDecay *Decay = &chn->Decay;
 	// If we've still got decaying to do
-	if (Decay->Sample != NULL && (Decay->LeftVol != 0 || Decay->RightVol != 0))
+	if (Decay->Sample != NULL)
 	{
 		int *buff = MixBuff;
 		int RampLeftVol = Decay->LeftVol;
 		int RampRightVol = Decay->RightVol;
 		// Restore audio generation to where it was last
-		UINT Pos = Decay->PosLo;
-		signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
-		do
+		if (Decay->FinalSample == 0)
 		{
-			int vol = p[Pos >> 16] << 8;
-			// Ramp
-			RampLeftVol -= Decay->DecayRate;
-			RampRightVol -= Decay->DecayRate;
-			// Clip
-			if (RampLeftVol < 0)
-				RampLeftVol = 0;
-			if (RampRightVol < 0)
-				RampRightVol = 0;
-			// Generate audio
-			buff[0] += vol * (RampRightVol << 4);
-			buff[1] += vol * (RampLeftVol << 4);
-			// Move position
-			buff += 2;
-			Pos += Decay->Increment;
-			// Looping? Ok, move us back to where we need to be in the loop
-			if ((Pos >> 16) >= chn->LoopEnd)
-				Pos -= (chn->LoopEnd - chn->LoopStart) << 16;
-			samples--;
+			UINT Pos = Decay->PosLo;
+			signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
+#define ADJUST_POS \
+	Pos += Decay->Increment; \
+	/* Looping? Ok, move us back to where we need to be in the loop */ \
+	if ((Pos >> 16) >= chn->LoopEnd) \
+		Pos -= (chn->LoopEnd - chn->LoopStart) << 16;
+			SAMPLE_LOOP(p[Pos >> 16] << 8);
+#undef ADJUST_POS
+			// Save our state
+			Decay->Pos += Pos >> 16;
+			Decay->PosLo = Pos & 0xFFFF;
 		}
-		while (samples != 0 && (RampRightVol != 0 || RampLeftVol != 0));
-		// Save our state
-		Decay->Pos += Pos >> 16;
-		Decay->PosLo = Pos & 0xFFFF;
+		else
+		{
+#define ADJUST_POS
+			SAMPLE_LOOP(Decay->FinalSample);
+#undef ADJUST_POS
+		}
 		Decay->LeftVol = RampLeftVol;
 		Decay->RightVol = RampRightVol;
 	}
 	else
 		Decay->Sample = NULL;
 }
+
+#undef SAMPLE_LOOP
 
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
 {
