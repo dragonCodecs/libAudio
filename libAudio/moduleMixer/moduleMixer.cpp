@@ -575,13 +575,13 @@ inline UINT GetPeriodFromNote(BYTE Note, BYTE FineTune)
 		return Periods[Note] << 2;
 }
 
-void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDecay)
+void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 {
 	UINT period;
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
 
-	if (DoDecay == TRUE)
+	if (/*chn->Sample != chn->NewSample && */chn->Sample != NULL)
 	{
 		SampleDecay *Decay = &chn->Decay;
 		UINT DecayRate = 1, SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
@@ -600,7 +600,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd, BOOL DoDeca
 		else if (chn->LoopStart < 1 && SampleRemaining < 2)
 		{
 			Decay->FinalSample = ((signed char *)chn->Sample)[chn->Length - 1] << 8;
-			DecayRate = 16;
+			DecayRate = 32;
 		}
 		Decay->DecayRate = DecayRate;
 		// Grab the current volume levels to operate on
@@ -716,7 +716,7 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 		case CMDEX_RETRIGER:
 		{
 			if (param != 0 && (p_Mixer->TickCount % param) == 0)
-				NoteChange(p_Mixer, i, chn->NewNote, 0, FALSE);
+				NoteChange(p_Mixer, i, chn->NewNote, 0);
 			break;
 		}
 		case CMDEX_FINEVOLUP:
@@ -903,7 +903,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					SampleChange(p_Mixer, chn, chn->NewSamp);
 					chn->NewSamp = 0;
 				}
-				NoteChange(p_Mixer, i, note, cmd, TRUE);
+				NoteChange(p_Mixer, i, note, cmd);
 			}
 		}
 		if (cmd != 0 || (cmd == 0 && param != 0))
@@ -1359,8 +1359,8 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 		DeltaLo = (Increment & 0xFFFF) * (Samples - 1);
 		PosDest = Pos + DeltaHi + ((PosLo + DeltaLo) >> 16);
 		if (PosDest >= chn->Length)
-			SampleCount = chn->Length - chn->Pos;
-//			SampleCount = ((((chn->Length - Pos) << 16) - PosLo - 1) / Increment) + 1;
+//			SampleCount = chn->Length - chn->Pos;
+			SampleCount = ((((chn->Length - Pos) << 16) - PosLo - 1) / Increment) + 1;
 	}
 	if (SampleCount <= 1)
 		return 1;
