@@ -66,12 +66,12 @@ inline int abs(int x)
 #define SNDMIX_POLYPHASESRCMODE	0x02
 #define SNDMIX_FIRFILTERSRCMODE	0x04
 
-#define MIXNDX_FILTER		0x01
-#define MIXNDX_LINEARSRC	0x02
-#define MIXNDX_HQSRC		0x04
-#define MIXNDX_KAISERSRC	0x06
-#define MIXNDX_FIRFILTERSRC	0x08
-#define MIXNDX_RAMP			0x10
+#define MIX_FILTER			0x01
+#define MIX_LINEARSRC		0x02
+#define MIX_HQSRC			0x04
+#define MIX_KAISERSRC		0x06
+#define MIX_FIRFILTERSRC	0x08
+#define MIX_RAMP			0x10
 
 #define MAX_VOLUME			64
 #define MIXBUFFERSIZE		512
@@ -1278,11 +1278,11 @@ BOOL ReadNote(MixerState *p_Mixer)
 UINT GetResamplingFlag(MixerState *p_Mixer)
 {
 	if ((p_Mixer->SoundSetup & SNDMIX_SPLINESRCMODE) != 0)
-		return MIXNDX_HQSRC;
+		return MIX_HQSRC;
 	else if ((p_Mixer->SoundSetup & SNDMIX_POLYPHASESRCMODE) != 0)
-		return MIXNDX_KAISERSRC;
+		return MIX_KAISERSRC;
 	else if ((p_Mixer->SoundSetup & SNDMIX_FIRFILTERSRCMODE) != 0)
-		return MIXNDX_FIRFILTERSRC;
+		return MIX_FIRFILTERSRC;
 	return 0;
 }
 
@@ -1418,6 +1418,8 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		// Restore audio generation to where it was last
 		if (Decay->FinalSample == 0)
 		{
+			// Add some logic here which checks if ther are still samples to go and we've reached the end of our sample
+			// when it's non-looping, so that the decay mode switches to the one in the else..
 			UINT Pos = Decay->PosLo;
 			signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
 #define ADJUST_POS \
@@ -1484,7 +1486,7 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 				buff += SampleCount * 2;
 			else
 			{
-				MixInterface MixFunc = (chn->RampLength != 0 ? MixFunctionTable[Flags | MIXNDX_RAMP] : MixFunctionTable[Flags]);
+				MixInterface MixFunc = MixFunctionTable[Flags | (chn->RampLength != 0 ? MIX_RAMP : 0)];
 				int *BuffMax = buff + (SampleCount * 2);
 //				if (p_Mixer->ChnMix[i] == 3)
 //					printf("Samples used: %u, Pos: %hu.%hu bytes\n", SampleCount * 2, chn->Pos, chn->PosLo);
