@@ -62,7 +62,6 @@ uninstall:
 	rm $(PKGDIR)/$(PC)
 
 libAudio.so$(VER):
-	rm -f $(SO) $(A)
 	$(AR) $(A) $(O)
 	$(RANLIB) $(A)
 	$(CC) $(LFLAGS)

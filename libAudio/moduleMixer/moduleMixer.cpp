@@ -92,8 +92,8 @@ typedef struct _Channel
 	MODSample *Samp;
 	BYTE RowNote, RowSample, Volume;
 	BYTE FineTune, Flags, Pan;
-	UINT Period, Pos, PosLo, PortamentoDest;
-	int Increment;
+	UINT Period, Pos, PosLo;
+	int Increment, PortamentoDest;
 	BYTE Arpeggio, LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
 	WORD RowEffect, PortamentoSlide;
@@ -581,6 +581,8 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
 
+	// TODO: Maybe increase the length of the decay time? Seems that 64 is a little short. Also,
+	// change the SampleRemaining count up from 2 to 16 or so, so that clicking is reduced even more?
 	if (/*chn->Sample != chn->NewSample && */chn->Sample != NULL)
 	{
 		SampleDecay *Decay = &chn->Decay;
@@ -670,8 +672,8 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 				if (chn->Period != 0 && param != 0)
 				{
 					chn->Period -= param << 2;
-					if (chn->Period < 14)
-						chn->Period = 14;
+					if (chn->Period < 56)
+						chn->Period = 56;
 				}
 			}
 			break;
@@ -794,8 +796,8 @@ inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE p
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
 	{
 		chn->Period -= param;
-		if (chn->Period < 14)
-			chn->Period = 14;
+		if (chn->Period < 56)
+			chn->Period = 56;
 	}
 }
 
@@ -828,9 +830,12 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 			}
 			else
 				Delta = chn->PortamentoSlide;
-			chn->Period += Delta;
-			if (chn->Period > chn->PortamentoDest)
-				chn->Period = chn->PortamentoDest;
+			Delta = chn->Period + Delta;
+			if (Delta < 56)
+				Delta = 56;
+			if (Delta > chn->PortamentoDest)
+				Delta = chn->PortamentoDest;
+			chn->Period = (UINT)Delta;
 		}
 		else if (chn->Period > chn->PortamentoDest)
 		{
@@ -838,15 +843,18 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 			if ((chn->Flags & CHN_GLISSANDO) != 0)
 			{
 				BYTE Slide = (BYTE)(chn->PortamentoSlide >> 2);
-				Delta = -muldiv(chn->Period, LinearSlideDownTable[Slide] + 1, 32768) - chn->Period;
+				Delta = -muldiv(chn->Period, LinearSlideDownTable[Slide], 32768) - chn->Period;
 				if (Delta < 1)
 					Delta = 1;
 			}
 			else
 				Delta = chn->PortamentoSlide;
-			chn->Period -= Delta;
-			if (chn->Period < chn->PortamentoDest)
-				chn->Period = chn->PortamentoDest;
+			Delta = chn->Period - Delta;
+			if (Delta < chn->PortamentoDest)
+				Delta = chn->PortamentoDest;
+			if (Delta > 7040)
+				Delta = 7040;
+			chn->Period = (UINT)Delta;
 		}
 	}
 }
@@ -1161,8 +1169,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 			if (vol > 64)
 				vol = 64;
 			chn->Volume = vol;
-			if (chn->Period < 14)
-				chn->Period = 14;
+			if (chn->Period < 56)
+				chn->Period = 56;
 			period = chn->Period;
 			if ((chn->Flags & CHN_ARPEGGIO) != 0)
 			{
