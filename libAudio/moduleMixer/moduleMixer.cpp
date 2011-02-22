@@ -78,9 +78,8 @@ inline int abs(int x)
 
 typedef struct _SampleDecay
 {
-	BYTE *Sample, LeftVol, RightVol, DecayRate;
+	BYTE *Sample, LeftVol, RightVol;
 	UINT LoopStart, LoopEnd, Length, Pos, PosLo;
-	UINT InitialSampleRemaining;
 	int Increment, FinalSample;
 } SampleDecay;
 
@@ -415,11 +414,11 @@ done:
 		"cliploop:\n"
 		"\tmov eax, dword ptr [edx]\n"
 		"\tadd ebx, 2\n"
-		"\tadd eax, (1 << 11)\n"
+		"\tadd eax, 2048\n" // 1 << 11
 		"\tadd edx, 4\n"
-		"\tcmp eax, (-0x07FFFFFF)\n"
+		"\tcmp eax, 0xF8000001\n" // This should be the negative of the next constant
 		"\tjl cliplow\n"
-		"\tcmp eax, (0x07FFFFFF)\n"
+		"\tcmp eax, 0x07FFFFFF\n"
 		"\tjg cliphigh\n"
 		"cliprecover:\n"
 		"\tsar eax, 12\n"
@@ -428,10 +427,10 @@ done:
 		"\tjnz cliploop\n"
 		"\tjmp done\n"
 		"cliplow:\n"
-		"\tmov eax, (-0x07FFFFFF)\n"
+		"\tmov eax, 0xF8000001\n"
 		"\tjmp cliprecover\n"
 		"cliphigh:\n"
-		"\tmov eax, (0x07FFFFFF)\n"
+		"\tmov eax, 0x07FFFFFF\n"
 		"\tjmp cliprecover\n"
 		"done:\n"
 #ifdef __x86_64__
@@ -502,6 +501,35 @@ void DestroyMixer(void *Mixer)
 	free(p_Mixer->Chns);
 	free(p_Mixer->ChnMix);
 	free(p_Mixer);
+}
+
+inline void GetDecayInfo(Channel *const chn)
+{
+	// TODO: Maybe increase the length of the decay time? Seems that 64 is a little short. Also,
+	// change the SampleRemaining count up from 2 to 16 or so, so that clicking is reduced even more?
+	if (chn->Sample != NULL)
+	{
+		SampleDecay *Decay = &chn->Decay;
+		UINT SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
+		// Copy key values needed to keep the note the same and for it to have the same properties
+		Decay->Increment = chn->Increment;
+		Decay->Sample = chn->Sample;
+		Decay->LoopStart = chn->LoopStart;
+		Decay->LoopEnd = chn->LoopEnd;
+		Decay->Length = chn->Length;
+		Decay->FinalSample = 0;
+		if (chn->LoopStart < 1 && SampleRemaining == 1)
+		{
+			UINT FinalPos = (((chn->Pos << 16) + chn->PosLo) + chn->Increment) >> 16;
+			Decay->FinalSample = ((signed char *)chn->Sample)[FinalPos] << 8;
+		}
+		// Grab the current volume levels to operate on
+		Decay->LeftVol = chn->LeftVol;// << 1;
+		Decay->RightVol = chn->RightVol;// << 1;
+		// And the current playback possition of the sample
+		Decay->Pos = chn->Pos;
+		Decay->PosLo = chn->PosLo;
+	}
 }
 
 inline BYTE PeriodToNoteIndex(WORD Period)
@@ -581,37 +609,7 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
 
-	// TODO: Maybe increase the length of the decay time? Seems that 64 is a little short. Also,
-	// change the SampleRemaining count up from 2 to 16 or so, so that clicking is reduced even more?
-	if (/*chn->Sample != chn->NewSample && */chn->Sample != NULL)
-	{
-		SampleDecay *Decay = &chn->Decay;
-		UINT DecayRate = 1, SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
-		// Copy key values needed to keep the note the same and for it to have the same properties
-		Decay->Increment = chn->Increment;
-		Decay->Sample = chn->Sample;
-		Decay->LoopStart = chn->LoopStart;
-		Decay->LoopEnd = chn->LoopEnd;
-		Decay->Length = chn->Length;
-		Decay->InitialSampleRemaining = SampleRemaining;
-		Decay->FinalSample = 0;
-		// Work out how fast we need to decay
-		SampleRemaining = chn->Length - chn->Pos;
-		if (chn->LoopStart < 1 && SampleRemaining <= 64 && SampleRemaining > 1)
-			DecayRate = 64 / SampleRemaining;
-		else if (chn->LoopStart < 1 && SampleRemaining < 2)
-		{
-			Decay->FinalSample = ((signed char *)chn->Sample)[chn->Length - 1] << 8;
-			DecayRate = 32;
-		}
-		Decay->DecayRate = DecayRate;
-		// Grab the current volume levels to operate on
-		Decay->LeftVol = chn->LeftVol;
-		Decay->RightVol = chn->RightVol;
-		// And the current playback possition of the sample
-		Decay->Pos = chn->Pos;
-		Decay->PosLo = chn->PosLo;
-	}
+	GetDecayInfo(chn);
 	chn->Note = note;
 	chn->NewSamp = 0;
 	period = GetPeriodFromNote(note, chn->FineTune);
@@ -895,6 +893,8 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 			BYTE note = chn->RowNote;
 			if (sample != 0)
 				chn->NewSamp = sample;
+			if (chn->Note != 0xFF && note == 0xFF)
+				GetDecayInfo(chn);
 			if (note == 0xFF && sample != 0)
 				chn->Volume = p_Mixer->Samp[sample - 1].Volume;
 			chn->NewNote = note;
@@ -1389,22 +1389,19 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 	{ \
 		int vol = (vol_val); \
 		/* Ramp */ \
-		RampLeftVol -= Decay->DecayRate; \
-		RampRightVol -= Decay->DecayRate; \
-		/* Clip */ \
-		if (RampLeftVol < 0) \
-			RampLeftVol = 0; \
-		if (RampRightVol < 0) \
-			RampRightVol = 0; \
+		if (RampLeftVol > 0) \
+			RampLeftVol -= 1; \
+		if (RampRightVol > 0) \
+			RampRightVol -= 1; \
 		/* Generate audio */ \
 		buff[0] += vol * (RampRightVol << 4); \
 		buff[1] += vol * (RampLeftVol << 4); \
 		/* Move position */ \
 		buff += 2; \
-		ADJUST_POS \
+		ADJUST_POS(vol_val) \
 		samples--; \
 	} \
-	while (samples != 0 && (RampRightVol != 0 || RampLeftVol != 0))
+	while (samples != 0 && (RampRightVol != 0 || RampLeftVol != 0) EXTRA_CONDITION)
 
 inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 {
@@ -1418,25 +1415,32 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 		// Restore audio generation to where it was last
 		if (Decay->FinalSample == 0)
 		{
-			// Add some logic here which checks if ther are still samples to go and we've reached the end of our sample
-			// when it's non-looping, so that the decay mode switches to the one in the else..
 			UINT Pos = Decay->PosLo;
 			signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
-#define ADJUST_POS \
+#define ADJUST_POS(vol_val) \
 	Pos += Decay->Increment; \
 	/* Looping? Ok, move us back to where we need to be in the loop */ \
-	if ((Pos >> 16) >= chn->LoopEnd) \
-		Pos -= (chn->LoopEnd - chn->LoopStart) << 16;
+	if ((Pos >> 16) >= Decay->LoopEnd) \
+		Pos -= (Decay->LoopEnd - Decay->LoopStart) << 16; \
+	else \
+	{ \
+		Pos -= Decay->Increment; \
+		Decay->FinalSample = (vol_val); \
+	}
+#define EXTRA_CONDITION && Decay->FinalSample == 0
 			SAMPLE_LOOP(p[Pos >> 16] << 8);
+#undef EXTRA_CONDITION
 #undef ADJUST_POS
 			// Save our state
 			Decay->Pos += Pos >> 16;
 			Decay->PosLo = Pos & 0xFFFF;
 		}
-		else
+		if (Decay->FinalSample != 0)
 		{
-#define ADJUST_POS
+#define ADJUST_POS(vol_val)
+#define EXTRA_CONDITION
 			SAMPLE_LOOP(Decay->FinalSample);
+#undef EXTRA_CONDITION
 #undef ADJUST_POS
 		}
 		Decay->LeftVol = RampLeftVol;
@@ -1450,24 +1454,22 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
 {
-	UINT i;
+	int SampleCount;
+	UINT i, Flags, rampSamples;
 	if (count == 0)
 		return;
+	Flags = GetResamplingFlag(p_Mixer);
 	for (i = 0; i < p_Mixer->MixChannels; i++)
 	{
-		int SampleCount;
-		UINT rampSamples, Flags, samples = count;
-		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
+		UINT samples = count;
 		int *buff = p_Mixer->MixBuffer;
-		if (chn->Decay.Sample != NULL && chn->Decay.LoopEnd != 0)
-			DoDecay(chn, buff, samples);
+		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
 		if (chn->Sample == NULL)
 			continue;
 /*		if (p_Mixer->ChnMix[i] == 3)
 			printf("%u, %u, %u, %u, %u, %i\n", chn->Note, chn->FineTune, chn->Flags, chn->Period, chn->Period >> 2, chn->Increment);
 		else
 			continue;*/
-		Flags = GetResamplingFlag(p_Mixer);
 		do
 		{
 			rampSamples = samples;
@@ -1508,6 +1510,13 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			}
 		}
 		while (samples > 0);
+	}
+	// Apply decay
+	for (i = 0; i < p_Mixer->Channels; i++)
+	{
+		Channel * const chn = &p_Mixer->Chns[i];
+		if (chn->Decay.Sample != NULL && chn->Decay.LoopEnd != 0)
+			DoDecay(chn, p_Mixer->MixBuffer, count);
 	}
 }
 
