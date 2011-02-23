@@ -101,7 +101,7 @@ MP4TrackId GetAACTrack(M4A_Intern *ret)
 
 		MP4GetTrackESConfiguration(ret->p_MP4, Track, &Buff, &BuffLen);
 
-		NeAACDecInit(ret->p_dec, Buff, BuffLen, (unsigned long *)&ret->ActualSampleRate, &ret->ActualChannels);
+		NeAACDecInit2(ret->p_dec, Buff, BuffLen, (unsigned long *)&ret->ActualSampleRate, &ret->ActualChannels);
 		ADC = NeAACDecGetCurrentConfiguration(ret->p_dec);
 		ADC->outputFormat = FAAD_FMT_16BIT;
 		NeAACDecSetConfiguration(ret->p_dec, ADC);
@@ -149,8 +149,6 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	MP4GetMetadataAlbum(p_MF->p_MP4, &ret->Album);
 	MP4GetMetadataArtist(p_MF->p_MP4, &ret->Artist);
 	MP4GetMetadataName(p_MF->p_MP4, &ret->Title);
-	//ret->BitRate = mp4ff_get_avg_bitrate(p_MF->p_MP4, p_MF->nTrack);
-	//ret->BitsPerSample = InterpretFormat(ADC->outputFormat);
 	ret->BitsPerSample = 16;
 	MP4GetMetadataComment(p_MF->p_MP4, &value);
 	if (value == NULL)
@@ -209,15 +207,12 @@ long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 				p_MF->p_Samples = (BYTE *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
 				free(Buff);
 
-				p_MF->nSamples = FI.samples * 2;
+				p_MF->nSamples = FI.samples * FI.channels;
 				p_MF->samplesUsed = 0;
 				if (FI.error != 0)
 				{
 					printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
 					p_MF->nSamples = 0;
-					/*printf("\nPress Any Key To Continue....\n");
-					getch();
-					exit(FI.error);*/
 					continue;
 				}
 			}
