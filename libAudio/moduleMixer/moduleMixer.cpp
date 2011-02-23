@@ -816,7 +816,7 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 	chn->Flags |= CHN_PORTAMENTO;
 	if (chn->Period != 0 && chn->PortamentoDest != 0)
 	{
-		if (chn->Period < chn->PortamentoDest)
+		if ((int)chn->Period < chn->PortamentoDest)
 		{
 			int Delta;
 			if ((chn->Flags & CHN_GLISSANDO) != 0)
@@ -835,7 +835,7 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 				Delta = chn->PortamentoDest;
 			chn->Period = (UINT)Delta;
 		}
-		else if (chn->Period > chn->PortamentoDest)
+		else if ((int)chn->Period > chn->PortamentoDest)
 		{
 			int Delta;
 			if ((chn->Flags & CHN_GLISSANDO) != 0)
