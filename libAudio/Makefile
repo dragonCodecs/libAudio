@@ -78,6 +78,8 @@ clean:
 .cpp.o:
 	$(CC) $(CFLAGS) $*.cpp
 
+.PHONY: clean libAudio.pc install all uninstall default .cpp.o
+
 loadAudio.o: loadAudio.cpp
 libAudio_Common.o: libAudio_Common.cpp
 loadOggVorbis.o: loadOggVorbis.cpp

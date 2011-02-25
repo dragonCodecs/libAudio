@@ -35,4 +35,6 @@ clean:
 .cpp.o:
 	$(CC) $(CFLAGS) $*.cpp
 
+.PHONY: .cpp.o clean install all default
+
 main.o: main.cpp
