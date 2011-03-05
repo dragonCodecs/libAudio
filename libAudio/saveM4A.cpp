@@ -89,11 +89,13 @@ void *M4A_OpenW(const char *FileName)
 
 void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 {
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
+	const MP4Tags *p_Tags;
 	faacEncConfigurationPtr p_conf;
 	UCHAR *ASC;
 	ULONG lenASC;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 
+	p_Tags = MP4TagsAlloc();
 	p_AF->Channels = p_FI->Channels;
 	p_AF->p_enc = faacEncOpen(p_FI->BitRate, p_FI->Channels, &p_AF->MaxInSamp, &p_AF->MaxOutByte);
 	if (p_AF->p_enc == NULL)
@@ -106,13 +108,15 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	MP4SetAudioProfileLevel(p_AF->p_mp4, 0x0F);
 
 	if (p_FI->Album != NULL)
-		MP4SetMetadataAlbum(p_AF->p_mp4, p_FI->Album);
+		MP4TagsSetAlbum(p_Tags, p_FI->Album);
 	if (p_FI->Artist != NULL)
-		MP4SetMetadataArtist(p_AF->p_mp4, p_FI->Artist);
+		MP4TagsSetArtist(p_Tags, p_FI->Artist);
 	if (p_FI->Title != NULL)
-		MP4SetMetadataTool(p_AF->p_mp4, p_FI->Title);
+		MP4TagsSetName(p_Tags, p_FI->Title);
 
-	MP4SetMetadataWriter(p_AF->p_mp4, "libAudio 0.1.44");
+	MP4TagsSetEncodingTool(p_Tags, "libAudio 0.1.44");
+	MP4TagsStore(p_Tags, p_AF->p_mp4);
+	MP4TagsFree(p_Tags);
 
 	p_conf = faacEncGetCurrentConfiguration(p_AF->p_enc);
 	if (p_conf == NULL)

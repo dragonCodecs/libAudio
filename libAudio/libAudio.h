@@ -10,10 +10,10 @@ typedef struct FileInfo
 	long BitRate;
 	int Channels;
 	//int BitStream;
-	char *Title;
-	char *Artist;
-	char *Album;
-	std::vector<char *> OtherComments;
+	const char *Title;
+	const char *Artist;
+	const char *Album;
+	std::vector<const char *> OtherComments;
 	int nOtherComments;
 } FileInfo;
 

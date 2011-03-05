@@ -204,7 +204,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 		p_IF->p_Head->reserved1 != 0x1004)
 		return NULL;
 
-	ret->Title = (char *)p_IF->p_Head->songname;
+	ret->Title = p_IF->p_Head->songname;
 	ret->BitRate = 44100;
 	ret->BitsPerSample = 16;
 	ret->Channels = 2;

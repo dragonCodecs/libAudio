@@ -80,9 +80,9 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 			{
 				int nOCText = strlen(ret->Title);
 				int nCText = strlen(p_comments[nComment] + 6);
-				ret->Title = (char *)realloc(ret->Title, nOCText + nCText + 4);
-				memcpy(ret->Title + nOCText, " / ", 3);
-				memcpy(ret->Title + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
+				ret->Title = (const char *)realloc((char *)ret->Title, nOCText + nCText + 4);
+				memcpy((char *)ret->Title + nOCText, " / ", 3);
+				memcpy((char *)ret->Title + nOCText + 3, p_comments[nComment] + 6, 	nCText + 1);
 			}
 		}
 		else if (strncasecmp(p_comments[nComment], "artist=", 7) == 0)
@@ -93,9 +93,9 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 			{
 				int nOCText = strlen(ret->Artist);
 				int nCText = strlen(p_comments[nComment] + 7);
-				ret->Artist = (char *)realloc(ret->Artist, nOCText + nCText + 4);
-				memcpy(ret->Artist + nOCText, " / ", 3);
-				memcpy(ret->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
+				ret->Artist = (const char *)realloc((char *)ret->Artist, nOCText + nCText + 4);
+				memcpy((char *)ret->Artist + nOCText, " / ", 3);
+				memcpy((char *)ret->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 			}
 		}
 		else if (strncasecmp(p_comments[nComment], "album=", 6) == 0)
@@ -106,9 +106,9 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 			{
 				int nOCText = strlen(ret->Album);
 				int nCText = strlen(p_comments[nComment] + 6);
-				ret->Album = (char *)realloc(ret->Album, nOCText + nCText + 4);
-				memcpy(ret->Album + nOCText, " / ", 3);
-				memcpy(ret->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
+				ret->Album = (const char *)realloc((char *)ret->Album, nOCText + nCText + 4);
+				memcpy((char *)ret->Album + nOCText, " / ", 3);
+				memcpy((char *)ret->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 			}
 		}
 		else

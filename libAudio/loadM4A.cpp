@@ -28,6 +28,7 @@ typedef struct _M4A_Intern
 	bool eof;
 	uint8_t buffer[8192];
 	Playback *p_Playback;
+	const MP4Tags *p_Tags;
 } M4A_Intern;
 
 void *MP4DecOpen(const char *FileName, MP4FileMode Mode);
@@ -127,14 +128,16 @@ void *M4A_OpenR(const char *FileName)
 	ret->p_dec = NeAACDecOpen();
 	ret->p_MP4 = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
 	ret->nTrack = GetAACTrack(ret);
+	ret->p_Tags = MP4TagsAlloc();
 
 	return ret;
 }
 
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
+	const MP4Tags *p_Tags;
 	uint32_t timescale, duration;
-	char *value;
+	const char *value;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 	FileInfo *ret = NULL;
 
@@ -145,12 +148,14 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 
 	ret->BitRate = p_MF->ActualSampleRate;
 	ret->Channels = p_MF->ActualChannels;
+	MP4TagsFetch(p_MF->p_Tags, p_MF->p_MP4);
+	p_Tags = p_MF->p_Tags;
 
-	MP4GetMetadataAlbum(p_MF->p_MP4, &ret->Album);
-	MP4GetMetadataArtist(p_MF->p_MP4, &ret->Artist);
-	MP4GetMetadataName(p_MF->p_MP4, &ret->Title);
+	ret->Album = p_Tags->album;
+	ret->Artist = (p_Tags->artist == NULL ? p_Tags->albumArtist : p_Tags->artist);
+	ret->Title = p_Tags->name;
 	ret->BitsPerSample = 16;
-	MP4GetMetadataComment(p_MF->p_MP4, &value);
+	value = p_Tags->comments;
 	if (value == NULL)
 		ret->nOtherComments = 0;
 	else
@@ -178,6 +183,7 @@ int M4A_CloseFileR(void *p_M4AFile)
 
 	NeAACDecClose(p_MF->p_dec);
 	MP4Close(p_MF->p_MP4);
+	MP4TagsFree(p_MF->p_Tags);
 
 	free(p_MF);
 	return 0;

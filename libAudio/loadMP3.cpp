@@ -117,7 +117,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	{
 		id3_field *id_field = NULL;
 		UINT nStrings = 0;
-		UCHAR *Album = NULL;
+		char *Album = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
 		nStrings = id3_field_getnstrings(id_field);
@@ -127,21 +127,21 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 			UINT i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
-				Album = id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
+				Album = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
 
 				if (Album != NULL)
 				{
 					if (ret->Album == NULL)
 					{
-						ret->Album = (char *)malloc(strlen((char *)Album) + 1);
-						memset(ret->Album, 0x00, strlen((char *)Album) + 1);
+						ret->Album = (const char *)malloc(strlen(Album) + 1);
+						memset((char *)ret->Album, 0x00, strlen(Album) + 1);
 					}
 					else
 					{
-						ret->Album = (char *)realloc(ret->Album, strlen(ret->Album) + strlen((char *)Album) + 4);
-						memcpy(ret->Album + strlen(ret->Album), " / ", 4);
+						ret->Album = (const char *)realloc((char *)ret->Album, strlen(ret->Album) + strlen(Album) + 4);
+						memcpy((char *)ret->Album + strlen(ret->Album), " / ", 4);
 					}
-					memcpy(ret->Album + strlen(ret->Album), Album, strlen((char *)Album) + 1);
+					memcpy((char *)ret->Album + strlen(ret->Album), Album, strlen(Album) + 1);
 					free(Album);
 					Album = NULL;
 				}
@@ -154,7 +154,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	{
 		id3_field *id_field = NULL;
 		UINT nStrings = 0;
-		UCHAR *Artist = NULL;
+		char *Artist = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
 		nStrings = id3_field_getnstrings(id_field);
@@ -164,21 +164,21 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 			UINT i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
-				Artist = id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
+				Artist = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
 
 				if (Artist != NULL)
 				{
 					if (ret->Artist == NULL)
 					{
-						ret->Artist = (char *)malloc(strlen((char *)Artist) + 1);
-						memset(ret->Artist, 0x00, strlen((char *)Artist) + 1);
+						ret->Artist = (const char *)malloc(strlen(Artist) + 1);
+						memset((char *)ret->Artist, 0x00, strlen(Artist) + 1);
 					}
 					else
 					{
-						ret->Artist = (char *)realloc(ret->Artist, strlen(ret->Artist) + strlen((char *)Artist) + 4);
-						memcpy(ret->Artist + strlen(ret->Artist), " / ", 4);
+						ret->Artist = (const char *)realloc((char *)ret->Artist, strlen(ret->Artist) + strlen(Artist) + 4);
+						memcpy((char *)ret->Artist + strlen(ret->Artist), " / ", 4);
 					}
-					memcpy(ret->Artist + strlen(ret->Artist), Artist, strlen((char *)Artist) + 1);
+					memcpy((char *)ret->Artist + strlen(ret->Artist), Artist, strlen(Artist) + 1);
 					free(Artist);
 					Artist = NULL;
 				}
@@ -191,7 +191,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	{
 		id3_field *id_field = NULL;
 		UINT nStrings = 0;
-		UCHAR *Title = NULL;
+		char *Title = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
 		nStrings = id3_field_getnstrings(id_field);
@@ -201,21 +201,21 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 			UINT i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
-				Title = id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
+				Title = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
 
 				if (Title != NULL)
 				{
 					if (ret->Title == NULL)
 					{
-						ret->Title = (char *)malloc(strlen((char *)Title) + 1);
-						memset(ret->Title, 0x00, strlen((char *)Title) + 1);
+						ret->Title = (const char *)malloc(strlen(Title) + 1);
+						memset((char *)ret->Title, 0x00, strlen(Title) + 1);
 					}
 					else
 					{
-						ret->Title = (char *)realloc(ret->Title, strlen(ret->Title) + strlen((char *)Title) + 4);
-						memcpy(ret->Title + strlen(ret->Title), " / ", 4);
+						ret->Title = (const char *)realloc((char *)ret->Title, strlen(ret->Title) + strlen(Title) + 4);
+						memcpy((char *)ret->Title + strlen(ret->Title), " / ", 4);
 					}
-					memcpy(ret->Title + strlen(ret->Title), Title, strlen((char *)Title) + 1);
+					memcpy((char *)ret->Title + strlen(ret->Title), Title, strlen(Title) + 1);
 					free(Title);
 					Title = NULL;
 				}

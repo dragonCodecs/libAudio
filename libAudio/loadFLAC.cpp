@@ -146,9 +146,9 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 					{
 						int nOCText = strlen(p_FI->Title);
 						int nCText = strlen(p_comments[nComment] + 6);
-						p_FI->Title = (char *)realloc(p_FI->Title, nOCText + nCText + 4);
-						memcpy(p_FI->Title + nOCText, " / ", 3);
-						memcpy(p_FI->Title + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
+						p_FI->Title = (const char *)realloc((char *)p_FI->Title, nOCText + nCText + 4);
+						memcpy((char *)p_FI->Title + nOCText, " / ", 3);
+						memcpy((char *)p_FI->Title + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 					}
 				}
 				else if (strncasecmp(p_comments[nComment], "artist=", 7) == 0)
@@ -159,9 +159,9 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 					{
 						int nOCText = strlen(p_FI->Artist);
 						int nCText = strlen(p_comments[nComment] + 7);
-						p_FI->Artist = (char *)realloc(p_FI->Artist, nOCText + nCText + 4);
-						memcpy(p_FI->Artist + nOCText, " / ", 3);
-						memcpy(p_FI->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
+						p_FI->Artist = (const char *)realloc((char *)p_FI->Artist, nOCText + nCText + 4);
+						memcpy((char *)p_FI->Artist + nOCText, " / ", 3);
+						memcpy((char *)p_FI->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 					}
 				}
 				else if (strncasecmp(p_comments[nComment], "album=", 6) == 0)
@@ -172,9 +172,9 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 					{
 						int nOCText = strlen(p_FI->Album);
 						int nCText = strlen(p_comments[nComment] + 6);
-						p_FI->Album = (char *)realloc(p_FI->Album, nOCText + nCText + 4);
-						memcpy(p_FI->Album + nOCText, " / ", 3);
-						memcpy(p_FI->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
+						p_FI->Album = (const char *)realloc((char *)p_FI->Album, nOCText + nCText + 4);
+						memcpy((char *)p_FI->Album + nOCText, " / ", 3);
+						memcpy((char *)p_FI->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
 					}
 				}
 				else

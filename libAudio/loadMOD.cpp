@@ -57,13 +57,13 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 	p_MF->p_FI = ret;
 
 	fread(p_MF->p_Header->Name, 20, 1, f_MOD); // Get the module name, padding with NULLs
-	ret->Title = (char *)malloc(p_MF->p_Header->Name[19] == 0 ? strlen(p_MF->p_Header->Name) : 21);
+	ret->Title = (const char *)malloc(p_MF->p_Header->Name[19] == 0 ? strlen(p_MF->p_Header->Name) : 21);
 	if (p_MF->p_Header->Name[19] == 0)
-		strcpy(ret->Title, p_MF->p_Header->Name);
+		strcpy((char *)ret->Title, p_MF->p_Header->Name);
 	else
 	{
-		memcpy(ret->Title, p_MF->p_Header->Name, 20);
-		ret->Title[20] = 0;
+		memcpy((char *)ret->Title, p_MF->p_Header->Name, 20);
+		((char *)ret->Title)[20] = 0;
 	}
 	ret->BitRate = 44100;
 	ret->BitsPerSample = 16;

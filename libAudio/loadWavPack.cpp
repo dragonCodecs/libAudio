@@ -121,7 +121,7 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 		if (i > 1)
 		{
 			ret->Album = (char *)malloc(i);
-			WavpackGetTagItem(p_WF->p_dec, "album", ret->Album, i);
+			WavpackGetTagItem(p_WF->p_dec, "album", (char *)ret->Album, i);
 		}
 	}
 	{
@@ -129,7 +129,7 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 		if (i > 1)
 		{
 			ret->Artist = (char *)malloc(i);
-			WavpackGetTagItem(p_WF->p_dec, "artist", ret->Artist, i);
+			WavpackGetTagItem(p_WF->p_dec, "artist", (char *)ret->Artist, i);
 		}
 	}
 	{
@@ -137,7 +137,7 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 		if (i > 1)
 		{
 			ret->Title = (char *)malloc(i);
-			WavpackGetTagItem(p_WF->p_dec, "title", ret->Title, i);
+			WavpackGetTagItem(p_WF->p_dec, "title", (char *)ret->Title, i);
 		}
 	}
 
