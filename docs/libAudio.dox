@@ -1,0 +1,31 @@
+/*!
+ * @mainpage libAudio - a powerful, but simplistic, audio file manipulation library
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2009-2011
+ *
+ * @section introduction Introduction
+ *
+ * libAudio is a midleware library geared toward providing a simple but highly effective interface
+ * to audio codecs without the need for converluted or unnatural handling of audio.
+ *
+ * The aim of this set of documents is to outline what the function of this library is,
+ * and to provide developers a way of understanding how to use the code from the library
+ *
+ * Like its sister librarys libImage and libVideo, the library sports a @subpage high-levelAPI "high-level API"
+ * and a @subpage low-levelAPI "low-level API" which allows greater flexibility and a nice modular design
+ */
+
+/*!
+ * @page low-levelAPI low-level API
+ */
+
+/*!
+ * @page high-levelAPI high-level API
+ *
+ * @section loading Loading Audio
+ * @see loadAudio.cpp
+ *
+ * @section savign Saving Audio
+ * @copydoc saveAudio
+ * @see saveAudio.cpp
+ */
