@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		printf("File %s, TotalTime: %um %us, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %i\n", argv[i],
+		printf("File %s, TotalTime: %um %us, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %d\n", argv[i],
 			(uint32_t)(p_FI->TotalTime / 60.0), (uint32_t)fmod(p_FI->TotalTime, 60.0),
 			(int)p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
 		/*{ // The following code makes the UTF-8 returned in p_FI display correctly under Windows.. the only OS that has a problem with this..

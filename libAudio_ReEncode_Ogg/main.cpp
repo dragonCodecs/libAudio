@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 		return -3;
 	Audio_SetFileInfo(AudioFileOut, p_FI, Type);
 
-	printf("Input File %s, BitRate: %iHz, Title: %s, Artist: %s, Album: %s, Channels: %i\n", argv[1],
+	printf("Input File %s, BitRate: %ldHz, Title: %s, Artist: %s, Album: %s, Channels: %d\n", argv[1],
 		p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
 
 	while (ret > 0)
