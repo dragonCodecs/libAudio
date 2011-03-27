@@ -10,13 +10,37 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+/*!
+ * @internal
+ * @file loadAAC.cpp
+ * The implementation of the AAC decoder API
+ * @note Not to be confused with the M4A/MP4 decoder
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2010-2011
+ */
+
+/*!
+ * @internal
+ * Gives the header size for ADIF AAC streams
+ * @note This was taken from FAAD2's aacinfo.c
+ */
 /* Following 2 definitions are taken from aacinfo.c from faad2: */
 #define ADIF_MAX_SIZE 30 /* Should be enough */
 //#define ADTS_MAX_SIZE 10 /* Should be enough */
 
+/*!
+ * @internal
+ * Gives the header size for ADTS AAC streams
+ * @note This was taken from ffmpeg's aac_parser.c, but there was another,
+ *   conflicting, definition in FAAD2's aacinfo.c which is 10 rather than 7
+ */
 /* ffmpeg's aac_parser.c specifies the following for ADTS_MAX_SIZE: */
 #define ADTS_MAX_SIZE 7
 
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given AAC file
+ */
 typedef struct _AAC_Intern
 {
 	FILE *f_AAC;
@@ -29,6 +53,12 @@ typedef struct _AAC_Intern
 	Playback *p_Playback;
 } AAC_Intern;
 
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by AAC_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *AAC_OpenR(const char *FileName)
 {
 	AAC_Intern *ret = NULL;
@@ -51,6 +81,12 @@ void *AAC_OpenR(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function gets the \c FileInfo structure for an opened file
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @warning This function must be called before using \c AAC_Play() or \c AAC_FillBuffer()
+ */
 FileInfo *AAC_GetFileInfo(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
@@ -76,6 +112,14 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 	return ret;
 }
 
+/*!
+ * Closes an opened audio file
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_AACFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ */
 int AAC_CloseFileR(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
@@ -91,6 +135,12 @@ int AAC_CloseFileR(void *p_AACFile)
 	return ret;
 }
 
+/*!
+ * @internal
+ * Internal structure used to read the AAC bitstream so that packets
+ * of data can be sent into FAAD2 correctly as packets so to ease the
+ * job of decoding
+ */
 typedef struct _BitStream
 {
 	BYTE *Data;
@@ -99,6 +149,12 @@ typedef struct _BitStream
 	long CurrentBit;
 } BitStream;
 
+/*!
+ * @internal
+ * Internal function used to open a buffer as a bitstream
+ * @param size The length of the buffer to be used
+ * @param buffer The buffer to be used
+ */
 BitStream *OpenBitStream(int size, BYTE *buffer)
 {
 	BitStream *BS = (BitStream *)malloc(sizeof(BitStream));
@@ -109,11 +165,22 @@ BitStream *OpenBitStream(int size, BYTE *buffer)
 	return BS;
 }
 
+/*!
+ * @internal
+ * Internal function used to close a buffer being used as a bitstream
+ * @param BS The bitstream to close and free
+ */
 void CloseBitStream(BitStream *BS)
 {
 	free(BS);
 }
 
+/*!
+ * @internal
+ * Internal function used to get the next \p NumBits bits sequentially from the bitstream
+ * @param BS The bitstream to get the bits from
+ * @param NumBits The number of bits to get
+ */
 ULONG GetBit(BitStream *BS, int NumBits)
 {
 	int Num = 0;
@@ -135,11 +202,27 @@ ULONG GetBit(BitStream *BS, int NumBits)
 	return ret;
 }
 
+/*!
+ * @internal
+ * Internal function used to skip a number of bits in the bitstream
+ * @param BS The bitstream to skip the bits in
+ * @param NumBits The number of bits to skip
+ */
 void SkipBit(BitStream *BS, int NumBits)
 {
 	BS->CurrentBit += NumBits;
 }
 
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
+ * @param OutBuffer A pointer to the buffer to be filled
+ * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ */
 long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
@@ -206,6 +289,13 @@ long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 	return OBuf - OutBuffer;
 }
 
+/*!
+ * Plays an opened audio file using OpenAL on the default audio device
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c AAC_OpenR() used to open the file at \p p_AACFile,
+ * this function will do nothing.
+ */
 void AAC_Play(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
@@ -213,6 +303,15 @@ void AAC_Play(void *p_AACFile)
 	p_AF->p_Playback->Play();
 }
 
+/*!
+ * Checks the file given by \p FileName for whether it is an AAC
+ * file recognised by this library or not
+ * @param FileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is an AAC file or not
+ */
 bool Is_AAC(const char *FileName)
 {
 	FILE *f_AAC = fopen(FileName, "rb");
@@ -233,6 +332,10 @@ bool Is_AAC(const char *FileName)
 	return true;
 }
 
+/*!
+ * @internal
+ * This structure controls decoding AAC files when using the high-level API on them
+ */
 API_Functions AACDecoder =
 {
 	AAC_OpenR,
