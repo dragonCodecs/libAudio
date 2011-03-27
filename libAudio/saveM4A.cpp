@@ -8,6 +8,18 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+/*!
+ * @internal
+ * @file saveM4A.cpp
+ * The implementation of the M4A/MP4 encoder API
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2010-2011
+ */
+
+/*!
+ * @internal
+ * Internal structure for holding the encoding context for a given M4A/MP4 file
+ */
 typedef struct _M4A_Enc_Intern
 {
 	faacEncHandle p_enc;

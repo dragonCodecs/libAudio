@@ -3,10 +3,10 @@
 
 /*!
  * @internal
- * @file loadAudio.cpp
- * The implementation of the master decoder API
+ * @file saveAudio.cpp
+ * The implementation of the master encoder API
  * @author Richard Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2011
+ * @date 2010-2011
  */
 
 /*!
