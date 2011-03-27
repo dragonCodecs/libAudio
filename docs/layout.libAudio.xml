@@ -108,19 +108,19 @@
     <memberdecl>
       <classes visible="yes" title=""/>
       <namespaces visible="yes" title=""/>
-      <functions title=""/>
-      <defines visible="no" title=""/>
-      <typedefs visible="no" title=""/>
+      <defines title=""/>
+      <typedefs title=""/>
       <enums title=""/>
+      <functions title=""/>
       <variables title=""/>
       <membergroups visible="yes"/>
     </memberdecl>
     <detaileddescription title=""/>
     <memberdef>
-      <functions title=""/>
-      <defines visible="no" title=""/>
-      <typedefs visible="no" title=""/>
+      <defines title=""/>
+      <typedefs title=""/>
       <enums title=""/>
+      <functions title=""/>
       <variables title=""/>
     </memberdef>
     <authorsection/>

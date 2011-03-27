@@ -23,9 +23,18 @@
  * @page high-levelAPI high-level API
  *
  * @section loading Loading Audio
- * @see loadAudio.cpp
+ * @sa loadAudio.cpp
  *
- * @section savign Saving Audio
- * @copydoc saveAudio
- * @see saveAudio.cpp
+ * @section saving Saving Audio
+ * @sa saveAudio.cpp
+ */
+
+/*
+ *
+ * \@subsection Audio_OpenW
+ * \@copydoc Audio_OpenW
+ *
+ * \@subsection Audio_SetFileInfo
+ * \@copydoc Audio_SetFileInfo
+ *
  */
