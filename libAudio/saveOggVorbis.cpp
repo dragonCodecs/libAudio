@@ -7,19 +7,73 @@
 #include <stdlib.h>
 #include <time.h>
 
+/*!
+ * @internal
+ * @file saveOggVorbis.cpp
+ * The implementation of the Ogg/Vorbis encoder API
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2010-2011
+ */
+
+/*!
+ * @internal
+ * Internal structure for holding the encoding context for a given Ogg/Vorbis file
+ */
 typedef struct _OV_Intern
 {
+	/*!
+	 * @internal
+	 * Sturcture describing info about the Vorbis stream being encoded
+	 */
 	vorbis_info *vi;
+	/*!
+	 * @internal
+	 * The Vorbis Digital Signal Processing state
+	 */
 	vorbis_dsp_state *vds;
+	/*!
+	 * @internal
+	 * The Vorbis encoding context
+	 */
 	vorbis_block *vb;
+	/*!
+	 * @internal
+	 * Structure describing the Vorbis Comments present
+	 */
 	vorbis_comment *vc;
+	/*!
+	 * @internal
+	 * The Ogg Packet context
+	 */
 	ogg_packet *opt;
+	/*!
+	 * @internal
+	 * The Ogg Page context
+	 */
 	ogg_page *ope;
+	/*!
+	 * @internal
+	 * The Ogg Stream state
+	 */
 	ogg_stream_state *oss;
+	/*!
+	 * @internal
+	 * The Ogg file being written to
+	 */
 	FILE *f_Ogg;
+	/*!
+	 * @internal
+	 * The input metadata in the form of a \c FileInfo structure
+	 */
 	FileInfo *p_FI;
 } OV_Intern;
 
+/*!
+ * This function opens the file given by \c FileName for writing and returns a pointer
+ * to the context of the opened file which must be used only by OggVorbis_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *OggVorbis_OpenW(const char *FileName)
 {
 	OV_Intern *ret = NULL;
@@ -50,6 +104,13 @@ void *OggVorbis_OpenW(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function sets the \c FileInfo structure for a Ogg/Vorbis file being encoded
+ * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenW()
+ * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
+ * @warning This function must be called before using \c OggVorbis_WriteBuffer()
+ * @bug p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
+ */
 void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
@@ -93,6 +154,13 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	memcpy(p_VF->p_FI, p_FI, sizeof(FileInfo));
 }
 
+/*!
+ * This function writes a buffer of audio to a Ogg/Vorbis file opened being encoded
+ * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenW()
+ * @param InBuffer The buffer of audio to write
+ * @param nInBufferLen An integer giving how long the buffer to write is
+ * @attention Will not work unless \c OggVorbis_SetFileInfo() has been called beforehand
+ */
 long OggVorbis_WriteBuffer(void *p_VorbisFile, BYTE *InBuffer, int nInBufferLen)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
@@ -162,6 +230,14 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, BYTE *InBuffer, int nInBufferLen)
 	}
 }
 
+/*!
+ * Closes an open Ogg/Vorbis file
+ * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenW()
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_VorbisFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ */
 int OggVorbis_CloseFileW(void *p_VorbisFile)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;

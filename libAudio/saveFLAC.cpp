@@ -144,8 +144,9 @@ void *FLAC_OpenW(const char *FileName)
 /*!
  * This function sets the \c FileInfo structure for a FLAC file being encoded
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenW()
- * @param p_FI A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c FLAC_WriteBuffer()
+ * @bug p_FI must not be NULL as no checking on the parameter is done. FIXME!
  */
 void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 {
@@ -217,7 +218,7 @@ long FLAC_WriteBuffer(void *p_FLACFile, BYTE *InBuffer, int nInBufferLen)
  * Closes an open FLAC file
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_AudioPtr after using
+ * @warning Do not use the pointer given by \p p_FLACFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
  */

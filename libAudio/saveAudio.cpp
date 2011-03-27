@@ -33,10 +33,11 @@ libAUDIO_API void *Audio_OpenW(const char *FileName, int Type)
 /*!
  * This function sets the \c FileInfo structure for an opened file
  * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenW()
- * @param p_FI A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @param Type One of the AUDIO_ constants describing what codec to use for the file
  * @warning This function must be called before using \c Audio_WriteBuffer()
  * @attention \p Type must have the same value as it had for \c Audio_OpenW()
+ * @bug p_FI must not be NULL as no checking on the parameter is done. FIXME!
  */
 libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type)
 {

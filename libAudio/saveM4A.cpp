@@ -22,12 +22,43 @@
  */
 typedef struct _M4A_Enc_Intern
 {
+	/*!
+	 * @internal
+	 * The encoder context itself
+	 */
 	faacEncHandle p_enc;
+	/*!
+	 * @internal
+	 * Holds the count returned by \c faacEncOpen() giving the maximum and
+	 *   prefered number of samples to feed \c faacEncEncode() with
+	 */
 	ULONG MaxInSamp;
+	/*!
+	 * @internal
+	 * Holds the count returned by \c faacEncOpen() giving the maximum number
+	 *   of bytes that \c faacEncEncode() will return in the output buffer
+	 */
 	ULONG MaxOutByte;
+	/*!
+	 * @internal
+	 * The MP4v2 handle for the MP4 file being written to
+	 */
 	MP4FileHandle p_mp4;
+	/*!
+	 * @internal
+	 * The MP4v2 track to which the encoded audio data is being written
+	 */
 	MP4TrackId track;
+	/*!
+	 * @internal
+	 * A boolean giving whether an encoding error has occured
+	 */
 	bool err;
+	/*!
+	 * @internal
+	 * A count giving the number of channels being processed. Taken from
+	 * the \c FileInfo structure passed into \c M4A_SetFileInfo()
+	 */
 	int Channels;
 } M4A_Enc_Intern;
 
@@ -37,6 +68,12 @@ int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, 
 int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t);
 int MP4EncClose(void *MP4File);
 
+/*!
+ * @internal
+ * Structure holding pointers to the \c MP4Enc* functions given in this file.
+ * Used in the initialising of the MP4v2 file - callbacks so as to prevent run-time
+ * issues on Windows.
+ */
 MP4FileProvider MP4EncFunctions =
 {
 	MP4EncOpen,
@@ -46,6 +83,13 @@ MP4FileProvider MP4EncFunctions =
 	MP4EncClose
 };
 
+/*!
+ * @internal
+ * Internal function used to open the MP4 file for output and potential readback
+ * @param FileName The name of the file to open
+ * @param Mode The \c MP4FileMode in which to open the file. We ensure this has
+ *    to be FILEMODE_CREATE for our purposes
+ */
 void *MP4EncOpen(const char *FileName, MP4FileMode Mode)
 {
 	if (Mode != FILEMODE_CREATE)
@@ -53,6 +97,12 @@ void *MP4EncOpen(const char *FileName, MP4FileMode Mode)
 	return fopen(FileName, "wb+");
 }
 
+/*!
+ * @internal
+ * Internal function used to seek in the MP4 file
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ * @param pos Possition into the file to which to seek to
+ */
 int MP4EncSeek(void *MP4File, int64_t pos)
 {
 #ifdef _WINDOWS
@@ -62,6 +112,14 @@ int MP4EncSeek(void *MP4File, int64_t pos)
 #endif
 }
 
+/*!
+ * @internal
+ * Internal function used to read from the MP4 file
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ * @param DataOut A typeless buffer to which the read data should be written
+ * @param DataOutLen A 64-bit integer giving how much data should be read from the file
+ * @param Read A 64-bit integer count returning how much data was actually read
+ */
 int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t)
 {
 	int ret = fread(DataOut, 1, (size_t)DataOutLen, (FILE *)MP4File);
@@ -71,6 +129,14 @@ int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, 
 	return FALSE;
 }
 
+/*!
+ * @internal
+ * Internal function used to write data to the MP4 file
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ * @param DataIn A typeless buffer holding the data to be written, which must also not become modified
+ * @param DataInLen A 64-bit integer giving how much data is to be written to the file
+ * @param Written A 64-bit integer count returning how much data was actually written
+ */
 int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
 {
 	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != DataInLen)
@@ -79,11 +145,22 @@ int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *W
 	return FALSE;
 }
 
+/*!
+ * @internal
+ * Internal function used to close the MP4 file after I/O is complete
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ */
 int MP4EncClose(void *MP4File)
 {
 	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
 }
 
+/*!
+ * This function opens the file given by \c FileName for writing and returns a pointer
+ * to the context of the opened file which must be used only by M4A_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *M4A_OpenW(const char *FileName)
 {
 	M4A_Enc_Intern *ret = NULL;
@@ -99,6 +176,13 @@ void *M4A_OpenW(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function sets the \c FileInfo structure for a M4A/MP4 file being encoded
+ * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
+ * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
+ * @warning This function must be called before using \c M4A_WriteBuffer()
+ * @bug p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
+ */
 void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 {
 	const MP4Tags *p_Tags;
@@ -161,6 +245,13 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	free(ASC);
 }
 
+/*!
+ * This function writes a buffer of audio to a M4A/MP4 file opened being encoded
+ * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
+ * @param InBuffer The buffer of audio to write
+ * @param nInBufferLen An integer giving how long the buffer to write is
+ * @attention Will not work unless \c M4A_SetFileInfo() has been called beforehand
+ */
 long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 {
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
@@ -219,6 +310,14 @@ long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 	return nInBufferLen;
 }
 
+/*!
+ * Closes an open M4A/MP4 file
+ * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_AACFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ */
 int M4A_CloseFileW(void *p_AACFile)
 {
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
