@@ -43,13 +43,48 @@
  */
 typedef struct _AAC_Intern
 {
+	/*!
+	 * @internal
+	 * The AAC file to decode
+	 */
 	FILE *f_AAC;
+	/*!
+	 * @internal
+	 * The decoder context handle
+	 */
 	NeAACDecHandle p_dec;
+	/*!
+	 * @internal
+	 * The \c FileInfo for the AAC file being decoded
+	 */
 	FileInfo *p_FI;
+	/*!
+	 * @internal
+	 * /var int nLoop
+	 * The number of frames decoded relative to the total number
+	 * /var int nCurrLoop
+	 * The total number of frames to decode
+	 */
 	int nLoop, nCurrLoop;
+	/*!
+	 * @internal
+	 * The end-of-file flag
+	 */
 	bool eof;
+	/*!
+	 * @internal
+	 * The internal decode data buffer
+	 */
 	BYTE buffer[8192];
+	/*!
+	 * @internal
+	 * The frame headers read at the start of the file
+	 */
 	BYTE FrameHeader[ADTS_MAX_SIZE];
+	/*!
+	 * @internal
+	 * The playback class instance for the AAC file
+	 */
 	Playback *p_Playback;
 } AAC_Intern;
 
@@ -143,9 +178,26 @@ int AAC_CloseFileR(void *p_AACFile)
  */
 typedef struct _BitStream
 {
+	/*!
+	 * @internal
+	 * The data buffer being used as a bitstream
+	 */
 	BYTE *Data;
+	/*!
+	 * @internal
+	 * The total number of bits available in the buffer
+	 */
 	long NumBit;
+	/*!
+	 * @internal
+	 * The total size of the bit-buffer in bytes
+	 */
 	long Size;
+	/*!
+	 * @internal
+	 * The index of the current bit relative to the total
+	 *   number of bits available in the buffer
+	 */
 	long CurrentBit;
 } BitStream;
 
