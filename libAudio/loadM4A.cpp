@@ -11,10 +11,29 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+/*!
+ * @internal
+ * @file loadFLAC.cpp
+ * The implementation of the FLAC decoder API
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2009-2011
+ */
+
 #ifndef min
+/*!
+ * @internal
+ * A simple implementation of the min() function as a macro
+ * for systems which don't have it (such as, it seems, Linux).
+ * This finding might be wrong in that \c min() may exist in a
+ * header such as <stdlib.h>
+ */
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given M4A/MP4 file
+ */
 typedef struct _M4A_Intern
 {
 	NeAACDecHandle p_dec;
@@ -37,6 +56,12 @@ int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, 
 int MP4DecWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t);
 int MP4DecClose(void *MP4File);
 
+/*!
+ * @internal
+ * Structure holding pointers to the \c MP4Dec* functions given in this file.
+ * Used in the initialising of the MP4v2 file reader as a set of callbacks so
+ * as to prevent run-time issues on Windows.
+ */
 MP4FileProvider MP4DecFunctions =
 {
 	MP4DecOpen,
@@ -46,6 +71,13 @@ MP4FileProvider MP4DecFunctions =
 	MP4DecClose
 };
 
+/*!
+ * @internal
+ * Internal function used to open the MP4 file for reading
+ * @param FileName The name of the file to open
+ * @param Mode The \c MP4FileMode in which to open the file. We ensure this has
+ *    to be FILEMODE_CREATE for our purposes
+ */
 void *MP4DecOpen(const char *FileName, MP4FileMode Mode)
 {
 	if (Mode != FILEMODE_READ)
@@ -53,6 +85,12 @@ void *MP4DecOpen(const char *FileName, MP4FileMode Mode)
 	return fopen(FileName, "rb");
 }
 
+/*!
+ * @internal
+ * Internal function used to seek in the MP4 file
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ * @param pos Possition into the file to which to seek to
+ */
 int MP4DecSeek(void *MP4File, int64_t pos)
 {
 #ifdef _WINDOWS
@@ -62,6 +100,14 @@ int MP4DecSeek(void *MP4File, int64_t pos)
 #endif
 }
 
+/*!
+ * @internal
+ * Internal function used to read from the MP4 file
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ * @param DataOut A typeless buffer to which the read data should be written
+ * @param DataOutLen A 64-bit integer giving how much data should be read from the file
+ * @param Read A 64-bit integer count returning how much data was actually read
+ */
 int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t)
 {
 	int ret = fread(DataOut, 1, (size_t)DataOutLen, (FILE *)MP4File);
@@ -71,6 +117,14 @@ int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, 
 	return FALSE;
 }
 
+/*!
+ * @internal
+ * Internal function used to write data to the MP4 file
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ * @param DataIn A typeless buffer holding the data to be written, which must also not become modified
+ * @param DataInLen A 64-bit integer giving how much data is to be written to the file
+ * @param Written A 64-bit integer count returning how much data was actually written
+ */
 int MP4DecWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
 {
 	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != DataInLen)
@@ -79,11 +133,23 @@ int MP4DecWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *W
 	return FALSE;
 }
 
+/*!
+ * @internal
+ * Internal function used to close the MP4 file after I/O is complete
+ * @param MP4File \c FILE handle for the MP4 file as a void pointer
+ */
 int MP4DecClose(void *MP4File)
 {
 	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
 }
 
+/*!
+ * @internal
+ * Internal function used to determine the first usable audio track and initialise decoding on it
+ * @param ret Our internal decoder structure's pointer named the same as in the only function
+ *   which calls this so as to keep name changing and confusion down
+ * @return The MP4v2 track ID located for the decoder or -1 on error
+ */
 MP4TrackId GetAACTrack(M4A_Intern *ret)
 {
 	/* find AAC track */
@@ -114,6 +180,12 @@ MP4TrackId GetAACTrack(M4A_Intern *ret)
 	return -1;
 }
 
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by M4A_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *M4A_OpenR(const char *FileName)
 {
 	M4A_Intern *ret = NULL;
@@ -133,6 +205,13 @@ void *M4A_OpenR(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function gets the \c FileInfo structure for an opened file
+ * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @warning This function must be called before using \c M4A_Play() or \c M4A_FillBuffer()
+ * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
 	const MP4Tags *p_Tags;
@@ -175,6 +254,15 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	return ret;
 }
 
+/*!
+ * Closes an opened audio file
+ * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_M4AFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 int M4A_CloseFileR(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
@@ -189,6 +277,17 @@ int M4A_CloseFileR(void *p_M4AFile)
 	return 0;
 }
 
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @param OutBuffer A pointer to the buffer to be filled
+ * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
@@ -236,6 +335,17 @@ long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 	return OBuf - OutBuffer;
 }
 
+/*!
+ * Plays an opened audio file using OpenAL on the default audio device
+ * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ *   the call to \c M4A_OpenR() used to open the file at \p p_M4AFile,
+ *   this function will do nothing.
+ * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug Futher to the \p p_M4AFile check bug on this function, if this function is
+ *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
+ */
 void M4A_Play(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
@@ -247,6 +357,15 @@ void M4A_Play(void *p_M4AFile)
 // 00 00 00 20 66 74 79 70 4D 34 41 20
 // .  .  .     f  t  y  p  M  4  A
 
+/*!
+ * Checks the file given by \p FileName for whether it is an MP4/M4A
+ * file recognised by this library or not
+ * @param FileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is an MP4/M4A file or not
+ */
 bool Is_M4A(const char *FileName)
 {
 	FILE *f_M4A = fopen(FileName, "rb");
@@ -274,6 +393,10 @@ bool Is_M4A(const char *FileName)
 	return true;
 }
 
+/*!
+ * @internal
+ * This structure controls decoding MP4/M4A files when using the high-level API on them
+ */
 API_Functions M4ADecoder =
 {
 	M4A_OpenR,

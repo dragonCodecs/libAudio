@@ -118,9 +118,10 @@ void *AAC_OpenR(const char *FileName)
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
  * @warning This function must be called before using \c AAC_Play() or \c AAC_FillBuffer()
+ * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 FileInfo *AAC_GetFileInfo(void *p_AACFile)
 {
@@ -154,6 +155,7 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
  * @warning Do not use the pointer given by \p p_AACFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
+ * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 int AAC_CloseFileR(void *p_AACFile)
 {
@@ -269,11 +271,12 @@ void SkipBit(BitStream *BS, int NumBits)
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
+ * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 {
@@ -342,11 +345,15 @@ long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 }
 
 /*!
- * Plays an opened audio file using OpenAL on the default audio device
+ * Plays an opened AAC file using OpenAL on the default audio device
  * @param p_AACFile A pointer to a file opened with \c AAC_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
  * the call to \c AAC_OpenR() used to open the file at \p p_AACFile,
  * this function will do nothing.
+ * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug Futher to the \p p_AACFile check bug on this function, if this function is
+ *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
 void AAC_Play(void *p_AACFile)
 {

@@ -71,8 +71,8 @@ int MP4EncClose(void *MP4File);
 /*!
  * @internal
  * Structure holding pointers to the \c MP4Enc* functions given in this file.
- * Used in the initialising of the MP4v2 file - callbacks so as to prevent run-time
- * issues on Windows.
+ * Used in the initialising of the MP4v2 file writer as a set of callbacks so
+ * as to prevent run-time issues on Windows.
  */
 MP4FileProvider MP4EncFunctions =
 {
@@ -181,7 +181,9 @@ void *M4A_OpenW(const char *FileName)
  * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c M4A_WriteBuffer()
- * @bug p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug \p p_AACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
 void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 {

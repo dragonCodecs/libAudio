@@ -33,9 +33,19 @@ typedef struct _FLAC_Decoder_Context
 	Playback *p_Playback;
 } FLAC_Decoder_Context;
 
-FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, BYTE *Buffer, size_t *bytes, void *ClientData)
+/*!
+ * @internal
+ * \c f_fread() is the internal read callback for FLAC file decoding. This prevents
+ * nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_dec The decoder context to read for, which must not become modified
+ * @param Buffer The buffer to read into
+ * @param bytes The number of bytes to read into the buffer given as a pointer
+ * @param p_FF Pointer to our internal context for the given FLAC file
+ * @return A status indicating if we had success or not
+ */
+FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, BYTE *Buffer, size_t *bytes, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)ClientData)->f_FLAC;
+	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
 	if (*bytes > 0)
 	{
@@ -51,9 +61,19 @@ FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, BYTE *Bu
 	return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
 }
 
-FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, UINT64 amount, void *ClientData)
+/*!
+ * @internal
+ * \c f_fseek() is the internal seek callback for FLAC file decoding. This prevents
+ * nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_dec The decoder context to seek for, which must not become modified
+ * @param amount A 64-bit unsigned integer giving the number of bytes from the beginning
+ *   of the file to seek through
+ * @param p_FF Pointer to our internal context for the given FLAC file
+ * @return A status indicating if the seek worked or not
+ */
+FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, UINT64 amount, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)ClientData)->f_FLAC;
+	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
 	if (f_FLAC == stdin)
 		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
@@ -63,9 +83,19 @@ FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, UINT64 a
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *offset, void *ClientData)
+/*!
+ * @internal
+ * \c f_ftell() is the internal seek callback for FLAC file decoding. This prevents
+ * nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_dec The decoder context to get the read position for, which must not become modified
+ * @param offset A 64-bit unsigned integer returning the number of bytes from the beginning
+ *   of the file at which the read possition is currently at
+ * @param p_FF Pointer to our internal context for the given FLAC file
+ * @return A status indicating if we were able to determine the position or not
+ */
+FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *offset, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)ClientData)->f_FLAC;
+	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 	long pos;
 
 	if (f_FLAC == stdin)
@@ -77,9 +107,18 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
-FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, UINT64 *len, void *ClientData)
+/*!
+ * @internal
+ * \c f_flen() is the internal seek callback for FLAC file decoding. This prevents
+ * nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_dec The decoder context to get the file length for, which must not become modified
+ * @param len A 64-bit unsigned integer returning the length of the file in bytes
+ * @param p_FF Pointer to our internal context for the given FLAC file
+ * @return A status indicating if we were able to determine the length or not
+ */
+FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, UINT64 *len, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)ClientData)->f_FLAC;
+	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 	struct stat m_stat;
 
 	if (f_FLAC == stdin)
@@ -92,16 +131,33 @@ FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, UINT64 
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-int f_feof(const FLAC__StreamDecoder *p_dec, void *ClientData)
+/*!
+ * @internal
+ * \c f_feof() is the internal end-of-file callback for FLAC file decoding. This prevents
+ * nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_dec The decoder context to get the EOF flag for, which must not become modified
+ * @param p_FF Pointer to our internal context for the given FLAC file
+ * @return A status indicating whether we have reached the end of the file or not
+ */
+int f_feof(const FLAC__StreamDecoder *p_dec, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)ClientData)->f_FLAC;
+	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
 	return (feof(f_FLAC) == 0 ? FALSE : TRUE);
 }
 
-FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FLAC__Frame *p_frame, const int * const buffers[], void *ClientData)
+/*!
+ * @internal
+ * \c f_data() is the internal data callback for FLAC file decoding.
+ * @param p_dec The decoder context to process data for, which must not become modified
+ * @param p_frame The headers for the current frame of decoded FLAC audio
+ * @param buffers The 32-bit audio buffers decoded for the current \p p_frame
+ * @param p_FLACFile Pointer to our internal context for the given FLAC file
+ * @return A constant status indicating that it's safe to continue reading the file
+ */
+FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FLAC__Frame *p_frame, const int * const buffers[], void *p_FLACFile)
 {
-	FLAC_Decoder_Context *p_FF = ((FLAC_Decoder_Context *)ClientData);
+	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	short *PCM = (short *)p_FF->buffer;
 	const short *Left = (const short *)buffers[0];
 	const short *Right = (const short *)buffers[1];
@@ -117,9 +173,16 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FL
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
-void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_metadata, void *ClientData)
+/*!
+ * @internal
+ * \c f_metadata() is the internal metadata callback for FLAC file decoding.
+ * @param p_dec The decoder context to process metadata for, which must not become modified
+ * @param p_metadata The item of metadata to process
+ * @param p_FLACFile Pointer to our internal context for the given FLAC file
+ */
+void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_metadata, void *p_FLACFile)
 {
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)ClientData;
+	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	FileInfo *p_FI = p_FF->fi_Info;
 
 	if (p_metadata->type >= FLAC__METADATA_TYPE_UNDEFINED)
@@ -134,7 +197,7 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 			p_FI->BitRate = p_md->sample_rate;
 			p_FI->BitsPerSample = p_md->bits_per_sample;
 			if (ExternalPlayback == 0)
-				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->buffer, 16384, ClientData);
+				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->buffer, 16384, p_FLACFile);
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -208,10 +271,24 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 	return;
 }
 
-void f_error(const FLAC__StreamDecoder *p_dec, FLAC__StreamDecoderErrorStatus errStat, void *ClientData)
+/*!
+ * @internal
+ * \c f_metadata() is the internal error callback for FLAC file decoding.
+ * @param p_dec The decoder context to process an error for, which must not become modified
+ * @param errStat The error that has occured
+ * @param p_FLACFile Pointer to our internal context for the given FLAC file
+ * @note Implemented as a no-operation due to how the rest of the decoder is structured
+ */
+void f_error(const FLAC__StreamDecoder *p_dec, FLAC__StreamDecoderErrorStatus errStat, void *p_FLACFile)
 {
 }
 
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by FLAC_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *FLAC_OpenR(const char *FileName)
 {
 	FLAC_Decoder_Context *ret = NULL;
@@ -244,6 +321,13 @@ void *FLAC_OpenR(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function gets the \c FileInfo structure for an opened file
+ * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @warning This function must be called before using \c FLAC_Play() or \c FLAC_FillBuffer()
+ * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
@@ -255,6 +339,16 @@ FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
 	return p_FF->fi_Info;
 }
 
+/*!
+ * Closes an opened audio file
+ * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @return an integer indicating success or failure relative to whether the 
+ * FLAC encoder was able to properly finish encoding
+ * @warning Do not use the pointer given by \p p_FLACFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 int FLAC_CloseFileR(void *p_FLACFile)
 {
 	int ret = 0;
@@ -269,6 +363,17 @@ int FLAC_CloseFileR(void *p_FLACFile)
 	return ret;
 }
 
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @param OutBuffer A pointer to the buffer to be filled
+ * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 long FLAC_FillBuffer(void *p_FLACFile, BYTE *OutBuffer, int nOutBufferLen)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
@@ -310,6 +415,17 @@ long FLAC_FillBuffer(void *p_FLACFile, BYTE *OutBuffer, int nOutBufferLen)
 	return ret;
 }
 
+/*!
+ * Plays an opened audio file using OpenAL on the default audio device
+ * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c FLAC_OpenR() used to open the file at \p p_FLACFile,
+ * this function will do nothing.
+ * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug Futher to the \p p_FLACFile check bug on this function, if this function is
+ *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
+ */
 void FLAC_Play(void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
@@ -317,6 +433,15 @@ void FLAC_Play(void *p_FLACFile)
 	p_FF->p_Playback->Play();
 }
 
+/*!
+ * Checks the file given by \p FileName for whether it is an FLAC
+ * file recognised by this library or not
+ * @param FileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is an FLAC file or not
+ */
 bool Is_FLAC(const char *FileName)
 {
 	FILE *f_FLAC = fopen(FileName, "rb");
@@ -333,6 +458,10 @@ bool Is_FLAC(const char *FileName)
 		return true;
 }
 
+/*!
+ * @internal
+ * This structure controls decoding FLAC files when using the high-level API on them
+ */
 API_Functions FLACDecoder =
 {
 	FLAC_OpenR,

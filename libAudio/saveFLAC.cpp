@@ -41,7 +41,7 @@ typedef struct _FLAC_Encoder_Context
 
 /*!
  * @internal
- * f_fwrite() is the internal write callback for FLAC file creation. This prevents
+ * \c f_fwrite() is the internal write callback for FLAC file creation. This prevents
  * nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_enc The encoding context which must not be modified by the function
  * @param buffer The buffer to write which also must not become modified
@@ -66,7 +66,7 @@ FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *p_enc, const 
 
 /*!
  * @internal
- * f_fseek() is the internal seek callback for FLAC file creation. This prevents
+ * \c f_fseek() is the internal seek callback for FLAC file creation. This prevents
  * nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_enc The encoding context which must not be modified by the function
  * @param offset The offset through the file to which to seek to
@@ -84,7 +84,7 @@ FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *p_enc, UINT64 o
 
 /*!
  * @internal
- * f_ftell() is the internal seek callback for FLAC file creation. This prevents
+ * \c f_ftell() is the internal seek callback for FLAC file creation. This prevents
  * nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_enc The encoding context which must not be modified by the function
  * @param offset The returned offset location into the file
@@ -105,11 +105,12 @@ FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *p_enc, UINT64 *
 
 /*!
  * @internal
- * f_fmetadata() is the internal seek callback for FLAC file creation. This prevents
- * nasty things from happening on Windows thanks to the run-time mess there.
+ * \c f_fmetadata() is the internal metadata callback for FLAC file creation.
  * @param p_enc The encoding context which must not be modified by the function
- * @param p_meta 
+ * @param p_meta The metadata that is due for processing this callback call
  * @param p_FLACFile Our own internal context pointer
+ * @note This is implemented as a no-operation as we are disinterested in processing
+ *   the metadata being sent to the file - we just want it written.
  */
 void f_fmetadata(const FLAC__StreamEncoder *p_enc, const FLAC__StreamMetadata *p_meta, void *p_FLACFile)
 {
