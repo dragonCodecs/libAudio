@@ -13,6 +13,11 @@
  *
  * Like its sister librarys libImage and libVideo, the library sports a @subpage high-levelAPI "high-level API"
  * and a @subpage low-levelAPI "low-level API" which allows greater flexibility and a nice modular design
+ *
+ * @section bugs Bugs
+ *
+ * Unfortunately as work is still being done to the library, there are still some bugs
+ * which can cause crashes, they are listed here: @subpage bug "bugs"
  */
 
 /*!
