@@ -1,12 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef _WINDOWS
 #include <windows.h>
+/*!
+ * @internal
+ * The Windows definition of a cross-platform sleep function
+ */
 #define _usleep _sleep
 #else
 #include <ctype.h>
 #include <time.h>
+/*!
+ * @internal
+ * The number of Miliseconds in one Second
+ */
 #define MSECS_IN_SEC 1000
+/*!
+ * @internal
+ * The number of Nanoseconds in one Milisecond
+ */
 #define NSECS_IN_MSEC 1000000
+/*!
+ * @internal
+ * The non-Windows definition of a cross-platform sleep function
+ */
 #define _usleep(milisec) \
 	{\
 		struct timespec req = {milisec / MSECS_IN_SEC, (milisec % MSECS_IN_SEC) * NSECS_IN_MSEC}; \
@@ -16,6 +33,15 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+/*!
+ * @internal
+ * \c fseek_wrapper() is the internal seek callback for several file decoders.
+ * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_file The \c FILE handle for the seek to use as a void pointer
+ * @param offset A 64-bit integer giving the number of bytes from the \p origin to seek through
+ * @param origin The location identifier to seek from
+ * @return The return result of \c fseek() indiciating if the seek worked or not
+ */
 int fseek_wrapper(void *p_file, __int64 offset, int origin)
 {
 	if (p_file == NULL)
@@ -23,73 +49,16 @@ int fseek_wrapper(void *p_file, __int64 offset, int origin)
 	return fseek((FILE *)p_file, (long)offset, origin);
 }
 
+/*!
+ * @internal
+ * \c ftell_wrapper() is the internal I/O possition callback for several file decoders.
+ * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+ * @param p_file The \c FILE handle for the seek to use as a void pointer
+ * @return The possition of I/O in the file called for
+ */
 __int64 ftell_wrapper(void *p_file)
 {
 	return ftell((FILE *)p_file);
-}
-
-UINT Initialize_OpenAL(ALCdevice **pp_Dev, ALCcontext **pp_Ctx)
-{
-	float orient[6] = {0, 0, -1, 0, 1, 0};
-	UINT ret;
-
-	*pp_Dev = alcOpenDevice(NULL);
-	*pp_Ctx = alcCreateContext(*pp_Dev, NULL);
-	alcMakeContextCurrent(*pp_Ctx);
-
-	alGenSources(1, &ret);
-
-	alSourcef(ret, AL_GAIN, 1);
-	alSourcef(ret, AL_PITCH, 1);
-	alSource3f(ret, AL_POSITION, 0, 0, 0);
-	alSource3f(ret, AL_VELOCITY, 0, 0, 0);
-	alSource3f(ret, AL_DIRECTION, 0, 0, 0);
-	alSourcef(ret, AL_ROLLOFF_FACTOR, 0);
-
-	return ret;
-}
-
-UINT *CreateBuffers(UINT n, UINT nSize, UINT nChannels)
-{
-	UINT bufNum = 0;
-	UINT *ret = (UINT *)malloc(sizeof(UINT) * n);
-	alGenBuffers(n, ret);
-
-	for (bufNum = 0; bufNum < n; bufNum++)
-	{
-		alBufferi(ret[bufNum], AL_SIZE, nSize);
-		alBufferi(ret[bufNum], AL_CHANNELS, nChannels);
-	}
-
-	return ret;
-}
-
-void DestroyBuffers(UINT **buffs, UINT n)
-{
-	alDeleteBuffers(n, *buffs);
-	*buffs = NULL;
-}
-
-void Deinitialize_OpenAL(ALCdevice **pp_Dev, ALCcontext **pp_Ctx, UINT Source)
-{
-	alDeleteSources(1, &Source);
-
-	alcMakeContextCurrent(NULL);
-	alcDestroyContext(*pp_Ctx);
-	alcCloseDevice(*pp_Dev);
-	*pp_Ctx = NULL;
-	*pp_Dev = NULL;
-}
-
-void QueueBuffer(UINT Source, UINT *p_BuffNum, int format, BYTE *Buffer, int nBuffSize, int BitRate)
-{
-	alBufferData(*p_BuffNum, format, Buffer, nBuffSize, BitRate);
-	alSourceQueueBuffers(Source, 1, p_BuffNum);
-}
-
-void UnqueueBuffer(UINT Source, UINT *p_BuffNum)
-{
-	alSourceUnqueueBuffers(Source, 1, p_BuffNum);
 }
 
 int GetBuffFmt(int BPS, int Channels)
@@ -106,9 +75,56 @@ int GetBuffFmt(int BPS, int Channels)
 		return AL_FORMAT_STEREO16;
 }
 
+bool Playback::OpenALInit = false;
+UINT Playback::sourceNum = 0;
+ALCdevice *Playback::device = NULL;
+ALCcontext *Playback::context = NULL;
+
+void Playback::init()
+{
+	if (OpenALInit == false)
+	{
+		device = alcOpenDevice(NULL);
+		context = alcCreateContext(device, NULL);
+		alcMakeContextCurrent(context);
+
+		alGenSources(1, &sourceNum);
+
+		alSourcef(sourceNum, AL_GAIN, 1);
+		alSourcef(sourceNum, AL_PITCH, 1);
+		alSource3f(sourceNum, AL_POSITION, 0, 0, 0);
+		alSource3f(sourceNum, AL_VELOCITY, 0, 0, 0);
+		alSource3f(sourceNum, AL_DIRECTION, 0, 0, 0);
+		alSourcef(sourceNum, AL_ROLLOFF_FACTOR, 0);
+		OpenALInit = true;
+		atexit(deinit);
+	}
+}
+
+void Playback::createBuffers()
+{
+	buffers = (UINT *)malloc(sizeof(UINT) * 4);
+	alGenBuffers(4, buffers);
+
+	for (UINT i = 0; i < 4; i++)
+	{
+		alBufferi(buffers[i], AL_SIZE, nBufferLen);
+		alBufferi(buffers[i], AL_CHANNELS, p_FI->Channels);
+	}
+}
+
+void Playback::deinit()
+{
+	alDeleteSources(1, &sourceNum);
+
+	alcMakeContextCurrent(NULL);
+	alcDestroyContext(context);
+	alcCloseDevice(device);
+}
+
 Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
-	float orient[6] = {0, 0, -1, 0, 1, 0};
+//	float orient[6] = {0, 0, -1, 0, 1, 0};
 
 	if (p_FI == NULL)
 		return;
@@ -126,27 +142,8 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuf
 	this->p_AudioPtr = p_AudioPtr;
 
 	// Initialize OpenAL ready
-	device = alcOpenDevice(NULL);
-	context = alcCreateContext(device, NULL);
-	alcMakeContextCurrent(context);
-
-	alGenSources(1, &sourceNum);
-
-	alSourcef(sourceNum, AL_GAIN, 1);
-	alSourcef(sourceNum, AL_PITCH, 1);
-	alSource3f(sourceNum, AL_POSITION, 0, 0, 0);
-	alSource3f(sourceNum, AL_VELOCITY, 0, 0, 0);
-	alSource3f(sourceNum, AL_DIRECTION, 0, 0, 0);
-	alSourcef(sourceNum, AL_ROLLOFF_FACTOR, 0);
-
-	buffers = (UINT *)malloc(sizeof(UINT) * 4);
-	alGenBuffers(4, buffers);
-
-	for (UINT i = 0; i < 4; i++)
-	{
-		alBufferi(buffers[i], AL_SIZE, nBufferLen);
-		alBufferi(buffers[i], AL_CHANNELS, p_FI->Channels);
-	}
+	init();
+	createBuffers();
 }
 
 #ifdef __NICE_OUTPUT__
@@ -284,12 +281,6 @@ finish:
 Playback::~Playback()
 {
 	alDeleteBuffers(4, buffers);
-
-	alDeleteSources(1, &sourceNum);
-
-	alcMakeContextCurrent(NULL);
-	alcDestroyContext(context);
-	alcCloseDevice(device);
-
+	free(buffers);
 	free(p_FI);
 }
