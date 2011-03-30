@@ -148,6 +148,8 @@ void *FLAC_OpenW(const char *FileName)
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c FLAC_WriteBuffer()
  * @bug p_FI must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug \p p_FLACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
 void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 {

@@ -13,8 +13,8 @@
 
 /*!
  * @internal
- * @file loadFLAC.cpp
- * The implementation of the FLAC decoder API
+ * @file loadM4A.cpp
+ * The implementation of the M4A/MP4 decoder API
  * @author Richard Mant <dx-mon@users.sourceforge.net>
  * @date 2009-2011
  */
@@ -36,17 +36,75 @@
  */
 typedef struct _M4A_Intern
 {
+	/*!
+	 * @internal
+	 * The decoder context handle
+	 */
 	NeAACDecHandle p_dec;
+	/*!
+	 * @internal
+	 * The MP4v2 handle for the MP4 file being read from
+	 */
 	MP4FileHandle p_MP4;
+	/*!
+	 * @internal
+	 * The MP4v2 track from which the decoded audio data is being read
+	 */
 	MP4TrackId nTrack;
+	/*!
+	 * @internal
+	 * The count returned as a parameter of \c NeAACDecInit2() holding
+	 * the sample rate of the MP4 audio stream to decode
+	 */
 	uint32_t ActualSampleRate;
+	/*!
+	 * @internal
+	 * The count returned as a parameter of \c NeAACDecInit2() holding
+	 * the number of channels encoded in the MP4 audio stream to decode
+	 */
 	uint8_t ActualChannels;
+	/*!
+	 * @internal
+	 * The \c FileInfo for the AAC file being decoded
+	 */
 	FileInfo *p_FI;
+	/*!
+	 * @internal
+	 * @var int nLoops
+	 * The number of frames decoded relative to the total number
+	 * @var int nCurrLoop
+	 * The total number of frames to decode
+	 * @var int samplesUsed
+	 * The number of samples used so far from the current sample buffer
+	 * @var int nSamples
+	 * The total number of samples in the current sample buffer
+	 */
 	int nLoops, nCurrLoop, samplesUsed, nSamples;
+	/*!
+	 * @internal
+	 * Pointer to the static return result of the call to \c NeAACDecDecode()
+	 */
 	uint8_t *p_Samples;
+	/*!
+	 * @internal
+	 * The end-of-file flag
+	 */
 	bool eof;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
 	uint8_t buffer[8192];
+	/*!
+	 * @internal
+	 * The playback class instance for the M4A/MP4 file
+	 */
 	Playback *p_Playback;
+	/*!
+	 * @internal
+	 * The MP4v2 tags structure allocated and filled for the metadata
+	 * in the MP4 file
+	 */
 	const MP4Tags *p_Tags;
 } M4A_Intern;
 

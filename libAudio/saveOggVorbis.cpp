@@ -110,6 +110,8 @@ void *OggVorbis_OpenW(const char *FileName)
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c OggVorbis_WriteBuffer()
  * @bug p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug \p p_VorbisFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
 void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 {

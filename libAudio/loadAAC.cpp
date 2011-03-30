@@ -60,9 +60,9 @@ typedef struct _AAC_Intern
 	FileInfo *p_FI;
 	/*!
 	 * @internal
-	 * /var int nLoop
+	 * @var int nLoop
 	 * The number of frames decoded relative to the total number
-	 * /var int nCurrLoop
+	 * @var int nCurrLoop
 	 * The total number of frames to decode
 	 */
 	int nLoop, nCurrLoop;
@@ -73,7 +73,7 @@ typedef struct _AAC_Intern
 	bool eof;
 	/*!
 	 * @internal
-	 * The internal decode data buffer
+	 * The internal decoded data buffer
 	 */
 	BYTE buffer[8192];
 	/*!

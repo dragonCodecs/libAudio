@@ -25,11 +25,36 @@
  */
 typedef struct _FLAC_Decoder_Context
 {
+	/*!
+	 * @internal
+	 * The decoder context handle
+	 */
 	FLAC__StreamDecoder *p_dec;
+	/*!
+	 * @internal
+	 * The FLAC file to decode
+	 */
 	FILE *f_FLAC;
+	/*!
+	 * @internal
+	 * The \c FileInfo for the FLAC file being decoded
+	 */
 	FileInfo *fi_Info;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
 	BYTE buffer[16384];
+	/*!
+	 * @internal
+	 * The count of the number of bytes left to process
+	 * (also thinkable as the number of bytes left to read)
+	 */
 	int nRead;
+	/*!
+	 * @internal
+	 * The playback class instance for the FLAC file
+	 */
 	Playback *p_Playback;
 } FLAC_Decoder_Context;
 
@@ -39,7 +64,7 @@ typedef struct _FLAC_Decoder_Context
  * nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_dec The decoder context to read for, which must not become modified
  * @param Buffer The buffer to read into
- * @param bytes The number of bytes to read into the buffer given as a pointer
+ * @param bytes The number of bytes to read into the buffer, given as a pointer
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we had success or not
  */
@@ -85,7 +110,7 @@ FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, UINT64 a
 
 /*!
  * @internal
- * \c f_ftell() is the internal seek callback for FLAC file decoding. This prevents
+ * \c f_ftell() is the internal read possition callback for FLAC file decoding. This prevents
  * nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_dec The decoder context to get the read position for, which must not become modified
  * @param offset A 64-bit unsigned integer returning the number of bytes from the beginning
@@ -109,7 +134,7 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *
 
 /*!
  * @internal
- * \c f_flen() is the internal seek callback for FLAC file decoding. This prevents
+ * \c f_flen() is the internal file length callback for FLAC file decoding. This prevents
  * nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_dec The decoder context to get the file length for, which must not become modified
  * @param len A 64-bit unsigned integer returning the length of the file in bytes

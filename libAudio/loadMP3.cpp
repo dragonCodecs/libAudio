@@ -10,28 +10,105 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+#include <limits.h>
+
+/*!
+ * @internal
+ * @file loadMP3.cpp
+ * The implementation of the MP3 decoder API
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2010-2011
+ */
+
 #ifndef SHRT_MAX
+/*!
+ * @internal
+ * Backup definition of \c SHRT_MAX, which should be defined in limit.h,
+ * but which assumes that short's length is 16 bits
+ */
 #define SHRT_MAX 0x7FFF
 #endif
 
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given MP3 file
+ */
 typedef struct _MP3_Intern
 {
+	/*!
+	 * @internal
+	 * The MP3 file to decode
+	 */
 	FILE *f_MP3;
+	/*!
+	 * @internal
+	 * The MP3 stream handle
+	 */
 	mad_stream *p_Stream;
+	/*!
+	 * @internal
+	 * The MP3 frame handle
+	 */
 	mad_frame *p_Frame;
+	/*!
+	 * @internal
+	 * The MP3 audio synthesis handle
+	 */
 	mad_synth *p_Synth;
-	//mad_timer_t *p_Timer;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
 	BYTE buffer[8192];
+	/*!
+	 * @internal
+	 * The internal input data buffer
+	 */
 	BYTE inbuff[16392];
+	/*!
+	 * @internal
+	 * The \c FileInfo for the MP3 file being decoded
+	 */
 	FileInfo *p_FI;
+	/*!
+	 * @internal
+	 * A flag indicating if we have yet to decode this MP3's initial frame
+	 */
 	bool InitialFrame;
+	/*!
+	 * @internal
+	 * A count giving the amount of decoded PCM which has been used with
+	 * the current values stored in buffer
+	 */
 	int PCMDecoded;
+	/*!
+	 * @internal
+	 * A string holding the name of the MP3 file relative to it's opening path
+	 * which is used when reading the ID3 data
+	 */
 	char *f_name;
+	/*!
+	 * @internal
+	 * The playback class instance for the MP3 file
+	 */
 	Playback *p_Playback;
+	/*!
+	 * @internal
+	 * The end-of-file flag
+	 */
 	bool eof;
 } MP3_Intern;
 
-short FixedToShort(mad_fixed_t Fixed)
+/*!
+ * @internal
+ * This function applies a simple conversion algorithm to convert the input
+ * fixed-point MAD sample to a short for playback
+ * @param Fixed The fixed point sample to convert
+ * @return The converted fixed point sample
+ * @bug This function applies no noise shaping or dithering
+ *   So the output is sub-par to what it could be. FIXME!
+ */
+inline short FixedToShort(mad_fixed_t Fixed)
 {
 	if (Fixed >= MAD_F_ONE)
 		return SHRT_MAX;
@@ -42,6 +119,12 @@ short FixedToShort(mad_fixed_t Fixed)
 	return (signed short)Fixed;
 }
 
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by MP3_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *MP3_OpenR(const char *FileName)
 {
 	MP3_Intern *ret = NULL;
@@ -71,6 +154,13 @@ void *MP3_OpenR(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function gets the \c FileInfo structure for an opened file
+ * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @warning This function must be called before using \c MP3_Play() or \c MP3_FillBuffer()
+ * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
+ */
 FileInfo *MP3_GetFileInfo(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
@@ -275,6 +365,15 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	return ret;
 }
 
+/*!
+ * Closes an opened audio file
+ * @param p_MP3File A pointer to a file opened with \c MP3_OpenR(), or \c NULL for a no-operation
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_MP3File after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
+ */
 int MP3_CloseFileR(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
@@ -293,14 +392,21 @@ int MP3_CloseFileR(void *p_MP3File)
 	return ret;
 }
 
+/*!
+ * @internal
+ * Gets the next buffer of MP3 data from the MP3 file
+ * @param p_MF Our internal MP3 context
+ * @param eof The pointer to the internal eof member
+ *   passed to help speed this function up slightly by not having
+ *   to re-dereference the pointers and memory needed to locate
+ *   the member
+ */
 void GetData(MP3_Intern *p_MF, bool *eof)
 {
 	int rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
 
 	if (p_MF->p_Stream->next_frame != NULL)
-	{
 		memmove(p_MF->inbuff, p_MF->p_Stream->next_frame, rem);
-	}
 
 	fread(p_MF->inbuff + rem, (2 * 8192) - rem, 1, p_MF->f_MP3);
 	*eof = (feof(p_MF->f_MP3) == FALSE ? false : true);
@@ -311,6 +417,13 @@ void GetData(MP3_Intern *p_MF, bool *eof)
 	mad_stream_buffer(p_MF->p_Stream, (const BYTE *)p_MF->inbuff, (2 * 8192));
 }
 
+/*!
+ * @internal
+ * Loads the next frame of audio from the MP3 file
+ * @param p_MF Our internal MP3 context
+ * @param eof A pointer to the internal eof member
+ *   for passing to \c GetData()
+ */
 int DecodeFrame(MP3_Intern *p_MF, bool *eof)
 {
 	if (p_MF->InitialFrame == false)
@@ -338,6 +451,17 @@ int DecodeFrame(MP3_Intern *p_MF, bool *eof)
 	return 0;
 }
 
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
+ * @param OutBuffer A pointer to the buffer to be filled
+ * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
+ */
 long MP3_FillBuffer(void *p_MP3File, BYTE *OutBuffer, int nOutBufferLen)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
@@ -401,6 +525,17 @@ long MP3_FillBuffer(void *p_MP3File, BYTE *OutBuffer, int nOutBufferLen)
 	return OBuff - OutBuffer;
 }
 
+/*!
+ * Plays an opened MP3 file using OpenAL on the default audio device
+ * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c MP3_OpenR() used to open the file at \p p_MP3File,
+ * this function will do nothing.
+ * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug Futher to the \p p_MP3File check bug on this function, if this function is
+ *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
+ */
 void MP3_Play(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
@@ -408,6 +543,15 @@ void MP3_Play(void *p_MP3File)
 	p_MF->p_Playback->Play();
 }
 
+/*!
+ * Checks the file given by \p FileName for whether it is an MP3
+ * file recognised by this library or not
+ * @param FileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is an MP3 file or not
+ */
 bool Is_MP3(const char *FileName)
 {
 	FILE *f_MP3 = fopen(FileName, "rb");
@@ -430,6 +574,10 @@ bool Is_MP3(const char *FileName)
 	return false;
 }
 
+/*!
+ * @internal
+ * This structure controls decoding MP3 files when using the high-level API on them
+ */
 API_Functions MP3Decoder =
 {
 	MP3_OpenR,

@@ -10,18 +10,71 @@
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
+/*!
+ * @internal
+ * @file loadWAV.cpp
+ * The implementation of the WAV decoder API
+ * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @date 2010-2011
+ */
+
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given WAV file
+ */
 typedef struct _WAV_Intern
 {
+	/*!
+	 * @internal
+	 * The WAV file to decode
+	 */
 	FILE *f_WAV;
+	/*!
+	 * @internal
+	 * The internal count of how long the file is in bytes
+	 * as read from the data chunk
+	 */
 	int fLen;
+	/*!
+	 * @internal
+	 * The compression flags read from the WAV file
+	 */
 	short compression;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
 	BYTE buffer[8192];
+	/*!
+	 * @internal
+	 * The playback class instance for the WAV file
+	 */
 	Playback *p_Playback;
+	/*!
+	 * @internal
+	 * The \c FileInfo for the WAV file being decoded
+	 */
 	FileInfo *p_FI;
+	/*!
+	 * @internal
+	 * The byte possition that the final byte of the file should be at in the file,
+	 * calculated fresh from fLen and an \c ftell() call just after reading the data
+	 * for fLen
+	 */
 	int DataEnd;
+	/*!
+	 * @internal
+	 * A flag indicating if this WAV's data is floating point
+	 */
 	bool usesFloat;
 } WAV_Intern;
 
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by WAV_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
 void *WAV_OpenR(const char *FileName)
 {
 	WAV_Intern *ret = NULL;
@@ -58,6 +111,13 @@ void *WAV_OpenR(const char *FileName)
 	return ret;
 }
 
+/*!
+ * This function gets the \c FileInfo structure for an opened file
+ * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @warning This function must be called before using \c WAV_Play() or \c WAV_FillBuffer()
+ * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
@@ -116,6 +176,15 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	return ret;
 }
 
+/*!
+ * Closes an opened audio file
+ * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR(), or \c NULL for a no-operation
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_WAVFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 int WAV_CloseFileR(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
@@ -129,6 +198,17 @@ int WAV_CloseFileR(void *p_WAVFile)
 	return ret;
 }
 
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
+ * @param OutBuffer A pointer to the buffer to be filled
+ * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
 long WAV_FillBuffer(void *p_WAVFile, BYTE *OutBuffer, int nOutBufferLen)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
@@ -207,6 +287,17 @@ long WAV_FillBuffer(void *p_WAVFile, BYTE *OutBuffer, int nOutBufferLen)
 	return ret;
 }
 
+/*!
+ * Plays an opened WAV file using OpenAL on the default audio device
+ * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c WAV_OpenR() used to open the file at \p p_WAVFile,
+ * this function will do nothing.
+ * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug Futher to the \p p_WAVFile check bug on this function, if this function is
+ *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
+ */
 void WAV_Play(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
@@ -214,6 +305,15 @@ void WAV_Play(void *p_WAVFile)
 	p_WF->p_Playback->Play();
 }
 
+/*!
+ * Checks the file given by \p FileName for whether it is an WAV
+ * file recognised by this library or not
+ * @param FileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is an WAV file or not
+ */
 bool Is_WAV(const char *FileName)
 {
 	FILE *f_WAV = fopen(FileName, "rb");
@@ -234,6 +334,10 @@ bool Is_WAV(const char *FileName)
 		return true;
 }
 
+/*!
+ * @internal
+ * This structure controls decoding WAV files when using the high-level API on them
+ */
 API_Functions WAVDecoder =
 {
 	WAV_OpenR,
