@@ -243,14 +243,15 @@ void InitialiseTables()
 
 // Begin / End loop
 #define SNDMIX_BEGINSAMPLELOOP \
-	UINT Pos = chn->PosLo; \
-	signed char *p = (signed char *)(chn->Sample + chn->Pos); \
+	int Pos = chn->PosLo; \
+	int Increment = chn->Increment.iValue; \
+	signed char *p = ((signed char *)chn->Sample) + chn->Pos; \
 	int *vol = Buff; \
 	do \
 	{
 
 #define SNDMIX_ENDSAMPLELOOP \
-		Pos += chn->Increment; \
+		Pos += Increment; \
 	} \
 	while (vol < BuffMax); \
 	chn->Pos += Pos >> 16; \
@@ -367,8 +368,8 @@ void InitialiseTables()
 
 // sinc
 #define SNDMIX_INITSINCTABLE \
-	char *sinc = (char *)(chn->Increment > 0x13000 || chn->Increment < -0x13000 ? \
-		(chn->Increment > 0x18000 || chn->Increment < -0x18000 ? DownSample2x : DownSample13x) : KaiserSinc);
+	char *sinc = (char *)(chn->Increment.iValue > 0x13000 || chn->Increment.iValue < -0x13000 ? \
+		(chn->Increment.iValue > 0x18000 || chn->Increment.iValue < -0x18000 ? DownSample2x : DownSample13x) : KaiserSinc);
 
 // Interfaces
 // Mono

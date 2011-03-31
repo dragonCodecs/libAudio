@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 #include <stdio.h>
+#include <stdlib.h>
 #include <malloc.h>
 #include <math.h>
 
@@ -7,15 +8,6 @@
 #include "../libAudio_Common.h"
 #include "../ProTracker.h"
 #include "moduleMixer.h"
-
-#ifndef _WINDOWS
-inline int abs(int x)
-{
-	if (x < 0)
-		return -x;
-	return x;
-}
-#endif
 
 #define SNG_ENDREACHED		1
 
@@ -76,11 +68,26 @@ inline int abs(int x)
 #define MAX_VOLUME			64
 #define MIXBUFFERSIZE		512
 
+#pragma pack(push, 1)
+
+typedef struct _int16dot16_t
+{
+	uint16_t Lo;
+	int16_t Hi;
+} int16dot16_t;
+
+typedef union _int16dot16
+{
+	int32_t iValue;
+	int16dot16_t Value;
+} int16dot16;
+
 typedef struct _SampleDecay
 {
 	BYTE *Sample, LeftVol, RightVol;
 	UINT LoopStart, LoopEnd, Length, Pos, PosLo;
-	int Increment, FinalSample;
+	int16dot16 Increment;
+	int FinalSample;
 } SampleDecay;
 
 typedef struct _Channel
@@ -92,7 +99,8 @@ typedef struct _Channel
 	BYTE RowNote, RowSample, Volume;
 	BYTE FineTune, Flags, Pan;
 	UINT Period, Pos, PosLo;
-	int Increment, PortamentoDest;
+	int16dot16 Increment;
+	int PortamentoDest;
 	BYTE Arpeggio, LeftVol, RightVol, RampLength;
 	BYTE NewLeftVol, NewRightVol;
 	WORD RowEffect, PortamentoSlide;
@@ -123,6 +131,8 @@ typedef struct _MixerState
 	BYTE PatternLoopCount, PatternLoopStart;
 	int MixBuffer[MIXBUFFERSIZE * 4];
 } MixerState;
+
+#pragma pack(pop)
 
 WORD Periods[60] =
 {
@@ -313,7 +323,7 @@ a_neg:
 b_neg:
 		xor edx, ecx
 		or ecx, ecx
-		mov edi, edx
+		mov esi, edx
 		jge c_neg
 		neg ecx
 c_neg:
@@ -325,7 +335,7 @@ c_neg:
 diverr:
 		mov eax, 0x7FFFFFFF
 ok:
-		mov edx, edi
+		mov edx, esi
 		or edx, edx
 		jge r_neg
 		neg eax
@@ -346,7 +356,7 @@ r_neg:
 		"b_neg:\n"
 		"\txor edx, ecx\n"
 		"\tor ecx, ecx\n"
-		"\tmov edi, edx\n"
+		"\tmov esi, edx\n"
 		"\tjge c_neg\n"
 		"\tneg ecx\n"
 		"c_neg:\n"
@@ -358,13 +368,13 @@ r_neg:
 		"diverr:\n"
 		"\tmov eax, 0x7FFFFFFF\n"
 		"ok:\n"
-		"\tmov edx, edi\n"
+		"\tmov edx, esi\n"
 		"\tor edx, edx\n"
 		"\tjge r_neg\n"
 		"\tneg eax\n"
 		"r_neg:\n"
 		".att_syntax\n" : [result] "=a" (result) : [a] "a" (a),
-		[b] "b" (b), [c] "c" (c) : "edx", "edi");
+		[b] "b" (b), [c] "c" (c) : "edx", "esi");
 #endif
 	return result;
 }
@@ -510,7 +520,7 @@ inline void GetDecayInfo(Channel *const chn)
 	if (chn->Sample != NULL)
 	{
 		SampleDecay *Decay = &chn->Decay;
-		UINT SampleRemaining = (chn->Length - chn->Pos) / ((chn->Increment >> 16) + 1);
+		UINT SampleRemaining = (chn->Length - chn->Pos) / (chn->Increment.Value.Hi + 1);
 		// Copy key values needed to keep the note the same and for it to have the same properties
 		Decay->Increment = chn->Increment;
 		Decay->Sample = chn->Sample;
@@ -520,7 +530,7 @@ inline void GetDecayInfo(Channel *const chn)
 		Decay->FinalSample = 0;
 		if (chn->LoopStart < 1 && SampleRemaining == 1)
 		{
-			UINT FinalPos = (((chn->Pos << 16) + chn->PosLo) + chn->Increment) >> 16;
+			UINT FinalPos = (((chn->Pos << 16) + chn->PosLo) + chn->Increment.iValue) >> 16;
 			Decay->FinalSample = ((signed char *)chn->Sample)[FinalPos] << 8;
 		}
 		// Grab the current volume levels to operate on
@@ -1140,11 +1150,11 @@ BOOL ReadNote(MixerState *p_Mixer)
 	chn = p_Mixer->Chns;
 	for (i = 0; i < p_Mixer->Channels; i++, chn++)
 	{
-		chn->Increment = 0;
+ 		chn->Increment.iValue = 0;
 		if (chn->Period != 0 && chn->Length != 0)
 		{
-			UINT inc, freq;
-			int vol = chn->Volume, period;
+			//UINT inc;
+			int inc, vol = chn->Volume, period;
 			if ((chn->Flags & CHN_TREMOLO) != 0)
 			{
 				BYTE TremoloPos = chn->TremoloPos;
@@ -1193,7 +1203,7 @@ BOOL ReadNote(MixerState *p_Mixer)
 					Delta = RandomTable[VibratoPos];
 				else
 					Delta = SinusTable[VibratoPos];
-				period += ((short)Delta * (short)chn->VibratoDepth) >> 7;
+				period += (short)(((int)Delta * (int)chn->VibratoDepth) >> 7);
 				chn->VibratoPos = (VibratoPos + chn->VibratoSpeed) & 0x3F;
 			}
 			// 14 << 2 == 56
@@ -1202,18 +1212,17 @@ BOOL ReadNote(MixerState *p_Mixer)
 			// 1760 << 2 == 7040
 			if (period > 7040)
 				period = 7040;
-			freq = 14187580L / period;
-			inc = muldiv(freq, 0x10000, p_Mixer->MixRate);
-			chn->Increment = (inc + 1) & ~3;
+			inc = muldiv(14187580UL / period, 0x10000, p_Mixer->MixRate);
+			chn->Increment.iValue = (inc + 1) & ~3;
 		}
 		if (chn->Volume != 0 || chn->LeftVol != 0 || chn->RightVol != 0)
 			chn->Flags |= CHN_VOLUMERAMP;
 		else
 			chn->Flags &= ~CHN_VOLUMERAMP;
 		chn->NewLeftVol = chn->NewRightVol = 0;
-		if ((chn->Increment >> 16) + 1 >= (int)(chn->LoopEnd - chn->LoopStart))
+		if (chn->Increment.Value.Hi + 1 >= (int)(chn->LoopEnd - chn->LoopStart))
 			chn->Flags &= ~CHN_LOOP;
-		chn->Sample = ((chn->NewSample != NULL && chn->Length != 0 && chn->Increment != 0) ? chn->NewSample : NULL);
+		chn->Sample = ((chn->NewSample != NULL && chn->Length != 0 && chn->Increment.iValue != 0) ? chn->NewSample : NULL);
 		if (chn->Sample != NULL)
 		{
 			if (p_Mixer->MixOutChannels == 2)
@@ -1290,12 +1299,12 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 {
 	UINT Pos, PosLo, SampleCount;
 	UINT LoopStart = ((chn->Flags & CHN_LOOP) != 0 ? chn->LoopStart : 0);
-	int Increment = chn->Increment;
-	if (Samples == 0 || Increment == 0 || chn->Length == 0)
+	int16dot16 Increment = chn->Increment;
+	if (Samples == 0 || Increment.iValue == 0 || chn->Length == 0)
 		return 0;
 	if (chn->Pos < LoopStart)
 	{
-		if (Increment < 0)
+		if (Increment.iValue < 0)
 		{
 			int Delta = ((LoopStart - chn->Pos) << 16) - (chn->PosLo & 0xFFFF);
 			chn->Pos = LoopStart | (Delta >> 16);
@@ -1305,8 +1314,8 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 				chn->Pos = LoopStart;
 				chn->PosLo = 0;
 			}
-			Increment = -Increment;
-			chn->Increment = Increment;
+			Increment.iValue = -Increment.iValue;
+			chn->Increment.iValue = Increment.iValue;
 			if ((chn->Flags & CHN_LOOP) == 0 || chn->Pos >= chn->Length)
 			{
 				chn->Pos = chn->Length;
@@ -1321,10 +1330,10 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 	{
 		if ((chn->Flags & CHN_LOOP) == 0)
 			return 0;
-		if (Increment < 0)
+		if (Increment.iValue < 0)
 		{
-			Increment = -Increment;
-			chn->Increment = Increment;
+			Increment.iValue = -Increment.iValue;
+			chn->Increment.iValue = Increment.iValue;
 		}
 		chn->Pos += LoopStart - chn->Length;
 		if (chn->Pos < LoopStart)
@@ -1333,42 +1342,44 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 	Pos = chn->Pos;
 	if (Pos < LoopStart)
 	{
-		if (Pos < 0 || Increment < 0)
+		if (Pos < 0 || Increment.iValue < 0)
 			return 0;
 	}
 	if (Pos >= chn->Length)
 		return 0;
 	PosLo = chn->PosLo;
 	SampleCount = Samples;
-	if (Increment < 0)
+	if (Increment.iValue < 0)
 	{
-		UINT Inv = -Increment;
-		UINT MaxSamples = 16384 / ((Inv >> 16) + 1);
+		int16dot16 Inv = Increment;
+		UINT MaxSamples;
 		UINT DeltaHi, DeltaLo, PosDest;
+		Inv.iValue = -Inv.iValue;
+		MaxSamples = 16384 / (Inv.Value.Hi + 1);
 		if (MaxSamples < 2)
 			MaxSamples = 2;
 		if (Samples > MaxSamples)
 			Samples = MaxSamples;
-		DeltaHi = (Inv >> 16) * (Samples - 1);
-		DeltaLo = (Increment & 0xFFFF) * (Samples - 1);
+		DeltaHi = Inv.Value.Hi * Samples;
+		DeltaLo = Inv.Value.Lo * Samples;
 		PosDest = Pos - DeltaHi + ((PosLo - DeltaLo) >> 16);
 		if (PosDest < LoopStart)
-			SampleCount = ((((Pos - LoopStart) << 16) + PosLo - 1) / Inv) + 1;
+			SampleCount = ((((Pos - LoopStart) << 16) + PosLo - 1) / Inv.iValue);
 	}
 	else
 	{
-		UINT MaxSamples = 16384 / ((Increment >> 16) + 1);
+		UINT MaxSamples = 16384 / (Increment.Value.Hi + 1);
 		UINT DeltaHi, DeltaLo, PosDest;
 		if (MaxSamples < 2)
 			MaxSamples = 2;
 		if (Samples > MaxSamples)
 			Samples = MaxSamples;
-		DeltaHi = (Increment >> 16) * (Samples - 1);
-		DeltaLo = (Increment & 0xFFFF) * (Samples - 1);
+		DeltaHi = Increment.Value.Hi * Samples;
+		DeltaLo = Increment.Value.Lo * Samples;
 		PosDest = Pos + DeltaHi + ((PosLo + DeltaLo) >> 16);
 		if (PosDest >= chn->Length)
 //			SampleCount = chn->Length - chn->Pos;
-			SampleCount = ((((chn->Length - Pos) << 16) - PosLo - 1) / Increment) + 1;
+			SampleCount = (((chn->Length - Pos) << 16) - PosLo) / Increment.iValue;
 	}
 	if (SampleCount <= 1)
 		return 1;
@@ -1385,6 +1396,7 @@ inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT 
 }
 
 #define SAMPLE_LOOP(vol_val) \
+	int Increment = Decay->Increment.iValue; \
 	do \
 	{ \
 		int vol = (vol_val); \
@@ -1418,13 +1430,13 @@ inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
 			UINT Pos = Decay->PosLo;
 			signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
 #define ADJUST_POS(vol_val) \
-	Pos += Decay->Increment; \
+	Pos += Increment; \
 	/* Looping? Ok, move us back to where we need to be in the loop */ \
 	if ((Pos >> 16) >= Decay->LoopEnd) \
 		Pos -= (Decay->LoopEnd - Decay->LoopStart) << 16; \
 	else \
 	{ \
-		Pos -= Decay->Increment; \
+		Pos -= Increment; \
 		Decay->FinalSample = (vol_val); \
 	}
 #define EXTRA_CONDITION && Decay->FinalSample == 0
@@ -1466,9 +1478,11 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
 		if (chn->Sample == NULL)
 			continue;
-/*		if (p_Mixer->ChnMix[i] == 3)
-			printf("%u, %u, %u, %u, %u, %i\n", chn->Note, chn->FineTune, chn->Flags, chn->Period, chn->Period >> 2, chn->Increment);
-		else
+//		if (p_Mixer->ChnMix[i] == 3)
+	//		printf("%X.%04X, %X.%04X : %X, %X : %u\n", chn->Increment.Value.Hi, chn->Increment.Value.Lo, chn->Pos, chn->PosLo,
+		//		samples, chn->Length, chn->Period);
+			//printf("%u, %u, %u, %u, %u, %i\n", chn->Note, chn->FineTune, chn->Flags, chn->Period, chn->Period >> 2, chn->Increment.iValue);
+/*		else
 			continue;*/
 		do
 		{
