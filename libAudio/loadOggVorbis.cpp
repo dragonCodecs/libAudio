@@ -12,28 +12,6 @@
  * @date 2010-2011
  */
 
-#ifdef _WINDOWS
-#ifdef __CDECL__
-#undef __CDECL__
-#endif
-/*!
- * @internal
- * Definition of \c __cdecl which is compatible with the keyword
- * not existing on non-Windows platforms due to them not having
- * multiple calling conventions which is a dumb microsoft-ism
- */
-#define __CDECL__ __cdecl
-#else
-#ifndef __CDECL__
-/*!
- * @internal
- * Null definition which is compatible with the \c __cdecl keyword
- * not existing on non-Windows platforms
- */
-#define __CDECL__
-#endif
-#endif
-
 /*!
  * @internal
  * Internal structure for holding the decoding context for a given Ogg|Vorbis file

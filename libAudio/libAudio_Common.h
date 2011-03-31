@@ -8,7 +8,19 @@
 #include <windows.h>
 #include <al.h>
 #include <alc.h>
+/*!
+ * @internal
+ * Definition of \c __cdecl which is compatible with the keyword
+ * not existing on non-Windows platforms due to them not having
+ * multiple calling conventions which is a dumb microsoft-ism
+ */
 #define __CDECL__ __cdecl
+/*!
+ * @internal
+ * Definition of \c __fastcall which is compatible with the keyword
+ * not existing on non-Windows platforms due to them not having
+ * multiple calling conventions which is a dumb microsoft-ism
+ */
 #define __FASTCALL__ __fastcall
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
@@ -16,16 +28,38 @@
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+/*!
+ * @internal
+ * Null definition which is compatible with the \c __cdecl keyword
+ * not existing on non-Windows platforms
+ */
 #define __CDECL__
+/*!
+ * @internal
+ * Definition which is compatible with the \c __cdecl keyword
+ * not existing on non-Windows platforms. This ensures that
+ * calls that are meant to be "fastcall" on Windows are instead
+ * hopefully inlined on Linux, making them even faster still by
+ * eliminating the call completely
+ */
 #define __FASTCALL__ inline
 #endif
 
 extern int fseek_wrapper(void *p_file, __int64 offset, int origin);
 //extern __int64 ftell_wrapper(void *p_file);
-extern int GetBuffFmt(int BPS, int Channels);
 
+/*!
+ * @internal
+ * Defines the buffer filling callback and a way to hold a pointer to it. Marking it
+ * as \c __cdecl is neccasery on Windows otherwise it makes extremely incorrect assumptions
+ */
 typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen);
 
+/*!
+ * @internal
+ * \c Playback is the internal playback class which controls all internally-driven
+ * audio playback
+ */
 class Playback
 {
 protected:
@@ -83,8 +117,16 @@ private:
 	void init();
 	void createBuffers();
 	static void deinit();
+	int getBufferFormat();
 };
 
+/*!
+ * @internal
+ * This structure holds what all low-level APIs must expose
+ * and is used to optimise performance of the high-level API
+ * by removing the need to if-check what format we're using
+ * on each call - the pointers in this structure say it all
+ */
 typedef struct _API_Functions
 {
 	void *(__CDECL__ *OpenR)(const char *FileName);
@@ -94,9 +136,27 @@ typedef struct _API_Functions
 	void (__CDECL__ *Play)(void *p_File);
 } API_Functions;
 
+/*!
+ * @internal
+ * This structure is what is returned in place of the internal
+ * \c p_AudioFile member when using the high-level API to utilise
+ * audio files in a reading capacity. It allows for a far more
+ * flexible, and faster library by removing a lot of if-checks
+ * from the high-level API.
+ */
 typedef struct _AudioPointer
 {
+	/*!
+	 * @internal
+	 * The real file context returned from a low-level \c *_OpenR()
+	 * call
+	 */
 	void *p_AudioFile;
+	/*!
+	 * @internal
+	 * a pointer to the API_Functions structure for the low-level
+	 * decoder
+	 */
 	API_Functions *API;
 } AudioPointer;
 

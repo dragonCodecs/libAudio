@@ -55,24 +55,12 @@ int fseek_wrapper(void *p_file, __int64 offset, int origin)
  * This prevents nasty things from happening on Windows thanks to the run-time mess there.
  * @param p_file The \c FILE handle for the seek to use as a void pointer
  * @return The possition of I/O in the file called for
+ * @deprecated Marked as deprecated as nothing currently uses or calls this function,
+ *   so I am considering removing it.
  */
 __int64 ftell_wrapper(void *p_file)
 {
 	return ftell((FILE *)p_file);
-}
-
-int GetBuffFmt(int BPS, int Channels)
-{
-	if (Channels == 2)
-		return AL_FORMAT_STEREO16;
-	else if (Channels == 1)
-		return AL_FORMAT_MONO16;
-	/*else if (BPS == 8 && Channels == 2)
-		return AL_FORMAT_STEREO8;
-	else if (BPS == 8 && Channels == 1)
-		return AL_FORMAT_MONO8;*/
-	else
-		return AL_FORMAT_STEREO16;
 }
 
 bool Playback::OpenALInit = false;
@@ -121,6 +109,25 @@ void Playback::deinit()
 	alcCloseDevice(device);
 }
 
+/*!
+ * @internal
+ * Called at the start of Play() to determine the format the playback buffers are in
+ * as a result of the processing that occurs in the buffer filling callback
+ */
+int Playback::getBufferFormat()
+{
+	if (p_FI->Channels == 2)
+		return AL_FORMAT_STEREO16;
+	else if (p_FI->Channels == 1)
+		return AL_FORMAT_MONO16;
+	/*else if (p_FI->BitsPerSample == 8 && p_FI->Channels == 2)
+		return AL_FORMAT_STEREO8;
+	else if (p_FI->BitsPerSample == 8 && p_FI->Channels == 1)
+		return AL_FORMAT_MONO8;*/
+	else
+		return AL_FORMAT_STEREO16;
+}
+
 Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
 //	float orient[6] = {0, 0, -1, 0, 1, 0};
@@ -167,7 +174,7 @@ void Playback::Play()
 {
 	long bufret = 1;
 	int nBuffs = 0, Playing;
-	int Fmt = GetBuffFmt(p_FI->BitsPerSample, p_FI->Channels);
+	int Fmt = getBufferFormat();
 #ifdef __NICE_OUTPUT__
 	static char *ProgressChars = "\xB3/\-\\";
 	int CharNum = 0, Proc = 0;
