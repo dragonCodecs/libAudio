@@ -68,6 +68,11 @@ UINT Playback::sourceNum = 0;
 ALCdevice *Playback::device = NULL;
 ALCcontext *Playback::context = NULL;
 
+/*!
+ * @internal
+ * Initialises the OpenAL context and devices and the source to which
+ * we attach buffers
+ */
 void Playback::init()
 {
 	if (OpenALInit == false)
@@ -89,6 +94,11 @@ void Playback::init()
 	}
 }
 
+/*!
+ * @internal
+ * Generates the OpenAL buffers and sets up the various properties
+ * for them for the instance of \c Playback this is called for
+ */
 void Playback::createBuffers()
 {
 	alGenBuffers(4, buffers);
@@ -100,6 +110,11 @@ void Playback::createBuffers()
 	}
 }
 
+/*!
+ * @internal
+ * Deinitialises the OpenAL context and devices and the source to which
+ * we attach buffers (invoked at the end of the program using libAudio's lifetime)
+ */
 void Playback::deinit()
 {
 	alDeleteSources(1, &sourceNum);
@@ -111,7 +126,7 @@ void Playback::deinit()
 
 /*!
  * @internal
- * Called at the start of Play() to determine the format the playback buffers are in
+ * Called at the start of \c Play() to determine the format the playback buffers are in
  * as a result of the processing that occurs in the buffer filling callback
  */
 int Playback::getBufferFormat()
@@ -128,6 +143,18 @@ int Playback::getBufferFormat()
 		return AL_FORMAT_STEREO16;
 }
 
+/*!
+ * @internal
+ * The constructor for \c Playback which makes sure that OpenAL has been initialised and
+ * which prepares buffers for the singular source held internally
+ * @param p_FI The \c FileInfo instance for the file to be played
+ * @param DataCallback The function to use to load more data into the buffer
+ * @param BuffPtr The buffer to load data into (which is typically the buffer internal to the decoder)
+ * @param nBuffLen The length of the buffer decoded into
+ * @param p_AudioPtr The typeless pointer to the file's decoding context
+ * @note \p DataCallback should be removed in future versions of this function and in place
+ * \c Audio_FillBuffer() should be called as it does not really have overhead now
+ */
 Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
 //	float orient[6] = {0, 0, -1, 0, 1, 0};
@@ -284,6 +311,16 @@ finish:
 	}
 }
 
+/*!
+ * @internal
+ * The deconstructor for \c Playback which makes sure that the OpenAL buffers
+ * are all freed and which frees the \c FileInfo instance created for a file
+ * @note The \c FileInfo handling code is technically in the wrong place and
+ * should be in the care of the format decoder instead, which must be fixed
+ * in future versions of the library so that memory leaks don't happen
+ * when people do not free the \c FileInfo instance themselves when using
+ * the library with external playback
+ */
 Playback::~Playback()
 {
 	alDeleteBuffers(4, buffers);

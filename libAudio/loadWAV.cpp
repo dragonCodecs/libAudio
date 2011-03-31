@@ -165,10 +165,9 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 		fread(tmp, 4, 1, f_WAV);
 	}
 	fread(&p_WF->DataEnd, 4, 1, f_WAV);
+	ret->TotalTime = (float)p_WF->DataEnd / (float)ret->Channels;
+	ret->TotalTime /= ((float)ret->BitsPerSample / 8.0F);
 	p_WF->DataEnd += ftell(f_WAV);
-	ret->TotalTime = (float)p_WF->DataEnd;
-	ret->TotalTime /= ret->Channels;
-	ret->TotalTime /= (ret->BitsPerSample / 8);
 
 	if (ExternalPlayback == 0)
 		p_WF->p_Playback = new Playback(ret, WAV_FillBuffer, p_WF->buffer, 8192, p_WAVFile);

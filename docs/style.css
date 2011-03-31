@@ -469,6 +469,9 @@ table.memberdecls
 	white-space: nowrap;
 	font-weight: bold;
 	margin-left: 6px;
+	margin-top: 6px;
+	margin-bottom: 6px;
+	border-collapse: collapse;
 }
 
 .memproto
