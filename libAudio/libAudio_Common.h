@@ -28,18 +28,50 @@ typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, BYTE *OutBuffer, int nOutBuf
 
 class Playback
 {
-public:
+protected:
+	/*!
+	 * @internal
+	 * Pointer to the function to be used to fill buffers for playback
+	 */
 	FB_Func FillBuffer;
+	/*!
+	 * @internal
+	 * Pointer to the \c FileInfo structure for the \c p_AudioPtr
+	 */
 	FileInfo *p_FI;
+	/*!
+	 * @internal
+	 * Pointer to the file to play back's internal decoder context
+	 */
 	void *p_AudioPtr;
 
 private:
+	/*!
+	 * @internal
+	 * Static member which holds the the source to attach the buffers to
+	 */
 	static UINT sourceNum;
-	UINT *buffers;
+	/*!
+	 * @internal
+	 * Holds the current instance's playback buffers
+	 */
+	UINT buffers[4];
+	/*!
+	 * @internal
+	 * Static member which holds a pointer to the OpenAL device opened for playback
+	 */
 	static ALCdevice *device;
+	/*!
+	 * @internal
+	 * Static member which holds a pointer to the OpenAL context opened for playback
+	 */
 	static ALCcontext *context;
 	BYTE *buffer;
 	int nBufferLen;
+	/*!
+	 * @internal
+	 * Static member which holds whether or not OpenAL has been initialised yet or not
+	 */
 	static bool OpenALInit;
 
 public:

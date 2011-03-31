@@ -103,7 +103,6 @@ void Playback::init()
 
 void Playback::createBuffers()
 {
-	buffers = (UINT *)malloc(sizeof(UINT) * 4);
 	alGenBuffers(4, buffers);
 
 	for (UINT i = 0; i < 4; i++)
@@ -281,6 +280,5 @@ finish:
 Playback::~Playback()
 {
 	alDeleteBuffers(4, buffers);
-	free(buffers);
 	free(p_FI);
 }
