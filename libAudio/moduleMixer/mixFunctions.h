@@ -302,9 +302,7 @@ void InitialiseTables()
 	}
 
 #define BEGIN_RAMPMIX_FLT_INTERFACE(func) \
-	BEGIN_MIX_INTERFACE(func) \
-		UINT RampRightVol = chn->RightVol; \
-		UINT RampLeftVol = chn->LeftVol; \
+	BEGIN_RAMPMIX_INTERFACE(func) \
 		MIX_BEGIN_FILTER
 
 #define END_RAMPMIX_FLT_INTERFACE() \

@@ -82,14 +82,6 @@ typedef union _int16dot16
 	int16dot16_t Value;
 } int16dot16;
 
-typedef struct _SampleDecay
-{
-	BYTE *Sample, LeftVol, RightVol;
-	UINT LoopStart, LoopEnd, Length, Pos, PosLo;
-	int16dot16 Increment;
-	int FinalSample;
-} SampleDecay;
-
 typedef struct _Channel
 {
 	BYTE *Sample, *NewSample;
@@ -109,7 +101,7 @@ typedef struct _Channel
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
-	SampleDecay Decay;
+	int DCOffsR, DCOffsL;
 } Channel;
 
 typedef struct _MixerState
@@ -129,7 +121,8 @@ typedef struct _MixerState
 	MODPattern *Patterns;
 	BYTE SongFlags, SoundSetup;
 	BYTE PatternLoopCount, PatternLoopStart;
-	int MixBuffer[MIXBUFFERSIZE * 4];
+	int MixBuffer[MIXBUFFERSIZE * 2];
+	int DCOffsR, DCOffsL;
 } MixerState;
 
 #pragma pack(pop)
@@ -280,10 +273,10 @@ const USHORT LinearSlideDownTable[256] =
 	26769, 26672, 26576, 26480, 26385, 26290, 26195, 26101
 };
 
-#include "mixFunctions.h"
-
 // BEGIN: Code from OMPT 1.17RC2
 // Credit for this code goes to Oliver Lapicque
+#include "mixFunctions.h"
+
 typedef void (__CDECL__ *MixInterface)(Channel *, int *, int *);
 
 MixInterface MixFunctionTable[32] = 
@@ -513,35 +506,6 @@ void DestroyMixer(void *Mixer)
 	free(p_Mixer);
 }
 
-inline void GetDecayInfo(Channel *const chn)
-{
-	// TODO: Maybe increase the length of the decay time? Seems that 64 is a little short. Also,
-	// change the SampleRemaining count up from 2 to 16 or so, so that clicking is reduced even more?
-	if (chn->Sample != NULL)
-	{
-		SampleDecay *Decay = &chn->Decay;
-		UINT SampleRemaining = (chn->Length - chn->Pos) / (chn->Increment.Value.Hi + 1);
-		// Copy key values needed to keep the note the same and for it to have the same properties
-		Decay->Increment = chn->Increment;
-		Decay->Sample = chn->Sample;
-		Decay->LoopStart = chn->LoopStart;
-		Decay->LoopEnd = chn->LoopEnd;
-		Decay->Length = chn->Length;
-		Decay->FinalSample = 0;
-		if (chn->LoopStart < 1 && SampleRemaining == 1)
-		{
-			UINT FinalPos = (((chn->Pos << 16) + chn->PosLo) + chn->Increment.iValue) >> 16;
-			Decay->FinalSample = ((signed char *)chn->Sample)[FinalPos] << 8;
-		}
-		// Grab the current volume levels to operate on
-		Decay->LeftVol = chn->LeftVol;// << 1;
-		Decay->RightVol = chn->RightVol;// << 1;
-		// And the current playback possition of the sample
-		Decay->Pos = chn->Pos;
-		Decay->PosLo = chn->PosLo;
-	}
-}
-
 inline BYTE PeriodToNoteIndex(WORD Period)
 {
 	BYTE i, min = 0, max = 59;
@@ -619,7 +583,6 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
 
-	GetDecayInfo(chn);
 	chn->Note = note;
 	chn->NewSamp = 0;
 	period = GetPeriodFromNote(note, chn->FineTune);
@@ -787,15 +750,15 @@ inline void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
 	{
 		short NewVolume = chn->Volume;
 		if ((param & 0xF0) != 0)
-			NewVolume += (short)((param & 0xF0) >> 8);
+			NewVolume += (param & 0xF0) >> 8;
 		else
-			NewVolume -= (short)(param & 0x0F);
+			NewVolume -= param & 0x0F;
 		chn->Flags |= CHN_FASTVOLRAMP;
 		if (NewVolume < 0)
 			NewVolume = 0;
 		else if (NewVolume > 64)
 			NewVolume = 64;
-		chn->Volume = (BYTE)NewVolume;
+		chn->Volume = NewVolume & 0xFF;
 	}
 }
 
@@ -903,8 +866,6 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 			BYTE note = chn->RowNote;
 			if (sample != 0)
 				chn->NewSamp = sample;
-			if (chn->Note != 0xFF && note == 0xFF)
-				GetDecayInfo(chn);
 			if (note == 0xFF && sample != 0)
 				chn->Volume = p_Mixer->Samp[sample - 1].Volume;
 			chn->NewNote = note;
@@ -1043,7 +1004,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				}
 				case CMD_SPEED:
 				{
-					/* Speed rules (as per http://www.aes.id.au/modformat.html
+					/* Speed rules (as per http://www.aes.id.au/modformat.html)
 					 * NewSpeed == 0 => NewSpeed = 1
 					 * NewSpeed <= 32 => Speed = NewSpeed (TPR)
 					 * NewSpeed > 32 => Tempo = NewSpeed (BPM)
@@ -1153,8 +1114,8 @@ BOOL ReadNote(MixerState *p_Mixer)
  		chn->Increment.iValue = 0;
 		if (chn->Period != 0 && chn->Length != 0)
 		{
-			//UINT inc;
-			int inc, vol = chn->Volume, period;
+			int inc, period;
+			short vol = chn->Volume;
 			if ((chn->Flags & CHN_TREMOLO) != 0)
 			{
 				BYTE TremoloPos = chn->TremoloPos;
@@ -1237,10 +1198,10 @@ BOOL ReadNote(MixerState *p_Mixer)
 			if ((chn->Flags & CHN_VOLUMERAMP) != 0 && (chn->LeftVol != chn->NewLeftVol || chn->RightVol != chn->NewRightVol))
 			{
 				int LeftDelta, RightDelta;
-				UINT RampLength = 42;
+				UINT RampLength = 1;
 				// Calculate Volume deltas
-				LeftDelta = (chn->NewLeftVol - chn->LeftVol);
-				RightDelta = (chn->NewRightVol - chn->RightVol);
+				LeftDelta = chn->NewLeftVol - chn->LeftVol;
+				RightDelta = chn->NewRightVol - chn->RightVol;
 				// Check if we need to calculate the RampLength, and do so if need be
 				if ((chn->LeftVol | chn->RightVol) != 0 && (chn->NewLeftVol | chn->NewRightVol) != 0 && (chn->Flags & CHN_FASTVOLRAMP) != 0)
 				{
@@ -1248,8 +1209,8 @@ BOOL ReadNote(MixerState *p_Mixer)
 					// Clipping:
 					if (RampLength > 512)
 						RampLength = 512;
-					else if (RampLength < 42)
-						RampLength = 42;
+					else if (RampLength < 1)
+						RampLength = 1;
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
 				chn->LeftRamp = LeftDelta / RampLength;
@@ -1391,78 +1352,70 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT SampleSize)
 {
 	if (Read != 0)
-		memset(Buffer, (p_Mixer->MixBitsPerSample == 8 ? 0x80 : 0), Read * SampleSize);
+		memset(Buffer, 0, Read * SampleSize);
 	return Max - Read;
 }
 
-#define SAMPLE_LOOP(vol_val) \
-	int Increment = Decay->Increment.iValue; \
-	do \
-	{ \
-		int vol = (vol_val); \
-		/* Ramp */ \
-		if (RampLeftVol > 0) \
-			RampLeftVol -= 1; \
-		if (RampRightVol > 0) \
-			RampRightVol -= 1; \
-		/* Generate audio */ \
-		buff[0] += vol * (RampRightVol << 4); \
-		buff[1] += vol * (RampLeftVol << 4); \
-		/* Move position */ \
-		buff += 2; \
-		ADJUST_POS(vol_val) \
-		samples--; \
-	} \
-	while (samples != 0 && (RampRightVol != 0 || RampLeftVol != 0) EXTRA_CONDITION)
-
-inline void DoDecay(Channel *chn, int *MixBuff, UINT samples)
+inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, UINT samples)
 {
-	SampleDecay *Decay = &chn->Decay;
-	// If we've still got decaying to do
-	if ((Decay->LeftVol | Decay->RightVol) != 0)
+	int DCOffsL = *p_DCOffsL;
+	int DCOffsR = *p_DCOffsR;
+	while (samples != 0 && (DCOffsR | DCOffsL) != 0)
 	{
-		int *buff = MixBuff;
-		int RampLeftVol = Decay->LeftVol;
-		int RampRightVol = Decay->RightVol;
-		// Restore audio generation to where it was last
-		if (Decay->FinalSample == 0)
+		int OffsL = -DCOffsL;
+		int OffsR = -DCOffsR;
+#ifdef _WINDOWS
+		__asm
 		{
-			UINT Pos = Decay->PosLo;
-			signed char *p = (signed char *)(Decay->Sample + Decay->Pos);
-#define ADJUST_POS(vol_val) \
-	Pos += Increment; \
-	/* Looping? Ok, move us back to where we need to be in the loop */ \
-	if ((Pos >> 16) >= Decay->LoopEnd) \
-		Pos -= (Decay->LoopEnd - Decay->LoopStart) << 16; \
-	else \
-	{ \
-		Pos -= Increment; \
-		Decay->FinalSample = (vol_val); \
-	}
-#define EXTRA_CONDITION && Decay->FinalSample == 0
-			SAMPLE_LOOP(p[Pos >> 16] << 8);
-#undef EXTRA_CONDITION
-#undef ADJUST_POS
-			// Save our state
-			Decay->Pos += Pos >> 16;
-			Decay->PosLo = Pos & 0xFFFF;
+			sar OffsL, 31
+			sar OffsR, 31
 		}
-		if (Decay->FinalSample != 0)
+#else
+		asm(".intel_syntax noprefix\n"
+			"\tsar %%eax, 31\n"
+			"\tsar %%ebx, 31\n"
+			".att_syntax\n" : [OffsL] "=a" (OffsL), [OffsR] "=b" (OffsR) :
+				"a" (OffsL), "b" (OffsR) : );
+#endif
+		OffsL &= 0xFF;
+		OffsR &= 0xFF;
+		OffsL += DCOffsL;
+		OffsR += DCOffsR;
+#ifdef _WINDOWS
+		__asm
 		{
-#define ADJUST_POS(vol_val)
-#define EXTRA_CONDITION
-			SAMPLE_LOOP(Decay->FinalSample);
-#undef EXTRA_CONDITION
-#undef ADJUST_POS
+			sar OffsL, 8
+			sar OffsR, 8
 		}
-		Decay->LeftVol = RampLeftVol;
-		Decay->RightVol = RampRightVol;
+#else
+		asm(".intel_syntax noprefix\n"
+			"\tsar %%eax, 8\n"
+			"\tsar %%ebx, 8\n"
+			".att_syntax\n" : [OffsL] "=a" (OffsL), [OffsR] "=b" (OffsR) :
+				"a" (OffsL), "b" (OffsR) : );
+#endif
+		DCOffsL -= OffsL;
+		DCOffsR -= OffsR;
+		buff[0] += DCOffsR;
+		buff[1] += DCOffsL;
+		buff += 2;
+		samples--;
 	}
-	else
-		Decay->Sample = NULL;
+	*p_DCOffsL = DCOffsL;
+	*p_DCOffsR = DCOffsR;
 }
 
-#undef SAMPLE_LOOP
+inline void DCFixingFill(int *MixBuffer, UINT samples, MixerState *p_Mixer)
+{
+	int *buff = MixBuffer;
+	for (UINT i = 0; i < samples; i++)
+	{
+		buff[0] = 0;
+		buff[1] = 0;
+		buff += 2;
+	}
+	FixDCOffset(&p_Mixer->DCOffsL, &p_Mixer->DCOffsR, MixBuffer, samples);
+}
 
 void CreateStereoMix(MixerState *p_Mixer, UINT count)
 {
@@ -1478,12 +1431,6 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
 		if (chn->Sample == NULL)
 			continue;
-//		if (p_Mixer->ChnMix[i] == 3)
-	//		printf("%X.%04X, %X.%04X : %X, %X : %u\n", chn->Increment.Value.Hi, chn->Increment.Value.Lo, chn->Pos, chn->PosLo,
-		//		samples, chn->Length, chn->Period);
-			//printf("%u, %u, %u, %u, %u, %i\n", chn->Note, chn->FineTune, chn->Flags, chn->Period, chn->Period >> 2, chn->Increment.iValue);
-/*		else
-			continue;*/
 		do
 		{
 			rampSamples = samples;
@@ -1495,6 +1442,10 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			SampleCount = GetSampleCount(chn, rampSamples);
 			if (SampleCount <= 0)
 			{
+				FixDCOffset(&chn->DCOffsL, &chn->DCOffsR, buff, samples);
+				p_Mixer->DCOffsL += chn->DCOffsL;
+				p_Mixer->DCOffsR += chn->DCOffsR;
+				chn->DCOffsL = chn->DCOffsR = 0;
 				samples = 0;
 				continue;
 			}
@@ -1504,9 +1455,11 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			{
 				MixInterface MixFunc = MixFunctionTable[Flags | (chn->RampLength != 0 ? MIX_RAMP : 0)];
 				int *BuffMax = buff + (SampleCount * 2);
-//				if (p_Mixer->ChnMix[i] == 3)
-//					printf("Samples used: %u, Pos: %hu.%hu bytes\n", SampleCount * 2, chn->Pos, chn->PosLo);
+				chn->DCOffsR = -((BuffMax - 2)[0]);
+				chn->DCOffsL = -((BuffMax - 2)[1]);
 				MixFunc(chn, buff, BuffMax);
+				chn->DCOffsR += ((BuffMax - 2)[0]);
+				chn->DCOffsL += ((BuffMax - 2)[1]);
 				buff = BuffMax;
 			}
 			samples -= SampleCount;
@@ -1524,13 +1477,6 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 			}
 		}
 		while (samples > 0);
-	}
-	// Apply decay
-	for (i = 0; i < p_Mixer->Channels; i++)
-	{
-		Channel * const chn = &p_Mixer->Chns[i];
-		if (chn->Decay.Sample != NULL && chn->Decay.LoopEnd != 0)
-			DoDecay(chn, p_Mixer->MixBuffer, count);
 	}
 }
 
@@ -1570,8 +1516,7 @@ long Read(void *Mixer, BYTE *Buffer, UINT BuffLen)
 			break;
 		SampleCount = Count;
 		// Reset the sound buffer.
-		// XXX: This may be wrong relative to how MPT does this?
-		memset(MixBuffer, 0x00, sizeof(int) * MIXBUFFERSIZE * 4);
+		DCFixingFill(MixBuffer, SampleCount, p_Mixer);
 		// MixOutChannels can only be one or two
 		if (p_Mixer->MixOutChannels == 2)
 		{
