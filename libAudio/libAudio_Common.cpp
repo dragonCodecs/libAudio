@@ -157,8 +157,6 @@ int Playback::getBufferFormat()
  */
 Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
-//	float orient[6] = {0, 0, -1, 0, 1, 0};
-
 	if (p_FI == NULL)
 		return;
 	if (DataCallback == NULL)
