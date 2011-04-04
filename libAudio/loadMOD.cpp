@@ -122,12 +122,10 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 		p_MF->p_Header->RestartPos = 127;
 
 	// Count the number of patterns present
-	for (i = 0, maxPattern = 0; i < p_MF->p_Header->nOrders; i++)
+	for (i = 0, maxPattern = 0; i < 128; i++)
 	{
 		if (p_MF->p_Header->Orders[i] < 64)
-		{
 			maxPattern = max(maxPattern, p_MF->p_Header->Orders[i]);
-		}
 	}
 	p_MF->nPatterns = maxPattern + 1;
 	p_MF->p_Patterns = (MODPattern *)malloc(sizeof(MODPattern) * p_MF->nPatterns);
@@ -161,7 +159,8 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 		{
 			p_MF->p_PCM[i] = (BYTE *)malloc(realLength);
 			fread(p_MF->p_PCM[i], realLength, 1, f_MOD);
-			if (strncasecmp((char *)p_MF->p_PCM[i], "ADPCM", 5) == 0)
+			p_MF->p_PCM[i][0] = p_MF->p_PCM[i][1] = 0;
+			if (strncasecmp((char *)p_MF->p_PCM[i] + 2, "ADPCM", 5) == 0)
 			{
 				UINT j;
 				BYTE *compressionTable = p_MF->p_PCM[i];
