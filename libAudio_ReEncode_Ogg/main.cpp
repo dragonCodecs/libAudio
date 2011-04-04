@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 		ret = Audio_FillBuffer(AudioFileIn, Buffer, 8192);
 		Audio_WriteBuffer(AudioFileOut, Buffer, ret, Type);
 		loops++;
-		fprintf(stdout, "%fs done\r", ((double)(8192 * loops)) / (double)p_FI->BitRate);
+		fprintf(stdout, "%fs done\r", ((double)((8192 / (p_FI->Channels * (p_FI->BitsPerSample / 8.0))) * loops)) / (double)p_FI->BitRate);
 		fflush(stdout);
 	}
 	fprintf(stdout, "\nTranscode complete!\n");

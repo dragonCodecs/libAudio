@@ -7,7 +7,7 @@ GCC_FLAGS =
 endif
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags libAudio)
-CFLAGS = -c $(EXTRA_CFLAGS) -o $*.o
+CFLAGS = -c $(EXTRA_CFLAGS) -o $@
 LIBS = $(shell pkg-config --libs libAudio) -lm
 LFLAGS = $(O) $(LIBS) -o $(EXE)
 CHMOD = chmod 0755
@@ -21,7 +21,6 @@ default: all
 all: $(EXE)
 
 libAudio_TestApp.out: $(O)
-	rm -f $(EXE)
 	$(CC) $(LFLAGS)
 	$(CHMOD) $(EXE)
 	$(STRIP) $(EXE)
@@ -33,7 +32,7 @@ clean:
 	rm -f *.o *.out *~
 
 .cpp.o:
-	$(CC) $(CFLAGS) $*.cpp
+	$(CC) $(CFLAGS) $<
 
 .PHONY: .cpp.o clean install all default
 
