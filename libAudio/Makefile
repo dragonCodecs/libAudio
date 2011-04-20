@@ -7,7 +7,7 @@ GCC_FLAGS =
 endif
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack)
-CFLAGS = -c $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
+CFLAGS = -c -O2 $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
 EXTRA_LIBS = $(shell pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack)
 LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)

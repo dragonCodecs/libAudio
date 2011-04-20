@@ -7,7 +7,7 @@ GCC_FLAGS =
 endif
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags libAudio)
-CFLAGS = -c $(EXTRA_CFLAGS) -o $*.o
+CFLAGS = -c -O2 $(EXTRA_CFLAGS) -o $*.o
 LIBS = $(shell pkg-config --libs libAudio)
 LFLAGS = $(O) $(LIBS) -o $(EXE)
 CHMOD = chmod 0755
