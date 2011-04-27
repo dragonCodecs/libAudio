@@ -37,9 +37,8 @@ typedef struct FileInfo
 	#endif
 #endif
 
-#ifndef _WINDOWS
 #include <inttypes.h>
-
+#ifndef _WINDOWS
 #ifndef __int64
 #define __int64 int64_t
 #endif
