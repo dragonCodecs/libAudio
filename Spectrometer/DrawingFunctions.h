@@ -1,7 +1,13 @@
 #ifndef __DRAWINGFUNCTIONS_H__
 #define __DRAWINGFUNCTIONS_H__ 1
 
-typedef void (__cdecl *DrawFn)(short *, int);
+#ifdef _WINDOWS
+#define __CDECL__ __cdecl
+#else
+#define __CDECL__
+#endif
+
+typedef void (__CDECL__ *DrawFn)(short *, int);
 
 #define nFunctions 4;
 

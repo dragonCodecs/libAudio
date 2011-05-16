@@ -217,6 +217,10 @@
 				RelativePath=".\Spectrometer.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\VUMeter.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -237,6 +241,10 @@
 			</File>
 			<File
 				RelativePath=".\Playback.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VUMeter.h"
 				>
 			</File>
 		</Filter>

@@ -1,13 +1,51 @@
-#include <Windows.h>
+#ifdef _WINDOWS
+#include <windows.h>
+#define _usleep _sleep
+// The following hack is because M$ have a nasty habit of leaving this function out the C RunTime which is bad.
+inline int round(double a)
+{
+	int b = (int)a;
+	double c = a - (double)b;
+	if (c >= 0.5)
+		return b + 1;
+	else if (c <= -0.5)
+		return b - 1;
+	else
+		return b;
+}
+#else
+#include <ctype.h>
+#include <time.h>
+#define MSECS_IN_SEC 1000
+#define NSECS_IN_MSEC 1000000
+#define _usleep(milisec) \
+	{\
+		struct timespec req = {milisec / MSECS_IN_SEC, (milisec % MSECS_IN_SEC) * NSECS_IN_MSEC}; \
+		nanosleep(&req, NULL); \
+	}
+#include <inttypes.h>
+#endif
 #include <GTK++.h>
 #include <libAudio.h>
 #include "Playback.h"
 #include "AboutBox.h"
 #include <pthread.h>
 #include "DrawingFunctions.h"
-#include <windows.h>
-#include <GL/GL.h>
-#include <GL/GLU.h>
+#include "VUMeter.h"
+#if defined(__MACOSX__)
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+#elif defined(__MACOS__)
+	#include <gl.h>
+	#include <glu.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+#endif
+#ifdef __linux__
+#include <sys/stat.h>
+#endif
+#include <math.h>
 
 class Spectrometer;
 
@@ -19,6 +57,10 @@ pthread_attr_t ThreadAttr;
 Spectrometer *Interface;
 pthread_mutex_t DrawMutex;
 pthread_mutexattr_t MutexAttr;
+#ifdef __linux__
+char **files;
+uint32_t fileCount;
+#endif
 
 class Spectrometer
 {
@@ -27,17 +69,34 @@ private:
 	GTKButton *btnOpen, *btnPlay, *btnPause, *btnNext;
 	GTKGLDrawingArea *Spectr;
 	short *Data;
-	int lenData, fnNo;
+	uint32_t lenData, fnNo;
 	GdkWindow *Surface;
 	DrawFn Function;
+#ifdef __linux__
+	uint32_t fileNo;
+#endif
+	bool FirstBuffer, PostValues;
+	double VolL, VolR;
+	VUMeter *LeftMeter, *RightMeter;
 
 	static void btnOpen_Click(GtkWidget *widget, void *data)
 	{
 		Spectrometer *self = (Spectrometer *)data;
+#ifndef __linux__
 		std::vector<const char *> FileTypes, FileTypeNames;
 		FileTypes.push_back("*.*");
 		FileTypeNames.push_back("Any file type");
 		char *FN = self->hMainWnd->FileOpen("Please select a file to open..", FileTypes, FileTypeNames);
+#else
+		char *FN;
+		if (self->fileNo < fileCount)
+		{
+			FN = files[self->fileNo];
+			self->fileNo++;
+		}
+		else
+			FN = NULL;
+#endif
 		if (FN != NULL)
 		{
 			self->Data = NULL;
@@ -68,7 +127,7 @@ private:
 			if (p_AudioFile == NULL)
 			{
 				GTKMessageBox *hMsgBox = new GTKMessageBox((GtkWindow *)self->hMainWnd->GetWindow(), GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
-					"Error, the file you requested could not be used for playback, please try again with another.", "libAudio Spectrum");
+					"Error, the file you requested could not be used for playback, please try again with another.", "libAudio Spectrometer");
 				hMsgBox->Run();
 				delete hMsgBox;
 				g_free(FN);
@@ -78,31 +137,29 @@ private:
 			p_FI = Audio_GetFileInfo(p_AudioFile);
 			Buff = new BYTE[8192];
 			p_Playback = new Playback(p_FI, Callback, Buff, 8192, p_AudioFile);
+			self->LeftMeter->ResetMeter();
+			self->RightMeter->ResetMeter();
 
 			self->btnPause->Disable();
 			self->btnPlay->Enable();
 		}
+#ifndef __linux__
 		g_free(FN);
 		FN = NULL;
+#endif
 	}
 
 	static BOOL Draw(GtkWidget *widget, GdkEventExpose *event, void *data)
 	{
 		Spectrometer *self = (Spectrometer *)data;
 		pthread_mutex_lock(&DrawMutex);
-		if (self->Data == NULL)
-		{
-			self->Spectr->glBegin();
-			self->Spectr->glSwapBuffers();
-			self->Spectr->glEnd();
-			pthread_mutex_unlock(&DrawMutex);
-			return TRUE;
-		}
-
 		self->Spectr->glBegin();
 
-		if (self->Function != NULL)
+		if (self->Data != NULL && self->Function != NULL)
+		{
 			self->Function(self->Data, self->lenData);
+			self->UpdateVUs();
+		}
 
 		self->Spectr->glSwapBuffers();
 		self->Spectr->glEnd();
@@ -117,17 +174,17 @@ private:
 		static GdkRectangle rect = {0, 0, 456, 214};
 		pthread_mutex_lock(&DrawMutex);
 		ret = Audio_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
-		if (ret <= 0)
+
+		if (ret > 0)
 		{
-			pthread_mutex_unlock(&DrawMutex);
-			return ret;
+			Interface->Data = (short *)OutBuffer;
+			Interface->lenData = ret;
+#ifndef __linux__
+			gdk_window_invalidate_rect(Interface->Surface, &rect, FALSE);
+#endif
 		}
 
-		Interface->Data = (short *)OutBuffer;
-		Interface->lenData = ret;
-		gdk_window_invalidate_rect(Interface->Surface, &rect, FALSE);
 		pthread_mutex_unlock(&DrawMutex);
-
 		return ret;
 	}
 
@@ -136,7 +193,9 @@ private:
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
+		Interface->Spectr->AddTimeout();
 		p_Playback->Play();
+		Interface->Spectr->RemoveTimeout();
 		return 0;
 	}
 
@@ -148,7 +207,7 @@ private:
 		pthread_attr_setscope(&ThreadAttr, PTHREAD_SCOPE_PROCESS);
 		pthread_create(&SoundThread, &ThreadAttr, PlaybackThread, NULL);
 		pthread_attr_destroy(&ThreadAttr);
-		Sleep(0);
+		_usleep(10);
 		self->btnPlay->Disable();
 		self->btnPause->Enable();
 	}
@@ -182,51 +241,168 @@ private:
 		delete about;
 	}
 
-public:
-	Spectrometer()
+	void UpdateVUs()
 	{
-		GTKFixed *fixed;
+		if (p_FI->Channels == 1)
+			UpdateMonoVUs();
+		else
+			UpdateStereoVUs();
+		if (PostValues == false)
+			PostValues = true;
+		else
+		{
+			LeftMeter->SetValue(VolL);
+			RightMeter->SetValue(VolR);
+			if (p_FI->Channels != 1)
+				PostValues = false;
+		}
+	}
+
+	void UpdateMonoVUs()
+	{
+		uint32_t i;
+		double Vol;
+		if (p_FI->BitsPerSample == 8)
+		{
+			signed char *Data = (signed char *)this->Data;
+			if (FirstBuffer == true)
+			{
+				Vol = Data[0] * Data[0];
+				FirstBuffer = false;
+			}
+			else
+				Vol = VolL * VolL;
+			for (i = 0; i < lenData; i++)
+			{
+				Vol += (Data[i] * Data[i]) << 8;
+				Vol /= 2;
+			}
+		}
+		else
+		{
+			if (FirstBuffer == true)
+			{
+				Vol = Data[0] * Data[0];
+				FirstBuffer = false;
+			}
+			else
+				Vol = VolL * VolL;
+			for (i = 0; i < lenData / 2; i++)
+			{
+				Vol += Data[i] * Data[i];
+				Vol /= 2;
+			}
+		}
+		VolR = VolL = round(sqrt(Vol));
+	}
+
+	void UpdateStereoVUs()
+	{
+		uint32_t i;
+		double L, R;
+		if (p_FI->BitsPerSample == 8)
+		{
+			signed char *Data = (signed char *)this->Data;
+			if (FirstBuffer == true)
+			{
+				L = Data[0] * Data[0];
+				R = Data[1] * Data[1];
+				FirstBuffer = false;
+			}
+			else
+			{
+				L = VolL * VolL;
+				R = VolR * VolR;
+			}
+			for (i = 0; i < lenData / 2; i++)
+			{
+				uint32_t j = i * 2;
+				L += (Data[j + 0] * Data[j + 0]) << 8;
+				R += (Data[j + 1] * Data[j + 1]) << 8;
+				L /= 2;
+				R /= 2;
+			}
+		}
+		else
+		{
+			if (FirstBuffer == true)
+			{
+				L = Data[0] * Data[0];
+				R = Data[1] * Data[1];
+				FirstBuffer = false;
+			}
+			else
+			{
+				L = VolL * VolL;
+				R = VolR * VolR;
+			}
+			for (i = 0; i < lenData / 4; i++)
+			{
+				uint32_t j = i * 2;
+				L += (Data[j + 0] * Data[j + 0]);
+				R += (Data[j + 1] * Data[j + 1]);
+				L /= 2;
+				R /= 2;
+			}
+		}
+		VolL = sqrt(L);
+		VolR = sqrt(R);
+	}
+
+public:
+	Spectrometer() : FirstBuffer(true), PostValues(false), VolL(0), VolR(0), Data(NULL), LeftMeter(new VUMeter()), RightMeter(new VUMeter())
+	{
 		GTKFrame *frame;
 		GTKButton *btnAbout;
+		GTKHBox *horBox;
+		GTKVBox *verBox;
 
 		hMainWnd = new GTKWindow(GTK_WINDOW_TOPLEVEL);
 		hMainWnd->SetLocation(GTK_WIN_POS_CENTER);
-		hMainWnd->SetSize(450, 300);
 		hMainWnd->SetTitle("libAudio Spectrometer");
 		hMainWnd->SetResizable(FALSE);
-		fixed = new GTKFixed(hMainWnd, 500, 300);
+		hMainWnd->SetBorder(7);
+		verBox = new GTKVBox(FALSE, 7);
+		horBox = new GTKHBox(FALSE, 7);
+		horBox->AddChild(LeftMeter->GetWidget());
+		horBox->AddChild(verBox);
+		horBox->AddChild(RightMeter->GetWidget());
+		hMainWnd->AddChild(horBox);
+		horBox = new GTKHBox(FALSE, 7);
 		btnOpen = new GTKButton("_Open file");
-		btnOpen->SetSize(100, 25);
-		btnOpen->SetOnClicked(btnOpen_Click, this);
-		fixed->SetLocation(btnOpen, 16, 259);
+		btnOpen->SetOnClicked((void *)btnOpen_Click, this);
+		horBox->AddChild(btnOpen);
 		btnPlay = new GTKButton("_Play");
-		btnPlay->SetSize(75, 25);
 		btnPlay->Disable();
-		btnPlay->SetOnClicked(btnPlay_Click, this);
-		fixed->SetLocation(btnPlay, 124, 259);
+		btnPlay->SetOnClicked((void *)btnPlay_Click, this);
+		horBox->AddChild(btnPlay);
 		btnPause = new GTKButton("_Pause");
-		btnPause->SetSize(75, 25);
 		btnPause->Disable();
-		btnPause->SetOnClicked(btnPause_Click, this);
-		fixed->SetLocation(btnPause, 207, 259);
+		btnPause->SetOnClicked((void *)btnPause_Click, this);
+		horBox->AddChild(btnPause);
 		btnNext = new GTKButton("_Next Visualisation");
-		btnNext->SetSize(125, 25);
-		btnNext->SetOnClicked(btnNext_Click, this);
-		fixed->SetLocation(btnNext, 290, 259);
+		btnNext->SetOnClicked((void *)btnNext_Click, this);
+		horBox->AddChild(btnNext);
 		btnAbout = new GTKButton("_About");
-		btnAbout->SetSize(60, 25);
-		btnAbout->SetOnClicked(btnAbout_Click, this);
-		fixed->SetLocation(btnAbout, 423, 259);
-		frame = new GTKFrame(fixed, 468, 235, 16, 16, "Visualisation");
+		btnAbout->SetOnClicked((void *)btnAbout_Click, this);
+		horBox->AddChild(btnAbout);
+		frame = new GTKFrame("Visualisation");
+		verBox->AddChild(frame);
+		verBox->AddChild(horBox);
+		horBox = new GTKHBox(FALSE);
+		horBox->SetBorder(2);
+		frame->AddChild(horBox);
 		Spectr = new GTKGLDrawingArea(456, 214, GLBase::MakeStandardConfig());
-		Spectr->SetHandler("expose_event", Draw, this);
-		frame->SetLocation((GTKWidget *)Spectr, 4, 2);
+		Spectr->SetHandler("expose_event", (void *)Draw, this);
+		horBox->AddChild(Spectr);
 
 		p_AudioFile = NULL;
 		Buff = NULL;
 		p_Playback = NULL;
 		ExternalPlayback = TRUE;
-		Data = NULL;
+#ifdef __linux__
+		fileNo = 0;
+#endif
 
 		pthread_mutexattr_init(&MutexAttr);
 		pthread_mutexattr_settype(&MutexAttr, PTHREAD_MUTEX_ERRORCHECK);
@@ -238,7 +414,7 @@ public:
 
 	~Spectrometer()
 	{
-		delete hMainWnd;
+		//delete hMainWnd;
 		Spectr = NULL;
 		Surface = NULL;
 		btnPause = NULL;
@@ -251,7 +427,7 @@ public:
 	{
 		hMainWnd->ShowWindow();
 
-		Surface = ((GTKWidget *)Interface->Spectr)->GetWidget()->window;
+		Surface = Interface->Spectr->GetWidget()->window;
 		g_object_ref(G_OBJECT(Surface));
 		Spectr->glBegin();
 
@@ -282,9 +458,50 @@ public:
 
 		hMainWnd->DoMessageLoop();
 
+		if (p_Playback != NULL)
+		{
+			if (p_Playback->IsPlaying() == true)
+			{
+				p_Playback->Stop();
+				pthread_mutex_lock(&DrawMutex);
+				pthread_cancel(SoundThread);
+				pthread_mutex_unlock(&DrawMutex);
+			}
+			delete p_Playback;
+			p_Playback = NULL;
+		}
+		if (p_AudioFile != NULL)
+		{
+			Audio_CloseFileR(p_AudioFile);
+			p_AudioFile = NULL;
+		}
+
 		g_object_unref(Surface);
 	}
 };
+
+#ifdef __linux__
+#define reallocFiles() \
+	fileCount++; \
+	files = (char **)realloc(files, sizeof(char *) * fileCount)
+
+void findFiles(int argc, char **argv)
+{
+	fileCount = 0;
+	files = NULL;
+	for (int i = 1; i < argc; i++)
+	{
+		struct stat s;
+		if (stat(argv[i], &s) == 0)
+		{
+			reallocFiles();
+			files[fileCount - 1] = argv[i];
+		}
+	}
+}
+
+#undef reallocFiles
+#endif
 
 #if defined(_WINDOWS) && !defined(_CONSOLE)
 #define argc __argc
@@ -297,7 +514,17 @@ int main(int argc, char **argv)
 {
 	GTKGL::GTKInit(argc, argv);
 
+#ifdef __linux__
+	findFiles(argc, argv);
+	if (fileCount == 0)
+		return 1;
+#endif
 	Interface = new Spectrometer();
 	Interface->Run();
 	delete Interface;
+#ifdef __linux__
+	free(files);
+#endif
+
+	return 0;
 }

@@ -1,32 +1,47 @@
 #define __DRAWINGFUNCTIONS_CPP__ 1
+#ifdef _WINDOWS
 #include <windows.h>
-#include <GL/GL.h>
-#include <GL/GLU.h>
+#endif
+#if defined(__MACOSX__)
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+#elif defined(__MACOS__)
+	#include <gl.h>
+	#include <glu.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+#endif
 #define _USE_MATH_DEFINES 1
 #include <math.h>
 #include "FFT.h"
 #include "DrawingFunctions.h"
 
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 void SideBySideHor_Osc(short *Data, int lenData)
 {
-	int m, n, BPS, Channel, o, width;
+	int m, n, BPS, Channel, o, width, Channels;
 
 	// Work  out how many samples there are per channel in the output buffer.
+	Channels = p_FI->Channels;
 	BPS = (p_FI->BitsPerSample / 8);
-	m = (lenData / p_FI->Channels) / BPS;
+	m = (lenData / Channels) / BPS;
 
-	width = ((m * p_FI->Channels) + p_FI->Channels) - 1;
+	width = ((m * Channels) + Channels) - 1;
 	glLoadIdentity();
 	glOrtho(0.0, (double)width, -(0x7FFF), 0x7FFF, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	o = 0;
-	for (Channel = 0; Channel < p_FI->Channels; Channel++)
+	for (Channel = 0; Channel < Channels; Channel++)
 	{
 		glBegin(GL_LINE_STRIP);
 			glColor4f(1.0, 1.0, 1.0, 1.0);
 		for (n = 0; n < m; n++, o++)
-			glVertex2d(o, Data[n * p_FI->Channels + Channel]);
+			glVertex2d(o, Data[n * Channels + Channel]);
 		glEnd();
 		if (o < width)
 		{
@@ -42,21 +57,22 @@ void SideBySideHor_Osc(short *Data, int lenData)
 
 void SideBySideVer_Osc(short *Data, int lenData)
 {
-	int m, n, BPS, Channel;
+	int m, n, BPS, Channel, Channels;
 
+	Channels = p_FI->Channels;
 	BPS = (p_FI->BitsPerSample / 8);
 	m = (lenData / p_FI->Channels) / BPS;
 
 	glLoadIdentity();
-	glOrtho(0.0, m, 0, 0xFFFE * p_FI->Channels, 0.0, 1.0);
+	glOrtho(0.0, m, 0, 0xFFFE * Channels, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	for (Channel = 0; Channel < p_FI->Channels; Channel++)
+	for (Channel = 0; Channel < Channels; Channel++)
 	{
 		glBegin(GL_LINE_STRIP);
 			glColor4f(1.0, 1.0, 1.0, 1.0);
 		for (n = 0; n < m; n++)
-			glVertex2d(n, Data[n * p_FI->Channels + Channel] + 0x7FFF + (0xFFFE * Channel));
+			glVertex2d(n, Data[n * Channels + Channel] + 0x7FFF + (0xFFFE * Channel));
 		glEnd();
 	}
 }
@@ -65,23 +81,24 @@ void SideBySideVer_Spe(short *Data, int lenData)
 {
 	static COMPLEX points[4096], opoints[4096];
 	static double log128 = log(128.0);
-	int m, n, BPS, Channel;
+	int m, n, BPS, Channel, Channels;
 	double m_d;
 
+	Channels = p_FI->Channels;
 	BPS = (p_FI->BitsPerSample / 8);
-	m = (lenData / p_FI->Channels) / BPS;
+	m = (lenData / Channels) / BPS;
 	m_d = (double)m / 2;
 
 	glLoadIdentity();
 	glOrtho(0.0, m_d, 0.0, log128 * p_FI->Channels, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	for (Channel = 0; Channel < p_FI->Channels; Channel++)
+	for (Channel = 0; Channel < Channels; Channel++)
 	{
 		double base = log128 * Channel;
 		for (n = 0; n < m; n++)
 		{
-			points[n].re = Data[n * p_FI->Channels + Channel];
+			points[n].re = Data[n * Channels + Channel];
 			points[n].im = 0;
 		}
 
@@ -104,24 +121,25 @@ void SideBySideVer_logSpe(short *Data, int lenData)
 {
 	static COMPLEX points[4096], opoints[4096];
 	static double log128 = log(128.0);
-	int m, n, BPS, Channel;
+	int m, n, BPS, Channel, Channels;
 	double m_d, logm_d;
 
+	Channels = p_FI->Channels;
 	BPS = (p_FI->BitsPerSample / 8);
-	m = (lenData / p_FI->Channels) / BPS;
+	m = (lenData / Channels) / BPS;
 	m_d = (double)m / 2;
 	logm_d = log(m_d);
 
 	glLoadIdentity();
-	glOrtho(0.0, logm_d, 0.0, log128 * p_FI->Channels, 0.0, 1.0);
+	glOrtho(0.0, logm_d, 0.0, log128 * Channels, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	for (Channel = 0; Channel < p_FI->Channels; Channel++)
+	for (Channel = 0; Channel < Channels; Channel++)
 	{
 		double base = log128 * Channel;
 		for (n = 0; n < m; n++)
 		{
-			points[n].re = Data[n * p_FI->Channels + Channel];
+			points[n].re = Data[n * Channels + Channel];
 			points[n].im = 0;
 		}
 
