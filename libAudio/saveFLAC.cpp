@@ -52,7 +52,7 @@ typedef struct _FLAC_Encoder_Context
  *   frame being encoded
  * @param p_FLACFile Our own internal context pointer which holds the file to write to
  */
-FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *p_enc, const BYTE *buffer, size_t nBytes, UINT nSamp, UINT nCurrFrame, void *p_FLACFile)
+FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *p_enc, const uint8_t *buffer, size_t nBytes, uint32_t nSamp, uint32_t nCurrFrame, void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 	if (buffer == NULL)
@@ -72,7 +72,7 @@ FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *p_enc, const 
  * @param offset The offset through the file to which to seek to
  * @param p_FLACFile Our own internal context pointer which holds the file to seek through
  */
-FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *p_enc, UINT64 offset, void *p_FLACFile)
+FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *p_enc, uint64_t offset, void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 
@@ -91,7 +91,7 @@ FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *p_enc, UINT64 o
  * @param p_FLACFile Our own internal context pointer which holds the file to get
  *   the write pointer position of
  */
-FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *p_enc, UINT64 *offset, void *p_FLACFile)
+FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *p_enc, uint64_t *offset, void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 	long off;
@@ -164,7 +164,7 @@ void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 	p_FF->p_meta[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
 	for (int i = 0; i < p_FI->nOtherComments; i++)
 	{
-		entry.entry = (BYTE *)p_FI->OtherComments[i];
+		entry.entry = (uint8_t *)p_FI->OtherComments[i];
 		entry.length = strlen(p_FI->OtherComments[i]);
 		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, true);
 	}
@@ -200,7 +200,7 @@ void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c FLAC_SetFileInfo() has been called beforehand
  */
-long FLAC_WriteBuffer(void *p_FLACFile, BYTE *InBuffer, int nInBufferLen)
+long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
 {
 	if (nInBufferLen <= 0)
 		return nInBufferLen;

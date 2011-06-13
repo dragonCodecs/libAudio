@@ -101,7 +101,7 @@ short *DownSample2x;
 signed short *WFIRlutTab;
 BOOL InitTables = FALSE;
 double WFIRCutoff = 0.99;
-BYTE WFIRType = WFIR_KAISER4T;
+uint8_t WFIRType = WFIR_KAISER4T;
 
 float WFIRCoef(int Cnr, float Offs, float Cut, int Width, int Type)
 {
@@ -283,8 +283,8 @@ void InitialiseTables()
 
 #define BEGIN_RAMPMIX_INTERFACE(func) \
 	BEGIN_MIX_INTERFACE(func) \
-		UINT RampRightVol = chn->RightVol; \
-		UINT RampLeftVol = chn->LeftVol;
+		uint32_t RampRightVol = chn->RightVol; \
+		uint32_t RampLeftVol = chn->LeftVol;
 
 #define END_RAMPMIX_INTERFACE() \
 		SNDMIX_ENDSAMPLELOOP \

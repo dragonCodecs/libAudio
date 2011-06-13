@@ -125,7 +125,7 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	vorbis_analysis_init(p_VF->vds, p_VF->vi);
 	vorbis_block_init(p_VF->vds, p_VF->vb);
 
-	srand((DWORD)time(NULL));
+	srand((uint32_t)time(NULL));
 	ogg_stream_init(p_VF->oss, rand());
 
 	if (p_FI->Title != NULL)
@@ -163,7 +163,7 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c OggVorbis_SetFileInfo() has been called beforehand
  */
-long OggVorbis_WriteBuffer(void *p_VorbisFile, BYTE *InBuffer, int nInBufferLen)
+long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
 	bool eos = false;

@@ -346,10 +346,10 @@ int M4A_CloseFileR(void *p_M4AFile)
  * or the number of bytes written to the buffer
  * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
+long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	BYTE *OBuf = OutBuffer;
+	uint8_t *OBuf = OutBuffer;
 
 	while ((OBuf - OutBuffer) < nOutBufferLen && p_MF->eof == false)
 	{
@@ -367,7 +367,7 @@ long M4A_FillBuffer(void *p_M4AFile, BYTE *OutBuffer, int nOutBufferLen)
 					p_MF->eof = true;
 					return -2;
 				}
-				p_MF->p_Samples = (BYTE *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
+				p_MF->p_Samples = (uint8_t *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
 				free(Buff);
 
 				p_MF->nSamples = FI.samples * FI.channels;
@@ -427,7 +427,7 @@ void M4A_Play(void *p_M4AFile)
 bool Is_M4A(const char *FileName)
 {
 	FILE *f_M4A = fopen(FileName, "rb");
-	CHAR Len[4];
+	char Len[4];
 	char TypeSig[4];
 	char FileType[4];
 

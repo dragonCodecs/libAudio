@@ -14,7 +14,7 @@
  * internal playback initialisation is active or not via being a truth value of whether
  * external playback is wanted or not - 0 means internal is active.
  */
-BYTE ExternalPlayback = 0;
+uint8_t ExternalPlayback = 0;
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -135,7 +135,7 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long Audio_FillBuffer(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen)
+long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
 	if (p_AP == NULL || OutBuffer == NULL || p_AP->p_AudioFile == NULL)

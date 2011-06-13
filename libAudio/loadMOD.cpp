@@ -8,10 +8,6 @@
 #include "moduleMixer/moduleMixer.h"
 
 #ifndef _WINDOWS
-#ifdef CHAR
-#undef CHAR
-#endif
-#define CHAR char
 #ifndef max
 #define max(a, b) (a > b ? a : b)
 #endif
@@ -43,8 +39,8 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
 	FileInfo *ret = NULL;
 	FILE *f_MOD;
-	CHAR MODMagic[4];
-	UINT i, maxPattern;
+	char MODMagic[4];
+	uint32_t i, maxPattern;
 
 	if (p_MF == NULL)
 		return ret;
@@ -113,7 +109,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 		smp->FineTune &= 0x0F;
 	}
 
-	fread(((BYTE *)p_MF->p_Header) + 20, 130, 1, f_MOD);
+	fread(((uint8_t *)p_MF->p_Header) + 20, 130, 1, f_MOD);
 	if (p_MF->nSamples != 15)
 		fseek(f_MOD, 4, SEEK_CUR);
 	if (p_MF->p_Header->nOrders > 128)
@@ -131,45 +127,45 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 	p_MF->p_Patterns = (MODPattern *)malloc(sizeof(MODPattern) * p_MF->nPatterns);
 	for (i = 0; i < p_MF->nPatterns; i++)
 	{
-		UINT j;
+		uint32_t j;
 		MODPattern *ptn = &p_MF->p_Patterns[i];
 		ptn->Commands = (MODCommand (*)[64])malloc(sizeof(MODCommand[64]) * p_MF->nChannels);
 		for (j = 0; j < 64; j++)
 		{
-			UINT k;
+			uint32_t k;
 			for (k = 0; k < p_MF->nChannels; k++)
 			{
 				MODCommand *cmd;
-				BYTE Data[4];
+				uint8_t Data[4];
 				// Read 4 bytes of data and unpack it into a MODCommand structure.
 				cmd = &ptn->Commands[k][j];
 				fread(Data, 4, 1, f_MOD);
 				cmd->Sample = (Data[0] & 0xF0) | (Data[2] >> 4);
-				cmd->Period = (((WORD)(Data[0] & 0x0F)) << 8) | Data[1];
-				cmd->Effect = (((WORD)(Data[2] & 0x0F)) << 8) | Data[3];
+				cmd->Period = (((uint16_t)(Data[0] & 0x0F)) << 8) | Data[1];
+				cmd->Effect = (((uint16_t)(Data[2] & 0x0F)) << 8) | Data[3];
 			}
 		}
 	}
 
-	p_MF->p_PCM = (BYTE **)malloc(sizeof(BYTE *) * p_MF->nSamples);
+	p_MF->p_PCM = (uint8_t **)malloc(sizeof(uint8_t *) * p_MF->nSamples);
 	for (i = 0; i < p_MF->nSamples; i++)
 	{
-		UINT realLength = p_MF->p_Samples[i].Length * 2;
+		uint32_t realLength = p_MF->p_Samples[i].Length * 2;
 		if (realLength != 0)
 		{
-			p_MF->p_PCM[i] = (BYTE *)malloc(realLength);
+			p_MF->p_PCM[i] = (uint8_t *)malloc(realLength);
 			fread(p_MF->p_PCM[i], realLength, 1, f_MOD);
 			p_MF->p_PCM[i][0] = p_MF->p_PCM[i][1] = 0;
 			if (strncasecmp((char *)p_MF->p_PCM[i] + 2, "ADPCM", 5) == 0)
 			{
-				UINT j;
-				BYTE *compressionTable = p_MF->p_PCM[i];
-				BYTE *compBuffer = &p_MF->p_PCM[i][16];
-				BYTE delta = 0;
+				uint32_t j;
+				uint8_t *compressionTable = p_MF->p_PCM[i];
+				uint8_t *compBuffer = &p_MF->p_PCM[i][16];
+				uint8_t delta = 0;
 				realLength -= 16;
 				p_MF->p_Samples[i].Length = realLength;
 				realLength *= 2;
-				p_MF->p_PCM[i] = (BYTE *)malloc(realLength);
+				p_MF->p_PCM[i] = (uint8_t *)malloc(realLength);
 				for (j = 0; j < p_MF->p_Samples[i].Length; j++)
 				{
 					delta += compressionTable[compBuffer[j] & 0x0F];
@@ -192,7 +188,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 	return ret;
 }
 
-long MOD_FillBuffer(void *p_MODFile, BYTE *OutBuffer, int nOutBufferLen)
+long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	long ret = 0, Read;
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
@@ -210,7 +206,7 @@ long MOD_FillBuffer(void *p_MODFile, BYTE *OutBuffer, int nOutBufferLen)
 
 int MOD_CloseFileR(void *p_MODFile)
 {
-	UINT i;
+	uint32_t i;
 	int ret = 0;
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
 	if (p_MF == NULL)
@@ -242,7 +238,7 @@ void MOD_Play(void *p_MODFile)
 bool Is_MOD(const char *FileName)
 {
 	FILE *f_MOD = fopen(FileName, "rb");
-	CHAR MODMagic[4];
+	char MODMagic[4];
 	if (f_MOD == NULL)
 		return false;
 

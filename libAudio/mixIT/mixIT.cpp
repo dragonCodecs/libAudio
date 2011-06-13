@@ -3454,7 +3454,7 @@ void ISoundFile::ExtendedS3MCommands(UINT nChn, UINT param)
 			if (TickCount != 0)
 				break;
 			chn->C4Speed = FineTuneTable[param & 0x0F];
-			chn->FineTune = (int)((UCHAR)(param << 4));
+			chn->FineTune = (int)((uint8_t)(param << 4));
 			if  (chn->Period != 0)
 				chn->Period = GetPeriodFromNote(chn->Note, chn->FineTune, chn->C4Speed);
 			break;
@@ -4046,7 +4046,7 @@ bool ISoundFile::ProcessEffects()
 				case CMD_TEMPO:
 				{
 					Cmmd = NULL;
-					if ((USHORT)Row < Patterns[Pattern].nRows - 1)
+					if ((uint16_t)Row < Patterns[Pattern].nRows - 1)
 						Cmmd = Patterns[Pattern].p_Commands + ((Row + 1) * Channels) + i;
 					if (Cmmd != NULL && Cmmd->command == CMD_XPARAM)
 						param = (param << 8) + Cmmd->param;
@@ -4202,7 +4202,7 @@ bool ISoundFile::ProcessEffects()
 				case CMD_PATTERNBREAK:
 				{
 					Cmmd = NULL;
-					if ((USHORT)Row < Patterns[Pattern].nRows - 1)
+					if ((uint16_t)Row < Patterns[Pattern].nRows - 1)
 						Cmmd = Patterns[Pattern].p_Commands + ((Row + 1) * Channels) + i;
 					if (Cmmd != NULL && Cmmd->command == CMD_XPARAM)
 						BreakRow = (param << 8) + Cmmd->param;

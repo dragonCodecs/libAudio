@@ -58,7 +58,7 @@ libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type)
  * @warning May not work unless \c Audio_SetFileInfo() has been called beforehand
  * @attention \p Type must have the same value as it had for \c Audio_OpenW()
  */
-libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, BYTE *InBuffer, int nInBufferLen, int Type)
+libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nInBufferLen, int Type)
 {
 	if (Type == AUDIO_OGG_VORBIS)
 		return OggVorbis_WriteBuffer(p_AudioPtr, InBuffer, nInBufferLen);

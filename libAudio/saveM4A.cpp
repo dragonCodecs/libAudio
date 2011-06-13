@@ -32,13 +32,13 @@ typedef struct _M4A_Enc_Intern
 	 * Holds the count returned by \c faacEncOpen() giving the maximum and
 	 *   prefered number of samples to feed \c faacEncEncode() with
 	 */
-	ULONG MaxInSamp;
+	unsigned long MaxInSamp;
 	/*!
 	 * @internal
 	 * Holds the count returned by \c faacEncOpen() giving the maximum number
 	 *   of bytes that \c faacEncEncode() will return in the output buffer
 	 */
-	ULONG MaxOutByte;
+	unsigned long MaxOutByte;
 	/*!
 	 * @internal
 	 * The MP4v2 handle for the MP4 file being written to
@@ -189,8 +189,8 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 {
 	const MP4Tags *p_Tags;
 	faacEncConfigurationPtr p_conf;
-	UCHAR *ASC;
-	ULONG lenASC;
+	uint8_t *ASC;
+	unsigned long lenASC;
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 
 	p_Tags = MP4TagsAlloc();
@@ -254,11 +254,11 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c M4A_SetFileInfo() has been called beforehand
  */
-long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
+long M4A_WriteBuffer(void *p_AACFile, uint8_t *InBuffer, int nInBufferLen)
 {
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 	int nOB, j = 0;
-	UCHAR *OB = NULL;
+	uint8_t *OB = NULL;
 
 	if (p_AF->p_enc == NULL)
 		return -3;
@@ -267,7 +267,7 @@ long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 
 	if (nInBufferLen == -2)
 	{
-		OB = (UCHAR *)malloc(p_AF->MaxOutByte);
+		OB = (uint8_t *)malloc(p_AF->MaxOutByte);
 
 		nOB = faacEncEncode(p_AF->p_enc, NULL, 0, OB, p_AF->MaxOutByte);
 		if (nOB > 0)
@@ -286,7 +286,7 @@ long M4A_WriteBuffer(void *p_AACFile, BYTE *InBuffer, int nInBufferLen)
 		return -2;
 	}
 
-	OB = (UCHAR *)malloc(p_AF->MaxOutByte);
+	OB = (uint8_t *)malloc(p_AF->MaxOutByte);
 	while (j < nInBufferLen)
 	{
 		if (j + ((int)p_AF->MaxInSamp * 2) > nInBufferLen)

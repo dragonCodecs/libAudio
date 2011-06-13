@@ -44,7 +44,7 @@ typedef struct _WAV_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The playback class instance for the WAV file
@@ -208,7 +208,7 @@ int WAV_CloseFileR(void *p_WAVFile)
  * or the number of bytes written to the buffer
  * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long WAV_FillBuffer(void *p_WAVFile, BYTE *OutBuffer, int nOutBufferLen)
+long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
 	FILE *f_WAV = p_WF->f_WAV;

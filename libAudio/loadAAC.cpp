@@ -75,12 +75,12 @@ typedef struct _AAC_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The frame headers read at the start of the file
 	 */
-	BYTE FrameHeader[ADTS_MAX_SIZE];
+	uint8_t FrameHeader[ADTS_MAX_SIZE];
 	/*!
 	 * @internal
 	 * The playback class instance for the AAC file
@@ -136,7 +136,7 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 
 	fread(p_AF->FrameHeader, ADTS_MAX_SIZE, 1, p_AF->f_AAC);
 	fseek(p_AF->f_AAC, -(ADTS_MAX_SIZE), SEEK_CUR);
-	NeAACDecInit(p_AF->p_dec, p_AF->FrameHeader, ADTS_MAX_SIZE, (ULONG *)&ret->BitRate, (BYTE *)&ret->Channels);
+	NeAACDecInit(p_AF->p_dec, p_AF->FrameHeader, ADTS_MAX_SIZE, (ULONG *)&ret->BitRate, (uint8_t *)&ret->Channels);
 	ADC = NeAACDecGetCurrentConfiguration(p_AF->p_dec);
 	ret->BitsPerSample = 16;
 
@@ -184,7 +184,7 @@ typedef struct _BitStream
 	 * @internal
 	 * The data buffer being used as a bitstream
 	 */
-	BYTE *Data;
+	uint8_t *Data;
 	/*!
 	 * @internal
 	 * The total number of bits available in the buffer
@@ -209,7 +209,7 @@ typedef struct _BitStream
  * @param size The length of the buffer to be used
  * @param buffer The buffer to be used
  */
-BitStream *OpenBitStream(int size, BYTE *buffer)
+BitStream *OpenBitStream(int size, uint8_t *buffer)
 {
 	BitStream *BS = (BitStream *)malloc(sizeof(BitStream));
 	BS->Size = size;
@@ -278,19 +278,19 @@ void SkipBit(BitStream *BS, int NumBits)
  * or the number of bytes written to the buffer
  * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
+long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 	FILE *f_AAC = p_AF->f_AAC;
-	BYTE *OBuf = OutBuffer, *FrameHeader = p_AF->FrameHeader;
+	uint8_t *OBuf = OutBuffer, *FrameHeader = p_AF->FrameHeader;
 
 	if (p_AF->eof == true)
 		return -2;
 	while ((OBuf - OutBuffer) < nOutBufferLen && p_AF->eof == false)
 	{
-		static BYTE *Buff2 = NULL;
-		BYTE *Buff = NULL;
-		UINT FrameLength = 0, read = 0;
+		static uint8_t *Buff2 = NULL;
+		uint8_t *Buff = NULL;
+		uint32_t FrameLength = 0, read = 0;
 		NeAACDecFrameInfo FI;
 		BitStream *BS = OpenBitStream(ADTS_MAX_SIZE, FrameHeader);
 
@@ -305,7 +305,7 @@ long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 			}
 			continue;
 		}
-		read = (UINT)GetBit(BS, 12);
+		read = (uint32_t)GetBit(BS, 12);
 		if (read != 0xFFF)
 		{
 			p_AF->eof = true;
@@ -313,9 +313,9 @@ long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 			continue;
 		}
 		SkipBit(BS, 18);
-		FrameLength = (UINT)GetBit(BS, 13);
+		FrameLength = (uint32_t)GetBit(BS, 13);
 		CloseBitStream(BS);
-		Buff = (BYTE *)malloc(FrameLength);
+		Buff = (uint8_t *)malloc(FrameLength);
 		memcpy(Buff, FrameHeader, ADTS_MAX_SIZE);
 		read = fread(Buff + ADTS_MAX_SIZE, 1, FrameLength - ADTS_MAX_SIZE, f_AAC);
 		if (feof(f_AAC) != FALSE)
@@ -328,7 +328,7 @@ long AAC_FillBuffer(void *p_AACFile, BYTE *OutBuffer, int nOutBufferLen)
 			}
 		}
 
-		Buff2 = (BYTE *)NeAACDecDecode(p_AF->p_dec, &FI, Buff, FrameLength);
+		Buff2 = (uint8_t *)NeAACDecDecode(p_AF->p_dec, &FI, Buff, FrameLength);
 		free(Buff);
 
 		if (FI.error != 0)
@@ -374,7 +374,7 @@ void AAC_Play(void *p_AACFile)
 bool Is_AAC(const char *FileName)
 {
 	FILE *f_AAC = fopen(FileName, "rb");
-	BYTE sig[2];
+	uint8_t sig[2];
 
 	if (f_AAC == NULL)
 		return false;

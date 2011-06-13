@@ -44,7 +44,7 @@ typedef struct _FLAC_Decoder_Context
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[16384];
+	uint8_t buffer[16384];
 	/*!
 	 * @internal
 	 * The count of the number of bytes left to process
@@ -68,7 +68,7 @@ typedef struct _FLAC_Decoder_Context
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we had success or not
  */
-FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, BYTE *Buffer, size_t *bytes, void *p_FF)
+FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, uint8_t *Buffer, size_t *bytes, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
@@ -96,7 +96,7 @@ FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, BYTE *Bu
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if the seek worked or not
  */
-FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, UINT64 amount, void *p_FF)
+FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, uint64_t amount, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
@@ -118,7 +118,7 @@ FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, UINT64 a
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we were able to determine the position or not
  */
-FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *offset, void *p_FF)
+FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, uint64_t *offset, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 	long pos;
@@ -128,7 +128,7 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *
 	else if ((pos = ftell(f_FLAC)) < 0)
 		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
 
-	*offset = (UINT64)pos;
+	*offset = (uint64_t)pos;
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
@@ -141,7 +141,7 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, UINT64 *
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we were able to determine the length or not
  */
-FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, UINT64 *len, void *p_FF)
+FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, uint64_t *len, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 	struct stat m_stat;
@@ -186,7 +186,7 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FL
 	short *PCM = (short *)p_FF->buffer;
 	const short *Left = (const short *)buffers[0];
 	const short *Right = (const short *)buffers[1];
-	UINT i = 0;
+	uint32_t i = 0;
 
 	for (i = (p_FF->nRead / 2); i < p_frame->header.blocksize; i++)
 	{
@@ -228,10 +228,10 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
 		{
 			const FLAC__StreamMetadata_VorbisComment *p_md = &p_metadata->data.vorbis_comment;
-			UINT nComment = 0;
+			uint32_t nComment = 0;
 			char **p_comments = (char **)malloc(sizeof(char *) * p_md->num_comments);
 
-			for (UINT i = 0; i < p_md->num_comments; i++)
+			for (uint32_t i = 0; i < p_md->num_comments; i++)
 			{
 				p_comments[i] = (char *)p_md->comments->entry;
 			}
@@ -399,7 +399,7 @@ int FLAC_CloseFileR(void *p_FLACFile)
  * or the number of bytes written to the buffer
  * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long FLAC_FillBuffer(void *p_FLACFile, BYTE *OutBuffer, int nOutBufferLen)
+long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	long ret = 0;

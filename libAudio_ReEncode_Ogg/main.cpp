@@ -8,7 +8,7 @@
 #include <string>
 #include <stdio.h>
 
-static BYTE Buffer[8192];
+static uint8_t Buffer[8192];
 
 int ToType(char *str)
 {

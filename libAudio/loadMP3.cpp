@@ -59,12 +59,12 @@ typedef struct _MP3_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The internal input data buffer
 	 */
-	BYTE inbuff[16392];
+	uint8_t inbuff[16392];
 	/*!
 	 * @internal
 	 * The \c FileInfo for the MP3 file being decoded
@@ -182,8 +182,8 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	if (id_frame != NULL)
 	{
 		id3_field *id_field = NULL;
-		UINT nStrings = 0;
-		UCHAR *Time = NULL;
+		uint32_t nStrings = 0;
+		uint8_t *Time = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
 		nStrings = id3_field_getnstrings(id_field);
@@ -206,7 +206,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	if (id_frame != NULL)
 	{
 		id3_field *id_field = NULL;
-		UINT nStrings = 0;
+		uint32_t nStrings = 0;
 		char *Album = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
@@ -214,7 +214,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 
 		if (nStrings > 0)
 		{
-			UINT i = 0;
+			uint32_t i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
 				Album = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
@@ -243,7 +243,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	if (id_frame != NULL)
 	{
 		id3_field *id_field = NULL;
-		UINT nStrings = 0;
+		uint32_t nStrings = 0;
 		char *Artist = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
@@ -251,7 +251,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 
 		if (nStrings > 0)
 		{
-			UINT i = 0;
+			uint32_t i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
 				Artist = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
@@ -280,7 +280,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	if (id_frame != NULL)
 	{
 		id3_field *id_field = NULL;
-		UINT nStrings = 0;
+		uint32_t nStrings = 0;
 		char *Title = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
@@ -288,7 +288,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 
 		if (nStrings > 0)
 		{
-			UINT i = 0;
+			uint32_t i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
 				Title = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
@@ -317,15 +317,15 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	if (id_frame != NULL)
 	{
 		id3_field *id_field = NULL;
-		UINT nStrings = 0;
-		UCHAR *Comment = NULL;
+		uint32_t nStrings = 0;
+		uint8_t *Comment = NULL;
 
 		id_field = id3_frame_field(id_frame, 1);
 		nStrings = id3_field_getnstrings(id_field);
 
 		if (nStrings > 0)
 		{
-			UINT i = 0;
+			uint32_t i = 0;
 			for (i = 0; i < nStrings; i++)
 			{
 				Comment = id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
@@ -349,7 +349,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 
 	rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
 	fread(p_MF->inbuff + rem, 2 * 8192 - rem, 1, p_MF->f_MP3);
-	mad_stream_buffer(p_MF->p_Stream, (const BYTE *)p_MF->inbuff, (2 * 8192));
+	mad_stream_buffer(p_MF->p_Stream, (const uint8_t *)p_MF->inbuff, (2 * 8192));
 
 	while (p_MF->p_Frame->header.bitrate == 0 || p_MF->p_Frame->header.samplerate == 0)
 		mad_frame_decode(p_MF->p_Frame, p_MF->p_Stream);
@@ -414,7 +414,7 @@ void GetData(MP3_Intern *p_MF, bool *eof)
 	if (*eof == true)
 		memset(p_MF->inbuff + (2 * 8192), 0x00, 8);
 
-	mad_stream_buffer(p_MF->p_Stream, (const BYTE *)p_MF->inbuff, (2 * 8192));
+	mad_stream_buffer(p_MF->p_Stream, (const uint8_t *)p_MF->inbuff, (2 * 8192));
 }
 
 /*!
@@ -462,10 +462,10 @@ int DecodeFrame(MP3_Intern *p_MF, bool *eof)
  * or the number of bytes written to the buffer
  * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
-long MP3_FillBuffer(void *p_MP3File, BYTE *OutBuffer, int nOutBufferLen)
+long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	BYTE *OBuff = OutBuffer;
+	uint8_t *OBuff = OutBuffer;
 
 	while ((OBuff - OutBuffer) < nOutBufferLen && p_MF->eof == false)
 	{

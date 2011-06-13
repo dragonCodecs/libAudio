@@ -21,25 +21,6 @@
  * @date 2010-2011
  */
 
-#ifdef _WINDOWS
-/*!
- * Definition of \c uint64_t as per inttypes.h
- */
-typedef unsigned long long uint64_t;
-/*!
- * Definition of \c uint32_t as per inttypes.h
- */
-typedef unsigned int uint32_t;
-/*!
- * Definition of \c uint16_t as per inttypes.h
- */
-typedef unsigned short uint16_t;
-/*!
- * Definition of \c uint8_t as per inttypes.h
- */
-typedef unsigned char uint8_t;
-#endif
-
 #include <limits.h>
 
 #ifndef SHRT_MAX
@@ -78,7 +59,7 @@ typedef struct _MPC_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The MPC callbacks/reader information handle
@@ -150,7 +131,7 @@ short FloatToShort(MPC_SAMPLE_FORMAT Sample)
  * @param size The number of bytes to read into the buffer
  * @return The return result of \c fread()
  */
-INT f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
+int f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
 	return fread(p_Buffer, 1, size, p_MF->f_MPC);
@@ -165,7 +146,7 @@ INT f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
  * @param offset The offset through the file to which to seek to
  * @return A truth value giving if the seek succeeded or not
  */
-UCHAR f_fseek(mpc_reader *p_MPCFile, int offset)
+uint8_t f_fseek(mpc_reader *p_MPCFile, int offset)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
 	return (fseek(p_MF->f_MPC, offset, SEEK_SET) == 0 ? TRUE : FALSE);
@@ -213,7 +194,7 @@ int f_flen(mpc_reader *p_MPCFile)
  *   holds the file to seek through
  * @return A truth value giving if seeking can work or not
  */
-UCHAR f_fcanseek(mpc_reader *p_MPCFile)
+uint8_t f_fcanseek(mpc_reader *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
 
@@ -297,10 +278,10 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
  * or the number of bytes written to the buffer
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long MPC_FillBuffer(void *p_MPCFile, BYTE *OutBuffer, int nOutBufferLen)
+long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	BYTE *OBuff = OutBuffer;
+	uint8_t *OBuff = OutBuffer;
 
 	while (OBuff - OutBuffer < nOutBufferLen)
 	{

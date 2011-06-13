@@ -53,7 +53,7 @@ typedef struct _WavPack_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The internal transfer data buffer used due to how WavPack's decoder
@@ -98,7 +98,7 @@ int f_fread_wp(void *p_file, void *data, int size)
  * @param p_file \c FILE handle for the WavPack file as a void pointer
  * @return An integer giving the read possition of the file in bytes
  */
-UINT f_ftell(void *p_file)
+uint32_t f_ftell(void *p_file)
 {
 	return ftell((FILE *)p_file);
 }
@@ -111,7 +111,7 @@ UINT f_ftell(void *p_file)
  * @param pos The offset through the file to which to seek to
  * @return A truth value giving if the seek succeeded or not
  */
-int f_fseek_abs(void *p_file, UINT pos)
+int f_fseek_abs(void *p_file, uint32_t pos)
 {
 	return fseek((FILE *)p_file, pos, SEEK_SET);
 }
@@ -142,7 +142,7 @@ int f_fungetc(void *p_file, int c)
  * @param p_file \c FILE handle for the WavPack file as a void pointer
  * @return An integer giving the length of the file in bytes
  */
-UINT f_flen(void *p_file)
+uint32_t f_flen(void *p_file)
 {
 	struct stat stats;
 
@@ -303,10 +303,10 @@ int WavPack_CloseFileR(void *p_WVPFile)
  * or the number of bytes written to the buffer
  * @bug \p p_WVPFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long WavPack_FillBuffer(void *p_WVPFile, BYTE *OutBuffer, int nOutBufferLen)
+long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	BYTE *OBuff = OutBuffer;
+	uint8_t *OBuff = OutBuffer;
 	if (p_WF->eof == true)
 		return -2;
 

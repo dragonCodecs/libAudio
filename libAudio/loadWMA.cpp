@@ -37,7 +37,7 @@ typedef struct _FFTContext
 {
     int nbits;
     int inverse;
-    USHORT *revtab;
+    uint16_t *revtab;
     FFTComplex *exptab;
 } FFTContext;
 
@@ -1061,7 +1061,7 @@ int mdct_init(MDCTContext *ctx, int nbits, int inverse)
 	fft->exptab = (FFTComplex *)malloc((n / 2) * sizeof(FFTComplex));
 	if (fft->exptab == NULL)
 		goto fail;
-	fft->revtab = (USHORT *)malloc(n * sizeof(USHORT));
+	fft->revtab = (uint16_t *)malloc(n * sizeof(uint16_t));
 	if (fft->revtab == NULL)
 		goto fail;
 
@@ -1192,7 +1192,7 @@ void imdct(MDCTContext *ctx, float *output, const float *input, FFTComplex *tmp)
 	int n = 1 << ctx->nbits, k, j;
 	int n2 = n >> 1, n4 = n >> 2, n8 = n >> 3;
 	const float *in1 = input, *in2 = input + n2 - 1;
-	const USHORT *revtab = ctx->fft.revtab;
+	const uint16_t *revtab = ctx->fft.revtab;
 	float *tcos = ctx->tcos, *tsin = ctx->tsin;
 
 	// pre-rotation

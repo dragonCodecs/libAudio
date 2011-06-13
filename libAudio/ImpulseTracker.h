@@ -202,8 +202,8 @@ typedef struct _Command
 
 typedef struct _Patern
 {
-	USHORT PatLen;
-	USHORT nRows;
+	uint16_t PatLen;
+	uint16_t nRows;
 	Command *p_Commands;
 } Patern;
 

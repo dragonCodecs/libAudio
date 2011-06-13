@@ -28,7 +28,7 @@ typedef struct _OggVorbis_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The playback class instance for the Ogg|Vorbis file
@@ -163,7 +163,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
  * or the number of bytes written to the buffer
  * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long OggVorbis_FillBuffer(void *p_VorbisFile, BYTE *OutBuffer, int nOutBufferLen)
+long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	int bitstream;
 	OggVorbis_File *p_OVFile = (OggVorbis_File *)p_VorbisFile;

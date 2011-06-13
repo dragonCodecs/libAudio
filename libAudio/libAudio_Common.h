@@ -45,15 +45,15 @@
 #define __FASTCALL__ inline
 #endif
 
-extern int fseek_wrapper(void *p_file, __int64 offset, int origin);
-//extern __int64 ftell_wrapper(void *p_file);
+extern int fseek_wrapper(void *p_file, int64_t offset, int origin);
+//extern int64_t ftell_wrapper(void *p_file);
 
 /*!
  * @internal
  * Defines the buffer filling callback and a way to hold a pointer to it. Marking it
  * as \c __cdecl is neccasery on Windows otherwise it makes extremely incorrect assumptions
  */
-typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen);
+typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen);
 
 /*!
  * @internal
@@ -84,12 +84,12 @@ private:
 	 * @internal
 	 * Static member which holds the the source to attach the buffers to
 	 */
-	static UINT sourceNum;
+	static uint32_t sourceNum;
 	/*!
 	 * @internal
 	 * Holds the current instance's playback buffers
 	 */
-	UINT buffers[4];
+	uint32_t buffers[4];
 	/*!
 	 * @internal
 	 * Static member which holds a pointer to the OpenAL device opened for playback
@@ -100,7 +100,7 @@ private:
 	 * Static member which holds a pointer to the OpenAL context opened for playback
 	 */
 	static ALCcontext *context;
-	BYTE *buffer;
+	uint8_t *buffer;
 	int nBufferLen;
 	/*!
 	 * @internal
@@ -109,7 +109,7 @@ private:
 	static bool OpenALInit;
 
 public:
-	Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr);
+	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
 	void Play();
 	~Playback();
 
@@ -131,7 +131,7 @@ typedef struct _API_Functions
 {
 	void *(__CDECL__ *OpenR)(const char *FileName);
 	FileInfo *(__CDECL__ *GetFileInfo)(void *p_File);
-	long (__CDECL__ *FillBuffer)(void *p_File, BYTE *OutBuffer, int nOutBufferLen);
+	long (__CDECL__ *FillBuffer)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 	int (__CDECL__ *CloseFileR)(void *p_File);
 	void (__CDECL__ *Play)(void *p_File);
 } API_Functions;

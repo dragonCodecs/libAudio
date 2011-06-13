@@ -112,7 +112,7 @@ void PrintPaterns(Patern *p_Paterns, UINT nPaterns, FileInfo *p_FI)
 	{
 		Command *Commands = p_Paterns[i].p_Commands;
 		fprintf(f_Out, "Patern #%i: \n", i);
-		for (USHORT j = 0; j < p_Paterns[i].nRows; j++)
+		for (uint16_t j = 0; j < p_Paterns[i].nRows; j++)
 		{
 			fprintf(f_Out, "%02X:\t", j);
 			for (int k = 0; k < p_FI->Channels; k++)
@@ -252,7 +252,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 
 	{
 		// Discardable extra:
-		USHORT len;
+		uint16_t len;
 		char *Unknown;
 		fread(&len, 2, 1, f_IT);
 		Unknown = (char *)malloc(len);

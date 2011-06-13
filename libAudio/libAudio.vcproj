@@ -268,6 +268,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\loadS3M.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\loadShorten.cpp"
 					>
 					<FileConfiguration
@@ -286,6 +290,10 @@
 							Name="VCCLCompilerTool"
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\loadSNDH.cpp"
+					>
 				</File>
 				<File
 					RelativePath=".\loadWAV.cpp"
@@ -337,7 +345,7 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="mixers"
+				Name="engines"
 				>
 				<Filter
 					Name="IT"
@@ -443,22 +451,22 @@
 						</FileConfiguration>
 					</File>
 				</Filter>
-			</Filter>
-			<Filter
-				Name="moduleMixer"
-				>
-				<File
-					RelativePath=".\moduleMixer\mixFunctions.h"
+				<Filter
+					Name="moduleMixer"
 					>
-				</File>
-				<File
-					RelativePath=".\moduleMixer\moduleMixer.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\moduleMixer\moduleMixer.h"
-					>
-				</File>
+					<File
+						RelativePath=".\moduleMixer\mixFunctions.h"
+						>
+					</File>
+					<File
+						RelativePath=".\moduleMixer\moduleMixer.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\moduleMixer\moduleMixer.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter

@@ -4,11 +4,11 @@
 
 typedef struct _RealMedia_File
 {
-	DWORD cType;
-	DWORD cSize;
-	WORD cVer;
-	DWORD fVer;
-	DWORD nHeaders;
+	uint32_t cType;
+	uint32_t cSize;
+	uint16_t cVer;
+	uint32_t fVer;
+	uint32_t nHeaders;
 } RealMedia_File;
 
 typedef struct _RealAudio_Intern

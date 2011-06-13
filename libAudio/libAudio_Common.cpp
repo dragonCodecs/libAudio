@@ -42,7 +42,7 @@
  * @param origin The location identifier to seek from
  * @return The return result of \c fseek() indiciating if the seek worked or not
  */
-int fseek_wrapper(void *p_file, __int64 offset, int origin)
+int fseek_wrapper(void *p_file, int64_t offset, int origin)
 {
 	if (p_file == NULL)
 		return -1;
@@ -58,13 +58,13 @@ int fseek_wrapper(void *p_file, __int64 offset, int origin)
  * @deprecated Marked as deprecated as nothing currently uses or calls this function,
  *   so I am considering removing it.
  */
-__int64 ftell_wrapper(void *p_file)
+int64_t ftell_wrapper(void *p_file)
 {
 	return ftell((FILE *)p_file);
 }
 
 bool Playback::OpenALInit = false;
-UINT Playback::sourceNum = 0;
+uint32_t Playback::sourceNum = 0;
 ALCdevice *Playback::device = NULL;
 ALCcontext *Playback::context = NULL;
 
@@ -103,7 +103,7 @@ void Playback::createBuffers()
 {
 	alGenBuffers(4, buffers);
 
-	for (UINT i = 0; i < 4; i++)
+	for (uint32_t i = 0; i < 4; i++)
 	{
 		alBufferi(buffers[i], AL_SIZE, nBufferLen);
 		alBufferi(buffers[i], AL_CHANNELS, p_FI->Channels);
@@ -155,7 +155,7 @@ int Playback::getBufferFormat()
  * @note \p DataCallback should be removed in future versions of this function and in place
  * \c Audio_FillBuffer() should be called as it does not really have overhead now
  */
-Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr)
+Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
 	if (p_FI == NULL)
 		return;
@@ -263,7 +263,7 @@ void Playback::Play()
 
 		while (Processed--)
 		{
-			UINT buffer;
+			uint32_t buffer;
 
 			alSourceUnqueueBuffers(sourceNum, 1, &buffer);
 			bufret = FillBuffer(p_AudioPtr, this->buffer, nBufferLen);
@@ -298,7 +298,7 @@ finish:
 
 		while (Processed--)
 		{
-			UINT buffer;
+			uint32_t buffer;
 			alSourceUnqueueBuffers(sourceNum, 1, &buffer);
 			nBuffs--;
 		}

@@ -84,50 +84,50 @@ typedef union _int16dot16
 
 typedef struct _Channel
 {
-	BYTE *Sample, *NewSample;
-	BYTE Note, NewNote, NewSamp;
-	UINT LoopStart, LoopEnd, Length;
+	uint8_t *Sample, *NewSample;
+	uint8_t Note, NewNote, NewSamp;
+	uint32_t LoopStart, LoopEnd, Length;
 	MODSample *Samp;
-	BYTE RowNote, RowSample, Volume;
-	BYTE FineTune, Flags, Pan;
-	UINT Period, Pos, PosLo;
+	uint8_t RowNote, RowSample, Volume;
+	uint8_t FineTune, Flags, Pan;
+	uint32_t Period, Pos, PosLo;
 	int16dot16 Increment;
 	int PortamentoDest;
-	BYTE Arpeggio, LeftVol, RightVol, RampLength;
-	BYTE NewLeftVol, NewRightVol;
-	WORD RowEffect, PortamentoSlide;
+	uint8_t Arpeggio, LeftVol, RightVol, RampLength;
+	uint8_t NewLeftVol, NewRightVol;
+	uint16_t RowEffect, PortamentoSlide;
 	short LeftRamp, RightRamp;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
-	BYTE TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
-	BYTE VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
+	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
+	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 	int DCOffsR, DCOffsL;
 } Channel;
 
 typedef struct _MixerState
 {
-	UINT MixRate, MixOutChannels, MixBitsPerSample;
-	UINT Channels, Samples;
-	UINT TickCount, BufferCount;
-	UINT Row, NextRow;
-	UINT MusicSpeed, MusicTempo;
-	UINT Pattern, CurrentPattern, NextPattern, RestartPos;
-	BYTE *Orders, MaxOrder, PatternDelay;
+	uint32_t MixRate, MixOutChannels, MixBitsPerSample;
+	uint32_t Channels, Samples;
+	uint32_t TickCount, BufferCount;
+	uint32_t Row, NextRow;
+	uint32_t MusicSpeed, MusicTempo;
+	uint32_t Pattern, CurrentPattern, NextPattern, RestartPos;
+	uint8_t *Orders, MaxOrder, PatternDelay;
 	MODSample *Samp;
-	BYTE **SamplePCM;
-	UINT RowsPerBeat, SamplesPerTick;
+	uint8_t **SamplePCM;
+	uint32_t RowsPerBeat, SamplesPerTick;
 	Channel *Chns;
-	UINT MixChannels, *ChnMix;
+	uint32_t MixChannels, *ChnMix;
 	MODPattern *Patterns;
-	BYTE SongFlags, SoundSetup;
-	BYTE PatternLoopCount, PatternLoopStart;
+	uint8_t SongFlags, SoundSetup;
+	uint8_t PatternLoopCount, PatternLoopStart;
 	int MixBuffer[MIXBUFFERSIZE * 2];
 	int DCOffsR, DCOffsL;
 } MixerState;
 
 #pragma pack(pop)
 
-WORD Periods[60] =
+uint16_t Periods[60] =
 {
 	1712, 1616, 1525, 1440, 1357, 1281, 1209, 1141, 1077, 1017, 961, 907,
 	856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480, 453,
@@ -136,7 +136,7 @@ WORD Periods[60] =
 	107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60, 57
 };
 
-WORD TunedPeriods[192] = 
+uint16_t TunedPeriods[192] = 
 {
 	// 0 to 7:
 	1712,1616,1524,1440,1356,1280,1208,1140,1076,1016,960,907,
@@ -158,7 +158,7 @@ WORD TunedPeriods[192] =
 	1724,1628,1536,1450,1368,1292,1220,1150,1086,1026,968,914 
 };
 
-const BYTE PreAmpTable[16] =
+const uint8_t PreAmpTable[16] =
 {
 	0x60, 0x60, 0x60, 0x70,
 	0x80, 0x88, 0x90, 0x98,
@@ -201,7 +201,7 @@ const signed char RandomTable[64] =
 	42, -34, 89, -4, -51, -72, 21, -29, 112, 123, 84, -101, -92, 98, -54, -95
 };
 
-const DWORD LinearSlideUpTable[256] =
+const uint32_t LinearSlideUpTable[256] =
 {
 	65536, 65773, 66010, 66249, 66489, 66729, 66971, 67213,
 	67456, 67700, 67945, 68190, 68437, 68685, 68933, 69182,
@@ -237,7 +237,7 @@ const DWORD LinearSlideUpTable[256] =
 	160439, 161019, 161601, 162186, 162772, 163361, 163952, 164545
 };
 
-const USHORT LinearSlideDownTable[256] =
+const uint16_t LinearSlideDownTable[256] =
 {
 	65535, 65298, 65063, 64829, 64595, 64362, 64130, 63899,
 	63669, 63439, 63211, 62983, 62756, 62530, 62304, 62080,
@@ -372,9 +372,9 @@ r_neg:
 	return result;
 }
 
-UINT __CDECL__ Convert32to16(void *_out, int *_in, UINT SampleCount)
+uint32_t __CDECL__ Convert32to16(void *_out, int *_in, uint32_t SampleCount)
 {
-	UINT result;
+	uint32_t result;
 #ifdef _WINDOWS
 	__asm
 	{
@@ -450,11 +450,11 @@ done:
 
 void ResetChannelPanning(MixerState *p_Mixer)
 {
-	BYTE i;
+	uint8_t i;
 	Channel *chn = p_Mixer->Chns;
 	for (i = 0; i < p_Mixer->Channels; i++, chn++)
 	{
-		BYTE j = i % 4;
+		uint8_t j = i % 4;
 		if (j == 0 || j == 3)
 			chn->Pan = 0;
 		else
@@ -489,9 +489,9 @@ void CreateMixer(MOD_Intern *p_MF)
 		p_Mixer->RestartPos = 0;
 	p_Mixer->SamplePCM = p_MF->p_PCM;
 	p_Mixer->Chns = (Channel *)malloc(sizeof(Channel) * p_Mixer->Channels);
-	p_Mixer->ChnMix = (UINT *)malloc(sizeof(UINT) * p_Mixer->Channels);
+	p_Mixer->ChnMix = (uint32_t *)malloc(sizeof(uint32_t) * p_Mixer->Channels);
 	memset(p_Mixer->Chns, 0x00, sizeof(Channel) * p_Mixer->Channels);
-	memset(p_Mixer->ChnMix, 0x00, sizeof(UINT) * p_Mixer->Channels);
+	memset(p_Mixer->ChnMix, 0x00, sizeof(uint32_t) * p_Mixer->Channels);
 	ResetChannelPanning(p_Mixer);
 	InitialiseTables();
 }
@@ -506,9 +506,9 @@ void DestroyMixer(void *Mixer)
 	free(p_Mixer);
 }
 
-inline BYTE PeriodToNoteIndex(WORD Period)
+inline uint8_t PeriodToNoteIndex(uint16_t Period)
 {
-	BYTE i, min = 0, max = 59;
+	uint8_t i, min = 0, max = 59;
 	do
 	{
 		i = min + ((max - min) / 2);
@@ -518,8 +518,8 @@ inline BYTE PeriodToNoteIndex(WORD Period)
 		{
 			if (i > 0)
 			{
-				UINT Dist1 = Period - Periods[i];
-				UINT Dist2 = abs(Periods[i - 1] - Period);
+				uint32_t Dist1 = Period - Periods[i];
+				uint32_t Dist2 = abs(Periods[i - 1] - Period);
 				if (Dist1 < Dist2)
 					return i;
 			}
@@ -529,8 +529,8 @@ inline BYTE PeriodToNoteIndex(WORD Period)
 		{
 			if (i < 59)
 			{
-				UINT Dist1 = Periods[i] - Period;
-				UINT Dist2 = abs(Period - Periods[i + 1]);
+				uint32_t Dist1 = Periods[i] - Period;
+				uint32_t Dist2 = abs(Period - Periods[i + 1]);
 				if (Dist1 < Dist2)
 					return i;
 			}
@@ -544,10 +544,10 @@ inline BYTE PeriodToNoteIndex(WORD Period)
 		return -1;
 }
 
-void SampleChange(MixerState *p_Mixer, Channel *chn, UINT sample_)
+void SampleChange(MixerState *p_Mixer, Channel *chn, uint32_t sample_)
 {
 	MODSample *smp;
-	UINT note, sample = sample_ - 1;
+	uint32_t note, sample = sample_ - 1;
 
 	smp = &p_Mixer->Samp[sample];
 	note = chn->NewNote;
@@ -567,7 +567,7 @@ void SampleChange(MixerState *p_Mixer, Channel *chn, UINT sample_)
 		chn->LoopEnd = chn->Length;
 }
 
-inline UINT GetPeriodFromNote(BYTE Note, BYTE FineTune)
+inline uint32_t GetPeriodFromNote(uint8_t Note, uint8_t FineTune)
 {
 	if (Note == 0xFF)
 		return 0;
@@ -577,9 +577,9 @@ inline UINT GetPeriodFromNote(BYTE Note, BYTE FineTune)
 		return Periods[Note] << 2;
 }
 
-void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
+void NoteChange(MixerState *p_Mixer, uint32_t nChn, uint8_t note, uint8_t cmd)
 {
-	UINT period;
+	uint32_t period;
 	Channel * const chn = &p_Mixer->Chns[nChn];
 	MODSample *smp = chn->Samp;
 
@@ -623,9 +623,9 @@ void NoteChange(MixerState *p_Mixer, UINT nChn, BYTE note, BYTE cmd)
 	chn->LeftVol = chn->RightVol = 0;
 }
 
-void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT i, BYTE param)
+void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, uint32_t i, uint8_t param)
 {
-	BYTE cmd = (param & 0xF0) >> 8;
+	uint8_t cmd = (param & 0xF0) >> 8;
 	param &= 0x0F;
 	switch (cmd)
 	{
@@ -720,7 +720,7 @@ void ProcessExtendedCommand(MixerState *p_Mixer, BOOL RunCmd, Channel *chn, UINT
 	}
 }
 
-inline int PatternLoop(MixerState *p_Mixer, UINT param)
+inline int PatternLoop(MixerState *p_Mixer, uint32_t param)
 {
 	if (param != 0)
 	{
@@ -744,7 +744,7 @@ inline int PatternLoop(MixerState *p_Mixer, UINT param)
 	return -1;
 }
 
-inline void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
+inline void VolumeSlide(BOOL DoSlide, Channel *chn, uint8_t param)
 {
 	if (DoSlide != FALSE)
 	{
@@ -762,7 +762,7 @@ inline void VolumeSlide(BOOL DoSlide, Channel *chn, BYTE param)
 	}
 }
 
-inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, uint8_t param)
 {
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
 	{
@@ -772,7 +772,7 @@ inline void PortamentoUp(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE p
 	}
 }
 
-inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE param)
+inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, uint8_t param)
 {
 	if (DoSlide || p_Mixer->MusicSpeed == 1)
 	{
@@ -782,7 +782,7 @@ inline void PortamentoDown(MixerState *p_Mixer, BOOL DoSlide, Channel *chn, BYTE
 	}
 }
 
-inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
+inline void TonePortamento(MixerState *p_Mixer, Channel *chn, uint8_t param)
 {
 	if (param != 0)
 		chn->PortamentoSlide = param << 2;
@@ -794,7 +794,7 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 			int Delta;
 			if ((chn->Flags & CHN_GLISSANDO) != 0)
 			{
-				BYTE Slide = (BYTE)(chn->PortamentoSlide >> 2);
+				uint8_t Slide = (uint8_t)(chn->PortamentoSlide >> 2);
 				Delta = muldiv(chn->Period, LinearSlideUpTable[Slide], 32768) - chn->Period;
 				if (Delta < 1)
 					Delta = 1;
@@ -806,14 +806,14 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 				Delta = 56;
 			if (Delta > chn->PortamentoDest)
 				Delta = chn->PortamentoDest;
-			chn->Period = (UINT)Delta;
+			chn->Period = (uint32_t)Delta;
 		}
 		else if ((int)chn->Period > chn->PortamentoDest)
 		{
 			int Delta;
 			if ((chn->Flags & CHN_GLISSANDO) != 0)
 			{
-				BYTE Slide = (BYTE)(chn->PortamentoSlide >> 2);
+				uint8_t Slide = (uint8_t)(chn->PortamentoSlide >> 2);
 				Delta = -muldiv(chn->Period, LinearSlideDownTable[Slide], 32768) - chn->Period;
 				if (Delta < 1)
 					Delta = 1;
@@ -825,7 +825,7 @@ inline void TonePortamento(MixerState *p_Mixer, Channel *chn, BYTE param)
 				Delta = chn->PortamentoDest;
 			if (Delta > 7040)
 				Delta = 7040;
-			chn->Period = (UINT)Delta;
+			chn->Period = (uint32_t)Delta;
 		}
 	}
 }
@@ -834,18 +834,18 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 {
 	int PositionJump = -1, BreakRow = -1, PatternLoopRow = -1;
 	Channel *chn = p_Mixer->Chns;
-	UINT i;
+	uint32_t i;
 	for (i = 0; i < p_Mixer->Channels; i++, chn++)
 	{
-		BYTE sample = chn->RowSample;
-		BYTE cmd = (chn->RowEffect & 0xF00) >> 8;
-		BYTE param = (chn->RowEffect & 0xFF);
-		UINT StartTick = 0;
+		uint8_t sample = chn->RowSample;
+		uint8_t cmd = (chn->RowEffect & 0xF00) >> 8;
+		uint8_t param = (chn->RowEffect & 0xFF);
+		uint32_t StartTick = 0;
 
 		chn->Flags &= ~CHN_FASTVOLRAMP;
 		if (cmd == CMD_EXTENDED)
 		{
-			BYTE excmd = (param & 0xF0) >> 4;
+			uint8_t excmd = (param & 0xF0) >> 4;
 			if (excmd == CMDEX_DELAYSAMP)
 				StartTick = param & 0x0F;
 			else if (p_Mixer->TickCount == 0)
@@ -863,7 +863,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 
 		if (p_Mixer->TickCount == StartTick)
 		{
-			BYTE note = chn->RowNote;
+			uint8_t note = chn->RowNote;
 			if (sample != 0)
 				chn->NewSamp = sample;
 			if (note == 0xFF && sample != 0)
@@ -958,7 +958,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				{
 					if (p_Mixer->TickCount != 0)
 						break;
-					chn->Pos = ((UINT)param) << 9;
+					chn->Pos = ((uint32_t)param) << 9;
 					chn->PosLo = 0;
 					if (chn->Pos > chn->Length)
 						chn->Pos = chn->Length;
@@ -981,7 +981,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				{
 					if (p_Mixer->TickCount == 0)
 					{
-						BYTE NewVolume = param;
+						uint8_t NewVolume = param;
 						if (NewVolume > 64)
 							NewVolume = 64;
 						chn->Volume = NewVolume;
@@ -1009,7 +1009,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 					 * NewSpeed <= 32 => Speed = NewSpeed (TPR)
 					 * NewSpeed > 32 => Tempo = NewSpeed (BPM)
 					 */
-					BYTE NewSpeed = param;
+					uint8_t NewSpeed = param;
 					if (NewSpeed == 0)
 						NewSpeed = 1;
 					if (NewSpeed <= 32)
@@ -1037,7 +1037,7 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 				PositionJump = p_Mixer->CurrentPattern + 1;
 			if (BreakRow < 0)
 				BreakRow = 0;
-			if ((UINT)PositionJump < p_Mixer->CurrentPattern || ((UINT)PositionJump == p_Mixer->CurrentPattern && (UINT)BreakRow <= p_Mixer->Row))
+			if ((uint32_t)PositionJump < p_Mixer->CurrentPattern || ((uint32_t)PositionJump == p_Mixer->CurrentPattern && (uint32_t)BreakRow <= p_Mixer->Row))
 				Jump = FALSE;
 			if (Jump == TRUE && (PositionJump != p_Mixer->CurrentPattern || BreakRow != p_Mixer->Row))
 			{
@@ -1056,7 +1056,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 	p_Mixer->TickCount++;
 	if (p_Mixer->TickCount >= p_Mixer->MusicSpeed * (p_Mixer->PatternDelay + 1))
 	{
-		UINT i;
+		uint32_t i;
 		MODCommand (*Commands)[64];
 		Channel *chn = p_Mixer->Chns;
 		p_Mixer->TickCount = 0;
@@ -1079,7 +1079,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 		Commands = p_Mixer->Patterns[p_Mixer->Pattern].Commands;
 		for (i = 0; i < p_Mixer->Channels; i++, chn++)
 		{
-			WORD Period = Commands[i][p_Mixer->Row].Period;
+			uint16_t Period = Commands[i][p_Mixer->Row].Period;
 			if (Period == 0)
 				chn->RowNote = -1;
 			else
@@ -1099,7 +1099,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 BOOL ReadNote(MixerState *p_Mixer)
 {
 	Channel *chn;
-	UINT i;
+	uint32_t i;
 	if (ProcessRow(p_Mixer) == FALSE)
 		return FALSE;
 
@@ -1118,11 +1118,11 @@ BOOL ReadNote(MixerState *p_Mixer)
 			short vol = chn->Volume;
 			if ((chn->Flags & CHN_TREMOLO) != 0)
 			{
-				BYTE TremoloPos = chn->TremoloPos;
+				uint8_t TremoloPos = chn->TremoloPos;
 				if (vol > 0)
 				{
-					BYTE TremoloType = chn->TremoloType & 0x03;
-					BYTE TremoloDepth = chn->TremoloDepth << 2;
+					uint8_t TremoloType = chn->TremoloType & 0x03;
+					uint8_t TremoloDepth = chn->TremoloDepth << 2;
 					if (TremoloType == 1)
 						vol += (RampDownTable[TremoloPos] * TremoloDepth) >> 8;
 					else if (TremoloType == 2)
@@ -1145,7 +1145,7 @@ BOOL ReadNote(MixerState *p_Mixer)
 			period = chn->Period;
 			if ((chn->Flags & CHN_ARPEGGIO) != 0)
 			{
-				BYTE n = p_Mixer->TickCount % 3;
+				uint8_t n = p_Mixer->TickCount % 3;
 				if (n == 1)
 					period = GetPeriodFromNote(chn->Note + (chn->Arpeggio >> 4), chn->FineTune);
 				else if (n == 2)
@@ -1153,9 +1153,9 @@ BOOL ReadNote(MixerState *p_Mixer)
 			}
 			if ((chn->Flags & CHN_VIBRATO) != 0)
 			{
-				CHAR Delta;
-				BYTE VibratoPos = chn->VibratoPos;
-				BYTE VibratoType = chn->VibratoType & 0x03;
+				char Delta;
+				uint8_t VibratoPos = chn->VibratoPos;
+				uint8_t VibratoType = chn->VibratoType & 0x03;
 				if (VibratoType == 1)
 					Delta = RampDownTable[VibratoPos];
 				else if (VibratoType == 2)
@@ -1198,7 +1198,7 @@ BOOL ReadNote(MixerState *p_Mixer)
 			if ((chn->Flags & CHN_VOLUMERAMP) != 0 && (chn->LeftVol != chn->NewLeftVol || chn->RightVol != chn->NewRightVol))
 			{
 				int LeftDelta, RightDelta;
-				UINT RampLength = 1;
+				uint32_t RampLength = 1;
 				// Calculate Volume deltas
 				LeftDelta = chn->NewLeftVol - chn->LeftVol;
 				RightDelta = chn->NewRightVol - chn->RightVol;
@@ -1245,7 +1245,7 @@ BOOL ReadNote(MixerState *p_Mixer)
 	return TRUE;
 }
 
-UINT GetResamplingFlag(MixerState *p_Mixer)
+uint32_t GetResamplingFlag(MixerState *p_Mixer)
 {
 	if ((p_Mixer->SoundSetup & SNDMIX_SPLINESRCMODE) != 0)
 		return MIX_HQSRC;
@@ -1256,10 +1256,10 @@ UINT GetResamplingFlag(MixerState *p_Mixer)
 	return 0;
 }
 
-inline UINT GetSampleCount(Channel *chn, UINT Samples)
+inline uint32_t GetSampleCount(Channel *chn, uint32_t Samples)
 {
-	UINT Pos, PosLo, SampleCount;
-	UINT LoopStart = ((chn->Flags & CHN_LOOP) != 0 ? chn->LoopStart : 0);
+	uint32_t Pos, PosLo, SampleCount;
+	uint32_t LoopStart = ((chn->Flags & CHN_LOOP) != 0 ? chn->LoopStart : 0);
 	int16dot16 Increment = chn->Increment;
 	if (Samples == 0 || Increment.iValue == 0 || chn->Length == 0)
 		return 0;
@@ -1313,8 +1313,8 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 	if (Increment.iValue < 0)
 	{
 		int16dot16 Inv = Increment;
-		UINT MaxSamples;
-		UINT DeltaHi, DeltaLo, PosDest;
+		uint32_t MaxSamples;
+		uint32_t DeltaHi, DeltaLo, PosDest;
 		Inv.iValue = -Inv.iValue;
 		MaxSamples = 16384 / (Inv.Value.Hi + 1);
 		if (MaxSamples < 2)
@@ -1329,8 +1329,8 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 	}
 	else
 	{
-		UINT MaxSamples = 16384 / (Increment.Value.Hi + 1);
-		UINT DeltaHi, DeltaLo, PosDest;
+		uint32_t MaxSamples = 16384 / (Increment.Value.Hi + 1);
+		uint32_t DeltaHi, DeltaLo, PosDest;
 		if (MaxSamples < 2)
 			MaxSamples = 2;
 		if (Samples > MaxSamples)
@@ -1349,14 +1349,14 @@ inline UINT GetSampleCount(Channel *chn, UINT Samples)
 	return SampleCount;
 }
 
-inline int MixDone(MixerState *p_Mixer, BYTE *Buffer, UINT Read, UINT Max, UINT SampleSize)
+inline int MixDone(MixerState *p_Mixer, uint8_t *Buffer, uint32_t Read, uint32_t Max, uint32_t SampleSize)
 {
 	if (Read != 0)
 		memset(Buffer, 0, Read * SampleSize);
 	return Max - Read;
 }
 
-inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, UINT samples)
+inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples)
 {
 	int DCOffsL = *p_DCOffsL;
 	int DCOffsR = *p_DCOffsR;
@@ -1405,10 +1405,10 @@ inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, UINT samples)
 	*p_DCOffsR = DCOffsR;
 }
 
-inline void DCFixingFill(int *MixBuffer, UINT samples, MixerState *p_Mixer)
+inline void DCFixingFill(int *MixBuffer, uint32_t samples, MixerState *p_Mixer)
 {
 	int *buff = MixBuffer;
-	for (UINT i = 0; i < samples; i++)
+	for (uint32_t i = 0; i < samples; i++)
 	{
 		buff[0] = 0;
 		buff[1] = 0;
@@ -1417,16 +1417,16 @@ inline void DCFixingFill(int *MixBuffer, UINT samples, MixerState *p_Mixer)
 	FixDCOffset(&p_Mixer->DCOffsL, &p_Mixer->DCOffsR, MixBuffer, samples);
 }
 
-void CreateStereoMix(MixerState *p_Mixer, UINT count)
+void CreateStereoMix(MixerState *p_Mixer, uint32_t count)
 {
 	int SampleCount;
-	UINT i, Flags, rampSamples;
+	uint32_t i, Flags, rampSamples;
 	if (count == 0)
 		return;
 	Flags = GetResamplingFlag(p_Mixer);
 	for (i = 0; i < p_Mixer->MixChannels; i++)
 	{
-		UINT samples = count;
+		uint32_t samples = count;
 		int *buff = p_Mixer->MixBuffer;
 		Channel * const chn = &p_Mixer->Chns[p_Mixer->ChnMix[i]];
 		if (chn->Sample == NULL)
@@ -1480,11 +1480,11 @@ void CreateStereoMix(MixerState *p_Mixer, UINT count)
 	}
 }
 
-long Read(void *Mixer, BYTE *Buffer, UINT BuffLen)
+long Read(void *Mixer, uint8_t *Buffer, uint32_t BuffLen)
 {
 	MixerState *p_Mixer = (MixerState *)Mixer;
-	UINT SampleSize = p_Mixer->MixBitsPerSample / 8 * p_Mixer->MixOutChannels;
-	UINT Max = BuffLen / SampleSize, Read, Count, SampleCount;
+	uint32_t SampleSize = p_Mixer->MixBitsPerSample / 8 * p_Mixer->MixOutChannels;
+	uint32_t Max = BuffLen / SampleSize, Read, Count, SampleCount;
 	int *MixBuffer = p_Mixer->MixBuffer;
 
 	if (Max == 0)

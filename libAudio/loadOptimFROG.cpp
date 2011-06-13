@@ -58,7 +58,7 @@ typedef struct _OFROG_Intern
  * @param Inst \c FILE handle for the OptimFROG file as a void pointer
  * @return A truth value indicating if closing the file succeeded or not
  */
-UCHAR __fclose(void *Inst)
+uint8_t __fclose(void *Inst)
 {
 	return (fclose((FILE *)Inst) == 0 ? TRUE : FALSE);
 }
@@ -90,7 +90,7 @@ int __fread(void *Inst, void *dest, UINT count)
  * @param Inst \c FILE handle for the OptimFROG file as a void pointer
  * @return A truth value indicating if we have reached the end of the file or not
  */
-UCHAR __feof(void *Inst)
+uint8_t __feof(void *Inst)
 {
 	return (feof((FILE *)Inst) == 0 ? FALSE : TRUE);
 }
@@ -105,7 +105,7 @@ UCHAR __feof(void *Inst)
  * @param Inst \c FILE handle for the OptimFROG file as a void pointer
  * @return A truth value giving if seeking can work or not
  */
-UCHAR __fseekable(void *Inst)
+uint8_t __fseekable(void *Inst)
 {
 	return (fseek((FILE *)Inst, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
 }
@@ -145,7 +145,7 @@ __int64 __ftell(void *Inst)
  * @param pos The offset through the file to which to seek to
  * @return A truth value giving if the seek succeeded or not
  */
-UCHAR __fseek(void *Inst, __int64 pos)
+uint8_t __fseek(void *Inst, __int64 pos)
 {
 	return (fseek((FILE *)Inst, (long)pos, SEEK_SET) == 0 ? TRUE : FALSE);
 }
