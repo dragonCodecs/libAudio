@@ -2,10 +2,6 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <malloc.h>
-#ifdef _WINDOWS
-#include <windows.h>
-#else
-#endif
 
 #include "libAudio.h"
 #include "libAudio_Common.h"

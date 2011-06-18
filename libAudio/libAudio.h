@@ -150,6 +150,15 @@ libAUDIO_API int MOD_CloseFileR(void *p_MODFile);
 libAUDIO_API void MOD_Play(void *p_MODFile);
 libAUDIO_API bool Is_MOD(const char *FileName);
 
+// S3M API
+
+libAUDIO_API void *S3M_OpenR(const char *FileName);
+libAUDIO_API FileInfo *S3M_GetFileInfo(void *p_MODFile);
+libAUDIO_API long S3M_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int S3M_CloseFileR(void *p_MODFile);
+libAUDIO_API void S3m_Play(void *p_MODFile);
+libAUDIO_API bool Is_S3M(const char *FileName);
+
 // MPC API
 
 libAUDIO_API void *MPC_OpenR(const char *FileName);

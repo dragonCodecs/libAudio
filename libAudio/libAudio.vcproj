@@ -467,6 +467,30 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="genericModule"
+					>
+					<File
+						RelativePath=".\genericModule\genericModule.h"
+						>
+					</File>
+					<File
+						RelativePath=".\genericModule\ModuleFile.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\genericModule\ModuleHeader.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\genericModule\ModulePattern.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\genericModule\ModuleSample.cpp"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
@@ -512,6 +536,10 @@
 			</File>
 			<File
 				RelativePath=".\ProTracker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScreamTracker.h"
 				>
 			</File>
 			<File

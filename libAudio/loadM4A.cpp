@@ -2,7 +2,6 @@
 #include <malloc.h>
 #ifdef _WINDOWS
 #include <conio.h>
-#include <windows.h>
 #endif
 
 #include <neaacdec.h>

@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <string.h> 
 #ifdef _WINDOWS
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <al.h>
 #include <alc.h>
@@ -170,6 +171,7 @@ extern API_Functions MP3Decoder;
 extern API_Functions ITDecoder;
 #endif
 extern API_Functions MODDecoder;
+extern API_Functions S3MDecoder;
 #ifndef __NO_MPC__
 extern API_Functions MPCDecoder;
 #endif

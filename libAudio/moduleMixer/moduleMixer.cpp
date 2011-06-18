@@ -6,8 +6,7 @@
 
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
-#include "../ProTracker.h"
-#include "moduleMixer.h"
+#include "../genericModule/genericModule.h"
 
 #define SNG_ENDREACHED		1
 
@@ -66,66 +65,6 @@
 #define MIX_RAMP			0x10
 
 #define MAX_VOLUME			64
-#define MIXBUFFERSIZE		512
-
-#pragma pack(push, 1)
-
-typedef struct _int16dot16_t
-{
-	uint16_t Lo;
-	int16_t Hi;
-} int16dot16_t;
-
-typedef union _int16dot16
-{
-	int32_t iValue;
-	int16dot16_t Value;
-} int16dot16;
-
-typedef struct _Channel
-{
-	uint8_t *Sample, *NewSample;
-	uint8_t Note, NewNote, NewSamp;
-	uint32_t LoopStart, LoopEnd, Length;
-	MODSample *Samp;
-	uint8_t RowNote, RowSample, Volume;
-	uint8_t FineTune, Flags, Pan;
-	uint32_t Period, Pos, PosLo;
-	int16dot16 Increment;
-	int PortamentoDest;
-	uint8_t Arpeggio, LeftVol, RightVol, RampLength;
-	uint8_t NewLeftVol, NewRightVol;
-	uint16_t RowEffect, PortamentoSlide;
-	short LeftRamp, RightRamp;
-	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
-	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
-	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
-	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
-	int DCOffsR, DCOffsL;
-} Channel;
-
-typedef struct _MixerState
-{
-	uint32_t MixRate, MixOutChannels, MixBitsPerSample;
-	uint32_t Channels, Samples;
-	uint32_t TickCount, BufferCount;
-	uint32_t Row, NextRow;
-	uint32_t MusicSpeed, MusicTempo;
-	uint32_t Pattern, CurrentPattern, NextPattern, RestartPos;
-	uint8_t *Orders, MaxOrder, PatternDelay;
-	MODSample *Samp;
-	uint8_t **SamplePCM;
-	uint32_t RowsPerBeat, SamplesPerTick;
-	Channel *Chns;
-	uint32_t MixChannels, *ChnMix;
-	MODPattern *Patterns;
-	uint8_t SongFlags, SoundSetup;
-	uint8_t PatternLoopCount, PatternLoopStart;
-	int MixBuffer[MIXBUFFERSIZE * 2];
-	int DCOffsR, DCOffsL;
-} MixerState;
-
-#pragma pack(pop)
 
 uint16_t Periods[60] =
 {
@@ -462,48 +401,36 @@ void ResetChannelPanning(MixerState *p_Mixer)
 	}
 }
 
-void CreateMixer(MOD_Intern *p_MF)
+void ModuleFile::CreateMixer(FileInfo *p_FI)
 {
-	MixerState *p_Mixer = NULL;
 	p_Mixer = (MixerState *)malloc(sizeof(MixerState));
 	if (p_Mixer == NULL)
 		return;
 	memset(p_Mixer, 0x00, sizeof(MixerState));
-	p_MF->p_Mixer = p_Mixer;
 
-	p_Mixer->Channels = p_MF->nChannels;
-	p_Mixer->Samples = p_MF->nSamples;
-	p_Mixer->MaxOrder = p_MF->p_Header->nOrders;
-	p_Mixer->Orders = p_MF->p_Header->Orders;
-	p_Mixer->Patterns = p_MF->p_Patterns;
-	p_Mixer->MusicSpeed = 6;
-	p_Mixer->MusicTempo = 125;
+	p_Mixer->Channels = p_Header->nChannels;
+	p_Mixer->Samples = p_Header->nSamples;
+	p_Mixer->MaxOrder = p_Header->nOrders;
+	p_Mixer->Orders = p_Header->Orders;
+	p_Mixer->Patterns = p_Patterns;
+	p_Mixer->MusicSpeed = p_Header->InitialSpeed;
+	p_Mixer->MusicTempo = p_Header->InitialTempo;
 	p_Mixer->TickCount = p_Mixer->MusicSpeed;
-	p_Mixer->Samp = p_MF->p_Samples;
-	p_Mixer->MixRate = p_MF->p_FI->BitRate;
-	p_Mixer->MixOutChannels = p_MF->p_FI->Channels;
-	p_Mixer->MixBitsPerSample = p_MF->p_FI->BitsPerSample;
+	p_Mixer->Samp = p_Samples;
+	p_Mixer->MixRate = p_FI->BitRate;
+	p_Mixer->MixOutChannels = p_FI->Channels;
+	p_Mixer->MixBitsPerSample = p_FI->BitsPerSample;
 	p_Mixer->SamplesPerTick = (p_Mixer->MixRate * 640) / (p_Mixer->MusicTempo << 8);
-	p_Mixer->RestartPos = p_MF->p_Header->RestartPos;
+	p_Mixer->RestartPos = p_Header->RestartPos;
 	if (p_Mixer->RestartPos > p_Mixer->MaxOrder)
 		p_Mixer->RestartPos = 0;
-	p_Mixer->SamplePCM = p_MF->p_PCM;
+	p_Mixer->SamplePCM = p_PCM;
 	p_Mixer->Chns = (Channel *)malloc(sizeof(Channel) * p_Mixer->Channels);
 	p_Mixer->ChnMix = (uint32_t *)malloc(sizeof(uint32_t) * p_Mixer->Channels);
 	memset(p_Mixer->Chns, 0x00, sizeof(Channel) * p_Mixer->Channels);
 	memset(p_Mixer->ChnMix, 0x00, sizeof(uint32_t) * p_Mixer->Channels);
 	ResetChannelPanning(p_Mixer);
 	InitialiseTables();
-}
-
-void DestroyMixer(void *Mixer)
-{
-	MixerState *p_Mixer = (MixerState *)Mixer;
-	if (p_Mixer == NULL)
-		return;
-	free(p_Mixer->Chns);
-	free(p_Mixer->ChnMix);
-	free(p_Mixer);
 }
 
 inline uint8_t PeriodToNoteIndex(uint16_t Period)
@@ -546,23 +473,23 @@ inline uint8_t PeriodToNoteIndex(uint16_t Period)
 
 void SampleChange(MixerState *p_Mixer, Channel *chn, uint32_t sample_)
 {
-	MODSample *smp;
+	ModuleSample *smp;
 	uint32_t note, sample = sample_ - 1;
 
-	smp = &p_Mixer->Samp[sample];
+	smp = p_Mixer->Samp[sample];
 	note = chn->NewNote;
-	chn->Volume = smp->Volume;
+	chn->Volume = smp->GetVolume();
 	chn->NewSamp = 0;
 	chn->Samp = smp;
-	chn->Length = smp->Length * 2;
-	chn->LoopStart = (smp->LoopStart < smp->Length ? smp->LoopStart : smp->Length) * 2;
-	chn->LoopEnd = (smp->LoopLen > 1 ? chn->LoopStart + (smp->LoopLen * 2) : 0);
+	chn->Length = smp->GetLength();
+	chn->LoopStart = (smp->GetLoopStart() < smp->GetLength() ? smp->GetLoopStart() : smp->GetLength());
+	chn->LoopEnd = (smp->GetLoopLen() > 2 ? chn->LoopStart + smp->GetLoopLen() : 0);
 	if (chn->LoopEnd != 0)
 		chn->Flags |= CHN_LOOP;
 	else
 		chn->Flags &= ~CHN_LOOP;
-	chn->NewSample = p_Mixer->SamplePCM[sample];
-	chn->FineTune = smp->FineTune;
+	chn->NewSample = p_Mixer->SamplePCM[smp->GetID()];
+	chn->FineTune = smp->GetFineTune();
 	if (chn->LoopEnd > chn->Length)
 		chn->LoopEnd = chn->Length;
 }
@@ -581,7 +508,7 @@ void NoteChange(MixerState *p_Mixer, uint32_t nChn, uint8_t note, uint8_t cmd)
 {
 	uint32_t period;
 	Channel * const chn = &p_Mixer->Chns[nChn];
-	MODSample *smp = chn->Samp;
+	ModuleSample *smp = chn->Samp;
 
 	chn->Note = note;
 	chn->NewSamp = 0;
@@ -596,19 +523,19 @@ void NoteChange(MixerState *p_Mixer, uint32_t nChn, uint8_t note, uint8_t cmd)
 		if (chn->PortamentoDest == chn->Period || chn->Length == 0)
 		{
 			chn->Samp = smp;
-			chn->NewSample = p_Mixer->SamplePCM[smp - p_Mixer->Samp];
-			chn->Length = smp->Length * 2;
-			if (smp->LoopLen > 1)
+			chn->NewSample = p_Mixer->SamplePCM[smp->GetID()];
+			chn->Length = smp->GetLength();
+			if (smp->GetLoopLen() > 2)
 			{
 				chn->Flags |= CHN_LOOP;
-				chn->LoopStart = (smp->LoopStart < smp->Length ? smp->LoopStart : smp->Length) * 2;
-				chn->LoopEnd = (smp->LoopLen > 1 ? chn->LoopStart + (smp->LoopLen * 2) : 0);
+				chn->LoopStart = (smp->GetLoopStart() < smp->GetLength() ? smp->GetLoopStart() : smp->GetLength());
+				chn->LoopEnd = chn->LoopStart + smp->GetLoopLen();
 			}
 			else
 			{
 				chn->Flags &= ~CHN_LOOP;
 				chn->LoopStart = 0;
-				chn->LoopEnd = smp->Length * 2;
+				chn->LoopEnd = smp->GetLength();
 			}
 			chn->Pos = 0;
 			if ((chn->TremoloType & 0x04) != 0)
@@ -867,11 +794,11 @@ BOOL ProcessEffects(MixerState *p_Mixer)
 			if (sample != 0)
 				chn->NewSamp = sample;
 			if (note == 0xFF && sample != 0)
-				chn->Volume = p_Mixer->Samp[sample - 1].Volume;
+				chn->Volume = p_Mixer->Samp[sample - 1]->GetVolume();
 			chn->NewNote = note;
 			if (sample != 0)
 			{
-				MODSample *smp = chn->Samp;
+				ModuleSample *smp = chn->Samp;
 				SampleChange(p_Mixer, chn, sample);
 				chn->NewSamp = 0;
 			}
@@ -1057,7 +984,7 @@ BOOL ProcessRow(MixerState *p_Mixer)
 	if (p_Mixer->TickCount >= p_Mixer->MusicSpeed * (p_Mixer->PatternDelay + 1))
 	{
 		uint32_t i;
-		MODCommand (*Commands)[64];
+		ModuleCommand (*Commands)[64];
 		Channel *chn = p_Mixer->Chns;
 		p_Mixer->TickCount = 0;
 		p_Mixer->PatternDelay = 0;
@@ -1076,18 +1003,18 @@ BOOL ProcessRow(MixerState *p_Mixer)
 			p_Mixer->NextPattern = p_Mixer->CurrentPattern + 1;
 			p_Mixer->NextRow = 0;
 		}
-		Commands = p_Mixer->Patterns[p_Mixer->Pattern].Commands;
+		Commands = (ModuleCommand (*)[64])p_Mixer->Patterns[p_Mixer->Pattern]->GetCommands();
 		for (i = 0; i < p_Mixer->Channels; i++, chn++)
 		{
-			uint16_t Period = Commands[i][p_Mixer->Row].Period;
+			uint16_t Period = Commands[i][p_Mixer->Row].GetPeriod();
 			if (Period == 0)
 				chn->RowNote = -1;
 			else
 				chn->RowNote = PeriodToNoteIndex(Period);
-			chn->RowSample = Commands[i][p_Mixer->Row].Sample;
+			chn->RowSample = Commands[i][p_Mixer->Row].GetSample();
 			if (chn->RowSample > p_Mixer->Samples)
 				chn->RowSample = 0;
-			chn->RowEffect = Commands[i][p_Mixer->Row].Effect;
+			chn->RowEffect = Commands[i][p_Mixer->Row].GetEffect();
 			chn->Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 		}
 	}
@@ -1480,9 +1407,8 @@ void CreateStereoMix(MixerState *p_Mixer, uint32_t count)
 	}
 }
 
-long Read(void *Mixer, uint8_t *Buffer, uint32_t BuffLen)
+long Read(MixerState *p_Mixer, uint8_t *Buffer, uint32_t BuffLen)
 {
-	MixerState *p_Mixer = (MixerState *)Mixer;
 	uint32_t SampleSize = p_Mixer->MixBitsPerSample / 8 * p_Mixer->MixOutChannels;
 	uint32_t Max = BuffLen / SampleSize, Read, Count, SampleCount;
 	int *MixBuffer = p_Mixer->MixBuffer;
@@ -1537,13 +1463,11 @@ long Read(void *Mixer, uint8_t *Buffer, uint32_t BuffLen)
 	return MixDone(p_Mixer, Buffer, Read, Max, SampleSize);
 }
 
-long FillMODBuffer(MOD_Intern *p_MF, long toRead)
+long ModuleFile::FillBuffer(uint8_t *buffer, long toRead, FileInfo *p_FI)
 {
 	long read;
-	if (p_MF->p_Mixer == NULL)
-		return -1;
-	read = Read(p_MF->p_Mixer, p_MF->buffer, toRead);
-	read *= (p_MF->p_FI->BitsPerSample / 8) * p_MF->p_FI->Channels;
+	read = Read(p_Mixer, buffer, toRead);
+	read *= (p_FI->BitsPerSample / 8) * p_FI->Channels;
 	if (read == 0)
 		return -2;
 	return read;

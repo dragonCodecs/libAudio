@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <malloc.h>
-#ifdef _WINDOWS
-#include <windows.h>
-#endif
 
 #include <mad.h>
 #include <id3tag.h>

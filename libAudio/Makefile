@@ -1,13 +1,14 @@
 GCC ?= gcc
-GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
-ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
-GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
-else
-GCC_FLAGS = 
-endif
+#GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
+#ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
+#GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
+#else
+#GCC_FLAGS = 
+#endif
+GCC_FLAGS = -ggdb
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack)
-CFLAGS = -c -O2 $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
+CFLAGS = -c $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
 EXTRA_LIBS = $(shell pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack)
 LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)
@@ -29,7 +30,8 @@ SHORTEN =
 #OPTIMFROG = loadOptimFROG.o
 OPTIMFROG = 
 H = libAudio.h
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o loadMOD.o moduleMixer/moduleMixer.o $(IT) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o loadMOD.o moduleMixer/moduleMixer.o loadSNDH.o loadS3M.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o $(O_MOD) $(IT) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -45,7 +47,7 @@ IN = libAudio.pc.in
 
 default: all
 
-all: $(O) $(SO) $(PC)
+all: $(SO) $(PC)
 
 install: all
 	$(INSTALL) $(SO) $(LIBDIR)
@@ -61,11 +63,11 @@ uninstall:
 	rm $(LIBDIR)/$(LA)
 	rm $(PKGDIR)/$(PC)
 
-libAudio.so$(VER):
+libAudio.so$(VER): $(O)
 	$(AR) $(A) $(O)
 	$(RANLIB) $(A)
 	$(CC) $(LFLAGS)
-	$(STRIP) $(SO)
+#	$(STRIP) $(SO)
 
 libAudio.pc:
 	$(SHELL) -c "sed -e 's:@LIBDIR@:$(LIBDIR):g' $(IN) > $(PC)"
@@ -74,6 +76,7 @@ clean:
 	rm -f *.o *.so* *.a *~ *.pc
 	@cd mixIT && rm -f *.o *~
 	@cd moduleMixer && rm -f *.o *~
+	@cd genericModule && rm -f *.o *~
 
 .cpp.o:
 	$(CC) $(CFLAGS) $*.cpp
@@ -89,8 +92,14 @@ loadM4A.o: loadM4A.cpp
 loadMP3.o: loadMP3.cpp
 loadMPC.o: loadMPC.cpp
 loadFLAC.o: loadFLAC.cpp
+genericModule/ModuleFile.o: genericModule/ModuleFile.cpp
+genericModule/ModuleHeader.o: genericModule/ModuleHeader.cpp
+genericModule/ModuleSample.o: genericModule/ModuleSample.cpp
+genericModule/ModulePattern.o: genericModule/ModulePattern.cpp
 loadMOD.o: loadMOD.cpp
 moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp
+loadSNDH.o: loadSNDH.cpp
+loadS3M.o: loadS3M.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp
 loadWavPack.o: loadWavPack.cpp

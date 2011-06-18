@@ -2,9 +2,6 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <malloc.h>
-#ifdef _WINDOWS
-#include <windows.h>
-#endif
 
 #include <FLAC/all.h>
 
