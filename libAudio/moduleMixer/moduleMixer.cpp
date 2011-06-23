@@ -35,14 +35,20 @@ void ModuleFile::ResetChannelPanning()
 	if (ModuleType == MODULE_MOD)
 	{
 		for (i = 0; i < p_Header->nChannels; i++)
-			Channels[i].Panning = ((i % 2) == 0 ? 0 : 128);
+		{
+			uint8_t j = i % 4;
+			if (j == 0 || j == 3)
+				Channels[i].Panning = 0;
+			else
+				Channels[i].Panning = 128;
+		}
 	}
 	else if (ModuleType == MODULE_S3M)
 	{
 		if (p_Header->Panning == NULL)
 		{
 			for (i = 0; i < p_Header->nChannels; i++)
-				Channels[i].Panning = 32;
+				Channels[i].Panning = 64;
 		}
 		else
 		{
@@ -723,8 +729,6 @@ void ModuleFile::SetChannelRowData(uint32_t i, ModuleCommand *Command)
 {
 	Channel *channel = &Channels[i];
 	channel->RowNote = Command->Note;
-	if (channel->RowNote == 0)
-		channel->RowNote = -1;
 	channel->RowSample = Command->Sample;
 	if (channel->RowSample > p_Header->nSamples)
 		channel->RowSample = 0;
@@ -753,10 +757,10 @@ bool ModuleFile::ProcessRow()
 			if (NewPattern != NextPattern)
 				NewPattern = NextPattern;
 			Pattern = p_Header->Orders[NewPattern];
-			if (Pattern >= p_Header->nPatterns)
+			if (Pattern > p_Header->nPatterns)
 				NextPattern++;
 		}
-		while (Pattern >= p_Header->nPatterns);
+		while (Pattern > p_Header->nPatterns);
 		NextPattern = NewPattern;
 		if (Row >= 64)
 			Row = 0;
@@ -1144,7 +1148,7 @@ long ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 
 	if (Max == 0)
 		return -2;
-	if (Pattern >= p_Header->nOrders)
+	if (NextPattern >= p_Header->nOrders)
 		return (Mixed == 0 ? -2 : Mixed * (MixBitsPerSample / 8) * MixChannels);
 	while (Mixed < Max)
 	{

@@ -102,6 +102,8 @@ ModuleCommand **ModulePattern::GetCommands()
 uint8_t ModuleCommand::MODPeriodToNoteIndex(uint16_t Period)
 {
 	uint8_t i, min = 0, max = 59;
+	if (Period == 0)
+		return 0;
 	do
 	{
 		i = min + ((max - min) / 2);
@@ -141,7 +143,7 @@ void ModuleCommand::SetMODData(uint8_t Data[4])
 {
 	Sample = (Data[0] & 0xF0) | (Data[2] >> 4);
 	Note = MODPeriodToNoteIndex((((uint16_t)(Data[0] & 0x0F)) << 8) | Data[1]);
-	//TranslateMODEffect(Data[2] & 0x0F, Data[3]);
+	TranslateMODEffect(Data[2] & 0x0F, Data[3]);
 }
 
 void ModuleCommand::SetS3MNote(uint8_t note, uint8_t sample)
