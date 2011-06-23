@@ -56,7 +56,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 
 	if (ExternalPlayback == 0)
 		p_MF->p_Playback = new Playback(ret, MOD_FillBuffer, p_MF->buffer, 8192, p_MODFile);
-	p_MF->p_File->CreateMixer(ret);
+	p_MF->p_File->InitMixer(ret);
 
 	return ret;
 }
@@ -69,7 +69,7 @@ long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 		return -1;
 	do
 	{
-		Read = p_MF->p_File->FillBuffer(p_MF->buffer, nOutBufferLen - ret, p_MF->p_FI);
+		Read = p_MF->p_File->Mix(p_MF->buffer, nOutBufferLen - ret);
 		if (Read >= 0 && OutBuffer != p_MF->buffer)
 			memcpy(OutBuffer + ret, p_MF->buffer, Read);
 		if (Read >= 0)
