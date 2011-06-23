@@ -28,93 +28,46 @@ void *Audio_OpenR(const char *FileName)
 	if (ret == NULL)
 		return NULL;
 	if (Is_OggVorbis(FileName) == true)
-	{
 		ret->API = &OggVorbisDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_FLAC(FileName) == true)
-	{
 		ret->API = &FLACDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_WAV(FileName) == true)
-	{
 		ret->API = &WAVDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_M4A(FileName) == true)
-	{
 		ret->API = &M4ADecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_AAC(FileName) == true)
-	{
 		ret->API = &AACDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_MP3(FileName) == true)
-	{
 		ret->API = &MP3Decoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 #ifndef __NO_IT__
 	else if (Is_IT(FileName) == true)
-	{
 		ret->API = &ITDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 #endif
 	else if (Is_MOD(FileName) == true)
-	{
 		ret->API = &MODDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_S3M(FileName) == true)
-	{
 		ret->API = &S3MDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_MPC(FileName) == true)
-	{
 		ret->API = &MPCDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 	else if (Is_WavPack(FileName) == true)
-	{
 		ret->API = &WavPackDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 #ifndef __NO_OptimFROG__
 	else if (Is_OptimFROG(FileName) == true)
-	{
 		ret->API = &OptimFROGDecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 #endif
 	// Add RealAudio call here once decoder is complete
 #ifdef __WMA__
 	else if (Is_WMA(FileName) == true)
-	{
 		ret->API = &WMADecoder;
-		ret->p_AudioFile = ret->API->OpenR(FileName);
-		return ret;
-	}
 #endif
-	free(ret);
+	else
+	{
+		free(ret);
+		return NULL;
+	}
 
-	return NULL;
+	ret->p_AudioFile = ret->API->OpenR(FileName);
+	return ret;
 }
 
 /*!
