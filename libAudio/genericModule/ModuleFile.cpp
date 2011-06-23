@@ -1,7 +1,6 @@
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
 #include "genericModule.h"
-#include "../moduleMixer/moduleMixer.h"
 
 #ifndef _WINDOWS
 #ifndef max
@@ -9,7 +8,7 @@
 #endif
 #endif
 
-ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Mixer(NULL)
+ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i, maxPattern;
 	FILE *f_MOD = p_MF->f_MOD;
@@ -35,9 +34,11 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Mixer(NULL)
 		p_Patterns[i] = new ModulePattern(p_MF, p_Header->nChannels);
 
 	MODLoadPCM(f_MOD);
+	MinPeriod = 56;
+	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Mixer(NULL)
+ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i;
 	FILE *f_S3M = p_SF->f_S3M;
@@ -46,7 +47,7 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Mixer(NULL)
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
-		uint32_t SeekLoc = ((uint32_t)p_Header->SamplePtrs[i]) << 4;
+		uint32_t SeekLoc = ((uint32_t)(p_Header->SamplePtrs[i])) << 4;
 		fseek(f_S3M, SeekLoc, SEEK_SET);
 		p_Samples[i] = ModuleSample::LoadSample(p_SF, i);
 	}
@@ -71,18 +72,16 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Mixer(NULL)
 	}
 
 	S3MLoadPCM(f_S3M);
+	MinPeriod = 64;
+	MaxPeriod = 32767;
 }
 
 ModuleFile::~ModuleFile()
 {
 	uint32_t i;
 
-	if (p_Mixer != NULL)
-	{
-		free(p_Mixer->Chns);
-		free(p_Mixer->ChnMix);
-	}
-	free(p_Mixer);
+	delete Channels;
+	delete MixerChannels;
 
 	for (i = 0; i < p_Header->nSamples; i++)
 		delete p_PCM[i];
@@ -157,6 +156,12 @@ void ModuleFile::S3MLoadPCM(FILE *f_S3M)
 			p_PCM[i] = new uint8_t[Length];
 			fseek(f_S3M, SeekLoc, SEEK_SET);
 			fread(p_PCM[i], Length, 1, f_S3M);
+			if (p_Header->FormatVersion == 2)
+			{
+				uint32_t j;
+				for (j = 0; j < Length; j++)
+					p_PCM[i][j] = ((short)p_PCM[i][j]) - 128;
+			}
 		}
 		else
 			p_PCM[i] = NULL;

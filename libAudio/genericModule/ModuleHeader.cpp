@@ -64,6 +64,7 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 	InitialSpeed = 6;
 	InitialTempo = 125;
 	SamplePtrs = PatternPtrs = NULL;
+	Panning = NULL;
 }
 
 ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
@@ -107,6 +108,21 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	PatternPtrs = new uint16_t[nPatterns];
 	fread(PatternPtrs, nPatterns, 2, f_S3M);
 
+	// Panning?
+	if (DontCare[1] == 0xFC)
+	{
+		uint32_t i;
+		Panning = new uint8_t[32];
+		fread(Panning, 32, 1, f_S3M);
+		for (i = 0; i < 32; i++)
+		{
+			if ((Panning[i] & 0x20) != 0)
+				Panning[i] = (Panning[i] & 0x0F) << 4;
+		}
+	}
+	else
+		Panning = NULL;
+
 	/********************************************\
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
@@ -116,6 +132,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 
 ModuleHeader::~ModuleHeader()
 {
+	delete Panning;
 	delete PatternPtrs;
 	delete SamplePtrs;
 	delete Orders;

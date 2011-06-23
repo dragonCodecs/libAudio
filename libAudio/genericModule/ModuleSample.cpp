@@ -17,20 +17,15 @@ ModuleSample *ModuleSample::LoadSample(S3M_Intern *p_SF, uint32_t i)
 {
 	uint8_t Type;
 	fread(&Type, 1, 1, p_SF->f_S3M);
-	if (Type == 1)
-		return new ModuleSampleNative(p_SF, i);
-	else
+	if (Type > 1)
 		return new ModuleSampleAdlib(p_SF, i, Type);
+	else
+		return new ModuleSampleNative(p_SF, i, Type);
 }
 
 uint8_t ModuleSample::GetType()
 {
 	return Type;
-}
-
-uint32_t ModuleSample::GetID()
-{
-	return ID;
 }
 
 ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSample(i, 1)
@@ -73,7 +68,7 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	Dest = (((uint32_t)P2) << 16) | P1; \
 }
 
-ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t type) : ModuleSample(i, type)
 {
 	uint8_t DontCare[12];
 	char Magic[4];
@@ -98,8 +93,11 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i) : ModuleSam
 	if (Name[27] != 0)
 		Name[28] = 0;
 	fread(Magic, 4, 1, f_S3M);
-	if (memcmp(Magic, "SCRS", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_S3M);
+	if (Type == 1)
+	{
+		if (memcmp(Magic, "SCRS", 4) != 0)
+			throw new ModuleLoaderError(E_BAD_S3M);
+	}
 }
 
 ModuleSampleNative::~ModuleSampleNative()
@@ -127,9 +125,14 @@ uint8_t ModuleSampleNative::GetFineTune()
 	return FineTune;
 }
 
+uint32_t ModuleSampleNative::GetC4Speed()
+{
+	return C4Speed;
+}
+
 uint8_t ModuleSampleNative::GetVolume()
 {
-	return Volume;
+	return Volume << 1;
 }
 
 ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type) : ModuleSample(i, Type)
@@ -189,7 +192,12 @@ uint8_t ModuleSampleAdlib::GetFineTune()
 	return 0;
 }
 
+uint32_t ModuleSampleAdlib::GetC4Speed()
+{
+	return C4Speed;
+}
+
 uint8_t ModuleSampleAdlib::GetVolume()
 {
-	return Volume;
+	return Volume << 1;
 }

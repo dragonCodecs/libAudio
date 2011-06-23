@@ -16,7 +16,9 @@ class ModulePattern;
 
 #include "../ProTracker.h"
 #include "../ScreamTracker.h"
-#include "../moduleMixer/moduleMixer.h"
+#include "effects.h"
+
+#define MIXBUFFERSIZE		512
 
 #define MODULE_MOD		1
 #define MODULE_S3M		2
@@ -64,6 +66,8 @@ private:
 	// PatternPtrs = pointers to where the compressed pattern data is
 	uint16_t *PatternPtrs;
 
+	uint8_t *Panning;
+
 private:
 	uint8_t nChannels;
 	friend class ModuleFile;
@@ -76,7 +80,7 @@ public:
 
 class ModuleSample
 {
-private:
+protected:
 	uint8_t Type;
 
 private:
@@ -95,8 +99,8 @@ public:
 	virtual uint32_t GetLoopStart() = 0;
 	virtual uint32_t GetLoopLen() = 0;
 	virtual uint8_t GetFineTune() = 0;
+	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
-	uint32_t GetID();
 };
 
 class ModuleSampleNative : public ModuleSample
@@ -119,13 +123,14 @@ private:
 
 public:
 	ModuleSampleNative(MOD_Intern *p_MF, uint32_t i);
-	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i);
+	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
 	~ModuleSampleNative();
 
 	uint32_t GetLength();
 	uint32_t GetLoopStart();
 	uint32_t GetLoopLen();
 	uint8_t GetFineTune();
+	uint32_t GetC4Speed();
 	uint8_t GetVolume();
 };
 
@@ -158,6 +163,7 @@ public:
 	uint32_t GetLoopStart();
 	uint32_t GetLoopLen();
 	uint8_t GetFineTune();
+	uint32_t GetC4Speed();
 	uint8_t GetVolume();
 };
 
@@ -165,15 +171,21 @@ class ModuleCommand
 {
 private:
 	uint8_t Sample;
-	uint16_t Period;
-	uint16_t Effect;
+	uint8_t Note;
+	uint8_t VolEffect;
+	uint8_t VolParam;
+	uint8_t Effect;
+	uint8_t Param;
+
+	inline uint8_t MODPeriodToNoteIndex(uint16_t Period);
+	void TranslateMODEffect(uint8_t Effect, uint8_t Param);
+	friend class ModuleFile;
 
 public:
 	void SetMODData(uint8_t Data[4]);
-	void SetS3MData(uint8_t Note, uint8_t sample);
-	uint8_t GetSample();
-	uint16_t GetPeriod();
-	uint16_t GetEffect();
+	void SetS3MNote(uint8_t Note, uint8_t sample);
+	void SetS3MVolume(uint8_t Volume);
+	void SetS3MEffect(uint8_t Effect, uint8_t Param);
 };
 
 class ModulePattern
@@ -189,6 +201,45 @@ public:
 	ModuleCommand **GetCommands();
 };
 
+typedef struct _int16dot16_t
+{
+	uint16_t Lo;
+	int16_t Hi;
+} int16dot16_t;
+
+typedef union _int16dot16
+{
+	int32_t iValue;
+	int16dot16_t Value;
+} int16dot16;
+
+typedef struct _Channel
+{
+	uint8_t *SampleData, *NewSampleData;
+	uint8_t Note, Flags;
+	uint8_t NewNote, NewSample;
+	uint32_t LoopStart, LoopEnd, Length;
+	uint8_t RampLength, Volume;
+	ModuleSample *Sample;
+	uint8_t FineTune, Panning, Arpeggio;
+	uint8_t RowNote, RowSample, RowVolEffect;
+	uint8_t RowEffect, RowVolParam, RowParam;
+	uint16_t PortamentoSlide;
+	uint32_t Period, C4Speed;
+	uint32_t Pos, PosLo;
+	int16dot16 Increment;
+	uint32_t PortamentoDest;
+	uint8_t Portamento;
+	uint8_t LeftVol, RightVol;
+	uint8_t NewLeftVol, NewRightVol;
+	short LeftRamp, RightRamp;
+	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
+	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
+	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
+	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
+	int DCOffsR, DCOffsL;
+} Channel;
+
 class ModuleFile
 {
 private:
@@ -197,7 +248,52 @@ private:
 	ModuleSample **p_Samples;
 	ModulePattern **p_Patterns;
 	uint8_t **p_PCM;
-	MixerState *p_Mixer;
+
+	// Mixer info
+private:
+	uint32_t MixSampleRate, MixChannels, MixBitsPerSample;
+	uint32_t TickCount, SamplesToMix, MinPeriod, MaxPeriod;
+	uint32_t Row, NextRow;
+	uint32_t MusicSpeed, MusicTempo;
+	uint32_t Pattern, NewPattern, NextPattern;
+	uint32_t RowsPerBeat, SamplesPerTick;
+	Channel *Channels;
+	uint32_t nMixerChannels, *MixerChannels;
+
+	uint8_t PatternLoopCount, PatternLoopStart;
+	uint8_t PatternDelay, FrameDelay;
+	int MixBuffer[MIXBUFFERSIZE * 2];
+	int DCOffsR, DCOffsL;
+
+	// Effects functions
+	void VolumeSlide(Channel *channel, uint8_t param);
+	void PortamentoUp(Channel *channel, uint8_t param);
+	void PortamentoDown(Channel *channel, uint8_t param);
+	void FinePortamentoUp(Channel *channel, uint8_t param);
+	void FinePortamentoDown(Channel *channel, uint8_t param);
+	void ExtraFinePortamentoUp(Channel *channel, uint8_t param);
+	void ExtraFinePortamentoDown(Channel *channel, uint8_t param);
+	void TonePortamento(Channel *channel, uint8_t param);
+	int PatternLoop(uint32_t param);
+	void ProcessMODExtended(Channel *channel);
+	void ProcessS3MExtended(Channel *channel);
+
+	// Processing functions
+	bool AdvanceRow();
+	bool ProcessRow();
+	bool ProcessEffects();
+	void SetChannelRowData(uint32_t channel, ModuleCommand *Command);
+	void ResetChannelPanning();
+	void SampleChange(Channel *channel, uint32_t sample);
+	void NoteChange(Channel * const channel, uint8_t note, uint8_t cmd);
+	uint32_t GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed);
+	uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int32_t PeriodFrac);
+
+	// Mixing functions
+	inline uint32_t GetSampleCount(Channel *chn, uint32_t Samples);
+	inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples);
+	void DCFixingFill(uint32_t samples);
+	void CreateStereoMix(uint32_t count);
 
 private:
 	void MODLoadPCM(FILE *f_MOD);
@@ -210,8 +306,8 @@ public:
 
 	const char *GetTitle();
 	uint8_t GetChannels();
-	void CreateMixer(FileInfo *p_FI);
-	long FillBuffer(uint8_t *buffer, long toRead, FileInfo *p_FI);
+	void InitMixer(FileInfo *p_FI);
+	long Mix(uint8_t *Buffer, uint32_t BuffLen);
 };
 
 #endif /*__GenericModule_H__*/
