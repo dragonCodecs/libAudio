@@ -2,6 +2,8 @@
 #ifndef __mixFunctions_H__
 #define __mixFunctions_H__ 1
 
+typedef void (__CDECL__ *MixInterface)(Channel *, int *, int *);
+
 #define WFIR_QUANTBITS		15
 #define WFIR_QUANTSCALE		(1 << WFIR_QUANTBITS)
 #define WFIR_SHIFT			(WFIR_QUANTBITS - 8)
@@ -245,7 +247,7 @@ void InitialiseTables()
 #define SNDMIX_BEGINSAMPLELOOP \
 	int Pos = chn->PosLo; \
 	int Increment = chn->Increment.iValue; \
-	signed char *p = ((signed char *)chn->Sample) + chn->Pos; \
+	signed char *p = ((signed char *)chn->SampleData) + chn->Pos; \
 	int *vol = Buff; \
 	do \
 	{
@@ -314,7 +316,7 @@ void InitialiseTables()
 
 // Mono
 #define SNDMIX_GETMONOVOLNOIDO \
-	int vol_ = p[Pos >> 16] << 8;
+	int vol_ = p[Pos >> 16] << 7;
 
 #define SNDMIX_GETMONOVOLLINEAR \
 	int posHi = Pos >> 16; \
