@@ -35,7 +35,13 @@ public:
 	const char *GetError();
 };
 
-class ModuleHeader
+class ModuleAllocator
+{
+public:
+	void *operator new(size_t s);
+};
+
+class ModuleHeader : public ModuleAllocator
 {
 private:
 	// Common fields
@@ -78,7 +84,7 @@ public:
 	~ModuleHeader();
 };
 
-class ModuleSample
+class ModuleSample : public ModuleAllocator
 {
 protected:
 	uint8_t Type;
@@ -167,7 +173,7 @@ public:
 	uint8_t GetVolume();
 };
 
-class ModuleCommand
+class ModuleCommand : public ModuleAllocator
 {
 private:
 	uint8_t Sample;
@@ -188,7 +194,7 @@ public:
 	void SetS3MEffect(uint8_t Effect, uint8_t Param);
 };
 
-class ModulePattern
+class ModulePattern : public ModuleAllocator
 {
 private:
 	ModuleCommand (*Commands)[64];
@@ -240,7 +246,7 @@ typedef struct _Channel
 	int DCOffsR, DCOffsL;
 } Channel;
 
-class ModuleFile
+class ModuleFile : public ModuleAllocator
 {
 private:
 	uint8_t ModuleType;

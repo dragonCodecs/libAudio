@@ -8,6 +8,13 @@
 #endif
 #endif
 
+void *ModuleAllocator::operator new(size_t size)
+{
+	void *ret = ::operator new(size);
+	memset(ret, 0x00, size);
+	return ret;
+}
+
 ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i, maxPattern;
