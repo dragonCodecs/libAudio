@@ -7,6 +7,7 @@
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
 #include "../genericModule/genericModule.h"
+#include "../fixedPoint/fixedPoint.h"
 
 #include "waveTables.h"
 #include "moduleMixer.h"
@@ -351,6 +352,15 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	}
 }
 
+// Returns ((period * 65536 * 2^(slide / 192)) + 32767) / 65536 using fixed-point maths
+inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
+{
+	const fixed64_t c192(192);
+	const fixed64_t c32768(32768);
+	const fixed64_t c65536(65536);
+	return (((fixed64_t(period) * (fixed64_t(slide) / c192).pow2() * c65536) + c32768) / c65536).operator int();
+}
+
 inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 {
 	if (param != 0)
@@ -408,7 +418,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
-			channel->Period = ((OldPeriod * LinearSlideUpTable[param]) + 32768) / 65536;
+			channel->Period = LinearSlideUp(OldPeriod, param);
 			if (channel->Period == OldPeriod)
 				channel->Period++;
 		}
@@ -439,7 +449,7 @@ inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
 	if (TickCount == 0)
 	{
 		if  ((p_Header->Flags & 4) == 0)
-			channel->Period = ((channel->Period * LinearSlideUpTable[param]) + 32768) / 65536;
+			channel->Period = LinearSlideUp(channel->Period, param);
 		else
 			channel->Period += param << 2;
 		if (channel->Period > MaxPeriod)
@@ -488,9 +498,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
-				// TODO: Replace LinearSlideUpTable lookup with
-				// (int)(65536 * 2^(Slide/192)) which is the formula to create the table
-				Delta = (((channel->Period * LinearSlideUpTable[Slide]) + 32768) / 65536) - channel->Period;
+				Delta = LinearSlideUp(channel->Period, Slide) - channel->Period;
 				//Delta = muladddiv(channel->Period, LinearSlideUpTable[Slide], 65536) - channel->Period;
 				if (Delta < 1)
 					Delta = 1;
