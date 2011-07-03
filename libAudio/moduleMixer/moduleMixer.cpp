@@ -132,6 +132,15 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 	uint32_t period;
 	ModuleSample *sample = channel->Sample;
 
+	if (note < 1)
+		return;
+	if (note >= 0x80)
+	{
+		NoteOff(channel);
+		if (note == 0xFE)
+			NoteCut(channel, TickCount);
+		return;
+	}
 	channel->Note = note;
 	channel->NewSample = 0;
 	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
@@ -352,13 +361,23 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	}
 }
 
-// Returns ((period * 65536 * 2^(slide / 192)) + 32767) / 65536 using fixed-point maths
+// Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
 inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
 {
 	const fixed64_t c192(192);
 	const fixed64_t c32768(32768);
 	const fixed64_t c65536(65536);
 	return (((fixed64_t(period) * (fixed64_t(slide) / c192).pow2() * c65536) + c32768) / c65536).operator int();
+}
+
+// Returns ((period * 65535 * 2^(-slide / 192)) + 32768) / 65536 using fixed-point maths
+inline uint32_t LinearSlideDown(uint32_t period, uint8_t slide)
+{
+	const fixed64_t c192(192);
+	const fixed64_t c32768(32768);
+	const fixed64_t c65535(65535);
+	const fixed64_t c65536(65536);
+	return (((fixed64_t(period) * (fixed64_t(-((int32_t)slide)) / c192).pow2() * c65535) + c32768) / c65536).operator int();
 }
 
 inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
@@ -383,7 +402,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
-			channel->Period = ((OldPeriod * LinearSlideDownTable[param]) + 32768) / 65536;
+			channel->Period = LinearSlideDown(OldPeriod, param);
 			if (channel->Period == OldPeriod)
 				channel->Period--;
 		}
@@ -436,7 +455,7 @@ inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
 	if (TickCount == 0)
 	{
 		if  ((p_Header->Flags & 4) == 0)
-			channel->Period = ((channel->Period * LinearSlideDownTable[param]) + 32768) / 65536;
+			channel->Period = LinearSlideDown(channel->Period, param);
 		else
 			channel->Period -= param << 2;
 		if (channel->Period < MinPeriod)
@@ -499,7 +518,6 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
 				Delta = LinearSlideUp(channel->Period, Slide) - channel->Period;
-				//Delta = muladddiv(channel->Period, LinearSlideUpTable[Slide], 65536) - channel->Period;
 				if (Delta < 1)
 					Delta = 1;
 			}
@@ -516,7 +534,6 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
 				Delta = (((channel->Period * LinearSlideDownTable[Slide]) + 32768) / 65536) - channel->Period;
-				//Delta = muladddiv(channel->Period, LinearSlideDownTable[Slide], 65536) - channel->Period;
 				if (Delta > -1)
 					Delta = -1;
 			}
@@ -527,6 +544,30 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 				channel->Period = channel->PortamentoDest;
 		}
 	}
+}
+
+void ModuleFile::NoteCut(Channel *channel, uint32_t TriggerTick)
+{
+	if (TickCount == TriggerTick)
+	{
+		channel->Volume = 0;
+		channel->Flags |= CHN_FASTVOLRAMP;
+	}
+}
+
+void ModuleFile::NoteOff(Channel *channel)
+{
+	if (channel->Length == 0)
+		return;
+}
+
+void ModuleFile::Vibrato(Channel *channel, uint8_t param, uint8_t Multiplier)
+{
+	if ((param & 0x0F) != 0)
+		channel->VibratoDepth = (param & 0x0F) * Multiplier;
+	if ((param & 0xF0) != 0)
+		channel->VibratoSpeed = param >> 4;
+	channel->Flags |= CHN_VIBRATO;
 }
 
 bool ModuleFile::ProcessEffects()
@@ -623,11 +664,7 @@ bool ModuleFile::ProcessEffects()
 				TonePortamento(channel, param);
 				break;
 			case CMD_VIBRATO:
-				if ((param & 0x0F) != 0)
-					channel->VibratoDepth = (param & 0x0F) * 4;
-				if ((param & 0xF0) != 0)
-					channel->VibratoSpeed = param >> 4;
-				channel->Flags |= CHN_VIBRATO;
+				Vibrato(channel, param, 4);
 				break;
 			case CMD_TONEPORTAVOL:
 				if (param != 0)
@@ -700,6 +737,9 @@ bool ModuleFile::ProcessEffects()
 					break;
 				channel->Panning = param;
 				channel->Flags |= CHN_FASTVOLRAMP;
+				break;
+			case CMD_FINEVIBRATO:
+				Vibrato(channel, param, 1);
 				break;
 		}
 	}
@@ -897,7 +937,7 @@ bool ModuleFile::AdvanceRow()
 				{
 					RampLength = SamplesToMix;
 					// Clipping:
-					CLIPINT(RampLength, 4, 512);
+					CLIPINT(RampLength, 2, 512);
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
 				channel->LeftRamp = LeftDelta / RampLength;
