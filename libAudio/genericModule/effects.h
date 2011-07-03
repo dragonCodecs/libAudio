@@ -21,6 +21,7 @@
 #define CMD_TEMPO			0x11
 #define CMD_VOLUME			0x12
 #define CMD_PANNING			0x13
+#define CMD_FINEVIBRATO		0x14
 
 #define VOLCMD_NONE			0x00
 #define VOLCMD_VOLUME		0x01

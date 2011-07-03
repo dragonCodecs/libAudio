@@ -168,10 +168,10 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_TEMPO;
 			Param = param;
 			break;
-		/*case 21:
+		case 21:
 			Effect = CMD_FINEVIBRATO;
 			Param = param;
-			break;*/
+			break;
 		/*case 22:
 			Effect = CMD_GLOBALVOLUME;
 			Param = param;

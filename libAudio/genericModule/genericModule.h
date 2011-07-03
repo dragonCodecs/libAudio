@@ -39,6 +39,7 @@ class ModuleAllocator
 {
 public:
 	void *operator new(size_t s);
+	void *operator new[](size_t s);
 };
 
 class ModuleHeader : public ModuleAllocator
@@ -219,8 +220,9 @@ typedef union _int16dot16
 	int16dot16_t Value;
 } int16dot16;
 
-typedef struct _Channel
+class Channel : public ModuleAllocator
 {
+public:
 	uint8_t *SampleData, *NewSampleData;
 	uint8_t Note, Flags;
 	uint8_t NewNote, NewSample;
@@ -244,7 +246,7 @@ typedef struct _Channel
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 	int DCOffsR, DCOffsL;
-} Channel;
+};
 
 class ModuleFile : public ModuleAllocator
 {
@@ -283,6 +285,9 @@ private:
 	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);
+	void NoteOff(Channel *channel);
+	void NoteCut(Channel *channel, uint32_t TriggerTick);
+	void Vibrato(Channel *channel, uint8_t param, uint8_t Multiplier);
 
 	// Processing functions
 	bool AdvanceRow();
