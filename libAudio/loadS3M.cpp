@@ -104,15 +104,17 @@ void S3M_Play(void *p_S3MFile)
 bool Is_S3M(const char *FileName)
 {
 	FILE *f_S3M = fopen(FileName, "rb");
-	char S3MMagic[4];
+	char S3MMagic1, S3MMagic2[4];
 	if (f_S3M == NULL)
 		return false;
 
-	fseek(f_S3M, 44, SEEK_CUR);
-	fread(S3MMagic, 4, 1, f_S3M);
+	fseek(f_S3M, 28, SEEK_CUR);
+	fread(&S3MMagic1, 1, 1, f_S3M);
+	fseek(f_S3M, 15, SEEK_CUR);
+	fread(S3MMagic2, 4, 1, f_S3M);
 	fclose(f_S3M);
 
-	if (strncmp(S3MMagic, "SCRM", 4) == 0)
+	if (S3MMagic1 == 0x1A && strncmp(S3MMagic2, "SCRM", 4) == 0)
 		return true;
 	else
 		return false;
