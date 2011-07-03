@@ -377,7 +377,7 @@ inline uint32_t LinearSlideDown(uint32_t period, uint8_t slide)
 	const fixed64_t c32768(32768);
 	const fixed64_t c65535(65535);
 	const fixed64_t c65536(65536);
-	return (((fixed64_t(period) * (fixed64_t(-((int32_t)slide)) / c192).pow2() * c65535) + c32768) / c65536).operator int();
+	return (((fixed64_t(period) * (fixed64_t(slide, 0, -1) / c192).pow2() * c65535) + c32768) / c65536).operator int();
 }
 
 inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
@@ -533,7 +533,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
-				Delta = (((channel->Period * LinearSlideDownTable[Slide]) + 32768) / 65536) - channel->Period;
+				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period;
 				if (Delta > -1)
 					Delta = -1;
 			}

@@ -1,12 +1,9 @@
 #include <stdio.h>
+#include <math.h>
+#include <strings.h>
 #include "fixedPoint.h"
 
-fixed64_t::fixed64_t(uint32_t a) : d(0)
-{
-	i = (int32_t)a;
-}
-
-fixed64_t::fixed64_t(int32_t a, uint32_t b) : i(a), d(b)
+fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c)
 {
 }
 
@@ -32,49 +29,163 @@ fixed64_t fixed64_t::pow2()
 
 fixed64_t fixed64_t::operator *(const fixed64_t &b) const
 {
-	double e = ((double)i) + ((double)d) / 4294967295.0;
-	double f = ((double)b.i) + ((double)b.d) / 4294967295.0;
-	double g = e * f;
-	return fixed64_t((int32_t)g, (uint32_t)((g - ((int32_t)g)) * 4294967295.0));
+	uint64_t e = ((uint64_t)b.i) * ((uint64_t)d);
+	uint64_t f = ((uint64_t)i) * ((uint64_t)b.d);
+	uint32_t g = (((uint64_t)d) * ((uint64_t)b.d)) >> 32;
+	uint32_t h = ((uint64_t)i) * ((uint64_t)b.i) + (e >> 32) + (f >> 32);
+	g += (e & 0xFFFFFFFF) + (f & 0xFFFFFFFF);
+//	printf("% 2.9f * % 2.9f ?= % 2.9f\n", operator double(), b.operator double(), fixed64_t(h, g, sign * b.sign).operator double());
+	return fixed64_t(h, g, sign * b.sign);
 }
 
 fixed64_t &fixed64_t::operator *=(const fixed64_t &b)
 {
-	double e = ((double)i) + ((double)d) / 4294967295.0;
-	double f = ((double)b.i) + ((double)b.d) / 4294967295.0;
-	double g = e * f;
-	i = (int32_t)g;
-	d = (uint32_t)((g - ((int32_t)g)) * 4294967295.0);
+	uint64_t e = ((uint64_t)b.i) * ((uint64_t)d);
+	uint64_t f = ((uint64_t)i) * ((uint64_t)b.d);
+	uint32_t g = (((uint64_t)d) * ((uint64_t)b.d)) >> 32;
+	sign *= b.sign;
+	i = i * b.i + (e >> 32) + (f >> 32);
+	d = (e & 0xFFFFFFFF) + (f & 0xFFFFFFFF) + g;
 	return *this;
 }
 
+// Quick and dirty code, it makes mistakes on occasion, but pumps the right sequence out for it's use
 fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 {
-	double e = ((double)i) + ((double)d) / 4294967295.0;
-	double f = ((double)b.i) + ((double)b.d) / 4294967295.0;
-	double g = (f == 0 ? 0 : e / f);
-	return fixed64_t((int32_t)g, (uint32_t)((g - ((int32_t)g)) * 4294967295.0));
+	uint8_t g;
+	uint32_t q_i, q_d = 0;
+	uint64_t e = (((uint64_t)i) << 32) | ((uint64_t)d);
+	uint64_t f = (((uint64_t)b.i) << 32) | ((uint64_t)b.d);
+
+	if (e == 0)
+		return fixed64_t(0);
+
+	q_i = e / f;
+//	printf("%llu %d\t", e, q_i);
+	e -= q_i * f;
+//	printf("%llu %llu", q_i * f, e);
+	g = 0;
+	while (e > 0 && f > 0 && g < 32)
+	{
+		q_d <<= 1;
+		if (e >= f)
+		{
+			e -= f;
+			q_d |= 1;
+		}
+		f >>= 1;
+		g++;
+	}
+//	printf("\t% 2.9f\n", fixed64_t(q_i, q_d << (33 - g), sign * b.sign).operator double());
+	return fixed64_t(q_i, q_d << (33 - g), sign * b.sign);
+}
+
+// Quick and dirty code, it makes mistakes on occasion, but pumps the right sequence out for it's use
+fixed64_t &fixed64_t::operator /=(const fixed64_t &b)
+{
+	uint8_t g;
+	uint64_t e = (((uint64_t)i) << 32) | ((uint64_t)d);
+	uint64_t f = (((uint64_t)b.i) << 32) | ((uint64_t)b.d);
+
+	if (e == 0)
+	{
+		i = 0;
+		d = 0;
+		return *this;
+	}
+
+	sign *= b.sign;
+	d = 0;
+	i = e / f;
+	g = 0;
+	while (e > 0 && f > 0 && g < 32)
+	{
+		d <<= 1;
+		if (e >= f)
+		{
+			e -= f;
+			d |= 1;
+		}
+		f >>= 1;
+		g++;
+	}
+	d <<= (33 - g);
+	return *this;
 }
 
 fixed64_t fixed64_t::operator +(const fixed64_t &b) const
 {
-	uint64_t e = (((int64_t)i) << 32) | d;
-	uint64_t f = (((int64_t)b.i) << 32) | b.d;
-	uint64_t g = e + f;
-	return fixed64_t(g >> 32, g & 0xFFFFFFFF);
+	if (sign != b.sign)
+	{
+		bool overflow = false;
+		int64_t decimal = ((int64_t)d) - ((int64_t)b.d);
+		int64_t integer = ((int64_t)i) - ((int64_t)b.i);
+		if (sign < 0)
+		{
+			decimal = -decimal;
+			integer = -integer;
+		}
+		if (decimal < 0)
+		{
+			overflow = true;
+			decimal = (1LL << 32) + decimal;
+		}
+		return fixed64_t((integer < 0 ? -integer : integer) - (overflow == true ? 1 : 0),
+			decimal, (integer < 0 ? -1 : 1));
+	}
+	else
+	{
+		uint32_t decimal = d + b.d;
+		return fixed64_t(i + b.i + (decimal < (d | b.d) ? 1 : 0), decimal, sign);
+	}
 }
 
 fixed64_t &fixed64_t::operator +=(const fixed64_t &b)
 {
-	uint64_t e = (((int64_t)i) << 32) | d;
-	uint64_t f = (((int64_t)b.i) << 32) | b.d;
-	uint64_t g = e + f;
-	i = g >> 32;
-	d = g & 0xFFFFFFFF;
+	if (sign != b.sign)
+	{
+		bool overflow = false;
+		int64_t decimal = ((int64_t)d) - ((int64_t)b.d);
+		int64_t integer = ((int64_t)i) - ((int64_t)b.i);
+		if (sign < 0)
+		{
+			decimal = -decimal;
+			integer = -integer;
+		}
+		if (decimal < 0)
+		{
+			overflow = true;
+			decimal = (1LL << 32) + decimal;
+		}
+		sign = (integer < 0 ? -1 : 1);
+		i = (integer < 0 ? -integer : integer) - (overflow == true ? 1 : 0);
+		d = decimal;
+	}
+	else
+	{
+		uint32_t decimal = d + b.d;
+		bool overflow = decimal < (d | b.d);
+		i += b.i + (overflow == true ? 1 : 0);
+		d = decimal;
+	}
 	return *this;
 }
 
-fixed64_t::operator int()
+uint8_t fixed64_t::ulog2(uint64_t n) const
 {
-	return i;
+	uint8_t r = 0;
+	while ((n >>= 1) != 0)
+		r++;
+	return r;
 }
+
+fixed64_t::operator int() const
+{
+	return sign * i;
+}
+
+fixed64_t::operator double() const
+{
+	return sign * (double)((((uint64_t)i) << 32) | (int64_t)((uint64_t)d)) / 4294967296.0;
+}
+
