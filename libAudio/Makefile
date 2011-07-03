@@ -30,8 +30,8 @@ SHORTEN =
 #OPTIMFROG = loadOptimFROG.o
 OPTIMFROG = 
 H = libAudio.h
-O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o loadMOD.o moduleMixer/moduleMixer.o loadSNDH.o loadS3M.o
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o $(O_MOD) $(IT) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadSNDH.o loadMOD.o loadS3M.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(IT) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -76,6 +76,7 @@ clean:
 	rm -f *.o *.so* *.a *~ *.pc
 	@cd mixIT && rm -f *.o *~
 	@cd moduleMixer && rm -f *.o *~
+	@cd fixedPoint && rm -f *.o *~
 	@cd genericModule && rm -f *.o *~
 
 .cpp.o:
@@ -92,10 +93,12 @@ loadM4A.o: loadM4A.cpp
 loadMP3.o: loadMP3.cpp
 loadMPC.o: loadMPC.cpp
 loadFLAC.o: loadFLAC.cpp
+fixedPoint/fixedPoint.o: fixedPoint/fixedPoint.cpp
 genericModule/ModuleFile.o: genericModule/ModuleFile.cpp
 genericModule/ModuleHeader.o: genericModule/ModuleHeader.cpp
 genericModule/ModuleSample.o: genericModule/ModuleSample.cpp
 genericModule/ModulePattern.o: genericModule/ModulePattern.cpp
+genericModule/ModuleEffects.o: genericModule/ModuleEffects.cpp
 loadMOD.o: loadMOD.cpp
 moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp
 loadSNDH.o: loadSNDH.cpp
