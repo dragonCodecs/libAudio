@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <math.h>
-#include <strings.h>
 #include "fixedPoint.h"
 
 fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c)

@@ -63,7 +63,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	long ret = 0, Read;
+	int32_t ret = 0, Read;
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
 	if (p_MF->p_File == NULL)
 		return -1;

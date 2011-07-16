@@ -318,7 +318,7 @@ public:
 	const char *GetTitle();
 	uint8_t GetChannels();
 	void InitMixer(FileInfo *p_FI);
-	long Mix(uint8_t *Buffer, uint32_t BuffLen);
+	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 };
 
 #endif /*__GenericModule_H__*/

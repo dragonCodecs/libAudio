@@ -63,7 +63,7 @@ FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	long ret = 0, Read;
+	int32_t ret = 0, Read;
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
 	if (p_SF->p_File == NULL)
 		return -1;

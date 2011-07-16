@@ -471,7 +471,15 @@
 					Name="genericModule"
 					>
 					<File
+						RelativePath=".\genericModule\effects.h"
+						>
+					</File>
+					<File
 						RelativePath=".\genericModule\genericModule.h"
+						>
+					</File>
+					<File
+						RelativePath=".\genericModule\ModuleEffects.cpp"
 						>
 					</File>
 					<File
@@ -491,6 +499,18 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="fixedPoint"
+				>
+				<File
+					RelativePath=".\fixedPoint\fixedPoint.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\fixedPoint\fixedPoint.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
