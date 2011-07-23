@@ -94,18 +94,26 @@ ModuleFile::~ModuleFile()
 {
 	uint32_t i;
 
-	delete Channels;
-	delete MixerChannels;
+	DeinitMixer();
 
 	for (i = 0; i < p_Header->nSamples; i++)
-		delete p_PCM[i];
-	delete p_PCM;
+	{
+		delete [] p_PCM[i];
+		p_PCM[i] = NULL;
+	}
+	delete [] p_PCM;
 	for (i = 0; i < p_Header->nPatterns; i++)
+	{
 		delete p_Patterns[i];
-	delete p_Patterns;
+		p_Patterns[i] = NULL;
+	}
+	delete [] p_Patterns;
 	for (i = 0; i < p_Header->nSamples; i++)
+	{
 		delete p_Samples[i];
-	delete p_Samples;
+		p_Samples[i] = NULL;
+	}
+	delete [] p_Samples;
 	delete p_Header;
 }
 

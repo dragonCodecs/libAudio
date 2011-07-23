@@ -132,9 +132,9 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 
 ModuleHeader::~ModuleHeader()
 {
-	delete Panning;
-	delete PatternPtrs;
-	delete SamplePtrs;
-	delete Orders;
-	delete Name;
+	delete [] Panning;
+	delete [] PatternPtrs;
+	delete [] SamplePtrs;
+	delete [] Orders;
+	delete [] Name;
 }
