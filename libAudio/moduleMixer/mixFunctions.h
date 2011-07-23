@@ -97,9 +97,9 @@ short FastSinc[1024] =
    -1,   135, 16374,  -124,    -1,   100, 16378,   -93,     0,    65, 16381,   -63,     0,    32, 16383,   -31,
 };
 
-short *KaiserSinc;
-short *DownSample13x;
-short *DownSample2x;
+short *KaiserSinc = NULL;
+short *DownSample13x = NULL;
+short *DownSample2x = NULL;
 signed short *WFIRlutTab;
 BOOL InitTables = FALSE;
 double WFIRCutoff = 0.99;
@@ -198,6 +198,11 @@ void InitWFIRTable()
 	}
 }
 
+void DeinitWFIRTable()
+{
+	free(WFIRlutTab);
+}
+
 double Zero(double y)
 {
 	double s = 1, ds = 1, d = 0;
@@ -212,11 +217,11 @@ double Zero(double y)
 	return s;
 }
 
-void getsinc(short *Sinc, double Beta, double LowPassFactor)
+void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 {
 	double ZeroBeta = Zero(Beta);
 	double LPAt = 4.0 * atan(1.0) * LowPassFactor;
-	Sinc = (short *)malloc(sizeof(short) * SINC_PHASES * 8);
+	short *Sinc = *p_Sinc = (short *)malloc(sizeof(short) * SINC_PHASES * 8);
 	for (int i = 0; i < 8 * SINC_PHASES; i++)
 	{
 		double FSinc;
@@ -238,9 +243,17 @@ void getsinc(short *Sinc, double Beta, double LowPassFactor)
 void InitialiseTables()
 {
 	InitWFIRTable();
-	getsinc(KaiserSinc, 9.6377, WFIRCutoff);
-	getsinc(DownSample13x, 8.5, 0.5);
-	getsinc(DownSample2x, 2.7625, 0.425);
+	getsinc(&KaiserSinc, 9.6377, WFIRCutoff);
+	getsinc(&DownSample13x, 8.5, 0.5);
+	getsinc(&DownSample2x, 2.7625, 0.425);
+}
+
+void DeinitialiseTables()
+{
+	DeinitWFIRTable();
+	free(KaiserSinc);
+	free(DownSample13x);
+	free(DownSample2x);
 }
 
 // Begin / End loop

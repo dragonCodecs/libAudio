@@ -30,6 +30,14 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 	InitialiseTables();
 }
 
+void ModuleFile::DeinitMixer()
+{
+	DeinitialiseTables();
+
+	delete [] Channels;
+	delete [] MixerChannels;
+}
+
 void ModuleFile::ResetChannelPanning()
 {
 	uint8_t i;
@@ -507,9 +515,9 @@ inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
 inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 {
 	if (param != 0)
-		channel->PortamentoSlide = param << 2;
+		channel->PortamentoSlide = ((uint16_t)param) << 2;
 	channel->Flags |= CHN_PORTAMENTO;
-	if (channel->Period != 0 && channel->PortamentoDest != 0 && (MusicSpeed == 1 || TickCount != 0))
+	if (channel->Period != 0 && channel->PortamentoDest != 0)// && (MusicSpeed == 1 || TickCount != 0))
 	{
 		if (channel->Period < channel->PortamentoDest)
 		{
@@ -1189,7 +1197,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 	}
 }
 
-long ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
+int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 {
 	uint32_t Count, SampleCount, Mixed = 0;
 	uint32_t SampleSize = MixBitsPerSample / 8 * MixChannels, Max = BuffLen / SampleSize;

@@ -309,6 +309,7 @@ private:
 private:
 	void MODLoadPCM(FILE *f_MOD);
 	void S3MLoadPCM(FILE *f_S3M);
+	void DeinitMixer();
 
 public:
 	ModuleFile(MOD_Intern *p_MF);
