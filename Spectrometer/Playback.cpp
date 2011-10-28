@@ -17,7 +17,7 @@
 #include "Playback.h"
 
 bool Playback::OpenALInit = false;
-UINT Playback::sourceNum = 0;
+uint32_t Playback::sourceNum = 0;
 ALCdevice *Playback::device = NULL;
 ALCcontext *Playback::context = NULL;
 
@@ -46,7 +46,7 @@ void Playback::createBuffers()
 {
 	alGenBuffers(4, buffers);
 
-	for (UINT i = 0; i < 4; i++)
+	for (uint32_t i = 0; i < 4; i++)
 	{
 		alBufferi(buffers[i], AL_SIZE, nBufferLen);
 		alBufferi(buffers[i], AL_CHANNELS, p_FI->Channels);
@@ -76,7 +76,7 @@ int Playback::getBufferFormat()
 		return AL_FORMAT_STEREO16;
 }
 
-Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr)
+Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
 	if (p_FI == NULL)
 		return;
@@ -154,7 +154,7 @@ void Playback::Play()
 
 		while (Processed--)
 		{
-			UINT Buff;
+			uint32_t Buff;
 
 			if (this->Playing == true && this->Paused == false)
 			{
@@ -188,7 +188,7 @@ finish:
 
 			while (Processed--)
 			{
-				UINT buffer;
+				uint32_t buffer;
 				alSourceUnqueueBuffers(sourceNum, 1, &buffer);
 				nBuffs--;
 			}
@@ -225,7 +225,7 @@ void Playback::Pause()
 
 Playback::~Playback()
 {
-	UINT Buff[4];
+	uint32_t Buff[4];
 	alSourceUnqueueBuffers(sourceNum, 4, Buff);
 	alDeleteBuffers(4, buffers);
 	free(p_FI);

@@ -16,11 +16,11 @@
 #define __FASTCALL__ inline
 #endif
 
-extern int fseek_wrapper(void *p_file, __int64 offset, int origin);
+extern int fseek_wrapper(void *p_file, int64_t offset, int origin);
 extern int GetBuffFmt(int BPS, int Channels);
 
 #ifndef FB_Func
-typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen);
+typedef long (__CDECL__ *FB_Func)(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen);
 #endif
 
 class Playback
@@ -31,17 +31,17 @@ public:
 	void *p_AudioPtr;
 
 private:
-	static UINT sourceNum;
-	UINT buffers[4];
+	static uint32_t sourceNum;
+	uint32_t buffers[4];
 	static ALCdevice *device;
 	static ALCcontext *context;
-	BYTE *buffer;
+	uint8_t *buffer;
 	int nBufferLen;
 	bool Resuming;
 	static bool OpenALInit;
 
 public:
-	Playback(FileInfo *p_FI, FB_Func DataCallback, BYTE *BuffPtr, int nBuffLen, void *p_AudioPtr);
+	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
 	void Play();
 	void Stop();
 	void Pause();

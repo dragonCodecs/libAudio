@@ -16,11 +16,11 @@ void Icon::SetIcons()
 {
 	if (Icons == NULL)
 	{
-		Icons = g_list_prepend(Icons, Spectrometer_16x16);
-		Icons = g_list_prepend(Icons, Spectrometer_32x32);
-		Icons = g_list_prepend(Icons, Spectrometer_48x48);
-		Icons = g_list_prepend(Icons, Spectrometer_64x64);
-		Icons = g_list_prepend(Icons, Spectrometer_128x128);
+		Icons = g_list_prepend(Icons, (void *)Spectrometer_16x16);
+		Icons = g_list_prepend(Icons, (void *)Spectrometer_32x32);
+		Icons = g_list_prepend(Icons, (void *)Spectrometer_48x48);
+		Icons = g_list_prepend(Icons, (void *)Spectrometer_64x64);
+		Icons = g_list_prepend(Icons, (void *)Spectrometer_128x128);
 	}
 	GTK::SetDefaultWindowIcon(Icons);
 }

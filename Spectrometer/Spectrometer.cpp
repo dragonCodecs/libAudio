@@ -51,7 +51,7 @@ inline int round(double a)
 class Spectrometer;
 
 Playback *p_Playback;
-BYTE *Buff;
+uint8_t *Buff;
 void *p_AudioFile;
 pthread_t SoundThread;
 pthread_attr_t ThreadAttr;
@@ -136,7 +136,7 @@ private:
 				return;
 			}
 			p_FI = Audio_GetFileInfo(p_AudioFile);
-			Buff = new BYTE[8192];
+			Buff = new uint8_t[8192];
 			p_Playback = new Playback(p_FI, Callback, Buff, 8192, p_AudioFile);
 			self->LeftMeter->ResetMeter();
 			self->RightMeter->ResetMeter();
@@ -169,7 +169,7 @@ private:
 		return TRUE;
 	}
 
-	static long Callback(void *p_AudioPtr, BYTE *OutBuffer, int nOutBufferLen)
+	static long Callback(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 	{
 		long ret;
 		static GdkRectangle rect = {0, 0, 456, 214};

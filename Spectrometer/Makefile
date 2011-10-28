@@ -13,7 +13,7 @@ LFLAGS = $(O) $(LIBS) -o $(EXE)
 CHMOD = chmod 0755
 STRIP = strip -s
 
-O = FFT.o AboutBox.o DrawingFunctions.o Playback.o VUMeter.o Spectrometer.o
+O = FFT.o AboutBox.o DrawingFunctions.o Playback.o VUMeter.o Icon.o Spectrometer.o
 EXE = Spectrometer.out
 
 default: all
@@ -44,4 +44,5 @@ AboutBox.o: AboutBox.cpp
 DrawingFunctions.o: DrawingFunctions.cpp
 Playback.o: Playback.cpp
 VUMeter.o: VUMeter.cpp
+Icon.o: Icon.cpp
 Spectrometer.o: Spectrometer.cpp
