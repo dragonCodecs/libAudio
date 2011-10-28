@@ -16,11 +16,18 @@ void Icon::SetIcons()
 {
 	if (Icons == NULL)
 	{
-		Icons = g_list_prepend(Icons, (void *)Spectrometer_16x16);
-		Icons = g_list_prepend(Icons, (void *)Spectrometer_32x32);
-		Icons = g_list_prepend(Icons, (void *)Spectrometer_48x48);
-		Icons = g_list_prepend(Icons, (void *)Spectrometer_64x64);
-		Icons = g_list_prepend(Icons, (void *)Spectrometer_128x128);
+		GDKPixbuf *buff;
+		buff = new GDKPixbuf(Spectrometer_16x16);
+		Icons = g_list_prepend(Icons, (void *)buff->GetBuffer());
+		buff = new GDKPixbuf(Spectrometer_32x32);
+		Icons = g_list_prepend(Icons, (void *)buff->GetBuffer());
+		buff = new GDKPixbuf(Spectrometer_48x48);
+		Icons = g_list_prepend(Icons, (void *)buff->GetBuffer());
+		buff = new GDKPixbuf(Spectrometer_64x64);
+		Icons = g_list_prepend(Icons, (void *)buff->GetBuffer());
+		buff = new GDKPixbuf(Spectrometer_128x128);
+		Icons = g_list_prepend(Icons, (void *)buff->GetBuffer());
+		buff = NULL;
 	}
 	GTK::SetDefaultWindowIcon(Icons);
 }
