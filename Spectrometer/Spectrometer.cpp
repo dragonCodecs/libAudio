@@ -46,6 +46,7 @@ inline int round(double a)
 #include <sys/stat.h>
 #endif
 #include <math.h>
+#include "Icon.h"
 
 class Spectrometer;
 
@@ -357,6 +358,7 @@ public:
 		GTKHBox *horBox;
 		GTKVBox *verBox;
 
+		Icon::SetIcons();
 		hMainWnd = new GTKWindow(GTK_WINDOW_TOPLEVEL);
 		hMainWnd->SetLocation(GTK_WIN_POS_CENTER);
 		hMainWnd->SetTitle("libAudio Spectrometer");
