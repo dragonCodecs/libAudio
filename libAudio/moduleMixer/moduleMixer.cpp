@@ -910,6 +910,7 @@ bool ModuleFile::AdvanceRow()
 			if (period < MinPeriod && ModuleType == MODULE_S3M)
 				channel->Length = 0;
 			CLIPINT(period, MinPeriod, MaxPeriod);
+			// Calculate the increment from the frequency from the period
 			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
 			inc = muldiv(freq, 0x10000, MixSampleRate);
 			channel->Increment.iValue = (inc + 1) & ~3;
@@ -971,6 +972,11 @@ bool ModuleFile::AdvanceRow()
 				channel->LeftVol = channel->NewLeftVol;
 				channel->RightVol = channel->NewRightVol;
 			}
+			// DEBUG: Uncomment to see the channel's main state information
+			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
+				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->Volume, channel->RowNote, channel->RowSample,
+				channel->RowEffect, channel->RowParam, channel->Period, channel->PortamentoDest, channel->FineTune, channel->Increment.Value.Hi, channel->Increment.Value.Lo,
+				channel->Pos, channel->PosLo);*/
 			MixerChannels[nMixerChannels++] = i;
 		}
 		else
@@ -1011,7 +1017,7 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 		else if (channel->Pos < 0)
 			channel->Pos = 0;
 	}
-	else if (channel->Pos >= channel->Length)
+	else if (channel->Pos >= channel->Length || ((channel->Flags & CHN_LOOP) != 0 && channel->Pos >= channel->LoopEnd))
 	{
 		if ((channel->Flags & CHN_LOOP) == 0)
 			return 0;
@@ -1020,7 +1026,7 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 			Increment.iValue = -Increment.iValue;
 			channel->Increment.iValue = Increment.iValue;
 		}
-		channel->Pos += LoopStart - channel->Length;
+		channel->Pos += LoopStart - channel->LoopEnd;
 		if (channel->Pos < LoopStart)
 			channel->Pos = LoopStart;
 	}
