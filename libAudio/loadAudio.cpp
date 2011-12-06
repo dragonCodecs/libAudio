@@ -113,9 +113,14 @@ long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 int Audio_CloseFileR(void *p_AudioPtr)
 {
 	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	API_Functions *API;
+	void *p_AudioFile;
 	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
 		return 0;
-	return p_AP->API->CloseFileR(p_AP->p_AudioFile);
+	API = p_AP->API;
+	p_AudioFile = p_AP->p_AudioFile;
+	free(p_AP);
+	return API->CloseFileR(p_AudioFile);
 }
 
 /*!
