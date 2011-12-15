@@ -522,15 +522,15 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 		if (channel->Period < channel->PortamentoDest)
 		{
 			int Delta;
-			if ((channel->Flags & CHN_GLISSANDO) != 0)
-			{
+			/*if ((channel->Flags & CHN_GLISSANDO) != 0)
+			{*/
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
 				Delta = LinearSlideUp(channel->Period, Slide) - channel->Period;
 				if (Delta < 1)
 					Delta = 1;
-			}
+			/*}
 			else
-				Delta = channel->PortamentoSlide;
+				Delta = channel->PortamentoSlide;*/
 			channel->Period += Delta;
 			if (channel->Period > channel->PortamentoDest)
 				channel->Period = channel->PortamentoDest;
@@ -538,15 +538,15 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 		else if (channel->Period > channel->PortamentoDest)
 		{
 			int Delta;
-			if ((channel->Flags & CHN_GLISSANDO) != 0)
-			{
+			/*if ((channel->Flags & CHN_GLISSANDO) != 0)
+			{*/
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
 				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period;
 				if (Delta > -1)
 					Delta = -1;
-			}
+			/*}
 			else
-				Delta = -channel->PortamentoSlide;
+				Delta = -channel->PortamentoSlide;*/
 			channel->Period += Delta;
 			if (channel->Period < channel->PortamentoDest)
 				channel->Period = channel->PortamentoDest;
@@ -1017,7 +1017,7 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 		else if (channel->Pos < 0)
 			channel->Pos = 0;
 	}
-	else if (channel->Pos >= channel->Length || ((channel->Flags & CHN_LOOP) != 0 && channel->Pos >= channel->LoopEnd))
+	else if (channel->Pos >= channel->Length)
 	{
 		if ((channel->Flags & CHN_LOOP) == 0)
 			return 0;
@@ -1026,7 +1026,7 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 			Increment.iValue = -Increment.iValue;
 			channel->Increment.iValue = Increment.iValue;
 		}
-		channel->Pos += LoopStart - channel->LoopEnd;
+		channel->Pos += LoopStart - channel->Length;
 		if (channel->Pos < LoopStart)
 			channel->Pos = LoopStart;
 	}

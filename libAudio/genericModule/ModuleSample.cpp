@@ -49,6 +49,8 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	if (Volume > 64)
 		Volume = 64;
 	FineTune &= 0x0F;
+	if (LoopLen > 2 && Length > (LoopStart + LoopLen))
+		Length = LoopStart + LoopLen;
 
 	/********************************************\
 	|* The following block just initialises the *|
@@ -86,7 +88,13 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	fread(&Volume, 1, 1, f_S3M);
 	fread(DontCare, 1, 1, f_S3M);
 	fread(&Packing, 1, 1, f_S3M);
+	if (Packing == 1)
+		printf("%d => ADPCM sample\n", i);
 	fread(&Flags, 1, 1, f_S3M);
+	if ((Flags & 2) != 0)
+		printf("%d => Stereo\n", i);
+	if ((Flags & 4) != 0)
+		printf("%d => 16-bit\n", i);
 	fread(&C4Speed, 4, 1, f_S3M);
 	fread(DontCare, 12, 1, f_S3M);
 	fread(Name, 28, 1, f_S3M);
