@@ -39,7 +39,7 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels)
 	FILE *f_S3M = p_SF->f_S3M;
 	Commands = new ModuleCommand[nChannels][64];
 	fread(&Length, sizeof(uint16_t), 1, f_S3M);
-	for (row = 0; row < 64;)
+	for (j = 0, row = 0; row < 64;)
 	{
 		/* Begin: temp */
 		uint8_t Note;
