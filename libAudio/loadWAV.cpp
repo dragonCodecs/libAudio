@@ -163,6 +163,7 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	fread(&p_WF->DataEnd, 4, 1, f_WAV);
 	ret->TotalTime = (float)p_WF->DataEnd / (float)ret->Channels;
 	ret->TotalTime /= ((float)ret->BitsPerSample / 8.0F);
+	ret->TotalTime /= ((float)ret->BitRate);
 	p_WF->DataEnd += ftell(f_WAV);
 
 	if (ExternalPlayback == 0)
