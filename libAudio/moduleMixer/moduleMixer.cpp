@@ -317,7 +317,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			if (channel->RowNote != 0 && channel->RowNote < 0x80)
 			{
 				int pos = param << 16;
-				if (pos < channel->Length)
+				if (pos < (int)channel->Length)
 					channel->Pos = pos;
 			}
 			break;
@@ -769,9 +769,9 @@ bool ModuleFile::ProcessEffects()
 				BreakRow = 0;
 			if ((uint32_t)PositionJump < NewPattern || ((uint32_t)PositionJump == NewPattern && (uint32_t)BreakRow <= Row))
 				Jump = FALSE;
-			if (Jump == TRUE && (PositionJump != NewPattern || BreakRow != Row))
+			if (Jump == TRUE && ((uint32_t)PositionJump != NewPattern || (uint32_t)BreakRow != Row))
 			{
-				if (PositionJump != NewPattern)
+				if ((uint32_t)PositionJump != NewPattern)
 					PatternLoopCount = PatternLoopStart = 0;
 				NextPattern = PositionJump;
 				NextRow = BreakRow;
@@ -907,9 +907,9 @@ bool ModuleFile::AdvanceRow()
 				period += (short)(((int)Delta * (int)channel->VibratoDepth) >> 7);
 				channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
 			}
-			if (period < MinPeriod && ModuleType == MODULE_S3M)
+			if (period < (int)MinPeriod && ModuleType == MODULE_S3M)
 				channel->Length = 0;
-			CLIPINT(period, MinPeriod, MaxPeriod);
+			CLIPINT(period, (int)MinPeriod, (int)MaxPeriod);
 			// Calculate the increment from the frequency from the period
 			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
 			inc = muldiv(freq, 0x10000, MixSampleRate);
