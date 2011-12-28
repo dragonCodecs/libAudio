@@ -136,14 +136,14 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_TONEPORTAVOL;
 			Param = param;
 			break;
-		/*case 13:
+		case 13:
 			Effect = CMD_CHANNELVOLUME;
 			Param = param;
-			break;*/
-		/*case 14:
+			break;
+		case 14:
 			Effect = CMD_CHANNELVOLSLIDE;
 			Param = param;
-			break;*/
+			break;
 		case 15:
 			Effect = CMD_OFFSET;
 			Param = param;
