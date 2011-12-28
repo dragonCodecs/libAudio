@@ -24,10 +24,15 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;
 	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
-	Channels = new Channel[p_Header->nChannels];
+	Channels = new Channel[p_Header->nChannels]();
 	MixerChannels = new uint32_t[p_Header->nChannels];
 	ResetChannelPanning();
 	InitialiseTables();
+}
+
+Channel::Channel()
+{
+	ChannelVolume = 64;
 }
 
 void ModuleFile::DeinitMixer()
@@ -740,6 +745,13 @@ bool ModuleFile::ProcessEffects()
 					channel->Flags |= CHN_FASTVOLRAMP;
 				}
 				break;
+			case CMD_CHANNELVOLUME:
+				if (TickCount != 0 && param < 65)
+				{
+					channel->ChannelVolume = param;
+					channel->Flags |= CHN_FASTVOLRAMP;
+				}
+				break;
 			case CMD_PANNING:
 				if (TickCount != 0)
 					break;
@@ -748,6 +760,8 @@ bool ModuleFile::ProcessEffects()
 				break;
 			case CMD_FINEVIBRATO:
 				Vibrato(channel, param, 1);
+				break;
+			default:
 				break;
 		}
 	}
@@ -781,18 +795,17 @@ bool ModuleFile::ProcessEffects()
 	return true;
 }
 
-void ModuleFile::SetChannelRowData(uint32_t i, ModuleCommand *Command)
+void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 {
-	Channel *channel = &Channels[i];
-	channel->RowNote = Command->Note;
-	channel->RowSample = Command->Sample;
-	if (channel->RowSample > p_Header->nSamples)
-		channel->RowSample = 0;
-	channel->RowVolEffect = Command->VolEffect;
-	channel->RowVolParam = Command->VolParam;
-	channel->RowEffect = Command->Effect;
-	channel->RowParam = Command->Param;
-	channel->Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
+	RowNote = Command->Note;
+	RowSample = Command->Sample;
+	if (RowSample > p_Header->nSamples)
+		RowSample = 0;
+	RowVolEffect = Command->VolEffect;
+	RowVolParam = Command->VolParam;
+	RowEffect = Command->Effect;
+	RowParam = Command->Param;
+	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 }
 
 bool ModuleFile::ProcessRow()
@@ -828,7 +841,7 @@ bool ModuleFile::ProcessRow()
 		}
 		Commands = (ModuleCommand (*)[64])p_Patterns[Pattern]->GetCommands();
 		for (i = 0; i < p_Header->nChannels; i++)
-			SetChannelRowData(i, &Commands[i][Row]);
+			Channels[i].SetData(&Commands[i][Row], p_Header);
 	}
 	if (MusicSpeed == 0)
 		MusicSpeed = 1;
@@ -873,6 +886,7 @@ bool ModuleFile::AdvanceRow()
 				if (TickCount != 0)
 					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3F;
 			}
+			vol = (vol * channel->ChannelVolume) >> 6;
 			CLIPINT(vol, 0, 128);
 			channel->Volume = vol;
 			CLIPINT(channel->Period, MinPeriod, MaxPeriod);
@@ -975,8 +989,8 @@ bool ModuleFile::AdvanceRow()
 			// DEBUG: Uncomment to see the channel's main state information
 			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
 				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->Volume, channel->RowNote, channel->RowSample,
-				channel->RowEffect, channel->RowParam, channel->Period, channel->PortamentoDest, channel->FineTune, channel->Increment.Value.Hi, channel->Increment.Value.Lo,
-				channel->Pos, channel->PosLo);*/
+				channel->RowEffect, channel->RowParam, channel->Period, channel->PortamentoDest, channel->FineTune, channel->Increment.Value.Hi,
+				channel->Increment.Value.Lo, channel->Pos, channel->PosLo);*/
 			MixerChannels[nMixerChannels++] = i;
 		}
 		else

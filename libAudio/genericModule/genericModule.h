@@ -11,6 +11,7 @@
 \***************************/
 
 class ModuleFile;
+class Channel;
 class ModuleSample;
 class ModulePattern;
 
@@ -78,6 +79,7 @@ private:
 private:
 	uint8_t nChannels;
 	friend class ModuleFile;
+	friend class Channel;
 
 public:
 	ModuleHeader(MOD_Intern *p_MF);
@@ -187,6 +189,7 @@ private:
 	inline uint8_t MODPeriodToNoteIndex(uint16_t Period);
 	void TranslateMODEffect(uint8_t Effect, uint8_t Param);
 	friend class ModuleFile;
+	friend class Channel;
 
 public:
 	void SetMODData(uint8_t Data[4]);
@@ -227,7 +230,7 @@ public:
 	uint8_t Note, Flags;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
-	uint8_t RampLength, Volume;
+	uint8_t RampLength, Volume, ChannelVolume;
 	ModuleSample *Sample;
 	uint8_t FineTune, Panning, Arpeggio;
 	uint8_t RowNote, RowSample, RowVolEffect;
@@ -246,6 +249,10 @@ public:
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 	int DCOffsR, DCOffsL;
+
+public:
+	Channel();
+	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
 };
 
 class ModuleFile : public ModuleAllocator
@@ -293,7 +300,6 @@ private:
 	bool AdvanceRow();
 	bool ProcessRow();
 	bool ProcessEffects();
-	void SetChannelRowData(uint32_t channel, ModuleCommand *Command);
 	void ResetChannelPanning();
 	void SampleChange(Channel *channel, uint32_t sample);
 	void NoteChange(Channel * const channel, uint8_t note, uint8_t cmd);
