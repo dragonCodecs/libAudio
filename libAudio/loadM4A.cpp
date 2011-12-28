@@ -246,7 +246,6 @@ MP4TrackId GetAACTrack(M4A_Intern *ret)
 void *M4A_OpenR(const char *FileName)
 {
 	M4A_Intern *ret = NULL;
-	FILE *f_M4A = NULL;
 
 	ret = (M4A_Intern *)malloc(sizeof(M4A_Intern));
 	if (ret == NULL)

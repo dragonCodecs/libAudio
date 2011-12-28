@@ -288,6 +288,11 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 
 			break;
 		}
+		default:
+		{
+			printf("Unused metadata block read\n");
+			break;
+		}
 	}
 
 	return;

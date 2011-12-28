@@ -165,9 +165,8 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
  */
 long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int bitstream;
+	int bitstream = 0;
 	OggVorbis_File *p_OVFile = (OggVorbis_File *)p_VorbisFile;
-	bitstream;
 	long ret = 0;
 	long readtot = 1;
 
@@ -217,6 +216,13 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
 	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Play();
 }
 
+#define CHECK_OK(actual, expected) \
+	if (actual != expected) \
+	{ \
+		fclose(f_Ogg); \
+		return false; \
+	}
+
 /*!
  * Checks the file given by \p FileName for whether it is an Ogg|Vorbis
  * file recognised by this library or not
@@ -234,9 +240,9 @@ bool Is_OggVorbis(const char *FileName)
 	if (f_Ogg == NULL)
 		return false;
 
-	fread(OggSig, 4, 1, f_Ogg);
-	fseek(f_Ogg, 25, SEEK_CUR);
-	fread(VorbisSig, 6, 1, f_Ogg);
+	CHECK_OK(fread(OggSig, 1, 4, f_Ogg), 4);
+	CHECK_OK(fseek(f_Ogg, 25, SEEK_CUR), 0);
+	CHECK_OK(fread(VorbisSig, 1, 6, f_Ogg), 6);
 	fclose(f_Ogg);
 
 	if (strncmp(OggSig, "OggS", 4) != 0 ||
@@ -245,6 +251,8 @@ bool Is_OggVorbis(const char *FileName)
 	else
 		return true;
 }
+
+#undef CHECK_OK
 
 /*!
  * @internal
