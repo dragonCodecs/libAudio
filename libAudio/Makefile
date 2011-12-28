@@ -5,9 +5,10 @@ GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
 else
 GCC_FLAGS = 
 endif
+#GCC_FLAGS = -ggdb
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack)
-CFLAGS = -c $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
+CFLAGS = -c -Wall $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
 EXTRA_LIBS = $(shell pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack)
 LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)
@@ -23,14 +24,16 @@ STRIP = strip -x
 #WMA = loadWMA.o
 WMA = 
 #IT = loadIT.o mixIT/mixIT.o
-IT = 
 #SHORTEN = loadShorten.o
 SHORTEN = 
 #OPTIMFROG = loadOptimFROG.o
 OPTIMFROG = 
 H = libAudio.h
-O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadSNDH.o loadMOD.o loadS3M.o
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(IT) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadMOD.o loadS3M.o
+#O_SNDH = loadSNDH.o
+O_SNDH = 
+O_SID = loadSID.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(O_SNDH) $(O_SID) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
@@ -68,8 +71,8 @@ libAudio.so$(VER): $(O)
 	$(CC) $(LFLAGS)
 	$(STRIP) $(SO)
 
-libAudio.pc:
-	$(SHELL) -c "sed -e 's:@LIBDIR@:$(LIBDIR):g' $(IN) > $(PC)"
+libAudio.pc: $(IN)
+	sed -e 's:@LIBDIR@:$(LIBDIR):g' $(IN) > $(PC)
 
 clean:
 	rm -f *.o *.so* *.a *~ *.pc
@@ -104,6 +107,7 @@ loadSNDH.o: loadSNDH.cpp
 loadS3M.o: loadS3M.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp
+loadSID.o: loadSID.cpp
 loadWavPack.o: loadWavPack.cpp
 loadOptimFROG.o: loadOptimFROG.cpp
 loadShorten.o: loadShorten.cpp
