@@ -4,7 +4,7 @@
 
 #define BE2LE(var) (uint32_t)((((uint16_t)(var & 0xFF)) << 8) | (var >> 8))
 
-ModuleSample::ModuleSample(uint32_t id, uint8_t type) : ID(id), Type(type)
+ModuleSample::ModuleSample(uint32_t id, uint8_t type) : Type(type), ID(id)
 {
 }
 
