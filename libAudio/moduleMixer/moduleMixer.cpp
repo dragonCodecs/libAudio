@@ -1190,7 +1190,8 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 				buff += SampleCount * 2;
 			else
 			{
-				MixInterface MixFunc = MixFunctionTable[/*Flags*/MIX_NOSRC | (channel->RampLength != 0 ? MIX_RAMP : 0)];
+				MixInterface MixFunc = MixFunctionTable[/*Flags*/MIX_NOSRC | (channel->RampLength != 0 ? MIX_RAMP : 0) |
+					(channel->Sample->Get16Bit() == true ? MIX_16BIT : 0)];
 				int *BuffMax = buff + (SampleCount * 2);
 				channel->DCOffsR = -((BuffMax - 2)[0]);
 				channel->DCOffsL = -((BuffMax - 2)[1]);
@@ -1215,6 +1216,12 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 		}
 		while (samples > 0);
 	}
+}
+
+inline void ModuleFile::MonoFromStereo(uint32_t count)
+{
+	for (uint32_t i = 0; i < count; i++)
+		MixBuffer[i] = MixBuffer[i << 1];
 }
 
 int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
@@ -1257,7 +1264,7 @@ int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 		{
 			CreateStereoMix(Count);
 			// Reverb processing?
-			// MonoFromStereo?
+			MonoFromStereo(Count);
 		}
 		Buffer += Convert32to16(Buffer, MixBuffer, SampleCount);
 		Mixed += Count;
