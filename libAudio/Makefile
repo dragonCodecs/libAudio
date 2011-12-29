@@ -8,9 +8,9 @@ endif
 #GCC_FLAGS = -ggdb
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack)
-CFLAGS = -c -Wall $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $*.o
+CFLAGS = -c -Wall $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $@
 EXTRA_LIBS = $(shell pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack)
-LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag
+LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)
 AR = ar cr
 RANLIB = ranlib
@@ -82,7 +82,7 @@ clean:
 	@cd genericModule && rm -f *.o *~
 
 .cpp.o:
-	$(CC) $(CFLAGS) $*.cpp
+	$(CC) $(CFLAGS) $<
 
 .PHONY: clean libAudio.pc install all uninstall default .cpp.o
 
