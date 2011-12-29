@@ -164,7 +164,6 @@ int MP4EncClose(void *MP4File)
 void *M4A_OpenW(const char *FileName)
 {
 	M4A_Enc_Intern *ret = NULL;
-	FILE *f_AAC = NULL;
 
 	ret = (M4A_Enc_Intern *)malloc(sizeof(M4A_Enc_Intern));
 	if (ret == NULL)
