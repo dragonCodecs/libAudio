@@ -102,7 +102,8 @@ genericModule/ModuleSample.o: genericModule/ModuleSample.cpp
 genericModule/ModulePattern.o: genericModule/ModulePattern.cpp
 genericModule/ModuleEffects.o: genericModule/ModuleEffects.cpp
 loadMOD.o: loadMOD.cpp
-moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp
+moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp moduleMixer/mixFunctions.h moduleMixer/mixFunctionTables.h moduleMixer/waveTables.h \
+	moduleMixer/frequencyTables.h moduleMixer/moduleMixer.h
 loadSNDH.o: loadSNDH.cpp
 loadS3M.o: loadS3M.cpp
 #loadIT.o: loadIT.cpp
