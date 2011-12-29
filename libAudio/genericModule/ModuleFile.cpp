@@ -171,7 +171,7 @@ void ModuleFile::S3MLoadPCM(FILE *f_S3M)
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
-		uint32_t SeekLoc, Length = p_Samples[i]->GetLength();
+		uint32_t SeekLoc, Length = p_Samples[i]->GetLength() << (p_Samples[i]->Get16Bit() ? 1 : 0);
 		if (Length != 0 && p_Samples[i]->GetType() == 1)
 		{
 			SeekLoc = ((ModuleSampleNative *)p_Samples[i])->SamplePos << 4;
@@ -185,13 +185,13 @@ void ModuleFile::S3MLoadPCM(FILE *f_S3M)
 				{
 					char *pcm = (char *)p_PCM[i];
 					for (j = 0; j < Length; j++)
-						pcm[j] = pcm[j] ^ 0x7F;
+						pcm[j] ^= 0x7F;
 				}
 				else
 				{
 					short *pcm = (short *)p_PCM[i];
-					for (j = 0; j < (Length / 2); j++)
-						pcm[j] = pcm[j] ^ 0x7FFF;
+					for (j = 0; j < (Length >> 1); j++)
+						pcm[j] ^= 0x7FFF;
 				}
 			}
 		}
