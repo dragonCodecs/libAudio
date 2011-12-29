@@ -93,8 +93,6 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	fread(&Flags, 1, 1, f_S3M);
 	if ((Flags & 2) != 0)
 		printf("%d => Stereo\n", i);
-	if ((Flags & 4) != 0)
-		printf("%d => 16-bit\n", i);
 	fread(&C4Speed, 4, 1, f_S3M);
 	fread(DontCare, 12, 1, f_S3M);
 	fread(Name, 28, 1, f_S3M);
