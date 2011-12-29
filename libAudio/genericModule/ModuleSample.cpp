@@ -143,6 +143,11 @@ uint8_t ModuleSampleNative::GetVolume()
 	return Volume << 1;
 }
 
+bool ModuleSampleNative::Get16Bit()
+{
+	return (Flags & 4) != 0;
+}
+
 ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type) : ModuleSample(i, Type)
 {
 	uint8_t DontCare[12];
@@ -208,4 +213,9 @@ uint32_t ModuleSampleAdlib::GetC4Speed()
 uint8_t ModuleSampleAdlib::GetVolume()
 {
 	return Volume << 1;
+}
+
+bool ModuleSampleAdlib::Get16Bit()
+{
+	return false;
 }

@@ -110,6 +110,7 @@ public:
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
+	virtual bool Get16Bit() = 0;
 };
 
 class ModuleSampleNative : public ModuleSample
@@ -141,6 +142,7 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
+	bool Get16Bit();
 };
 
 class ModuleSampleAdlib : public ModuleSample
@@ -174,6 +176,7 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
+	bool Get16Bit();
 };
 
 class ModuleCommand : public ModuleAllocator
@@ -311,6 +314,7 @@ private:
 	inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples);
 	void DCFixingFill(uint32_t samples);
 	void CreateStereoMix(uint32_t count);
+	inline void MonoFromStereo(uint32_t count);
 
 private:
 	void MODLoadPCM(FILE *f_MOD);
