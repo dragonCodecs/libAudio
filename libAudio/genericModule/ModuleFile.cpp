@@ -181,8 +181,18 @@ void ModuleFile::S3MLoadPCM(FILE *f_S3M)
 			if (p_Header->FormatVersion == 2)
 			{
 				uint32_t j;
-				for (j = 0; j < Length; j++)
-					p_PCM[i][j] = ((short)p_PCM[i][j]) - 128;
+				if (p_Samples[i]->Get16Bit() == false)
+				{
+					char *pcm = (char *)p_PCM[i];
+					for (j = 0; j < Length; j++)
+						pcm[j] = pcm[j] ^ 0x7F;
+				}
+				else
+				{
+					short *pcm = (short *)p_PCM[i];
+					for (j = 0; j < (Length / 2); j++)
+						pcm[j] = pcm[j] ^ 0x7FFF;
+				}
 			}
 		}
 		else
