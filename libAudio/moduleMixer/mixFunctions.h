@@ -6,7 +6,7 @@ typedef void (__CDECL__ *MixInterface)(Channel *, int *, int *);
 
 #define WFIR_QUANTBITS		15
 #define WFIR_QUANTSCALE		(1 << WFIR_QUANTBITS)
-#define WFIR_SHIFT_8BIT		(WFIR_QUANTBITS - 8)
+#define WFIR_SHIFT_8BIT		(WFIR_QUANTBITS - 9)
 #define WFIR_SHIFT_16BIT	WFIR_QUANTBITS
 #define WFIR_FRACBITS		12
 #define WFIR_LUTLEN			((1 << (WFIR_FRACBITS + 1)) + 1)
@@ -341,10 +341,10 @@ void DeinitialiseTables()
 	int pcm = p[Pos >> 16]
 
 #define SNDMIX_GETMONOVOLNOIDO8 \
-	SNDMIX_GETMONOVOLNOIDO << 8;
+	SNDMIX_GETMONOVOLNOIDO << 7;
 
 #define SNDMIX_GETMONOVOLNOIDO16 \
-	SNDMIX_GETMONOVOLNOIDO;
+	SNDMIX_GETMONOVOLNOIDO >> 1;
 
 #define SNDMIX_GETMONOVOLLINEAR \
 	int posHi = Pos >> 16; \
@@ -354,11 +354,11 @@ void DeinitialiseTables()
 
 #define SNDMIX_GETMONOVOLLINEAR8 \
 	SNDMIX_GETMONOVOLLINEAR \
-	int pcm = (SrcVol << 8) + (posLo * (DestVol - SrcVol));
+	int pcm = (SrcVol << 7) + (posLo * (DestVol - SrcVol));
 
 #define SNDMIX_GETMONOVOLLINEAR16 \
 	SNDMIX_GETMONOVOLLINEAR \
-	int pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 8);
+	int pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 9);
 
 #define SNDMIX_GETMONOVOLHQSRC \
 	int posHi = Pos >> 16; \
@@ -367,10 +367,10 @@ void DeinitialiseTables()
 		FastSinc[posLo + 2] * p[posHi + 1] + FastSinc[posLo + 3] * p[posHi + 2])
 
 #define SNDMIX_GETMONOVOLHQSRC8 \
-	SNDMIX_GETMONOVOLHQSRC >> 6;
+	SNDMIX_GETMONOVOLHQSRC >> 7;
 
 #define SNDMIX_GETMONOVOLHQSRC16 \
-	SNDMIX_GETMONOVOLHQSRC >> 14;
+	SNDMIX_GETMONOVOLHQSRC >> 15;
 
 #define SNDMIX_GETMONOVOLKAISER \
 	int posHi = Pos >> 16; \
@@ -381,10 +381,10 @@ void DeinitialiseTables()
 		posLo[6] * p[posHi + 3] + posLo[7] * p[posHi + 4])
 
 #define SNDMIX_GETMONOVOLKAISER8 \
-	SNDMIX_GETMONOVOLKAISER >> 6;
+	SNDMIX_GETMONOVOLKAISER >> 7;
 
 #define SNDMIX_GETMONOVOLKAISER16 \
-	SNDMIX_GETMONOVOLKAISER >> 14;
+	SNDMIX_GETMONOVOLKAISER >> 15;
 
 #define SNDMIX_GETMONOVOLFIRFILTER \
 	int posHi = Pos >> 16; \
@@ -414,7 +414,7 @@ void DeinitialiseTables()
 	pcm2 += WFIRlutTab[firIdx + 5] * p[posHi + 2]; \
 	pcm2 += WFIRlutTab[firIdx + 6] * p[posHi + 3]; \
 	pcm2 += WFIRlutTab[firIdx + 7] * p[posHi + 4]; \
-	pcm = ((pcm1 >> 1) + (pcm2 >> 1)) >> (WFIR_SHIFT_16BIT - 1);
+	pcm = ((pcm1 >> 1) + (pcm2 >> 1)) >> WFIR_SHIFT_16BIT;
 
 // Volume
 #define SNDMIX_STOREMONOVOL \
