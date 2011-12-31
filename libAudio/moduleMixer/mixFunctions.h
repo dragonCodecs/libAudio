@@ -6,7 +6,7 @@ typedef void (__CDECL__ *MixInterface)(Channel *, int *, int *);
 
 #define WFIR_QUANTBITS		15
 #define WFIR_QUANTSCALE		(1 << WFIR_QUANTBITS)
-#define WFIR_SHIFT_8BIT		(WFIR_QUANTBITS - 9)
+#define WFIR_SHIFT_8BIT		(WFIR_QUANTBITS - 7)
 #define WFIR_SHIFT_16BIT	WFIR_QUANTBITS
 #define WFIR_FRACBITS		12
 #define WFIR_LUTLEN			((1 << (WFIR_FRACBITS + 1)) + 1)
