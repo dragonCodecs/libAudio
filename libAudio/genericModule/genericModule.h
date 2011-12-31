@@ -285,6 +285,7 @@ private:
 
 	// Effects functions
 	void VolumeSlide(Channel *channel, uint8_t param);
+	void ChannelVolumeSlide(Channel *channel, uint8_t param);
 	void PortamentoUp(Channel *channel, uint8_t param);
 	void PortamentoDown(Channel *channel, uint8_t param);
 	void FinePortamentoUp(Channel *channel, uint8_t param);

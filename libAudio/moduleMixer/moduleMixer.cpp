@@ -374,6 +374,10 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	}
 }
 
+inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
+{
+}
+
 // Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
 inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
 {
@@ -546,7 +550,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			/*if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{*/
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
-				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period;
+				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period; 
 				if (Delta > -1)
 					Delta = -1;
 			/*}
@@ -707,6 +711,9 @@ bool ModuleFile::ProcessEffects()
 			case CMD_VOLUMESLIDE:
 				if (param != 0)
 					VolumeSlide(channel, param);
+				break;
+			case CMD_CHANNELVOLSLIDE:
+				ChannelVolumeSlide(channel, param);
 				break;
 			case CMD_POSITIONJUMP:
 				PositionJump = param;
