@@ -531,34 +531,34 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 		if (channel->Period < channel->PortamentoDest)
 		{
 			int Delta;
-			/*if ((channel->Flags & CHN_GLISSANDO) != 0)
-			{*/
+			if ((channel->Flags & CHN_GLISSANDO) != 0)
+			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
 				Delta = LinearSlideUp(channel->Period, Slide) - channel->Period;
 				if (Delta < 1)
 					Delta = 1;
-			/*}
+			}
 			else
-				Delta = channel->PortamentoSlide;*/
+				Delta = channel->PortamentoSlide;
+			if (channel->PortamentoDest - channel->Period < (uint32_t)Delta)
+				Delta = channel->PortamentoDest - channel->Period;
 			channel->Period += Delta;
-			if (channel->Period > channel->PortamentoDest)
-				channel->Period = channel->PortamentoDest;
 		}
 		else if (channel->Period > channel->PortamentoDest)
 		{
 			int Delta;
-			/*if ((channel->Flags & CHN_GLISSANDO) != 0)
-			{*/
+			if ((channel->Flags & CHN_GLISSANDO) != 0)
+			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
-				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period; 
+				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period;
 				if (Delta > -1)
 					Delta = -1;
-			/*}
+			}
 			else
-				Delta = -channel->PortamentoSlide;*/
+				Delta = -((int)channel->PortamentoSlide);
+			if (channel->PortamentoDest - channel->Period > ((uint32_t)Delta))
+				Delta = channel->PortamentoDest - channel->Period;
 			channel->Period += Delta;
-			if (channel->Period < channel->PortamentoDest)
-				channel->Period = channel->PortamentoDest;
 		}
 	}
 }
