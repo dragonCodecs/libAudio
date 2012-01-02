@@ -72,19 +72,19 @@ void ModuleFile::ResetChannelPanning()
 	}
 }
 
-void ModuleFile::SampleChange(Channel *channel, uint32_t sample_)
+void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 {
 	ModuleSample *sample;
 	uint32_t note;
 
-	sample = p_Samples[sample_ - 1];
+	sample = p_Samples[nSample - 1];
 	note = channel->NewNote;
 	channel->Volume = sample->GetVolume();
 	channel->NewSample = 0;
 	channel->Sample = sample;
 	channel->Length = sample->GetLength();
-	channel->LoopStart = (sample->GetLoopStart() < sample->GetLength() ? sample->GetLoopStart() : sample->GetLength());
-	channel->LoopEnd = (sample->GetLoopLen() > 2 ? channel->LoopStart + sample->GetLoopLen() : 0);
+	channel->LoopStart = (sample->GetLoopStart() < channel->Length ? sample->GetLoopStart() : channel->Length);
+	channel->LoopEnd = sample->GetLoopEnd();
 	if (channel->LoopEnd != 0)
 		channel->Flags |= CHN_LOOP;
 	else
@@ -94,6 +94,7 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t sample_)
 	channel->C4Speed = sample->GetC4Speed();
 	if (channel->LoopEnd > channel->Length)
 		channel->LoopEnd = channel->Length;
+	channel->NewSample = 0;
 }
 
 uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed)
@@ -169,11 +170,11 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 			channel->Sample = sample;
 			channel->NewSampleData = p_PCM[sample->ID];
 			channel->Length = sample->GetLength();
-			if (sample->GetLoopLen() > 2)
+			if (sample->GetLoopEnd() != 0)
 			{
 				channel->Flags |= CHN_LOOP;
 				channel->LoopStart = (sample->GetLoopStart() < sample->GetLength() ? sample->GetLoopStart() : sample->GetLength());
-				channel->LoopEnd = channel->LoopStart + sample->GetLoopLen();
+				channel->LoopEnd = sample->GetLoopEnd();
 			}
 			else
 			{
@@ -253,11 +254,11 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			break;
 		case CMD_MODEX_FINEVOLUP:
 			if (param != 0 && TickCount == 0)
-				channel->Volume += param << 1;
+				channel->Volume += param << 1; // << 1?
 			break;
 		case CMD_MODEX_FINEVOLDOWN:
 			if (param != 0 && TickCount == 0)
-				channel->Volume -= param << 1;
+				channel->Volume -= param << 1; // << 1?
 			break;
 		case CMD_MODEX_CUT:
 			if (TickCount == param)
@@ -267,6 +268,8 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			}
 			break;
 		case CMD_MODEX_INVERTLOOP:
+			if (ModuleType == MODULE_MOD)
+				channel->Increment.iValue = -channel->Increment.iValue;
 			break;
 	}
 }
@@ -327,6 +330,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			}
 			break;
 		case CMD_S3MEX_NOTECUT:
+			NoteCut(channel, param);
 			break;
 	}
 }
@@ -366,10 +370,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 		else
 			NewVolume -= param & 0x0F;
 		channel->Flags |= CHN_FASTVOLRAMP;
-		if (NewVolume < 0)
-			NewVolume = 0;
-		else if (NewVolume > 64)
-			NewVolume = 64;
+		CLIPINT(NewVolume, 0, 128);
 		channel->Volume = NewVolume & 0xFF;
 	}
 }
@@ -574,6 +575,7 @@ void ModuleFile::NoteCut(Channel *channel, uint32_t TriggerTick)
 
 void ModuleFile::NoteOff(Channel *channel)
 {
+	//channel->Flags |= CHN_NOTEOFF;
 	if (channel->Length == 0)
 		return;
 }
@@ -603,7 +605,8 @@ bool ModuleFile::ProcessEffects()
 		if (cmd == CMD_MOD_EXTENDED || cmd == CMD_S3M_EXTENDED)
 		{
 			uint8_t excmd = (param & 0xF0) >> 4;
-			if (excmd == CMD_MODEX_DELAYSAMP)
+			if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_DELAYSAMP) ||
+				(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_DELAYSAMP))
 				StartTick = param & 0x0F;
 			else if (TickCount == 0)
 			{
@@ -637,17 +640,11 @@ bool ModuleFile::ProcessEffects()
 			if (note != 0 && note <= 128)
 				channel->NewNote = note;
 			if (sample != 0)
-			{
 				SampleChange(channel, sample);
-				channel->NewSample = 0;
-			}
 			if (note != 0)
 			{
-				if (sample == 0 && channel->NewSample != 0 && note < 0x80)
-				{
+				if (sample == 0 && channel->NewSample != 0 && note <= 0x80)
 					SampleChange(channel, channel->NewSample);
-					channel->NewSample = 0;
-				}
 				NoteChange(channel, note, cmd);
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
@@ -886,7 +883,7 @@ bool ModuleFile::AdvanceRow()
 					else if (TremoloType == 2)
 						vol += (SquareTable[TremoloPos] * TremoloDepth) >> 8;
 					else if (TremoloType == 3)
-						vol += (RandomTable[TremoloPos] * channel->TremoloDepth) >> 8;
+						vol += (RandomTable[TremoloPos] * TremoloDepth) >> 8;
 					else
 						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8;
 				}
