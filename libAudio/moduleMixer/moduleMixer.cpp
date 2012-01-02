@@ -165,7 +165,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		if (cmd != CMD_TONEPORTAMENTO && cmd != CMD_TONEPORTAVOL)
 			channel->Period = period;
 		channel->PortamentoDest = period;
-		if (channel->PortamentoDest == channel->Period || channel->Length == 0)
+		if (channel->PortamentoDest == channel->Period || (channel->Length == 0 && ModuleType != MODULE_S3M))
 		{
 			channel->Sample = sample;
 			channel->NewSampleData = p_PCM[sample->ID];
