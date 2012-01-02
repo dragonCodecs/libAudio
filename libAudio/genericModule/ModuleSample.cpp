@@ -49,8 +49,6 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	if (Volume > 64)
 		Volume = 64;
 	FineTune &= 0x0F;
-	if (LoopEnd > 2 && Length > (LoopStart + LoopEnd))
-		Length = LoopStart + LoopEnd;
 	LoopEnd = (LoopStart < Length && LoopEnd > 2 ? LoopStart + LoopEnd : 0);
 
 	/********************************************\
@@ -105,8 +103,6 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 		if (memcmp(Magic, "SCRS", 4) != 0)
 			throw new ModuleLoaderError(E_BAD_S3M);
 	}
-	if (LoopEnd > LoopStart && Length > LoopEnd)
-		Length = LoopEnd;
 }
 
 ModuleSampleNative::~ModuleSampleNative()

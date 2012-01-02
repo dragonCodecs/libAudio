@@ -1047,6 +1047,10 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 		channel->Pos += LoopStart - channel->Length;
 		if (channel->Pos < LoopStart)
 			channel->Pos = LoopStart;
+		// The following fixes 3 or 4 bugs and allows
+		// for loops to run correctly. DO NOT REMOVE!
+		if (channel->Length > channel->LoopEnd)
+			channel->Length = channel->LoopEnd;
 	}
 	Pos = channel->Pos;
 	if (Pos < LoopStart)
