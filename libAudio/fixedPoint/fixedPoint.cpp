@@ -180,7 +180,7 @@ uint8_t fixed64_t::ulog2(uint64_t n) const
 
 fixed64_t::operator int() const
 {
-	return sign * i;
+	return sign * (i + (d >> 31));
 }
 
 fixed64_t::operator double() const
