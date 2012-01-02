@@ -106,7 +106,7 @@ public:
 	uint8_t GetType();
 	virtual uint32_t GetLength() = 0;
 	virtual uint32_t GetLoopStart() = 0;
-	virtual uint32_t GetLoopLen() = 0;
+	virtual uint32_t GetLoopEnd() = 0;
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
@@ -121,7 +121,7 @@ private:
 	uint8_t FineTune;
 	uint8_t Volume;
 	uint32_t LoopStart;
-	uint32_t LoopLen;
+	uint32_t LoopEnd;
 
 private:
 	char *FileName;
@@ -138,7 +138,7 @@ public:
 
 	uint32_t GetLength();
 	uint32_t GetLoopStart();
-	uint32_t GetLoopLen();
+	uint32_t GetLoopEnd();
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
@@ -172,7 +172,7 @@ public:
 
 	uint32_t GetLength();
 	uint32_t GetLoopStart();
-	uint32_t GetLoopLen();
+	uint32_t GetLoopEnd();
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();

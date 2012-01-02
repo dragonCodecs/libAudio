@@ -45,12 +45,13 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	fread(&Short, 2, 1, f_MOD);
 	LoopStart = BE2LE(Short) * 2;
 	fread(&Short, 2, 1, f_MOD);
-	LoopLen = BE2LE(Short) * 2;
+	LoopEnd = BE2LE(Short) * 2;
 	if (Volume > 64)
 		Volume = 64;
 	FineTune &= 0x0F;
-	if (LoopLen > 2 && Length > (LoopStart + LoopLen))
-		Length = LoopStart + LoopLen;
+	if (LoopEnd > 2 && Length > (LoopStart + LoopEnd))
+		Length = LoopStart + LoopEnd;
+	LoopEnd = (LoopStart < Length && LoopEnd > 2 ? LoopStart + LoopEnd : 0);
 
 	/********************************************\
 	|* The following block just initialises the *|
@@ -84,7 +85,7 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	fread_24bit(SamplePos, f_S3M);
 	fread(&Length, 4, 1, f_S3M);
 	fread(&LoopStart, 4, 1, f_S3M);
-	fread(&LoopLen, 4, 1, f_S3M);
+	fread(&LoopEnd, 4, 1, f_S3M);
 	fread(&Volume, 1, 1, f_S3M);
 	fread(DontCare, 1, 1, f_S3M);
 	fread(&Packing, 1, 1, f_S3M);
@@ -104,6 +105,8 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 		if (memcmp(Magic, "SCRS", 4) != 0)
 			throw new ModuleLoaderError(E_BAD_S3M);
 	}
+	if (LoopEnd > LoopStart && Length > LoopEnd)
+		Length = LoopEnd;
 }
 
 ModuleSampleNative::~ModuleSampleNative()
@@ -121,9 +124,9 @@ uint32_t ModuleSampleNative::GetLoopStart()
 	return LoopStart;
 }
 
-uint32_t ModuleSampleNative::GetLoopLen()
+uint32_t ModuleSampleNative::GetLoopEnd()
 {
-	return LoopLen;
+	return LoopEnd;
 }
 
 uint8_t ModuleSampleNative::GetFineTune()
@@ -193,7 +196,7 @@ uint32_t ModuleSampleAdlib::GetLoopStart()
 	return 0;
 }
 
-uint32_t ModuleSampleAdlib::GetLoopLen()
+uint32_t ModuleSampleAdlib::GetLoopEnd()
 {
 	return 0;
 }
