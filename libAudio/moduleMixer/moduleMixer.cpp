@@ -15,6 +15,19 @@
 #include "mixFunctionTables.h"
 #include "frequencyTables.h"
 
+uint32_t __CDECL__ Convert32to16(void *_out, int *_in, uint32_t SampleCount)
+{
+	uint32_t i;
+	signed short *out = (signed short *)_out;
+	for (i = 0; i < SampleCount; i++)
+	{
+		int samp = _in[i];
+		CLIPINT(samp, (int)0x8F000001, 0x07FFFFFF);
+		out[i] = samp >> 12;
+	}
+	return SampleCount << 1;
+}
+
 void ModuleFile::InitMixer(FileInfo *p_FI)
 {
 	MixSampleRate = p_FI->BitRate;
