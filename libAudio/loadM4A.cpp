@@ -271,7 +271,7 @@ void *M4A_OpenR(const char *FileName)
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
 	const MP4Tags *p_Tags;
-	uint32_t timescale, duration;
+	uint32_t timescale;
 	const char *value;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 	FileInfo *ret = NULL;
@@ -299,8 +299,7 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 		ret->OtherComments.push_back(value);
 	}
 	timescale = MP4GetTrackTimeScale(p_MF->p_MP4, p_MF->nTrack);
-	duration = MP4GetTrackDuration(p_MF->p_MP4, p_MF->nTrack);
-	ret->TotalTime = ((double)duration) / ((double)timescale);
+	ret->TotalTime = ((double)MP4GetTrackDuration(p_MF->p_MP4, p_MF->nTrack)) / ((double)timescale);
 	p_MF->nLoops = MP4GetTrackNumberOfSamples(p_MF->p_MP4, p_MF->nTrack);
 	p_MF->nCurrLoop = 0;
 

@@ -91,7 +91,7 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels)
 
 ModulePattern::~ModulePattern()
 {
-	delete Commands;
+	delete [] Commands;
 }
 
 ModuleCommand **ModulePattern::GetCommands()

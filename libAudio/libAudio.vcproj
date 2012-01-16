@@ -455,6 +455,10 @@
 					Name="moduleMixer"
 					>
 					<File
+						RelativePath=".\moduleMixer\frequencyTables.h"
+						>
+					</File>
+					<File
 						RelativePath=".\moduleMixer\mixFunctions.h"
 						>
 					</File>
@@ -464,6 +468,10 @@
 					</File>
 					<File
 						RelativePath=".\moduleMixer\moduleMixer.h"
+						>
+					</File>
+					<File
+						RelativePath=".\moduleMixer\waveTables.h"
 						>
 					</File>
 				</Filter>
