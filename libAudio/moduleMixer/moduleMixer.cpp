@@ -417,7 +417,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	/*if (ModuleType == MODULE_S3M && (param & 0xF0) >= 0xE0)
+	if (ModuleType == MODULE_S3M && (param & 0xF0) >= 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -427,7 +427,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 				ExtraFinePortamentoUp(channel, param & 0x0F);
 		}
 		return;
-	}*/
+	}
 	if (TickCount != 0 || MusicSpeed == 1)
 	{
 		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
@@ -452,7 +452,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	/*if (ModuleType == MODULE_S3M && (param & 0xF0) >= 0xE0)
+	if (ModuleType == MODULE_S3M && (param & 0xF0) >= 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -462,7 +462,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 				ExtraFinePortamentoDown(channel, param & 0x0F);
 		}
 		return;
-	}*/
+	}
 	if (TickCount != 0 || MusicSpeed == 1)
 	{
 		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
