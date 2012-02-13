@@ -379,9 +379,9 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	{
 		short NewVolume = channel->Volume;
 		if ((param & 0xF0) != 0)
-			NewVolume += (param & 0xF0) >> 4;
+			NewVolume += (param & 0xF0) >> 3;
 		else
-			NewVolume -= param & 0x0F;
+			NewVolume -= (param & 0x0F) << 1;
 		channel->Flags |= CHN_FASTVOLRAMP;
 		CLIPINT(NewVolume, 0, 128);
 		channel->Volume = NewVolume & 0xFF;
