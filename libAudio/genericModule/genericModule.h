@@ -240,7 +240,7 @@ public:
 	uint8_t RowEffect, RowVolParam, RowParam;
 	uint16_t PortamentoSlide;
 	uint32_t Period, C4Speed;
-	uint32_t Pos, PosLo;
+	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
 	uint32_t PortamentoDest;
 	uint8_t Portamento;

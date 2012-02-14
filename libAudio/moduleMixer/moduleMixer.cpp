@@ -222,7 +222,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			// XXX: Currently we ignore this.
 			break;
 		case CMD_MODEX_FINEPORTAUP:
-			if (TickCount == 0)
+			if (TickCount == channel->StartTick)
 			{
 				if (channel->Period != 0 && param != 0)
 				{
@@ -233,7 +233,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			}
 			break;
 		case CMD_MODEX_FINEPORTADOWN:
-			if (TickCount == 0)
+			if (TickCount == channel->StartTick)
 			{
 				if (channel->Period != 0 && param != 0)
 				{
@@ -253,7 +253,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			channel->VibratoType = param & 0x07;
 			break;
 		case CMD_MODEX_FINETUNE:
-			if (TickCount != 0)
+			if (TickCount > channel->StartTick)
 				break;
 			channel->FineTune = param;
 			channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
@@ -304,7 +304,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 				channel->Flags |= CHN_GLISSANDO;
 			break;
 		case CMD_S3MEX_FINETUNE:
-			if (TickCount != 0)
+			if (TickCount > channel->StartTick)
 				break;
 			channel->FineTune = S3MSpeedTable[param];
 			channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
@@ -321,11 +321,11 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			FrameDelay = param;
 			break;
 		case CMD_S3MEX_ENVELOPE:
-			if (TickCount != 0)
+			if (TickCount > channel->StartTick)
 				break;
 			break;
 		case CMD_S3MEX_PANNING:
-			if (TickCount != 0)
+			if (TickCount > channel->StartTick)
 				break;
 			channel->Panning = param << 3;
 			channel->Flags |= CHN_FASTVOLRAMP;
@@ -333,7 +333,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 		case CMD_S3MEX_SURROUND:
 			break;
 		case CMD_S3MEX_OFFSET:
-			if (TickCount != 0)
+			if (TickCount > channel->StartTick)
 				break;
 			if (channel->RowNote != 0 && channel->RowNote < 0x80)
 			{
@@ -375,7 +375,7 @@ inline int ModuleFile::PatternLoop(uint32_t param)
 inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 {
 	// TODO: Recode to take into account S3M FineVolume slides
-	if (TickCount != 0)
+	if (TickCount > channel->StartTick)
 	{
 		short NewVolume = channel->Volume;
 		if ((param & 0xF0) != 0)
@@ -428,7 +428,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		}
 		return;
 	}
-	if (TickCount != 0 || MusicSpeed == 1)
+	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
 		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
 		{
@@ -463,7 +463,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		}
 		return;
 	}
-	if (TickCount != 0 || MusicSpeed == 1)
+	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
 		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
 		{
@@ -483,7 +483,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 
 inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
 {
-	if (TickCount == 0)
+	if (TickCount == channel->StartTick)
 	{
 		if  ((p_Header->Flags & 4) == 0)
 			channel->Period = LinearSlideDown(channel->Period, param);
@@ -496,7 +496,7 @@ inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
 
 inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
 {
-	if (TickCount == 0)
+	if (TickCount == channel->StartTick)
 	{
 		if  ((p_Header->Flags & 4) == 0)
 			channel->Period = LinearSlideUp(channel->Period, param);
@@ -509,7 +509,7 @@ inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
 
 inline void ModuleFile::ExtraFinePortamentoUp(Channel *channel, uint8_t param)
 {
-	if (TickCount == 0)
+	if (TickCount == channel->StartTick)
 	{
 		if  ((p_Header->Flags & 4) == 0)
 		{
@@ -523,7 +523,7 @@ inline void ModuleFile::ExtraFinePortamentoUp(Channel *channel, uint8_t param)
 
 inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
 {
-	if (TickCount == 0)
+	if (TickCount == channel->StartTick)
 	{
 		if  ((p_Header->Flags & 4) == 0)
 		{
@@ -540,7 +540,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 	if (param != 0)
 		channel->PortamentoSlide = ((uint16_t)param) << 2;
 	channel->Flags |= CHN_PORTAMENTO;
-	if (channel->Period != 0 && channel->PortamentoDest != 0)// && (MusicSpeed == 1 || TickCount != 0))
+	if (channel->Period != 0 && channel->PortamentoDest != 0)// && (MusicSpeed == 1 || TickCount > channel->StartTick))
 	{
 		if (channel->Period < channel->PortamentoDest)
 		{
@@ -612,16 +612,12 @@ bool ModuleFile::ProcessEffects()
 		uint8_t sample = channel->RowSample;
 		uint8_t cmd = channel->RowEffect;
 		uint8_t param = channel->RowParam;
-		uint32_t StartTick = 0;
 
 		channel->Flags &= ~CHN_FASTVOLRAMP;
 		if (cmd == CMD_MOD_EXTENDED || cmd == CMD_S3M_EXTENDED)
 		{
 			uint8_t excmd = (param & 0xF0) >> 4;
-			if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_DELAYSAMP) ||
-				(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_DELAYSAMP))
-				StartTick = param & 0x0F;
-			else if (TickCount == 0)
+			if (channel->StartTick == 0 && TickCount == 0)
 			{
 				if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
 					(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_LOOP))
@@ -635,7 +631,7 @@ bool ModuleFile::ProcessEffects()
 			}
 		}
 
-		if (TickCount == StartTick)
+		if (TickCount == channel->StartTick)
 		{
 			uint8_t note = channel->RowNote;
 			if (sample != 0)
@@ -676,7 +672,7 @@ bool ModuleFile::ProcessEffects()
 			case CMD_NONE:
 				break;
 			case CMD_ARPEGGIO:
-				if (TickCount != 0 || channel->Period == 0 || channel->Note == 0xFF)
+				if (TickCount > channel->StartTick || channel->Period == 0 || channel->Note == 0xFF)
 					break;
 				channel->Flags |= CHN_ARPEGGIO;
 				channel->Arpeggio = param;
@@ -711,9 +707,9 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_TREMOLO;
 				break;
 			case CMD_OFFSET:
-				if (TickCount != 0)
+				if (TickCount > channel->StartTick)
 					break;
-				channel->Pos = ((uint32_t)param) << 9;
+				channel->Pos = ((uint32_t)param) << 8;
 				channel->PosLo = 0;
 				if (channel->Pos > channel->Length)
 					channel->Pos = channel->Length;
@@ -753,7 +749,7 @@ bool ModuleFile::ProcessEffects()
 				MusicTempo = param;
 				break;
 			case CMD_VOLUME:
-				if (TickCount == 0)
+				if (TickCount == channel->StartTick)
 				{
 					uint8_t NewVolume = param;
 					if (NewVolume > 64)
@@ -763,14 +759,14 @@ bool ModuleFile::ProcessEffects()
 				}
 				break;
 			case CMD_CHANNELVOLUME:
-				if (TickCount != 0 && param < 65)
+				if (TickCount > channel->StartTick && param < 65)
 				{
 					channel->ChannelVolume = param;
 					channel->Flags |= CHN_FASTVOLRAMP;
 				}
 				break;
 			case CMD_PANNING:
-				if (TickCount != 0)
+				if (TickCount > channel->StartTick)
 					break;
 				channel->Panning = param;
 				channel->Flags |= CHN_FASTVOLRAMP;
@@ -814,6 +810,7 @@ bool ModuleFile::ProcessEffects()
 
 void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 {
+	uint8_t excmd;
 	RowNote = Command->Note;
 	RowSample = Command->Sample;
 	if (RowSample > p_Header->nSamples)
@@ -822,6 +819,12 @@ void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 	RowVolParam = Command->VolParam;
 	RowEffect = Command->Effect;
 	RowParam = Command->Param;
+	excmd = (RowParam & 0xF0) >> 4;
+	if ((RowEffect == CMD_MOD_EXTENDED && excmd == CMD_MODEX_DELAYSAMP) ||
+		(RowEffect == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_DELAYSAMP))
+		StartTick = RowParam & 0x0F;
+	else
+		StartTick = 0;
 	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 }
 
@@ -900,7 +903,7 @@ bool ModuleFile::AdvanceRow()
 					else
 						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8;
 				}
-				if (TickCount != 0)
+				if (TickCount > channel->StartTick)
 					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3F;
 			}
 			vol = (vol * channel->ChannelVolume) >> 6;
