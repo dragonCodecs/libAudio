@@ -266,11 +266,11 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 				NoteChange(channel, channel->NewNote, 0);
 			break;
 		case CMD_MODEX_FINEVOLUP:
-			if (param != 0 && TickCount == 0)
+			if (param != 0 && TickCount == channel->StartTick)
 				channel->Volume += param << 1; // << 1?
 			break;
 		case CMD_MODEX_FINEVOLDOWN:
-			if (param != 0 && TickCount == 0)
+			if (param != 0 && TickCount == channel->StartTick)
 				channel->Volume -= param << 1; // << 1?
 			break;
 		case CMD_MODEX_CUT:
@@ -749,7 +749,7 @@ bool ModuleFile::ProcessEffects()
 				MusicTempo = param;
 				break;
 			case CMD_VOLUME:
-				if (TickCount == channel->StartTick)
+				if (TickCount == 0)//channel->StartTick)
 				{
 					uint8_t NewVolume = param;
 					if (NewVolume > 64)
