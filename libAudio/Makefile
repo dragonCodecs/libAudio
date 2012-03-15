@@ -58,6 +58,7 @@ install: all
 	$(LN) $(LIBDIR)/$(SO) $(LIBDIR)/$(SOREV)
 	$(LN) $(LIBDIR)/$(SOREV) $(LIBDIR)/$(SOMIN)
 	$(LN) $(LIBDIR)/$(SOMIN) $(LIBDIR)/$(SOMAJ)
+	ldconfig
 
 uninstall:
 	rm $(LIBDIR)/$(SOMAJ)*
