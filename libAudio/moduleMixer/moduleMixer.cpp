@@ -267,11 +267,23 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			break;
 		case CMD_MODEX_FINEVOLUP:
 			if (param != 0 && TickCount == channel->StartTick)
-				channel->Volume += param << 1; // << 1?
+			{
+				param <<= 1; // << 1?
+				if (128 - param > channel->Volume)
+					channel->Volume += param;
+				else
+					channel->Volume = 0;
+			}
 			break;
 		case CMD_MODEX_FINEVOLDOWN:
 			if (param != 0 && TickCount == channel->StartTick)
-				channel->Volume -= param << 1; // << 1?
+			{
+				param <<= 1; // << 1?
+				if (channel->Volume > param)
+					channel->Volume -= param;
+				else
+					channel->Volume = 0;
+			}
 			break;
 		case CMD_MODEX_CUT:
 			if (TickCount == param)
