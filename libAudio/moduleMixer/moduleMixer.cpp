@@ -272,7 +272,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 				if (128 - param > channel->Volume)
 					channel->Volume += param;
 				else
-					channel->Volume = 0;
+					channel->Volume = 128;
 			}
 			break;
 		case CMD_MODEX_FINEVOLDOWN:
@@ -992,7 +992,7 @@ bool ModuleFile::AdvanceRow()
 				{
 					RampLength = SamplesToMix;
 					// Clipping:
-					CLIPINT(RampLength, 2, 512);
+					CLIPINT(RampLength, 2, 256);
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
 				channel->LeftRamp = LeftDelta / RampLength;
