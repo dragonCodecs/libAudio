@@ -303,8 +303,8 @@ private:
 	void NoteCut(Channel *channel, uint32_t TriggerTick);
 
 	// Processing functions
-	bool AdvanceRow();
-	bool ProcessRow();
+	bool AdvanceTick();
+	bool Tick();
 	bool ProcessEffects();
 	void ResetChannelPanning();
 	void SampleChange(Channel *channel, uint32_t sample);

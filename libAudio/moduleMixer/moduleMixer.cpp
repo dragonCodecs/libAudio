@@ -840,7 +840,7 @@ void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
 }
 
-bool ModuleFile::ProcessRow()
+bool ModuleFile::Tick()
 {
 	TickCount++;
 	if (TickCount >= (MusicSpeed * (PatternDelay + 1)) + FrameDelay)
@@ -880,11 +880,11 @@ bool ModuleFile::ProcessRow()
 	return ProcessEffects();
 }
 
-bool ModuleFile::AdvanceRow()
+bool ModuleFile::AdvanceTick()
 {
 	uint32_t i;
 
-	if (ProcessRow() == false)
+	if (Tick() == false)
 		return false;
 	if (MusicTempo == 0)
 		return false;
@@ -1274,7 +1274,7 @@ int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 		if (SamplesToMix == 0)
 		{
 			// TODO: Deal with song fading
-			if (AdvanceRow() == false)
+			if (AdvanceTick() == false)
 			{
 				// Song fading
 			}
