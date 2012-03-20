@@ -259,6 +259,7 @@ public:
 
 	// Channel effects
 	void NoteOff();
+	void NoteCut(bool Triggered);
 	void Vibrato(uint8_t param, uint8_t Multiplier);
 };
 
@@ -300,7 +301,6 @@ private:
 	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);
-	void NoteCut(Channel *channel, uint32_t TriggerTick);
 
 	// Processing functions
 	bool AdvanceTick();

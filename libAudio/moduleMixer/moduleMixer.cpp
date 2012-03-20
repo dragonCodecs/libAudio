@@ -165,7 +165,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 	{
 		channel->NoteOff();
 		if (note == 0xFE)
-			NoteCut(channel, TickCount);
+			channel->NoteCut(true);
 		return;
 	}
 	channel->Note = note;
@@ -355,7 +355,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			}
 			break;
 		case CMD_S3MEX_NOTECUT:
-			NoteCut(channel, param);
+			channel->NoteCut(TickCount == param);
 			break;
 	}
 }
@@ -589,12 +589,12 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 	}
 }
 
-void ModuleFile::NoteCut(Channel *channel, uint32_t TriggerTick)
+void Channel::NoteCut(bool Triggered)
 {
-	if (TickCount == TriggerTick)
+	if (Triggered)
 	{
-		channel->Volume = 0;
-		channel->Flags |= CHN_FASTVOLRAMP;
+		Volume = 0;
+		Flags |= CHN_FASTVOLRAMP;
 	}
 }
 
