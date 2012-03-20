@@ -256,6 +256,10 @@ public:
 public:
 	Channel();
 	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
+
+	// Channel effects
+	void NoteOff();
+	void Vibrato(uint8_t param, uint8_t Multiplier);
 };
 
 class ModuleFile : public ModuleAllocator
@@ -296,9 +300,7 @@ private:
 	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);
-	void NoteOff(Channel *channel);
 	void NoteCut(Channel *channel, uint32_t TriggerTick);
-	void Vibrato(Channel *channel, uint8_t param, uint8_t Multiplier);
 
 	// Processing functions
 	bool AdvanceRow();

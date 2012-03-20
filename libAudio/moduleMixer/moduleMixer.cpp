@@ -163,7 +163,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		return;
 	if (note >= 0x80)
 	{
-		NoteOff(channel);
+		channel->NoteOff();
 		if (note == 0xFE)
 			NoteCut(channel, TickCount);
 		return;
@@ -598,20 +598,20 @@ void ModuleFile::NoteCut(Channel *channel, uint32_t TriggerTick)
 	}
 }
 
-void ModuleFile::NoteOff(Channel *channel)
+void Channel::NoteOff()
 {
 	//channel->Flags |= CHN_NOTEOFF;
-	if (channel->Length == 0)
+	if (Length == 0)
 		return;
 }
 
-void ModuleFile::Vibrato(Channel *channel, uint8_t param, uint8_t Multiplier)
+void Channel::Vibrato(uint8_t param, uint8_t Multiplier)
 {
 	if ((param & 0x0F) != 0)
-		channel->VibratoDepth = (param & 0x0F) * Multiplier;
+		VibratoDepth = (param & 0x0F) * Multiplier;
 	if ((param & 0xF0) != 0)
-		channel->VibratoSpeed = param >> 4;
-	channel->Flags |= CHN_VIBRATO;
+		VibratoSpeed = param >> 4;
+	Flags |= CHN_VIBRATO;
 }
 
 bool ModuleFile::ProcessEffects()
@@ -699,7 +699,7 @@ bool ModuleFile::ProcessEffects()
 				TonePortamento(channel, param);
 				break;
 			case CMD_VIBRATO:
-				Vibrato(channel, param, 4);
+				channel->Vibrato(param, 4);
 				break;
 			case CMD_TONEPORTAVOL:
 				if (param != 0)
@@ -784,7 +784,7 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_FASTVOLRAMP;
 				break;
 			case CMD_FINEVIBRATO:
-				Vibrato(channel, param, 1);
+				channel->Vibrato(param, 1);
 				break;
 			default:
 				break;
