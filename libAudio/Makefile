@@ -1,14 +1,14 @@
 GCC ?= gcc
-GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
-ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
-GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
-else
-GCC_FLAGS = 
-endif
-#GCC_FLAGS = -ggdb
+#GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
+#ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
+#GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
+#else
+#GCC_FLAGS = 
+#endif
+GCC_FLAGS = -ggdb
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = $(shell pkg-config --cflags openal ogg vorbis vorbisfile vorbisenc flac wavpack)
-CFLAGS = -c -O2 -Wall $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $@
+CFLAGS = -c -Wall $(EXTRA_CFLAGS) -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__ -o $@
 EXTRA_LIBS = $(shell pkg-config --libs openal ogg vorbis vorbisfile vorbisenc flac wavpack)
 LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -o $(SO)
@@ -29,7 +29,7 @@ SHORTEN =
 #OPTIMFROG = loadOptimFROG.o
 OPTIMFROG = 
 H = libAudio.h
-O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadMOD.o loadS3M.o
+O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadMOD.o loadS3M.o loadSTM.o
 #O_SNDH = loadSNDH.o
 O_SNDH = 
 O_SID = loadSID.o
@@ -70,7 +70,7 @@ libAudio.so$(VER): $(O)
 	$(AR) $(A) $(O)
 	$(RANLIB) $(A)
 	$(CC) $(LFLAGS)
-	$(STRIP) $(SO)
+#	$(STRIP) $(SO)
 
 libAudio.pc: $(IN)
 	sed -e 's:@LIBDIR@:$(LIBDIR):g' $(IN) > $(PC)
@@ -107,6 +107,7 @@ moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp moduleMixer/mixFunctions.
 	moduleMixer/frequencyTables.h moduleMixer/moduleMixer.h
 loadSNDH.o: loadSNDH.cpp
 loadS3M.o: loadS3M.cpp
+loadSTM.o: loadSTM.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp
 loadSID.o: loadSID.cpp

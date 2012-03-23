@@ -88,10 +88,8 @@ void ModuleFile::ResetChannelPanning()
 void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 {
 	ModuleSample *sample;
-	uint32_t note;
 
 	sample = p_Samples[nSample - 1];
-	note = channel->NewNote;
 	channel->Volume = sample->GetVolume();
 	channel->NewSample = 0;
 	channel->Sample = sample;
