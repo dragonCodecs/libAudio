@@ -23,8 +23,10 @@ class ModulePattern;
 
 #define MODULE_MOD		1
 #define MODULE_S3M		2
+#define MODULE_STM		3
 
 #define E_BAD_S3M		1
+#define E_BAD_STM		2
 
 class ModuleLoaderError
 {
@@ -84,6 +86,7 @@ private:
 public:
 	ModuleHeader(MOD_Intern *p_MF);
 	ModuleHeader(S3M_Intern *p_SF);
+	ModuleHeader(STM_Intern *p_SF);
 	~ModuleHeader();
 };
 
@@ -102,6 +105,7 @@ protected:
 public:
 	static ModuleSample *LoadSample(MOD_Intern *p_MF, uint32_t i);
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
+	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
 
 	uint8_t GetType();
 	virtual uint32_t GetLength() = 0;
@@ -134,6 +138,7 @@ private:
 public:
 	ModuleSampleNative(MOD_Intern *p_MF, uint32_t i);
 	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
+	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
 	~ModuleSampleNative();
 
 	uint32_t GetLength();
@@ -195,10 +200,14 @@ private:
 	friend class Channel;
 
 public:
+	void SetSample(uint8_t Sample);
+	void SetVolume(uint8_t Volume);
 	void SetMODData(uint8_t Data[4]);
-	void SetS3MNote(uint8_t Note, uint8_t sample);
+	void SetS3MNote(uint8_t Note, uint8_t Sample);
 	void SetS3MVolume(uint8_t Volume);
 	void SetS3MEffect(uint8_t Effect, uint8_t Param);
+	void SetSTMNote(uint8_t Note);
+	void SetSTMEffect(uint8_t Effect, uint8_t Param);
 };
 
 class ModulePattern : public ModuleAllocator
@@ -209,6 +218,7 @@ private:
 public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);
 	ModulePattern(S3M_Intern *p_SF, uint32_t nChannels);
+	ModulePattern(STM_Intern *p_SF);
 	~ModulePattern();
 
 	ModuleCommand **GetCommands();
@@ -322,11 +332,13 @@ private:
 private:
 	void MODLoadPCM(FILE *f_MOD);
 	void S3MLoadPCM(FILE *f_S3M);
+	void STMLoadPCM(FILE *f_STM);
 	void DeinitMixer();
 
 public:
 	ModuleFile(MOD_Intern *p_MF);
 	ModuleFile(S3M_Intern *p_SF);
+	ModuleFile(STM_Intern *p_SF);
 	~ModuleFile();
 
 	const char *GetTitle();

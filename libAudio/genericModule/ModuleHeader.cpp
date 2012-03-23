@@ -130,6 +130,54 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	RestartPos = 255;
 }
 
+ModuleHeader::ModuleHeader(STM_Intern *p_SF)
+{
+	char Const[9];
+	char Reserved[13];
+	uint8_t _nPatterns, i;
+	FILE *f_STM = p_SF->f_STM;
+
+	Name = new char[21];
+	fread(Name, 20, 1, f_STM);
+	if (Name[19] != 0)
+		Name[20] = 0;
+	fread(Const, 9, 1, f_STM);
+	fread(&Type, 1, 1, f_STM);
+	fread(&FormatVersion, 2, 1, f_STM);
+	fread(&InitialSpeed, 1, 1, f_STM);
+	InitialSpeed >>= 4;
+	fread(&_nPatterns, 1, 1, f_STM);
+	nPatterns = _nPatterns;
+	fread(&GlobalVolume, 1, 1, f_STM);
+	fread(Reserved, 13, 1, f_STM);
+
+	if (strncmp(Const, "!Scream!\x1A", 9) != 0 || Type != 2)
+		throw new ModuleLoaderError(E_BAD_STM);
+
+	nOrders = 128;
+	Orders = new uint8_t[128];
+	fseek(f_STM, 1040, SEEK_SET);
+	fread(Orders, 128, 1, f_STM);
+	for (i = 0; i < nOrders; i++)
+	{
+		if (Orders[i] >= 99)
+			Orders[i] = 255;
+	}
+	fseek(f_STM, 48, SEEK_SET);
+	nSamples = 31;
+	nChannels = 4;
+
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
+	Flags = 0;
+	MasterVolume = 64;
+	RestartPos = 255;
+	InitialTempo = 125;
+	SamplePtrs = PatternPtrs = NULL;
+}
+
 ModuleHeader::~ModuleHeader()
 {
 	delete [] Panning;

@@ -23,6 +23,11 @@ ModuleSample *ModuleSample::LoadSample(S3M_Intern *p_SF, uint32_t i)
 		return new ModuleSampleNative(p_SF, i, Type);
 }
 
+ModuleSample *ModuleSample::LoadSample(STM_Intern *p_SF, uint32_t i)
+{
+	return new ModuleSampleNative(p_SF, i);
+}
+
 uint8_t ModuleSample::GetType()
 {
 	return Type;
@@ -103,6 +108,51 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 		if (memcmp(Magic, "SCRS", 4) != 0)
 			throw new ModuleLoaderError(E_BAD_S3M);
 	}
+}
+
+ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSample(i, 1)
+{
+	uint8_t ID, Disk, Reserved2;
+	uint16_t Reserved1, C3Speed, Unknown;
+	uint32_t Reserved3;
+	FILE *f_STM = p_SF->f_STM;
+	Name = new char[13];
+
+	fread(Name, 12, 1, f_STM);
+	if (Name[11] != 0)
+		Name[12] = 0;
+	fread(&ID, 1, 1, f_STM);
+	fread(&Disk, 1, 1, f_STM);
+	fread(&Reserved1, 2, 1, f_STM);
+	fread(&Length, 2, 1, f_STM);
+	fread(&LoopStart, 2, 1, f_STM);
+	fread(&LoopEnd, 2, 1, f_STM);
+	fread(&Volume, 1, 1, f_STM);
+	fread(&Reserved2, 1, 1, f_STM);
+	fread(&C3Speed, 2, 1, f_STM);
+	// TODO: What's the diff. between them?
+	C4Speed = C3Speed;
+	fread(&Reserved3, 4, 1, f_STM);
+	// XXX: One spec says this is the "Length in Paragraphs", need to figure out what that means.
+	fread(&Unknown, 2, 1, f_STM);
+	if (ID > 0)
+		throw new ModuleLoaderError(E_BAD_STM);
+
+	if (LoopEnd < LoopStart || LoopEnd == 0xFFFF)
+	{
+		LoopEnd = 0;
+		LoopStart = 0;
+	}
+	if (Volume > 64)
+		Volume = 64;
+
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
+	Packing = Flags = 0;
+	Name = NULL;
+	FineTune = 0;
 }
 
 ModuleSampleNative::~ModuleSampleNative()

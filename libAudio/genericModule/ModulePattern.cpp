@@ -89,6 +89,36 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels)
 
 #undef checkLength
 
+ModulePattern::ModulePattern(STM_Intern *p_SF)
+{
+	uint8_t row, channel;
+	FILE *f_STM = p_SF->f_STM;
+
+	Commands = new ModuleCommand[4][64];
+	for (row = 0; row < 64; row++)
+	{
+		for (channel = 0; channel < 4; channel++)
+		{
+			uint8_t Note;
+			uint8_t Param;
+			uint8_t Volume;
+			uint8_t Effect;
+
+			fread(&Note, 1, 1, f_STM);
+			Commands[channel][row].SetSTMNote(Note);
+			fread(&Param, 1, 1, f_STM);
+			Volume = Param & 0x07;
+			Commands[channel][row].SetSample(Param >> 3);
+			fread(&Param, 1, 1, f_STM);
+			Volume += Param >> 1;
+			Commands[channel][row].SetVolume(Volume);
+			Effect = Param & 0x0F;
+			fread(&Param, 1, 1, f_STM);
+			Commands[channel][row].SetSTMEffect(Effect, Param);
+		}
+	}
+}
+
 ModulePattern::~ModulePattern()
 {
 	delete [] Commands;
@@ -97,6 +127,17 @@ ModulePattern::~ModulePattern()
 ModuleCommand **ModulePattern::GetCommands()
 {
 	return (ModuleCommand **)Commands;
+}
+
+void ModuleCommand::SetSample(uint8_t sample)
+{
+	Sample = sample;
+}
+
+void ModuleCommand::SetVolume(uint8_t volume)
+{
+	VolEffect = VOLCMD_VOLUME;
+	VolParam = volume;
 }
 
 uint8_t ModuleCommand::MODPeriodToNoteIndex(uint16_t Period)
@@ -169,4 +210,25 @@ void ModuleCommand::SetS3MVolume(uint8_t volume)
 		VolEffect = VOLCMD_VOLUME;
 		VolParam = (volume > 64 ? 64 : volume);
 	}
+}
+
+void ModuleCommand::SetSTMNote(uint8_t note)
+{
+	if (note > 250)
+	{
+		if (note == 254 || note == 252)
+			Note = 254;
+	}
+	else
+	{
+		uint8_t Octave = (note & 0xF0) >> 4;
+		uint8_t Pitch = note & 0x0F;
+		Pitch %= 12;
+		Note = (Octave * 12) + Pitch + 37;
+	}
+}
+
+void ModuleCommand::SetSTMEffect(uint8_t Effect, uint8_t Param)
+{
+	TranslateMODEffect(Effect, Param);
 }
