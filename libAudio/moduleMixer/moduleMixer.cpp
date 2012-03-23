@@ -83,6 +83,16 @@ void ModuleFile::ResetChannelPanning()
 				Channels[i].Panning = p_Header->Panning[i];
 		}
 	}
+	else if (ModuleType == MODULE_STM)
+	{
+		for (i = 0; i < p_Header->nChannels; i++)
+		{
+			if ((i % 2) != 0)
+				Channels[i].Panning = 64;
+			else
+				Channels[i].Panning = 192;
+		}
+	}
 }
 
 void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
