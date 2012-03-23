@@ -172,6 +172,7 @@ extern API_Functions ITDecoder;
 #endif
 extern API_Functions MODDecoder;
 extern API_Functions S3MDecoder;
+extern API_Functions STMDecoder;
 #ifndef __NO_MPC__
 extern API_Functions MPCDecoder;
 #endif

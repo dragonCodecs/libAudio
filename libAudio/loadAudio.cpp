@@ -47,6 +47,8 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &MODDecoder;
 	else if (Is_S3M(FileName) == true)
 		ret->API = &S3MDecoder;
+	else if (Is_STM(FileName) == true)
+		ret->API = &STMDecoder;
 	else if (Is_MPC(FileName) == true)
 		ret->API = &MPCDecoder;
 	else if (Is_WavPack(FileName) == true)
@@ -167,6 +169,8 @@ bool Is_Audio(const char *FileName)
 	else if (Is_MOD(FileName) == true)
 		return true;
 	else if (Is_S3M(FileName) == true)
+		return true;
+	else if (Is_STM(FileName) == true)
 		return true;
 #ifndef __NO_MPC__
 	else if (Is_MPC(FileName) == true)
