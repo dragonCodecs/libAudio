@@ -4,14 +4,6 @@
 *.exe
 *.dll
 *.exe
-*.ilk
-*.pdb
-*.exp
-*.idb
-*.dep
-*.manifest
-*.ncb
-*.suo
 *.libs
 *.dir
 BuildLog.htm
