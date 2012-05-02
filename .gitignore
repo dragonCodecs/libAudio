@@ -1,0 +1,10 @@
+*.o
+*.lo
+debug/*.exe
+debug/*.dll
+debug/*.lib
+debug/*.pdb
+release/*.exe
+release/*.dll
+release/*.lib
+release/*.pdb
