@@ -1,9 +1,13 @@
 *.lo
 *.la
 *.a
-*.exe
 *.dll
 *.exe
 *.libs
 *.dir
 BuildLog.htm
+
+faac-1.28/common/mp4v2/mpeg4ip_config.h
+libvorbis-1.2.3/ltmain.sh
+OptimFROG_SDK/xmms/libofr.so
+OptimFROG_SDK/xmms/libofr_amd64.so
