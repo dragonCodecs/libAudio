@@ -140,5 +140,7 @@ API_Functions S3MDecoder =
 	S3M_GetFileInfo,
 	S3M_FillBuffer,
 	S3M_CloseFileR,
-	S3M_Play
+	S3M_Play,
+	S3M_Pause,
+	S3M_Stop
 };

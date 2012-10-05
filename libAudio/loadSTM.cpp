@@ -138,5 +138,7 @@ API_Functions STMDecoder =
 	STM_GetFileInfo,
 	STM_FillBuffer,
 	STM_CloseFileR,
-	STM_Play
+	STM_Play,
+	STM_Pause,
+	STM_Stop
 };

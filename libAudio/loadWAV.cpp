@@ -354,5 +354,7 @@ API_Functions WAVDecoder =
 	WAV_GetFileInfo,
 	WAV_FillBuffer,
 	WAV_CloseFileR,
-	WAV_Play
+	WAV_Play,
+	WAV_Pause,
+	WAV_Stop
 };

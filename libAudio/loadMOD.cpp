@@ -157,5 +157,7 @@ API_Functions MODDecoder =
 	MOD_GetFileInfo,
 	MOD_FillBuffer,
 	MOD_CloseFileR,
-	MOD_Play
+	MOD_Play,
+	MOD_Pause,
+	MOD_Stop
 };

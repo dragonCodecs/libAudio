@@ -415,5 +415,7 @@ API_Functions AACDecoder =
 	AAC_GetFileInfo,
 	AAC_FillBuffer,
 	AAC_CloseFileR,
-	AAC_Play
+	AAC_Play,
+	AAC_Pause,
+	AAC_Stop
 };

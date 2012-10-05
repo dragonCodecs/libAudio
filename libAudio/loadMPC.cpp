@@ -426,7 +426,9 @@ API_Functions MPCDecoder =
 	MPC_GetFileInfo,
 	MPC_FillBuffer,
 	MPC_CloseFileR,
-	MPC_Play
+	MPC_Play,
+	MPC_Pause,
+	MPC_Stop
 };
 
 #endif /* __NO_MPC__ */

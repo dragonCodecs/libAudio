@@ -472,5 +472,7 @@ API_Functions M4ADecoder =
 	M4A_GetFileInfo,
 	M4A_FillBuffer,
 	M4A_CloseFileR,
-	M4A_Play
+	M4A_Play,
+	M4A_Pause,
+	M4A_Stop
 };

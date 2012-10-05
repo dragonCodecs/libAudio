@@ -623,5 +623,7 @@ API_Functions ITDecoder =
 	IT_GetFileInfo,
 	IT_FillBuffer,
 	IT_CloseFileR,
-	IT_Play
+	IT_Play,
+	IT_Pause,
+	IT_Stop
 };

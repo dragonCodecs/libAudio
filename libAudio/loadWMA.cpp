@@ -2354,5 +2354,7 @@ API_Functions WMADecoder =
 	WMA_GetFileInfo,
 	WMA_FillBuffer,
 	WMA_CloseFileR,
-	WMA_Play
+	WMA_Play,
+	WMA_Pause,
+	WMA_Stop
 };

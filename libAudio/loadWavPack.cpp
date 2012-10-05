@@ -403,6 +403,7 @@ API_Functions WavPackDecoder =
 	WavPack_GetFileInfo,
 	WavPack_FillBuffer,
 	WavPack_CloseFileR,
-	WavPack_Play
+	WavPack_Play,
+	WavPack_Pause,
+	WavPack_Stop
 };
-

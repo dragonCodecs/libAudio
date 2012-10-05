@@ -357,5 +357,7 @@ API_Functions OptimFROGDecoder =
 	OptimFROG_GetFileInfo,
 	OptimFROG_FillBuffer,
 	OptimFROG_CloseFileR,
-	OptimFROG_Play
+	OptimFROG_Play,
+	OptimFROG_Pause,
+	OptimFROG_Stop
 };

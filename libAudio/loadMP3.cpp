@@ -595,5 +595,7 @@ API_Functions MP3Decoder =
 	MP3_GetFileInfo,
 	MP3_FillBuffer,
 	MP3_CloseFileR,
-	MP3_Play
+	MP3_Play,
+	MP3_Pause,
+	MP3_Stop
 };

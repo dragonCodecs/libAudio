@@ -509,5 +509,7 @@ API_Functions FLACDecoder =
 	FLAC_GetFileInfo,
 	FLAC_FillBuffer,
 	FLAC_CloseFileR,
-	FLAC_Play
+	FLAC_Play,
+	FLAC_Pause,
+	FLAC_Stop
 };
