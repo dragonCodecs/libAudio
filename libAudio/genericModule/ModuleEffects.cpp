@@ -84,7 +84,7 @@ void ModuleCommand::TranslateMODEffect(uint8_t cmd, uint8_t param)
 	}
 }
 
-void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
+void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 {
 	switch (effect)
 	{
@@ -148,6 +148,15 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_OFFSET;
 			Param = param;
 			break;
+	}
+}
+
+void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
+{
+	if (effect < 15)
+		return SetSTMEffect(effect, param);
+	switch (effect)
+	{
 		/*case 16:
 			Effect = CMD_PANNINGSLIDE;
 			Param = param;

@@ -227,8 +227,3 @@ void ModuleCommand::SetSTMNote(uint8_t note)
 		Note = (Octave * 12) + Pitch + 37;
 	}
 }
-
-void ModuleCommand::SetSTMEffect(uint8_t Effect, uint8_t Param)
-{
-	TranslateMODEffect(Effect, Param);
-}
