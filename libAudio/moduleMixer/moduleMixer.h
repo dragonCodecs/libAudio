@@ -17,7 +17,30 @@
 		num = max
 
 // Return (a * b) / c [ - no divide error ]
-int muldiv(long a, long b, long c)
+int32_t muldiv(int32_t a, int32_t b, int32_t c)
+{
+	int32_t result;
+	uint64_t e;
+	int32_t d = a;
+	if (a < 0)
+		a = -a;
+	d ^= b;
+	if (b < 0)
+		b = -b;
+	d ^= c;
+	if (c < 0)
+		c = -c;
+	e = (uint32_t)a * (uint32_t)b;
+	if (c >= (e >> 32))
+		result = 0x7FFFFFFF;
+	else
+		result = e / c;
+	if (d < 0)
+		result = -result;
+	return result;
+}
+
+/*int muldiv(long a, long b, long c)
 {
 	int result;
 #ifdef _WINDOWS
@@ -92,7 +115,7 @@ r_neg:
 		[b] "b" (b), [c] "c" (c) : "edx", "esi");
 #endif
 	return result;
-}
+}*/
 
 #endif /*__moduleMixer_H__*/
 
