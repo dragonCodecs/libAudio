@@ -310,6 +310,14 @@ finish:
 	}
 }
 
+void Playback::Pause()
+{
+}
+
+void Playback::Stop()
+{
+}
+
 /*!
  * @internal
  * The deconstructor for \c Playback which makes sure that the OpenAL buffers

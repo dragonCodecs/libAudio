@@ -362,6 +362,20 @@ void AAC_Play(void *p_AACFile)
 	p_AF->p_Playback->Play();
 }
 
+void AAC_Pause(void *p_AACFile)
+{
+	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
+
+	p_AF->p_Playback->Pause();
+}
+
+void AAC_Stop(void *p_AACFile)
+{
+	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
+
+	p_AF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an AAC
  * file recognised by this library or not

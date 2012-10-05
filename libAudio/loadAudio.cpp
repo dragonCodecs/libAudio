@@ -139,6 +139,20 @@ void Audio_Play(void *p_AudioPtr)
 		p_AP->API->Play(p_AP->p_AudioFile);
 }
 
+void Audio_Pause(void *p_AudioPtr)
+{
+	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
+		p_AP->API->Pause(p_AP->p_AudioFile);
+}
+
+void Audio_Stop(void *p_AudioPtr)
+{
+	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
+		p_AP->API->Stop(p_AP->p_AudioFile);
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an audio
  * file recognised by this library or not

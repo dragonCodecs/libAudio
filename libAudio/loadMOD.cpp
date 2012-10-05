@@ -101,6 +101,20 @@ void MOD_Play(void *p_MODFile)
 	p_MF->p_Playback->Play();
 }
 
+void MOD_Pause(void *p_MODFile)
+{
+	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
+
+	p_MF->p_Playback->Pause();
+}
+
+void MOD_Stop(void *p_MODFile)
+{
+	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
+
+	p_MF->p_Playback->Stop();
+}
+
 bool Is_MOD(const char *FileName)
 {
 	FILE *f_MOD = fopen(FileName, "rb");

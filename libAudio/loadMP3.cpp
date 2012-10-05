@@ -540,6 +540,20 @@ void MP3_Play(void *p_MP3File)
 	p_MF->p_Playback->Play();
 }
 
+void MP3_Pause(void *p_MP3File)
+{
+	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
+
+	p_MF->p_Playback->Pause();
+}
+
+void MP3_Stop(void *p_MP3File)
+{
+	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
+
+	p_MF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an MP3
  * file recognised by this library or not

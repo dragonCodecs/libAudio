@@ -307,6 +307,20 @@ void OptimFROG_Play(void *p_OFGFile)
 	p_OF->p_Playback->Play();
 }
 
+void OptimFROG_Pause(void *p_OFGFile)
+{
+	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+
+	p_OF->p_Playback->Pause();
+}
+
+void OptimFROG_Stop(void *p_OFGFile)
+{
+	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+
+	p_OF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an OptimFROG
  * file recognised by this library or not

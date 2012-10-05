@@ -408,6 +408,20 @@ void M4A_Play(void *p_M4AFile)
 	p_MF->p_Playback->Play();
 }
 
+void M4A_Pause(void *p_M4AFile)
+{
+	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
+
+	p_MF->p_Playback->Pause();
+}
+
+void M4A_Stop(void *p_M4AFile)
+{
+	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
+
+	p_MF->p_Playback->Stop();
+}
+
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
 // 00 00 00 20 66 74 79 70 4D 34 41 20
 // .  .  .     f  t  y  p  M  4  A

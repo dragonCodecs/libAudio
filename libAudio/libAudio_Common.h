@@ -111,8 +111,10 @@ private:
 
 public:
 	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
-	void Play();
 	~Playback();
+	void Play();
+	void Pause();
+	void Stop();
 
 private:
 	void init();
@@ -135,6 +137,8 @@ typedef struct _API_Functions
 	long (__CDECL__ *FillBuffer)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 	int (__CDECL__ *CloseFileR)(void *p_File);
 	void (__CDECL__ *Play)(void *p_File);
+	void (__CDECL__ *Pause)(void *p_File);
+	void (__CDECL__ *Stop)(void *p_File);
 } API_Functions;
 
 /*!

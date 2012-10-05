@@ -375,6 +375,20 @@ void MPC_Play(void *p_MPCFile)
 	p_MF->p_Playback->Play();
 }
 
+void MPC_Pause(void *p_MPCFile)
+{
+	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
+
+	p_MF->p_Playback->Pause();
+}
+
+void MPC_Stop(void *p_MPCFile)
+{
+	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
+
+	p_MF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an MPC
  * file recognised by this library or not

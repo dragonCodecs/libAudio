@@ -353,6 +353,20 @@ void WavPack_Play(void *p_WVPFile)
 	p_WF->p_Playback->Play();
 }
 
+void WavPack_Pause(void *p_WVPFile)
+{
+	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
+
+	p_WF->p_Playback->Pause();
+}
+
+void WavPack_Stop(void *p_WVPFile)
+{
+	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
+
+	p_WF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an WavPack
  * file recognised by this library or not

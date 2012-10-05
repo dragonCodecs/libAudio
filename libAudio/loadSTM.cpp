@@ -101,6 +101,20 @@ void STM_Play(void *p_STMFile)
 	p_SF->p_Playback->Play();
 }
 
+void STM_Pause(void *p_STMFile)
+{
+	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
+
+	p_SF->p_Playback->Pause();
+}
+
+void STM_Stop(void *p_STMFile)
+{
+	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
+
+	p_SF->p_Playback->Stop();
+}
+
 bool Is_STM(const char *FileName)
 {
 	FILE *f_STM = fopen(FileName, "rb");

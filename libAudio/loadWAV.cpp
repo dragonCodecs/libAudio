@@ -301,6 +301,20 @@ void WAV_Play(void *p_WAVFile)
 	p_WF->p_Playback->Play();
 }
 
+void WAV_Pause(void *p_WAVFile)
+{
+	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
+
+	p_WF->p_Playback->Pause();
+}
+
+void WAV_Stop(void *p_WAVFile)
+{
+	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
+
+	p_WF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an WAV
  * file recognised by this library or not

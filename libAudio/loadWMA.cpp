@@ -452,7 +452,7 @@ DWORD alloc_table(VLC *vlc, int size)
 
 DWORD build_table(VLC *vlc, int tbl_bits, int nb_codes, const BYTE *bits, int bits_wrap, void *codes, int codes_wrap,
 				  int codes_size, DWORD *symbols, int symbols_wrap, DWORD code_prefix, int n_prefix)
-{	
+{
 	int j, l, symbol, prefix, table_size, table_index, index;
 	WORD (*table)[2];
 	WORD bit;
@@ -2310,6 +2310,20 @@ void WMA_Play(void *p_WMAFile)
 	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
 
 	p_WF->p_Playback->Play();
+}
+
+void WMA_Pause(void *p_WMAFile)
+{
+	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+
+	p_WF->p_Playback->Pause();
+}
+
+void WMA_Stop(void *p_WMAFile)
+{
+	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+
+	p_WF->p_Playback->Stop();
 }
 
 bool Is_WMA(char *FileName)

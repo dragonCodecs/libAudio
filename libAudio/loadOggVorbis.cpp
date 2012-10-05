@@ -211,9 +211,20 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
  *
  * @bug Futher to the \p p_VorbisFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
- */void OggVorbis_Play(void *p_VorbisFile)
+ */
+void OggVorbis_Play(void *p_VorbisFile)
 {
 	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Play();
+}
+
+void OggVorbis_Pause(void *p_VorbisFile)
+{
+	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Pause();
+}
+
+void OggVorbis_Stop(void *p_VorbisFile)
+{
+	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Stop();
 }
 
 #define CHECK_OK(actual, expected) \

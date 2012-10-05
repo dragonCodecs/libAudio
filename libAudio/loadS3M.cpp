@@ -101,6 +101,20 @@ void S3M_Play(void *p_S3MFile)
 	p_SF->p_Playback->Play();
 }
 
+void S3M_Pause(void *p_S3MFile)
+{
+	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
+
+	p_SF->p_Playback->Pause();
+}
+
+void S3M_Stop(void *p_S3MFile)
+{
+	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
+
+	p_SF->p_Playback->Stop();
+}
+
 bool Is_S3M(const char *FileName)
 {
 	FILE *f_S3M = fopen(FileName, "rb");

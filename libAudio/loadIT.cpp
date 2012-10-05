@@ -587,6 +587,20 @@ void IT_Play(void *p_ITFile)
 	p_IF->p_Playback->Play();
 }
 
+void IT_Pause(void *p_ITFile)
+{
+	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
+
+	p_IF->p_Playback->Pause();
+}
+
+void IT_Stop(void *p_ITFile)
+{
+	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
+
+	p_IF->p_Playback->Stop();
+}
+
 bool Is_IT(const char *FileName)
 {
 	FILE *f_IT = fopen(FileName, "rb");

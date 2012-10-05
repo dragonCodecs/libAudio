@@ -460,6 +460,20 @@ void FLAC_Play(void *p_FLACFile)
 	p_FF->p_Playback->Play();
 }
 
+void FLAC_Pause(void *p_FLACFile)
+{
+	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
+
+	p_FF->p_Playback->Pause();
+}
+
+void FLAC_Stop(void *p_FLACFile)
+{
+	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
+
+	p_FF->p_Playback->Stop();
+}
+
 /*!
  * Checks the file given by \p FileName for whether it is an FLAC
  * file recognised by this library or not
