@@ -296,6 +296,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\loadSTM.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\loadWAV.cpp"
 					>
 				</File>
