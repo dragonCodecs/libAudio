@@ -41,7 +41,7 @@ uint32_t __CDECL__ Convert32to16(void *_out, int *_in, uint32_t SampleCount)
 	for (i = 0; i < SampleCount; i++)
 	{
 		int samp = _in[i];
-		CLIPINT(samp, (int)0x8F000001, 0x07FFFFFF);
+		CLIPINT(samp, (int)0xF8000001, 0x07FFFFFF);
 		out[i] = samp >> 12;
 	}
 	return SampleCount << 1;
