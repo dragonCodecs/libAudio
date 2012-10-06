@@ -15,33 +15,14 @@
 #include "mixFunctionTables.h"
 #include "frequencyTables.h"
 
-/*
 uint32_t __CDECL__ Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
-{
-	uint32_t i;
-	int16_t *out = (int16_t *)_out;
-	for (i = 0; i < SampleCount; i++)
-	{
-		int32_t a = _in[i] + (1 << 11);
-		if (a < -0x07FFFFFF)
-			a = -0x07FFFFFF;
-		else if (a > 0x07FFFFFF)
-			a = 0x07FFFFFF;
-		// This should be the same as "sar eax, 12".
-		out[i] = (int16_t)(a >> 12);
-	}
-	return SampleCount + SampleCount;
-}
-*/
-
-uint32_t __CDECL__ Convert32to16(void *_out, int *_in, uint32_t SampleCount)
 {
 	uint32_t i;
 	signed short *out = (signed short *)_out;
 	for (i = 0; i < SampleCount; i++)
 	{
-		int samp = _in[i];
-		CLIPINT(samp, (int)0xF8000001, 0x07FFFFFF);
+		int32_t samp = _in[i]/* + (1 << 11)*/;
+		CLIPINT(samp, (int32_t)0xF8000001, 0x07FFFFFF);
 		out[i] = samp >> 12;
 	}
 	return SampleCount << 1;
