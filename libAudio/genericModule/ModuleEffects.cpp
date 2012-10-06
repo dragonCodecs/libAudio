@@ -90,7 +90,7 @@ void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 	{
 		case 1:
 			Effect = CMD_SPEED;
-			Param = param;
+			Param = param >> 4;
 			break;
 		case 2:
 			Effect = CMD_POSITIONJUMP;
@@ -136,6 +136,22 @@ void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_TONEPORTAVOL;
 			Param = param;
 			break;
+	}
+}
+
+void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
+{
+	if (effect > 1 && effect <= 12)
+	{
+		SetSTMEffect(effect, param);
+		return;
+	}
+	switch (effect)
+	{
+		case 1:
+			Effect = CMD_SPEED;
+			Param = param;
+			break;
 		case 13:
 			Effect = CMD_CHANNELVOLUME;
 			Param = param;
@@ -148,15 +164,6 @@ void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_OFFSET;
 			Param = param;
 			break;
-	}
-}
-
-void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
-{
-	if (effect < 15)
-		return SetSTMEffect(effect, param);
-	switch (effect)
-	{
 		/*case 16:
 			Effect = CMD_PANNINGSLIDE;
 			Param = param;
