@@ -31,10 +31,10 @@ int32_t muldiv(int32_t a, int32_t b, int32_t c)
 	if (c < 0)
 		c = -c;
 	e = (uint32_t)a * (uint32_t)b;
-	if (c >= (e >> 32))
-		result = 0x7FFFFFFF;
-	else
+	if ((uint64_t)c < e)
 		result = e / c;
+	else
+		result = 0x7FFFFFFF;
 	if (d < 0)
 		result = -result;
 	return result;
