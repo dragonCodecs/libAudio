@@ -1145,36 +1145,15 @@ inline void ModuleFile::FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, u
 	{
 		int OffsL = -DCOffsL;
 		int OffsR = -DCOffsR;
-#ifdef _WINDOWS
-		__asm
-		{
-			sar OffsL, 31
-			sar OffsR, 31
-		}
-#else
-		asm(".intel_syntax noprefix\n"
-			"\tsar %%eax, 31\n"
-			"\tsar %%ebx, 31\n"
-			".att_syntax\n" : [OffsL] "=a" (OffsL), [OffsR] "=b" (OffsR) :
-				"a" (OffsL), "b" (OffsR) : );
-#endif
+
+		OffsL >>= 31;
+		OffsR >>= 31;
 		OffsL &= 0xFF;
 		OffsR &= 0xFF;
 		OffsL += DCOffsL;
 		OffsR += DCOffsR;
-#ifdef _WINDOWS
-		__asm
-		{
-			sar OffsL, 8
-			sar OffsR, 8
-		}
-#else
-		asm(".intel_syntax noprefix\n"
-			"\tsar %%eax, 8\n"
-			"\tsar %%ebx, 8\n"
-			".att_syntax\n" : [OffsL] "=a" (OffsL), [OffsR] "=b" (OffsR) :
-				"a" (OffsL), "b" (OffsR) : );
-#endif
+		OffsL >>= 8;
+		OffsR >>= 8;
 		DCOffsL -= OffsL;
 		DCOffsR -= OffsR;
 		buff[0] += DCOffsR;
