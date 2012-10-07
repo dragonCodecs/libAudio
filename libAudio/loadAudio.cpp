@@ -3,8 +3,8 @@
 
 /*!
  * @internal
- * @file saveAudio.cpp
- * The implementation of the master encoder API
+ * @file loadAudio.cpp
+ * @brief The implementation of the master encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2011
  */

@@ -13,7 +13,7 @@
 /*!
  * @internal
  * @file loadWavPack.cpp
- * The implementation of the WavPack decoder API
+ * @brief The implementation of the WavPack decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2011
  */

@@ -1,5 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+/*!
+ * @internal
+ * @file libAudio_Common.cpp
+ * @brief libAudio's common routines, including the playback engine
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @date 2010-2012
+ */
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

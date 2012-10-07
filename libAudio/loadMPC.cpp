@@ -16,7 +16,7 @@
 /*!
  * @internal
  * @file loadMPC.cpp
- * The implementation of the MPC decoder API
+ * @brief The implementation of the MPC decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2011
  */

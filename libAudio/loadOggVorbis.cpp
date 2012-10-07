@@ -7,7 +7,7 @@
 /*!
  * @internal
  * @file loadOggVorbis.cpp
- * The implementation of the Ogg|Vorbis decoder API
+ * @brief The implementation of the Ogg|Vorbis decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2011
  */
