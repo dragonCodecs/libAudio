@@ -23,11 +23,16 @@ libAudio/Release
 libAudio/Debug
 libAudio_TestApp/Release
 libAudio_TestApp/Debug
+libAudio_TestApp/libAudio_TestApp
 libAudio_ReEncode_Ogg/Release
 libAudio_ReEncode_Ogg/Debug
+libAudio_ReEncode_Ogg/libAudio_ReEncodeApp
 Spectrometer/Release
 Spectrometer/Debug
 
 libAudio/*.a
 libAudio/*.pc
 libAudio/*.so*
+
+libAudio/fixedPoint/tests/TestLinearSlideDown
+libAudio/fixedPoint/tests/TestLinearSlideUp
