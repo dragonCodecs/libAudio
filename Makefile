@@ -12,4 +12,3 @@ clean:
 	@cd libAudio && $(MAKE) clean
 	@cd libAudio_TestApp && $(MAKE) clean
 	@cd libAudio_ReEncode_Ogg && $(MAKE) clean
-	rm -f *~
