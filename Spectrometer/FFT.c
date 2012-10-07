@@ -1,6 +1,6 @@
 /*
  * Code originally written by Pjotr in 1987.
- * Revamped and combined into 2 files by Richard Mant in 2010.
+ * Revamped and combined into 2 files by Rachel Mant in 2010.
  * --
  * This was originally written in the oldest style of C you can find and was written for Unix.
  */

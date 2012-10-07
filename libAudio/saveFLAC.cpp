@@ -7,7 +7,7 @@
  * @internal
  * @file saveFLAC.cpp
  * The implementation of the FLAC encoder API
- * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2011
  */
 

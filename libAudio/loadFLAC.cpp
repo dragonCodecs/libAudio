@@ -12,7 +12,7 @@
  * @internal
  * @file loadFLAC.cpp
  * The implementation of the FLAC decoder API
- * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2009-2011
  */
 

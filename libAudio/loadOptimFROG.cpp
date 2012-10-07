@@ -9,7 +9,7 @@
  * @internal
  * @file loadOptimFROG.cpp
  * The implementation of the OptimFROG decoder API
- * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2009-2011
  */
 

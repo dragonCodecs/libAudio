@@ -13,7 +13,7 @@
  * @internal
  * @file loadMP3.cpp
  * The implementation of the MP3 decoder API
- * @author Richard Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2011
  */
 
