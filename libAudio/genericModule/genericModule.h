@@ -107,6 +107,7 @@ public:
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
 
+	virtual ~ModuleSample();
 	uint8_t GetType();
 	virtual uint32_t GetLength() = 0;
 	virtual uint32_t GetLoopStart() = 0;

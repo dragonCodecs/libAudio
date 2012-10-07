@@ -8,6 +8,10 @@ ModuleSample::ModuleSample(uint32_t id, uint8_t type) : Type(type), ID(id)
 {
 }
 
+ModuleSample::~ModuleSample()
+{
+}
+
 ModuleSample *ModuleSample::LoadSample(MOD_Intern *p_MF, uint32_t i)
 {
 	return new ModuleSampleNative(p_MF, i);
@@ -230,6 +234,12 @@ ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type)
 	fread(Magic, 4, 1, f_S3M);
 	if (memcmp(Magic, "SCRI", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_S3M);
+}
+
+ModuleSampleAdlib::~ModuleSampleAdlib()
+{
+	delete Name;
+	delete FileName;
 }
 
 uint32_t ModuleSampleAdlib::GetLength()
