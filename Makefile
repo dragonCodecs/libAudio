@@ -1,3 +1,5 @@
+include Makefile.inc
+
 default: all
 
 all:

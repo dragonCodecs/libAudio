@@ -1,39 +1,31 @@
-GCC ?= gcc
-GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
-ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
-GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
-else
-GCC_FLAGS = 
-endif
-CC = $(GCC) $(GCC_FLAGS)
+include ../Makefile.inc
+
 EXTRA_CFLAGS = $(shell pkg-config --cflags libAudio)
-CFLAGS = -c $(EXTRA_CFLAGS) -o $@
-LIBS = $(shell pkg-config --libs libAudio) -lm
+CFLAGS = -c $(OPTIM_FLAGS) $(EXTRA_CFLAGS) -o $@ $<
+LIBS = $(shell pkg-config --libs libAudio)
 LFLAGS = $(O) $(LIBS) -o $(EXE)
-CHMOD = chmod 0755
+INSTALL_FILE = $(INSTALL) -m755
 STRIP = strip -s
 
 O = main.o
-EXE = libAudio_TestApp.out
+EXE = libAudio_TestApp
 
 default: all
 
 all: $(EXE)
 
-libAudio_TestApp.out: $(O)
-	$(CC) $(LFLAGS)
-	$(CHMOD) $(EXE)
-	$(STRIP) $(EXE)
+$(EXE): $(O)
+	$(call run-cmd,ccld,$(LFLAGS))
+	$(call run-cmd,chmod,$(EXE))
+	$(call debug-strip,$(EXE))
 
 install: all
-	install -m755 -D $(EXE) ../bin/libAudio_TestApp
+	$(call run-cmd,install_file,$(EXE),../bin)
 
 clean:
-	rm -f *.o *.out *~
+	$(call run-cmd,rm,libAudio_TestApp,$(O) $(EXE))
 
 .cpp.o:
-	$(CC) $(CFLAGS) $<
+	$(call run-cmd,cc,$(CFLAGS))
 
 .PHONY: .cpp.o clean install all default
-
-main.o: main.cpp
