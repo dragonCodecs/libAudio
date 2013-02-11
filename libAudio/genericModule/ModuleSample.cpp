@@ -112,6 +112,10 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 		if (memcmp(Magic, "SCRS", 4) != 0)
 			throw new ModuleLoaderError(E_BAD_S3M);
 	}
+
+	// If looping not enabled, zero the Loop fields
+	if ((Flags & 1) == 0)
+		LoopStart = LoopEnd = 0;
 }
 
 ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSample(i, 1)
