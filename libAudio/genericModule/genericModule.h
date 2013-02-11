@@ -254,7 +254,7 @@ public:
 	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
 	uint32_t PortamentoDest;
-	uint8_t Portamento;
+	uint8_t Portamento, VolumeSlide;
 	uint8_t LeftVol, RightVol;
 	uint8_t NewLeftVol, NewRightVol;
 	short LeftRamp, RightRamp;

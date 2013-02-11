@@ -394,15 +394,41 @@ inline int ModuleFile::PatternLoop(uint32_t param)
 
 inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 {
-	// TODO: Recode to take into account S3M FineVolume slides
+	short NewVolume;
+
+	if (param == 0)
+		param = channel->VolumeSlide;
+	else
+		channel->VolumeSlide = param;
+	NewVolume = channel->Volume;
+
+	// TODO: Complete recode to take into account S3M FineVolume slides
+	if (ModuleType == MODULE_S3M || ModuleType == MODULE_STM)
+	{
+		if ((param & 0x0F) == 0x0F)
+		{
+			if ((param & 0xF0) != 0)
+				return; // FineVolumeUp(channel, param >> 4);
+			else if (TickCount > channel->StartTick)
+				NewVolume -= 0x3C; //0x0F * 4;
+		}
+		else if ((param & 0xF0) == 0xF0)
+		{
+			if ((param & 0x0F) != 0)
+				return; // FineVolumeDown(channel, param & 0x0F);
+			else if (TickCount > channel->StartTick)
+				NewVolume += 0x3C; //0x0F * 4;
+		}
+	}
+
 	if (TickCount > channel->StartTick)
 	{
-		short NewVolume = channel->Volume;
 		if ((param & 0xF0) != 0)
 			NewVolume += (param & 0xF0) >> 3;
 		else
 			NewVolume -= (param & 0x0F) << 1;
-		channel->Flags |= CHN_FASTVOLRAMP;
+		if (ModuleType == MODULE_MOD)
+			channel->Flags |= CHN_FASTVOLRAMP;
 		CLIPINT(NewVolume, 0, 128);
 		channel->Volume = NewVolume & 0xFF;
 	}
@@ -735,7 +761,7 @@ bool ModuleFile::ProcessEffects()
 					channel->Pos = channel->Length;
 				break;
 			case CMD_VOLUMESLIDE:
-				if (param != 0)
+				if (param != 0 || ModuleType != MODULE_MOD)
 					VolumeSlide(channel, param);
 				break;
 			case CMD_CHANNELVOLSLIDE:
