@@ -241,20 +241,22 @@ class Channel : public ModuleAllocator
 {
 public:
 	uint8_t *SampleData, *NewSampleData;
-	uint8_t Note, Flags;
+	uint8_t Note, RampLength;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
-	uint8_t RampLength, Volume, ChannelVolume;
+	uint8_t Volume, VolumeSlide;
+	uint8_t ChannelVolume, ChannelVolumeSlide;
 	ModuleSample *Sample;
 	uint8_t FineTune, Panning, Arpeggio;
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
-	uint16_t PortamentoSlide;
+	uint16_t PortamentoSlide, Flags;
 	uint32_t Period, C4Speed;
 	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
 	uint32_t PortamentoDest;
-	uint8_t Portamento, VolumeSlide;
+	uint8_t Portamento;
+	uint8_t Tremor, TremorCount;
 	uint8_t LeftVol, RightVol;
 	uint8_t NewLeftVol, NewRightVol;
 	short LeftRamp, RightRamp;
@@ -284,7 +286,6 @@ private:
 	uint8_t **p_PCM;
 
 	// Mixer info
-private:
 	uint32_t MixSampleRate, MixChannels, MixBitsPerSample;
 	uint32_t TickCount, SamplesToMix, MinPeriod, MaxPeriod;
 	uint32_t Row, NextRow;
@@ -294,6 +295,7 @@ private:
 	Channel *Channels;
 	uint32_t nMixerChannels, *MixerChannels;
 
+	uint8_t GlobalVolume, GlobalVolSlide;
 	uint8_t PatternLoopCount, PatternLoopStart;
 	uint8_t PatternDelay, FrameDelay;
 	int MixBuffer[MIXBUFFERSIZE * 2];
@@ -302,6 +304,7 @@ private:
 	// Effects functions
 	void VolumeSlide(Channel *channel, uint8_t param);
 	void ChannelVolumeSlide(Channel *channel, uint8_t param);
+	void GlobalVolumeSlide(uint8_t param);
 	void PortamentoUp(Channel *channel, uint8_t param);
 	void PortamentoDown(Channel *channel, uint8_t param);
 	void FinePortamentoUp(Channel *channel, uint8_t param);
