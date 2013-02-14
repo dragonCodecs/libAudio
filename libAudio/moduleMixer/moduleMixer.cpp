@@ -36,6 +36,7 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 	MusicSpeed = p_Header->InitialSpeed;
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;
+	GlobalVolume = 128;
 	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
 	Channels = new Channel[p_Header->nChannels]();
 	MixerChannels = new uint32_t[p_Header->nChannels];
@@ -811,6 +812,14 @@ bool ModuleFile::ProcessEffects()
 					channel->Flags |= CHN_FASTVOLRAMP;
 				}
 				break;
+			case CMD_GLOBALVOLUME:
+				if (TickCount == 0)
+				{
+					if (param > 64)
+						param = 64;
+					GlobalVolume = param << 1;
+				}
+				break;
 			case CMD_PANNING:
 				if (TickCount > channel->StartTick)
 					break;
@@ -953,6 +962,7 @@ bool ModuleFile::AdvanceTick()
 					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3F;
 			}
 			vol = (vol * channel->ChannelVolume) >> 6;
+			vol = (vol * GlobalVolume) >> 7;
 			CLIPINT(vol, 0, 128);
 			channel->Volume = vol;
 			CLIPINT(channel->Period, MinPeriod, MaxPeriod);
