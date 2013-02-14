@@ -532,13 +532,13 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	if (ModuleType == MODULE_S3M && (param & 0xF0) >= 0xE0)
+	if (ModuleType == MODULE_S3M && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
-			if ((param & 0xF0) == 0xF0)
+			if ((param & 0x10) == 0x10)
 				FinePortamentoUp(channel, param & 0x0F);
-			else if ((param & 0xF0) == 0xE0)
+			else
 				ExtraFinePortamentoUp(channel, param & 0x0F);
 		}
 		return;
@@ -567,13 +567,13 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	if (ModuleType == MODULE_S3M && (param & 0xF0) >= 0xE0)
+	if (ModuleType == MODULE_S3M && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
-			if ((param & 0xF0) == 0xF0)
+			if ((param & 0x10) == 0x10)
 				FinePortamentoDown(channel, param & 0x0F);
-			else if ((param & 0xF0) == 0xE0)
+			else
 				ExtraFinePortamentoDown(channel, param & 0x0F);
 		}
 		return;
