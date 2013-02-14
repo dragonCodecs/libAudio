@@ -435,8 +435,76 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	}
 }
 
+// TODO: Write these next two functions as one template as both
+// do the exact same thing, just on different variables.
 inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
 {
+	bool FirstTick = (TickCount == 0);
+	int16_t SlideDest = channel->ChannelVolume;
+
+	if (param == 0)
+		param = channel->ChannelVolumeSlide;
+	else
+		channel->ChannelVolumeSlide = param;
+
+	if ((param & 0xF0) == 0xF0 && (param & 0x0F) != 0)
+	{
+		if (FirstTick)
+			SlideDest -= param & 0x0F;
+	}
+	else if ((param & 0x0F) == 0x0F && (param & 0xF0) != 0)
+	{
+		if (FirstTick)
+			SlideDest += (param & 0xF0) >> 4;
+	}
+	else if (!FirstTick)
+	{
+		if ((param & 0x0F) != 0)
+			SlideDest -= param & 0x0F;
+		else
+			SlideDest += (param & 0xF0) >> 4;
+	}
+
+	if (SlideDest != channel->ChannelVolume)
+	{
+		CLIPINT(SlideDest, 0, 64);
+		channel->ChannelVolume = SlideDest;
+	}
+}
+
+inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
+{
+	bool FirstTick = (TickCount == 0);
+	int16_t SlideDest = GlobalVolume;
+
+	if (param == 0)
+		param = GlobalVolSlide;
+	else
+		GlobalVolSlide = param;
+
+	if ((param & 0xF0) == 0xF0 && (param & 0x0F) != 0)
+	{
+		if (FirstTick)
+			SlideDest -= (param & 0x0F) << 1;
+	}
+	else if ((param & 0x0F) == 0x0F && (param & 0xF0) != 0)
+	{
+		if (FirstTick)
+			SlideDest += (param & 0xF0) >> 3;
+	}
+	else if (!FirstTick)
+	{
+		if ((param & 0x0F) != 0)
+			SlideDest -= (param & 0x0F) << 1;
+		else if ((param & 0xF0) != 0)
+			SlideDest += (param & 0xF0) >> 3;
+	}
+
+	if (SlideDest != GlobalVolume)
+	{
+		CLIPINT(SlideDest, 0, 128);
+		GlobalVolume = SlideDest;
+	}
 }
 
 // Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
@@ -767,6 +835,9 @@ bool ModuleFile::ProcessEffects()
 				break;
 			case CMD_CHANNELVOLSLIDE:
 				ChannelVolumeSlide(channel, param);
+				break;
+			case CMD_GLOBALVOLSLIDE:
+				GlobalVolumeSlide(param);
 				break;
 			case CMD_POSITIONJUMP:
 				PositionJump = param;
