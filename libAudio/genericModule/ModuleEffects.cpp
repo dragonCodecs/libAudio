@@ -120,10 +120,10 @@ void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_VIBRATO;
 			Param = param;
 			break;
-		/*case 9:
+		case 9:
 			Effect = CMD_TREMOR;
 			Param = param;
-			break;*/
+			break;
 		case 10:
 			Effect = CMD_ARPEGGIO;
 			Param = param;
@@ -188,14 +188,14 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_FINEVIBRATO;
 			Param = param;
 			break;
-		/*case 22:
+		case 22:
 			Effect = CMD_GLOBALVOLUME;
 			Param = param;
-			break;*/
-		/*case 23:
+			break;
+		case 23:
 			Effect = CMD_GLOBALVOLSLIDE;
 			Param = param;
-			break;*/
+			break;
 		case 24:
 			Effect = CMD_PANNING;
 			Param = param;
