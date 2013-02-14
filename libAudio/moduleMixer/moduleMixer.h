@@ -1,14 +1,15 @@
 #ifndef __moduleMixer_H__
 #define __moduleMixer_H__
 
-#define CHN_LOOP			0x01
-#define CHN_TREMOLO			0x02
-#define CHN_ARPEGGIO		0x04
-#define CHN_VIBRATO			0x08
-#define CHN_VOLUMERAMP		0x10
-#define CHN_FASTVOLRAMP		0x20
-#define CHN_PORTAMENTO		0x40
-#define CHN_GLISSANDO		0x80
+#define CHN_LOOP			0x0001
+#define CHN_TREMOLO			0x0002
+#define CHN_ARPEGGIO		0x0004
+#define CHN_VIBRATO			0x0008
+#define CHN_VOLUMERAMP		0x0010
+#define CHN_FASTVOLRAMP		0x0020
+#define CHN_PORTAMENTO		0x0040
+#define CHN_GLISSANDO		0x0080
+#define CHN_TREMOR			0x0100
 
 #define CLIPINT(num, min, max) \
 	if (num < min) \

@@ -829,6 +829,13 @@ bool ModuleFile::ProcessEffects()
 			case CMD_FINEVIBRATO:
 				channel->Vibrato(param, 1);
 				break;
+			case CMD_TREMOR:
+				if (TickCount != 0)
+					break;
+				if (param != 0)
+					channel->Tremor = param;
+				channel->Flags |= CHN_TREMOR;
+				break;
 			default:
 				break;
 		}
@@ -880,7 +887,7 @@ void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 		StartTick = RowParam & 0x0F;
 	else
 		StartTick = 0;
-	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO);
+	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO | CHN_TREMOR);
 }
 
 bool ModuleFile::Tick()
@@ -960,6 +967,21 @@ bool ModuleFile::AdvanceTick()
 				}
 				if (TickCount > channel->StartTick)
 					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3F;
+			}
+			if ((channel->Flags & CHN_TREMOR) != 0)
+			{
+				uint8_t Duration = (channel->Tremor >> 4) + (channel->Tremor & 0x0F) + 2;
+				uint8_t OnTime = (channel->Tremor >> 4) + 1;
+				uint8_t Count = channel->TremorCount;
+				if (Count > Duration)
+					Count = 0;
+				if (TickCount != 0 || ModuleType == MODULE_S3M)
+				{
+					if (Count > OnTime)
+						vol = 0;
+					channel->TremorCount = Count + 1;
+				}
+				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			vol = (vol * channel->ChannelVolume) >> 6;
 			vol = (vol * GlobalVolume) >> 7;
