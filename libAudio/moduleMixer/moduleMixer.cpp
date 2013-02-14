@@ -410,14 +410,14 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 			if ((param & 0xF0) != 0)
 				return; // FineVolumeUp(channel, param >> 4);
 			else if (TickCount > channel->StartTick)
-				NewVolume -= 0x3C; //0x0F * 4;
+				NewVolume -= 0x1E; //0x0F * 2;
 		}
 		else if ((param & 0xF0) == 0xF0)
 		{
 			if ((param & 0x0F) != 0)
 				return; // FineVolumeDown(channel, param & 0x0F);
 			else if (TickCount > channel->StartTick)
-				NewVolume += 0x3C; //0x0F * 4;
+				NewVolume += 0x1E; //0x0F * 2;
 		}
 	}
 
@@ -805,7 +805,7 @@ bool ModuleFile::ProcessEffects()
 				}
 				break;
 			case CMD_CHANNELVOLUME:
-				if (TickCount > channel->StartTick && param < 65)
+				if (TickCount == 0 && param < 65)
 				{
 					channel->ChannelVolume = param;
 					channel->Flags |= CHN_FASTVOLRAMP;
