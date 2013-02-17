@@ -325,10 +325,11 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 				channel->Flags |= CHN_GLISSANDO;
 			break;
 		case CMD_S3MEX_FINETUNE:
-			if (TickCount > channel->StartTick)
-				break;
-			channel->FineTune = S3MSpeedTable[param];
-			channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
+			if (TickCount == channel->StartTick)
+			{
+				channel->FineTune = S3MSpeedTable[param];
+				channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
+			}
 			break;
 		case CMD_S3MEX_VIBRATOWAVE:
 			channel->VibratoType = param & 0x07;
@@ -343,21 +344,21 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			FrameDelay = param;
 			break;
 		case CMD_S3MEX_ENVELOPE:
-			if (TickCount > channel->StartTick)
-				break;
+			if (TickCount == channel->StartTick)
+			{
+			}
 			break;
 		case CMD_S3MEX_PANNING:
-			if (TickCount > channel->StartTick)
-				break;
-			channel->Panning = (param + (param << 4)) >> 1;
-			channel->Flags |= CHN_FASTVOLRAMP;
+			if (TickCount == channel->StartTick)
+			{
+				channel->Panning = (param + (param << 4)) >> 1;
+				channel->Flags |= CHN_FASTVOLRAMP;
+			}
 			break;
 		case CMD_S3MEX_SURROUND:
 			break;
 		case CMD_S3MEX_OFFSET:
-			if (TickCount > channel->StartTick)
-				break;
-			if (channel->RowNote != 0 && channel->RowNote < 0x80)
+			if (TickCount == channel->StartTick && channel->RowNote != 0 && channel->RowNote < 0x80)
 			{
 				int pos = param << 16;
 				if (pos < (int)channel->Length)
@@ -533,7 +534,9 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	/**/if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
+	if (channel->Period == 0)
+		return;
+	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -543,8 +546,8 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 				ExtraFinePortamentoUp(channel, param & 0x0F);
 		}
 		return;
-	}/**/
-	if ((TickCount > channel->StartTick || MusicSpeed == 1) && channel->Period != 0)
+	}
+	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
 		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
@@ -568,7 +571,9 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	/**/if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
+	if (channel->Period == 0)
+		return;
+	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -578,8 +583,8 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 				ExtraFinePortamentoDown(channel, param & 0x0F);
 		}
 		return;
-	}/**/
-	if ((TickCount > channel->StartTick || MusicSpeed == 1) && channel->Period != 0)
+	}
+	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
 		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
@@ -656,7 +661,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 	if (param != 0)
 		channel->PortamentoSlide = ((uint16_t)param) << 2;
 	channel->Flags |= CHN_PORTAMENTO;
-	if (channel->Period != 0 && channel->PortamentoDest != 0)// && (MusicSpeed == 1 || TickCount > channel->StartTick))
+	if (channel->Period != 0 && channel->PortamentoDest != 0)
 	{
 		if (channel->Period < channel->PortamentoDest)
 		{
