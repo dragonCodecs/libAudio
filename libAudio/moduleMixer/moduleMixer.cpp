@@ -212,6 +212,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 			channel->Pos = channel->Length;
 		channel->PosLo = 0;
 	}
+	channel->Flags &= ~CHN_NOTEOFF;
 	if (channel->PortamentoDest == channel->Period)
 		channel->Flags |= CHN_FASTVOLRAMP;
 	channel->LeftVol = channel->RightVol = 0;
@@ -709,7 +710,8 @@ void Channel::NoteCut(bool Triggered)
 
 void Channel::NoteOff()
 {
-	//channel->Flags |= CHN_NOTEOFF;
+	// bool NoteOn = !(Flags & CHN_NOTEOFF);
+	Flags |= CHN_NOTEOFF;
 	if (Length == 0)
 		return;
 }
