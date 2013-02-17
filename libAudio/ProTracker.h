@@ -1,5 +1,5 @@
 #ifndef __ProTracker_H__
-#define __ProTracker_H__ 1
+#define __ProTracker_H__
 
 typedef struct _MOD_Intern
 {

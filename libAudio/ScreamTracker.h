@@ -1,5 +1,5 @@
 #ifndef __ScreamTracker_H__
-#define __ScreamTracker_H__ 1
+#define __ScreamTracker_H__
 
 typedef struct _S3M_Intern
 {
