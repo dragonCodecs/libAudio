@@ -89,6 +89,7 @@ loadM4A.o: loadM4A.cpp
 loadMP3.o: loadMP3.cpp
 loadMPC.o: loadMPC.cpp
 loadFLAC.o: loadFLAC.cpp
+fixedPoint/fixedPoint.o: CFLAGS += -std=c++11
 fixedPoint/fixedPoint.o: fixedPoint/fixedPoint.cpp
 genericModule/ModuleFile.o: genericModule/ModuleFile.cpp
 genericModule/ModuleHeader.o: genericModule/ModuleHeader.cpp
