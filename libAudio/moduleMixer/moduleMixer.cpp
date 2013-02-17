@@ -606,7 +606,7 @@ inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if  (false)//((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 			channel->Period = LinearSlideDown(channel->Period, param);
 		else
 			channel->Period -= param << 2;
@@ -619,7 +619,7 @@ inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if  (false)//((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 			channel->Period = LinearSlideUp(channel->Period, param);
 		else
 			channel->Period += param << 2;
@@ -632,7 +632,7 @@ inline void ModuleFile::ExtraFinePortamentoUp(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if (false)//((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 		}
 		else
@@ -646,7 +646,7 @@ inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if (false)//((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 		}
 		else
