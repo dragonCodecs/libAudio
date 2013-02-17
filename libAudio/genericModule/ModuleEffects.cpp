@@ -200,10 +200,10 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_PANNING;
 			Param = param;
 			break;
-		/*case 25:
-			Effect = CMD_PANBERELLO;
+		case 25:
+			Effect = CMD_PANBRELLO;
 			Param = param;
-			break;*/
+			break;
 	}
 }
 
