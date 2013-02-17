@@ -349,7 +349,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 		case CMD_S3MEX_PANNING:
 			if (TickCount > channel->StartTick)
 				break;
-			channel->Panning = param << 3;
+			channel->Panning = (param + (param << 4)) >> 1;
 			channel->Flags |= CHN_FASTVOLRAMP;
 			break;
 		case CMD_S3MEX_SURROUND:
