@@ -337,6 +337,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			channel->TremoloType = param & 0x07;
 			break;
 		case CMD_S3MEX_PANWAVE:
+			channel->PanbrelloType = param & 0x07;
 			break;
 		case CMD_S3MEX_FRAMEDELAY:
 			FrameDelay = param;
@@ -717,6 +718,15 @@ void Channel::Vibrato(uint8_t param, uint8_t Multiplier)
 	Flags |= CHN_VIBRATO;
 }
 
+void Channel::Panbrello(uint8_t param)
+{
+	if ((param & 0x0F) != 0)
+		PanbrelloDepth = param & 0x0F;
+	if ((param & 0xF0) != 0)
+		PanbrelloSpeed = param >> 4;
+	Flags |= CHN_PANBRELLO;
+}
+
 bool ModuleFile::ProcessEffects()
 {
 	int PositionJump = -1, BreakRow = -1, PatternLoopRow = -1;
@@ -907,6 +917,9 @@ bool ModuleFile::ProcessEffects()
 					channel->Tremor = param;
 				channel->Flags |= CHN_TREMOR;
 				break;
+			case CMD_PANBRELLO:
+				channel->Panbrello(param);
+				break;
 			default:
 				break;
 		}
@@ -958,7 +971,7 @@ void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 		StartTick = RowParam & 0x0F;
 	else
 		StartTick = 0;
-	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO | CHN_TREMOR);
+	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO | CHN_TREMOR | CHN_PANBRELLO);
 }
 
 bool ModuleFile::Tick()
@@ -1089,6 +1102,25 @@ bool ModuleFile::AdvanceTick()
 					Delta = SinusTable[VibratoPos];
 				period += (short)(((int)Delta * (int)channel->VibratoDepth) >> 7);
 				channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
+			}
+			if ((channel->Flags & CHN_PANBRELLO) != 0)
+			{
+				int8_t Delta;
+				uint8_t PanPos = (((uint16_t)channel->PanbrelloPos + 16) >> 2) & 0x3F;
+				uint8_t PanType = channel->PanbrelloType & 0x03;
+				int16_t Pan = channel->Panning;
+				if (PanType == 1)
+					Delta = RampDownTable[PanPos];
+				else if (PanType == 2)
+					Delta = SquareTable[PanPos];
+				else if (PanType == 3)
+					Delta = RandomTable[PanPos];
+				else
+					Delta = SinusTable[PanPos];
+				Pan += (Delta * (int)channel->PanbrelloDepth) >> 4;
+				CLIPINT(Pan, 0, 128);
+				channel->Panning = Pan;
+				channel->PanbrelloPos += channel->PanbrelloSpeed;
 			}
 			if (period < (int)MinPeriod && ModuleType == MODULE_S3M)
 				channel->Length = 0;

@@ -10,6 +10,7 @@
 #define CHN_PORTAMENTO		0x0040
 #define CHN_GLISSANDO		0x0080
 #define CHN_TREMOR			0x0100
+#define CHN_PANBRELLO		0x0200
 
 #define CLIPINT(num, min, max) \
 	if (num < min) \

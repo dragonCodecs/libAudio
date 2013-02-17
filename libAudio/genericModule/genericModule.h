@@ -264,6 +264,7 @@ public:
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
+	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
 	int DCOffsR, DCOffsL;
 
 public:
@@ -274,6 +275,7 @@ public:
 	void NoteOff();
 	void NoteCut(bool Triggered);
 	void Vibrato(uint8_t param, uint8_t Multiplier);
+	void Panbrello(uint8_t param);
 };
 
 class ModuleFile : public ModuleAllocator
