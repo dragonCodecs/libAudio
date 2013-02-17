@@ -286,3 +286,6 @@ libAUDIO_API uint8_t ExternalPlayback;
 #define AUDIO_REALAUDIO		11
 #define AUDIO_WMA			12
 #define AUDIO_MOD			13
+#define AUDIO_S3M			14
+#define AUDIO_STM			15
+#define AUDIO_FC1x			16
