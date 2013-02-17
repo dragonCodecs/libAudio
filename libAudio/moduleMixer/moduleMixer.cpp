@@ -797,10 +797,14 @@ bool ModuleFile::ProcessEffects()
 			case CMD_NONE:
 				break;
 			case CMD_ARPEGGIO:
-				if (TickCount > channel->StartTick || channel->Period == 0 || channel->Note == 0xFF)
-					break;
-				channel->Flags |= CHN_ARPEGGIO;
-				channel->Arpeggio = param;
+				if (TickCount == channel->StartTick && channel->Period != 0 && channel->Note != 0xFF)
+				{
+					if (param == 0 && ModuleType != MODULE_S3M)
+						break;
+					channel->Flags |= CHN_ARPEGGIO;
+					if (param != 0)
+						channel->Arpeggio = param;
+				}
 				break;
 			case CMD_PORTAMENTOUP:
 				PortamentoUp(channel, param);
