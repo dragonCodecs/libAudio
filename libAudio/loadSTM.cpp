@@ -26,13 +26,11 @@ void *STM_OpenR(const char *FileName)
 
 FileInfo *STM_GetFileInfo(void *p_STMFile)
 {
-	FILE *f_STM;
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
 	FileInfo *ret = NULL;
 
 	if (p_SF == NULL)
 		return ret;
-	f_STM = p_SF->f_STM;
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)

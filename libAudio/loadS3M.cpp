@@ -26,13 +26,11 @@ void *S3M_OpenR(const char *FileName)
 
 FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 {
-	FILE *f_S3M;
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
 	FileInfo *ret = NULL;
 
 	if (p_SF == NULL)
 		return ret;
-	f_S3M = p_SF->f_S3M;
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)

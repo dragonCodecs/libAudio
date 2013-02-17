@@ -26,13 +26,11 @@ void *MOD_OpenR(const char *FileName)
 
 FileInfo *MOD_GetFileInfo(void *p_MODFile)
 {
-	FILE *f_MOD;
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
 	FileInfo *ret = NULL;
 
 	if (p_MF == NULL)
 		return ret;
-	f_MOD = p_MF->f_MOD;
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)
