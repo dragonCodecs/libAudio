@@ -28,6 +28,9 @@ class ModulePattern;
 #define E_BAD_S3M		1
 #define E_BAD_STM		2
 
+#define FILE_FLAGS_AMIGA_SLIDES		0x01
+#define FILE_FLAGS_AMIGA_LIMITS		0x02
+
 class ModuleLoaderError
 {
 private:

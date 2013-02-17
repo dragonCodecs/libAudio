@@ -71,7 +71,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 {
 	char DontCare[10];
 	char Magic[4];
-	uint8_t Const;
+	uint8_t Const, RawFlags;
 	uint16_t Special;
 	FILE *f_S3M = p_SF->f_S3M;
 
@@ -85,7 +85,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	fread(&nOrders, 2, 1, f_S3M);
 	fread(&nSamples, 2, 1, f_S3M);
 	fread(&nPatterns, 2, 1, f_S3M);
-	fread(&Flags, 2, 1, f_S3M);
+	fread(&RawFlags, 2, 1, f_S3M);
 	fread(&CreationVersion, 2, 1, f_S3M);
 	fread(&FormatVersion, 2, 1, f_S3M);
 	fread(Magic, 4, 1, f_S3M);
@@ -100,6 +100,11 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	if (Const != 0x1A || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
 		memcmp(Magic, "SCRM", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_S3M);
+
+	if ((RawFlags & 0x04) != 0)
+		Flags |= FILE_FLAGS_AMIGA_SLIDES;
+	if ((RawFlags & 0x10) != 0)
+		Flags |= FILE_FLAGS_AMIGA_LIMITS;
 
 	Orders = new uint8_t[nOrders];
 	fread(Orders, nOrders, 1, f_S3M);

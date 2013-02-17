@@ -126,7 +126,7 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 	Note--;
 	if (ModuleType == MODULE_S3M)
 	{
-		if ((p_Header->Flags & 4) == 0)
+		if ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 			return (S3MPeriods[Note % 12] << 5) >> (Note / 12);
 		else
 		{
@@ -152,7 +152,7 @@ uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int32_
 		return 14187580UL / Period;
 	else// if (ModuleType == MODULE_S3M)
 	{
-		if ((p_Header->Flags & 4) == 0)
+		if ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			if (C4Speed == 0)
 				C4Speed = 8363;
@@ -546,7 +546,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 	}
 	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
-		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
+		if (ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
 			channel->Period = LinearSlideDown(OldPeriod, param);
@@ -581,7 +581,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 	}
 	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
-		if (ModuleType == MODULE_S3M && (p_Header->Flags & 4) == 0)
+		if (ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
 			channel->Period = LinearSlideUp(OldPeriod, param);
@@ -601,7 +601,7 @@ inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & 4) == 0)
+		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 			channel->Period = LinearSlideDown(channel->Period, param);
 		else
 			channel->Period -= param << 2;
@@ -614,7 +614,7 @@ inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & 4) == 0)
+		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 			channel->Period = LinearSlideUp(channel->Period, param);
 		else
 			channel->Period += param << 2;
@@ -627,7 +627,7 @@ inline void ModuleFile::ExtraFinePortamentoUp(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & 4) == 0)
+		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 		}
 		else
@@ -641,7 +641,7 @@ inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
 {
 	if (TickCount == channel->StartTick)
 	{
-		if  ((p_Header->Flags & 4) == 0)
+		if  ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 		}
 		else
@@ -1083,7 +1083,7 @@ bool ModuleFile::AdvanceTick()
 				else if (n == 2)
 					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio & 0x0F), channel->FineTune, channel->C4Speed);
 			}
-			if ((p_Header->Flags & 16) != 0)
+			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
 			{
 				CLIPINT(period, 452, 3424);
 			}
