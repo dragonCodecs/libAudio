@@ -1093,7 +1093,7 @@ bool ModuleFile::AdvanceTick()
 			}
 			if ((channel->Flags & CHN_VIBRATO) != 0)
 			{
-				char Delta;
+				int8_t Delta;
 				uint8_t VibratoPos = channel->VibratoPos;
 				uint8_t VibratoType = channel->VibratoType & 0x03;
 				if (VibratoType == 1)
