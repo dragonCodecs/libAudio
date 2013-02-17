@@ -29,6 +29,7 @@ class ModulePattern;
 
 #define E_BAD_S3M		1
 #define E_BAD_STM		2
+#define E_BAD_FC1x		3
 
 #define FILE_FLAGS_AMIGA_SLIDES		0x01
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
@@ -83,6 +84,14 @@ private:
 
 	uint8_t *Panning;
 
+#ifdef __FC1x_EXPERIMENTAL__
+	// FC1x
+	uint32_t SeqLength;
+	uint32_t PatternOffs;
+	uint32_t PatLength;
+	uint32_t SampleOffs;
+#endif
+
 private:
 	uint8_t nChannels;
 	friend class ModuleFile;
@@ -92,6 +101,9 @@ public:
 	ModuleHeader(MOD_Intern *p_MF);
 	ModuleHeader(S3M_Intern *p_SF);
 	ModuleHeader(STM_Intern *p_SF);
+#ifdef __FC1x_EXPERIMENTAL__
+	ModuleHeader(FC1x_Intern *p_FF);
+#endif
 	~ModuleHeader();
 };
 

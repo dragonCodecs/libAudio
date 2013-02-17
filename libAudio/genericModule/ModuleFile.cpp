@@ -112,6 +112,11 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
 {
+#ifdef __FC1x_EXPERIMENTAL__
+//	FILE *f_FC1x = p_FF->f_FC1x;
+
+	p_Header = new ModuleHeader(p_FF);
+#endif
 }
 
 ModuleFile::~ModuleFile()
@@ -254,6 +259,8 @@ const char *ModuleLoaderError::GetError()
 			return "Bad Scream Tracker III Module";
 		case E_BAD_STM:
 			return "Bad Scream Tracker Module - Maybe just song data?";
+		case E_BAD_FC1x:
+			return "Bad Future Composer Module";
 		default:
 			return "Unknown error";
 	}

@@ -183,6 +183,40 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF)
 	SamplePtrs = PatternPtrs = NULL;
 }
 
+#ifdef __FC1x_EXPERIMENTAL__
+ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
+{
+	char Magic[4];
+	uint32_t IDK1, IDK2;
+	uint32_t Special;
+	FILE *f_FC1x = p_FF->f_FC1x;
+
+	fread(Magic, 4, 1, f_FC1x);
+	fread(&SeqLength, 4, 1, f_FC1x);
+	fread(&PatternOffs, 4, 1, f_FC1x);
+	fread(&PatLength, 4, 1, f_FC1x);
+	fread(&IDK1, 4, 1, f_FC1x);
+	fread(&IDK2, 4, 1, f_FC1x);
+	fread(&IDK1, 4, 1, f_FC1x);
+	fread(&IDK2, 4, 1, f_FC1x);
+	fread(&SampleOffs, 4, 1, f_FC1x);
+	fread(&Special, 4, 1, f_FC1x);
+
+	if (strncmp(Magic, "SMOD", 4) != 0 && strncmp(Magic, "FC14", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_FC1x);
+
+	//
+
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
+	Name = NULL;
+	RestartPos = 255;
+	SamplePtrs = PatternPtrs = NULL;
+}
+#endif
+
 ModuleHeader::~ModuleHeader()
 {
 	delete [] Panning;
