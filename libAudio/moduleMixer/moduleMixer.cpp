@@ -533,7 +533,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	if (ModuleType == MODULE_S3M && (param & 0xE0) == 0xE0)
+	/**/if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -543,10 +543,10 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 				ExtraFinePortamentoUp(channel, param & 0x0F);
 		}
 		return;
-	}
-	if (TickCount > channel->StartTick || MusicSpeed == 1)
+	}/**/
+	if ((TickCount > channel->StartTick || MusicSpeed == 1) && channel->Period != 0)
 	{
-		if (ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
 			channel->Period = LinearSlideDown(OldPeriod, param);
@@ -568,7 +568,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		channel->Portamento = param;
 	else
 		param = channel->Portamento;
-	if (ModuleType == MODULE_S3M && (param & 0xE0) == 0xE0)
+	/**/if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -578,10 +578,10 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 				ExtraFinePortamentoDown(channel, param & 0x0F);
 		}
 		return;
-	}
-	if (TickCount > channel->StartTick || MusicSpeed == 1)
+	}/**/
+	if ((TickCount > channel->StartTick || MusicSpeed == 1) && channel->Period != 0)
 	{
-		if (ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
 			channel->Period = LinearSlideUp(OldPeriod, param);
