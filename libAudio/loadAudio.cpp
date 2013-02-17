@@ -49,8 +49,10 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &S3MDecoder;
 	else if (Is_STM(FileName) == true)
 		ret->API = &STMDecoder;
+#ifdef __FC1x_EXPERIMENTAL__
 	else if (Is_FC1x(FileName) == true)
 		ret->API = &FC1xDecoder;
+#endif
 	else if (Is_MPC(FileName) == true)
 		ret->API = &MPCDecoder;
 	else if (Is_WavPack(FileName) == true)
