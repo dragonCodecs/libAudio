@@ -139,7 +139,7 @@ int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, 
  */
 int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
 {
-	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != DataInLen)
+	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != (size_t)DataInLen)
 		return TRUE;
 	*Written = DataInLen;
 	return FALSE;
