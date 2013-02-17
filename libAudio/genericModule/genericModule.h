@@ -17,6 +17,7 @@ class ModulePattern;
 
 #include "../ProTracker.h"
 #include "../ScreamTracker.h"
+#include "../FutureComposer.h"
 #include "effects.h"
 
 #define MIXBUFFERSIZE		512
@@ -24,6 +25,7 @@ class ModulePattern;
 #define MODULE_MOD		1
 #define MODULE_S3M		2
 #define MODULE_STM		3
+#define MODULE_FC1x		4
 
 #define E_BAD_S3M		1
 #define E_BAD_STM		2
@@ -348,6 +350,7 @@ public:
 	ModuleFile(MOD_Intern *p_MF);
 	ModuleFile(S3M_Intern *p_SF);
 	ModuleFile(STM_Intern *p_SF);
+	ModuleFile(FC1x_Intern *p_FF);
 	~ModuleFile();
 
 	const char *GetTitle();

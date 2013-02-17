@@ -110,6 +110,10 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 	MaxPeriod = 32767;
 }
 
+ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
+{
+}
+
 ModuleFile::~ModuleFile()
 {
 	uint32_t i;
