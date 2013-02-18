@@ -200,7 +200,7 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	char Magic1[4], Magic2[42];
 	char StrMagic[4];
 	uint32_t StringLen;
-	uint8_t Const;
+	uint8_t Const, i;
 	FILE *f_AON = p_AF->f_AON;
 
 	fread(Magic1, 4, 1, f_AON);
@@ -262,7 +262,42 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	RestartPos = Const;
 	fread(&Const, 1, 1, f_AON);
 
-	//
+	// Skip over the arpeggio table..
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	if (strncmp(StrMagic, "ARPG", 4) != 0 || StringLen != Swap32(64))
+		throw new ModuleLoaderError(E_BAD_AON);
+	fseek(f_AON, 64, SEEK_CUR);
+
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	StringLen = Swap32(StringLen);
+	// If odd number of orders
+	if ((nOrders & 1) != 0)
+		// Get rid of fill byte from count
+		StringLen--;
+	if (strncmp(StrMagic, "PLST", 4) != 0 || StringLen != nOrders)
+		throw new ModuleLoaderError(E_BAD_AON);
+	Orders = new uint8_t[nOrders];
+	for (i = 0; i < nOrders; i++)
+		fread(&Orders[i], 1, 1, f_AON);
+	// If odd read length
+	if ((StringLen & 1) != 0)
+		// Read the fill-byte
+		fread(&Const, 1, 1, f_AON);
+
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
+	Type = 0;
+	Flags = 0;
+	CreationVersion = FormatVersion = 0;
+	GlobalVolume = MasterVolume = 64;
+	InitialSpeed = 6;
+	InitialTempo = 125;
+	SamplePtrs = PatternPtrs = NULL;
+	Panning = NULL;
 }
 
 #ifdef __FC1x_EXPERIMENTAL__
