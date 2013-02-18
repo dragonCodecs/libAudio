@@ -112,6 +112,7 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 
 ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL), MixerChannels(NULL)
 {
+	p_Header = new ModuleHeader(p_AF);
 }
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)

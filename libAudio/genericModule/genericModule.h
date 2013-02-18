@@ -66,7 +66,7 @@ private:
 
 	// Fields specific to certain formats
 
-	// MOD
+	// MOD/AON
 	uint8_t RestartPos;
 
 	// S3M
@@ -87,6 +87,10 @@ private:
 
 	uint8_t *Panning;
 
+	// AON
+	char *Author;
+	char *Remark;
+
 #ifdef __FC1x_EXPERIMENTAL__
 	// FC1x
 	uint32_t SeqLength;
@@ -104,6 +108,7 @@ public:
 	ModuleHeader(MOD_Intern *p_MF);
 	ModuleHeader(S3M_Intern *p_SF);
 	ModuleHeader(STM_Intern *p_SF);
+	ModuleHeader(AON_Intern *p_AF);
 #ifdef __FC1x_EXPERIMENTAL__
 	ModuleHeader(FC1x_Intern *p_FF);
 #endif

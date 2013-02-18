@@ -2,6 +2,12 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
+inline uint32_t Swap32(uint32_t i)
+{
+	return ((i >> 24) & 0xFF) | ((i >> 8) & 0xFF00) |
+		((i & 0xFF00) << 8) | ((i & 0xFF) << 24);
+}
+
 ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 {
 	char MODMagic[4];
@@ -65,6 +71,8 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 	InitialTempo = 125;
 	SamplePtrs = PatternPtrs = NULL;
 	Panning = NULL;
+	Author = NULL;
+	Remark = NULL;
 }
 
 ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
@@ -133,6 +141,8 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	RestartPos = 255;
+	Author = NULL;
+	Remark = NULL;
 }
 
 ModuleHeader::ModuleHeader(STM_Intern *p_SF)
@@ -181,6 +191,78 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF)
 	RestartPos = 255;
 	InitialTempo = 125;
 	SamplePtrs = PatternPtrs = NULL;
+	Author = NULL;
+	Remark = NULL;
+}
+
+ModuleHeader::ModuleHeader(AON_Intern *p_AF)
+{
+	char Magic1[4], Magic2[42];
+	char StrMagic[4];
+	uint32_t StringLen;
+	uint8_t Const;
+	FILE *f_AON = p_AF->f_AON;
+
+	fread(Magic1, 4, 1, f_AON);
+	fread(Magic2, 42, 1, f_AON);
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	StringLen = Swap32(StringLen);
+
+	if (strncmp(Magic1, "AON4", 4) != 0 && strncmp(Magic1, "AON8", 4) != 0 &&
+		strncmp(Magic2, "artofnoise by bastian spiegel (twice/lego)", 42) != 0 &&
+		strncmp(StrMagic, "NAME", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
+
+	nChannels = Magic1[3] - '0';
+
+	Name = new char[StringLen + 1];
+	fread(Name, StringLen, 1, f_AON);
+	Name[StringLen] = 0;
+
+	fread(StrMagic, 4, 1, f_AON);
+	if (strncmp(StrMagic, "AUTH", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	StringLen = Swap32(StringLen);
+	Author = new char [StringLen + 1];
+	fread(Author, StringLen, 1, f_AON);
+	Author[StringLen] = 0;
+
+	fread(StrMagic, 4, 1, f_AON);
+	if (strncmp(StrMagic, "DATE", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	StringLen = Swap32(StringLen);
+	fseek(f_AON, StringLen, SEEK_CUR);
+
+	fread(StrMagic, 4, 1, f_AON);
+	if (strncmp(StrMagic, "RMRK", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	if (StringLen != 0)
+	{
+		StringLen = Swap32(StringLen);
+		Remark = new char[StringLen + 1];
+		fread(Remark, StringLen, 1, f_AON);
+		Remark[StringLen] = 0;
+	}
+	else
+		Remark = NULL;
+
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&StringLen, 4, 1, f_AON);
+	fread(&Const, 1, 1, f_AON);
+	if (strncmp(StrMagic, "INFO", 4) != 0 || StringLen != Swap32(4) ||
+		Const != 0x34)
+		throw new ModuleLoaderError(E_BAD_AON);
+	fread(&Const, 1, 1, f_AON);
+	nOrders = Const;
+	fread(&Const, 1, 1, f_AON);
+	RestartPos = Const;
+	fread(&Const, 1, 1, f_AON);
+
+	//
 }
 
 #ifdef __FC1x_EXPERIMENTAL__
@@ -214,6 +296,8 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 	Name = NULL;
 	RestartPos = 255;
 	SamplePtrs = PatternPtrs = NULL;
+	Author = NULL;
+	Remark = NULL;
 }
 #endif
 
@@ -224,4 +308,6 @@ ModuleHeader::~ModuleHeader()
 	delete [] SamplePtrs;
 	delete [] Orders;
 	delete [] Name;
+	delete [] Author;
+	delete [] Remark;
 }
