@@ -202,12 +202,12 @@ libAUDIO_API bool Is_AON(const char *FileName);
 // FC1x API
 
 libAUDIO_API void *FC1x_OpenR(const char *FileName);
-libAUDIO_API FileInfo *FC1x_GetFileInfo(void *p_STMFile);
-libAUDIO_API long FC1x_FillBuffer(void *p_STMFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int FC1x_CloseFileR(void *p_STMFile);
-libAUDIO_API void FC1x_Play(void *p_STMFile);
-libAUDIO_API void FC1x_Pause(void *p_STMFile);
-libAUDIO_API void FC1x_Stop(void *p_STMFile);
+libAUDIO_API FileInfo *FC1x_GetFileInfo(void *p_FC1xFile);
+libAUDIO_API long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int FC1x_CloseFileR(void *p_FC1xFile);
+libAUDIO_API void FC1x_Play(void *p_FC1xFile);
+libAUDIO_API void FC1x_Pause(void *p_FC1xFile);
+libAUDIO_API void FC1x_Stop(void *p_FC1xFile);
 libAUDIO_API bool Is_FC1x(const char *FileName);
 
 // MPC API
