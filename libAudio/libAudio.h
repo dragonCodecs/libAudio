@@ -188,6 +188,17 @@ libAUDIO_API void STM_Pause(void *p_STMFile);
 libAUDIO_API void STM_Stop(void *p_STMFile);
 libAUDIO_API bool Is_STM(const char *FileName);
 
+// AON API
+
+libAUDIO_API void *AON_OpenR(const char *FileName);
+libAUDIO_API FileInfo *AON_GetFileInfo(void *p_AONFile);
+libAUDIO_API long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int AON_CloseFileR(void *p_AONFile);
+libAUDIO_API void AON_Play(void *p_AONFile);
+libAUDIO_API void AON_Pause(void *p_AONFile);
+libAUDIO_API void AON_Stop(void *p_AONFile);
+libAUDIO_API bool Is_AON(const char *FileName);
+
 // FC1x API
 
 libAUDIO_API void *FC1x_OpenR(const char *FileName);
@@ -288,4 +299,5 @@ libAUDIO_API uint8_t ExternalPlayback;
 #define AUDIO_MOD			13
 #define AUDIO_S3M			14
 #define AUDIO_STM			15
-#define AUDIO_FC1x			16
+#define AUDIO_AON			16
+#define AUDIO_FC1x			17

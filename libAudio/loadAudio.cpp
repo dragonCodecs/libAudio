@@ -49,6 +49,8 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &S3MDecoder;
 	else if (Is_STM(FileName) == true)
 		ret->API = &STMDecoder;
+	else if (Is_AON(FileName) == true)
+		ret->API = &AONDecoder;
 #ifdef __FC1x_EXPERIMENTAL__
 	else if (Is_FC1x(FileName) == true)
 		ret->API = &FC1xDecoder;
@@ -189,6 +191,8 @@ bool Is_Audio(const char *FileName)
 	else if (Is_S3M(FileName) == true)
 		return true;
 	else if (Is_STM(FileName) == true)
+		return true;
+	else if (Is_AON(FileName) == true)
 		return true;
 	else if (Is_FC1x(FileName) == true)
 		return true;

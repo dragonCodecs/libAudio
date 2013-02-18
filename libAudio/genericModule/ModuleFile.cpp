@@ -110,6 +110,10 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 	MaxPeriod = 32767;
 }
 
+ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL), MixerChannels(NULL)
+{
+}
+
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
 {
 #ifdef __FC1x_EXPERIMENTAL__
@@ -259,6 +263,8 @@ const char *ModuleLoaderError::GetError()
 			return "Bad Scream Tracker III Module";
 		case E_BAD_STM:
 			return "Bad Scream Tracker Module - Maybe just song data?";
+		case E_BAD_AON:
+			return "Bad Art Of Noise Module";
 		case E_BAD_FC1x:
 			return "Bad Future Composer Module";
 		default:

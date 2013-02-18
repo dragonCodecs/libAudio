@@ -22,7 +22,7 @@ SHORTEN =
 #OPTIMFROG = loadOptimFROG.o
 OPTIMFROG = 
 H = libAudio.h
-O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadMOD.o loadS3M.o loadSTM.o loadFC1x.o
+O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadMOD.o loadS3M.o loadSTM.o loadAON.o loadFC1x.o
 #O_SNDH = loadSNDH.o
 O_SNDH = 
 O_SID = loadSID.o
@@ -102,6 +102,7 @@ moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp moduleMixer/mixFunctions.
 loadSNDH.o: loadSNDH.cpp
 loadS3M.o: loadS3M.cpp
 loadSTM.o: loadSTM.cpp
+loadAON.o: loadAON.cpp
 loadFC1x.o: loadFC1x.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp

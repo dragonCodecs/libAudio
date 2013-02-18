@@ -17,6 +17,7 @@ class ModulePattern;
 
 #include "../ProTracker.h"
 #include "../ScreamTracker.h"
+#include "../ArtOfNoise.h"
 #include "../FutureComposer.h"
 #include "effects.h"
 
@@ -25,11 +26,13 @@ class ModulePattern;
 #define MODULE_MOD		1
 #define MODULE_S3M		2
 #define MODULE_STM		3
-#define MODULE_FC1x		4
+#define MODULE_AON		4
+#define MODULE_FC1x		5
 
 #define E_BAD_S3M		1
 #define E_BAD_STM		2
-#define E_BAD_FC1x		3
+#define E_BAD_AON		3
+#define E_BAD_FC1x		4
 
 #define FILE_FLAGS_AMIGA_SLIDES		0x01
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
@@ -362,6 +365,7 @@ public:
 	ModuleFile(MOD_Intern *p_MF);
 	ModuleFile(S3M_Intern *p_SF);
 	ModuleFile(STM_Intern *p_SF);
+	ModuleFile(AON_Intern *p_AF);
 	ModuleFile(FC1x_Intern *p_FF);
 	~ModuleFile();
 
