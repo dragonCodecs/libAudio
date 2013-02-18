@@ -153,6 +153,8 @@ ModuleFile::~ModuleFile()
 
 const char *ModuleFile::GetTitle()
 {
+	if (p_Header->Name == NULL)
+		return NULL;
 	return strdup(p_Header->Name);
 }
 
