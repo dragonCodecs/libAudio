@@ -375,6 +375,8 @@ public:
 	~ModuleFile();
 
 	const char *GetTitle();
+	const char *GetAuthor();
+	const char *GetRemark();
 	uint8_t GetChannels();
 	void InitMixer(FileInfo *p_FI);
 	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);

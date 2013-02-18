@@ -158,6 +158,20 @@ const char *ModuleFile::GetTitle()
 	return strdup(p_Header->Name);
 }
 
+const char *ModuleFile::GetAuthor()
+{
+	if (p_Header->Author == NULL)
+		return NULL;
+	return strdup(p_Header->Author);
+}
+
+const char *ModuleFile::GetRemark()
+{
+	if (p_Header->Remark == NULL)
+		return NULL;
+	return strdup(p_Header->Remark);
+}
+
 uint8_t ModuleFile::GetChannels()
 {
 	return (p_Header->MasterVolume & 0x80) == 0 ? 1 : 2;
