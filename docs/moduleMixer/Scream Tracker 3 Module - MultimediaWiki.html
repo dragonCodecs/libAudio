@@ -1,0 +1,531 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0065)http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr"><script type="text/javascript">(function (){
+		for (var i in window)
+		{
+			try {
+				var jsType = typeof window[i];
+				switch (jsType.toUpperCase())
+				{					
+					case "FUNCTION": 
+						if (window[i] !== window.location)
+						{
+							if (window[i] === window.open || (window.showModelessDialog && window[i] === window.showModelessDialog))
+								window[i] = function(){return true;};
+							else if (window[i] === window.onbeforeunload)	// To try to fix onbeforeunload pop ups some users report seeing but I can't replicate.
+								window.onbeforeunload = null;
+							else if (window[i] === window.onunload)
+								window.onunload = null;								
+							else
+								window[i] = function(){return "";};
+						}
+						break;							
+				}			
+			}
+			catch(err)
+			{}		
+		}
+		
+		for (var i in document)
+		{
+			try {
+				var jsType = typeof document[i];
+				switch (jsType.toUpperCase())
+				{					
+					case "FUNCTION":
+						document[i] = function(){return "";};
+						break;					
+				}			
+			}
+			catch(err)
+			{}		
+		}
+
+		try {
+			eval = function(){return "";};				
+			unescape = function(){return "";};
+			String = function(){return "";};
+			parseInt = function(){return "";};
+			parseFloat = function(){return "";};
+			Number = function(){return "";};
+			isNaN = function(){return "";};
+			isFinite = function(){return "";};
+			escape = function(){return "";};
+			encodeURIComponent = function(){return "";};
+			encodeURI = function(){return "";};
+			decodeURIComponent = function(){return "";};
+			decodeURI = function(){return "";};
+			Array = function(){return "";};
+			Boolean = function(){return "";};
+			Date = function(){return "";};
+			Math = function(){return "";};
+			Number = function(){return "";};
+			RegExp = function(){return "";};
+			
+			var oNav = navigator;
+			navigator = function(){return "";};
+			oNav = null;			
+		}
+		catch(err)
+		{}
+		
+	})();</script><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		
+		<meta name="keywords" content="Scream Tracker 3 Module">
+<link rel="shortcut icon" href="http://wiki.multimedia.cx/favicon.ico">
+<link title="Creative Commons" type="application/rdf+xml" href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=creativecommons" rel="meta">
+		<title>Scream Tracker 3 Module - MultimediaWiki</title>
+		<style type="text/css" media="screen,projection">/*<![CDATA[*/ @import "/skins/monobook/main.css?7"; /*]]>*/</style>
+		<link rel="stylesheet" type="text/css" media="print" href="./Scream Tracker 3 Module - MultimediaWiki_files/commonPrint.css">
+		<!--[if lt IE 5.5000]><style type="text/css">@import "/skins/monobook/IE50Fixes.css";</style><![endif]-->
+		<!--[if IE 5.5000]><style type="text/css">@import "/skins/monobook/IE55Fixes.css";</style><![endif]-->
+		<!--[if IE 6]><style type="text/css">@import "/skins/monobook/IE60Fixes.css";</style><![endif]-->
+		<!--[if IE 7]><style type="text/css">@import "/skins/monobook/IE70Fixes.css?1";</style><![endif]-->
+		<!--[if lt IE 7]><script type="text/javascript" src="/skins/common/IEFixes.js"></script>
+		<meta http-equiv="imagetoolbar" content="no" /><![endif]-->
+		<script type="text/javascript">var skin = 'monobook';var stylepath = '/skins';</script>
+		<script type="text/javascript" src="./Scream Tracker 3 Module - MultimediaWiki_files/wikibits.js"><!-- wikibits js --></script>
+		<script type="text/javascript" src="./Scream Tracker 3 Module - MultimediaWiki_files/index.php"><!-- site js --></script>
+		<style type="text/css">/*<![CDATA[*/
+@import "/index.php?title=MediaWiki:Common.css&action=raw&ctype=text/css&smaxage=18000";
+@import "/index.php?title=MediaWiki:Monobook.css&action=raw&ctype=text/css&smaxage=18000";
+@import "/index.php?title=-&action=raw&gen=css&maxage=18000";
+/*]]>*/</style>
+		<!-- Head Scripts -->
+			</head>
+<body class="ns-0 ltr">
+	<div id="globalWrapper">
+		<div id="column-content">
+	<div id="content">
+		<a name="top" id="top"></a>
+				<h1 class="firstHeading">Scream Tracker 3 Module</h1>
+		<div id="bodyContent">
+			<h3 id="siteSub">From MultimediaWiki</h3>
+			<div id="contentSub"></div>
+									<div id="jump-to-nav">Jump to: <a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#column-one">navigation</a>, <a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#searchInput">search</a></div>			<!-- start content -->
+			<ul><li> Extension: s3m
+</li></ul>
+<p>A normally 16-channel module format for MS-DOS on the PC, it can also support OPL2 FM synthesis (9 melodic channels). While the format itself can technically support 32 channels, only the 25 mentioned have any meaning assigned to them, and they are usually not all used at the same time.
+</p><p>Aspects which are easy to get wrong with this format are in <b>bold text</b>.
+</p><p>Unless otherwise specified, this information pertains to Scream Tracker v3.21's play routine.
+</p>
+<table id="toc" class="toc" summary="Contents"><tbody><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#File_Format"><span class="tocnumber">1</span> <span class="toctext">File Format</span></a></li>
+<li class="toclevel-1"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Playback_Notes"><span class="tocnumber">2</span> <span class="toctext">Playback Notes</span></a>
+<ul>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Multiple_channel_mapping_quirk"><span class="tocnumber">2.1</span> <span class="toctext">Multiple channel mapping quirk</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Effects"><span class="tocnumber">3</span> <span class="toctext">Effects</span></a>
+<ul>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Axx"><span class="tocnumber">3.1</span> <span class="toctext">Axx</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Bxx"><span class="tocnumber">3.2</span> <span class="toctext">Bxx</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Cxy"><span class="tocnumber">3.3</span> <span class="toctext">Cxy</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Dxy_.28.25.29"><span class="tocnumber">3.4</span> <span class="toctext">Dxy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Exx_.28.25.29"><span class="tocnumber">3.5</span> <span class="toctext">Exx (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Fxx_.28.25.29"><span class="tocnumber">3.6</span> <span class="toctext">Fxx (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Gxx_.28.2A.29"><span class="tocnumber">3.7</span> <span class="toctext">Gxx (*)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Hxy_.28.2A.29"><span class="tocnumber">3.8</span> <span class="toctext">Hxy (*)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Ixy_.28.25.29"><span class="tocnumber">3.9</span> <span class="toctext">Ixy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Jxy_.28.25.29"><span class="tocnumber">3.10</span> <span class="toctext">Jxy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Kxy_.28.25.29"><span class="tocnumber">3.11</span> <span class="toctext">Kxy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Lxy_.28.25.29"><span class="tocnumber">3.12</span> <span class="toctext">Lxy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Oxx_.28.2A.29"><span class="tocnumber">3.13</span> <span class="toctext">Oxx (*)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Qxy_.28.25.29"><span class="tocnumber">3.14</span> <span class="toctext">Qxy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Rxy_.28.25.29"><span class="tocnumber">3.15</span> <span class="toctext">Rxy (%)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Sxy_.28.25.29"><span class="tocnumber">3.16</span> <span class="toctext">Sxy (%)</span></a>
+<ul>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#S0x"><span class="tocnumber">3.16.1</span> <span class="toctext">S0x</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#S1x"><span class="tocnumber">3.16.2</span> <span class="toctext">S1x</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#S2x"><span class="tocnumber">3.16.3</span> <span class="toctext">S2x</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#S3x"><span class="tocnumber">3.16.4</span> <span class="toctext">S3x</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#S4x"><span class="tocnumber">3.16.5</span> <span class="toctext">S4x</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#S8x"><span class="tocnumber">3.16.6</span> <span class="toctext">S8x</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#SAx"><span class="tocnumber">3.16.7</span> <span class="toctext">SAx</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#SBx"><span class="tocnumber">3.16.8</span> <span class="toctext">SBx</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#SCx"><span class="tocnumber">3.16.9</span> <span class="toctext">SCx</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#SDx"><span class="tocnumber">3.16.10</span> <span class="toctext">SDx</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#SEx"><span class="tocnumber">3.16.11</span> <span class="toctext">SEx</span></a></li>
+<li class="toclevel-3"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#SFx"><span class="tocnumber">3.16.12</span> <span class="toctext">SFx</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Txx"><span class="tocnumber">3.17</span> <span class="toctext">Txx</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Uxy_.28.2A.29"><span class="tocnumber">3.18</span> <span class="toctext">Uxy (*)</span></a></li>
+<li class="toclevel-2"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module#Vxx"><span class="tocnumber">3.19</span> <span class="toctext">Vxx</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></tbody></table><script type="text/javascript"> if (window.showTocToggle) { var tocShowText = "show"; var tocHideText = "hide"; showTocToggle(); } </script>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=1" title="Edit section: File Format">edit</a>]</div><a name="File_Format"></a><h2>File Format</h2>
+<p>The format is little-endian (least significant byte first). A "byte" is 8 bits, a "word" is 16 bits, and a "dword" (double word) is 32 bits. Hex values will be denoted with "0x". A parapointer points to pp*16 in the file due to the DOS nature of the format.
+</p><p>Note that if some parts of the format are inconsistent, it's usually best to let it slip, as ST3 itself will allegedly for instance load instruments which don't have the "SCRS" / "SCRI" mark.
+</p>
+<ul><li>28 bytes: module name, NUL-terminated, NUL-padded.
+</li><li>Byte: 0x1A.
+</li><li>Byte: 16 (0x10) to indicate this is a Scream Tracker 3 module.
+</li><li>2 reserved bytes, should be set to 0x00.
+</li><li>6 words, denoting the following:
+<ul><li>Order count
+</li><li>Instrument count
+</li><li>Pattern count
+</li><li>Flags
+<ul><li>Bit 0 (pre-3.01 ONLY): ST2 vibrato <i>(effect unknown)</i>.
+</li><li>Bit 1 (pre-3.01 ONLY): ST2 tempo <i>(effect unknown)</i>.
+</li><li>Bit 3 (pre-3.01 ONLY): Amiga slides <i>(effect unknown)</i>.
+</li><li>Bit 4: 0-vol optimisations - turn off looping notes which have a zero volume for more than(?) 2 rows.
+</li><li>Bit 5: Amiga limits (limit periods to confine to 113 &lt;= x &lt;= 856).
+</li><li>Bit 6 (pre-3.01 ONLY): Enable filter / sfx with SB <i>(effect unknown)</i>.
+</li><li>Bit 7: ST3.00 volume slides (<b>automatically enabled if tracker version is &lt;= 0x1300</b>) - if enabled, <i>all</i> volume slides occur <i>every</i> tick.
+</li><li>Bit 8: Special custom data in file (uses "Special" field)
+</li></ul>
+</li><li>Tracker version
+<ul><li>0x1xyy == Scream Tracker x.yy
+</li><li>0x2xyy == Imago Orpheus x.yy
+</li><li>0x3xyy == Impulse Tracker x.yy
+</li><li>0x4xyy == Schism Tracker (version numbering scheme is different)
+</li><li>0x5xyy == OpenMPT
+</li></ul>
+</li><li>File format information
+<ul><li>1 == signed samples (horribly, horribly old)
+</li><li>2 == unsigned samples
+</li><li>Anything else is invalid and ST3 will not load the file(?).
+</li></ul>
+</li></ul>
+</li><li>4 byte string: "SCRM"
+</li><li>6 bytes, denoting the following:
+<ul><li>Global volume (range 0 &lt;= x &lt;= 64) which is used in calculating individual channel volumes <b>and is nasty.</b>
+</li><li>Initial speed (ticks per row / TPR) - <b>if 0 <i>or 255</i>, it is ignored</b> and the previous value used when you loaded the song is used instead. The value of 255 is very unusual as AFF (set speed to 0xFF == 255) still works.
+</li><li>Initial tempo - if <b>less than 33, it is ignored</b> and the previous value used when you loaded the song is used instead.
+</li><li>Mixing volume (range 16 &lt;= x &lt;= 127) which is only used for Sound Blaster. <b>It is multiplied by 11/8 when stereo is on.</b>
+</li><li>Ultra-click removal which is only used for Gravis Ultrasound. ST3.21's interface only allows inputting of values 8, 12, or 16. Allegedly this is the number of GUS channels to allocate to guarantee that this value / 2 channels will play w/o clicks.
+</li><li>Default pan value flag, if equal to 252 then load the default panning values at the end of the header, otherwise don't bother.
+</li></ul>
+</li><li>8 reserved bytes, should be set to 0x00, although some trackers write stuff in here.
+</li><li>1 parapointer: "Special", used to point to "special custom data" which is not used in ST 3.01 or later. ST3.21's TECH.DOC refers to ExtHead which is not mentioned anywhere else. This should be safe to ignore.
+</li><li>32 bytes indicating channel settings, as follows:
+<ul><li>If bit 8 is set, this channel is enabled.
+</li><li>The lower 7 bits indicate the channel type:
+<ul><li>0 &lt;= x &lt;= 7: Left PCM channel 1-8 (Lx)
+</li><li>8 &lt;= x &lt;= 15: Right PCM channel 1-8 (Rx)
+</li><li>16 &lt;= x &lt;= 24: Adlib/OPL2 #1 melody (Ax)
+</li><li>25 &lt;= x &lt;= 29: Adlib/OPL2 #1 drums (A_, where _ can be one of {<i>(TODO: look this up</i>}) - these are unused.
+</li><li>Immediately after Adlib/OPL2 #1, there's some provision for a second OPL2 chip, although this does not appear to be supported / used.
+</li></ul>
+</li><li><b>It is possible to map two pattern channels to the same output channel, which allows for some quirks. This is NOT supported by virtually any player other than ST3 itself.</b> pys3m supports it, but is very obscure and quite slow. <b>WARNING:</b> Despite being less useful than you might expect, there ARE reasons why people would do this!
+</li></ul>
+</li><li>Order list: series of bytes indicating pattern indices.
+</li><li>Instrument parapointer list: series of parapointers pointing to instruments.
+</li><li>Pattern parapointer list: series of parapointers pointing to patterns.
+</li><li>OPTIONAL: Panning list: Entries are as follows:
+<ul><li>Bits 6 and 7 are reserved.
+</li><li>Bit 5(?): If set, use the value specified, otherwise use default (7 for mono, 3(L) / C(R) for stereo).
+</li><li>Bits 0-3: Specified panning value if default not used.
+</li></ul>
+</li></ul>
+<p><i>TODO: ST3.21's TECH.DOC should cover instruments.</i>
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=2" title="Edit section: Playback Notes">edit</a>]</div><a name="Playback_Notes"></a><h2>Playback Notes</h2>
+<p>Note w/o sample results in retriggering the note without resetting the volume.
+</p><p>Sample w/o note results in resetting the volume and <i>switching samples</i> w/o retriggering the note. If the C4 speeds differ, this could potentially be out of tune as it does not convert the internal period values. If the note is off, it will stay off - it will not retrigger.
+</p><p>Vibrato and tremolo have a full cycle length of 256, though Hxy and Rxy use x*4 and y*4 as their parameters.
+</p><p>Base clock is <b>14317456 Hz</b> (documentation <b>incorrectly says</b> 14317056 Hz, correct value is the expected 8363*1712). When calculating a note's period, use the following table:
+</p>
+<pre> C    C#   D    D#   E    F    F#   G    G#   A   A#   A
+1712,1616,1524,1440,1356,1280,1208,1140,1076,1016,960,907
+</pre>
+<p>and calculate the period like so:
+</p>
+<pre>period = 8363 * 16 * (note &gt;&gt; octave) / middle_c_frequency_of_instrument
+</pre>
+<p><i>Theoretically</i>, both the period and the volume have "stored" values and "active" values.
+</p><p><b>Volumes actually peak at 63</b>, and not 64. Setting the volume to 64 will actually make it go to 63.
+</p><p>However, on <b>adlib channels</b>, if the default volume is 64, it will use 64. Any further operations on the volume will clip it to within the 0-63 range.
+</p><p>Many effects use the <b>latest nonzero effect parameter encountered</b>, as noted a bit further below.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=3" title="Edit section: Multiple channel mapping quirk">edit</a>]</div><a name="Multiple_channel_mapping_quirk"></a><h3>Multiple channel mapping quirk</h3>
+<p><b>It is possible to map two pattern channels to one output channel.</b> However, it is rather quirky, but usable.
+</p><p>Note that <b>only the last pattern channel's effects are used</b>.
+</p><p><i>TODO: document this quirk in detail.</i>
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=4" title="Edit section: Effects">edit</a>]</div><a name="Effects"></a><h2>Effects</h2>
+<p><i>TODO the rest</i>
+</p><p>Effects marked with a % use <b>the latest nonzero effect parameter to show up</b>. Effects with a * have their own memory.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=5" title="Edit section: Axx">edit</a>]</div><a name="Axx"></a><h3>Axx</h3>
+<p>Set speed. If the parameter <b>is 0</b>, the effect is <b>ignored</b>.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=6" title="Edit section: Bxx">edit</a>]</div><a name="Bxx"></a><h3>Bxx</h3>
+<p>Order jump.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=7" title="Edit section: Cxy">edit</a>]</div><a name="Cxy"></a><h3>Cxy</h3>
+<p>Jump to row x*10 + y. The value provided is in <b>decimal</b>. If the row number specified <b>is 64 or higher, the effect is ignored</b>.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=8" title="Edit section: Dxy (%)">edit</a>]</div><a name="Dxy_.28.25.29"></a><h3>Dxy (%)</h3>
+<p>Volume slide. If one of the values are 0, then we slide on all nonzero ticks. If one of the values are F, then we slide on all zero ticks. That means that <b>D0F slides down 15 on all ticks and DF0 slides up 15 on all ticks</b>.
+</p><p>However, if fast slides are enabled (if they are set as a flag or the version is &lt;= 0x1300), then, unless we're doing a fineslide, we slide on all ticks.
+</p><p>When we do a volume slide, we slide the active volume <b>without modifying the stored volume</b>.
+</p><p>The checking order is not the same as ImpulseTracker.
+</p><p>Here's a full detailed description of all possible cases (0x00..0xFF) and how both Scream Tracker and Impulse Tracker handle them:
+</p>
+<ul><li>D0x, 1 &lt;= x &lt;= 0xE: slide down by x on all nonzero ticks. Also slide on tick 0, if fast slides are enabled.
+</li><li>Dx0, 1 &lt;= x &lt;= 0xE: slide up by x on all nonzero ticks. Also slide on tick 0, if fast slides are enabled.
+</li><li>DFx, 1 &lt;= x &lt;= 0xE: slide down by x on tick 0.
+</li><li>DxF, 1 &lt;= x &lt;= 0xE: slide up by x on tick 0.
+</li><li>DFF: slide up by 15 on tick 0.
+</li><li>D0F: slide down by 15 on all ticks. Not affected at all by the fast slides flag.
+</li><li>DF0: slide up by 15 on all ticks. Not affected at all by the fast slides flag.
+</li><li>Dxy, 1 &lt;= x &lt;= 0xE, 1 &lt;= y &lt;= 0xE: Scream Tracker treats it as a slide down by y, i.e. equivalent to D0y. Impulse Tracker does nothing.
+</li><li>D00: Scream Tracker uses the last nonzero effect parameter in the channel. Impulse Tracker uses the last nonzero value used for Dxx, Kxx or Lxx in the channel.
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=9" title="Edit section: Exx (%)">edit</a>]</div><a name="Exx_.28.25.29"></a><h3>Exx (%)</h3>
+<p>Slide down.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=10" title="Edit section: Fxx (%)">edit</a>]</div><a name="Fxx_.28.25.29"></a><h3>Fxx (%)</h3>
+<p>Slide up.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=11" title="Edit section: Gxx (*)">edit</a>]</div><a name="Gxx_.28.2A.29"></a><h3>Gxx (*)</h3>
+<p>Slide to note.
+</p><p>Peculiarities in the Scream Tracker implementation of this effect:
+</p>
+<ul><li>If the current note is empty, the destination note is set to the <b>last note</b> to show up in the channel, <b>even if it has occurred without the Gxx effect</b>.
+</li><li>Gxx <b>doesn't clear the target note</b> when it is reached, so any future Gxx with no note will keep sliding back to this particular note.
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=12" title="Edit section: Hxy (*)">edit</a>]</div><a name="Hxy_.28.2A.29"></a><h3>Hxy (*)</h3>
+<p>Vibrato. This effect <b>shares memory</b> with <b>Uxy</b>.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=13" title="Edit section: Ixy (%)">edit</a>]</div><a name="Ixy_.28.25.29"></a><h3>Ixy (%)</h3>
+<p>Tremor.
+</p>
+<ul><li> "On" time is <b>x + 1</b> ticks, "off" time is <b>y + 1</b> ticks
+</li><li> This effect is updated on <b>every tick</b>.
+</li><li> Implemented with two decrementing counters per channel - the "on" counter and the "off" counter.
+</li><li> On each tick, if the "on" counter is greater than zero, it is decremented and if it reaches zero, the current volume is set to 0 and the "off" counter is set to the "off" time (y + 1). If the "on" counter was zero in the beginning of the update procedure, then the "off" counter is decremented and if it reached zero (or became less than zero), <b>the current volume is set to the stored volume</b> and the "on" counter is set to the "on" time (x + 1).
+</li><li> <b>The "on" and "off" counters are never reset</b>, except in the tremor update procedure described above. Scream Tracker doesn't even reset them on playback start. Only on tracker startup are they reset.
+</li><li> If the current volume was 0 at the end of the effect and there is no tremor effect on the next row, <b>the current volume stays 0</b>. It isn't reset back to the stored volume or its previous value from before the tremor effect.
+</li><li> <b>The stored volume isn't modified by this effect.</b>
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=14" title="Edit section: Jxy (%)">edit</a>]</div><a name="Jxy_.28.25.29"></a><h3>Jxy (%)</h3>
+<p>Arpeggio. <i>TODO: this effect is weird.</i>
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=15" title="Edit section: Kxy (%)">edit</a>]</div><a name="Kxy_.28.25.29"></a><h3>Kxy (%)</h3>
+<p>H00 + Dxy.
+</p><p>The volume slide, performed by this effect differs from Dxy in the following ways:
+</p>
+<ul><li> <b>The first tick of this effect is ignored.</b> This is due to a no-op in the "first tick" pointer table.
+</li><li> As a result of the previous point, fine slides do not work. However, <b>the "other" effect</b> (H00 in case of Kxy; G00 in case of Lxy) <b> is also not performed when a fine volume slide is requested.</b>
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=16" title="Edit section: Lxy (%)">edit</a>]</div><a name="Lxy_.28.25.29"></a><h3>Lxy (%)</h3>
+<p>G00 + Dxy.
+</p><p>The volume slide <b>differs from Dxy</b>. See <b>Kxy</b> for details.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=17" title="Edit section: Oxx (*)">edit</a>]</div><a name="Oxx_.28.2A.29"></a><h3>Oxx (*)</h3>
+<p>Set sample offset.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=18" title="Edit section: Qxy (%)">edit</a>]</div><a name="Qxy_.28.25.29"></a><h3>Qxy (%)</h3>
+<p>Retrigger note every y ticks with volume modifier x. <b>If the retrig value 'y' is 0, the effect is ignored.</b>
+</p><p>This effect uses a counter, that is increased on each tick. When the counter reaches the retrig value 'y' (or becomes greater, which could happen if the retrig value is decreased), the sample is retriggered, the note volume is modified according to the volume modifier 'x' and the counter is reset back to 0. The counter is reset (<b>without retriggering the sample</b>) also in the following cases:
+</p>
+<ul><li> before the start of playing the song
+</li><li> when a row without the Qxx effect is encountered in the channel
+</li></ul>
+<p>However, the counter is <b>not reset in any other cases</b>, for example <b>playing a new note *with* the Qxy effect does not reset the counter</b>. Also, this effect <b>is processed on every tick, including tick 0 and is entirely independent of the song speed.</b> A retrig of the sample <b>can also happen on tick 0, even when playing a new note</b> in which case the note volume modification occurs <b>immediately after the new note is played</b>.
+</p><p>Values for x:
+</p>
+<ul><li>0: 0
+</li><li>1: -1
+</li><li>2: -2
+</li><li>3: -4
+</li><li>4: -8
+</li><li>5: -16
+</li><li>6: *2/3
+</li><li>7: *1/2
+</li><li>8: 0 (documentation says "?")
+</li><li>9: 1
+</li><li>A: 2
+</li><li>B: 4
+</li><li>C: 8
+</li><li>D: 16
+</li><li>E: *3/2
+</li><li>F: *2
+</li></ul>
+<p><b>6 isn't exactly *2/3.</b> It seems to use the following table:
+</p>
+<pre> TwoThirds: array [0..63] of Byte =
+ ( 0,  0,  1,  1,  2,  3,  3,  4,  5,  5,  6,  6,  7,  8,  8,  9,
+  10, 10, 11, 11, 12, 13, 13, 14, 15, 15, 16, 16, 17, 18, 18, 19,
+  20, 20, 21, 21, 22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29,
+  30, 30, 31, 31, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39);
+</pre>
+<p>This effect changes only the active volume, <b>without modifying the stored volume.</b>
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=19" title="Edit section: Rxy (%)">edit</a>]</div><a name="Rxy_.28.25.29"></a><h3>Rxy (%)</h3>
+<p>Tremolo. x*4 is speed, y*4 is depth. This effect is screwy, but not as screwy as previously documented.
+</p>
+<ul><li>Get xy from the <b>latest nonzero effect parameter</b> to appear in the channel.
+</li><li><b>On tick 1</b> (the <b>second</b> tick of the row) set the active volume to <b>the stored volume plus</b> (depth * value) / (max_amplitude * 2) (Rxy peaks at 32 in each direction), and for each <b>nonzero</b> tick increase the tremolo position by the speed. <b>The stored volume is untouched.</b>
+</li><li><b>If the song speed (not tremolo speed, but song speed - ticks per row) is 1, the active volume is also untouched. It is not set to the stored volume!</b>
+</li><li><b>Tremolo will not work if the stored volume is 0 (or 64 - adlib only).</b>
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=20" title="Edit section: Sxy (%)">edit</a>]</div><a name="Sxy_.28.25.29"></a><h3>Sxy (%)</h3>
+<p>Miscellaneous effects.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=21" title="Edit section: S0x">edit</a>]</div><a name="S0x"></a><h4>S0x</h4>
+<p>Set filter. Not implemented in Scream Tracker 3.
+</p>
+<ul><li> <b>S00</b> performs an Sxy effect with <b>the latest nonzero effect parameter to show up</b> (note the '%').
+</li><li> <b>When S00 is repeating a note delay (SDx), the note is triggered twice: once on tick 0 (as if there's no note delay) and again on tick x (as with a normal note delay)</b>
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=22" title="Edit section: S1x">edit</a>]</div><a name="S1x"></a><h4>S1x</h4>
+<p>Set glissando control.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=23" title="Edit section: S2x">edit</a>]</div><a name="S2x"></a><h4>S2x</h4>
+<p>Set finetune.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=24" title="Edit section: S3x">edit</a>]</div><a name="S3x"></a><h4>S3x</h4>
+<p>Set vibrato waveform.
+</p><p><b>The low 2 bits</b> of x (i.e. <b>x &amp; 0x03</b>) set the vibrato waveform:
+</p>
+<ul><li>0: Sine wave
+</li><li>1: Ramp down
+</li><li>2: Square wave
+</li><li>3: Random wave
+</li></ul>
+<p>If the <b>third bit</b> is set (i.e. if <b>(x &amp; 0x04)&nbsp;!= 0</b> ), don't reset waveform when a new note is played.
+</p><p>The 4-th bit (x &amp; 0x08) is <b>ignored</b>.
+</p><p>E.g. S3E sets a square waveform and disables reset on new note.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=25" title="Edit section: S4x">edit</a>]</div><a name="S4x"></a><h4>S4x</h4>
+<p>Set tremolo waveform.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=26" title="Edit section: S8x">edit</a>]</div><a name="S8x"></a><h4>S8x</h4>
+<p>Set panning position. Scream Tracker 3 supports this only on the Gravis Ultrasound.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=27" title="Edit section: SAx">edit</a>]</div><a name="SAx"></a><h4>SAx</h4>
+<p>Old stereo control. This appears in PANIC.S3M, but may have been removed since Scream Tracker 3.01 BETA. libmodplug, and in turn SchismTracker, convert these to S8x effects.
+</p><p><i>TODO: work out how SAx converts to S8x effects.</i>
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=28" title="Edit section: SBx">edit</a>]</div><a name="SBx"></a><h4>SBx</h4>
+<p>Loop pattern.
+</p><p>Unlike other trackers, <b>the loopback info (i.e. the loopback point and counter) is global</b> and not per channel.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=29" title="Edit section: SCx">edit</a>]</div><a name="SCx"></a><h4>SCx</h4>
+<p>Note cut after x ticks.
+</p>
+<ul><li>If <b>the argument is 0</b>, the effect <b>is ignored</b>.
+</li><li>When the note is cut, the volume is <b>not</b> set to 0. Instead playback is temporarily <b>frozen</b> and may be <b>resumed by a following Exx, Fxx, Gxx, Hxx, Jxx, Kxx, Lxx or Uxx command</b>.
+</li></ul>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=30" title="Edit section: SDx">edit</a>]</div><a name="SDx"></a><h4>SDx</h4>
+<p>Note delay for x ticks.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=31" title="Edit section: SEx">edit</a>]</div><a name="SEx"></a><h4>SEx</h4>
+<p>Pattern delay for x rows.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=32" title="Edit section: SFx">edit</a>]</div><a name="SFx"></a><h4>SFx</h4>
+<p>FunkRepeat. Not implemented in Scream Tracker 3.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=33" title="Edit section: Txx">edit</a>]</div><a name="Txx"></a><h3>Txx</h3>
+<p>Set tempo. If the parameter is <b>less than 33</b>, the effect is <b>ignored</b>.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=34" title="Edit section: Uxy (*)">edit</a>]</div><a name="Uxy_.28.2A.29"></a><h3>Uxy (*)</h3>
+<p>Fine vibrato. This effect <b>shares memory</b> with <b>Hxy</b>.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit&section=35" title="Edit section: Vxx">edit</a>]</div><a name="Vxx"></a><h3>Vxx</h3>
+<p>Set global volume. This effect has several quirks:
+</p>
+<ul><li>Normally, it does not affect events on the same row, where the effect is set. However, <b>there are some exceptions to that rule</b>, read below for details.
+</li><li>It does not affect past notes, that are still playing, unless <b>their volume is changed</b>, which <b>applies the new global volume to that voice</b> as well.
+</li><li>This effect <b>is actually processed on tick 1 (that is the second tick)</b> of the row. This has several consequences:
+<ul><li>The effect <b>doesn't do anything</b>, if <b>the current speed is 1</b>.
+</li><li>The effect <b>is applied to notes on the current row, that have a note delay effect</b> (SDx with x &gt;= 1). For notes on the same row <b>that have a note delay of 1 tick</b>, the effect is only applied to <b>channels, that are processed after</b> the channel with the set global volume effect. For notes on the same row that have a <b>note delay of 2 ticks or more</b>, the effect is applied <b>regardless of the relative position of the channel</b> in the processing order. <i>TODO: Document the processing order, since it isn't very obvious (I think it's L1, L2, ..., L8, R1, R2, ..., R8, but I'm not 100% sure).</i>
+</li><li>The effect <b>is also applied</b> on the same row if anything updates the note volume <b>on tick 1</b> or <b>tick 2</b> (depends on processing order), like the <b>Dxx effect</b> (when doing a non-fine slide, of course).
+</li></ul>
+</li><li>Vxx with parameter <b>values higher than 0x40</b> are <b>ignored</b>.
+</li></ul>
+
+<!-- Saved in parser cache with key melanson_wiki:pcache:idhash:2705-0!1!0!0!!en!2 and timestamp 20130216184725 -->
+<div class="printfooter">
+Retrieved from "<a href="./Scream Tracker 3 Module - MultimediaWiki_files/Scream Tracker 3 Module - MultimediaWiki.html">http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module</a>"</div>
+			<div id="catlinks"><p class="catlinks"><a href="http://wiki.multimedia.cx/index.php?title=Special:Categories&article=Scream_Tracker_3_Module" title="Special:Categories">Category</a>: <span dir="ltr"><a href="http://wiki.multimedia.cx/index.php?title=Category:Music_Pattern_Formats" title="Category:Music Pattern Formats">Music Pattern Formats</a></span></p></div>			<!-- end content -->
+			<div class="visualClear"></div>
+		</div>
+	</div>
+		</div>
+		<div id="column-one">
+	<div id="p-cactions" class="portlet">
+		<h5>Views</h5>
+		<ul>
+				 <li id="ca-nstab-main" class="selected"><a href="./Scream Tracker 3 Module - MultimediaWiki_files/Scream Tracker 3 Module - MultimediaWiki.html">Article</a></li>
+				 <li id="ca-talk" class="new"><a href="http://wiki.multimedia.cx/index.php?title=Talk:Scream_Tracker_3_Module&action=edit">Discussion</a></li>
+				 <li id="ca-edit"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=edit">Edit</a></li>
+				 <li id="ca-history"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&action=history">History</a></li>
+		</ul>
+	</div>
+	<div class="portlet" id="p-personal">
+		<h5>Personal tools</h5>
+		<div class="pBody">
+			<ul>
+				<li id="pt-login"><a href="http://wiki.multimedia.cx/index.php?title=Special:Userlogin&returnto=Scream_Tracker_3_Module">Log in / create account</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="portlet" id="p-logo">
+		<a style="background-image: url(/images/wiki.png);" href="http://wiki.multimedia.cx/index.php?title=Main_Page" title="Main Page"></a>
+	</div>
+	<script type="text/javascript"> if (window.isMSIE55) fixalpha(); </script>
+		<div class="portlet" id="p-navigation">
+		<h5>Navigation</h5>
+		<div class="pBody">
+			<ul>
+				<li id="n-mainpage"><a href="http://wiki.multimedia.cx/index.php?title=Main_Page">Main Page</a></li>
+				<li id="n-recentchanges"><a href="http://wiki.multimedia.cx/index.php?title=Special:Recentchanges">Recent changes</a></li>
+				<li id="n-Video-Codecs"><a href="http://wiki.multimedia.cx/index.php?title=Category:Video_Codecs">Video Codecs</a></li>
+				<li id="n-Video-FourCCs"><a href="http://wiki.multimedia.cx/index.php?title=Category:Video_FourCCs">Video FourCCs</a></li>
+				<li id="n-Audio-Codecs"><a href="http://wiki.multimedia.cx/index.php?title=Category:Audio_Codecs">Audio Codecs</a></li>
+				<li id="n-Container-Formats"><a href="http://wiki.multimedia.cx/index.php?title=Category:Container_Formats">Container Formats</a></li>
+				<li id="n-Game-Formats"><a href="http://wiki.multimedia.cx/index.php?title=Category:Game_Formats">Game Formats</a></li>
+				<li id="n-Subtitle-Formats"><a href="http://wiki.multimedia.cx/index.php?title=Category:Subtitle_Formats">Subtitle Formats</a></li>
+				<li id="n-Image-Formats"><a href="http://wiki.multimedia.cx/index.php?title=Category:Image_Formats">Image Formats</a></li>
+				<li id="n-All-Categories"><a href="http://wiki.multimedia.cx/index.php?title=Special:Categories">All Categories</a></li>
+				<li id="n-randompage"><a href="http://wiki.multimedia.cx/index.php?title=Special:Random">Random page</a></li>
+			</ul>
+		</div>
+	</div>
+		<div id="p-search" class="portlet">
+		<h5><label for="searchInput">Search</label></h5>
+		<div id="searchBody" class="pBody">
+			<form action="http://wiki.multimedia.cx/index.php?title=Special:Search" id="searchform"><div>
+				<input id="searchInput" name="search" type="text" accesskey="f" value="">
+				<input type="submit" name="go" class="searchButton" id="searchGoButton" value="Go">&nbsp;
+				<input type="submit" name="fulltext" class="searchButton" value="Search">
+			</div></form>
+		</div>
+	</div>
+	<div class="portlet" id="p-tb">
+		<h5>Toolbox</h5>
+		<div class="pBody">
+			<ul>
+				<li id="t-whatlinkshere"><a href="http://wiki.multimedia.cx/index.php?title=Special:Whatlinkshere/Scream_Tracker_3_Module">What links here</a></li>
+				<li id="t-recentchangeslinked"><a href="http://wiki.multimedia.cx/index.php?title=Special:Recentchangeslinked/Scream_Tracker_3_Module">Related changes</a></li>
+<li id="t-upload"><a href="http://wiki.multimedia.cx/index.php?title=Special:Upload">Upload file</a></li>
+<li id="t-specialpages"><a href="http://wiki.multimedia.cx/index.php?title=Special:Specialpages">Special pages</a></li>
+				<li id="t-print"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&printable=yes">Printable version</a></li>				<li id="t-permalink"><a href="http://wiki.multimedia.cx/index.php?title=Scream_Tracker_3_Module&oldid=14015">Permanent link</a></li>			</ul>
+		</div>
+	</div>
+		</div><!-- end of the left (by default at least) column -->
+			<div class="visualClear"></div>
+			<div id="footer">
+				<div id="f-poweredbyico"><a href="http://www.mediawiki.org/"><img src="./Scream Tracker 3 Module - MultimediaWiki_files/poweredby_mediawiki_88x31.png" alt="MediaWiki"></a></div>
+			<ul id="f-list">
+				<li id="lastmod"> This page was last modified 14:23, 26 March 2012.</li>
+				<li id="viewcount">This page has been accessed 10,363 times.</li>
+				<li id="privacy"><a href="http://wiki.multimedia.cx/index.php?title=MultimediaWiki:Privacy_policy" title="MultimediaWiki:Privacy policy">Privacy policy</a></li>
+				<li id="about"><a href="http://wiki.multimedia.cx/index.php?title=MultimediaWiki:About" title="MultimediaWiki:About">About MultimediaWiki</a></li>
+				<li id="disclaimer"><a href="http://wiki.multimedia.cx/index.php?title=MultimediaWiki:General_disclaimer" title="MultimediaWiki:General disclaimer">Disclaimers</a></li>
+			</ul>
+		</div>
+	<script type="text/javascript"> if (window.runOnloadHook) runOnloadHook();</script>
+</div>
+<!-- Served by warthog.acenet-inc.net in 0.13 secs. -->
+
+</body></html>

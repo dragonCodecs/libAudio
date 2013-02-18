@@ -1,0 +1,607 @@
+﻿
+Extension:	.DMF
+Version:	8, (4 in the 2nd part)
+Created by:	Delusion
+Tracker:	X-Tracker
+Players:	Cubic, ...
+Description by: Delusion
+Taken from:	DDMF Description v0.25,
+		FileFormats List v1.50
+Note:		Digital music format
+		1st part in german (sorry :)
+
+
+────────────────────────────────────────────────────────────────────────
+DELUSION DIGITAL MUSIC FORMAT  -  rev 0.25 (10/6/94)
+────────────────────────────────────────────────────────────────────────
+
+Beschreibung des DELUSION DIGITAL MUSIC FORMAT Fileversion 8.
+Die Dateikennung ist ".DMF".
+
+Alle früheren DDMF Versionen sind Betaformate und sollten nicht weiter
+benutzt werden, Xtracker 1.0 lädt alle Vorgänger Versionen korrekt und
+speichert sie als Version 8 ab.
+
+
+Das DDMF Format ist in folgenden Blöcke unterteilt:
+
+[DDMF] Format Kennzeichnung
+[INFO] reserviert
+[CMSG] Text Mitteilungen
+[SEQU] Sequencer, Abspielreihenfolge der Pattern
+[PATT] Patterndaten
+[INST] reserviert
+[SMPI] Defintionen der Samples.
+[SMPD] Daten der Samples. Muß hinter dem SMPI Block gespeichert sein.
+[ENDE] Endmarkierung des DDMFs
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ DDMF Header                                                          │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Fileoffset │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ ID                                         │ 4 Chars    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Filekennung ist "DDMF"                                               │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 4h         │ FILE VERSION                               │ 1 Byte     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ DDMF Fileversion, diese Beschreibung gilt nur für Version 8.         │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 5h         │ TRACKER NAME                               │ 8 Chars    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Name des benutzten Trackers.                                         │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 0dh        │ SONG NAME                                  │ 30 Chars   │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Name des Musikstückes, nicht benutzte Zeichen sollten auf 0 stehen.  │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 2bh        │ COMPOSER NAME                              │ 20 Chars   │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Name des Komponisten, nicht benutzte Zeichen sollten auf 0 stehen.   │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 3fh        │ DATE                                       │ 3 Bytes    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Erstellungsdatum: je ein Byte Tag, Monat, Jahr+1900                  │
+└──────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ CMSG Block: Mitteilungen                                             │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Blockoffs. │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ BLOCKID                                    │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Blockkennung "CMSG"                                                  │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 4h         │ BLOCKLENGTH                                │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Länge in Bytes bis zum nächsten Block.                               │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 8h         │ FILLER                                     │ 1 Byte     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ reserviert                                                           │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 9h         │ MESSAGE                                    │ Chars      │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ ASCII-Text mit einer festen Zeilenlänge von 40 Zeichen.              │
+│ Länge von MESSAGE = (BLOCKLENGTH - 1) Bytes.                         │
+└──────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ SEQU Block: Sequencer, Abspielreihenfolge der Pattern                │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Blockoffs. │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ BLOCKID                                    │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Blockkennung "SEQU"                                                  │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 4h         │ BLOCKLENGTH                                │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Länge in Bytes bis zum nächsten Block.                               │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 8h         │ SEQUENCER LOOP START                       │ 1 Word     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Sequencer Schleifenanfang                                            │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 0ah        │ SEQUENCER LOOP END                         │ 1 Word     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Sequencer Schleifenende                                              │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 0ch        │ SEQUENCER                                  │ Words      │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Liste der Patternnummern die nacheinander abgespielt werden.         │
+│ Länge von SEQUENCER = (BLOCKLENGTH - 4) Bytes                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ PATT Block: Patterndaten                                             │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Blockoffs. │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ BLOCKID                                    │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Blockkennung "PATT"                                                  │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 4h         │ BLOCKLENGTH                                │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Länge in Bytes bis zum nächsten Block.                               │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 8h         │ PATTERN ENTRIES (1-1024)                   │ 1 Word     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Anzahl der gespeicherten Pattern.                                    │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 0ah        │ MAX TRACKS (1-32)                          │ 1 Byte     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Anzahl der der maximal benutzten Tracks.                             │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 0bh        │ PATTERNS                                   │ Words      │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Folgende Struktur PATTERN ENTRIES mal wiederholt                     │
+│┌────────────┬───────────────────────────────────────────┬────────────┤
+││ Patternoff.│ Bezeichner                                │ Datentyp   │
+│├────────────┼───────────────────────────────────────────┼────────────┤
+││ 0h         │ TRACK ENTRIES (1-1024)                    │ 1 Byte     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Anzahl der gespeicherten Tracks in diesem Pattern.                  │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ 1h         │ BEAT                                      │ 1 Byte     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ BEAT = xxxxyyyy                                                     │
+││        ││││└┴┴┴─ reserviert                                         │
+││        └┴┴┴───── Notenzeilen pro Beatschlag                         │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ 2h         │ TICK ENTRIES                              │ 1 Word     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Anzahl der gespeicherten Notenzeilen in diesem Pattern              │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ 4h         │ PATTERNLENGTH                             │ 1 Dword    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Länge der Patterndata, Bytes bis zum nächsten Pattern.              │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ 6h         │ PATTERDATA                                │ Bytes      │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Der Patterndatenstrom ist folgendermassen codiert:                  │
+││                                                                     │
+││ Folgende Struktur TICK ENTRIES mal wiederholt                       │
+││┌────────────────────────────────────────────────────────────────────┤
+│││ <GLOBAL TRACK> (<TRACK> * TRACK ENTRIES)                           │
+││├────────────────────────────────────────────────────────────────────┤
+│││ GLOBAL TRACK                                                       │
+│││                                                                    │
+│││  INFO          1 Byte                                              │
+│││  (COUNTER)     1 Byte                                              │
+│││  (DATA)        1 Byte                                              │
+│││                                                                    │
+│││  INFO = xxxxxxxx                                                   │
+│││         ││││││││                                                   │
+│││         ││└┴┴┴┴┴─ Global Track Ereigniss                           │
+│││         │└─────── reserviert                                       │
+│││         └──────── Pack                                             │
+│││                                                                    │
+│││  Falls Pack=1 ist das nächst gelesene Byte COUNTER.                │
+│││  COUNTER ist ein Zähler der jede Notenzeile herunter gezählt wird, │
+│││  es sind keine GLOBAL Track Informationen gespeichert bis COUNTER  │
+│││  wieder auf 0 steht. COUNTER wird bei einem Patternwechsel auf 0   │
+│││  gesetzt. Ist Pack=0 so ist kein COUNTER gespeichert und für       │
+│││  COUNTER gilt der Wert 0, d.h. im nächsten Tick ist wieder ein     │
+│││  GLOBAL TRACK gespeichert.                                         │
+│││                                                                    │
+│││  Falls Global Track Ereigniss > 0 ist folgt ein weiters Byte DATA, │
+│││  das die Effektdaten für den zugehörige Ereigniss liefert. Ist das │
+│││  Global Track Ereigniss = 0 ist DATA nicht gespeichert.            │
+│││                                                                    │
+│││  Definition der Global Track Ereignisse siehe DMF_EFF.TXT          │
+│││                                                                    │
+││├────────────────────────────────────────────────────────────────────┤
+│││ TRACK                                                              │
+│││ ──────                                                             │
+│││                                                                    │
+│││  INFO                 1 Byte                                       │
+│││  (COUNTER)            1 Byte                                       │
+│││  (INSTRUMENT)         1 Byte                                       │
+│││  (NOTE)               1 Byte                                       │
+│││  (VOLUME)             1 Byte                                       │
+│││  (INSTRUMENT EFFECT)  2 Bytes                                      │
+│││  (NOTE EFFECT)        2 Bytes                                      │
+│││  (VOLUME EFFECT)      2 Bytes                                      │
+│││                                                                    │
+│││                                                                    │
+│││  INFO                                                              │
+│││  ─────                                                             │
+│││                                                                    │
+│││  INFO = xxxxxxxx                                                   │
+│││         ││││││││                                                   │
+│││         │││││││x reserviert                                        │
+│││         ││││││1=VOLUME EFFECT gespeichert / 0=nicht gespeichert    │
+│││         │││││1=NOTE EFFECT gespeichert / 0 ...                     │
+│││         ││││1=INSTRUMENT EFFECT gespeichert / 0 ...                │
+│││         │││1=VOLUME gespeichert / 0 ...                            │
+│││         ││1=NOTE gespeichert / 0 ...                               │
+│││         │1=INSTRUMENT gespeichert / 0 ...                          │
+│││         1=COUNTER gespeichert / 0 ...                              │
+│││                                                                    │
+│││  Folgende Werte sind also nur gespeichert wenn die entsprechenden  │
+│││  Bits in INFO gesetzt sind, wenn nicht bedeuted das keine Änderung │
+│││  des entsprechenden Parameters.                                    │
+│││                                                                    │
+│││                                                                    │
+│││  COUNTER                                                           │
+│││  ────────                                                          │
+│││                                                                    │
+│││  COUNTER ist ein Zähler der jeden Tick herunter gezählt wird, es   │
+│││  sind keine Informationen für diesen Track gespeichert bis COUNTER │
+│││  wieder auf 0 steht. COUNTER wird bei einem Patternwechsel auf 0   │
+│││  gesetzt. Ist COUNTER nicht gespeichert so gilt für COUNTER der    │
+│││  Wert 0, d.h. für die nächsten Notenzeilen sind wieder Daten für   │
+│││  diesen Track gespeichert.                                         │
+│││                                                                    │
+│││                                                                    │
+│││  INSTRUMENT                                                        │
+│││  ───────────                                                       │
+│││                                                                    │
+│││  Die Samplenummer des Samples das Angeschlagen wird.               │
+│││                                                                    │
+│││                                                                    │
+│││  NOTE                                                              │
+│││  ─────                                                             │
+│││                                                                    │
+│││   0       = Keine Änderung                                         │
+│││   1-108   = Note in Halbtonschritten,  C0=1 bis H8=108.            │
+│││             Dies entspricht einer Midi Note mit 1 addiert.         │
+│││   109-128 = Nicht definiert                                        │
+│││   129-236 = Die Note wird in den Notenpuffer gespeichert und nicht │
+│││             gespielt, eine spielende Note wird nicht verändert.    │
+│││             Das MSBit wird gelöscht die Noten entsprechen dann den │
+│││             Noten 1-108.                                           │
+│││             Der Notenpuffer wird als 2 Parameter für Noten-Effekte │
+│││             verwendet z.B. für Note Portamentos, wo die Effekt-    │
+│││             daten schon für den Steigungsgrad vergeben sind.       │
+│││                                                                    │
+│││   237-254 = Nicht definiert                                        │
+│││   255     = Note Off, setzt die Notenfrequenz auf 0 hz             │
+│││                                                                    │
+│││                                                                    │
+│││  VOLUME                                                            │
+│││  ───────                                                           │
+│││                                                                    │
+│││   0     = Nicht definiert                                          │
+│││   1-255 = Neue Lautstärke des Tracks, lineare Skalierung           │
+│││                                                                    │
+│││                                                                    │
+│││  INSTRUMENT EFFECT                                                 │
+│││  ──────────────────                                                │
+│││                                                                    │
+│││   1.Byte: Instrument Effekt Nr.                                    │
+│││   2.Byte: Instrument Effekt Daten                                  │
+│││                                                                    │
+│││                                                                    │
+│││  NOTE EFFECT                                                       │
+│││  ────────────                                                      │
+│││                                                                    │
+│││   1.Byte: Noten Effekt Nr.                                         │
+│││   2.Byte: Noten Effekt Daten                                       │
+│││                                                                    │
+│││                                                                    │
+│││  VOLUME EFFECT                                                     │
+│││  ──────────────                                                    │
+│││                                                                    │
+│││   1.Byte: Volume Effekt Nr.                                        │
+│││   2.Byte: Volume Effekt Daten                                      │
+│││                                                                    │
+│││                                                                    │
+│││  Definition der Volume,Noten,Instrument Effekte in DMF_EFF.TXT     │
+│││                                                                    │
+││└────────────────────────────────────────────────────────────────────┤
+│└─────────────────────────────────────────────────────────────────────┤
+└──────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ SMPI Block: Sample Defintionen                                       │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Blockoffs. │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ BLOCKID                                    │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Blockkennung "SMPI"                                                  │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 4h         │ BLOCKLENGTH                                │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Länge in Bytes bis zum nächsten Block.                               │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 8h         │ SAMPLE ENTRIES (1-255)                     │ 1 Word     │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│  Anzahl der gespeicherten Samples, maximal 255.                      │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 6h         │ SAMPLES                                    │ Bytes      │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Folgende Struktur SAMPLE ENTRIES mal wiederholt                      │
+│┌────────────┬───────────────────────────────────────────┬────────────┤
+││ Sampleoff. │ Bezeichner                                │ Datentyp   │
+│├────────────┼───────────────────────────────────────────┼────────────┤
+││ 0h         │ Y = NAME LENGTH (0-30)                    │ 1 Byte     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Länge des Samplenamens, die Länge des ist auf maximal 30 Zeichen    │
+││ beschränkt.                                                         │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ 1h         │ SAMPLE NAME                               │ X Chars    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Name des Samples in ASCII Zeichen. Länge des Namens ist NAME LENGTH │
+││ Zeichen.                                                            │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 1h     │ SAMPLE LENGTH                             │ 1 Dword    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Länge des Samples in Bytes.                                         │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 5h     │ SAMPLE LOOP START                         │ 1 Dword    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Sample Schleifen Start Position.                                    │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 9h     │ SAMPLE LOOP END                           │ 1 Dword    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Sample Schleifen End Position.                                      │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 0dh    │ C3 FREQUENCY                              │ 1 Word     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Frequenz, in Hz, mit der das Sample bei der Note C-3 gespielt wird. │
+││ Das Sample kann dadurch beliebig gestimmt werden. Gültiger Bereich  │
+││ für C3 FREQUENCY ist 1000-45000 Hz.                                 │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 0fh    │ VOLUME                                    │ 1 Byte     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Samplelautstärke.                                                   │
+││                                                                     │
+││ VOLUME = 0 kein Auswirkung                                          │
+││          1-255 Lautstärke, linearer Skalierung                      │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 10h    │ TYPE                                      │ 1 Byte     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││                                                                     │
+││ TYPE = xxxxxxx0   = kein Schleife                                   │
+││        xxxxxxx1   = Sample wird mit einer Schleife gespielt, das    │
+││                     Sample spielt vom Start bis SAMPLE LOOP END und │
+││                     wiederholt danach den Bereich von SAMPLE LOOP   │
+││                     START bis SAMPLE LOOP END.                      │
+││        xxxxxx0x   = 8BIT Sample                                     │
+││        xxxxxx1x   = 16BIT Sample                                    │
+││        xxxxXXxx   = Kompremierungsverfahren                         │
+││        xxxx00xx   = Unkompremiert vorzeichenbehaftet                │
+││        xxxx01xx   = Kompremierungs Typ0                             │
+││        xxxx10xx   = (Kompremierungs Typ1)                           │
+││        xxxx11xx   = (Kompremierungs Typ2)                           │
+││        xXXXxxxx   = nicht Definiert                                 │
+││        0xxxxxxx   = --> Die Sampledaten sind im SMPD Block des DMFs │
+││                     gespeichert.                                    │
+││        1xxxxxxx   = --> Die Sampledaten sind in einer Biblothek     │
+││                     gespeichert.                                    │
+││                                                                     │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 11h    │ LIBRARY NAME                              │ 8 Byte     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Biblotheks Kennzeichnung unter der das Sample zu finden ist.        │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 19h    │ FILLER                                    │ 1 Word     │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ reserviert                                                          │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ Y + 1bh    │ ID CRC32                                  │ 1 DWord    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Prüfsumme der Sampledaten.                                          │
+│└─────────────────────────────────────────────────────────────────────┤
+└──────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ SMPD Block: Sample Daten                                             │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Blockoffs. │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ BLOCKID                                    │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Blockkennung "SMPD"                                                  │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 4h         │ BLOCKLENGTH                                │ 1 Dword    │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Länge in Bytes bis zum nächsten Block.                               │
+├────────────┬────────────────────────────────────────────┬────────────┤
+│ 8h         │ SAMPLE DATA                                │ Bytes      │
+├────────────┴────────────────────────────────────────────┴────────────┤
+│ Folgende Struktur SAMPLE ENTRIES (SMPI) wiederholt                   │
+│┌────────────┬───────────────────────────────────────────┬────────────┤
+││ Sampleoff. │ Bezeichner                                │ Datentyp   │
+│├────────────┼───────────────────────────────────────────┼────────────┤
+││ 0h         │ SAMPLE DATA LENGTH                        │ 1 Dword    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Länge des Sampledatenstroms. Bei kompremierten Samples die Länge    │
+││ des Samplepackstroms. Bei einem Sample das in einer Biblothek       │
+││ gespeichert ist steht SAMPLE DATA LENGTH auf 0.                     │
+│├────────────┬───────────────────────────────────────────┬────────────┤
+││ 4h         │ SAMPLE DATA STREAM                        │ X Bytes    │
+│├────────────┴───────────────────────────────────────────┴────────────┤
+││ Sampledatenstrom.                                                   │
+│└─────────────────────────────────────────────────────────────────────┤
+└──────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ ENDE Block: End-Markierung des DDMFs                                 │
+╞════════════╤════════════════════════════════════════════╤════════════╡
+│ Blockoffs. │ Bezeichner                                 │ Datentyp   │
+├────────────┼────────────────────────────────────────────┼────────────┤
+│ 0h         │ "ENDE"                                     │ 1 Dword    │
+└────────────┴────────────────────────────────────────────┴────────────┘
+
+-------------------------------------------------------------------------------
+
+The Digital Music Files are high quality MOD style files with up to
+32 channels/1024 beats per track. The X-Tracker by the demo group
+D-Lusion produces this format. In general, the format is well organised
+due to the ID/Blocklength structure wich makes downward compatibility to
+older version files easy, but the Version 4 (current version) of the file
+format, produced by X-Tracker 0.30ß still requires some manual scanning for
+the next ID which I regard as not so nice. Version 5 of the format has the
+[SEQU] block length fixed, but the [SMPD] block has the length 0.
+
+The file consists of several blocks, each with a 4 char (dwordint) ID tag
+and a length of the record data. The main file header looks as follows :
+OFFSET              Count TYPE   Description
+0000h                   4 char   ID='DDMF'
+0004h                   1 byte   Version id.
+                                 4 -> XTracker 0.30ß
+0005h                   8 char   Tracker name, e.g. 'XTRACKER', 'HACKTRAK' :-)
+000Dh                  30 char   Song name (ASCIIZ?)
+002Bh                  20 char   Name of composer (ASCIIZ?)
+0049h                   1 byte   Day of creation
+004Ah                   1 byte   Month of creation
+004Bh                   1 byte   Year of creation
+
+The other headers have the standard skip record format, in this section
+named DMFblock. The offsets start _after_ this header record :
+OFFSET              Count TYPE   Description
+0000h                   4 char   Record tag (see below)
+0004h                   1 dword  Size of data bedwording to this tag
+
+DMFblock [INFO]
+  Contains some message in ASCII. Length of the message is the size of
+  the record.
+
+DMFblock [CMSG]
+  Contains the message the composer wants to bring to us. After the ID
+  record, another fill byte preceeds the real message !
+OFFSET              Count TYPE   Description
+0000h                   1 byte   Junk byte
+0001h                   ? char   Composer message
+
+DMFblock [SEQU]
+  Contains the information necessary for sequencing the different tracks.
+OFFSET              Count TYPE   Description
+0000h                   1 word   Song loop start
+0002h                   1 word   Song loop end
+0004h                   ? word   Sequencer data
+
+DMFblock [PATT]
+  This block contains the information about the different patterns and tracks.
+0000h                   1 word   Maximum pattern (=Songlength)
+                                 ="MPT"
+0004h                   1 byte   Number of channels of this song (<= 16)
+0005h               "MPT" rec    Pattern data.
+                        1 byte   Track entries. (<=32)
+                                 ="TET"
+                                 How many tracks this pattern has.
+                                 XTracker allows a different number of
+                                 tracks for each pattern.
+                        1 byte   Beat information
+                                 High nibble : Ticks per beat
+                                 Low nibble  : Beats per measure
+                        1 word   Maximum number of ticks (<=512)
+                        1 dword  Number of bytes to skip for the
+                                 next pattern information.
+                        ? rec    Track data stream
+                        1 byte   Global track effect
+                        1 byte   Global track data (only if global
+                                 effect >0 !!!)
+                    "TET" rec
+                        1 byte   Information byte, bitmapped
+                                 For each bit set in the info byte, one
+                                 or two data byte(s) follow. This info byte
+                                 must not always be there, see below. For
+                                 effects, 2 bytes follow.
+                                 0 - reserved
+                                 1 - Volume effect
+                                 2 - Note effect
+                                 3 - Instrument effect
+                                 4 - Volume set
+                                 5 - Note set
+                                 6 - Instrument set
+                                 7 - Counter to next information byte.
+                                     Not set means, that next info byte
+                                     follows in 1 tick, unit is in
+                                     ticks.
+                                 The maximum number of effects is 3 at a time,
+                                 the maxximum size of a track information is
+                                 11 bytes (with info=0FEh).
+                        ? rec   Effect bytes
+                        1 byte  Effect number
+                        1 byte  Effect data
+                        ? byte  Set data
+** Here follows the pattern data, but it's too late today **
+
+DMFblock [INST]
+  This block contains the information about the instrument data.
+  If this block does not exists, then the instrument numbers in the patterns
+  point directly to the samples in the [SMPI] block.
+OFFSET              Count TYPE   Description
+0000h                   1 byte   Number of instruments
+0001h                   ? rec    Instrument information block
+                       30 char   The name of the instrument
+                        1 byte   Instrument type, bitmapped
+                                 0 - Instrument type
+                                 1 - Instrument type
+                                   00 - Sample in [SMPI] block
+                                   01 - MIDI device
+                                   10 - FM instrument
+                                   11 - reserved
+                                 2 - valid attack envelope
+                                 3 - sustain on
+                                 4 - reserved
+                                 5 - reserved
+                                 6 - reserved
+                                 7 - reserved
+                        1 byte   Range entries
+                                 ="REN"
+                                 Like the GF1 patterns, an instrument can
+                                 consist of several samples.
+                    "REN" rec    Range definition
+                        1 byte   Sample to be played in this range
+                        1 byte   Length of this range in half tone steps up
+                        6 byte   Not yet defined 6-point envelope
+
+DMFblock [SMPI]
+This block contains the information about the samples stored in the file.
+OFFSET              Count TYPE   Description
+0000h                   1 byte   Number of samples (<= 250)
+                                 ="NUM"
+                    "NUM" rec    Sample record
+                        1 byte   Length of sample name
+                        ? char   Name of the sample
+                        1 dword  Length of sample in bytes
+                        1 dword  Start of sample loop
+                        1 dword  End of sample loop
+                        1 word   Frequency used for C-3
+                        1 byte   Volume for sample
+                                 0 - Don't change current volume
+                                 otherwise volume (linear scale)
+                        1 byte   Sample type, bitmapped
+                                   0 - not looped/looped
+                                   1 - 8/16-bit sample
+                                     (16-bit not supported with X-Tracker v0.30)
+                                 2,3 - Pack type :
+                                   00 - unpacked, signed sample
+                                   01 - pack type 0
+                                   10 - pack type 1
+                                   11 - pack type 2
+                                 4-6 - reserved, set to zero
+                                   7 - Sample stored in dmf/bib
+                        1 word   reserved, set to zero
+                        1 dword  crc32 of sample to identify samples
+                                 in BIB.
+
+DMFblock [SMPD]
+This block contains the sample data (raw or packed, see [SMPI] block) in the
+following format :
+<SampleLength> <SampleData> <SampleLength> <SampleData> etc.
+OFFSET              Count TYPE   Description
+0000h                   1 dword  Length of the following sample
+                        ? byte   Sample data (might be packed)
+
+DMFBlock [ENDE]
+This block serves as a end of file marker and can be used for validation.
+Note that the four ID characters are _not_ followed by a length dword ! Each DMF
+file simply ends with the four characters 'ENDE'.
+
