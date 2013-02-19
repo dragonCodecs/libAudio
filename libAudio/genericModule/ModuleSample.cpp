@@ -163,7 +163,8 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 
 ModuleSampleNative::~ModuleSampleNative()
 {
-	delete Name;
+	delete [] Name;
+	delete [] FileName;
 }
 
 uint32_t ModuleSampleNative::GetLength()
