@@ -394,4 +394,9 @@ inline uint32_t Swap32(uint32_t i)
 		((i & 0xFF00) << 8) | ((i & 0xFF) << 24);
 }
 
+inline uint16_t Swap16(uint16_t i)
+{
+	return ((i >> 8) & 0xFF) | ((i & 0xFF) << 8);
+}
+
 #endif /*__GenericModule_H__*/

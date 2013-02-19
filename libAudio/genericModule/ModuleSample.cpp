@@ -2,8 +2,6 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-#define BE2LE(var) (uint32_t)((((uint16_t)(var & 0xFF)) << 8) | (var >> 8))
-
 ModuleSample::ModuleSample(uint32_t id, uint8_t type) : Type(type), ID(id)
 {
 }
@@ -48,13 +46,13 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 		Name[22] = 0;
 
 	fread(&Short, 2, 1, f_MOD);
-	Length = BE2LE(Short) * 2;
+	Length = Swap16(Short) * 2;
 	fread(&FineTune, 1, 1, f_MOD);
 	fread(&Volume, 1, 1, f_MOD);
 	fread(&Short, 2, 1, f_MOD);
-	LoopStart = BE2LE(Short) * 2;
+	LoopStart = Swap16(Short) * 2;
 	fread(&Short, 2, 1, f_MOD);
-	LoopEnd = BE2LE(Short) * 2;
+	LoopEnd = Swap16(Short) * 2;
 	if (Volume > 64)
 		Volume = 64;
 	FineTune &= 0x0F;
