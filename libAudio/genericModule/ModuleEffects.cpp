@@ -136,6 +136,8 @@ void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_TONEPORTAVOL;
 			Param = param;
 			break;
+		default:
+			Effect = CMD_NONE;
 	}
 }
 
@@ -204,6 +206,8 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_PANBRELLO;
 			Param = param;
 			break;
+		default:
+			Effect = CMD_NONE;
 	}
 }
 
