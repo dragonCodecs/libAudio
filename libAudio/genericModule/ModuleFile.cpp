@@ -170,6 +170,10 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL
 	BlockLen = Swap32(BlockLen);
 	if (strncmp(StrMagic, "WAVE", 4) != 0 || BlockLen != SampleLengths)
 		throw new ModuleLoaderError(E_BAD_AON);
+
+	AONLoadPCM(f_AON);
+	MinPeriod = 56;
+	MaxPeriod = 7040;
 }
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
@@ -310,6 +314,23 @@ void ModuleFile::STMLoadPCM(FILE *f_STM)
 			p_PCM[i] = new uint8_t[Length];
 			fread(p_PCM[i], Length, 1, f_STM);
 			fseek(f_STM, Length % 16, SEEK_CUR);
+		}
+		else
+			p_PCM[i] = NULL;
+	}
+}
+
+void ModuleFile::AONLoadPCM(FILE *f_AON)
+{
+	uint32_t i;
+	p_PCM = new uint8_t *[64];
+	for (i = 0; i < 64; i++)
+	{
+		uint32_t Length = p_Samples[i]->GetLength();
+		if (Length != 0)
+		{
+			p_PCM[i] = new uint8_t[Length];
+			fread(p_PCM[i], Length, 1, f_AON);
 		}
 		else
 			p_PCM[i] = NULL;

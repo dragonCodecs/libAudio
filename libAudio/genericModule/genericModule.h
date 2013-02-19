@@ -373,6 +373,7 @@ private:
 	void MODLoadPCM(FILE *f_MOD);
 	void S3MLoadPCM(FILE *f_S3M);
 	void STMLoadPCM(FILE *f_STM);
+	void AONLoadPCM(FILE *f_AON);
 	void DeinitMixer();
 
 public:
