@@ -2,12 +2,6 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-inline uint32_t Swap32(uint32_t i)
-{
-	return ((i >> 24) & 0xFF) | ((i >> 8) & 0xFF00) |
-		((i & 0xFF00) << 8) | ((i & 0xFF) << 24);
-}
-
 ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 {
 	char MODMagic[4];

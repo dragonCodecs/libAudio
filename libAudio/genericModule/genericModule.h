@@ -382,4 +382,10 @@ public:
 	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 };
 
+inline uint32_t Swap32(uint32_t i)
+{
+	return ((i >> 24) & 0xFF) | ((i >> 8) & 0xFF00) |
+		((i & 0xFF00) << 8) | ((i & 0xFF) << 24);
+}
+
 #endif /*__GenericModule_H__*/
