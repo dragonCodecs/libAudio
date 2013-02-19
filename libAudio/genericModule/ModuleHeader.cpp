@@ -261,7 +261,14 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	fread(&BlockLen, 4, 1, f_AON);
 	if (strncmp(StrMagic, "ARPG", 4) != 0 || BlockLen != Swap32(64))
 		throw new ModuleLoaderError(E_BAD_AON);
-	fseek(f_AON, 64, SEEK_CUR);
+	for (i = 0; i < 16; i++)
+	{
+		for (int j = 0; j < 4; j++)
+			fread(&ArpTable[i][j], 1, 1, f_AON);
+	}
+	if (ArpTable[0][0] != 0 || ArpTable[0][1] != 0 ||
+		ArpTable[0][2] != 0 || ArpTable[0][3] != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
 
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&BlockLen, 4, 1, f_AON);

@@ -90,6 +90,7 @@ private:
 	// AON
 	char *Author;
 	char *Remark;
+	char ArpTable[16][4];
 
 #ifdef __FC1x_EXPERIMENTAL__
 	// FC1x
