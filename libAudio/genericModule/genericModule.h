@@ -133,6 +133,7 @@ public:
 	static ModuleSample *LoadSample(MOD_Intern *p_MF, uint32_t i);
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
+	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name);
 
 	virtual ~ModuleSample();
 	uint8_t GetType();
@@ -167,6 +168,7 @@ public:
 	ModuleSampleNative(MOD_Intern *p_MF, uint32_t i);
 	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
 	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
+	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name);
 	~ModuleSampleNative();
 
 	uint32_t GetLength();

@@ -110,10 +110,12 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 	MaxPeriod = 32767;
 }
 
+// http://www.tigernt.com/onlineDoc/68000.pdf
+// http://eab.abime.net/showthread.php?t=21516
 ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL), MixerChannels(NULL)
 {
 	char StrMagic[4];
-	uint32_t BlockLen, i;
+	uint32_t BlockLen, i, SampleLengths;
 	uint8_t ChannelMul;
 	FILE *f_AON = p_AF->f_AON;
 
@@ -156,6 +158,18 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL
 	if (strncmp(StrMagic, "WLEN", 4) != 0 || BlockLen != 0x0100)
 		throw new ModuleLoaderError(E_BAD_AON);
 	p_Header->nSamples = BlockLen >> 2;
+	p_Samples = new ModuleSample *[64];
+	for (i = 0, SampleLengths = 0; i < 64; i++)
+	{
+		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, NULL);
+		SampleLengths += p_Samples[i]->GetLength();
+	}
+
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&BlockLen, 4, 1, f_AON);
+	BlockLen = Swap32(BlockLen);
+	if (strncmp(StrMagic, "WAVE", 4) != 0 || BlockLen != SampleLengths)
+		throw new ModuleLoaderError(E_BAD_AON);
 }
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)

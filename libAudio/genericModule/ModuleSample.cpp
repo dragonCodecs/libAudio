@@ -30,6 +30,11 @@ ModuleSample *ModuleSample::LoadSample(STM_Intern *p_SF, uint32_t i)
 	return new ModuleSampleNative(p_SF, i);
 }
 
+ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name)
+{
+	return new ModuleSampleNative(p_AF, i, Name);
+}
+
 uint8_t ModuleSample::GetType()
 {
 	return Type;
@@ -159,6 +164,15 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	Packing = Flags = 0;
 	Name = NULL;
 	FineTune = 0;
+}
+
+ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name) : ModuleSample(i, 1)
+{
+	FILE *f_AON = p_AF->f_AON;
+
+	Name = name;
+	fread(&Length, 4, 1, f_AON);
+	Length = Swap32(Length);
 }
 
 ModuleSampleNative::~ModuleSampleNative()
