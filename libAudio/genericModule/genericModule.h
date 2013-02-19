@@ -61,6 +61,7 @@ private:
 	char *Name;
 	uint16_t nOrders;
 	uint16_t nSamples;
+	uint16_t nInstruments;
 	uint16_t nPatterns;
 	uint8_t *Orders;
 

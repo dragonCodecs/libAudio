@@ -132,6 +132,30 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(p_AF, p_Header->nChannels);
+
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&BlockLen, 4, 1, f_AON);
+	BlockLen = Swap32(BlockLen);
+	if (strncmp(StrMagic, "INST", 4) != 0 || (BlockLen % 32) != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
+	p_Header->nInstruments = BlockLen >> 5;
+	// TODO: Write instrument stuff up for main mixer to allow this to work
+	fseek(f_AON, BlockLen, SEEK_CUR);
+
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&BlockLen, 4, 1, f_AON);
+	BlockLen = Swap32(BlockLen);
+	if (strncmp(StrMagic, "INAM", 4) == 0)
+	{
+		// We don't care about the instrument names, so skip over them.
+		fseek(f_AON, BlockLen, SEEK_CUR);
+		fread(StrMagic, 4, 1, f_AON);
+		fread(&BlockLen, 4, 1, f_AON);
+		BlockLen = Swap32(BlockLen);
+	}
+	if (strncmp(StrMagic, "WLEN", 4) != 0 || BlockLen != 0x0100)
+		throw new ModuleLoaderError(E_BAD_AON);
+	p_Header->nSamples = BlockLen >> 2;
 }
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
