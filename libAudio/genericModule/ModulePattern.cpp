@@ -143,6 +143,7 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels)
 			ArpIndex |= (Effect >> 4) & 0x0C;
 			Commands[channel][row].SetAONArpIndex(ArpIndex);
 			fread(&Param, 1, 1, f_AON);
+			Commands[channel][row].SetAONEffect(Effect & 0x3F, Param);
 		}
 	}
 }

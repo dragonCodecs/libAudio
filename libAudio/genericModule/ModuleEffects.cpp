@@ -207,3 +207,72 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 	}
 }
 
+void ModuleCommand::SetAONEffect(uint8_t effect, uint8_t param)
+{
+	// Effect 8 is unused, 0 is CMD_NONE
+	// and all the standard MOD effect IDs
+	// map as in MOD otherwise
+	if (effect >= 1 && effect != 8 && effect <= 15)
+	{
+		TranslateMODEffect(effect, param);
+		return;
+	}
+	switch (effect)
+	{
+		// TODO: Look up what these translate to and how they work
+		// from the code at line 28906 in aon.8free.S
+		// AON_DOFX
+		// aon_fxcom
+		// aon_fxdat
+		/*case 16:
+			Effect = CMD_
+			break;
+		case 17:
+			Effect = CMD_
+			break;
+		case 18:
+			Effect = CMD_
+			break;
+		case 19:
+			Effect = CMD_
+			break;
+		case 20:
+			Effect = CMD_
+			break;
+		case 21:
+			Effect = CMD_
+			break;
+		case 22:
+			Effect = CMD_
+			break;
+		case 23:
+			Effect = CMD_
+			break;
+		case 24:
+			Effect = CMD_
+			break;
+		case 25:
+			Effect = CMD_
+			break;
+		case 26:
+			Effect = CMD_
+			break;
+		case 27:
+			Effect = CMD_
+			break;
+		case 28:
+			Effect = CMD_
+			break;
+		case 29:
+			Effect = CMD_
+			break;
+		case 30:
+			Effect = CMD_
+			break;
+		case 33:
+			Effect = CMD_
+			break;*/
+		default:
+			Effect = CMD_NONE;
+	}
+}
