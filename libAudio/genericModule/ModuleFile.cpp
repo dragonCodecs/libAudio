@@ -118,6 +118,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL
 	FILE *f_AON = p_AF->f_AON;
 
 	p_Header = new ModuleHeader(p_AF);
+
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&BlockLen, 4, 1, f_AON);
 	BlockLen = Swap32(BlockLen);
@@ -130,7 +131,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL
 	p_Header->nPatterns = BlockLen >> ChannelMul;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(p_AF, p_Header->nChannels, 1 << ChannelMul);
+		p_Patterns[i] = new ModulePattern(p_AF, p_Header->nChannels);
 }
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)

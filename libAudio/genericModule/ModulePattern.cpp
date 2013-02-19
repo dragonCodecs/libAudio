@@ -119,17 +119,30 @@ ModulePattern::ModulePattern(STM_Intern *p_SF)
 	}
 }
 
-ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels, uint32_t Length)
+ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels)
 {
 	uint8_t row, channel;
+	uint32_t read = 0;
 	FILE *f_AON = p_AF->f_AON;
 
 	Commands = new ModuleCommand[Channels][64];
 	for (row = 0; row < 64; row++)
 	{
-		for (channel = 0; channel < Channels; channel++)
+		for (channel = 0; channel < Channels; channel++, read +=4)
 		{
-			f_AON;
+			uint8_t Note, Samp;
+			uint8_t Effect, Param;
+			uint8_t ArpIndex = 0;
+
+			fread(&Note, 1, 1, f_AON);
+			Commands[channel][row].SetAONNote(Note);
+			fread(&Samp, 1, 1, f_AON);
+			ArpIndex |= (Samp >> 6) & 0x03;
+			Commands[channel][row].SetSample(Samp & 0x3F);
+			fread(&Effect, 1, 1, f_AON);
+			ArpIndex |= (Effect >> 4) & 0x0C;
+			Commands[channel][row].SetAONArpIndex(ArpIndex);
+			fread(&Param, 1, 1, f_AON);
 		}
 	}
 }
@@ -241,4 +254,14 @@ void ModuleCommand::SetSTMNote(uint8_t note)
 		Pitch %= 12;
 		Note = (Octave * 12) + Pitch + 37;
 	}
+}
+
+void ModuleCommand::SetAONNote(uint8_t note)
+{
+	Note = note;
+}
+
+void ModuleCommand::SetAONArpIndex(uint8_t Index)
+{
+	ArpIndex = Index;
 }

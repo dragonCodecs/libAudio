@@ -220,6 +220,7 @@ private:
 	uint8_t VolParam;
 	uint8_t Effect;
 	uint8_t Param;
+	uint8_t ArpIndex;
 
 	inline uint8_t MODPeriodToNoteIndex(uint16_t Period);
 	void TranslateMODEffect(uint8_t Effect, uint8_t Param);
@@ -235,6 +236,9 @@ public:
 	void SetS3MEffect(uint8_t Effect, uint8_t Param);
 	void SetSTMNote(uint8_t Note);
 	void SetSTMEffect(uint8_t Effect, uint8_t Param);
+	void SetAONNote(uint8_t Note);
+	void SetAONArpIndex(uint8_t Index);
+	void SetAONEffect(uint8_t Effect, uint8_t Param);
 };
 
 class ModulePattern : public ModuleAllocator
@@ -246,7 +250,7 @@ public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);
 	ModulePattern(S3M_Intern *p_SF, uint32_t nChannels);
 	ModulePattern(STM_Intern *p_SF);
-	ModulePattern(AON_Intern *p_AF, uint32_t nChannels, uint32_t Length);
+	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
 	~ModulePattern();
 
 	ModuleCommand **GetCommands();
