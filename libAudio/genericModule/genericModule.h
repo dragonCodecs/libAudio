@@ -245,6 +245,7 @@ public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);
 	ModulePattern(S3M_Intern *p_SF, uint32_t nChannels);
 	ModulePattern(STM_Intern *p_SF);
+	ModulePattern(AON_Intern *p_AF, uint32_t nChannels, uint32_t Length);
 	~ModulePattern();
 
 	ModuleCommand **GetCommands();

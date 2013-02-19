@@ -119,6 +119,21 @@ ModulePattern::ModulePattern(STM_Intern *p_SF)
 	}
 }
 
+ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels, uint32_t Length)
+{
+	uint8_t row, channel;
+	FILE *f_AON = p_AF->f_AON;
+
+	Commands = new ModuleCommand[Channels][64];
+	for (row = 0; row < 64; row++)
+	{
+		for (channel = 0; channel < Channels; channel++)
+		{
+			f_AON;
+		}
+	}
+}
+
 ModulePattern::~ModulePattern()
 {
 	delete [] Commands;

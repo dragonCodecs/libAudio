@@ -112,7 +112,25 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 
 ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL), MixerChannels(NULL)
 {
+	char StrMagic[4];
+	uint32_t BlockLen, i;
+	uint8_t ChannelMul;
+	FILE *f_AON = p_AF->f_AON;
+
 	p_Header = new ModuleHeader(p_AF);
+	fread(StrMagic, 4, 1, f_AON);
+	fread(&BlockLen, 4, 1, f_AON);
+	BlockLen = Swap32(BlockLen);
+	// 2 if 8 voices, 1 otherwise
+	ChannelMul = p_Header->nChannels >> 2;
+	// Transform that into a shift value to get the number of patterns
+	ChannelMul += 9;
+	if (strncmp(StrMagic, "PATT", 4) != 0 || (BlockLen % (1 << ChannelMul)) != 0)
+		throw new ModuleLoaderError(E_BAD_AON);
+	p_Header->nPatterns = BlockLen >> ChannelMul;
+	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	for (i = 0; i < p_Header->nPatterns; i++)
+		p_Patterns[i] = new ModulePattern(p_AF, p_Header->nChannels, 1 << ChannelMul);
 }
 
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
