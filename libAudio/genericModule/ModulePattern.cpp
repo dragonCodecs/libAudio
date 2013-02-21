@@ -122,13 +122,12 @@ ModulePattern::ModulePattern(STM_Intern *p_SF)
 ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels)
 {
 	uint8_t row, channel;
-	uint32_t read = 0;
 	FILE *f_AON = p_AF->f_AON;
 
 	Commands = new ModuleCommand[Channels][64];
 	for (row = 0; row < 64; row++)
 	{
-		for (channel = 0; channel < Channels; channel++, read +=4)
+		for (channel = 0; channel < Channels; channel++)
 		{
 			uint8_t Note, Samp;
 			uint8_t Effect, Param;
