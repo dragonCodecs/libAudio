@@ -13,7 +13,7 @@
  * @file saveM4A.cpp
  * @brief The implementation of the M4A/MP4 encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2011
+ * @date 2010-2013
  */
 
 /*!

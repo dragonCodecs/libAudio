@@ -10,7 +10,7 @@
  * @file loadOptimFROG.cpp
  * @brief The implementation of the OptimFROG decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2011
+ * @date 2009-2013
  */
 
 /*!

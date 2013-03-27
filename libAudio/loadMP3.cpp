@@ -14,7 +14,7 @@
  * @file loadMP3.cpp
  * @brief The implementation of the MP3 decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2011
+ * @date 2010-2013
  */
 
 #ifndef SHRT_MAX

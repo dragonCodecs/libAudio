@@ -11,7 +11,7 @@
  * @file loadWAV.cpp
  * @brief The implementation of the WAV decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2011
+ * @date 2010-2013
  */
 
 /*!

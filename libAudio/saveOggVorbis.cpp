@@ -12,7 +12,7 @@
  * @file saveOggVorbis.cpp
  * @brief The implementation of the Ogg/Vorbis encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2011
+ * @date 2010-2013
  */
 
 /*!
