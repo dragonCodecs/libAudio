@@ -127,12 +127,12 @@ private:
 			p_AudioFile = Audio_OpenR(FN);
 			if (p_AudioFile == NULL)
 			{
-				GTKMessageBox *hMsgBox = new GTKMessageBox((GtkWindow *)self->hMainWnd->GetWindow(), GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
-					"Error, the file you requested could not be used for playback, please try again with another.", "libAudio Spectrometer");
-				hMsgBox->Run();
-				delete hMsgBox;
+				self->hMainWnd->MessageBox(GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "Error, the file you requested could not be used for playback, please try again with another.",
+					"libAudio Spectrometer");
+#ifndef __linux__
 				g_free(FN);
 				FN = NULL;
+#endif
 				return;
 			}
 			p_FI = Audio_GetFileInfo(p_AudioFile);
