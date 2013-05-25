@@ -866,8 +866,7 @@ bool ModuleFile::ProcessEffects()
 					PositionJump = 0;
 				break;
 			case CMD_PATTERNBREAK:
-				BreakRow = param;
-				BreakRow = ((BreakRow >> 8) * 10) + (BreakRow & 0x0F);
+				BreakRow = ((param >> 4) * 10) + (param & 0x0F);
 				if (BreakRow > 63)
 					BreakRow = 63;
 				break;
@@ -951,7 +950,7 @@ bool ModuleFile::ProcessEffects()
 				PositionJump = NewPattern + 1;
 			if (BreakRow < 0)
 				BreakRow = 0;
-			if ((uint32_t)PositionJump < NewPattern || ((uint32_t)PositionJump == NewPattern && (uint32_t)BreakRow <= Row))
+			if ((uint32_t)PositionJump < NewPattern)// || ((uint32_t)PositionJump == NewPattern && (uint32_t)BreakRow <= Row))
 				Jump = FALSE;
 			if (Jump == TRUE && ((uint32_t)PositionJump != NewPattern || (uint32_t)BreakRow != Row))
 			{
