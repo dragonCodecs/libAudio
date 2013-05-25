@@ -287,13 +287,13 @@ void ModuleFile::S3MLoadPCM(FILE *f_S3M)
 				{
 					short *pcm = (short *)p_PCM[i];
 					for (j = 0; j < (Length >> 1); j++)
-						pcm[j] ^= 0x7FFF;
+						pcm[j] ^= 0x8000;
 				}
 				else
 				{
 					char *pcm = (char *)p_PCM[i];
 					for (j = 0; j < Length; j++)
-						pcm[j] ^= 0x7F;
+						pcm[j] ^= 0x80;
 				}
 			}
 		}
