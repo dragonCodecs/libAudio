@@ -73,8 +73,8 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 {
 	char DontCare[10];
 	char Magic[4];
-	uint8_t Const, RawFlags;
-	uint16_t Special;
+	uint8_t Const;
+	uint16_t Special, RawFlags;
 	FILE *f_S3M = p_SF->f_S3M;
 
 	Name = new char[29];
