@@ -29,7 +29,7 @@ VUMeter::VUMeter()
 
 	for (i = 0; i < 40; i++)
 	{
-		Bars[i] = new GTKImage(100, 4, TRUE);
+		Bars[i] = new GTKImage(100, 4, true);
 		fixed->SetLocation(Bars[i], 2, 2 + (i * 6));
 	}
 	ResetMeter();
