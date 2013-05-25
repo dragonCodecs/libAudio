@@ -76,7 +76,7 @@ clean:
 	$(call run-cmd,rm,libAudio,*.o $(SOMAJ)* $(A) $(PC))
 
 .cpp.o:
-	$(call run-cmd,cc,$(CFLAGS))
+	$(call run-cmd,cxx,$(CFLAGS))
 
 .PHONY: clean libAudio.pc install all uninstall default .cpp.o
 

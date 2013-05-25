@@ -26,6 +26,6 @@ clean:
 	$(call run-cmd,rm,libAudio_TestApp,$(O) $(EXE))
 
 .cpp.o:
-	$(call run-cmd,cc,$(CFLAGS))
+	$(call run-cmd,cxx,$(CFLAGS))
 
 .PHONY: .cpp.o clean install all default

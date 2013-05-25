@@ -27,8 +27,8 @@ export quiet Q BUILD_VERBOSE
 
 endif
 
-quiet_cmd_cc = " CC    $@"
-cmd_cc = $(CC) $(2)
+quiet_cmd_cxx = " CXX   $@"
+cmd_cxx = $(CC) $(2)
 quiet_cmd_ccld = " CCLD  $@"
 cmd_ccld = $(CC) $(2)
 quiet_cmd_strip = " STRIP $@"
