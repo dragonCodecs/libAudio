@@ -174,30 +174,21 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 
 	f_id3 = id3_file_open(/*fileno(p_MF->f_MP3)*/p_MF->f_name, ID3_FILE_MODE_READONLY);
 	id_tag = id3_file_tag(f_id3);
-#ifdef _WINDOWS
 	id_frame = id3_tag_findframe(id_tag, "TLEN", 0);
 	if (id_frame != NULL)
 	{
-		id3_field *id_field = NULL;
-		uint32_t nStrings = 0;
-		uint8_t *Time = NULL;
-
-		id_field = id3_frame_field(id_frame, 1);
-		nStrings = id3_field_getnstrings(id_field);
-
-		if (nStrings > 0)
+		id3_field *id_field = id3_frame_field(id_frame, 1);
+		if (id_field != NULL)
 		{
-			Time = id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
-
-			if (Time != NULL)
+			uint32_t strings = id3_field_getnstrings(id_field);
+			if (strings > 0)
 			{
-				ret->TotalTime = (double)atol((const char *)Time);
-				free(Time);
-				Time = NULL;
+				const id3_ucs4_t *str = id3_field_getstrings(id_field, 0);
+				if (str != NULL)
+					ret->TotalTime = id3_ucs4_getnumber(str) / 1000;
 			}
 		}
 	}
-#endif
 
 	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_ALBUM, 0);
 	if (id_frame != NULL)
