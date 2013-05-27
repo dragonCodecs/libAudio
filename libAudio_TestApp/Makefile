@@ -2,7 +2,7 @@ include ../Makefile.inc
 
 EXTRA_CFLAGS = $(shell pkg-config --cflags libAudio)
 CFLAGS = -c $(OPTIM_FLAGS) $(EXTRA_CFLAGS) -o $@ $<
-LIBS = $(shell pkg-config --libs libAudio) -lm
+LIBS = $(shell pkg-config --libs libAudio)
 LFLAGS = $(O) $(LIBS) -o $(EXE)
 INSTALL_FILE = $(INSTALL) -m755
 STRIP = strip -s
