@@ -209,7 +209,7 @@ FileInfo *OptimFROG_GetFileInfo(void *p_OFGFile)
 	ret->Channels = p_OFI->channels;
 	ret->BitRate = p_OFI->samplerate;
 	ret->BitsPerSample = p_OFI->bitspersample;
-	ret->TotalTime = (double)p_OFI->length_ms;
+	ret->TotalTime = p_OFI->length_ms / 1000;
 	p_OF->p_FI = ret;
 
 	/*OptimFROG_getTags(p_OF->p_dec, p_OFT);

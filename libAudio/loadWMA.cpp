@@ -2135,7 +2135,7 @@ FileInfo *WMA_GetFileInfo(void *p_WMAFile)
 	for (a = 0; a < p_WF->nb_block_sizes; a++)
 		mdct_init(&p_WF->imdct_ctx[a], p_WF->mdctlen_bits - a + 1, 1);
 
-	ret->TotalTime = (double)p_WF->p_ASFMain->send_time / (10000000 / 1000) - p_WF->p_ASFMain->preroll;
+	ret->TotalTime = p_WF->p_ASFMain->send_time / (10000000 / 1000) - p_WF->p_ASFMain->preroll;
 	//(double)p_WF->p_ASFMain->play_time;// / 1000.0;
 
 	if (ExternalPlayback == 0)

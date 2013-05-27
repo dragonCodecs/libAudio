@@ -299,7 +299,7 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 		ret->OtherComments.push_back(value);
 	}
 	timescale = MP4GetTrackTimeScale(p_MF->p_MP4, p_MF->nTrack);
-	ret->TotalTime = ((double)MP4GetTrackDuration(p_MF->p_MP4, p_MF->nTrack)) / ((double)timescale);
+	ret->TotalTime = MP4GetTrackDuration(p_MF->p_MP4, p_MF->nTrack) / timescale;
 	p_MF->nLoops = MP4GetTrackNumberOfSamples(p_MF->p_MP4, p_MF->nTrack);
 	p_MF->nCurrLoop = 0;
 

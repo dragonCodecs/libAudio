@@ -2,19 +2,20 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include <vector>
+#include <inttypes.h>
 
 typedef struct FileInfo
 {
-	double TotalTime; // in seconds? - probably a good resolution for this.
-	long BitsPerSample;
-	long BitRate;
-	int Channels;
+	uint64_t TotalTime; // in seconds? - probably a good resolution for this.
+	uint32_t BitsPerSample;
+	uint32_t BitRate;
+	uint32_t Channels;
 	//int BitStream;
 	const char *Title;
 	const char *Artist;
 	const char *Album;
 	std::vector<const char *> OtherComments;
-	int nOtherComments;
+	uint32_t nOtherComments;
 } FileInfo;
 
 #ifdef _WINDOWS
@@ -37,7 +38,6 @@ typedef struct FileInfo
 	#endif
 #endif
 
-#include <inttypes.h>
 #ifndef _WINDOWS
 #ifndef TRUE
 #define TRUE 1
