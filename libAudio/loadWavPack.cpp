@@ -320,10 +320,8 @@ long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 		for (int i = 0; i < j; )
 		{
-			for (int k = 0; k < p_WF->p_FI->Channels; k++)
-			{
+			for (uint32_t k = 0; k < p_WF->p_FI->Channels; k++)
 				out[i + k] = (short)p_WF->middlebuff[i + k];
-			}
 
 			i += p_WF->p_FI->Channels;
 		}

@@ -162,7 +162,7 @@ void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 
 	p_FF->p_meta[1] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING);
 	p_FF->p_meta[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
-	for (int i = 0; i < p_FI->nOtherComments; i++)
+	for (uint32_t i = 0; i < p_FI->nOtherComments; i++)
 	{
 		entry.entry = (uint8_t *)p_FI->OtherComments[i];
 		entry.length = strlen(p_FI->OtherComments[i]);
@@ -205,10 +205,10 @@ long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
 	if (nInBufferLen <= 0)
 		return nInBufferLen;
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	int nIBL = (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)) / p_FF->p_FI->Channels;
+	uint32_t nIBL = (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)) / p_FF->p_FI->Channels;
 	int *IB = (int *)malloc(sizeof(int) * (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)));
 
-	for (int i = 0; i < nIBL * p_FF->p_FI->Channels; i++)
+	for (uint32_t i = 0; i < nIBL * p_FF->p_FI->Channels; i++)
 		IB[i] = (int)(((short *)InBuffer)[i]);
 
 	FLAC__stream_encoder_process_interleaved(p_FF->p_enc, IB, nIBL);

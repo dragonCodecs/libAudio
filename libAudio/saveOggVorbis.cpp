@@ -135,7 +135,7 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	if (p_FI->Artist != NULL)
 		vorbis_comment_add_tag(p_VF->vc, "Artist", p_FI->Artist);
 
-	for (int i = 0; i < p_FI->nOtherComments; i++)
+	for (uint32_t i = 0; i < p_FI->nOtherComments; i++)
 		vorbis_comment_add(p_VF->vc, p_FI->OtherComments[i]);
 
 	vorbis_analysis_headerout(p_VF->vds, p_VF->vc, &hdr, &hdr_comm, &hdr_code);
@@ -175,16 +175,14 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 	}
 	else
 	{
-		int bufflen = (nInBufferLen / 2) / p_VF->p_FI->Channels;
+		uint32_t bufflen = (nInBufferLen / 2) / p_VF->p_FI->Channels;
 		float **buff = vorbis_analysis_buffer(p_VF->vds, bufflen);
 		short *IB = (short *)InBuffer;
 
-		for (int i = 0; i < bufflen; i++)
+		for (uint32_t i = 0; i < bufflen; i++)
 		{
-			for (int j = 0; j < p_VF->p_FI->Channels; j++)
-			{
+			for (uint32_t j = 0; j < p_VF->p_FI->Channels; j++)
 				buff[j][i] = ((float)IB[i * p_VF->p_FI->Channels + j]) / 32768.0F;
-			}
 		}
 
 		vorbis_analysis_wrote(p_VF->vds, bufflen);
