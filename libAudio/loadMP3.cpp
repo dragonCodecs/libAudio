@@ -193,35 +193,33 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_ALBUM, 0);
 	if (id_frame != NULL)
 	{
-		id3_field *id_field = NULL;
-		uint32_t nStrings = 0;
-		char *Album = NULL;
-
-		id_field = id3_frame_field(id_frame, 1);
-		nStrings = id3_field_getnstrings(id_field);
-
-		if (nStrings > 0)
+		id3_field *id_field = id3_frame_field(id_frame, 1);
+		if (id_field != NULL)
 		{
-			uint32_t i = 0;
-			for (i = 0; i < nStrings; i++)
+			uint32_t strings = id3_field_getnstrings(id_field);
+			if (strings > 0)
 			{
-				Album = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
-
-				if (Album != NULL)
+				for (uint32_t i = 0; i < strings; i++)
 				{
-					if (ret->Album == NULL)
+					const id3_ucs4_t *str = id3_field_getstrings(id_field, i);
+					if (str != NULL)
 					{
-						ret->Album = (const char *)malloc(strlen(Album) + 1);
-						memset((char *)ret->Album, 0x00, strlen(Album) + 1);
+						char *Album = (char *)id3_ucs4_utf8duplicate(str);
+						if (Album == NULL)
+							continue;
+						if (ret->Album == NULL)
+						{
+							ret->Album = (const char *)malloc(strlen(Album) + 1);
+							memset((char *)ret->Album, 0x00, strlen(Album) + 1);
+						}
+						else
+						{
+							ret->Album = (const char *)realloc((char *)ret->Album, strlen(ret->Album) + strlen(Album) + 4);
+							memcpy((char *)ret->Album + strlen(ret->Album), " / ", 4);
+						}
+						memcpy((char *)ret->Album + strlen(ret->Album), Album, strlen(Album) + 1);
+						free(Album);
 					}
-					else
-					{
-						ret->Album = (const char *)realloc((char *)ret->Album, strlen(ret->Album) + strlen(Album) + 4);
-						memcpy((char *)ret->Album + strlen(ret->Album), " / ", 4);
-					}
-					memcpy((char *)ret->Album + strlen(ret->Album), Album, strlen(Album) + 1);
-					free(Album);
-					Album = NULL;
 				}
 			}
 		}
@@ -230,35 +228,33 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_ARTIST, 0);
 	if (id_frame != NULL)
 	{
-		id3_field *id_field = NULL;
-		uint32_t nStrings = 0;
-		char *Artist = NULL;
-
-		id_field = id3_frame_field(id_frame, 1);
-		nStrings = id3_field_getnstrings(id_field);
-
-		if (nStrings > 0)
+		id3_field *id_field = id3_frame_field(id_frame, 1);
+		if (id_field != NULL)
 		{
-			uint32_t i = 0;
-			for (i = 0; i < nStrings; i++)
+			uint32_t strings = id3_field_getnstrings(id_field);
+			if (strings > 0)
 			{
-				Artist = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
-
-				if (Artist != NULL)
+				for (uint32_t i = 0; i < strings; i++)
 				{
-					if (ret->Artist == NULL)
+					const id3_ucs4_t *str = id3_field_getstrings(id_field, i);
+					if (str != NULL)
 					{
-						ret->Artist = (const char *)malloc(strlen(Artist) + 1);
-						memset((char *)ret->Artist, 0x00, strlen(Artist) + 1);
+						char *Artist = (char *)id3_ucs4_utf8duplicate(str);
+						if (Artist == NULL)
+							continue;
+						if (ret->Artist == NULL)
+						{
+							ret->Artist = (const char *)malloc(strlen(Artist) + 1);
+							memset((char *)ret->Artist, 0x00, strlen(Artist) + 1);
+						}
+						else
+						{
+							ret->Artist = (const char *)realloc((char *)ret->Artist, strlen(ret->Artist) + strlen(Artist) + 4);
+							memcpy((char *)ret->Artist + strlen(ret->Artist), " / ", 4);
+						}
+						memcpy((char *)ret->Artist + strlen(ret->Artist), Artist, strlen(Artist) + 1);
+						free(Artist);
 					}
-					else
-					{
-						ret->Artist = (const char *)realloc((char *)ret->Artist, strlen(ret->Artist) + strlen(Artist) + 4);
-						memcpy((char *)ret->Artist + strlen(ret->Artist), " / ", 4);
-					}
-					memcpy((char *)ret->Artist + strlen(ret->Artist), Artist, strlen(Artist) + 1);
-					free(Artist);
-					Artist = NULL;
 				}
 			}
 		}
@@ -267,35 +263,33 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_TITLE, 0);
 	if (id_frame != NULL)
 	{
-		id3_field *id_field = NULL;
-		uint32_t nStrings = 0;
-		char *Title = NULL;
-
-		id_field = id3_frame_field(id_frame, 1);
-		nStrings = id3_field_getnstrings(id_field);
-
-		if (nStrings > 0)
+		id3_field *id_field = id3_frame_field(id_frame, 1);
+		if (id_field != NULL)
 		{
-			uint32_t i = 0;
-			for (i = 0; i < nStrings; i++)
+			uint32_t strings = id3_field_getnstrings(id_field);
+			if (strings > 0)
 			{
-				Title = (char *)id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
-
-				if (Title != NULL)
+				for (uint32_t i = 0; i < strings; i++)
 				{
-					if (ret->Title == NULL)
+					const id3_ucs4_t *str = id3_field_getstrings(id_field, i);
+					if (str != NULL)
 					{
-						ret->Title = (const char *)malloc(strlen(Title) + 1);
-						memset((char *)ret->Title, 0x00, strlen(Title) + 1);
+						char *Title = (char *)id3_ucs4_utf8duplicate(str);
+						if (Title == NULL)
+							continue;
+						if (ret->Title == NULL)
+						{
+							ret->Title = (const char *)malloc(strlen(Title) + 1);
+							memset((char *)ret->Title, 0x00, strlen(Title) + 1);
+						}
+						else
+						{
+							ret->Title = (const char *)realloc((char *)ret->Title, strlen(ret->Title) + strlen(Title) + 4);
+							memcpy((char *)ret->Title + strlen(ret->Title), " / ", 4);
+						}
+						memcpy((char *)ret->Title + strlen(ret->Title), Title, strlen(Title) + 1);
+						free(Title);
 					}
-					else
-					{
-						ret->Title = (const char *)realloc((char *)ret->Title, strlen(ret->Title) + strlen(Title) + 4);
-						memcpy((char *)ret->Title + strlen(ret->Title), " / ", 4);
-					}
-					memcpy((char *)ret->Title + strlen(ret->Title), Title, strlen(Title) + 1);
-					free(Title);
-					Title = NULL;
 				}
 			}
 		}
@@ -304,29 +298,25 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_COMMENT, 0);
 	if (id_frame != NULL)
 	{
-		id3_field *id_field = NULL;
-		uint32_t nStrings = 0;
-		uint8_t *Comment = NULL;
-
-		id_field = id3_frame_field(id_frame, 1);
-		nStrings = id3_field_getnstrings(id_field);
-
-		if (nStrings > 0)
+		id3_field *id_field = id3_frame_field(id_frame, 1);
+		if (id_field != NULL)
 		{
-			uint32_t i = 0;
-			for (i = 0; i < nStrings; i++)
+			uint32_t strings = id3_field_getnstrings(id_field);
+			if (strings > 0)
 			{
-				Comment = id3_ucs4_latin1duplicate(id3_field_getstrings(id_field, 0));
-
-				if (Comment != NULL)
+				for (uint32_t i = 0; i < strings; i++)
 				{
-					if (ret->OtherComments.size() == 0)
-						ret->nOtherComments = 0;
-
-					ret->OtherComments.push_back(strdup((char *)Comment));
-					free(Comment);
-					Comment = NULL;
-					ret->nOtherComments++;
+					const id3_ucs4_t *str = id3_field_getstrings(id_field, i);
+					if (str != NULL)
+					{
+						char *Comment = (char *)id3_ucs4_utf8duplicate(str);
+						if (Comment == NULL)
+							continue;
+						if (ret->OtherComments.size() == 0)
+							ret->nOtherComments = 0;
+						ret->OtherComments.push_back(Comment);
+						ret->nOtherComments++;
+					}
 				}
 			}
 		}
