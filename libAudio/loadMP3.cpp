@@ -141,14 +141,42 @@ void *MP3_OpenR(const char *FileName)
 	ret->p_Stream = (mad_stream *)malloc(sizeof(mad_stream));
 	ret->p_Frame = (mad_frame *)malloc(sizeof(mad_frame));
 	ret->p_Synth = (mad_synth *)malloc(sizeof(mad_synth));
-	//ret->p_Timer = (mad_timer_t *)malloc(sizeof(mad_timer_t));
 
 	mad_stream_init(ret->p_Stream);
 	mad_frame_init(ret->p_Frame);
 	mad_synth_init(ret->p_Synth);
-	//mad_timer_reset(ret->p_Timer);
 
 	return ret;
+}
+
+#define MP3_XING (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g')
+#define MP3_INFO (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o')
+#define MP3_XING_FRAMES	0x00000001
+
+uint32_t ParseXingHeader(mad_bitptr bitStream, uint32_t bitLen)
+{
+	uint32_t xingHeader;
+	uint32_t frames = 0;
+	uint32_t remaining = bitLen;
+	if (bitLen < 64)
+		return frames;
+
+	xingHeader = mad_bit_read(&bitStream, 32);
+	remaining -= 32;
+	if (xingHeader != MP3_XING && xingHeader != MP3_INFO)
+		return frames;
+	xingHeader = mad_bit_read(&bitStream, 32);
+	remaining -= 32;
+
+	if ((xingHeader & MP3_XING_FRAMES) != 0)
+	{
+		if (remaining < 32)
+			return frames;
+		frames = mad_bit_read(&bitStream, 32);
+		remaining -= 32;
+	}
+
+	return frames;
 }
 
 /*!
@@ -160,6 +188,7 @@ void *MP3_OpenR(const char *FileName)
  */
 FileInfo *MP3_GetFileInfo(void *p_MP3File)
 {
+	uint32_t frameCount;
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 	FileInfo *ret = NULL;
 	int rem = 0;
@@ -332,6 +361,17 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	while (p_MF->p_Frame->header.bitrate == 0 || p_MF->p_Frame->header.samplerate == 0)
 		mad_frame_decode(p_MF->p_Frame, p_MF->p_Stream);
 	p_MF->InitialFrame = true;
+
+	frameCount = ParseXingHeader(p_MF->p_Stream->anc_ptr, p_MF->p_Stream->anc_bitlen);
+	if (frameCount != 0)
+	{
+		uint64_t totalTime;
+		mad_timer_t songLength = p_MF->p_Frame->header.duration;
+		mad_timer_multiply(&songLength, frameCount);
+		totalTime = mad_timer_count(songLength, MAD_UNITS_SECONDS);
+		if (ret->TotalTime == 0 || ret->TotalTime != totalTime)
+			ret->TotalTime = totalTime;
+	}
 	ret->BitRate = p_MF->p_Frame->header.samplerate;
 	ret->BitsPerSample = 16;
 	ret->Channels = (p_MF->p_Frame->header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
@@ -362,7 +402,6 @@ int MP3_CloseFileR(void *p_MP3File)
 	mad_synth_finish(p_MF->p_Synth);
 	mad_frame_finish(p_MF->p_Frame);
 	mad_stream_finish(p_MF->p_Stream);
-	//mad_timer_reset(p_MF->p_Timer);
 
 	free(p_MF->f_name);
 	ret = fclose(p_MF->f_MP3);
