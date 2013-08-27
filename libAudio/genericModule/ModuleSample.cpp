@@ -228,6 +228,8 @@ ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type)
 	if (FileName[11] != 0)
 		FileName[12] = 0;
 	fread(DontCare, 3, 1, f_S3M);
+	if (DontCare[0] != DontCare[1] || DontCare[1] != DontCare[2] || DontCare[0] != 0)
+		throw new ModuleLoaderError(E_BAD_S3M);
 	fread(&D00, 1, 1, f_S3M);
 	fread(&D01, 1, 1, f_S3M);
 	fread(&D02, 1, 1, f_S3M);
