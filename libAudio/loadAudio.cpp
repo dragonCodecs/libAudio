@@ -4,7 +4,7 @@
 /*!
  * @internal
  * @file loadAudio.cpp
- * @brief The implementation of the master decoder API
+ * @brief The implementation of the master encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2013
  */
