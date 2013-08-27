@@ -212,7 +212,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\loadAON.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\loadAudio.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\loadFC1x.cpp"
 					>
 				</File>
 				<File

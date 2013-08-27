@@ -6,9 +6,10 @@ else
 GCC_FLAGS = 
 endif
 CC = $(GCC) $(GCC_FLAGS)
-EXTRA_CFLAGS = $(shell pkg-config --cflags libAudio libGTK++)
+PKGS = libAudio libGTK++ openal gl gobject-2.0
+EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKGS))
 CFLAGS = -O2 -g -c $(EXTRA_CFLAGS) -o $@
-LIBS = $(shell pkg-config --libs libAudio libGTK++)
+LIBS = $(shell pkg-config --libs $(PKGS)) -lstdc++ -lm
 LFLAGS = $(O) $(LIBS) -o $(EXE)
 CHMOD = chmod 0755
 STRIP = strip -s
