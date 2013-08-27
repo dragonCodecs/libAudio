@@ -92,5 +92,6 @@ RANLIB = ranlib
 LN = ln -sfT
 INSTALL = install
 INSTALL_FILE = install -m644
+INSTALL_DIR = mkdir -p
 
 export GCC DEBUG
