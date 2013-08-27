@@ -100,5 +100,6 @@ LN = ln -sfT
 INSTALL = install
 INSTALL_FILE = install -m644
 INSTALL_DIR = mkdir -p
+UID = $(shell id -u)
 
-export GCC DEBUG
+export GCC DEBUG UID
