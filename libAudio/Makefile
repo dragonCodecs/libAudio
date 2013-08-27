@@ -8,7 +8,7 @@ EXTRA_LIBS = $(shell pkg-config --libs $(PKG_CONFIG_PKGS))
 LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -z defs -o $(SO)
 
-SED = sed -e 's:@LIBDIR@:$(LIBDIR):g'
+SED = sed -e 's:@LIBDIR@:$(LIBDIR):g' -e 's:@PREFIX@:$(PREFIX):g'
 
 PREFIX ?= /usr
 LIBDIR ?= $(PREFIX)/lib
