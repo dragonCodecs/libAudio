@@ -10,9 +10,10 @@ LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -z defs -o $(SO)
 
 SED = sed -e 's:@LIBDIR@:$(LIBDIR):g'
 
-LIBDIR ?= /usr/lib
+PREFIX ?= /usr
+LIBDIR ?= $(PREFIX)/lib
 PKGDIR = $(LIBDIR)/pkgconfig/
-INCDIR = /usr/include/
+INCDIR = $(PREFIX)/include/
 
 #WMA = loadWMA.o
 WMA = 
