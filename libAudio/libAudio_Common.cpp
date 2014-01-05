@@ -83,7 +83,9 @@ ALCcontext *Playback::context = NULL;
  */
 void Playback::init()
 {
+#ifndef _WINDOWS
 	if (OpenALInit == false)
+#endif
 	{
 		device = alcOpenDevice(NULL);
 		context = alcCreateContext(device, NULL);
@@ -97,8 +99,10 @@ void Playback::init()
 		alSource3f(sourceNum, AL_VELOCITY, 0, 0, 0);
 		alSource3f(sourceNum, AL_DIRECTION, 0, 0, 0);
 		alSourcef(sourceNum, AL_ROLLOFF_FACTOR, 0);
+#ifndef _WINDOWS
 		OpenALInit = true;
 		atexit(deinit);
+#endif
 	}
 }
 
@@ -339,4 +343,7 @@ Playback::~Playback()
 {
 	alDeleteBuffers(4, buffers);
 	free(p_FI);
+#ifdef _WINDOWS
+	deinit();
+#endif
 }
