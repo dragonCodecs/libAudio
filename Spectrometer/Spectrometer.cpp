@@ -150,7 +150,7 @@ private:
 #endif
 	}
 
-	static BOOL Draw(GtkWidget *widget, GdkEventExpose *event, void *data)
+	static bool Draw(GtkWidget *widget, GdkEventExpose *event, void *data)
 	{
 		Spectrometer *self = (Spectrometer *)data;
 		pthread_mutex_lock(&DrawMutex);
@@ -166,7 +166,7 @@ private:
 		self->Spectr->glEnd();
 
 		pthread_mutex_unlock(&DrawMutex);
-		return TRUE;
+		return false;
 	}
 
 	static long Callback(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
@@ -180,9 +180,6 @@ private:
 		{
 			Interface->Data = (short *)OutBuffer;
 			Interface->lenData = ret;
-#ifndef __linux__
-			gdk_window_invalidate_rect(Interface->Surface, &rect, FALSE);
-#endif
 		}
 
 		pthread_mutex_unlock(&DrawMutex);
