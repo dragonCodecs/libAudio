@@ -945,14 +945,16 @@ bool ModuleFile::ProcessEffects()
 		}
 		else if (BreakRow >= 0 || PositionJump >= 0)
 		{
-			BOOL Jump = TRUE;
 			if (PositionJump < 0)
 				PositionJump = NewPattern + 1;
 			if (BreakRow < 0)
 				BreakRow = 0;
 			if ((uint32_t)PositionJump < NewPattern)// || ((uint32_t)PositionJump == NewPattern && (uint32_t)BreakRow <= Row))
-				Jump = FALSE;
-			if (Jump == TRUE && ((uint32_t)PositionJump != NewPattern || (uint32_t)BreakRow != Row))
+			{
+				NextPattern = p_Header->nOrders;
+				return false;
+			}
+			else if (((uint32_t)PositionJump != NewPattern || (uint32_t)BreakRow != Row))
 			{
 				if ((uint32_t)PositionJump != NewPattern)
 					PatternLoopCount = PatternLoopStart = 0;
