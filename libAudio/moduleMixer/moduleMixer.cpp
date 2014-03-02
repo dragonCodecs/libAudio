@@ -1435,9 +1435,7 @@ int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 		{
 			// TODO: Deal with song fading
 			if (AdvanceTick() == false)
-			{
-				// Song fading
-			}
+				Max = Mixed;
 		}
 		Count = SamplesToMix;
 		if (Count > MIXBUFFERSIZE)
