@@ -224,7 +224,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[0], Fmt, buffer, nBufferLen, p_FI->BitRate);
+		alBufferData(buffers[0], Fmt, buffer, bufret, p_FI->BitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[0]);
 		nBuffs++;
 	}
@@ -235,7 +235,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[1], Fmt, buffer, nBufferLen, p_FI->BitRate);
+		alBufferData(buffers[1], Fmt, buffer, bufret, p_FI->BitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[1]);
 		nBuffs++;
 	}
@@ -246,7 +246,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[2], Fmt, buffer, nBufferLen, p_FI->BitRate);
+		alBufferData(buffers[2], Fmt, buffer, bufret, p_FI->BitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[2]);
 		nBuffs++;
 	}
@@ -257,7 +257,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[3], Fmt, buffer, nBufferLen, p_FI->BitRate);
+		alBufferData(buffers[3], Fmt, buffer, bufret, p_FI->BitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[3]);
 		nBuffs++;
 	}
@@ -287,7 +287,7 @@ void Playback::Play()
 #ifdef __NICE_OUTPUT__
 			DoDisplay(&CharNum, &Proc, ProgressChars);
 #endif
-			alBufferData(buffer, Fmt, this->buffer, nBufferLen, p_FI->BitRate);
+			alBufferData(buffer, Fmt, this->buffer, bufret, p_FI->BitRate);
 			alSourceQueueBuffers(sourceNum, 1, &buffer);
 
 		}
