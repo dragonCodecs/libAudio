@@ -44,6 +44,11 @@ typedef struct _FLAC_Decoder_Context
 	uint8_t buffer[16384];
 	/*!
 	 * @internal
+	 * The amount to shift the sample data by to convert it
+	 */
+	uint8_t sampleShift;
+	/*!
+	 * @internal
 	 * The count of the number of bytes left to process
 	 * (also thinkable as the number of bytes left to read)
 	 */
@@ -181,14 +186,15 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FL
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	short *PCM = (short *)p_FF->buffer;
-	const short *Left = (const short *)buffers[0];
-	const short *Right = (const short *)buffers[1];
+	const int *Left = buffers[0];
+	const int *Right = buffers[1];
+	uint8_t sampleShift = p_FF->sampleShift;
 	uint32_t i = 0;
 
 	for (i = (p_FF->nRead / 2); i < p_frame->header.blocksize; i++)
 	{
-		PCM[(i * 2) + 0] = (short)Left[i * 2];
-		PCM[(i * 2) + 1] = (short)Right[i * 2];
+		PCM[(i * 2) + 0] = (short)(Left[i] >> sampleShift);
+		PCM[(i * 2) + 1] = (short)(Right[i] >> sampleShift);
 	}
 	p_FF->nRead = p_frame->header.blocksize * 4;
 
@@ -218,6 +224,12 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
 			p_FI->Channels = p_md->channels;
 			p_FI->BitRate = p_md->sample_rate;
 			p_FI->BitsPerSample = p_md->bits_per_sample;
+			if (p_FI->BitsPerSample == 24)
+			{
+				p_FI->BitsPerSample = 16;
+				p_FF->sampleShift = 8;
+			}
+			p_FI->TotalTime = p_md->total_samples / p_md->sample_rate;
 			if (ExternalPlayback == 0)
 				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->buffer, 16384, p_FLACFile);
 			break;
