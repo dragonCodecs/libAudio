@@ -36,7 +36,10 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 	MusicSpeed = p_Header->InitialSpeed;
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;
-	GlobalVolume = p_Header->GlobalVolume << 1;
+	if (ModuleType != MODULE_IT)
+		GlobalVolume = p_Header->GlobalVolume << 1;
+	else
+		GlobalVolume = p_Header->GlobalVolume;
 	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
 	Channels = new Channel[p_Header->nChannels]();
 	MixerChannels = new uint32_t[p_Header->nChannels];
