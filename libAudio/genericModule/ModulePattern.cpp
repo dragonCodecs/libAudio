@@ -12,16 +12,18 @@ uint16_t Periods[60] =
 	107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60, 57
 };
 
-ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels)
+ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nChannels)
 {
 	uint32_t channel, row;
-	Commands = new ModuleCommand[nChannels][64];
+	Commands = new ModuleCommand *[nChannels];
 	for (row = 0; row < 64; row++)
 	{
 		for (channel = 0; channel < nChannels; channel++)
 		{
 			// Read 4 bytes of data and unpack it into the structure.
 			uint8_t Data[4];
+			if (row == 0)
+				Commands[channel] = new ModuleCommand[64];
 			fread(Data, 4, 1, p_MF->f_MOD);
 			Commands[channel][row].SetMODData(Data);
 		}
@@ -32,12 +34,12 @@ ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels)
 	if (cnt + 1 >= Length) \
 		break
 
-ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels)
+ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nChannels)
 {
 	uint32_t j, Length;
 	uint8_t row;
 	FILE *f_S3M = p_SF->f_S3M;
-	Commands = new ModuleCommand[nChannels][64];
+	Commands = new ModuleCommand *[nChannels];
 	fread(&Length, sizeof(uint16_t), 1, f_S3M);
 	for (j = 0, row = 0; row < 64;)
 	{
@@ -58,6 +60,8 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels)
 			continue;
 		}
 		channel = (byte & 0x1F);
+		if (row == 0)
+			Commands[channel] = new ModuleCommand[64];
 		if ((byte & 0x20) != 0)
 		{
 			fread(&Note, 1, 1, f_S3M);
@@ -89,12 +93,12 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels)
 
 #undef checkLength
 
-ModulePattern::ModulePattern(STM_Intern *p_SF)
+ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4)
 {
 	uint8_t row, channel;
 	FILE *f_STM = p_SF->f_STM;
 
-	Commands = new ModuleCommand[4][64];
+	Commands = new ModuleCommand *[4];
 	for (row = 0; row < 64; row++)
 	{
 		for (channel = 0; channel < 4; channel++)
@@ -104,6 +108,8 @@ ModulePattern::ModulePattern(STM_Intern *p_SF)
 			uint8_t Volume;
 			uint8_t Effect;
 
+			if (row == 0)
+				Commands[channel] = new ModuleCommand[64];
 			fread(&Note, 1, 1, f_STM);
 			Commands[channel][row].SetSTMNote(Note);
 			fread(&Param, 1, 1, f_STM);
@@ -119,20 +125,22 @@ ModulePattern::ModulePattern(STM_Intern *p_SF)
 	}
 }
 
-ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels)
+ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nChannels)
 {
 	uint8_t row, channel;
 	FILE *f_AON = p_AF->f_AON;
 
-	Commands = new ModuleCommand[Channels][64];
+	Commands = new ModuleCommand *[nChannels];
 	for (row = 0; row < 64; row++)
 	{
-		for (channel = 0; channel < Channels; channel++)
+		for (channel = 0; channel < nChannels; channel++)
 		{
 			uint8_t Note, Samp;
 			uint8_t Effect, Param;
 			uint8_t ArpIndex = 0;
 
+			if (row == 0)
+				Commands[channel] = new ModuleCommand[64];
 			fread(&Note, 1, 1, f_AON);
 			Commands[channel][row].SetAONNote(Note);
 			fread(&Samp, 1, 1, f_AON);
@@ -149,12 +157,15 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t Channels)
 
 ModulePattern::~ModulePattern()
 {
+	uint8_t channel;
+	for (channel = 0; channel < Channels; channel++)
+		delete [] Commands[channel];
 	delete [] Commands;
 }
 
 ModuleCommand **ModulePattern::GetCommands()
 {
-	return (ModuleCommand **)Commands;
+	return Commands;
 }
 
 void ModuleCommand::SetSample(uint8_t sample)

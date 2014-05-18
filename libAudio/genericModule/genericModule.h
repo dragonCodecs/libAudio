@@ -247,7 +247,8 @@ public:
 class ModulePattern : public ModuleAllocator
 {
 private:
-	ModuleCommand (*Commands)[64];
+	uint32_t Channels;
+	ModuleCommand **Commands;
 
 public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);

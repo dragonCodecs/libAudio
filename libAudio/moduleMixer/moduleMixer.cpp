@@ -992,7 +992,7 @@ bool ModuleFile::Tick()
 	if (TickCount >= (MusicSpeed * (PatternDelay + 1)) + FrameDelay)
 	{
 		uint32_t i;
-		ModuleCommand (*Commands)[64];
+		ModuleCommand **Commands;
 		TickCount = 0;
 		PatternDelay = 0;
 		FrameDelay = 0;
@@ -1017,7 +1017,7 @@ bool ModuleFile::Tick()
 			NextPattern = NewPattern + 1;
 			NextRow = 0;
 		}
-		Commands = (ModuleCommand (*)[64])p_Patterns[Pattern]->GetCommands();
+		Commands = p_Patterns[Pattern]->GetCommands();
 		for (i = 0; i < p_Header->nChannels; i++)
 			Channels[i].SetData(&Commands[i][Row], p_Header);
 	}
