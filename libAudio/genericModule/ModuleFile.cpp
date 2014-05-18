@@ -202,6 +202,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), Channels(NULL),
 		p_Samples[i] = ModuleSample::LoadSample(p_IF, i);
 	}
 
+	p_Header->nChannels = 64;
 	for (i = 0; i < 64; i++)
 	{
 		if (p_Header->Panning[i] > 128)
@@ -209,6 +210,10 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), Channels(NULL),
 			p_Header->nChannels = i;
 			break;
 		}
+		else if (p_Header->Panning[i] <= 64)
+			p_Header->Panning[i] *= 2;
+		else if (p_Header->Panning[i] == 100)
+			p_Header->Panning[i] = 64;
 	}
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
@@ -224,7 +229,9 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), Channels(NULL),
 		}
 	}
 
-	//ITLoadPCM(f_IT);
+	ITLoadPCM(f_IT);
+	MinPeriod = 8;
+	MaxPeriod = 61440;//32767;
 }
 
 ModuleFile::~ModuleFile()
@@ -376,6 +383,41 @@ void ModuleFile::AONLoadPCM(FILE *f_AON)
 		}
 		else
 			p_PCM[i] = NULL;
+	}
+}
+
+void ModuleFile::ITLoadPCM(FILE *f_IT)
+{
+	uint32_t i;
+	p_PCM = new uint8_t *[p_Header->nSamples];
+	for (i = 0; i < p_Header->nSamples; i++)
+	{
+		ModuleSampleNative *Sample = ((ModuleSampleNative *)p_Samples[i]);
+		uint32_t Length = p_Samples[i]->GetLength();
+		if ((Sample->Flags & 0x01) == 0)
+		{
+			p_PCM[i] = NULL;
+			continue;
+		}
+		p_PCM[i] = new uint8_t[Length];
+		fseek(f_IT, Sample->SamplePos, SEEK_SET);
+		fread(p_PCM[i], Length, 1, f_IT);
+		if (p_Samples[i]->GetUnsigned())
+		{
+			uint32_t j;
+			if (p_Samples[i]->Get16Bit())
+			{
+				short *pcm = (short *)p_PCM[i];
+				for (j = 0; j < (Length >> 1); j++)
+					pcm[j] ^= 0x8000;
+			}
+			else
+			{
+				char *pcm = (char *)p_PCM[i];
+				for (j = 0; j < Length; j++)
+					pcm[j] ^= 0x80;
+			}
+		}
 	}
 }
 
