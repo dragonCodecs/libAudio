@@ -155,16 +155,21 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nC
 	}
 }
 
-template<typename T> void readInc(T var, uint8_t bytes, uint16_t &j, FILE *f_IT)
+inline bool readInc(uint8_t *var, uint16_t &i, uint16_t len, FILE *f_IT)
 {
-	fread(var, bytes, 1, f_IT);
-	j += bytes;
+	if (i > len)
+		return true;
+	fread(var, 1, 1, f_IT);
+	i++;
+	return false;
 }
 
 ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nChannels)
 {
-	uint8_t b;
+	char DontCare[4];
+	uint8_t b, ChannelMask;
 	uint16_t len, rows, row, channel, j;
+	ModuleCommand LastCommand[64];
 	FILE *f_IT = p_IF->f_IT;
 
 	fread(&len, 2, 1, f_IT);
@@ -172,21 +177,71 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 	Commands = new ModuleCommand *[nChannels];
 	for (channel = 0; channel < nChannels; channel++)
 		Commands[channel] = new ModuleCommand[rows];
+	fread(DontCare, 4, 1, f_IT);
 
 	row = 0;
 	j = 0;
 	while (row < rows)
 	{
 		channel = 0;
-		if (j > len)
+		if (readInc(&b, j, len, f_IT))
 			break;
-		readInc(&b, 1, j, f_IT);
 		if (b == 0)
 		{
 			row++;
 			continue;
 		}
 		channel = b & 0x7F;
+		if (channel != 0)
+			channel = (channel - 1) & 0x3F;
+		if ((b & 0x80) != 0 && readInc(&ChannelMask, j, len, f_IT))
+			break;	
+		if (channel < nChannels)
+			Commands[channel][row].SetITRepVal(ChannelMask, LastCommand[64]);
+		if ((ChannelMask & 0x01) != 0)
+		{
+			uint8_t note;
+			if (readInc(&note, j, len, f_IT))
+				break;
+			if (channel < nChannels)
+			{
+				Commands[channel][row].SetITNote(note);
+				LastCommand[channel].SetITNote(note);
+			}
+		}
+		if ((ChannelMask & 0x02) != 0)
+		{
+			uint8_t sample;
+			if (readInc(&sample, j, len, f_IT))
+				break;
+			if (channel < nChannels)
+			{
+				Commands[channel][row].SetSample(sample);
+				LastCommand[channel].SetSample(sample);
+			}
+		}
+		if ((ChannelMask & 0x04) != 0)
+		{
+			uint8_t volume;
+			if (readInc(&volume, j, len, f_IT))
+				break;
+			if (channel < nChannels)
+			{
+				Commands[channel][row].SetITVolume(volume);
+				LastCommand[channel].SetITVolume(volume);
+			}
+		}
+		if ((ChannelMask & 0x08) != 0)
+		{
+			uint8_t effect, param;
+			if (readInc(&effect, j, len, f_IT) || readInc(&param, j, len, f_IT))
+				break;
+			if (channel < nChannels)
+			{
+				Commands[channel][row].SetITEffect(effect, param);
+				LastCommand[channel].SetITEffect(effect, param);
+			}
+		}
 	}
 }
 
@@ -310,4 +365,35 @@ void ModuleCommand::SetAONNote(uint8_t note)
 void ModuleCommand::SetAONArpIndex(uint8_t Index)
 {
 	ArpIndex = Index;
+}
+
+void ModuleCommand::SetITRepVal(uint8_t ChannelMask, ModuleCommand &LastCommand)
+{
+	if ((ChannelMask & 0x10) != 0)
+		Note = LastCommand.Note;
+	if ((ChannelMask & 0x20) != 0)
+		Sample = LastCommand.Sample;
+	if ((ChannelMask & 0x40) != 0)
+	{
+		VolEffect = LastCommand.VolEffect;
+		VolParam = LastCommand.VolParam;
+	}
+	if ((ChannelMask & 0x80) != 0)
+	{
+		Effect = LastCommand.Effect;
+		Param = LastCommand.Param;
+	}
+}
+
+void ModuleCommand::SetITNote(uint8_t note)
+{
+	if (note & 0x80)
+		note++;
+	Note = note;
+}
+
+void ModuleCommand::SetITVolume(uint8_t volume)
+{
+	VolEffect = VOLCMD_NONE;
+	VolParam = volume;
 }

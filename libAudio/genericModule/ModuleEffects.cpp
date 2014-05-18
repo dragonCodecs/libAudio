@@ -280,3 +280,11 @@ void ModuleCommand::SetAONEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_NONE;
 	}
 }
+
+void ModuleCommand::SetITEffect(uint8_t effect, uint8_t param)
+{
+	switch (effect)
+	{
+	}
+	Effect = CMD_NONE;
+}

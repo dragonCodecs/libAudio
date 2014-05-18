@@ -261,6 +261,10 @@ public:
 	void SetAONNote(uint8_t Note);
 	void SetAONArpIndex(uint8_t Index);
 	void SetAONEffect(uint8_t Effect, uint8_t Param);
+	void SetITRepVal(uint8_t ChannelMask, ModuleCommand &LastCommand);
+	void SetITNote(uint8_t Note);
+	void SetITVolume(uint8_t Volume);
+	void SetITEffect(uint8_t Effect, uint8_t Param);
 };
 
 class ModulePattern : public ModuleAllocator
