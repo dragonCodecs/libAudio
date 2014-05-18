@@ -25,44 +25,44 @@ void *AON_OpenR(const char *FileName)
 
 FileInfo *AON_GetFileInfo(void *p_AONFile)
 {
-	AON_Intern *p_SF = (AON_Intern *)p_AONFile;
+	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 	FileInfo *ret = NULL;
 
-	if (p_SF == NULL)
+	if (p_AF == NULL)
 		return ret;
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)
 		return ret;
 	memset(ret, 0x00, sizeof(FileInfo));
-	p_SF->p_FI = ret;
+	p_AF->p_FI = ret;
 
 	ret->BitRate = 44100;
 	ret->BitsPerSample = 16;
 	try
 	{
-		p_SF->p_File = new ModuleFile(p_SF);
+		p_AF->p_File = new ModuleFile(p_AF);
 	}
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());
 		return NULL;
 	}
-	ret->Title = p_SF->p_File->GetTitle();
-	ret->Artist = p_SF->p_File->GetAuthor();
+	ret->Title = p_AF->p_File->GetTitle();
+	ret->Artist = p_AF->p_File->GetAuthor();
 	{
-		const char *Remark = p_SF->p_File->GetRemark();
+		const char *Remark = p_AF->p_File->GetRemark();
 		if (Remark != NULL)
 		{
 			ret->OtherComments.push_back(Remark);
 			ret->nOtherComments++;
 		}
 	}
-	//ret->Channels = p_SF->p_File->GetChannels();
+	//ret->Channels = p_AF->p_File->GetChannels();
 
 	//if (ExternalPlayback == 0)
-	//	p_SF->p_Playback = new Playback(ret, AON_FillBuffer, p_SF->buffer, 8192, p_AONFile);
-	//p_SF->p_File->InitMixer(ret);
+	//	p_AF->p_Playback = new Playback(ret, AON_FillBuffer, p_AF->buffer, 8192, p_AONFile);
+	//p_AF->p_File->InitMixer(ret);
 
 	return ret;
 }
@@ -70,14 +70,14 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	int32_t ret = 0, Read;
-	AON_Intern *p_SF = (AON_Intern *)p_AONFile;
-	if (p_SF->p_File == NULL)
+	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
+	if (p_AF->p_File == NULL)
 		return -1;
 	do
 	{
-		Read = p_SF->p_File->Mix(p_SF->buffer, nOutBufferLen - ret);
-		if (Read >= 0 && OutBuffer != p_SF->buffer)
-			memcpy(OutBuffer + ret, p_SF->buffer, Read);
+		Read = p_AF->p_File->Mix(p_AF->buffer, nOutBufferLen - ret);
+		if (Read >= 0 && OutBuffer != p_AF->buffer)
+			memcpy(OutBuffer + ret, p_AF->buffer, Read);
 		if (Read >= 0)
 			ret += Read;
 	}
@@ -88,37 +88,37 @@ long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen)
 int AON_CloseFileR(void *p_AONFile)
 {
 	int ret = 0;
-	AON_Intern *p_SF = (AON_Intern *)p_AONFile;
-	if (p_SF == NULL)
+	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
+	if (p_AF == NULL)
 		return 0;
 
-	delete p_SF->p_Playback;
-	delete p_SF->p_File;
+	delete p_AF->p_Playback;
+	delete p_AF->p_File;
 
-	ret = fclose(p_SF->f_AON);
-	free(p_SF);
+	ret = fclose(p_AF->f_AON);
+	free(p_AF);
 	return ret;
 }
 
 void AON_Play(void *p_AONFile)
 {
-	AON_Intern *p_SF = (AON_Intern *)p_AONFile;
+	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	//p_SF->p_Playback->Play();
+	//p_AF->p_Playback->Play();
 }
 
 void AON_Pause(void *p_AONFile)
 {
-	AON_Intern *p_SF = (AON_Intern *)p_AONFile;
+	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	p_SF->p_Playback->Pause();
+	p_AF->p_Playback->Pause();
 }
 
 void AON_Stop(void *p_AONFile)
 {
-	AON_Intern *p_SF = (AON_Intern *)p_AONFile;
+	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	p_SF->p_Playback->Stop();
+	p_AF->p_Playback->Stop();
 }
 
 bool Is_AON(const char *FileName)
