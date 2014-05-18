@@ -35,6 +35,11 @@ ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name)
 	return new ModuleSampleNative(p_AF, i, Name);
 }
 
+ModuleSample *ModuleSample::LoadSample(IT_Intern *p_IF, uint32_t i)
+{
+	return new ModuleSampleNative(p_IF, i);
+}
+
 uint8_t ModuleSample::GetType()
 {
 	return Type;
@@ -173,6 +178,45 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name)
 	Name = name;
 	fread(&Length, 4, 1, f_AON);
 	Length = Swap32(Length);
+}
+
+ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSample(i, 1)
+{
+	char Magic[4], Const;
+	FILE *f_IT = p_IF->f_IT;
+
+	fread(&Magic, 4, 1, f_IT);
+	if (strncmp(Magic, "IMPS", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_IT);
+	FileName = new char[13];
+	Name = new char[27];
+	fread(FileName, 12, 1, f_IT);
+	if (FileName[11] != 0)
+		FileName[12] = 0;
+	fread(&Const, 1, 1, f_IT);
+	fread(&InstrVol, 1, 1, f_IT);
+	fread(&Flags, 1, 1, f_IT);
+	fread(&Volume, 1, 1, f_IT);
+	fread(Name, 26, 1, f_IT);
+	if (Name[25] != 0)
+		Name[26] = 0;
+	fread(&Packing, 1, 1, f_IT);
+	fread(&DefaultPan, 1, 1, f_IT);
+	fread(&Length, 4, 1, f_IT);
+	fread(&LoopStart, 4, 1, f_IT);
+	fread(&LoopEnd, 4, 1, f_IT);
+	fread(&C4Speed, 4, 1, f_IT);
+	fread(&SusLoopBegin, 4, 1, f_IT);
+	fread(&SusLoopEnd, 4, 1, f_IT);
+	fread(&SamplePos, 4, 1, f_IT);
+	fread(&VibratoSpeed, 1, 1, f_IT);
+	fread(&VibratoDepth, 1, 1, f_IT);
+	fread(&VibratoType, 1, 1, f_IT);
+	fread(&VibratoRate, 1, 1, f_IT);
+
+	if (Const != 0 || Packing > 63|| VibratoSpeed > 64 || VibratoDepth > 64 ||
+		/*VibratoType > 4  ||*/ (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
+		throw new ModuleLoaderError(E_BAD_IT);
 }
 
 ModuleSampleNative::~ModuleSampleNative()

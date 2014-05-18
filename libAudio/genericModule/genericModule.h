@@ -143,6 +143,7 @@ public:
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name);
+	static ModuleSample *LoadSample(IT_Intern *p_IF, uint32_t i);
 
 	virtual ~ModuleSample();
 	uint8_t GetType();
@@ -162,6 +163,7 @@ private:
 	uint32_t Length;
 	uint8_t FineTune;
 	uint8_t Volume;
+	uint8_t InstrVol;
 	uint32_t LoopStart;
 	uint32_t LoopEnd;
 
@@ -171,6 +173,13 @@ private:
 	uint8_t Packing;
 	uint8_t Flags;
 	uint32_t C4Speed;
+	uint8_t DefaultPan;
+	uint8_t VibratoSpeed;
+	uint8_t VibratoDepth;
+	uint8_t VibratoType;
+	uint8_t VibratoRate;
+	uint32_t SusLoopBegin;
+	uint32_t SusLoopEnd;
 	friend class ModuleFile;
 
 public:
@@ -178,6 +187,7 @@ public:
 	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
 	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
 	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name);
+	ModuleSampleNative(IT_Intern *p_IF, uint32_t i);
 	~ModuleSampleNative();
 
 	uint32_t GetLength();
