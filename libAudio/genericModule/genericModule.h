@@ -40,6 +40,11 @@ class ModulePattern;
 #define FILE_FLAGS_AMIGA_SLIDES		0x01
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
 
+#define SAMPLE_FLAGS_LOOP		1
+#define SAMPLE_FLAGS_STEREO		2
+#define SAMPLE_FLAGS_16BIT		4
+#define SAMPLE_FLAGS_UNSIGNED	8
+
 class ModuleLoaderError
 {
 private:
@@ -153,6 +158,7 @@ public:
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
+	virtual bool GetUnsigned() = 0;
 	virtual bool Get16Bit() = 0;
 };
 
@@ -171,7 +177,7 @@ private:
 	char *FileName;
 	uint32_t SamplePos; // actually 24-bit..
 	uint8_t Packing;
-	uint8_t Flags;
+	uint8_t Flags, SampleFlags;
 	uint32_t C4Speed;
 	uint8_t DefaultPan;
 	uint8_t VibratoSpeed;
@@ -196,6 +202,7 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
+	bool GetUnsigned();
 	bool Get16Bit();
 };
 
@@ -230,6 +237,7 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
+	bool GetUnsigned();
 	bool Get16Bit();
 };
 

@@ -72,7 +72,7 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Packing = Flags = 0;
+	Packing = SampleFlags = 0;
 	C4Speed = 8363;
 	FileName = NULL;
 }
@@ -90,6 +90,7 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 {
 	uint8_t DontCare[12];
 	char Magic[4];
+	uint8_t Flags;
 	FILE *f_S3M = p_SF->f_S3M;
 	Name = new char[29];
 	FileName = new char[13];
@@ -124,6 +125,11 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	// If looping not enabled, zero the Loop fields
 	if ((Flags & 1) == 0)
 		LoopStart = LoopEnd = 0;
+
+	SampleFlags = 0;
+	SampleFlags |= (Flags & 1) ? SAMPLE_FLAGS_LOOP : 0;
+	SampleFlags |= (Flags & 2) ? SAMPLE_FLAGS_STEREO : 0;
+	SampleFlags |= (Flags & 4) ? SAMPLE_FLAGS_16BIT : 0;
 }
 
 ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSample(i, 1)
@@ -166,7 +172,7 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Packing = Flags = 0;
+	Packing = SampleFlags = 0;
 	Name = NULL;
 	FineTune = 0;
 }
@@ -197,6 +203,8 @@ ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSamp
 	fread(&InstrVol, 1, 1, f_IT);
 	fread(&Flags, 1, 1, f_IT);
 	fread(&Volume, 1, 1, f_IT);
+	if (Volume > 64)
+		Volume = 64;
 	fread(Name, 26, 1, f_IT);
 	if (Name[25] != 0)
 		Name[26] = 0;
@@ -217,6 +225,23 @@ ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSamp
 	if (Const != 0 || Packing > 63|| VibratoSpeed > 64 || VibratoDepth > 64 ||
 		/*VibratoType > 4  ||*/ (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
 		throw new ModuleLoaderError(E_BAD_IT);
+
+	if (C4Speed == 0)
+		C4Speed = 8363;
+	else if (C4Speed < 256)
+		C4Speed = 256;
+	else
+		C4Speed /= 2;
+
+	// If looping not enabled, zero the Loop fields
+	if ((Flags & 0x10) == 0)
+		LoopStart = LoopEnd = 0;
+
+	SampleFlags = 0;
+	SampleFlags |= (Flags & 0x10) ? SAMPLE_FLAGS_LOOP : 0;
+	SampleFlags |= (Flags & 0x04) ? SAMPLE_FLAGS_STEREO : 0;
+	SampleFlags |= (Flags & 0x02) ? SAMPLE_FLAGS_16BIT : 0;
+	SampleFlags |= (Packing & 0x01) ? SAMPLE_FLAGS_UNSIGNED : 0;
 }
 
 ModuleSampleNative::~ModuleSampleNative()
@@ -255,9 +280,14 @@ uint8_t ModuleSampleNative::GetVolume()
 	return Volume << 1;
 }
 
+bool ModuleSampleNative::GetUnsigned()
+{
+	return (SampleFlags & SAMPLE_FLAGS_UNSIGNED) != 0;
+}
+
 bool ModuleSampleNative::Get16Bit()
 {
-	return (Flags & 4) != 0;
+	return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0;
 }
 
 ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type) : ModuleSample(i, Type)
@@ -333,6 +363,11 @@ uint32_t ModuleSampleAdlib::GetC4Speed()
 uint8_t ModuleSampleAdlib::GetVolume()
 {
 	return Volume << 1;
+}
+
+bool ModuleSampleAdlib::GetUnsigned()
+{
+	return false;
 }
 
 bool ModuleSampleAdlib::Get16Bit()
