@@ -235,6 +235,10 @@ ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSamp
 	// If looping not enabled, zero the Loop fields
 	if ((Flags & 0x10) == 0)
 		LoopStart = LoopEnd = 0;
+	if ((Flags & 0x02) != 0)
+		Length *= 2;
+	if ((Flags & 0x04) != 0)
+		Length *= 2;
 
 	SampleFlags = 0;
 	SampleFlags |= (Flags & 0x10) ? SAMPLE_FLAGS_LOOP : 0;
