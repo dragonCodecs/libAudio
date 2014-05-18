@@ -134,24 +134,6 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 		}
 	}
 
-	if (p_IF->p_Head->smpnum != 0)
-	{
-		for (WORD i = 0; i < p_IF->p_Head->smpnum; i++)
-		{
-			if (p_IF->p_Samp[i].C5Speed == 0)
-				p_IF->p_Samp[i].C5Speed = 8363;
-			else if (p_IF->p_Samp[i].C5Speed < 256)
-				p_IF->p_Samp[i].C5Speed = 256;
-			else
-				p_IF->p_Samp[i].C5Speed /= 2;
-
-			// And now the data
-			fseek(f_IT, p_IF->p_Samp[i].samplepointer, SEEK_SET);
-			p_IF->p_Samples[i].BPS = ((p_IF->p_Samp[i].flags & 0x02) != 0 ? 16 : 8);
-			IT_ReadSample(&p_IF->p_Samp[i], &p_IF->p_Samples[i], f_IT);
-		}
-	}
-
 	// This code works flawlessly on a properly encoded/saved
 	// .IT file. MPT Compatability files from the current release
 	// do not follow the standard properly, so this messes up.
@@ -170,8 +152,6 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 
 	if (p_IF->p_Head->patnum != 0)
 	{
-		p_IF->p_Paterns = (Patern *)malloc(sizeof(Patern) * p_IF->p_Head->patnum);
-		memset(p_IF->p_Paterns, 0x00, sizeof(Patern) * p_IF->p_Head->patnum);
 
 		for (UINT i = 0; i < p_IF->p_Head->patnum; i++)
 		{
@@ -180,101 +160,10 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 			WORD nRows = 0, j = 0;
 			Command LastVal[64];
 			Command *Commands = NULL;
-			if (p_IF->p_PaternOffsets[i] == 0)
-				continue;
-
-			fseek(f_IT, p_IF->p_PaternOffsets[i], SEEK_SET);
-			fread(&Len, 2, 1, f_IT);
-			p_IF->p_Paterns[i].PatLen = Len;
-			fread(&Rows, 2, 1, f_IT);
-			p_IF->p_Paterns[i].nRows = Rows;
-			fseek(f_IT, 4, SEEK_CUR);
-
-			p_IF->p_Paterns[i].p_Commands = (Command *)malloc(sizeof(Command) * p_IF->nChannels * p_IF->p_Paterns[i].nRows);
-			memset(ChanMask, 0x00, sizeof(ChanMask));
-			memset(LastVal, 0x00, sizeof(LastVal));
-			memset(p_IF->p_Paterns[i].p_Commands, 0x00, sizeof(Command) * p_IF->nChannels * p_IF->p_Paterns[i].nRows);
-			Commands = p_IF->p_Paterns[i].p_Commands;
 
 			while (nRows < Rows)
 			{
 				int nChan = 0;
-				UINT nPatPos;
-				if (j > Len)
-					break;
-
-				fread(&b, 1, 1, f_IT);
-				j++;
-				// Check for end of row
-				if (b == 0)
-				{
-					nRows++;
-					continue;
-				}
-				// Get channel number
-				nChan = b & 0x7F;
-				if (nChan != 0)
-					nChan = (nChan - 1) & 0x3F;
-				// Set up the Position number
-				nPatPos = (nRows * p_IF->nChannels) + nChan;
-				// Check for ChanMask
-				if ((b & 0x80) != 0)
-				{
-					if (j >= Len)
-						break;
-					fread(&ChanMask[nChan], 1, 1, f_IT);
-					j++;
-				}
-				// Check for a repeated note
-				if ((ChanMask[nChan] & 0x10) != 0 && nChan < p_IF->nChannels)
-					Commands[nPatPos].note = LastVal[nChan].note;
-				// Check for a repeated instrument
-				if ((ChanMask[nChan] & 0x20) != 0 && nChan < p_IF->nChannels)
-					Commands[nPatPos].instr = LastVal[nChan].instr;
-				// Check for repeated volume command
-				if ((ChanMask[nChan] & 0x40) != 0 && nChan < p_IF->nChannels)
-				{
-					Commands[nPatPos].vol = LastVal[nChan].vol;
-					Commands[nPatPos].volcmd = LastVal[nChan].volcmd;
-				}
-				// Check for repeated parameter command
-				if ((ChanMask[nChan] & 0x80) != 0 && nChan < p_IF->nChannels)
-				{
-					Commands[nPatPos].command = LastVal[nChan].command;
-					Commands[nPatPos].param = LastVal[nChan].param;
-				}
-				// Check for a normal note
-				if ((ChanMask[nChan] & 1) != 0)
-				{
-					BYTE note = 0;
-					if (j >= Len)
-						break;
-					fread(&note, 1, 1, f_IT);
-					j++;
-
-					if (nChan < p_IF->nChannels)
-					{
-						if (note < 0x80)
-							note++;
-						Commands[nPatPos].note = note;
-						LastVal[nChan].note = note;
-					}
-				}
-				// Check for a normal instrument
-				if ((ChanMask[nChan] & 2) != 0)
-				{
-					BYTE instr = 0;
-					if (j >= Len)
-						break;
-					fread(&instr, 1, 1, f_IT);
-					j++;
-
-					if (nChan < p_IF->nChannels)
-					{
-						Commands[nPatPos].instr = instr;
-						LastVal[nChan].instr = instr;
-					}
-				}
 				// Check for a normal volume command
 				if ((ChanMask[nChan] & 4) != 0)
 				{
