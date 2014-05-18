@@ -90,7 +90,6 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 {
 	uint8_t DontCare[12];
 	char Magic[4];
-	uint8_t Flags;
 	FILE *f_S3M = p_SF->f_S3M;
 	Name = new char[29];
 	FileName = new char[13];
