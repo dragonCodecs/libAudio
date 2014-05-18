@@ -39,10 +39,8 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &AACDecoder;
 	else if (Is_MP3(FileName) == true)
 		ret->API = &MP3Decoder;
-#ifndef __NO_IT__
 	else if (Is_IT(FileName) == true)
 		ret->API = &ITDecoder;
-#endif
 	else if (Is_MOD(FileName) == true)
 		ret->API = &MODDecoder;
 	else if (Is_S3M(FileName) == true)
@@ -182,10 +180,8 @@ bool Is_Audio(const char *FileName)
 		return true;
 	else if (Is_MP3(FileName) == true)
 		return true;
-#ifndef __NO_IT__
 	else if (Is_IT(FileName) == true)
 		return true;
-#endif
 	else if (Is_MOD(FileName) == true)
 		return true;
 	else if (Is_S3M(FileName) == true)

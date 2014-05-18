@@ -1,7 +1,7 @@
 include ../Makefile.inc
 
 PKG_CONFIG_PKGS = openal ogg vorbis vorbisfile vorbisenc flac wavpack
-EXTRA_DEFINE = -DHAVE_STDINT_H -DlibAUDIO -D__NO_IT__ -D__NO_OptimFROG__
+EXTRA_DEFINE = -DHAVE_STDINT_H -DlibAUDIO -D__NO_OptimFROG__
 EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKG_CONFIG_PKGS))
 CFLAGS = -c $(OPTIM_FLAGS) -pedantic -Wall $(EXTRA_CFLAGS) $(EXTRA_DEFINE) -o $@ $<
 EXTRA_LIBS = $(shell pkg-config --libs $(PKG_CONFIG_PKGS))
@@ -17,17 +17,18 @@ INCDIR = $(PREFIX)/include/
 
 #WMA = loadWMA.o
 WMA = 
-#IT = loadIT.o mixIT/mixIT.o
 #SHORTEN = loadShorten.o
 SHORTEN = 
 #OPTIMFROG = loadOptimFROG.o
 OPTIMFROG = 
 H = libAudio.h
-O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o loadMOD.o loadS3M.o loadSTM.o loadAON.o loadFC1x.o
+O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o \
+	loadMOD.o loadS3M.o loadSTM.o loadAON.o loadFC1x.o loadIT.o
 #O_SNDH = loadSNDH.o
 O_SNDH = 
 O_SID = loadSID.o
-O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(O_SNDH) $(O_SID) loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA)  saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
+O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(O_SNDH) $(O_SID) \
+	loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA) saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .1
 VERREV = .43
