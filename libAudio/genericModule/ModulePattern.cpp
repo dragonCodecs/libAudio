@@ -40,6 +40,8 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nC
 	uint8_t row;
 	FILE *f_S3M = p_SF->f_S3M;
 	Commands = new ModuleCommand *[nChannels];
+	for (j = 0; j < nChannels; j++)
+		Commands[j] = new ModuleCommand[64];
 	fread(&Length, sizeof(uint16_t), 1, f_S3M);
 	for (j = 0, row = 0; row < 64;)
 	{
@@ -60,8 +62,6 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nC
 			continue;
 		}
 		channel = (byte & 0x1F);
-		if (row == 0)
-			Commands[channel] = new ModuleCommand[64];
 		if ((byte & 0x20) != 0)
 		{
 			fread(&Note, 1, 1, f_S3M);
