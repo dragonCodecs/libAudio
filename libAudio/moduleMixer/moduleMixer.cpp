@@ -263,10 +263,12 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			channel->VibratoType = param & 0x07;
 			break;
 		case CMD_MODEX_FINETUNE:
-			if (TickCount > channel->StartTick)
+			if (TickCount != channel->StartTick)
 				break;
+			channel->C4Speed = S3MSpeedTable[param];
 			channel->FineTune = param;
-			channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
+			if (channel->Period != 0)
+				channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
 			break;
 		case CMD_MODEX_TREMOLOWAVE:
 			channel->TremoloType = param & 0x07;
@@ -326,11 +328,12 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 				channel->Flags |= CHN_GLISSANDO;
 			break;
 		case CMD_S3MEX_FINETUNE:
-			if (TickCount == channel->StartTick)
-			{
-				channel->FineTune = S3MSpeedTable[param];
+			if (TickCount != channel->StartTick)
+				break;
+			channel->C4Speed = S3MSpeedTable[param];
+			channel->FineTune =  param;
+			if (channel->Period != 0)
 				channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
-			}
 			break;
 		case CMD_S3MEX_VIBRATOWAVE:
 			channel->VibratoType = param & 0x07;
