@@ -62,9 +62,6 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 #if 0
 FileInfo *IT_GetFileInfo_(void *p_ITFile)
 {
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	FileInfo *ret = NULL;
-	FILE *f_IT = p_IF->f_IT;
 	char ID[4];
 
 	{
@@ -84,7 +81,6 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 	}
 
 	fread(ID, 4, 1, f_IT);
-
 	if (ID == "PNAM")
 	{
 		fread(&p_IF->PatName.nNames, 4, 1, f_IT);
@@ -100,7 +96,6 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 		fseek(f_IT, -4, SEEK_CUR);
 
 	fread(ID, 4, 1, f_IT);
-
 	if (ID == "CNAME")
 	{
 		fread(&p_IF->ChanName.nNames, 4, 1, f_IT);
@@ -227,24 +222,9 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 						}
 					}
 				}
-				// Check for a normal parameter command
-				if ((ChanMask[nChan] & 8) != 0)
-				{
-					BYTE cmd = 0, param = 0;
-					fread(&cmd, 1, 1, f_IT);
-					fread(&param, 1, 1, f_IT);
-					j += 2;
-
-					if (cmd + 0x40 < 65 || cmd + 0x40 > 90)
-						cmd = 0;
-					else
-						cmd += 0x40;
-				}
 			}
 		}
 	}
-
-	return ret;
 }
 #endif
 
