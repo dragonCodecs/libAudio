@@ -132,8 +132,8 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	uint16_t Reserved1, C3Speed, Unknown;
 	uint32_t Reserved3;
 	FILE *f_STM = p_SF->f_STM;
-	Name = new char[13];
 
+	Name = new char[13];
 	fread(Name, 12, 1, f_STM);
 	if (Name[11] != 0)
 		Name[12] = 0;
@@ -301,8 +301,8 @@ ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type)
 
 ModuleSampleAdlib::~ModuleSampleAdlib()
 {
-	delete Name;
-	delete FileName;
+	delete [] Name;
+	delete [] FileName;
 }
 
 uint32_t ModuleSampleAdlib::GetLength()
