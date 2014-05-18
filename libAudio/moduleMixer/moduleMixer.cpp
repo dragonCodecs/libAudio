@@ -71,7 +71,7 @@ void ModuleFile::ResetChannelPanning()
 				Channels[i].Panning = 128;
 		}
 	}
-	else if (ModuleType == MODULE_S3M)
+	else if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT)
 	{
 		if (p_Header->Panning == NULL)
 		{
@@ -89,9 +89,9 @@ void ModuleFile::ResetChannelPanning()
 		for (i = 0; i < p_Header->nChannels; i++)
 		{
 			if ((i % 2) != 0)
-				Channels[i].Panning = 64;
+				Channels[i].Panning = 32;
 			else
-				Channels[i].Panning = 192;
+				Channels[i].Panning = 96;
 		}
 	}
 }
