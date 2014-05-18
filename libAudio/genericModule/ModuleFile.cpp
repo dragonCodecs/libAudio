@@ -187,6 +187,46 @@ ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NU
 #endif
 }
 
+ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), Channels(NULL), MixerChannels(NULL)
+{
+	uint16_t i;
+	uint32_t *SamplePtrs, *PatternPtrs;
+	FILE *f_IT = p_IF->f_IT;
+
+	p_Header = new ModuleHeader(p_IF);
+	p_Samples = new ModuleSample *[p_Header->nSamples];
+	SamplePtrs = (uint32_t *)p_Header->SamplePtrs;
+	for (i = 0; i < p_Header->nSamples; i++)
+	{
+		fseek(f_IT, SamplePtrs[i], SEEK_SET);
+		p_Samples[i] = ModuleSample::LoadSample(p_IF, i);
+	}
+
+	for (i = 0; i < 64; i++)
+	{
+		if (p_Header->Panning[i] > 128)
+		{
+			p_Header->nChannels = i;
+			break;
+		}
+	}
+
+	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	PatternPtrs = (uint32_t *)p_Header->PatternPtrs;
+	for (i = 0; i < p_Header->nPatterns; i++)
+	{
+		if (PatternPtrs[i] == 0)
+			p_Patterns[i] = NULL;
+		else
+		{
+			fseek(f_IT, PatternPtrs[i], SEEK_SET);
+			p_Patterns[i] = new ModulePattern(p_IF, p_Header->nChannels);
+		}
+	}
+
+	//ITLoadPCM(f_IT);
+}
+
 ModuleFile::~ModuleFile()
 {
 	uint32_t i;
@@ -355,6 +395,8 @@ const char *ModuleLoaderError::GetError()
 			return "Bad Art Of Noise Module";
 		case E_BAD_FC1x:
 			return "Bad Future Composer Module";
+		case E_BAD_IT:
+			return "Bad Impulse Tracker Module";
 		default:
 			return "Unknown error";
 	}

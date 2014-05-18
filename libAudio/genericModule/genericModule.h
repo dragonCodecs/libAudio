@@ -274,6 +274,7 @@ public:
 	ModulePattern(S3M_Intern *p_SF, uint32_t nChannels);
 	ModulePattern(STM_Intern *p_SF);
 	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
+	ModulePattern(IT_Intern *p_IF, uint32_t nChannels);
 	~ModulePattern();
 
 	ModuleCommand **GetCommands();
@@ -402,6 +403,7 @@ public:
 	ModuleFile(STM_Intern *p_SF);
 	ModuleFile(AON_Intern *p_AF);
 	ModuleFile(FC1x_Intern *p_FF);
+	ModuleFile(IT_Intern *p_IF);
 	~ModuleFile();
 
 	const char *GetTitle();

@@ -155,6 +155,41 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nC
 	}
 }
 
+template<typename T> void readInc(T var, uint8_t bytes, uint16_t &j, FILE *f_IT)
+{
+	fread(var, bytes, 1, f_IT);
+	j += bytes;
+}
+
+ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nChannels)
+{
+	uint8_t b;
+	uint16_t len, rows, row, channel, j;
+	FILE *f_IT = p_IF->f_IT;
+
+	fread(&len, 2, 1, f_IT);
+	fread(&rows, 2, 1, f_IT);
+	Commands = new ModuleCommand *[nChannels];
+	for (channel = 0; channel < nChannels; channel++)
+		Commands[channel] = new ModuleCommand[rows];
+
+	row = 0;
+	j = 0;
+	while (row < rows)
+	{
+		channel = 0;
+		if (j > len)
+			break;
+		readInc(&b, 1, j, f_IT);
+		if (b == 0)
+		{
+			row++;
+			continue;
+		}
+		channel = b & 0x7F;
+	}
+}
+
 ModulePattern::~ModulePattern()
 {
 	uint8_t channel;
