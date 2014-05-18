@@ -347,6 +347,72 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 }
 #endif
 
+ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
+{
+	char Magic[4], DontCare[4];
+	uint16_t MsgLength;
+	uint8_t Const;
+	FILE *f_IT = p_IF->f_IT;
+
+	fread(Magic, 4, 1, f_IT);
+	if (strncmp(Magic, "IMPM", 4) != 0)
+		throw new ModuleLoaderError(E_BAD_IT);
+
+	Name = new char[27];
+	fread(Name, 26, 1, f_IT);
+	if (Name[25] != 0)
+		Name[26] = 0;
+
+	fread(DontCare, 2, 1, f_IT);
+	fread(&nOrders, 2, 1, f_IT);
+	fread(&nInstruments, 2, 1, f_IT);
+	fread(&nSamples, 2, 1, f_IT);
+	fread(&nPatterns, 2, 1, f_IT);
+	fread(&CreationVersion, 2, 1, f_IT);
+	fread(&FormatVersion, 2, 1, f_IT);
+	fread(&Flags, 2, 1, f_IT);
+	// TODO: Handle special.
+	fread(DontCare, 2, 1, f_IT);
+	fread(&GlobalVolume, 1, 1, f_IT);
+	fread(&MasterVolume, 1, 1, f_IT);
+	fread(&InitialSpeed, 1, 1, f_IT);
+	fread(&InitialTempo, 1, 1, f_IT);
+	fread(&Separation, 1, 1, f_IT);
+	fread(&Const, 1, 1, f_IT);
+
+	if (Const != 0)
+		throw new ModuleLoaderError(E_BAD_IT);
+
+	fread(&MsgLength, 2, 1, f_IT);
+	fread(&MessageOffs, 4, 1, f_IT);
+	fread(&DontCare, 4, 1, f_IT);
+
+	if (MessageOffs != 0)
+	{
+		size_t PartialHeader = ftell(f_IT);
+		fseek(f_IT, SEEK_SET, MessageOffs);
+		Remark = new char[MsgLength + 1];
+		fread(Remark, MsgLength, 1, f_IT);
+		fseek(f_IT, SEEK_SET, PartialHeader);
+		Remark[MsgLength] = 0;
+	}
+
+	Panning = new uint8_t[64];
+	fread(Panning, 64, 1, f_IT);
+	//Volumes = new uint8_t[64];
+	fread(Volumes, 64, 1, f_IT);
+
+	Orders = new uint8_t[nOrders];
+	fread(Orders, nOrders, 1, f_IT);
+
+	InstrumentPtrs = new uint32_t[nInstruments];
+	fread(InstrumentPtrs, nInstruments, 4, f_IT);
+	SamplePtrs = new uint32_t[nSamples];
+	fread(SamplePtrs, nSamples, 4, f_IT);
+	PatternPtrs = new uint32_t[nPatterns];
+	fread(PatternPtrs, nPatterns, 4, f_IT);
+}
+
 ModuleHeader::~ModuleHeader()
 {
 	delete [] Panning;

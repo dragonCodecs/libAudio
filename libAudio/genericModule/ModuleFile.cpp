@@ -54,14 +54,15 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), Channels(NULL
 
 ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), Channels(NULL), MixerChannels(NULL)
 {
-	uint32_t i;
+	uint16_t i, *SamplePtrs, *PatternPtrs;
 	FILE *f_S3M = p_SF->f_S3M;
 
 	p_Header = new ModuleHeader(p_SF);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
+	SamplePtrs = (uint16_t *)p_Header->SamplePtrs;
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
-		uint32_t SeekLoc = ((uint32_t)(p_Header->SamplePtrs[i])) << 4;
+		uint32_t SeekLoc = ((uint32_t)(SamplePtrs[i])) << 4;
 		fseek(f_S3M, SeekLoc, SEEK_SET);
 		p_Samples[i] = ModuleSample::LoadSample(p_SF, i);
 	}
@@ -78,9 +79,10 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), Channels(NULL
 	}
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	PatternPtrs = (uint16_t *)p_Header->PatternPtrs;
 	for (i = 0; i < p_Header->nPatterns; i++)
 	{
-		uint32_t SeekLoc = ((uint32_t)p_Header->PatternPtrs[i]) << 4;
+		uint32_t SeekLoc = ((uint32_t)PatternPtrs[i]) << 4;
 		fseek(f_S3M, SeekLoc, SEEK_SET);
 		p_Patterns[i] = new ModulePattern(p_SF, p_Header->nChannels);
 	}

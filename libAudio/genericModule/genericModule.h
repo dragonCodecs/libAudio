@@ -19,6 +19,7 @@ class ModulePattern;
 #include "../ScreamTracker.h"
 #include "../ArtOfNoise.h"
 #include "../FutureComposer.h"
+#include "../ImpulseTracker.h"
 #include "effects.h"
 
 #define MIXBUFFERSIZE		512
@@ -28,11 +29,13 @@ class ModulePattern;
 #define MODULE_STM		3
 #define MODULE_AON		4
 #define MODULE_FC1x		5
+#define MODULE_IT		6
 
 #define E_BAD_S3M		1
 #define E_BAD_STM		2
 #define E_BAD_AON		3
 #define E_BAD_FC1x		4
+#define E_BAD_IT		5
 
 #define FILE_FLAGS_AMIGA_SLIDES		0x01
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
@@ -119,6 +122,7 @@ public:
 #ifdef __FC1x_EXPERIMENTAL__
 	ModuleHeader(FC1x_Intern *p_FF);
 #endif
+	ModuleHeader(IT_Intern *p_IF);
 	~ModuleHeader();
 };
 
