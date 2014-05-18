@@ -59,11 +59,22 @@ class ModuleHeader : public ModuleAllocator
 private:
 	// Common fields
 	char *Name;
+	char *Remark;
 	uint16_t nOrders;
 	uint16_t nSamples;
 	uint16_t nInstruments;
 	uint16_t nPatterns;
 	uint8_t *Orders;
+	uint8_t *Panning;
+	uint16_t Flags;
+	uint16_t CreationVersion;
+	uint16_t FormatVersion;
+	void *InstrumentPtrs;
+	// Slightly badly named
+	// SamplePtrs = pointers to where the sample *descriptors* are
+	void *SamplePtrs;
+	// PatternPtrs = pointers to where the compressed pattern data is
+	void *PatternPtrs;
 
 	// Fields specific to certain formats
 
@@ -72,25 +83,14 @@ private:
 
 	// S3M
 	uint8_t Type;
-	uint16_t Flags;
-	uint16_t CreationVersion;
-	uint16_t FormatVersion;
 	uint8_t GlobalVolume;
 	uint8_t InitialSpeed;
 	uint8_t InitialTempo;
 	uint8_t MasterVolume;
 	uint8_t ChannelSettings[32];
-	// Slightly badly named
-	// SamplePtrs = pointers to where the sample *descriptors* are
-	uint16_t *SamplePtrs;
-	// PatternPtrs = pointers to where the compressed pattern data is
-	uint16_t *PatternPtrs;
-
-	uint8_t *Panning;
 
 	// AON
 	char *Author;
-	char *Remark;
 	char ArpTable[16][4];
 
 #ifdef __FC1x_EXPERIMENTAL__
@@ -100,6 +100,11 @@ private:
 	uint32_t PatLength;
 	uint32_t SampleOffs;
 #endif
+
+	// IT
+	uint8_t Separation;
+	uint32_t MessageOffs;
+	uint8_t Volumes[64];
 
 private:
 	uint8_t nChannels;

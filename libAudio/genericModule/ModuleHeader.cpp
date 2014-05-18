@@ -6,8 +6,8 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 {
 	char MODMagic[4];
 	FILE *f_MOD = p_MF->f_MOD;
-	Name = new char[21];
 
+	Name = new char[21];
 	fread(Name, 20, 1, f_MOD);
 	if (Name[19] != 0)
 		Name[20] = 0;
@@ -59,11 +59,13 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 	\********************************************/
 	Type = 0;
 	Flags = 0;
+	nInstruments = 0;
 	CreationVersion = FormatVersion = 0;
 	GlobalVolume = MasterVolume = 64;
+	Separation = 128;
 	InitialSpeed = 6;
 	InitialTempo = 125;
-	SamplePtrs = PatternPtrs = NULL;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
 	Panning = NULL;
 	Author = NULL;
 	Remark = NULL;
@@ -135,6 +137,9 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	RestartPos = 255;
+	Separation = 128;
+	nInstruments = 0;
+	InstrumentPtrs = NULL;
 	Author = NULL;
 	Remark = NULL;
 }
@@ -182,9 +187,11 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF)
 	\********************************************/
 	Flags = 0;
 	MasterVolume = 64;
+	Separation = 128;
 	RestartPos = 255;
 	InitialTempo = 125;
-	SamplePtrs = PatternPtrs = NULL;
+	nInstruments = 0;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
 	Author = NULL;
 	Remark = NULL;
 }
@@ -295,9 +302,10 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	Flags = 0;
 	CreationVersion = FormatVersion = 0;
 	GlobalVolume = MasterVolume = 64;
+	Separation = 128;
 	InitialSpeed = 6;
 	InitialTempo = 125;
-	SamplePtrs = PatternPtrs = NULL;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
 	Panning = NULL;
 }
 
@@ -331,7 +339,9 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 	\********************************************/
 	Name = NULL;
 	RestartPos = 255;
-	SamplePtrs = PatternPtrs = NULL;
+	nInstruments = 0;
+	Separation = 128;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
 	Author = NULL;
 	Remark = NULL;
 }
@@ -340,8 +350,9 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 ModuleHeader::~ModuleHeader()
 {
 	delete [] Panning;
-	delete [] PatternPtrs;
-	delete [] SamplePtrs;
+	delete [] (uint16_t *)InstrumentPtrs;
+	delete [] (uint16_t *)PatternPtrs;
+	delete [] (uint16_t *)SamplePtrs;
 	delete [] Orders;
 	delete [] Name;
 	delete [] Author;
