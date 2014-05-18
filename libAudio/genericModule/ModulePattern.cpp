@@ -394,6 +394,14 @@ void ModuleCommand::SetITNote(uint8_t note)
 
 void ModuleCommand::SetITVolume(uint8_t volume)
 {
-	VolEffect = VOLCMD_NONE;
-	VolParam = volume;
+	if (volume <= 64)
+	{
+		VolEffect = VOLCMD_VOLUME;
+		VolParam = volume;
+	}
+	else
+	{
+		VolEffect = VOLCMD_NONE;
+		VolParam = volume;
+	}
 }
