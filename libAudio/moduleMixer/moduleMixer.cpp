@@ -114,6 +114,10 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 		channel->Flags |= CHN_LOOP;
 	else
 		channel->Flags &= ~CHN_LOOP;
+	if (sample->GetBidiLoop())
+		channel->Flags |= CHN_LPINGPONG;
+	else
+		channel->Flags &= ~CHN_LPINGPONG;
 	channel->NewSampleData = p_PCM[sample->ID];
 	channel->FineTune = sample->GetFineTune();
 	channel->C4Speed = sample->GetC4Speed();
@@ -207,6 +211,10 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 				channel->LoopStart = 0;
 				channel->LoopEnd = sample->GetLength();
 			}
+			if (sample->GetBidiLoop())
+				channel->Flags |= CHN_LPINGPONG;
+			else
+				channel->Flags &= ~CHN_LPINGPONG;
 			channel->Pos = 0;
 			if ((channel->TremoloType & 0x04) != 0)
 				channel->TremoloPos = 0;
@@ -1254,14 +1262,28 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 	{
 		if ((channel->Flags & CHN_LOOP) == 0)
 			return 0;
-		if (Increment.iValue < 0)
+		if ((channel->Flags & CHN_LPINGPONG) != 0)
 		{
-			Increment.iValue = -Increment.iValue;
-			channel->Increment.iValue = Increment.iValue;
+			if (Increment.iValue > 0)
+			{
+				Increment.iValue = -Increment.iValue;
+				channel->Increment.iValue = Increment.iValue;
+			}
+			channel->Pos -= channel->Pos - channel->Length;
+			if (channel->Pos <= channel->LoopStart || channel->Pos >= channel->Length)
+				channel->Pos = channel->Length - 1;
 		}
-		channel->Pos += LoopStart - channel->Length;
-		if (channel->Pos < LoopStart)
-			channel->Pos = LoopStart;
+		else
+		{
+			if (Increment.iValue < 0)
+			{
+				Increment.iValue = -Increment.iValue;
+				channel->Increment.iValue = Increment.iValue;
+			}
+			channel->Pos += LoopStart - channel->Length;
+			if (channel->Pos < LoopStart)
+				channel->Pos = LoopStart;
+		}
 		// The following fixes 3 or 4 bugs and allows
 		// for loops to run correctly. DO NOT REMOVE!
 		if (channel->Length > channel->LoopEnd)

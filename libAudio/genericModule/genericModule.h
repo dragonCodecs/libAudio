@@ -43,7 +43,7 @@ class ModulePattern;
 #define SAMPLE_FLAGS_LOOP		1
 #define SAMPLE_FLAGS_STEREO		2
 #define SAMPLE_FLAGS_16BIT		4
-#define SAMPLE_FLAGS_UNSIGNED	8
+#define SAMPLE_FLAGS_LPINGPONG	8
 
 class ModuleLoaderError
 {
@@ -164,6 +164,7 @@ public:
 	virtual uint8_t GetVibratoType() = 0;
 	virtual uint8_t GetVibratoRate() = 0;
 	virtual bool Get16Bit() = 0;
+	virtual bool GetBidiLoop() = 0;
 };
 
 class ModuleSampleNative : public ModuleSample
@@ -212,6 +213,7 @@ public:
 	uint8_t GetVibratoType();
 	uint8_t GetVibratoRate();
 	bool Get16Bit();
+	bool GetBidiLoop();
 };
 
 class ModuleSampleAdlib : public ModuleSample
@@ -251,6 +253,7 @@ public:
 	uint8_t GetVibratoType();
 	uint8_t GetVibratoRate();
 	bool Get16Bit();
+	bool GetBidiLoop();
 };
 
 class ModuleCommand : public ModuleAllocator

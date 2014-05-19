@@ -252,7 +252,7 @@ ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSamp
 	SampleFlags |= (Flags & 0x10) ? SAMPLE_FLAGS_LOOP : 0;
 	SampleFlags |= (Flags & 0x04) ? SAMPLE_FLAGS_STEREO : 0;
 	SampleFlags |= (Flags & 0x02) ? SAMPLE_FLAGS_16BIT : 0;
-	SampleFlags |= (Packing & 0x01) ? SAMPLE_FLAGS_UNSIGNED : 0;
+	SampleFlags |= (Flags & 0x40) ? SAMPLE_FLAGS_LPINGPONG : 0;
 }
 
 ModuleSampleNative::~ModuleSampleNative()
@@ -319,6 +319,11 @@ uint8_t ModuleSampleNative::GetVibratoRate()
 bool ModuleSampleNative::Get16Bit()
 {
 	return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0;
+}
+
+bool ModuleSampleNative::GetBidiLoop()
+{
+	return (SampleFlags & SAMPLE_FLAGS_LPINGPONG) != 0;
 }
 
 ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type) : ModuleSample(i, Type)
@@ -422,6 +427,11 @@ uint8_t ModuleSampleAdlib::GetVibratoRate()
 }
 
 bool ModuleSampleAdlib::Get16Bit()
+{
+	return false;
+}
+
+bool ModuleSampleAdlib::GetBidiLoop()
 {
 	return false;
 }
