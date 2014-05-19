@@ -167,7 +167,7 @@ inline bool readInc(uint8_t *var, uint16_t &i, uint16_t len, FILE *f_IT)
 ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nChannels)
 {
 	char DontCare[4];
-	uint8_t b, ChannelMask;
+	uint8_t b, ChannelMask[64];
 	uint16_t len, rows, row, channel, j;
 	ModuleCommand LastCommand[64];
 	FILE *f_IT = p_IF->f_IT;
@@ -194,11 +194,11 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 		channel = b & 0x7F;
 		if (channel != 0)
 			channel = (channel - 1) & 0x3F;
-		if ((b & 0x80) != 0 && readInc(&ChannelMask, j, len, f_IT))
+		if ((b & 0x80) != 0 && readInc(&ChannelMask[channel], j, len, f_IT))
 			break;	
 		if (channel < nChannels)
-			Commands[channel][row].SetITRepVal(ChannelMask, LastCommand[64]);
-		if ((ChannelMask & 0x01) != 0)
+			Commands[channel][row].SetITRepVal(ChannelMask[channel], LastCommand[channel]);
+		if ((ChannelMask[channel] & 0x01) != 0)
 		{
 			uint8_t note;
 			if (readInc(&note, j, len, f_IT))
@@ -209,7 +209,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 				LastCommand[channel].SetITNote(note);
 			}
 		}
-		if ((ChannelMask & 0x02) != 0)
+		if ((ChannelMask[channel] & 0x02) != 0)
 		{
 			uint8_t sample;
 			if (readInc(&sample, j, len, f_IT))
@@ -220,7 +220,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 				LastCommand[channel].SetSample(sample);
 			}
 		}
-		if ((ChannelMask & 0x04) != 0)
+		if ((ChannelMask[channel] & 0x04) != 0)
 		{
 			uint8_t volume;
 			if (readInc(&volume, j, len, f_IT))
@@ -231,7 +231,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 				LastCommand[channel].SetITVolume(volume);
 			}
 		}
-		if ((ChannelMask & 0x08) != 0)
+		if ((ChannelMask[channel] & 0x08) != 0)
 		{
 			uint8_t effect, param;
 			if (readInc(&effect, j, len, f_IT) || readInc(&param, j, len, f_IT))
@@ -387,7 +387,7 @@ void ModuleCommand::SetITRepVal(uint8_t ChannelMask, ModuleCommand &LastCommand)
 
 void ModuleCommand::SetITNote(uint8_t note)
 {
-	if (note & 0x80)
+	if (note < 0x80)
 		note++;
 	Note = note;
 }

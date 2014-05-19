@@ -283,7 +283,7 @@ void ModuleCommand::SetAONEffect(uint8_t effect, uint8_t param)
 
 void ModuleCommand::SetITEffect(uint8_t effect, uint8_t param)
 {
-	if (effect < 25)
+	if (effect < 26)
 	{
 		SetS3MEffect(effect, param);
 		if (effect == 3)
