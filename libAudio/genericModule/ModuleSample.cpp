@@ -75,6 +75,7 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	Packing = SampleFlags = 0;
 	C4Speed = 8363;
 	FileName = NULL;
+	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
 #define fread_24bit(Dest, File) \
@@ -129,6 +130,12 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	SampleFlags |= (Flags & 1) ? SAMPLE_FLAGS_LOOP : 0;
 	SampleFlags |= (Flags & 2) ? SAMPLE_FLAGS_STEREO : 0;
 	SampleFlags |= (Flags & 4) ? SAMPLE_FLAGS_16BIT : 0;
+
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
+	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
 ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSample(i, 1)
@@ -174,6 +181,7 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	Packing = SampleFlags = 0;
 	Name = NULL;
 	FineTune = 0;
+	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
 ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name) : ModuleSample(i, 1)
@@ -283,9 +291,29 @@ uint8_t ModuleSampleNative::GetVolume()
 	return Volume << 1;
 }
 
-bool ModuleSampleNative::GetUnsigned()
+bool ModuleSampleNative::GetVibrato()
 {
-	return (SampleFlags & SAMPLE_FLAGS_UNSIGNED) != 0;
+	return VibratoSpeed != 0 && VibratoDepth != 0 && VibratoRate != 0;
+}
+
+uint8_t ModuleSampleNative::GetVibratoSpeed()
+{
+	return VibratoSpeed;
+}
+
+uint8_t ModuleSampleNative::GetVibratoDepth()
+{
+	return VibratoDepth;
+}
+
+uint8_t ModuleSampleNative::GetVibratoType()
+{
+	return VibratoType;
+}
+
+uint8_t ModuleSampleNative::GetVibratoRate()
+{
+	return VibratoRate;
 }
 
 bool ModuleSampleNative::Get16Bit()
@@ -368,9 +396,29 @@ uint8_t ModuleSampleAdlib::GetVolume()
 	return Volume << 1;
 }
 
-bool ModuleSampleAdlib::GetUnsigned()
+bool ModuleSampleAdlib::GetVibrato()
 {
 	return false;
+}
+
+uint8_t ModuleSampleAdlib::GetVibratoSpeed()
+{
+	return 0;
+}
+
+uint8_t ModuleSampleAdlib::GetVibratoDepth()
+{
+	return 0;
+}
+
+uint8_t ModuleSampleAdlib::GetVibratoType()
+{
+	return 0;
+}
+
+uint8_t ModuleSampleAdlib::GetVibratoRate()
+{
+	return 0;
 }
 
 bool ModuleSampleAdlib::Get16Bit()

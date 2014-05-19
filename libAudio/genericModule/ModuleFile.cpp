@@ -402,7 +402,7 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 		p_PCM[i] = new uint8_t[Length];
 		fseek(f_IT, Sample->SamplePos, SEEK_SET);
 		fread(p_PCM[i], Length, 1, f_IT);
-		if (p_Samples[i]->GetUnsigned())
+		if ((Sample->Packing & 0x01) == 0)
 		{
 			uint32_t j;
 			if (p_Samples[i]->Get16Bit())

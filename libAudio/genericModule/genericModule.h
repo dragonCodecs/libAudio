@@ -158,7 +158,11 @@ public:
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
-	virtual bool GetUnsigned() = 0;
+	virtual bool GetVibrato() = 0;
+	virtual uint8_t GetVibratoSpeed() = 0;
+	virtual uint8_t GetVibratoDepth() = 0;
+	virtual uint8_t GetVibratoType() = 0;
+	virtual uint8_t GetVibratoRate() = 0;
 	virtual bool Get16Bit() = 0;
 };
 
@@ -202,7 +206,11 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
-	bool GetUnsigned();
+	bool GetVibrato();
+	uint8_t GetVibratoSpeed();
+	uint8_t GetVibratoDepth();
+	uint8_t GetVibratoType();
+	uint8_t GetVibratoRate();
 	bool Get16Bit();
 };
 
@@ -237,7 +245,11 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
-	bool GetUnsigned();
+	bool GetVibrato();
+	uint8_t GetVibratoSpeed();
+	uint8_t GetVibratoDepth();
+	uint8_t GetVibratoType();
+	uint8_t GetVibratoRate();
 	bool Get16Bit();
 };
 
