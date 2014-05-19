@@ -131,7 +131,7 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 	if (Note == 0 || Note > 0xF0)
 		return 0;
 	Note--;
-	if (ModuleType == MODULE_S3M)
+	if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT || ModuleType == MODULE_STM)
 	{
 		if ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 			return (S3MPeriods[Note % 12] << 5) >> (Note / 12);

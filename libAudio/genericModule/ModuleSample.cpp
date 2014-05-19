@@ -237,8 +237,8 @@ ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSamp
 		C4Speed = 8363;
 	else if (C4Speed < 256)
 		C4Speed = 256;
-	else
-		C4Speed /= 2;
+	/*else
+		C4Speed /= 2;*/
 
 	// If looping not enabled, zero the Loop fields
 	if ((Flags & 0x10) == 0)
