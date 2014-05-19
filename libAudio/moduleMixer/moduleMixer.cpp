@@ -123,6 +123,8 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 	channel->C4Speed = sample->GetC4Speed();
 	if (channel->LoopEnd > channel->Length)
 		channel->LoopEnd = channel->Length;
+	if (channel->Length > channel->LoopEnd)
+		channel->Length = channel->LoopEnd;
 	channel->NewSample = 0;
 }
 
@@ -1161,7 +1163,8 @@ bool ModuleFile::AdvanceTick()
 		else
 			channel->Flags &= ~CHN_VOLUMERAMP;
 		channel->NewLeftVol = channel->NewRightVol = 0;
-		if (channel->Increment.Value.Hi + 1 >= (int)(channel->LoopEnd - channel->LoopStart))
+		//if (channel->Increment.Value.Hi + 1 >= (int)(channel->LoopEnd - channel->LoopStart))
+		if ((channel->Increment.Value.Hi + 1) >= (int)channel->LoopEnd)
 			channel->Flags &= ~CHN_LOOP;
 		channel->SampleData = ((channel->NewSampleData != NULL && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : NULL);
 		if (channel->SampleData != NULL)
