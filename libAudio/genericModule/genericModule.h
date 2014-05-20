@@ -256,6 +256,53 @@ public:
 	bool GetBidiLoop();
 };
 
+class ModuleInstrument : public ModuleAllocator
+{
+private:
+	uint32_t ID;
+
+protected:
+	ModuleInstrument(uint32_t ID);
+
+public:
+	static ModuleInstrument *LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion);
+
+	virtual uint8_t Map(uint8_t Note) = 0;
+};
+
+class ModuleOldInstrument : public ModuleInstrument
+{
+public:
+	ModuleOldInstrument(IT_Intern *p_IT, uint32_t i);
+
+	uint8_t Map(uint8_t Note);
+};
+
+class ModuleNewInstrument : public ModuleInstrument
+{
+private:
+	char *FileName;
+	uint8_t NNA;
+	uint8_t DCT;
+	uint8_t DCA;
+	uint16_t FadeOut;
+	uint8_t PPS;
+	uint8_t PPC;
+	uint8_t Volume;
+	uint8_t Panning;
+	uint8_t RandVolume;
+	uint8_t RandPanning;
+	uint16_t TrackerVersion;
+	uint8_t nSamples;
+	char *Name;
+	uint8_t SampleMapping[240];
+
+public:
+	ModuleNewInstrument(IT_Intern *p_IT, uint32_t i);
+
+	uint8_t Map(uint8_t Note);
+};
+
 class ModuleCommand : public ModuleAllocator
 {
 private:
@@ -329,6 +376,7 @@ public:
 	uint8_t Volume, VolumeSlide;
 	uint8_t ChannelVolume, ChannelVolumeSlide;
 	ModuleSample *Sample;
+	ModuleInstrument *Instrument;
 	uint8_t FineTune, Panning, Arpeggio;
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
@@ -367,6 +415,7 @@ private:
 	ModuleHeader *p_Header;
 	ModuleSample **p_Samples;
 	ModulePattern **p_Patterns;
+	ModuleInstrument **p_Instruments;
 	uint8_t **p_PCM;
 
 	// Mixer info
