@@ -22,7 +22,7 @@ void *ModuleAllocator::operator new[](size_t size)
 	return ret;
 }
 
-ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i, maxPattern;
 	FILE *f_MOD = p_MF->f_MOD;
@@ -52,7 +52,7 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), Channels(NULL
 	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint16_t i, *SamplePtrs, *PatternPtrs;
 	FILE *f_S3M = p_SF->f_S3M;
@@ -92,7 +92,7 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), Channels(NULL
 	MaxPeriod = 32767;
 }
 
-ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i;
 	FILE *f_STM = p_SF->f_STM;
@@ -114,7 +114,7 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), Channels(NULL
 
 // http://www.tigernt.com/onlineDoc/68000.pdf
 // http://eab.abime.net/showthread.php?t=21516
-ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	char StrMagic[4];
 	uint32_t BlockLen, i, SampleLengths;
@@ -178,7 +178,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), Channels(NULL
 	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 #ifdef __FC1x_EXPERIMENTAL__
 //	FILE *f_FC1x = p_FF->f_FC1x;
@@ -187,13 +187,23 @@ ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), Channels(NU
 #endif
 }
 
-ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint16_t i;
 	uint32_t *SamplePtrs, *PatternPtrs;
 	FILE *f_IT = p_IF->f_IT;
 
 	p_Header = new ModuleHeader(p_IF);
+	if (p_Header->nInstruments != 0)
+	{
+		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
+		SamplePtrs = (uint32_t *)p_Header->InstrumentPtrs;
+		for (i = 0; i < p_Header->nInstruments; i++)
+		{
+			fseek(f_IT, SamplePtrs[i], SEEK_SET);
+			p_Instruments[i] = ModuleInstrument::LoadInstrument(p_IF, i, p_Header->FormatVersion);
+		}
+	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	SamplePtrs = (uint32_t *)p_Header->SamplePtrs;
 	for (i = 0; i < p_Header->nSamples; i++)
