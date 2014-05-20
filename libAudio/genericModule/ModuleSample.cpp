@@ -229,7 +229,7 @@ ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSamp
 	fread(&VibratoType, 1, 1, f_IT);
 	fread(&VibratoRate, 1, 1, f_IT);
 
-	if (Const != 0 || Packing > 63|| VibratoSpeed > 64 || VibratoDepth > 64 ||
+	if (Const != 0 || Packing > 63 || VibratoSpeed > 64 || VibratoDepth > 64 ||
 		/*VibratoType > 4  ||*/ (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
 		throw new ModuleLoaderError(E_BAD_IT);
 
@@ -289,11 +289,6 @@ uint32_t ModuleSampleNative::GetC4Speed()
 uint8_t ModuleSampleNative::GetVolume()
 {
 	return Volume << 1;
-}
-
-bool ModuleSampleNative::GetVibrato()
-{
-	return VibratoSpeed != 0 && VibratoDepth != 0 && VibratoRate != 0;
 }
 
 uint8_t ModuleSampleNative::GetVibratoSpeed()
@@ -399,11 +394,6 @@ uint32_t ModuleSampleAdlib::GetC4Speed()
 uint8_t ModuleSampleAdlib::GetVolume()
 {
 	return Volume << 1;
-}
-
-bool ModuleSampleAdlib::GetVibrato()
-{
-	return false;
 }
 
 uint8_t ModuleSampleAdlib::GetVibratoSpeed()

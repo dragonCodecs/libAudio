@@ -158,7 +158,6 @@ public:
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
-	virtual bool GetVibrato() = 0;
 	virtual uint8_t GetVibratoSpeed() = 0;
 	virtual uint8_t GetVibratoDepth() = 0;
 	virtual uint8_t GetVibratoType() = 0;
@@ -207,7 +206,6 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
-	bool GetVibrato();
 	uint8_t GetVibratoSpeed();
 	uint8_t GetVibratoDepth();
 	uint8_t GetVibratoType();
@@ -247,7 +245,6 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
-	bool GetVibrato();
 	uint8_t GetVibratoSpeed();
 	uint8_t GetVibratoDepth();
 	uint8_t GetVibratoType();
@@ -394,6 +391,7 @@ public:
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
+	uint8_t AutoVibratoPos;
 	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
 	int DCOffsR, DCOffsL;
 
