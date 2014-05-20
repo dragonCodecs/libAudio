@@ -99,14 +99,11 @@ void ModuleFile::ResetChannelPanning()
 	}
 }
 
-void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
+void ModuleFile::ReloadSample(Channel *channel)
 {
-	ModuleSample *sample;
-
-	sample = p_Samples[nSample - 1];
+	ModuleSample *sample = channel->Sample;
 	channel->Volume = sample->GetVolume();
 	channel->NewSample = 0;
-	channel->Sample = sample;
 	channel->Length = sample->GetLength();
 	channel->LoopStart = (sample->GetLoopStart() < channel->Length ? sample->GetLoopStart() : channel->Length);
 	channel->LoopEnd = sample->GetLoopEnd();
@@ -126,6 +123,26 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 	if (channel->Length > channel->LoopEnd)
 		channel->Length = channel->LoopEnd;
 	channel->NewSample = 0;
+	channel->AutoVibratoPos = 0;
+}
+
+void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
+{
+	if (p_Instruments != NULL)
+	{
+		ModuleInstrument *instr = p_Instruments[nSample - 1];
+		uint8_t nSample = instr->Map(channel->Note - 1);
+		if (nSample == 0)
+		{
+			channel->Sample = NULL;
+			channel->NewSampleData = NULL;
+			channel->Length = 0;
+			return;
+		}
+		channel->Instrument = instr;
+	}
+	channel->Sample = p_Samples[nSample - 1];
+	ReloadSample(channel);
 }
 
 uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed)
@@ -187,6 +204,16 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		return;
 	}
 	channel->Note = note;
+	if (p_Instruments != NULL)
+	{
+		uint8_t nSample = channel->Instrument->Map(channel->Note - 1);
+		if (nSample == 0)
+			sample = NULL;
+		else
+			sample = p_Samples[nSample - 1];
+		channel->Sample = sample;
+		ReloadSample(channel);
+	}
 	channel->NewSample = 0;
 	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
 	if (sample == NULL)

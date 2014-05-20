@@ -453,6 +453,7 @@ private:
 	bool ProcessEffects();
 	void ResetChannelPanning();
 	void SampleChange(Channel *channel, uint32_t sample);
+	void ReloadSample(Channel *channel);
 	void NoteChange(Channel * const channel, uint8_t note, uint8_t cmd);
 	uint32_t GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed);
 	uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int32_t PeriodFrac);
