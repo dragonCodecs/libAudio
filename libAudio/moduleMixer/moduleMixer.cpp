@@ -753,10 +753,40 @@ void Channel::NoteCut(bool Triggered)
 
 void Channel::NoteOff()
 {
-	// bool NoteOn = !(Flags & CHN_NOTEOFF);
+	bool NoteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
+	/*if (Instrument != NULL && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
+		Flags |= CHN_NOTEFADE;*/
 	if (Length == 0)
 		return;
+	if (false && Sample != NULL && NoteOn)
+	{
+		if (LoopEnd != 0)
+		{
+			if (Sample->GetBidiLoop())
+				Flags |= CHN_LPINGPONG;
+			else
+				Flags &= ~CHN_LPINGPONG;
+			Flags |= CHN_LOOP;
+			Length = Sample->GetLength();
+			LoopStart = Sample->GetLoopStart();
+			LoopEnd = Sample->GetLoopEnd();
+			if (LoopEnd > Length)
+				LoopEnd = Length;
+			if (Length > LoopEnd)
+				Length = LoopEnd;
+		}
+		else
+		{
+			Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
+			Length = Sample->GetLength();
+		}
+	}
+	if (Instrument != NULL)
+	{
+		/*if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
+			Flags |= CHN_NOTEFADE;*/
+	}
 }
 
 void Channel::Vibrato(uint8_t param, uint8_t Multiplier)
