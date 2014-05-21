@@ -45,6 +45,10 @@ class ModulePattern;
 #define SAMPLE_FLAGS_16BIT		4
 #define SAMPLE_FLAGS_LPINGPONG	8
 
+#define ENVELOPE_VOLUME		0
+#define ENVELOPE_PANNING	1
+#define ENVELOPE_PITCH		2
+
 class ModuleLoaderError
 {
 private:
@@ -253,6 +257,23 @@ public:
 	bool GetBidiLoop();
 };
 
+class ModuleEnvelope : public ModuleAllocator
+{
+private:
+	uint8_t Type;
+	uint8_t Flags;
+	uint8_t nNodes;
+	uint8_t LoopBegin;
+	uint8_t LoopEnd;
+	uint8_t SusLoopBegin;
+	uint8_t SusLoopEnd;
+	uint8_t Nodes[75];
+
+public:
+	ModuleEnvelope(IT_Intern *p_IT, uint8_t env);
+	uint8_t Apply(uint8_t Tick, uint8_t Value);
+};
+
 class ModuleInstrument : public ModuleAllocator
 {
 private:
@@ -293,9 +314,11 @@ private:
 	uint8_t nSamples;
 	char *Name;
 	uint8_t SampleMapping[240];
+	ModuleEnvelope **Envelopes;
 
 public:
 	ModuleNewInstrument(IT_Intern *p_IT, uint32_t i);
+	~ModuleNewInstrument();
 
 	uint8_t Map(uint8_t Note);
 };

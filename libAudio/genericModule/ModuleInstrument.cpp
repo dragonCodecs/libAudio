@@ -25,7 +25,7 @@ uint8_t ModuleOldInstrument::Map(uint8_t Note)
 
 ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
 {
-	uint8_t Const;
+	uint8_t Const, env;
 	char Magic[4], DontCare[6];
 	FILE *f_IT = p_IT->f_IT;
 
@@ -59,6 +59,20 @@ ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 
 	if (Const != 0 || NNA > 3 || DCT > 3 || DCA > 2)
 		throw new ModuleLoaderError(E_BAD_IT);
+
+	Envelopes = new ModuleEnvelope *[3];
+	for (env = 0; env < 3; env++)
+		Envelopes[env] = new ModuleEnvelope(p_IT, env);
+}
+
+ModuleNewInstrument::~ModuleNewInstrument()
+{
+	uint8_t i;
+	for (i = 0; i < 3; i++)
+		delete Envelopes[i];
+	delete [] Envelopes;
+	delete [] Name;
+	delete [] FileName;
 }
 
 uint8_t ModuleNewInstrument::Map(uint8_t Note)
@@ -71,4 +85,24 @@ uint8_t ModuleNewInstrument::Map(uint8_t Note)
 			sample = SampleMapping[(i << 1) + 1];
 	}
 	return sample;
+}
+
+ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
+{
+	uint8_t DontCare;
+	FILE *f_IT = p_IT->f_IT;
+
+	fread(&Flags, 1, 1, f_IT);
+	fread(&nNodes, 1, 1, f_IT);
+	fread(&LoopBegin, 1, 1, f_IT);
+	fread(&LoopEnd, 1, 1, f_IT);
+	fread(&SusLoopBegin, 1, 1, f_IT);
+	fread(&SusLoopEnd, 1, 1, f_IT);
+	fread(Nodes, 75, 1, f_IT);
+	fread(&DontCare, 1, 1, f_IT);
+}
+
+uint8_t ModuleEnvelope::Apply(uint8_t Tick, uint8_t Value)
+{
+	return Value;
 }
