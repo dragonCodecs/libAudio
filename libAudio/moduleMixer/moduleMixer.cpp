@@ -204,7 +204,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		return;
 	}
 	channel->Note = note;
-	if (p_Instruments != NULL)
+	if (channel->Instrument != NULL)
 	{
 		uint8_t nSample = channel->Instrument->Map(channel->Note - 1);
 		if (nSample == 0)
