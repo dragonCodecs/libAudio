@@ -411,6 +411,11 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(SamplePtrs, nSamples, 4, f_IT);
 	PatternPtrs = new uint32_t[nPatterns];
 	fread(PatternPtrs, nPatterns, 4, f_IT);
+
+	Flags = 0;
+	RestartPos = 255;
+	Separation = 128;
+	Author = NULL;
 }
 
 ModuleHeader::~ModuleHeader()
