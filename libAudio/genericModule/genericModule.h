@@ -257,11 +257,13 @@ public:
 	bool GetBidiLoop();
 };
 
+#pragma pack(push, 1)
 typedef struct EnvelopeNode
 {
 	uint8_t Value;
 	uint16_t Tick;
 } EnvelopeNode;
+#pragma pack(pop)
 
 class ModuleEnvelope : public ModuleAllocator
 {
@@ -277,7 +279,7 @@ private:
 
 public:
 	ModuleEnvelope(IT_Intern *p_IT, uint8_t env);
-	int16_t Apply(uint8_t Tick);
+	uint8_t Apply(uint16_t Tick);
 	bool GetEnabled() const;
 	bool GetLooped() const;
 	bool HasNodes() const;

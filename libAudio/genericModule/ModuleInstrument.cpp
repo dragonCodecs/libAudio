@@ -140,12 +140,14 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 	fread(&SusLoopEnd, 1, 1, f_IT);
 	fread(Nodes, 75, 1, f_IT);
 	fread(&DontCare, 1, 1, f_IT);
+
+	if (LoopBegin >= nNodes || LoopEnd >= nNodes)
+		throw new ModuleLoaderError(E_BAD_IT);
 }
 
-int16_t ModuleEnvelope::Apply(uint8_t Tick)
+uint8_t ModuleEnvelope::Apply(uint16_t Tick)
 {
-	uint8_t pt, n1, n2;
-	int16_t ret;
+	uint8_t pt, n1, n2, ret;
 	for (pt = 0; pt < (nNodes - 1); pt++)
 	{
 		if (Tick <= Nodes[pt].Tick)
@@ -166,7 +168,7 @@ int16_t ModuleEnvelope::Apply(uint8_t Tick)
 	n2 = Nodes[pt].Tick;
 	if (n2 > n1 && Tick > n1)
 	{
-		int16_t val = pt - n1;
+		int16_t val = Tick - n1;
 		val *= ((int16_t)Nodes[pt].Value) - ret;
 		n2 -= n1;
 		return ret + (val / n2);
