@@ -102,7 +102,7 @@ void ModuleFile::ResetChannelPanning()
 void ModuleFile::ReloadSample(Channel *channel)
 {
 	ModuleSample *sample = channel->Sample;
-	channel->Volume = sample->GetVolume();
+	channel->RawVolume = sample->GetVolume();
 	channel->NewSample = 0;
 	channel->Length = sample->GetLength();
 	channel->LoopStart = (sample->GetLoopStart() < channel->Length ? sample->GetLoopStart() : channel->Length);
@@ -326,26 +326,26 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			if (param != 0 && TickCount == channel->StartTick)
 			{
 				param <<= 1; // << 1?
-				if (128 - param > channel->Volume)
-					channel->Volume += param;
+				if (128 - param > channel->RawVolume)
+					channel->RawVolume += param;
 				else
-					channel->Volume = 128;
+					channel->RawVolume = 128;
 			}
 			break;
 		case CMD_MODEX_FINEVOLDOWN:
 			if (param != 0 && TickCount == channel->StartTick)
 			{
 				param <<= 1; // << 1?
-				if (channel->Volume > param)
-					channel->Volume -= param;
+				if (channel->RawVolume > param)
+					channel->RawVolume -= param;
 				else
-					channel->Volume = 0;
+					channel->RawVolume = 0;
 			}
 			break;
 		case CMD_MODEX_CUT:
 			if (TickCount == param)
 			{
-				channel->Volume = 0;
+				channel->RawVolume = 0;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			break;
@@ -452,7 +452,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 		param = channel->VolumeSlide;
 	else
 		channel->VolumeSlide = param;
-	NewVolume = channel->Volume;
+	NewVolume = channel->RawVolume;
 
 	// TODO: Complete recode to take into account S3M FineVolume slides
 	if (ModuleType == MODULE_S3M || ModuleType == MODULE_STM)
@@ -482,7 +482,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 		if (ModuleType == MODULE_MOD)
 			channel->Flags |= CHN_FASTVOLRAMP;
 		CLIPINT(NewVolume, 0, 128);
-		channel->Volume = NewVolume & 0xFF;
+		channel->RawVolume = NewVolume & 0xFF;
 	}
 }
 
@@ -849,11 +849,11 @@ bool ModuleFile::ProcessEffects()
 			if (ModuleType == MODULE_MOD && note == 0xFF)
 			{
 				channel->Flags |= CHN_FASTVOLRAMP;
-				channel->Volume = 0;
+				channel->RawVolume = 0;
 				note = sample = 0;
 			}
 			if (note == 0 && sample != 0)
-				channel->Volume = p_Samples[sample - 1]->GetVolume();
+				channel->RawVolume = p_Samples[sample - 1]->GetVolume();
 			if (note >= 0xFE)
 				sample = 0;
 			if (note != 0 && note <= 128)
@@ -868,7 +868,7 @@ bool ModuleFile::ProcessEffects()
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
 			{
-				channel->Volume = channel->RowVolParam << 1;
+				channel->RawVolume = channel->RowVolParam << 1;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			else if (channel->RowVolEffect == VOLCMD_PANNING)
@@ -970,7 +970,7 @@ bool ModuleFile::ProcessEffects()
 					uint8_t NewVolume = param;
 					if (NewVolume > 64)
 						NewVolume = 64;
-					channel->Volume = NewVolume << 1;
+					channel->RawVolume = NewVolume << 1;
 					channel->Flags |= CHN_FASTVOLRAMP;
 				}
 				break;
@@ -1122,7 +1122,7 @@ bool ModuleFile::AdvanceTick()
 		if (channel->Period != 0 && channel->Length != 0)
 		{
 			int inc, period, freq;
-			short vol = channel->Volume;
+			short vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
 			{
 				uint8_t TremoloPos = channel->TremoloPos;
@@ -1176,6 +1176,7 @@ bool ModuleFile::AdvanceTick()
 				//FadeOutVol?
 				vol = 0;
 			}
+			channel->Flags &= ~CHN_NOTEFADE;
 
 			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
 			CLIPINT(vol, 0, 128);
@@ -1318,7 +1319,7 @@ bool ModuleFile::AdvanceTick()
 			}
 			// DEBUG: Uncomment to see the channel's main state information
 			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
-				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->Volume, channel->RowNote, channel->RowSample,
+				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->RawVolume, channel->RowNote, channel->RowSample,
 				channel->RowEffect, channel->RowParam, channel->Period, channel->PortamentoDest, channel->FineTune, channel->Increment.Value.Hi,
 				channel->Increment.Value.Lo, channel->Pos, channel->PosLo);*/
 			MixerChannels[nMixerChannels++] = i;

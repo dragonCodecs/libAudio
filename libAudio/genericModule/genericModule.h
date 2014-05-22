@@ -414,7 +414,7 @@ public:
 	uint8_t Note, RampLength;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
-	uint8_t Volume, VolumeSlide;
+	uint8_t RawVolume, Volume, VolumeSlide;
 	uint8_t ChannelVolume, ChannelVolumeSlide;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
