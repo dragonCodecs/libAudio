@@ -198,7 +198,11 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		return;
 	if (note >= 0x80)
 	{
-		channel->NoteOff();
+		if (note == 0xFF && ModuleType != MODULE_IT)
+			channel->NoteOff();
+		else
+			channel->Flags |= CHN_NOTEFADE;
+
 		if (note == 0xFE)
 			channel->NoteCut(true);
 		return;
@@ -1152,8 +1156,19 @@ bool ModuleFile::AdvanceTick()
 				}
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
-			vol = (vol * channel->ChannelVolume) >> 6;
-			vol = (vol * GlobalVolume) >> 7;
+
+			if (channel->Instrument != NULL)
+			{
+				ModuleInstrument *instr = channel->Instrument;
+				//if (instr->GetEnvEnabled(ENVELOPE_VOLUME) && instr->GetEnvHasNodes())
+			}
+			else if (channel->Flags & CHN_NOTEFADE)
+			{
+				//FadeOutVol?
+				vol = 0;
+			}
+
+			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
 			CLIPINT(vol, 0, 128);
 			channel->Volume = vol;
 			CLIPINT(channel->Period, MinPeriod, MaxPeriod);

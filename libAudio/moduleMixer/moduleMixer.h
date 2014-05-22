@@ -12,7 +12,8 @@
 #define CHN_TREMOR			0x0100
 #define CHN_PANBRELLO		0x0200
 #define CHN_NOTEOFF			0x0400
-#define CHN_LPINGPONG		0x0800
+#define CHN_NOTEFADE		0x0800
+#define CHN_LPINGPONG		0x1000
 
 #define CLIPINT(num, min, max) \
 	if (num < min) \
