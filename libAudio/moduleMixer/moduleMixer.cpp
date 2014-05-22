@@ -216,7 +216,8 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		else
 			sample = p_Samples[nSample - 1];
 		channel->Sample = sample;
-		ReloadSample(channel);
+		if (sample != NULL)
+			ReloadSample(channel);
 	}
 	channel->NewSample = 0;
 	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
