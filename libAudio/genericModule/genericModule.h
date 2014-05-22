@@ -283,6 +283,11 @@ public:
 	bool GetEnabled() const;
 	bool GetLooped() const;
 	bool HasNodes() const;
+	bool IsAtEnd(uint16_t Tick) const;
+	bool IsZeroLoop() const;
+	uint16_t GetLoopEnd() const;
+	uint16_t GetLoopBegin() const;
+	uint16_t GetLastTick() const;
 };
 
 class ModuleInstrument : public ModuleAllocator

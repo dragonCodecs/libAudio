@@ -191,3 +191,28 @@ bool ModuleEnvelope::HasNodes() const
 {
 	return nNodes != 0;
 }
+
+bool ModuleEnvelope::IsAtEnd(uint16_t Tick) const
+{
+	return Tick > GetLastTick();
+}
+
+bool ModuleEnvelope::IsZeroLoop() const
+{
+	return LoopEnd == LoopBegin;
+}
+
+uint16_t ModuleEnvelope::GetLoopEnd() const
+{
+	return Nodes[LoopEnd].Tick;
+}
+
+uint16_t ModuleEnvelope::GetLoopBegin() const
+{
+	return Nodes[LoopBegin].Tick;
+}
+
+uint16_t ModuleEnvelope::GetLastTick() const
+{
+	return Nodes[nNodes - 1].Tick;
+}
