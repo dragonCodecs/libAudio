@@ -38,6 +38,11 @@ bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const
 	return false;
 }
 
+ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const
+{
+	return NULL;
+}
+
 ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t Const, env;
@@ -117,6 +122,11 @@ bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
 	return Envelopes[env]->GetLooped();
 }
 
+ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const
+{
+	return Envelopes[env];
+}
+
 ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 {
 	uint8_t DontCare;
@@ -132,9 +142,37 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 	fread(&DontCare, 1, 1, f_IT);
 }
 
-uint8_t ModuleEnvelope::Apply(uint8_t Tick, uint8_t Value)
+int16_t ModuleEnvelope::Apply(uint8_t Tick)
 {
-	return Value;
+	uint8_t pt, n1, n2;
+	int16_t ret;
+	for (pt = 0; pt < (nNodes - 1); pt++)
+	{
+		if (Tick <= Nodes[pt].Tick)
+			break;
+	}
+	if (Tick >= Nodes[pt].Tick)
+		return Nodes[pt].Value;
+	if (pt != 0)
+	{
+		n1 = Nodes[pt - 1].Tick;
+		ret = Nodes[pt - 1].Value;
+	}
+	else
+	{
+		n1 = 0;
+		ret = 0;
+	}
+	n2 = Nodes[pt].Tick;
+	if (n2 > n1 && Tick > n1)
+	{
+		int16_t val = pt - n1;
+		val *= ((int16_t)Nodes[pt].Value) - ret;
+		n2 -= n1;
+		return ret + (val / n2);
+	}
+	else
+		return ret;
 }
 
 bool ModuleEnvelope::GetEnabled() const
@@ -145,4 +183,9 @@ bool ModuleEnvelope::GetEnabled() const
 bool ModuleEnvelope::GetLooped() const
 {
 	return (Flags & 0x02) != 0;
+}
+
+bool ModuleEnvelope::HasNodes() const
+{
+	return nNodes != 0;
 }

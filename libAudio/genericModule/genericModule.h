@@ -257,6 +257,12 @@ public:
 	bool GetBidiLoop();
 };
 
+typedef struct EnvelopeNode
+{
+	uint8_t Value;
+	uint16_t Tick;
+} EnvelopeNode;
+
 class ModuleEnvelope : public ModuleAllocator
 {
 private:
@@ -267,13 +273,14 @@ private:
 	uint8_t LoopEnd;
 	uint8_t SusLoopBegin;
 	uint8_t SusLoopEnd;
-	uint8_t Nodes[75];
+	EnvelopeNode Nodes[25];
 
 public:
 	ModuleEnvelope(IT_Intern *p_IT, uint8_t env);
-	uint8_t Apply(uint8_t Tick, uint8_t Value);
+	int16_t Apply(uint8_t Tick);
 	bool GetEnabled() const;
 	bool GetLooped() const;
+	bool HasNodes() const;
 };
 
 class ModuleInstrument : public ModuleAllocator
@@ -291,6 +298,7 @@ public:
 	virtual uint16_t GetFadeOut() const = 0;
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;
 	virtual bool GetEnvLooped(uint8_t env) const = 0;
+	virtual ModuleEnvelope *GetEnvelope(uint8_t env) const = 0;
 };
 
 class ModuleOldInstrument : public ModuleInstrument
@@ -302,6 +310,7 @@ public:
 	uint16_t GetFadeOut() const;
 	bool GetEnvEnabled(uint8_t env) const;
 	bool GetEnvLooped(uint8_t env) const;
+	ModuleEnvelope *GetEnvelope(uint8_t env) const;
 };
 
 class ModuleNewInstrument : public ModuleInstrument
@@ -332,6 +341,7 @@ public:
 	uint16_t GetFadeOut() const;
 	bool GetEnvEnabled(uint8_t env) const;
 	bool GetEnvLooped(uint8_t env) const;
+	ModuleEnvelope *GetEnvelope(uint8_t env) const;
 };
 
 class ModuleCommand : public ModuleAllocator

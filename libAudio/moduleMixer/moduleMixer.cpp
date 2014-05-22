@@ -1157,11 +1157,19 @@ bool ModuleFile::AdvanceTick()
 				}
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
+			/*CLIPINT(vol, 0, 128);
+			//vol <<= 7;*/
 
 			if (channel->Instrument != NULL)
 			{
 				ModuleInstrument *instr = channel->Instrument;
-				//if (instr->GetEnvEnabled(ENVELOPE_VOLUME) && instr->GetEnvHasNodes())
+				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
+				if (env->GetEnabled() && env->HasNodes())
+				{
+					int volValue = env->Apply(TickCount);
+					vol = muldiv(vol, volValue, 1 << 6);
+					CLIPINT(vol, 0, 128);
+				}
 			}
 			else if (channel->Flags & CHN_NOTEFADE)
 			{
