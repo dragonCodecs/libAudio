@@ -132,6 +132,7 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 	{
 		ModuleInstrument *instr = p_Instruments[nSample - 1];
 		uint8_t nSample = instr->Map(channel->Note - 1);
+		channel->EnvVolumePos = 0;
 		if (nSample == 0)
 		{
 			channel->Sample = NULL;
@@ -215,6 +216,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 			sample = NULL;
 		else
 			sample = p_Samples[nSample - 1];
+		channel->EnvVolumePos = 0;
 		channel->Sample = sample;
 		if (sample != NULL)
 			ReloadSample(channel);
@@ -1166,17 +1168,45 @@ bool ModuleFile::AdvanceTick()
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
 				if (env->GetEnabled() && env->HasNodes())
 				{
-					int volValue = env->Apply(TickCount);
+					uint8_t volValue = env->Apply(channel->EnvVolumePos);
 					vol = muldiv(vol, volValue, 1 << 6);
 					CLIPINT(vol, 0, 128);
+					channel->EnvVolumePos++;
+					// TODO: Handle CHN_NOTEFADE..
+					channel->Flags &= ~CHN_NOTEFADE;
+					if (env->GetLooped())
+					{
+						uint16_t endTick = env->GetLoopEnd();
+						if (channel->EnvVolumePos == ++endTick)
+						{
+							channel->EnvVolumePos = env->GetLoopBegin();
+							if (env->IsZeroLoop() && env->Apply(channel->EnvVolumePos) == 0)
+							{
+								channel->Flags |= CHN_NOTEFADE;
+								// FadeOutVol?
+							}
+						}
+					}
+					if (env->IsAtEnd(channel->EnvVolumePos))
+					{
+						if ((channel->Flags & CHN_NOTEOFF) != 0)
+							channel->Flags |= CHN_NOTEFADE;
+						channel->EnvVolumePos = env->GetLastTick();
+						if (env->Apply(channel->EnvVolumePos) == 0)
+						{
+							channel->Flags |= CHN_NOTEFADE;
+							// FadeOutVol?
+							vol = 0;
+						}
+					}
 				}
 			}
 			else if (channel->Flags & CHN_NOTEFADE)
 			{
 				//FadeOutVol?
 				vol = 0;
+				channel->Flags &= ~CHN_NOTEFADE;
 			}
-			channel->Flags &= ~CHN_NOTEFADE;
 
 			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
 			CLIPINT(vol, 0, 128);
