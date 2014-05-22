@@ -23,6 +23,21 @@ uint8_t ModuleOldInstrument::Map(uint8_t Note)
 	return 0;
 }
 
+uint16_t ModuleOldInstrument::GetFadeOut() const
+{
+	return 0;
+}
+
+bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const
+{
+	return false;
+}
+
+bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const
+{
+	return false;
+}
+
 ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t Const, env;
@@ -87,6 +102,21 @@ uint8_t ModuleNewInstrument::Map(uint8_t Note)
 	return sample;
 }
 
+uint16_t ModuleNewInstrument::GetFadeOut() const
+{
+	return FadeOut;
+}
+
+bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
+{
+	return Envelopes[env]->GetEnabled();
+}
+
+bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
+{
+	return Envelopes[env]->GetLooped();
+}
+
 ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 {
 	uint8_t DontCare;
@@ -105,4 +135,14 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 uint8_t ModuleEnvelope::Apply(uint8_t Tick, uint8_t Value)
 {
 	return Value;
+}
+
+bool ModuleEnvelope::GetEnabled() const
+{
+	return (Flags & 0x01) != 0;
+}
+
+bool ModuleEnvelope::GetLooped() const
+{
+	return (Flags & 0x02) != 0;
 }

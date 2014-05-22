@@ -272,6 +272,8 @@ private:
 public:
 	ModuleEnvelope(IT_Intern *p_IT, uint8_t env);
 	uint8_t Apply(uint8_t Tick, uint8_t Value);
+	bool GetEnabled() const;
+	bool GetLooped() const;
 };
 
 class ModuleInstrument : public ModuleAllocator
@@ -286,6 +288,9 @@ public:
 	static ModuleInstrument *LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion);
 
 	virtual uint8_t Map(uint8_t Note) = 0;
+	virtual uint16_t GetFadeOut() const = 0;
+	virtual bool GetEnvEnabled(uint8_t env) const = 0;
+	virtual bool GetEnvLooped(uint8_t env) const = 0;
 };
 
 class ModuleOldInstrument : public ModuleInstrument
@@ -294,6 +299,9 @@ public:
 	ModuleOldInstrument(IT_Intern *p_IT, uint32_t i);
 
 	uint8_t Map(uint8_t Note);
+	uint16_t GetFadeOut() const;
+	bool GetEnvEnabled(uint8_t env) const;
+	bool GetEnvLooped(uint8_t env) const;
 };
 
 class ModuleNewInstrument : public ModuleInstrument
@@ -321,6 +329,9 @@ public:
 	~ModuleNewInstrument();
 
 	uint8_t Map(uint8_t Note);
+	uint16_t GetFadeOut() const;
+	bool GetEnvEnabled(uint8_t env) const;
+	bool GetEnvLooped(uint8_t env) const;
 };
 
 class ModuleCommand : public ModuleAllocator
