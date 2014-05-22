@@ -421,7 +421,7 @@ public:
 	uint8_t Note, RampLength;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
-	uint8_t RawVolume, Volume, VolumeSlide;
+	uint8_t RawVolume, Volume, VolumeSlide, AutoVibratoPos;
 	uint8_t ChannelVolume, ChannelVolumeSlide;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
@@ -442,8 +442,8 @@ public:
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
-	uint8_t AutoVibratoPos;
 	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
+	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos;
 	int DCOffsR, DCOffsL;
 
 public:
