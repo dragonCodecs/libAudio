@@ -141,7 +141,7 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 	fread(Nodes, 75, 1, f_IT);
 	fread(&DontCare, 1, 1, f_IT);
 
-	if (LoopBegin >= nNodes || LoopEnd >= nNodes)
+	if (LoopBegin > nNodes || LoopEnd > nNodes)
 		throw new ModuleLoaderError(E_BAD_IT);
 }
 
