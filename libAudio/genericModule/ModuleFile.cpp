@@ -431,9 +431,9 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 	}
 }
 
-ModuleLoaderError::ModuleLoaderError(uint32_t error) : Error(error)
-{
-}
+#undef ModuleLoaderError
+
+ModuleLoaderError::ModuleLoaderError(uint32_t error) : Error(error) { }
 
 const char *ModuleLoaderError::GetError()
 {

@@ -115,8 +115,6 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 		// Allocate enough memory
 		if (p_IF->p_Head->cmwt < 0x200)
 			p_IF->p_OldIns = (ITOldInstrument *)malloc(sizeof(ITOldInstrument) * p_IF->p_Head->insnum);
-		else
-			p_IF->p_Ins = (ITInstrument *)malloc(sizeof(ITInstrument) * p_IF->p_Head->insnum);
 
 		// Read in the instruments
 		for (WORD i = 0; i < p_IF->p_Head->insnum; i++)
@@ -124,8 +122,6 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 			fseek(f_IT, p_IF->p_InstOffsets[i], SEEK_SET);
 			if (p_IF->p_Head->cmwt < 0x200)
 				fread(&p_IF->p_OldIns[i], sizeof(ITOldInstrument), 1, f_IT);
-			else
-				fread(&p_IF->p_Ins[i], sizeof(ITInstrument), 1, f_IT);
 		}
 	}
 
