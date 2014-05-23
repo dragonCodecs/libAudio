@@ -387,16 +387,6 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(&MessageOffs, 4, 1, f_IT);
 	fread(&DontCare, 4, 1, f_IT);
 
-	if (MessageOffs != 0)
-	{
-		size_t PartialHeader = ftell(f_IT);
-		fseek(f_IT, SEEK_SET, MessageOffs);
-		Remark = new char[MsgLength + 1];
-		fread(Remark, MsgLength, 1, f_IT);
-		fseek(f_IT, SEEK_SET, PartialHeader);
-		Remark[MsgLength] = 0;
-	}
-
 	Panning = new uint8_t[64];
 	fread(Panning, 64, 1, f_IT);
 	//Volumes = new uint8_t[64];
@@ -411,6 +401,14 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(SamplePtrs, nSamples, 4, f_IT);
 	PatternPtrs = new uint32_t[nPatterns];
 	fread(PatternPtrs, nPatterns, 4, f_IT);
+
+	if (MessageOffs != 0)
+	{
+		fseek(f_IT, SEEK_SET, MessageOffs);
+		Remark = new char[MsgLength + 1];
+		fread(Remark, MsgLength, 1, f_IT);
+		Remark[MsgLength] = 0;
+	}
 
 	Flags = 0;
 	RestartPos = 255;
