@@ -399,10 +399,50 @@ void ModuleCommand::SetITVolume(uint8_t volume)
 		VolEffect = VOLCMD_VOLUME;
 		VolParam = volume;
 	}
+	else if (volume <= 74)
+	{
+		VolEffect = VOLCMD_FINEVOLUP;
+		VolParam = volume - 65;
+	}
+	else if (volume <= 84)
+	{
+		VolEffect = VOLCMD_FINEVOLDOWN;
+		VolParam = volume - 75;
+	}
+	else if (volume <= 94)
+	{
+		VolEffect = VOLCMD_VOLSLIDEUP;
+		VolParam = volume - 85;
+	}
+	else if (volume <= 104)
+	{
+		VolEffect = VOLCMD_VOLSLIDEDOWN;
+		VolParam = volume - 95;
+	}
+	else if (volume <= 114)
+	{
+		VolEffect = VOLCMD_PORTADOWN;
+		VolParam = volume - 105;
+	}
+	else if (volume <= 124)
+	{
+		VolEffect = VOLCMD_PORTAUP;
+		VolParam = volume - 115;
+	}
 	else if (volume >= 128 && volume <= 192)
 	{
 		VolEffect = VOLCMD_PANNING;
 		VolParam = volume - 128;
+	}
+	else if (volume >= 193 && volume <= 202)
+	{
+		VolEffect = VOLCMD_PORTAMENTO;
+		VolParam = volume - 193;
+	}
+	else if (volume >= 203 && volume <= 212)
+	{
+		VolEffect = VOLCMD_VIBRATO;
+		VolParam = volume - 203;
 	}
 	else
 	{
