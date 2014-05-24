@@ -350,7 +350,7 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 {
 	char Magic[4], DontCare[4];
-	uint16_t MsgLength;
+	uint16_t MsgLength, SongFlags;
 	uint8_t Const;
 	FILE *f_IT = p_IF->f_IT;
 
@@ -370,7 +370,7 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(&nPatterns, 2, 1, f_IT);
 	fread(&CreationVersion, 2, 1, f_IT);
 	fread(&FormatVersion, 2, 1, f_IT);
-	fread(&Flags, 2, 1, f_IT);
+	fread(&SongFlags, 2, 1, f_IT);
 	// TODO: Handle special.
 	fread(DontCare, 2, 1, f_IT);
 	fread(&GlobalVolume, 1, 1, f_IT);
@@ -402,6 +402,11 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	PatternPtrs = new uint32_t[nPatterns];
 	fread(PatternPtrs, nPatterns, 4, f_IT);
 
+	Flags = 0;
+	Flags |= (SongFlags & 0x0010) == 0 ? FILE_FLAGS_AMIGA_SLIDES : 0;
+	if ((SongFlags & 0x0004) == 0)
+		nInstruments = 0;
+
 	if (MessageOffs != 0)
 	{
 		fseek(f_IT, SEEK_SET, MessageOffs);
@@ -410,7 +415,10 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 		Remark[MsgLength] = 0;
 	}
 
-	Flags = 0;
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
 	RestartPos = 255;
 	Separation = 128;
 	Author = NULL;
