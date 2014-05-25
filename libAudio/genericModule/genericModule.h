@@ -390,6 +390,7 @@ class ModulePattern : public ModuleAllocator
 private:
 	uint32_t Channels;
 	ModuleCommand **Commands;
+	uint16_t Rows;
 
 public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);
@@ -399,7 +400,8 @@ public:
 	ModulePattern(IT_Intern *p_IF, uint32_t nChannels);
 	~ModulePattern();
 
-	ModuleCommand **GetCommands();
+	ModuleCommand **GetCommands() const;
+	uint16_t GetRows() const;
 };
 
 typedef struct _int16dot16_t
@@ -470,9 +472,9 @@ private:
 	// Mixer info
 	uint32_t MixSampleRate, MixChannels, MixBitsPerSample;
 	uint32_t TickCount, SamplesToMix, MinPeriod, MaxPeriod;
-	uint32_t Row, NextRow;
+	uint16_t Row, NextRow, Rows;
 	uint32_t MusicSpeed, MusicTempo;
-	uint32_t Pattern, NewPattern, NextPattern;
+	uint16_t Pattern, NewPattern, NextPattern;
 	uint32_t RowsPerBeat, SamplesPerTick;
 	Channel *Channels;
 	uint32_t nMixerChannels, *MixerChannels;

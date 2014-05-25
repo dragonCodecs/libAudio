@@ -12,7 +12,7 @@ uint16_t Periods[60] =
 	107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60, 57
 };
 
-ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nChannels)
+ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nChannels), Rows(64)
 {
 	uint32_t channel, row;
 	Commands = new ModuleCommand *[nChannels];
@@ -34,7 +34,7 @@ ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nC
 	if (cnt + 1 >= Length) \
 		break
 
-ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nChannels)
+ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nChannels), Rows(64)
 {
 	uint32_t j, Length;
 	uint8_t row;
@@ -93,7 +93,7 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nC
 
 #undef checkLength
 
-ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4)
+ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4), Rows(64)
 {
 	uint8_t row, channel;
 	FILE *f_STM = p_SF->f_STM;
@@ -125,7 +125,7 @@ ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4)
 	}
 }
 
-ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nChannels)
+ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nChannels), Rows(64)
 {
 	uint8_t row, channel;
 	FILE *f_AON = p_AF->f_AON;
@@ -168,20 +168,20 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 {
 	char DontCare[4];
 	uint8_t b, ChannelMask[64];
-	uint16_t len, rows, row, channel, j;
+	uint16_t len, row, channel, j;
 	ModuleCommand LastCommand[64];
 	FILE *f_IT = p_IF->f_IT;
 
 	fread(&len, 2, 1, f_IT);
-	fread(&rows, 2, 1, f_IT);
+	fread(&Rows, 2, 1, f_IT);
 	Commands = new ModuleCommand *[nChannels];
 	for (channel = 0; channel < nChannels; channel++)
-		Commands[channel] = new ModuleCommand[rows];
+		Commands[channel] = new ModuleCommand[Rows];
 	fread(DontCare, 4, 1, f_IT);
 
 	row = 0;
 	j = 0;
-	while (row < rows)
+	while (row < Rows)
 	{
 		channel = 0;
 		if (readInc(&b, j, len, f_IT))
@@ -253,9 +253,14 @@ ModulePattern::~ModulePattern()
 	delete [] Commands;
 }
 
-ModuleCommand **ModulePattern::GetCommands()
+ModuleCommand **ModulePattern::GetCommands() const
 {
 	return Commands;
+}
+
+uint16_t ModulePattern::GetRows() const
+{
+	return Rows;
 }
 
 void ModuleCommand::SetSample(uint8_t sample)

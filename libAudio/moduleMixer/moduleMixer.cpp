@@ -947,8 +947,8 @@ bool ModuleFile::ProcessEffects()
 				break;
 			case CMD_PATTERNBREAK:
 				BreakRow = ((param >> 4) * 10) + (param & 0x0F);
-				if (BreakRow > 63)
-					BreakRow = 63;
+				if (BreakRow > (Rows - 1))
+					BreakRow = (Rows - 1);
 				break;
 			case CMD_SPEED:
 				MusicSpeed = param;
@@ -1089,15 +1089,16 @@ bool ModuleFile::Tick()
 		}
 		while (Pattern > p_Header->nPatterns);
 		NextPattern = NewPattern;
-		if (Row >= 64)
+		if (Row >= Rows)
 			Row = 0;
 		NextRow = Row + 1;
-		if (NextRow >= 64)
+		if (NextRow >= Rows)
 		{
 			NextPattern = NewPattern + 1;
 			NextRow = 0;
 		}
 		Commands = p_Patterns[Pattern]->GetCommands();
+		Rows = p_Patterns[Pattern]->GetRows();
 		for (i = 0; i < p_Header->nChannels; i++)
 			Channels[i].SetData(&Commands[i][Row], p_Header);
 	}
