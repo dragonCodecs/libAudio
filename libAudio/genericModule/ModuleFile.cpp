@@ -420,20 +420,22 @@ uint32_t ITBitstreamRead(uint8_t &buff, uint8_t &buffLen, FILE *f_IT, uint8_t bi
 
 void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp)
 {
-	uint8_t buff, buffLen, delta, adjDelta;
+	uint8_t buff, buffLen;
+	int8_t delta, adjDelta;
 	uint8_t bitWidth;
 	uint32_t blockLen = 0;
 	uint32_t i = 0, Length = sample->GetLength();
-	buff = 0;
-	buffLen = 0;
 	while (Length != 0)
 	{
 		uint32_t j, offs = 0;
 		if (blockLen == 0)
 		{
 			blockLen = 0x8000;
+			buffLen = 0;
 			ITBitstreamRead(buff, buffLen, f_IT, 16);
 			bitWidth = 9;
+			delta = 0;
+			adjDelta = 0;
 		}
 		j = blockLen;
 		if (j > Length)
@@ -441,12 +443,13 @@ void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp
 		do
 		{
 			uint16_t bits;
+			bits = ITBitstreamRead(buff, buffLen, f_IT, bitWidth);
 			if (feof(f_IT) == true)
 				return;
-			bits = ITBitstreamRead(buff, buffLen, f_IT, bitWidth);
 			if (bitWidth < 7)
 			{
-				if (bits == (1 << (bitWidth - 1)))
+				uint16_t special = 1 << (bitWidth - 1);
+				if (bits == special)
 				{
 					uint8_t bits = ITBitstreamRead(buff, buffLen, f_IT, 3) + 1;
 					if (bits < bitWidth)
@@ -475,25 +478,25 @@ void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp
 				offs++;
 				continue;
 			}
-			if (bits >= 256)
+			else if (bits >= 256)
 			{
-				bitWidth = (bits + 1) & 0xFF;
+				bitWidth = bits + 1;
 				continue;
 			}
 			if (bitWidth < 8)
 			{
 				uint8_t shift = 8 - bitWidth;
-				bits = ((bits << shift) & 0xFF) >> shift;
+				bits = ((int8_t)(bits << shift)) >> shift;
 			}
 			bits += delta;
 			delta = bits;
 			adjDelta += delta;
+			if (offs >= Length)
+				return;
 			PCM[i + offs] = deltaComp ? adjDelta : delta;
 			offs++;
-			if ((i + offs) >= Length)
-				return;
 		}
-		while (offs != j);
+		while (offs < j);
 		i += j;
 		Length -= j;
 		blockLen -= j;
@@ -502,20 +505,22 @@ void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp
 
 void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaComp)
 {
-	uint8_t buff, buffLen, delta, adjDelta;
+	uint8_t buff, buffLen;
+	int16_t delta, adjDelta;
 	uint8_t bitWidth;
 	uint32_t blockLen = 0;
 	uint32_t i = 0, Length = sample->GetLength() >> 1;
-	buff = 0;
-	buffLen = 0;
-	while (Length < i)
+	while (Length != 0)
 	{
 		uint32_t j, offs = 0;
 		if (blockLen == 0)
 		{
 			blockLen = 0x4000;
+			buffLen = 0;
 			ITBitstreamRead(buff, buffLen, f_IT, 16);
 			bitWidth = 17;
+			delta = 0;
+			adjDelta = 0;
 		}
 		j = blockLen;
 		if (j > Length)
@@ -528,7 +533,8 @@ void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaCo
 			bits = ITBitstreamRead(buff, buffLen, f_IT, bitWidth);
 			if (bitWidth < 7)
 			{
-				if (bits == (1 << (bitWidth - 1)))
+				uint32_t special = 1 << (bitWidth - 1);
+				if (bits == special)
 				{
 					uint8_t bits = ITBitstreamRead(buff, buffLen, f_IT, 4) + 1;
 					if (bits < bitWidth)
@@ -557,25 +563,25 @@ void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaCo
 				offs++;
 				continue;
 			}
-			if (bits >= 65536)
+			else if (bits >= 65536)
 			{
-				bitWidth = (bits + 1) & 0xFF;
+				bitWidth = bits + 1;
 				continue;
 			}
 			if (bitWidth < 16)
 			{
 				uint8_t shift = 16 - bitWidth;
-				bits = ((bits << shift) & 0xFF) >> shift;
+				bits = ((int16_t)(bits << shift)) >> shift;
 			}
 			bits += delta;
 			delta = bits;
 			adjDelta += delta;
+			if (offs >= Length)
+				return;
 			PCM[i + offs] = deltaComp ? adjDelta : delta;
 			offs++;
-			if ((i + offs) >= Length)
-				return;
 		}
-		while (offs != j);
+		while (offs < j);
 		i += j;
 		Length -= j;
 		blockLen -= j;
