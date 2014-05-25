@@ -220,6 +220,8 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		channel->Sample = sample;
 		if (sample != NULL)
 			ReloadSample(channel);
+		else
+			channel->NewSampleData = NULL;
 	}
 	channel->NewSample = 0;
 	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
@@ -1097,6 +1099,8 @@ bool ModuleFile::Tick()
 			NextPattern = NewPattern + 1;
 			NextRow = 0;
 		}
+		if (p_Patterns[Pattern] == NULL)
+			return false;
 		Commands = p_Patterns[Pattern]->GetCommands();
 		Rows = p_Patterns[Pattern]->GetRows();
 		for (i = 0; i < p_Header->nChannels; i++)
