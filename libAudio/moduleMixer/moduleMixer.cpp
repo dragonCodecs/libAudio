@@ -218,6 +218,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		else
 			sample = p_Samples[nSample - 1];
 		channel->EnvVolumePos = 0;
+		channel->EnvPitchPos = 0;
 		channel->Sample = sample;
 		if (sample != NULL)
 			ReloadSample(channel);
@@ -1232,6 +1233,32 @@ bool ModuleFile::AdvanceTick()
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
 			{
 				CLIPINT(period, 452, 3424);
+			}
+			if (channel->Instrument != NULL)
+			{
+				ModuleInstrument *instr = channel->Instrument;
+				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_PITCH);
+				if (env->GetEnabled() && env->HasNodes())
+				{
+					int8_t pitchValue = env->Apply(channel->EnvPitchPos) - 32;
+					if (pitchValue < 0)
+					{
+						uint8_t adjust = ((uint8_t)-pitchValue) << 3;
+						period = LinearSlideUp(period, adjust);
+					}
+					else
+					{
+						uint8_t adjust = ((uint8_t)pitchValue) << 3;
+						period = LinearSlideDown(period, adjust);
+					}
+					channel->EnvPitchPos++;
+					if (env->GetLooped())
+					{
+						uint16_t endTick = env->GetLoopEnd();
+						if (channel->EnvPitchPos == ++endTick)
+							channel->EnvPitchPos = env->GetLoopBegin();
+					}
+				}
 			}
 			if ((channel->Flags & CHN_VIBRATO) != 0)
 			{
