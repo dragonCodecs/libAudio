@@ -107,7 +107,7 @@ void ModuleFile::ReloadSample(Channel *channel)
 	channel->Length = sample->GetLength();
 	channel->LoopStart = (sample->GetLoopStart() < channel->Length ? sample->GetLoopStart() : channel->Length);
 	channel->LoopEnd = sample->GetLoopEnd();
-	if (channel->LoopEnd != 0)
+	if (sample->GetLooped())
 		channel->Flags |= CHN_LOOP;
 	else
 		channel->Flags &= ~CHN_LOOP;
@@ -237,7 +237,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 			channel->Sample = sample;
 			channel->NewSampleData = p_PCM[sample->ID];
 			channel->Length = sample->GetLength();
-			if (sample->GetLoopEnd() != 0)
+			if (sample->GetLooped())
 			{
 				channel->Flags |= CHN_LOOP;
 				channel->LoopStart = (sample->GetLoopStart() < sample->GetLength() ? sample->GetLoopStart() : sample->GetLength());

@@ -68,11 +68,15 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	FineTune &= 0x0F;
 	LoopEnd = (LoopStart < Length && LoopEnd > 2 ? LoopStart + LoopEnd : 0);
 
+	SampleFlags = 0;
+	if (LoopEnd != 0)
+		SampleFlags |= SAMPLE_FLAGS_LOOP;
+
 	/********************************************\
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Packing = SampleFlags = 0;
+	Packing = 0;
 	C4Speed = 8363;
 	FileName = NULL;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
@@ -166,11 +170,14 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	if (ID > 0)
 		throw new ModuleLoaderError(E_BAD_STM);
 
+	SampleFlags = 0;
 	if (LoopEnd < LoopStart || LoopEnd == 0xFFFF)
 	{
 		LoopEnd = 0;
 		LoopStart = 0;
 	}
+	else
+		SampleFlags |= SAMPLE_FLAGS_LOOP;
 	if (Volume > 64)
 		Volume = 64;
 
@@ -316,6 +323,11 @@ bool ModuleSampleNative::Get16Bit()
 	return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0;
 }
 
+bool ModuleSampleNative::GetLooped()
+{
+	return (SampleFlags & SAMPLE_FLAGS_LOOP) != 0;
+}
+
 bool ModuleSampleNative::GetBidiLoop()
 {
 	return (SampleFlags & SAMPLE_FLAGS_LPINGPONG) != 0;
@@ -417,6 +429,11 @@ uint8_t ModuleSampleAdlib::GetVibratoRate()
 }
 
 bool ModuleSampleAdlib::Get16Bit()
+{
+	return false;
+}
+
+bool ModuleSampleAdlib::GetLooped()
 {
 	return false;
 }
