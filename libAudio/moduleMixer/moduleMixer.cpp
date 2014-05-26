@@ -43,6 +43,7 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
 	Channels = new Channel[p_Header->nChannels]();
 	MixerChannels = new uint32_t[p_Header->nChannels];
+	Rows = 2;
 	ResetChannelPanning();
 	InitialiseTables();
 }
@@ -988,9 +989,9 @@ bool ModuleFile::ProcessEffects()
 			case CMD_GLOBALVOLUME:
 				if (TickCount == 0)
 				{
-					if (param > 64)
-						param = 64;
-					GlobalVolume = param << 1;
+					if (param > 128)
+						param = 128;
+					GlobalVolume = param;
 				}
 				break;
 			case CMD_PANNING:
