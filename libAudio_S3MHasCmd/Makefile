@@ -8,7 +8,7 @@ endif
 CC = $(GCC) $(GCC_FLAGS)
 EXTRA_CFLAGS = -I../libAudio
 CFLAGS = -c -O2 $(EXTRA_CFLAGS) -o $@
-genericModule = ModuleEffects.o ModuleFile.o ModuleHeader.o ModulePattern.o ModuleSample.o
+genericModule = ModuleEffects.o ModuleFile.o ModuleHeader.o ModulePattern.o ModuleSample.o ModuleInstrument.o
 libAudio = $(addprefix genericModule/,$(genericModule)) moduleMixer/moduleMixer.o fixedPoint/fixedPoint.o loadS3M.o libAudio_Common.o
 LIBS = $(addprefix ../libAudio/,$(libAudio)) -lstdc++ -lm $(shell pkg-config --libs openal)
 LFLAGS = $(O) $(LIBS) -o $(EXE)
