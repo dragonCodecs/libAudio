@@ -167,6 +167,7 @@ public:
 	virtual uint8_t GetVibratoType() = 0;
 	virtual uint8_t GetVibratoRate() = 0;
 	virtual bool Get16Bit() = 0;
+	virtual bool GetStereo() = 0;
 	virtual bool GetLooped() = 0;
 	virtual bool GetBidiLoop() = 0;
 };
@@ -216,6 +217,7 @@ public:
 	uint8_t GetVibratoType();
 	uint8_t GetVibratoRate();
 	bool Get16Bit();
+	bool GetStereo();
 	bool GetLooped();
 	bool GetBidiLoop();
 };
@@ -256,6 +258,7 @@ public:
 	uint8_t GetVibratoType();
 	uint8_t GetVibratoRate();
 	bool Get16Bit();
+	bool GetStereo();
 	bool GetLooped();
 	bool GetBidiLoop();
 };

@@ -323,6 +323,11 @@ bool ModuleSampleNative::Get16Bit()
 	return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0;
 }
 
+bool ModuleSampleNative::GetStereo()
+{
+	return (SampleFlags & SAMPLE_FLAGS_STEREO) != 0;
+}
+
 bool ModuleSampleNative::GetLooped()
 {
 	return (SampleFlags & SAMPLE_FLAGS_LOOP) != 0;
@@ -429,6 +434,11 @@ uint8_t ModuleSampleAdlib::GetVibratoRate()
 }
 
 bool ModuleSampleAdlib::Get16Bit()
+{
+	return false;
+}
+
+bool ModuleSampleAdlib::GetStereo()
 {
 	return false;
 }
