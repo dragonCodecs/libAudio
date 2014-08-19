@@ -434,6 +434,31 @@ void DeinitialiseTables()
 	char *sinc = (char *)(chn->Increment.iValue > 0x13000 || chn->Increment.iValue < -0x13000 ? \
 		(chn->Increment.iValue > 0x18000 || chn->Increment.iValue < -0x18000 ? DownSample2x : DownSample13x) : KaiserSinc);
 
+// Stereo
+#define SNDMIX_GETSTEREOVOLNOIDO(shift) \
+	int pcmL = p[((Pos >> 16) * 2) + 0] shift; \
+	int pcmR = p[((Pos >> 16) * 2) + 1] shift;
+
+#define SNDMIX_GETSTEREOVOLNOIDO8 \
+	SNDMIX_GETSTEREOVOLNOIDO(<< 7)
+
+#define SNDMIX_GETSTEREOVOLNOIDO16 \
+	SNDMIX_GETSTEREOVOLNOIDO(>> 1)
+
+// Volume
+#define SNDMIX_STORESTEREOVOL \
+	vol[0] += pcmL * (chn->RightVol << 4); \
+	vol[1] += pcmR * (chn->LeftVol << 4); \
+	vol += 2;
+
+#define SNDMIX_RAMPSTEREOVOL \
+	RampLeftVol += chn->LeftRamp; \
+	RampRightVol += chn->RightRamp; \
+	vol[0] += pcmL * (RampRightVol << 4); \
+	vol[1] += pcmR * (RampLeftVol << 4); \
+	vol += 2;
+
+
 // Interfaces
 // Mono 8-bit
 BEGIN_MIX_INTERFACE(Mono8BitMix)
@@ -707,5 +732,31 @@ BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitFIRFilterRampMix)
 	SNDMIX_PROCESSFILTER
 	SNDMIX_RAMPMONOVOL
 END_MIX_FLT_INTERFACE()
+
+// Stereo 8-bit
+BEGIN_MIX_INTERFACE(Stereo8BitMix)
+	SNDMIX_BEGINSAMPLELOOP8
+	SNDMIX_GETSTEREOVOLNOIDO8
+	SNDMIX_STORESTEREOVOL
+END_MIX_INTERFACE()
+
+BEGIN_RAMPMIX_INTERFACE(Stereo8BitRampMix)
+	SNDMIX_BEGINSAMPLELOOP8
+	SNDMIX_GETSTEREOVOLNOIDO8
+	SNDMIX_RAMPSTEREOVOL
+END_RAMPMIX_INTERFACE()
+
+// Stereo 16-bit
+BEGIN_MIX_INTERFACE(Stereo16BitMix)
+	SNDMIX_BEGINSAMPLELOOP16
+	SNDMIX_GETSTEREOVOLNOIDO16
+	SNDMIX_STORESTEREOVOL
+END_MIX_INTERFACE()
+
+BEGIN_RAMPMIX_INTERFACE(Stereo16BitRampMix)
+	SNDMIX_BEGINSAMPLELOOP16
+	SNDMIX_GETSTEREOVOLNOIDO16
+	SNDMIX_RAMPSTEREOVOL
+END_RAMPMIX_INTERFACE()
 
 #endif /*__mixFunctions_H__*/
