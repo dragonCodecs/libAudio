@@ -1582,7 +1582,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 			else
 			{
 				MixInterface MixFunc = MixFunctionTable[/*Flags*/MIX_NOSRC | (channel->RampLength != 0 ? MIX_RAMP : 0) |
-					(channel->Sample->Get16Bit() == true ? MIX_16BIT : 0)];
+					(channel->Sample->Get16Bit() == true ? MIX_16BIT : 0) | (channel->Sample->GetStereo() == true ? MIX_STEREO : 0)];
 				int *BuffMax = buff + (SampleCount * 2);
 				channel->DCOffsR = -((BuffMax - 2)[0]);
 				channel->DCOffsL = -((BuffMax - 2)[1]);
