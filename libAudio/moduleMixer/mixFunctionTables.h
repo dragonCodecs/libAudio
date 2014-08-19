@@ -8,11 +8,13 @@
 #define MIX_KAISERSRC		0x06
 #define MIX_FIRFILTERSRC	0x08
 #define MIX_FILTER			0x10
-#define MIX_16BIT			0x20
+#define MIX_STEREO			0x20
+#define MIX_16BIT			0x40
 
-MixInterface MixFunctionTable[64] = 
+MixInterface MixFunctionTable[128] = 
 {
 	//// 8-bit ////
+	// Mono
 	// Non filtering functions
 	Mono8BitMix, Mono8BitRampMix, Mono8BitLinearMix, Mono8BitLinearRampMix,
 	Mono8BitHQMix, Mono8BitHQRampMix, Mono8BitKaiserMix, Mono8BitKaiserRampMix,
@@ -22,6 +24,17 @@ MixInterface MixFunctionTable[64] =
 	FilterMono8BitMix, FilterMono8BitRampMix, FilterMono8BitLinearMix, FilterMono8BitLinearRampMix,
 	FilterMono8BitHQRampMix, FilterMono8BitLinearRampMix, FilterMono8BitKaiserRampMix, FilterMono8BitKaiserRampMix,
 	FilterMono8BitFIRFilterRampMix, FilterMono8BitFIRFilterRampMix, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	// Stereo
+	// Non filtering functions
+	Stereo8BitMix, Stereo8BitRampMix, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	// Filtering functions
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL,
 	//// 16-bit ////
 	// Non filtering functions
@@ -33,6 +46,17 @@ MixInterface MixFunctionTable[64] =
 	FilterMono16BitMix, FilterMono16BitRampMix, FilterMono16BitLinearMix, FilterMono16BitLinearRampMix,
 	FilterMono16BitHQRampMix, FilterMono16BitLinearRampMix, FilterMono16BitKaiserRampMix, FilterMono16BitKaiserRampMix,
 	FilterMono16BitFIRFilterRampMix, FilterMono16BitFIRFilterRampMix, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	// Stereo
+	// Non filtering functions
+	Stereo16BitMix, Stereo16BitRampMix, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	// Filtering functions
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL,
 };
 
