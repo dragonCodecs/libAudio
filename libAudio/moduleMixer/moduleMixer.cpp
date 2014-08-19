@@ -757,7 +757,7 @@ void Channel::NoteCut(bool Triggered)
 {
 	if (Triggered)
 	{
-		Volume = 0;
+		RawVolume = 0;
 		Flags |= CHN_FASTVOLRAMP;
 	}
 }
