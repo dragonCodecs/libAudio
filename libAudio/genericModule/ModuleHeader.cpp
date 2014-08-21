@@ -73,7 +73,7 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 
 ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 {
-	char DontCare[10];
+	uint8_t DontCare[10];
 	char Magic[4];
 	uint8_t Const;
 	uint16_t Special, RawFlags;
