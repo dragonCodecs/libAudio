@@ -409,7 +409,7 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 
 	if (MessageOffs != 0)
 	{
-		fseek(f_IT, SEEK_SET, MessageOffs);
+		fseek(f_IT, MessageOffs, SEEK_SET);
 		Remark = new char[MsgLength + 1];
 		fread(Remark, MsgLength, 1, f_IT);
 		Remark[MsgLength] = 0;
