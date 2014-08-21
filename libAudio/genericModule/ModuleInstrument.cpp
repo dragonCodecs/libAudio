@@ -14,11 +14,11 @@ ModuleInstrument *ModuleInstrument::LoadInstrument(IT_Intern *p_IT, uint32_t i, 
 		return new ModuleNewInstrument(p_IT, i);
 }
 
-ModuleOldInstrument::ModuleOldInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
+ModuleOldInstrument::ModuleOldInstrument(IT_Intern */*p_IT*/, uint32_t i) : ModuleInstrument(i)
 {
 }
 
-uint8_t ModuleOldInstrument::Map(uint8_t Note)
+uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/)
 {
 	return 0;
 }
@@ -28,17 +28,17 @@ uint16_t ModuleOldInstrument::GetFadeOut() const
 	return 0;
 }
 
-bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const
+bool ModuleOldInstrument::GetEnvEnabled(uint8_t /*env*/) const
 {
 	return false;
 }
 
-bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const
+bool ModuleOldInstrument::GetEnvLooped(uint8_t /*env*/) const
 {
 	return false;
 }
 
-ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const
+ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t /*env*/) const
 {
 	return NULL;
 }
