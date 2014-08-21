@@ -52,7 +52,7 @@ typedef struct _FLAC_Encoder_Context
  *   frame being encoded
  * @param p_FLACFile Our own internal context pointer which holds the file to write to
  */
-FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *p_enc, const uint8_t *buffer, size_t nBytes, uint32_t nSamp, uint32_t nCurrFrame, void *p_FLACFile)
+FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *, const uint8_t *buffer, size_t nBytes, uint32_t /*nSamp*/, uint32_t /*nCurrFrame*/, void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 	if (buffer == NULL)
@@ -72,7 +72,7 @@ FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *p_enc, const 
  * @param offset The offset through the file to which to seek to
  * @param p_FLACFile Our own internal context pointer which holds the file to seek through
  */
-FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *p_enc, uint64_t offset, void *p_FLACFile)
+FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *, uint64_t offset, void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 
@@ -91,7 +91,7 @@ FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *p_enc, uint64_t
  * @param p_FLACFile Our own internal context pointer which holds the file to get
  *   the write pointer position of
  */
-FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *p_enc, uint64_t *offset, void *p_FLACFile)
+FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *, uint64_t *offset, void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 	long off;
@@ -112,7 +112,7 @@ FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *p_enc, uint64_t
  * @note This is implemented as a no-operation as we are disinterested in processing
  *   the metadata being sent to the file - we just want it written.
  */
-void f_fmetadata(const FLAC__StreamEncoder *p_enc, const FLAC__StreamMetadata *p_meta, void *p_FLACFile)
+void f_fmetadata(const FLAC__StreamEncoder */*p_enc*/, const FLAC__StreamMetadata */*p_meta*/, void */*p_FLACFile*/)
 {
 }
 

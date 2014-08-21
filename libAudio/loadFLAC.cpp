@@ -70,7 +70,7 @@ typedef struct _FLAC_Decoder_Context
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we had success or not
  */
-FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, uint8_t *Buffer, size_t *bytes, void *p_FF)
+FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buffer, size_t *bytes, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
@@ -98,7 +98,7 @@ FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *p_dec, uint8_t 
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if the seek worked or not
  */
-FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, uint64_t amount, void *p_FF)
+FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *, uint64_t amount, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
@@ -120,7 +120,7 @@ FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *p_dec, uint64_t
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we were able to determine the position or not
  */
-FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, uint64_t *offset, void *p_FF)
+FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *, uint64_t *offset, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 	long pos;
@@ -143,7 +143,7 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *p_dec, uint64_t
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we were able to determine the length or not
  */
-FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, uint64_t *len, void *p_FF)
+FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *, uint64_t *len, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 	struct stat m_stat;
@@ -166,7 +166,7 @@ FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *p_dec, uint64_
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating whether we have reached the end of the file or not
  */
-int f_feof(const FLAC__StreamDecoder *p_dec, void *p_FF)
+int f_feof(const FLAC__StreamDecoder *, void *p_FF)
 {
 	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
 
@@ -182,7 +182,7 @@ int f_feof(const FLAC__StreamDecoder *p_dec, void *p_FF)
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  * @return A constant status indicating that it's safe to continue reading the file
  */
-FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FLAC__Frame *p_frame, const int * const buffers[], void *p_FLACFile)
+FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	short *PCM = (short *)p_FF->buffer;
@@ -208,7 +208,7 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *p_dec, const FL
  * @param p_metadata The item of metadata to process
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  */
-void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_metadata, void *p_FLACFile)
+void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	FileInfo *p_FI = p_FF->fi_Info;
@@ -318,7 +318,7 @@ void f_metadata(const FLAC__StreamDecoder *p_dec, const FLAC__StreamMetadata *p_
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  * @note Implemented as a no-operation due to how the rest of the decoder is structured
  */
-void f_error(const FLAC__StreamDecoder *p_dec, FLAC__StreamDecoderErrorStatus errStat, void *p_FLACFile)
+void f_error(const FLAC__StreamDecoder */*p_dec*/, FLAC__StreamDecoderErrorStatus /*errStat*/, void */*p_FLACFile*/)
 {
 }
 
