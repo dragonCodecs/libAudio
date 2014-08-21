@@ -593,7 +593,7 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
 		ModuleSampleNative *Sample = ((ModuleSampleNative *)p_Samples[i]);
-		uint32_t Length = p_Samples[i]->GetLength();
+		uint32_t Length = p_Samples[i]->GetLength() << ((Sample->Get16Bit() ? 1 : 0) + (Sample->GetStereo() ? 1 : 0));
 		if ((Sample->Flags & 0x01) == 0)
 		{
 			p_PCM[i] = NULL;
