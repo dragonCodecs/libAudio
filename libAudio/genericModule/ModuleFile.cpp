@@ -586,6 +586,16 @@ void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaCo
 	}
 }
 
+template<typename T>
+void StereoInterleve(T *pcmIn, T *pcmOut, uint32_t Length)
+{
+	for (uint32_t i = 0; i < Length; i++)
+	{
+		pcmOut[(i << 1) + 0] = pcmIn[i];
+		pcmOut[(i << 1) + 1] = pcmIn[i + Length];
+	}
+}
+
 void ModuleFile::ITLoadPCM(FILE *f_IT)
 {
 	uint32_t i;
@@ -625,6 +635,16 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 				for (j = 0; j < Length; j++)
 					pcm[j] ^= 0x80;
 			}
+		}
+		if (Sample->GetStereo())
+		{
+			uint8_t *outBuff = new uint8_t[Length];
+			if (Sample->Get16Bit())
+				StereoInterleve((uint16_t *)p_PCM[i], (uint16_t *)outBuff, p_Samples[i]->GetLength());
+			else
+				StereoInterleve(p_PCM[i], outBuff, p_Samples[i]->GetLength());
+			delete [] p_PCM[i];
+			p_PCM[i] = outBuff;
 		}
 	}
 }
