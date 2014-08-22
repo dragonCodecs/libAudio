@@ -50,10 +50,13 @@ ModuleOldInstrument::ModuleOldInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 
 	if (Const != 0 || NNA > 3 || DNC > 1)
 		throw new ModuleLoaderError(E_BAD_IT);
+
+	Envelope = new ModuleEnvelope(p_IT, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
 
 ModuleOldInstrument::~ModuleOldInstrument()
 {
+	delete Envelope;
 	delete [] Name;
 	delete [] FileName;
 }
@@ -183,6 +186,11 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
 		throw new ModuleLoaderError(E_BAD_IT);
+}
+
+ModuleEnvelope::ModuleEnvelope(IT_Intern */*p_IT*/, uint8_t flags, uint8_t loopBegin, uint8_t loopEnd, uint8_t susLoopBegin, uint8_t susLoopEnd) :
+	Type(0), Flags(flags), LoopBegin(loopBegin), LoopEnd(loopEnd), SusLoopBegin(susLoopBegin), SusLoopEnd(susLoopEnd)
+{
 }
 
 uint8_t ModuleEnvelope::Apply(uint16_t Tick)

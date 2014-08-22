@@ -285,6 +285,7 @@ private:
 
 public:
 	ModuleEnvelope(IT_Intern *p_IT, uint8_t env);
+	ModuleEnvelope(IT_Intern *p_IT, uint8_t Flags, uint8_t LoopBegin, uint8_t LoopEnd, uint8_t SusLoopBegin, uint8_t SusLoopEnd);
 	uint8_t Apply(uint16_t Tick);
 	bool GetEnabled() const;
 	bool GetLooped() const;
@@ -327,6 +328,7 @@ private:
 	uint8_t nSamples;
 	char *Name;
 	uint8_t SampleMapping[240];
+	ModuleEnvelope *Envelope;
 
 public:
 	ModuleOldInstrument(IT_Intern *p_IT, uint32_t i);
