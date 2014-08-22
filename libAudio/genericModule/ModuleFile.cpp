@@ -631,7 +631,7 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 			}
 			else
 			{
-				uint8_t *pcm = (uint8_t *)p_PCM[i];
+				uint8_t *pcm = p_PCM[i];
 				for (j = 0; j < Length; j++)
 					pcm[j] ^= 0x80;
 			}
