@@ -317,8 +317,20 @@ public:
 
 class ModuleOldInstrument : public ModuleInstrument
 {
+private:
+	char *FileName;
+	uint8_t Flags;
+	uint16_t FadeOut;
+	uint8_t NNA;
+	uint8_t DNC;
+	uint16_t TrackerVersion;
+	uint8_t nSamples;
+	char *Name;
+	uint8_t SampleMapping[240];
+
 public:
 	ModuleOldInstrument(IT_Intern *p_IT, uint32_t i);
+	~ModuleOldInstrument();
 
 	uint8_t Map(uint8_t Note);
 	uint16_t GetFadeOut() const;
