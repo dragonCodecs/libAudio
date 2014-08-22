@@ -2,9 +2,8 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-ModuleInstrument::ModuleInstrument(uint32_t id) : ID(id)
-{
-}
+ModuleInstrument::ModuleInstrument(uint32_t id) : ID(id) { }
+ModuleInstrument::~ModuleInstrument() { }
 
 ModuleInstrument *ModuleInstrument::LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion)
 {

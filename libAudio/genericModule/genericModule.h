@@ -132,7 +132,7 @@ public:
 	ModuleHeader(FC1x_Intern *p_FF);
 #endif
 	ModuleHeader(IT_Intern *p_IF);
-	~ModuleHeader();
+	virtual ~ModuleHeader();
 };
 
 class ModuleSample : public ModuleAllocator
@@ -303,6 +303,7 @@ private:
 
 protected:
 	ModuleInstrument(uint32_t ID);
+	virtual ~ModuleInstrument();
 
 public:
 	static ModuleInstrument *LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion);
@@ -404,7 +405,7 @@ public:
 	ModulePattern(STM_Intern *p_SF);
 	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
 	ModulePattern(IT_Intern *p_IF, uint32_t nChannels);
-	~ModulePattern();
+	virtual ~ModulePattern();
 
 	ModuleCommand **GetCommands() const;
 	uint16_t GetRows() const;
@@ -539,7 +540,7 @@ public:
 	ModuleFile(AON_Intern *p_AF);
 	ModuleFile(FC1x_Intern *p_FF);
 	ModuleFile(IT_Intern *p_IF);
-	~ModuleFile();
+	virtual ~ModuleFile();
 
 	const char *GetTitle();
 	const char *GetAuthor();
