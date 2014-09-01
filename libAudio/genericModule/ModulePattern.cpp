@@ -38,7 +38,7 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nC
 {
 	uint32_t j, Length;
 	uint8_t row;
-	FILE *f_S3M = p_SF->f_S3M;
+	FILE *f_S3M = p_SF->f_Module;
 	Commands = new ModuleCommand *[nChannels];
 	for (j = 0; j < nChannels; j++)
 		Commands[j] = new ModuleCommand[64];
@@ -96,7 +96,7 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nC
 ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4), Rows(64)
 {
 	uint8_t row, channel;
-	FILE *f_STM = p_SF->f_STM;
+	FILE *f_STM = p_SF->f_Module;
 
 	Commands = new ModuleCommand *[4];
 	for (row = 0; row < 64; row++)

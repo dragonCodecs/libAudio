@@ -19,7 +19,7 @@ void *STM_OpenR(const char *FileName)
 	f_STM = fopen(FileName, "rb");
 	if (f_STM == NULL)
 		return f_STM;
-	ret->f_STM = f_STM;
+	ret->f_Module = f_STM;
 
 	return ret;
 }
@@ -87,7 +87,7 @@ int STM_CloseFileR(void *p_STMFile)
 	delete p_SF->p_Playback;
 	delete p_SF->p_File;
 
-	ret = fclose(p_SF->f_STM);
+	ret = fclose(p_SF->f_Module);
 	free(p_SF);
 	return ret;
 }

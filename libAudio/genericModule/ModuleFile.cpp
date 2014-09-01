@@ -55,7 +55,7 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint16_t i, *SamplePtrs, *PatternPtrs;
-	FILE *f_S3M = p_SF->f_S3M;
+	FILE *f_S3M = p_SF->f_Module;
 
 	p_Header = new ModuleHeader(p_SF);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
@@ -95,7 +95,7 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i;
-	FILE *f_STM = p_SF->f_STM;
+	FILE *f_STM = p_SF->f_Module;
 
 	p_Header = new ModuleHeader(p_SF);
 	p_Samples = new ModuleSample *[p_Header->nSamples];

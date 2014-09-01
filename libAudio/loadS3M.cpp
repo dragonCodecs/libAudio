@@ -18,7 +18,7 @@ void *S3M_OpenR(const char *FileName)
 	f_S3M = fopen(FileName, "rb");
 	if (f_S3M == NULL)
 		return f_S3M;
-	ret->f_S3M = f_S3M;
+	ret->f_Module = f_S3M;
 
 	return ret;
 }
@@ -86,7 +86,7 @@ int S3M_CloseFileR(void *p_S3MFile)
 	delete p_SF->p_Playback;
 	delete p_SF->p_File;
 
-	ret = fclose(p_SF->f_S3M);
+	ret = fclose(p_SF->f_Module);
 	free(p_SF);
 	return ret;
 }

@@ -25,10 +25,13 @@ template<typename T> struct moduleIntern : T
 };
 
 struct modIntern { };
+struct s3mIntern { };
+struct stmIntern { };
 
 typedef moduleIntern<modIntern> MOD_Intern;
+typedef moduleIntern<s3mIntern> S3M_Intern;
+typedef moduleIntern<stmIntern> STM_Intern;
 
-#include "../ScreamTracker.h"
 #include "../ArtOfNoise.h"
 #include "../FutureComposer.h"
 #include "../ImpulseTracker.h"

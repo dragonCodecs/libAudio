@@ -77,7 +77,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	char Magic[4];
 	uint8_t Const;
 	uint16_t Special, RawFlags;
-	FILE *f_S3M = p_SF->f_S3M;
+	FILE *f_S3M = p_SF->f_Module;
 
 	Name = new char[29];
 	fread(Name, 28, 1, f_S3M);
@@ -149,7 +149,7 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF)
 	char Const[9];
 	char Reserved[13];
 	uint8_t _nPatterns, i;
-	FILE *f_STM = p_SF->f_STM;
+	FILE *f_STM = p_SF->f_Module;
 
 	Name = new char[21];
 	fread(Name, 20, 1, f_STM);

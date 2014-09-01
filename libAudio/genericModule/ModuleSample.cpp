@@ -18,7 +18,7 @@ ModuleSample *ModuleSample::LoadSample(MOD_Intern *p_MF, uint32_t i)
 ModuleSample *ModuleSample::LoadSample(S3M_Intern *p_SF, uint32_t i)
 {
 	uint8_t Type;
-	fread(&Type, 1, 1, p_SF->f_S3M);
+	fread(&Type, 1, 1, p_SF->f_Module);
 	if (Type > 1)
 		return new ModuleSampleAdlib(p_SF, i, Type);
 	else
@@ -95,7 +95,7 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 {
 	uint8_t DontCare[12];
 	char Magic[4];
-	FILE *f_S3M = p_SF->f_S3M;
+	FILE *f_S3M = p_SF->f_Module;
 	Name = new char[29];
 	FileName = new char[13];
 
@@ -147,7 +147,7 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	uint8_t ID, Disk, Reserved2;
 	uint16_t Reserved1, C3Speed, Unknown;
 	uint32_t Reserved3;
-	FILE *f_STM = p_SF->f_STM;
+	FILE *f_STM = p_SF->f_Module;
 
 	Name = new char[13];
 	fread(Name, 12, 1, f_STM);
@@ -338,7 +338,7 @@ ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type)
 {
 	uint8_t DontCare[12];
 	char Magic[4];
-	FILE *f_S3M = p_SF->f_S3M;
+	FILE *f_S3M = p_SF->f_Module;
 	Name = new char[29];
 	FileName = new char[13];
 
