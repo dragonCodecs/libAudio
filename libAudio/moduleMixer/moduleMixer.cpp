@@ -1202,7 +1202,7 @@ bool ModuleFile::AdvanceTick()
 					}
 					else if (env->IsAtEnd(channel->EnvVolumePos))
 					{
-						if ((channel->Flags & CHN_NOTEOFF) != 0)
+						if (ModuleType == MODULE_IT || (channel->Flags & CHN_NOTEOFF) != 0)
 							channel->Flags |= CHN_NOTEFADE;
 						channel->EnvVolumePos = env->GetLastTick();
 						if (env->Apply(channel->EnvVolumePos) == 0)
