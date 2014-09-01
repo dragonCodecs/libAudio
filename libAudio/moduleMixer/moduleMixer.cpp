@@ -591,7 +591,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		param = channel->Portamento;
 	if (channel->Period == 0)
 		return;
-	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
+	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT) && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
@@ -628,7 +628,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		param = channel->Portamento;
 	if (channel->Period == 0)
 		return;
-	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM) && (param & 0xE0) == 0xE0)
+	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT) && (param & 0xE0) == 0xE0)
 	{
 		if ((param & 0x0F) != 0)
 		{
