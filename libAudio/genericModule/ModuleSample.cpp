@@ -48,7 +48,7 @@ uint8_t ModuleSample::GetType()
 ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSample(i, 1)
 {
 	uint16_t Short;
-	FILE *f_MOD = p_MF->f_MOD;
+	FILE *f_MOD = p_MF->f_Module;
 	Name = new char[23];
 
 	fread(Name, 22, 1, f_MOD);

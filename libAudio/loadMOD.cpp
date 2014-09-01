@@ -19,7 +19,7 @@ void *MOD_OpenR(const char *FileName)
 	f_MOD = fopen(FileName, "rb");
 	if (f_MOD == NULL)
 		return f_MOD;
-	ret->f_MOD = f_MOD;
+	ret->f_Module = f_MOD;
 
 	return ret;
 }
@@ -87,7 +87,7 @@ int MOD_CloseFileR(void *p_MODFile)
 	delete p_MF->p_Playback;
 	delete p_MF->p_File;
 
-	ret = fclose(p_MF->f_MOD);
+	ret = fclose(p_MF->f_Module);
 	free(p_MF);
 	return ret;
 }

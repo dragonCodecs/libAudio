@@ -25,7 +25,7 @@ void *ModuleAllocator::operator new[](size_t size)
 ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 	uint32_t i, maxPattern;
-	FILE *f_MOD = p_MF->f_MOD;
+	FILE *f_MOD = p_MF->f_Module;
 
 	p_Header = new ModuleHeader(p_MF);
 	fseek(f_MOD, 20, SEEK_SET);

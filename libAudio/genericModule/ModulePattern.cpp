@@ -24,7 +24,7 @@ ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nC
 			uint8_t Data[4];
 			if (row == 0)
 				Commands[channel] = new ModuleCommand[64];
-			fread(Data, 4, 1, p_MF->f_MOD);
+			fread(Data, 4, 1, p_MF->f_Module);
 			Commands[channel][row].SetMODData(Data);
 		}
 	}

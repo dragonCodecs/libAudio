@@ -5,7 +5,7 @@
 ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 {
 	char MODMagic[4];
-	FILE *f_MOD = p_MF->f_MOD;
+	FILE *f_MOD = p_MF->f_Module;
 
 	Name = new char[21];
 	fread(Name, 20, 1, f_MOD);

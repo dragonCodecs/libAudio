@@ -15,7 +15,19 @@ class Channel;
 class ModuleSample;
 class ModulePattern;
 
-#include "../ProTracker.h"
+template<typename T> struct moduleIntern : T
+{
+	FILE *f_Module;
+	FileInfo *p_FI;
+	Playback *p_Playback;
+	uint8_t buffer[8192];
+	ModuleFile *p_File;
+};
+
+struct modIntern { };
+
+typedef moduleIntern<modIntern> MOD_Intern;
+
 #include "../ScreamTracker.h"
 #include "../ArtOfNoise.h"
 #include "../FutureComposer.h"
