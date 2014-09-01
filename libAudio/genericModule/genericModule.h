@@ -289,11 +289,14 @@ public:
 	uint8_t Apply(uint16_t Tick);
 	bool GetEnabled() const;
 	bool GetLooped() const;
+	bool GetSustained() const;
 	bool HasNodes() const;
 	bool IsAtEnd(uint16_t Tick) const;
 	bool IsZeroLoop() const;
 	uint16_t GetLoopEnd() const;
 	uint16_t GetLoopBegin() const;
+	uint16_t GetSustainEnd() const;
+	uint16_t GetSustainBegin() const;
 	uint16_t GetLastTick() const;
 };
 

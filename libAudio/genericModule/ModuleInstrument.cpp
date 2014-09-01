@@ -235,6 +235,11 @@ bool ModuleEnvelope::GetLooped() const
 	return (Flags & 0x02) != 0;
 }
 
+bool ModuleEnvelope::GetSustained() const
+{
+	return (Flags & 0x04) != 0;
+}
+
 bool ModuleEnvelope::HasNodes() const
 {
 	return nNodes != 0;
@@ -258,6 +263,16 @@ uint16_t ModuleEnvelope::GetLoopEnd() const
 uint16_t ModuleEnvelope::GetLoopBegin() const
 {
 	return Nodes[LoopBegin].Tick;
+}
+
+uint16_t ModuleEnvelope::GetSustainEnd() const
+{
+	return Nodes[SusLoopBegin].Tick;
+}
+
+uint16_t ModuleEnvelope::GetSustainBegin() const
+{
+	return Nodes[SusLoopBegin].Tick;
 }
 
 uint16_t ModuleEnvelope::GetLastTick() const
