@@ -1194,7 +1194,13 @@ bool ModuleFile::AdvanceTick()
 							}
 						}
 					}
-					if (env->IsAtEnd(channel->EnvVolumePos))
+					if (env->GetSustained() && (channel->Flags & CHN_NOTEOFF) == 0)
+					{
+						uint16_t endTick = env->GetSustainEnd();
+						if (channel->EnvVolumePos == ++endTick)
+							channel->EnvVolumePos = env->GetSustainBegin();
+					}
+					else if (env->IsAtEnd(channel->EnvVolumePos))
 					{
 						if ((channel->Flags & CHN_NOTEOFF) != 0)
 							channel->Flags |= CHN_NOTEFADE;
