@@ -202,7 +202,7 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	char StrMagic[4];
 	uint32_t BlockLen;
 	uint8_t Const, i;
-	FILE *f_AON = p_AF->f_AON;
+	FILE *f_AON = p_AF->f_Module;
 
 	fread(Magic1, 4, 1, f_AON);
 	fread(Magic2, 42, 1, f_AON);
@@ -315,7 +315,7 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 	char Magic[4];
 	uint32_t IDK1, IDK2;
 	uint32_t Special;
-	FILE *f_FC1x = p_FF->f_FC1x;
+	FILE *f_FC1x = p_FF->f_Module;
 
 	fread(Magic, 4, 1, f_FC1x);
 	fread(&SeqLength, 4, 1, f_FC1x);
@@ -352,7 +352,7 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	char Magic[4], DontCare[4];
 	uint16_t MsgLength, SongFlags;
 	uint8_t Const;
-	FILE *f_IT = p_IF->f_IT;
+	FILE *f_IT = p_IF->f_Module;
 
 	fread(Magic, 4, 1, f_IT);
 	if (strncmp(Magic, "IMPM", 4) != 0)

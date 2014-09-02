@@ -19,7 +19,7 @@ ModuleOldInstrument::ModuleOldInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 	uint8_t SusLoopBegin, SusLoopEnd;
 	uint8_t Const;
 	char Magic[4], DontCare[6];
-	FILE *f_IT = p_IT->f_IT;
+	FILE *f_IT = p_IT->f_Module;
 
 	fread(Magic, 4, 1, f_IT);
 	if (strncmp(Magic, "IMPI", 4) != 0)
@@ -90,7 +90,7 @@ ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 {
 	uint8_t Const, env;
 	char Magic[4], DontCare[6];
-	FILE *f_IT = p_IT->f_IT;
+	FILE *f_IT = p_IT->f_Module;
 
 	fread(Magic, 4, 1, f_IT);
 	if (strncmp(Magic, "IMPI", 4) != 0)
@@ -173,7 +173,7 @@ ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const
 ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 {
 	uint8_t DontCare;
-	FILE *f_IT = p_IT->f_IT;
+	FILE *f_IT = p_IT->f_Module;
 
 	fread(&Flags, 1, 1, f_IT);
 	fread(&nNodes, 1, 1, f_IT);

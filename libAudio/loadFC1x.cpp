@@ -18,7 +18,7 @@ void *FC1x_OpenR(const char *FileName)
 	f_FC1x = fopen(FileName, "rb");
 	if (f_FC1x == NULL)
 		return f_FC1x;
-	ret->f_FC1x = f_FC1x;
+	ret->f_Module = f_FC1x;
 
 	return ret;
 }
@@ -86,7 +86,7 @@ int FC1x_CloseFileR(void *p_FC1xFile)
 	delete p_FF->p_Playback;
 	delete p_FF->p_File;
 
-	ret = fclose(p_FF->f_FC1x);
+	ret = fclose(p_FF->f_Module);
 	free(p_FF);
 	return ret;
 }

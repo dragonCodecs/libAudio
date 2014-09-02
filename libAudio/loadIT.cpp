@@ -19,7 +19,7 @@ void *IT_OpenR(const char *FileName)
 	f_IT = fopen(FileName, "rb");
 	if (f_IT == NULL)
 		return f_IT;
-	ret->f_IT = f_IT;
+	ret->f_Module = f_IT;
 
 	return ret;
 }
@@ -171,7 +171,7 @@ int IT_CloseFileR(void *p_ITFile)
 	delete p_IF->p_Playback;
 	delete p_IF->p_File;
 
-	ret = fclose(p_IF->f_IT);
+	ret = fclose(p_IF->f_Module);
 	free(p_IF);
 	return ret;
 }

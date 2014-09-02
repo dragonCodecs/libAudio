@@ -193,7 +193,7 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 
 ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name) : ModuleSample(i, 1)
 {
-	FILE *f_AON = p_AF->f_AON;
+	FILE *f_AON = p_AF->f_Module;
 
 	Name = name;
 	fread(&Length, 4, 1, f_AON);
@@ -203,7 +203,7 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name)
 ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSample(i, 1)
 {
 	char Magic[4], Const;
-	FILE *f_IT = p_IF->f_IT;
+	FILE *f_IT = p_IF->f_Module;
 
 	fread(&Magic, 4, 1, f_IT);
 	if (strncmp(Magic, "IMPS", 4) != 0)

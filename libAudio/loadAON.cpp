@@ -18,7 +18,7 @@ void *AON_OpenR(const char *FileName)
 	f_AON = fopen(FileName, "rb");
 	if (f_AON == NULL)
 		return f_AON;
-	ret->f_AON = f_AON;
+	ret->f_Module = f_AON;
 
 	return ret;
 }
@@ -95,7 +95,7 @@ int AON_CloseFileR(void *p_AONFile)
 	delete p_AF->p_Playback;
 	delete p_AF->p_File;
 
-	ret = fclose(p_AF->f_AON);
+	ret = fclose(p_AF->f_Module);
 	free(p_AF);
 	return ret;
 }

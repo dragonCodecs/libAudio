@@ -128,7 +128,7 @@ ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4), Rows(64)
 ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nChannels), Rows(64)
 {
 	uint8_t row, channel;
-	FILE *f_AON = p_AF->f_AON;
+	FILE *f_AON = p_AF->f_Module;
 
 	Commands = new ModuleCommand *[nChannels];
 	for (row = 0; row < 64; row++)
@@ -170,7 +170,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 	uint8_t b, ChannelMask[64];
 	uint16_t len, row, channel, j;
 	ModuleCommand LastCommand[64];
-	FILE *f_IT = p_IF->f_IT;
+	FILE *f_IT = p_IF->f_Module;
 
 	fread(&len, 2, 1, f_IT);
 	fread(&Rows, 2, 1, f_IT);

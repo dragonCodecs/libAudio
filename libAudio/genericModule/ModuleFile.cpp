@@ -119,7 +119,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	char StrMagic[4];
 	uint32_t BlockLen, i, SampleLengths;
 	uint8_t ChannelMul;
-	FILE *f_AON = p_AF->f_AON;
+	FILE *f_AON = p_AF->f_Module;
 
 	p_Header = new ModuleHeader(p_AF);
 
@@ -181,7 +181,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
 {
 #ifdef __FC1x_EXPERIMENTAL__
-//	FILE *f_FC1x = p_FF->f_FC1x;
+//	FILE *f_FC1x = p_FF->f_Module;
 
 	p_Header = new ModuleHeader(p_FF);
 #endif
@@ -191,7 +191,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(N
 {
 	uint16_t i;
 	uint32_t *SamplePtrs, *PatternPtrs;
-	FILE *f_IT = p_IF->f_IT;
+	FILE *f_IT = p_IF->f_Module;
 
 	p_Header = new ModuleHeader(p_IF);
 	if (p_Header->nInstruments != 0)
