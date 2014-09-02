@@ -200,10 +200,15 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		return;
 	if (note >= 0x80)
 	{
-		if (note == 0xFF && ModuleType != MODULE_IT)
-			channel->NoteOff();
+		if (ModuleType == MODULE_IT)
+		{
+			if (note == 0xFF)
+				channel->NoteOff();
+			else
+				channel->Flags |= CHN_NOTEFADE;
+		}
 		else
-			channel->Flags |= CHN_NOTEFADE;
+			channel->NoteOff();
 
 		if (note == 0xFE)
 			channel->NoteCut(true);
