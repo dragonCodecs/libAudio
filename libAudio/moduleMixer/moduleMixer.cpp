@@ -1088,10 +1088,10 @@ bool ModuleFile::Tick()
 			if (NewPattern != NextPattern)
 				NewPattern = NextPattern;
 			Pattern = p_Header->Orders[NewPattern];
-			if (Pattern > p_Header->nPatterns)
+			if (Pattern >= p_Header->nPatterns)
 				NextPattern++;
 		}
-		while (Pattern > p_Header->nPatterns);
+		while (Pattern >= p_Header->nPatterns);
 		NextPattern = NewPattern;
 		if (Row >= Rows)
 			Row = 0;
