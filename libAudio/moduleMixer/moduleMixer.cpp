@@ -612,15 +612,23 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
-			channel->Period = LinearSlideDown(OldPeriod, param);
-			if (channel->Period == OldPeriod)
-				channel->Period--;
+			if (param != 0)
+			{
+				channel->Period = LinearSlideDown(OldPeriod, param);
+				if (channel->Period == OldPeriod)
+					channel->Period--;
+			}
 		}
 		else
-		{
 			channel->Period -= param << 2;
-			if (channel->Period < MinPeriod)
-				channel->Period = MinPeriod;
+		if (channel->Period > MaxPeriod)
+		{
+			channel->Period = MaxPeriod;
+			if (ModuleType == MODULE_IT)
+			{
+				channel->Flags |= CHN_NOTEFADE;
+//				channel->FadeOutVol = 0;
+			}
 		}
 	}
 }
@@ -649,15 +657,23 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
 		{
 			uint32_t OldPeriod = channel->Period;
-			channel->Period = LinearSlideUp(OldPeriod, param);
-			if (channel->Period == OldPeriod)
-				channel->Period++;
+			if (param != 0)
+			{
+				channel->Period = LinearSlideUp(OldPeriod, param);
+				if (channel->Period == OldPeriod)
+					channel->Period++;
+			}
 		}
 		else
-		{
 			channel->Period += param << 2;
-			if (channel->Period > MaxPeriod)
-				channel->Period = MaxPeriod;
+		if (channel->Period > MaxPeriod)
+		{
+			channel->Period = MaxPeriod;
+			if (ModuleType == MODULE_IT)
+			{
+				channel->Flags |= CHN_NOTEFADE;
+//				channel->FadeOutVol = 0;
+			}
 		}
 	}
 }
