@@ -609,7 +609,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 	}
 	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
-		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) == 0)// && ModuleType != MODULE_XM)
 		{
 			uint32_t OldPeriod = channel->Period;
 			if (param != 0)
@@ -654,7 +654,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 	}
 	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
-		if (false)//(ModuleType == MODULE_S3M && (p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) == 0)// && ModuleType != MODULE_XM)
 		{
 			uint32_t OldPeriod = channel->Period;
 			if (param != 0)
