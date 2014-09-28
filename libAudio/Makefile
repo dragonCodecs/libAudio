@@ -38,7 +38,6 @@ SOMIN = $(SOMAJ)$(VERMAJ)
 SOREV = $(SOMIN)$(VERMIN)
 SO = $(SOREV)$(VERREV)
 A = libAudio.a
-LA = libAudio.la
 PC = libAudio.pc
 IN = libAudio.pc.in
 
