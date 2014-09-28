@@ -57,6 +57,8 @@ typedef moduleIntern<itIntern> IT_Intern;
 
 #define FILE_FLAGS_AMIGA_SLIDES		0x01
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
+#define FILE_FLAGS_FAST_SLIDES		0x04
+#define FILE_FLAGS_LINEAR_SLIDES	0x08
 
 #define SAMPLE_FLAGS_LOOP		1
 #define SAMPLE_FLAGS_STEREO		2

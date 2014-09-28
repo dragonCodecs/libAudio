@@ -109,6 +109,8 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 		Flags |= FILE_FLAGS_AMIGA_SLIDES;
 	if ((RawFlags & 0x10) != 0)
 		Flags |= FILE_FLAGS_AMIGA_LIMITS;
+	if (CreationVersion < 0x1320 && (RawFlags & 0x40) != 0)
+		Flags |= FILE_FLAGS_FAST_SLIDES;
 
 	Orders = new uint8_t[nOrders];
 	fread(Orders, nOrders, 1, f_S3M);
@@ -403,7 +405,7 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(PatternPtrs, nPatterns, 4, f_IT);
 
 	Flags = 0;
-	Flags |= (SongFlags & 0x0010) == 0 ? FILE_FLAGS_AMIGA_SLIDES : 0;
+	Flags |= (SongFlags & 0x0010) == 0 ? FILE_FLAGS_AMIGA_SLIDES : FILE_FLAGS_LINEAR_SLIDES;
 	if ((SongFlags & 0x0004) == 0)
 		nInstruments = 0;
 
