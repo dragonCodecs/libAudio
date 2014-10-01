@@ -648,7 +648,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 			if (ModuleType == MODULE_IT)
 			{
 				channel->Flags |= CHN_NOTEFADE;
-//				channel->FadeOutVol = 0;
+				channel->FadeOutVol = 0;
 			}
 		}
 	}
@@ -693,7 +693,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 			if (ModuleType == MODULE_IT)
 			{
 				channel->Flags |= CHN_NOTEFADE;
-//				channel->FadeOutVol = 0;
+				channel->FadeOutVol = 0;
 			}
 		}
 	}
@@ -808,8 +808,8 @@ void Channel::NoteOff()
 {
 	bool NoteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
-	/*if (Instrument != NULL && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
-		Flags |= CHN_NOTEFADE;*/
+	if (Instrument != NULL && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
+		Flags |= CHN_NOTEFADE;
 	if (Length == 0)
 		return;
 	if (false && Sample != NULL && NoteOn)
@@ -837,8 +837,8 @@ void Channel::NoteOff()
 	}
 	if (Instrument != NULL)
 	{
-		/*if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
-			Flags |= CHN_NOTEFADE;*/
+		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
+			Flags |= CHN_NOTEFADE;
 	}
 }
 
@@ -1250,15 +1250,15 @@ bool ModuleFile::AdvanceTick()
 						if (env->Apply(channel->EnvVolumePos) == 0)
 						{
 							channel->Flags |= CHN_NOTEFADE;
-							// FadeOutVol?
+							channel->FadeOutVol = 0;
 							vol = 0;
 						}
 					}
 				}
 			}
-			else if (channel->Flags & CHN_NOTEFADE)
+			else if ((channel->Flags & CHN_NOTEFADE) != 0)
 			{
-				//FadeOutVol?
+				channel->FadeOutVol = 0;
 				vol = 0;
 				channel->Flags &= ~CHN_NOTEFADE;
 			}

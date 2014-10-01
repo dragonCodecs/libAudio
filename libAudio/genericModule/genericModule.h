@@ -489,7 +489,7 @@ public:
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
-	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos;
+	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos, FadeOutVol;
 	int DCOffsR, DCOffsL;
 
 public:
