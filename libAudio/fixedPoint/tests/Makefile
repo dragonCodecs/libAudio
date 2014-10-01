@@ -11,9 +11,10 @@ CFLAGS = -c -o $@ $<
 LIBS = ../fixedPoint.o -lstdc++ -lm
 LFLAGS = $< $(LIBS) -o $@
 INSTALL = install -m755
+CHMOD = chmod
 
-EXE = TestLinearSlideUp.out TestLinearSlideDown.out
-O = TestLinearSlideUp.o TestLinearSlideDown.o
+EXE = TestLinearSlideUp TestLinearSlideDown TestFineLinearSlideUp TestFineLinearSlideDown
+O = TestLinearSlideUp.o TestLinearSlideDown.o TestFineLinearSlideUp.o TestFineLinearSlideDown.o
 
 default: all
 
@@ -26,15 +27,9 @@ $(EXE): ../fixedPoint.o
 
 .o.out:
 	$(CC) $(LFLAGS)
-	$(INSTALL) $@ $*
+	$(CHMOD) +x $@
 
 .cpp.o:
 	$(CC) $(CFLAGS)
 
 .PHONY: .cpp.o .o.out clean default all
-
-TestLinearSlideUp.o: TestLinearSlideUp.cpp
-TestLinearSlideDown.o: TestLinearSlideDown.cpp
-
-TestLinearSlideUp.out: TestLinearSlideUp.o
-TestLinearSlideDown.out: TestLinearSlideDown.o
