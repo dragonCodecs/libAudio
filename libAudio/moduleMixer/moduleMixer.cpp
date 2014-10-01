@@ -1253,6 +1253,20 @@ bool ModuleFile::AdvanceTick()
 						}
 					}
 				}
+				if ((channel->Flags & CHN_NOTEFADE) != 0 && false)
+				{
+					uint16_t FadeOut = instr->GetFadeOut();
+					if (FadeOut != 0)
+					{
+						if (channel->FadeOutVol < (FadeOut << 1))
+							channel->FadeOutVol = 0;
+						else
+							channel->FadeOutVol -= FadeOut << 1;
+						vol = (vol * channel->FadeOutVol) >> 16;
+					}
+					else if (channel->FadeOutVol == 0)
+						vol = 0;
+				}
 			}
 			else if ((channel->Flags & CHN_NOTEFADE) != 0)
 			{
