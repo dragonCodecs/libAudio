@@ -123,6 +123,7 @@ ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 	if (Const != 0 || NNA > 3 || DCT > 3 || DCA > 2)
 		throw new ModuleLoaderError(E_BAD_IT);
 
+	FadeOut <<= 6;
 	Envelopes = new ModuleEnvelope *[3];
 	for (env = 0; env < 3; env++)
 		Envelopes[env] = new ModuleEnvelope(p_IT, env);
