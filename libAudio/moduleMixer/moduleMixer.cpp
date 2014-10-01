@@ -630,7 +630,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 	}
 	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) == 0)// && ModuleType != MODULE_XM)
+		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)// && ModuleType != MODULE_XM)
 		{
 			uint32_t OldPeriod = channel->Period;
 			if (param != 0)
@@ -675,7 +675,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 	}
 	if (TickCount > channel->StartTick || MusicSpeed == 1)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) == 0)// && ModuleType != MODULE_XM)
+		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)// && ModuleType != MODULE_XM)
 		{
 			uint32_t OldPeriod = channel->Period;
 			if (param != 0)
