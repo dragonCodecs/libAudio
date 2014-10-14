@@ -268,6 +268,20 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 			channel->Pos = channel->Length;
 		channel->PosLo = 0;
 	}
+	if (period == 0 || ModuleType != MODULE_IT || ((channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0))
+	{
+		if (ModuleType == MODULE_IT && (channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0)
+		{
+			// Reset envelopes and auto-vibrato*
+			channel->Flags &= ~CHN_NOTEFADE;
+			channel->FadeOutVol = 0xFFFF;
+		}
+		else
+		{
+			channel->Flags &= ~CHN_NOTEFADE;
+			channel->FadeOutVol = 0xFFFF;
+		}
+	}
 	channel->Flags &= ~CHN_NOTEOFF;
 	if (channel->PortamentoDest == channel->Period)
 		channel->Flags |= CHN_FASTVOLRAMP;
@@ -798,7 +812,8 @@ void Channel::NoteCut(bool Triggered)
 	if (Triggered)
 	{
 		RawVolume = 0;
-		Flags |= CHN_FASTVOLRAMP;
+		FadeOutVol = 0;
+		Flags |= CHN_FASTVOLRAMP | CHN_NOTEFADE;
 	}
 }
 
@@ -1213,14 +1228,26 @@ bool ModuleFile::AdvanceTick()
 			{
 				ModuleInstrument *instr = channel->Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
+				if ((channel->Flags & CHN_NOTEFADE) != 0)
+				{
+					uint16_t FadeOut = instr->GetFadeOut();
+					if (FadeOut != 0)
+					{
+						if (channel->FadeOutVol < (FadeOut << 1))
+							channel->FadeOutVol = 0;
+						else
+							channel->FadeOutVol -= FadeOut << 1;
+						vol = (vol * channel->FadeOutVol) >> 16;
+					}
+					else if (channel->FadeOutVol == 0)
+						vol = 0;
+				}
 				if (env->GetEnabled() && env->HasNodes())
 				{
 					uint8_t volValue = env->Apply(channel->EnvVolumePos);
 					vol = muldiv(vol, volValue, 1 << 6);
 					CLIPINT(vol, 0, 128);
 					channel->EnvVolumePos++;
-					// TODO: Handle CHN_NOTEFADE..
-					channel->Flags &= ~CHN_NOTEFADE;
 					if (env->GetLooped())
 					{
 						uint16_t endTick = env->GetLoopEnd();
@@ -1230,7 +1257,7 @@ bool ModuleFile::AdvanceTick()
 							if (env->IsZeroLoop() && env->Apply(channel->EnvVolumePos) == 0)
 							{
 								channel->Flags |= CHN_NOTEFADE;
-								// FadeOutVol?
+								channel->FadeOutVol = 0;
 							}
 						}
 					}
@@ -1253,26 +1280,13 @@ bool ModuleFile::AdvanceTick()
 						}
 					}
 				}
-				if ((channel->Flags & CHN_NOTEFADE) != 0 && false)
-				{
-					uint16_t FadeOut = instr->GetFadeOut();
-					if (FadeOut != 0)
-					{
-						if (channel->FadeOutVol < (FadeOut << 1))
-							channel->FadeOutVol = 0;
-						else
-							channel->FadeOutVol -= FadeOut << 1;
-						vol = (vol * channel->FadeOutVol) >> 16;
-					}
-					else if (channel->FadeOutVol == 0)
-						vol = 0;
-				}
+				// TODO: Process panning envelopes here.
 			}
 			else if ((channel->Flags & CHN_NOTEFADE) != 0)
 			{
 				channel->FadeOutVol = 0;
 				vol = 0;
-				channel->Flags &= ~CHN_NOTEFADE;
+//				channel->Flags &= ~CHN_NOTEFADE;
 			}
 
 			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
