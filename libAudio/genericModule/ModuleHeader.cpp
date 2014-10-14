@@ -128,7 +128,9 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 		for (i = 0; i < 32; i++)
 		{
 			if ((Panning[i] & 0x20) != 0)
-				Panning[i] = (Panning[i] & 0x0F) << 4;
+				Panning[i] = ((Panning[i] & 0x0F) << 4) | (Panning[i] & 0x0F);
+			else
+				Panning[i] = 127;
 		}
 	}
 	else
