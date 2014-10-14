@@ -131,6 +131,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 				Panning[i] = ((Panning[i] & 0x0F) << 4) | (Panning[i] & 0x0F);
 			else
 				Panning[i] = 127;
+			Panning[i] >>= 1;
 		}
 	}
 	else
