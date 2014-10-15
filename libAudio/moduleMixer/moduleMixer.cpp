@@ -1482,6 +1482,10 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 	int16dot16 Increment = channel->Increment;
 	if (Samples == 0 || Increment.iValue == 0 || channel->Length == 0)
 		return 0;
+	// The following fixes 3 or 4 bugs and allows
+	// for loops to run correctly. DO NOT REMOVE!
+	if (channel->Length > channel->LoopEnd)
+		channel->Length = channel->LoopEnd;
 	if (channel->Pos < LoopStart)
 	{
 		if (Increment.iValue < 0)
@@ -1503,6 +1507,7 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 				return 0;
 			}
 		}
+		// In theory this can't happen, and the compiler tells us this too.. need to work out if theory matches practice.
 		else if (channel->Pos < 0)
 			channel->Pos = 0;
 	}
@@ -1523,8 +1528,9 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 		}
 		else
 		{
-			if (Increment.iValue < 0)
+			if (Increment.iValue < 0) // Theory says this is imposible..
 			{
+				printf("This should not happen\n");
 				Increment.iValue = -Increment.iValue;
 				channel->Increment.iValue = Increment.iValue;
 			}
@@ -1532,10 +1538,6 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 			if (channel->Pos < LoopStart)
 				channel->Pos = LoopStart;
 		}
-		// The following fixes 3 or 4 bugs and allows
-		// for loops to run correctly. DO NOT REMOVE!
-		if (channel->Length > channel->LoopEnd)
-			channel->Length = channel->LoopEnd;
 	}
 	Pos = channel->Pos;
 	if (Pos < LoopStart)
