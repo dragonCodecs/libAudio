@@ -1477,6 +1477,7 @@ bool ModuleFile::AdvanceTick()
 
 uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 {
+	uint32_t DeltaHi, DeltaLo, MaxSamples;
 	uint32_t Pos, PosLo, SampleCount;
 	uint32_t LoopStart = ((channel->Flags & CHN_LOOP) != 0 ? channel->LoopStart : 0);
 	int16dot16 Increment = channel->Increment;
@@ -1547,40 +1548,29 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 		if (Pos < 0 || Increment.iValue < 0)
 			return 0;
 	}
-	if (Pos >= channel->Length)
+	if (Pos < 0 || Pos >= channel->Length)
 		return 0;
 	PosLo = channel->PosLo;
 	SampleCount = Samples;
 	if (Increment.iValue < 0)
+		Increment.iValue = -Increment.iValue;
+	MaxSamples = 16384 / (Increment.Value.Hi + 1);
+	if (MaxSamples < 2)
+		MaxSamples = 2;
+	if (Samples > MaxSamples)
+		Samples = MaxSamples;
+	DeltaHi = Increment.Value.Hi * (Samples - 1);
+	DeltaLo = Increment.Value.Lo * (Samples - 1);
+	if (channel->Increment.iValue < 0)
 	{
-		int16dot16 Inv = Increment;
-		uint32_t MaxSamples;
-		uint32_t DeltaHi, DeltaLo, PosDest;
-		Inv.iValue = -Inv.iValue;
-		MaxSamples = 16384 / (Inv.Value.Hi + 1);
-		if (MaxSamples < 2)
-			MaxSamples = 2;
-		if (Samples > MaxSamples)
-			Samples = MaxSamples;
-		DeltaHi = Inv.Value.Hi * Samples;
-		DeltaLo = Inv.Value.Lo * Samples;
-		PosDest = Pos - DeltaHi + ((PosLo - DeltaLo) >> 16);
+		uint32_t PosDest = Pos - DeltaHi - ((DeltaLo - PosLo) >> 16);
 		if (PosDest < LoopStart)
-			SampleCount = ((((Pos - LoopStart) << 16) + PosLo - 1) / Inv.iValue);
+			SampleCount = (((Pos - LoopStart) << 16) + PosLo) / Increment.iValue;
 	}
 	else
 	{
-		uint32_t MaxSamples = 16384 / (Increment.Value.Hi + 1);
-		uint32_t DeltaHi, DeltaLo, PosDest;
-		if (MaxSamples < 2)
-			MaxSamples = 2;
-		if (Samples > MaxSamples)
-			Samples = MaxSamples;
-		DeltaHi = Increment.Value.Hi * Samples;
-		DeltaLo = Increment.Value.Lo * Samples;
-		PosDest = Pos + DeltaHi + ((PosLo + DeltaLo) >> 16);
+		uint32_t PosDest = Pos + DeltaHi + ((DeltaLo + PosLo) >> 16);
 		if (PosDest >= channel->Length)
-//			SampleCount = channel->Length - channel->Pos;
 			SampleCount = (((channel->Length - Pos) << 16) - PosLo) / Increment.iValue;
 	}
 	if (SampleCount <= 1)
