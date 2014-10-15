@@ -1187,6 +1187,7 @@ bool ModuleFile::AdvanceTick()
 	for (i = 0; i < p_Header->nChannels; i++)
 	{
 		Channel *channel = &Channels[i];
+		bool incNegative = channel->Increment.iValue < 0;
  		channel->Increment.iValue = 0;
 		if (channel->Period != 0 && channel->Length != 0)
 		{
@@ -1398,15 +1399,16 @@ bool ModuleFile::AdvanceTick()
 			CLIPINT(period, (int)MinPeriod, (int)MaxPeriod);
 			// Calculate the increment from the frequency from the period
 			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
-			inc = muldiv(freq, 0x10000, MixSampleRate);
-			channel->Increment.iValue = (inc + 1) & ~3;
+			inc = muldiv(freq, 0x10000, MixSampleRate) + 1;
+			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
+				inc = -inc;
+			channel->Increment.iValue = inc & ~3;
 		}
 		if (channel->Volume != 0 || channel->LeftVol != 0 || channel->RightVol != 0)
 			channel->Flags |= CHN_VOLUMERAMP;
 		else
 			channel->Flags &= ~CHN_VOLUMERAMP;
 		channel->NewLeftVol = channel->NewRightVol = 0;
-		//if (channel->Increment.Value.Hi + 1 >= (int)(channel->LoopEnd - channel->LoopStart))
 		if ((channel->Increment.Value.Hi + 1) >= (int)channel->LoopEnd)
 			channel->Flags &= ~CHN_LOOP;
 		channel->SampleData = ((channel->NewSampleData != NULL && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : NULL);
