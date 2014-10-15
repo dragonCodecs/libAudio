@@ -258,19 +258,20 @@ void DeinitialiseTables()
 }
 
 // Begin / End loop
+// TODO: Figure out if anything here can be made unsigned by adjusting the maths any
 #define SNDMIX_BEGINSAMPLELOOP8 \
-	int Pos = chn->PosLo; \
-	int Increment = chn->Increment.iValue; \
+	int32_t Pos = chn->PosLo; \
+	int32_t Increment = chn->Increment.iValue; \
 	const signed char *p = (signed char *)(chn->SampleData + chn->Pos); \
-	int *vol = Buff; \
+	int32_t *vol = Buff; \
 	do \
 	{
 
 #define SNDMIX_BEGINSAMPLELOOP16 \
-	int Pos = chn->PosLo; \
-	int Increment = chn->Increment.iValue; \
+	int32_t Pos = chn->PosLo; \
+	int32_t Increment = chn->Increment.iValue; \
 	const signed short *p = (signed short *)(chn->SampleData + (chn->Pos << 1)); \
-	int *vol = Buff; \
+	int32_t *vol = Buff; \
 	do \
 	{
 
