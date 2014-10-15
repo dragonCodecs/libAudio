@@ -1517,12 +1517,14 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 			return 0;
 		if ((channel->Flags & CHN_LPINGPONG) != 0)
 		{
+			uint32_t delta = ((~channel->PosLo) & 0xFFFF) + 1;
 			if (Increment.iValue > 0)
 			{
 				Increment.iValue = -Increment.iValue;
 				channel->Increment.iValue = Increment.iValue;
 			}
-			channel->Pos -= channel->Pos - channel->Length;
+			channel->Pos -= ((channel->Pos - channel->Length) << 1) + (delta >> 16);
+			channel->PosLo = delta & 0xFFFF;
 			if (channel->Pos <= channel->LoopStart || channel->Pos >= channel->Length)
 				channel->Pos = channel->Length - 1;
 		}
@@ -1534,7 +1536,7 @@ uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
 				Increment.iValue = -Increment.iValue;
 				channel->Increment.iValue = Increment.iValue;
 			}
-			channel->Pos += LoopStart - channel->Length;
+			channel->Pos -= channel->Length - LoopStart;
 			if (channel->Pos < LoopStart)
 				channel->Pos = LoopStart;
 		}
