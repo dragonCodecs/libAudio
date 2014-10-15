@@ -256,17 +256,21 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 				channel->LoopStart = 0;
 				channel->LoopEnd = sample->GetLength();
 			}
-			if (sample->GetBidiLoop())
+			// This next bit only applies to sustain loops apparently..
+			/*if (sample->GetBidiLoop())
 				channel->Flags |= CHN_LPINGPONG;
 			else
-				channel->Flags &= ~CHN_LPINGPONG;
+				channel->Flags &= ~CHN_LPINGPONG;*/
 			channel->Pos = 0;
-			if ((channel->TremoloType & 0x04) != 0)
+			channel->PosLo = 0;
+			if (channel->VibratoType < 4)
+				channel->VibratoPos = 0;
+			//if ((channel->TremoloType & 0x03) != 0)
+			if (channel->TremoloType < 4)
 				channel->TremoloPos = 0;
 		}
 		if (channel->Pos > channel->Length)
 			channel->Pos = channel->Length;
-		channel->PosLo = 0;
 	}
 	if (period == 0 || ModuleType != MODULE_IT || ((channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0))
 	{
@@ -825,6 +829,7 @@ void Channel::NoteOff()
 		Flags |= CHN_NOTEFADE;
 	if (Length == 0)
 		return;
+	// This false gets replaced with a check for sustain loops.
 	if (false && Sample != NULL && NoteOn)
 	{
 		if (LoopEnd != 0)
