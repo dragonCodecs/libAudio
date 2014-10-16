@@ -501,6 +501,9 @@ public:
 	void NoteCut(bool Triggered);
 	void Vibrato(uint8_t param, uint8_t Multiplier);
 	void Panbrello(uint8_t param);
+
+	// Channel mixing processing
+	uint32_t GetSampleCount(uint32_t Samples);
 };
 
 class ModuleFile : public ModuleAllocator
@@ -556,7 +559,6 @@ private:
 	uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int32_t PeriodFrac);
 
 	// Mixing functions
-	inline uint32_t GetSampleCount(Channel *chn, uint32_t Samples);
 	inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples);
 	void DCFixingFill(uint32_t samples);
 	void CreateStereoMix(uint32_t count);

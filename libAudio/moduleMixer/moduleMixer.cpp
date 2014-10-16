@@ -1475,109 +1475,109 @@ bool ModuleFile::AdvanceTick()
 	return true;
 }
 
-uint32_t ModuleFile::GetSampleCount(Channel *channel, uint32_t Samples)
+uint32_t Channel::GetSampleCount(uint32_t samples)
 {
-	uint32_t DeltaHi, DeltaLo, MaxSamples;
-	uint32_t Pos, PosLo, SampleCount;
-	uint32_t LoopStart = ((channel->Flags & CHN_LOOP) != 0 ? channel->LoopStart : 0);
-	int16dot16 Increment = channel->Increment;
-	if (Samples == 0 || Increment.iValue == 0 || channel->Length == 0)
+	uint32_t deltaHi, deltaLo, maxSamples;
+	uint32_t pos, posLo, sampleCount;
+	uint32_t loopStart = ((Flags & CHN_LOOP) != 0 ? LoopStart : 0);
+	int16dot16 increment = Increment;
+	if (samples == 0 || Increment.iValue == 0 || Length == 0)
 		return 0;
 	// The following fixes 3 or 4 bugs and allows
 	// for loops to run correctly. DO NOT REMOVE!
-	if (channel->Length > channel->LoopEnd)
-		channel->Length = channel->LoopEnd;
-	if (channel->Pos < LoopStart)
+	if (Length > LoopEnd)
+		Length = LoopEnd;
+	if (Pos < loopStart)
 	{
-		if (Increment.iValue < 0)
+		if (increment.iValue < 0)
 		{
-			int Delta = ((LoopStart - channel->Pos) << 16) - (channel->PosLo & 0xFFFF);
-			channel->Pos = LoopStart | (Delta >> 16);
-			channel->PosLo = Delta & 0xFFFF;
-			if (channel->Pos < LoopStart || channel->Pos >= (LoopStart + channel->Length) / 2)
+			int delta = ((loopStart - Pos) << 16) - (PosLo & 0xFFFF);
+			Pos = loopStart | (delta >> 16);
+			PosLo = delta & 0xFFFF;
+			if (Pos < loopStart || Pos >= (loopStart + Length) / 2)
 			{
-				channel->Pos = LoopStart;
-				channel->PosLo = 0;
+				Pos = loopStart;
+				PosLo = 0;
 			}
-			Increment.iValue = -Increment.iValue;
-			channel->Increment.iValue = Increment.iValue;
-			if ((channel->Flags & CHN_LOOP) == 0 || channel->Pos >= channel->Length)
+			increment.iValue = -increment.iValue;
+			Increment.iValue = increment.iValue;
+			if ((Flags & CHN_LOOP) == 0 || Pos >= Length)
 			{
-				channel->Pos = channel->Length;
-				channel->PosLo = 0;
+				Pos = Length;
+				PosLo = 0;
 				return 0;
 			}
 		}
 		// In theory this can't happen, and the compiler tells us this too.. need to work out if theory matches practice.
-		else if (channel->Pos < 0)
-			channel->Pos = 0;
+		else if (Pos < 0)
+			Pos = 0;
 	}
-	else if (channel->Pos >= channel->Length)
+	else if (Pos >= Length)
 	{
-		if ((channel->Flags & CHN_LOOP) == 0)
+		if ((Flags & CHN_LOOP) == 0)
 			return 0;
-		if ((channel->Flags & CHN_LPINGPONG) != 0)
+		if ((Flags & CHN_LPINGPONG) != 0)
 		{
-			uint32_t delta = ((~channel->PosLo) & 0xFFFF) + 1;
-			if (Increment.iValue > 0)
+			uint32_t delta = ((~PosLo) & 0xFFFF) + 1;
+			if (increment.iValue > 0)
 			{
-				Increment.iValue = -Increment.iValue;
-				channel->Increment.iValue = Increment.iValue;
+				increment.iValue = -increment.iValue;
+				Increment.iValue = increment.iValue;
 			}
-			channel->Pos -= ((channel->Pos - channel->Length) << 1) + (delta >> 16);
-			channel->PosLo = delta & 0xFFFF;
-			if (channel->Pos <= channel->LoopStart || channel->Pos >= channel->Length)
-				channel->Pos = channel->Length - 1;
+			Pos -= ((Pos - Length) << 1) + (delta >> 16);
+			PosLo = delta & 0xFFFF;
+			if (Pos <= LoopStart || Pos >= Length)
+				Pos = Length - 1;
 		}
 		else
 		{
 			if (Increment.iValue < 0) // Theory says this is imposible..
 			{
 				printf("This should not happen\n");
-				Increment.iValue = -Increment.iValue;
-				channel->Increment.iValue = Increment.iValue;
+				increment.iValue = -increment.iValue;
+				Increment.iValue = increment.iValue;
 			}
-			channel->Pos -= channel->Length - LoopStart;
-			if (channel->Pos < LoopStart)
-				channel->Pos = LoopStart;
+			Pos -= Length - loopStart;
+			if (Pos < loopStart)
+				Pos = loopStart;
 		}
 	}
-	Pos = channel->Pos;
-	if (Pos < LoopStart)
+	pos = Pos;
+	if (pos < loopStart)
 	{
-		if (Pos < 0 || Increment.iValue < 0)
+		if (pos < 0 || Increment.iValue < 0)
 			return 0;
 	}
-	if (Pos < 0 || Pos >= channel->Length)
+	if (pos < 0 || pos >= Length)
 		return 0;
-	PosLo = channel->PosLo;
-	SampleCount = Samples;
+	posLo = PosLo;
+	sampleCount = samples;
+	if (increment.iValue < 0)
+		increment.iValue = -increment.iValue;
+	maxSamples = 16384 / (increment.Value.Hi + 1);
+	if (maxSamples < 2)
+		maxSamples = 2;
+	if (samples > maxSamples)
+		samples = maxSamples;
+	deltaHi = increment.Value.Hi * (samples - 1);
+	deltaLo = increment.Value.Lo * (samples - 1);
 	if (Increment.iValue < 0)
-		Increment.iValue = -Increment.iValue;
-	MaxSamples = 16384 / (Increment.Value.Hi + 1);
-	if (MaxSamples < 2)
-		MaxSamples = 2;
-	if (Samples > MaxSamples)
-		Samples = MaxSamples;
-	DeltaHi = Increment.Value.Hi * (Samples - 1);
-	DeltaLo = Increment.Value.Lo * (Samples - 1);
-	if (channel->Increment.iValue < 0)
 	{
-		uint32_t PosDest = Pos - DeltaHi - ((DeltaLo - PosLo) >> 16);
-		if (PosDest < LoopStart)
-			SampleCount = (((Pos - LoopStart) << 16) + PosLo) / Increment.iValue;
+		uint32_t posDest = pos - deltaHi - ((deltaLo - posLo) >> 16);
+		if (posDest < loopStart)
+			sampleCount = (((pos - loopStart) << 16) + posLo) / increment.iValue;
 	}
 	else
 	{
-		uint32_t PosDest = Pos + DeltaHi + ((DeltaLo + PosLo) >> 16);
-		if (PosDest >= channel->Length)
-			SampleCount = (((channel->Length - Pos) << 16) - PosLo) / Increment.iValue;
+		uint32_t posDest = pos + deltaHi + ((deltaLo + posLo) >> 16);
+		if (posDest >= Length)
+			sampleCount = (((Length - pos) << 16) - posLo) / increment.iValue;
 	}
-	if (SampleCount <= 1)
+	if (sampleCount <= 1)
 		return 1;
-	if (SampleCount > Samples)
-		return Samples;
-	return SampleCount;
+	if (sampleCount > samples)
+		return samples;
+	return sampleCount;
 }
 
 inline void ModuleFile::FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples)
@@ -1642,7 +1642,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 				if (rampSamples > channel->RampLength)
 					rampSamples = channel->RampLength;
 			}
-			SampleCount = GetSampleCount(channel, rampSamples);
+			SampleCount = channel->GetSampleCount(rampSamples);
 			if (SampleCount <= 0)
 			{
 				FixDCOffset(&channel->DCOffsL, &channel->DCOffsR, buff, samples);
