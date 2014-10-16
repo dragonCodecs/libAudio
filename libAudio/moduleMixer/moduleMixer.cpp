@@ -195,6 +195,8 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 {
 	uint32_t period;
 	ModuleSample *sample = channel->Sample;
+	bool cmdPortamento = (channel->RowEffect == CMD_TONEPORTAMENTO) ||
+		(channel->RowEffect == CMD_TONEPORTAVOL) || (channel->RowVolEffect == VOLCMD_PORTAMENTO);
 
 	if (note < 1)
 		return;
@@ -272,7 +274,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		if (channel->Pos > channel->Length)
 			channel->Pos = channel->Length;
 	}
-	if (period == 0 || ModuleType != MODULE_IT || ((channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0))
+	if (!cmdPortamento || period == 0 || ModuleType != MODULE_IT || ((channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0))
 	{
 		if (ModuleType == MODULE_IT && (channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0)
 		{
