@@ -1254,7 +1254,7 @@ bool ModuleFile::AdvanceTick()
 				{
 					uint8_t volValue = env->Apply(channel->EnvVolumePos);
 					vol = muldiv(vol, volValue, 1 << 6);
-					CLIPINT(vol, 0, 128);
+					clipInt<int16_t>(vol, 0, 128);
 					channel->EnvVolumePos++;
 					if (env->GetLooped())
 					{
@@ -1298,7 +1298,7 @@ bool ModuleFile::AdvanceTick()
 			}
 
 			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
-			CLIPINT(vol, 0, 128);
+			clipInt<int16_t>(vol, 0, 128);
 			channel->Volume = vol;
 			CLIPINT(channel->Period, MinPeriod, MaxPeriod);
 			period = channel->Period;
@@ -1435,7 +1435,7 @@ bool ModuleFile::AdvanceTick()
 				{
 					RampLength = SamplesToMix;
 					// Clipping:
-					CLIPINT(RampLength, 2, 256);
+					clipInt(RampLength, 2, 256);
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
 				channel->LeftRamp = LeftDelta / RampLength;
