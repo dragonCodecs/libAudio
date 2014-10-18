@@ -1193,8 +1193,8 @@ bool ModuleFile::AdvanceTick()
  		channel->Increment.iValue = 0;
 		if (channel->Period != 0 && channel->Length != 0)
 		{
-			uint32_t period;
-			int32_t inc/*, period*/, freq;
+			uint32_t period, freq;
+			int32_t inc/*, period, freq*/;
 			uint16_t vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
 			{
@@ -1372,7 +1372,7 @@ bool ModuleFile::AdvanceTick()
 				else
 					Delta = SinusTable[PanPos];
 				Pan += (Delta * (int)channel->PanbrelloDepth) >> 4;
-				CLIPINT(Pan, 0, 128);
+				clipInt(Pan, 0, 128);
 				channel->Panning = Pan;
 				channel->PanbrelloPos += channel->PanbrelloSpeed;
 			}
@@ -1426,8 +1426,8 @@ bool ModuleFile::AdvanceTick()
 			// Do we need to ramp the volume up or down?
 			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->LeftVol != channel->NewLeftVol || channel->RightVol != channel->NewRightVol))
 			{
-				int LeftDelta, RightDelta;
-				uint32_t RampLength = 1;
+				int32_t LeftDelta, RightDelta;
+				int32_t RampLength = 1;
 				// Calculate Volume deltas
 				LeftDelta = channel->NewLeftVol - channel->LeftVol;
 				RightDelta = channel->NewRightVol - channel->RightVol;
