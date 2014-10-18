@@ -29,6 +29,14 @@ template<typename T> inline void clipInt(T &num, const T min, const T max)
 		num = max;
 }
 
+template<> inline void clipInt<uint16_t>(uint16_t &num, uint16_t min, uint16_t max)
+{
+	if ((num & 0x8000) != 0 || (min != 0 && num < min))
+		num = min;
+	else if (num > max)
+		num = max;
+}
+
 // Return (a * b) / c [ - no divide error ]
 int32_t muldiv(int32_t a, int32_t b, int32_t c)
 {

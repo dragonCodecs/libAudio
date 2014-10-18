@@ -1193,8 +1193,8 @@ bool ModuleFile::AdvanceTick()
  		channel->Increment.iValue = 0;
 		if (channel->Period != 0 && channel->Length != 0)
 		{
-			int inc, period, freq;
-			short vol = channel->RawVolume;
+			int32_t inc, period, freq;
+			uint16_t vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
 			{
 				uint8_t TremoloPos = channel->TremoloPos;
@@ -1254,7 +1254,7 @@ bool ModuleFile::AdvanceTick()
 				{
 					uint8_t volValue = env->Apply(channel->EnvVolumePos);
 					vol = muldiv(vol, volValue, 1 << 6);
-					clipInt<int16_t>(vol, 0, 128);
+					clipInt<uint16_t>(vol, 0, 128);
 					channel->EnvVolumePos++;
 					if (env->GetLooped())
 					{
@@ -1298,7 +1298,7 @@ bool ModuleFile::AdvanceTick()
 			}
 
 			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
-			clipInt<int16_t>(vol, 0, 128);
+			clipInt<uint16_t>(vol, 0, 128);
 			channel->Volume = vol;
 			CLIPINT(channel->Period, MinPeriod, MaxPeriod);
 			period = channel->Period;
