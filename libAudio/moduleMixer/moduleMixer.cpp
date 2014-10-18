@@ -1372,7 +1372,7 @@ bool ModuleFile::AdvanceTick()
 				else
 					Delta = SinusTable[PanPos];
 				Pan += (Delta * (int)channel->PanbrelloDepth) >> 4;
-				clipInt(Pan, 0, 128);
+				clipInt<int16_t>(Pan, 0, 128);
 				channel->Panning = Pan;
 				channel->PanbrelloPos += channel->PanbrelloSpeed;
 			}
