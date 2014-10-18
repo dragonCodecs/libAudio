@@ -1313,9 +1313,7 @@ bool ModuleFile::AdvanceTick()
 					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio & 0x0F), channel->FineTune, channel->C4Speed);
 			}
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
-			{
-				CLIPINT(period, 452, 3424);
-			}
+				clipInt<int32_t>(period, 452, 3424);
 			if (channel->Instrument != NULL)
 			{
 				ModuleInstrument *instr = channel->Instrument;
@@ -1398,7 +1396,7 @@ bool ModuleFile::AdvanceTick()
 			}
 			if (period < (int)MinPeriod && ModuleType == MODULE_S3M)
 				channel->Length = 0;
-			CLIPINT(period, (int)MinPeriod, (int)MaxPeriod);
+			clipInt<int32_t>(period, MinPeriod, MaxPeriod);
 			// Calculate the increment from the frequency from the period
 			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
 			inc = muldiv(freq, 0x10000, MixSampleRate) + 1;

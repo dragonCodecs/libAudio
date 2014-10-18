@@ -21,6 +21,14 @@
 	else if (num > max) \
 		num = max
 
+template<typename T> inline void clipInt(T &num, const T min, const T max)
+{
+	if (num < min)
+		num = min;
+	else if (num > max)
+		num = max;
+}
+
 // Return (a * b) / c [ - no divide error ]
 int32_t muldiv(int32_t a, int32_t b, int32_t c)
 {
