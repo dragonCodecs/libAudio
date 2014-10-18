@@ -1193,7 +1193,8 @@ bool ModuleFile::AdvanceTick()
  		channel->Increment.iValue = 0;
 		if (channel->Period != 0 && channel->Length != 0)
 		{
-			int32_t inc, period, freq;
+			uint32_t period;
+			int32_t inc/*, period*/, freq;
 			uint16_t vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
 			{
@@ -1313,7 +1314,7 @@ bool ModuleFile::AdvanceTick()
 					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio & 0x0F), channel->FineTune, channel->C4Speed);
 			}
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
-				clipInt<int32_t>(period, 452, 3424);
+				clipInt<uint32_t>(period, 452, 3424);
 			if (channel->Instrument != NULL)
 			{
 				ModuleInstrument *instr = channel->Instrument;
@@ -1391,12 +1392,12 @@ bool ModuleFile::AdvanceTick()
 					Delta = RandomTable[VibratoPos];
 				else
 					Delta = SinusTable[VibratoPos];
-				period += (short)(((int)Delta * sample->GetVibratoDepth()) >> 7);
+				period += (short)((Delta * sample->GetVibratoDepth()) >> 7);
 				channel->AutoVibratoPos = VibratoPos;
 			}
-			if (period < (int)MinPeriod && ModuleType == MODULE_S3M)
+			if ((period < MinPeriod || (period & 0x80000000) != 0) && ModuleType == MODULE_S3M)
 				channel->Length = 0;
-			clipInt<int32_t>(period, MinPeriod, MaxPeriod);
+			clipInt<uint32_t>(period, MinPeriod, MaxPeriod);
 			// Calculate the increment from the frequency from the period
 			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
 			inc = muldiv(freq, 0x10000, MixSampleRate) + 1;
