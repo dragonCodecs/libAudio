@@ -18,11 +18,11 @@
 uint32_t __CDECL__ Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 {
 	uint32_t i;
-	signed short *out = (signed short *)_out;
+	int16_t *out = (int16_t *)_out;
 	for (i = 0; i < SampleCount; i++)
 	{
 		int32_t samp = _in[i]/* + (1 << 11)*/;
-		CLIPINT(samp, (int32_t)0xF8000001, 0x07FFFFFF);
+		clipInt<int32_t>(samp, 0xF8000001, 0x07FFFFFF);
 		out[i] = samp >> 12;
 	}
 	return SampleCount << 1;

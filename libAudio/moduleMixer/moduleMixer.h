@@ -15,12 +15,6 @@
 #define CHN_NOTEFADE		0x0800
 #define CHN_LPINGPONG		0x1000
 
-#define CLIPINT(num, min, max) \
-	if (num < min) \
-		num = min; \
-	else if (num > max) \
-		num = max
-
 template<typename T> inline void clipInt(T &num, const T min, const T max)
 {
 	if (num < min)
