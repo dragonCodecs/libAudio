@@ -477,7 +477,7 @@ inline int ModuleFile::PatternLoop(uint32_t param)
 
 inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 {
-	short NewVolume;
+	uint16_t NewVolume;
 
 	if (param == 0)
 		param = channel->VolumeSlide;
@@ -512,7 +512,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 			NewVolume -= (param & 0x0F) << 1;
 		if (ModuleType == MODULE_MOD)
 			channel->Flags |= CHN_FASTVOLRAMP;
-		CLIPINT(NewVolume, 0, 128);
+		clipInt<uint16_t>(NewVolume, 0, 128);
 		channel->RawVolume = NewVolume & 0xFF;
 	}
 }
@@ -522,7 +522,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
 {
 	bool FirstTick = (TickCount == 0);
-	int16_t SlideDest = channel->ChannelVolume;
+	uint16_t SlideDest = channel->ChannelVolume;
 
 	if (param == 0)
 		param = channel->ChannelVolumeSlide;
@@ -549,7 +549,7 @@ inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
 
 	if (SlideDest != channel->ChannelVolume)
 	{
-		CLIPINT(SlideDest, 0, 64);
+		clipInt<uint16_t>(SlideDest, 0, 64);
 		channel->ChannelVolume = SlideDest;
 	}
 }
@@ -557,7 +557,7 @@ inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
 inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 {
 	bool FirstTick = (TickCount == 0);
-	int16_t SlideDest = GlobalVolume;
+	uint16_t SlideDest = GlobalVolume;
 
 	if (param == 0)
 		param = GlobalVolSlide;
@@ -584,7 +584,7 @@ inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 
 	if (SlideDest != GlobalVolume)
 	{
-		CLIPINT(SlideDest, 0, 128);
+		clipInt<uint16_t>(SlideDest, 0, 128);
 		GlobalVolume = SlideDest;
 	}
 }
@@ -780,7 +780,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 	{
 		if (channel->Period < channel->PortamentoDest)
 		{
-			int Delta;
+			int32_t Delta;
 			if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
@@ -796,7 +796,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 		}
 		else if (channel->Period > channel->PortamentoDest)
 		{
-			int Delta;
+			int32_t Delta;
 			if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{
 				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
@@ -805,7 +805,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 					Delta = -1;
 			}
 			else
-				Delta = -((int)channel->PortamentoSlide);
+				Delta = -int32_t(channel->PortamentoSlide);
 			if (channel->PortamentoDest - channel->Period > ((uint32_t)Delta))
 				Delta = channel->PortamentoDest - channel->Period;
 			channel->Period += Delta;
@@ -1194,7 +1194,7 @@ bool ModuleFile::AdvanceTick()
 		if (channel->Period != 0 && channel->Length != 0)
 		{
 			uint32_t period, freq;
-			int32_t inc/*, period, freq*/;
+			int32_t inc;
 			uint16_t vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
 			{
@@ -1230,7 +1230,7 @@ bool ModuleFile::AdvanceTick()
 				}
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
-			/*CLIPINT(vol, 0, 128);
+			/*clipInt<uint16_t>(vol, 0, 128);
 			//vol <<= 7;*/
 
 			if (channel->Instrument != NULL)
@@ -1354,7 +1354,7 @@ bool ModuleFile::AdvanceTick()
 					Delta = RandomTable[VibratoPos];
 				else
 					Delta = SinusTable[VibratoPos];
-				period += (short)(((int)Delta * channel->VibratoDepth) >> 7);
+				period += (short)((Delta * channel->VibratoDepth) >> 7);
 				channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
 			}
 			if ((channel->Flags & CHN_PANBRELLO) != 0)
@@ -1362,7 +1362,7 @@ bool ModuleFile::AdvanceTick()
 				int8_t Delta;
 				uint8_t PanPos = (((uint16_t)channel->PanbrelloPos + 16) >> 2) & 0x3F;
 				uint8_t PanType = channel->PanbrelloType & 0x03;
-				int16_t Pan = channel->Panning;
+				uint16_t Pan = channel->Panning;
 				if (PanType == 1)
 					Delta = RampDownTable[PanPos];
 				else if (PanType == 2)
@@ -1371,8 +1371,8 @@ bool ModuleFile::AdvanceTick()
 					Delta = RandomTable[PanPos];
 				else
 					Delta = SinusTable[PanPos];
-				Pan += (Delta * (int)channel->PanbrelloDepth) >> 4;
-				clipInt<int16_t>(Pan, 0, 128);
+				Pan += (Delta * channel->PanbrelloDepth) >> 4;
+				clipInt<uint16_t>(Pan, 0, 128);
 				channel->Panning = Pan;
 				channel->PanbrelloPos += channel->PanbrelloSpeed;
 			}
@@ -1410,7 +1410,7 @@ bool ModuleFile::AdvanceTick()
 		else
 			channel->Flags &= ~CHN_VOLUMERAMP;
 		channel->NewLeftVol = channel->NewRightVol = 0;
-		if ((channel->Increment.Value.Hi + 1) >= (int)channel->LoopEnd)
+		if ((channel->Increment.Value.Hi + 1) >= (int32_t)channel->LoopEnd)
 			channel->Flags &= ~CHN_LOOP;
 		channel->SampleData = ((channel->NewSampleData != NULL && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : NULL);
 		if (channel->SampleData != NULL)
