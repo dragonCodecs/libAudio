@@ -1191,8 +1191,10 @@ bool ModuleFile::AdvanceTick()
 		Channel *channel = &Channels[i];
 		bool incNegative = channel->Increment.iValue < 0;
 
- 		channel->Increment.iValue = 0;
- 		channel->Panning = channel->RawPanning;
+		channel->Increment.iValue = 0;
+		channel->Volume = 0;
+		channel->Panning = channel->RawPanning;
+		channel->RampLength = 0;
 
 		if (channel->Period != 0 && channel->Length != 0)
 		{
