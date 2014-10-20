@@ -70,9 +70,9 @@ void ModuleFile::ResetChannelPanning()
 		{
 			uint8_t j = i % 4;
 			if (j == 0 || j == 3)
-				Channels[i].Panning = 0;
+				Channels[i].RawPanning = 0;
 			else
-				Channels[i].Panning = 128;
+				Channels[i].RawPanning = 128;
 		}
 	}
 	else if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT)
@@ -80,12 +80,12 @@ void ModuleFile::ResetChannelPanning()
 		if (p_Header->Panning == NULL)
 		{
 			for (i = 0; i < p_Header->nChannels; i++)
-				Channels[i].Panning = 64;
+				Channels[i].RawPanning = 64;
 		}
 		else
 		{
 			for (i = 0; i < p_Header->nChannels; i++)
-				Channels[i].Panning = p_Header->Panning[i];
+				Channels[i].RawPanning = p_Header->Panning[i];
 		}
 	}
 	else if (ModuleType == MODULE_STM)
@@ -93,9 +93,9 @@ void ModuleFile::ResetChannelPanning()
 		for (i = 0; i < p_Header->nChannels; i++)
 		{
 			if ((i % 2) != 0)
-				Channels[i].Panning = 32;
+				Channels[i].RawPanning = 32;
 			else
-				Channels[i].Panning = 96;
+				Channels[i].RawPanning = 96;
 		}
 	}
 }
@@ -431,7 +431,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 		case CMD_S3MEX_PANNING:
 			if (TickCount == channel->StartTick)
 			{
-				channel->Panning = (param + (param << 4)) >> 1;
+				channel->RawPanning = (param + (param << 4)) >> 1;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			break;
@@ -941,7 +941,7 @@ bool ModuleFile::ProcessEffects()
 			}
 			else if (channel->RowVolEffect == VOLCMD_PANNING)
 			{
-				channel->Panning = channel->RowVolParam;
+				channel->RawPanning = channel->RowVolParam;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 		}
@@ -1190,7 +1190,10 @@ bool ModuleFile::AdvanceTick()
 	{
 		Channel *channel = &Channels[i];
 		bool incNegative = channel->Increment.iValue < 0;
+
  		channel->Increment.iValue = 0;
+ 		channel->Panning = channel->RawPanning;
+
 		if (channel->Period != 0 && channel->Length != 0)
 		{
 			uint32_t period, freq;
