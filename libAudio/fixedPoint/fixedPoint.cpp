@@ -183,6 +183,11 @@ fixed64_t::operator int() const
 	return sign * (i + (d >> 31));
 }
 
+fixed64_t::operator uint32_t() const
+{
+	return i + (d >> 31);
+}
+
 fixed64_t::operator double() const
 {
 	return sign * (double)((((uint64_t)i) << 32) | (int64_t)((uint64_t)d)) / 4294967296.0;

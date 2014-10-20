@@ -30,6 +30,7 @@ public:
 	fixed64_t &operator +=(const fixed64_t &b);
 
 	operator int() const;
+	operator uint32_t() const;
 	operator double() const;
 };
 

@@ -595,7 +595,7 @@ inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
 	const fixed64_t c192(192);
 	const fixed64_t c32768(32768);
 	const fixed64_t c65536(65536);
-	return (((fixed64_t(period) * (fixed64_t(slide) / c192).pow2() * c65536) + c32768) / c65536).operator int();
+	return ((fixed64_t(period) * (fixed64_t(slide) / c192).pow2() * c65536) + c32768) / c65536;
 }
 
 // Returns ((period * 65535 * 2^(-slide / 192)) + 32768) / 65536 using fixed-point maths
@@ -605,7 +605,7 @@ inline uint32_t LinearSlideDown(uint32_t period, uint8_t slide)
 	const fixed64_t c32768(32768);
 	const fixed64_t c65535(65535);
 	const fixed64_t c65536(65536);
-	return (((fixed64_t(period) * (fixed64_t(slide, 0, -1) / c192).pow2() * c65535) + c32768) / c65536).operator int();
+	return ((fixed64_t(period) * (fixed64_t(slide, 0, -1) / c192).pow2() * c65535) + c32768) / c65536;
 }
 
 // Returns ((period * 65536 * 2^((slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
@@ -615,7 +615,7 @@ inline uint32_t FineLinearSlideUp(uint32_t period, uint8_t slide)
 	const fixed64_t c192(192);
 	const fixed64_t c32768(32768);
 	const fixed64_t c65536(65536);
-	return (((fixed64_t(period) * ((fixed64_t(slide) / c4) / c192).pow2() * c65536) + c32768) / c65536).operator int();
+	return ((fixed64_t(period) * ((fixed64_t(slide) / c4) / c192).pow2() * c65536) + c32768) / c65536;
 }
 
 // Returns ((period * 65535 * 2^((-slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
@@ -626,7 +626,7 @@ inline uint32_t FineLinearSlideDown(uint32_t period, uint8_t slide)
 	const fixed64_t c32768(32768);
 	const fixed64_t c65535(65535);
 	const fixed64_t c65536(65536);
-	return (((fixed64_t(period) * ((fixed64_t(slide, 0, -1) / c4) / c192).pow2() * c65535) + c32768) / c65536).operator int();
+	return ((fixed64_t(period) * ((fixed64_t(slide, 0, -1) / c4) / c192).pow2() * c65535) + c32768) / c65536;
 }
 
 inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
