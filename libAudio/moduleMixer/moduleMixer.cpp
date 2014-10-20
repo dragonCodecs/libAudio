@@ -1294,7 +1294,34 @@ bool ModuleFile::AdvanceTick()
 						}
 					}
 				}
-				// TODO: Process panning envelopes here.
+				env = instr->GetEnvelope(ENVELOPE_PANNING);
+				if (env->GetEnabled() && env->HasNodes())
+				{
+					uint16_t pan = channel->Panning;
+					int8_t panningValue = env->Apply(channel->EnvPanningPos) - 32;
+					clipInt<int8_t>(panningValue, -32, 32);
+					if (pan >= 64)
+						pan += (panningValue * (128 - pan)) / 32;
+					else
+						pan += (panningValue * pan) / 32;
+					clipInt<uint16_t>(pan, 0, 128);
+					channel->RawPanning = pan;
+					channel->EnvPanningPos++;
+					if (env->GetLooped())
+					{
+						uint16_t endTick = env->GetLoopEnd();
+						if (channel->EnvPanningPos == ++endTick)
+							channel->EnvPanningPos = endTick;
+					}
+					if (env->GetSustained() && (channel->Flags & CHN_NOTEOFF) == 0)
+					{
+						uint16_t endTick = env->GetSustainEnd();
+						if (channel->EnvPanningPos == ++endTick)
+							channel->EnvPanningPos = env->GetSustainBegin();
+					}
+					else if (env->IsAtEnd(channel->EnvPanningPos))
+						channel->EnvPanningPos = env->GetLastTick();
+				}
 			}
 			else if ((channel->Flags & CHN_NOTEFADE) != 0)
 			{
