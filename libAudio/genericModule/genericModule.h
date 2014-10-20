@@ -337,6 +337,10 @@ public:
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;
 	virtual bool GetEnvLooped(uint8_t env) const = 0;
 	virtual ModuleEnvelope *GetEnvelope(uint8_t env) const = 0;
+	virtual bool IsPanned() const = 0;
+	virtual bool HasVolume() const = 0;
+	virtual uint8_t GetPanning() const = 0;
+	virtual uint8_t GetVolume() const = 0;
 };
 
 class ModuleOldInstrument : public ModuleInstrument
@@ -362,6 +366,10 @@ public:
 	bool GetEnvEnabled(uint8_t env) const;
 	bool GetEnvLooped(uint8_t env) const;
 	ModuleEnvelope *GetEnvelope(uint8_t env) const;
+	bool IsPanned() const;
+	bool HasVolume() const;
+	uint8_t GetPanning() const;
+	uint8_t GetVolume() const;
 };
 
 class ModuleNewInstrument : public ModuleInstrument
@@ -393,6 +401,10 @@ public:
 	bool GetEnvEnabled(uint8_t env) const;
 	bool GetEnvLooped(uint8_t env) const;
 	ModuleEnvelope *GetEnvelope(uint8_t env) const;
+	bool IsPanned() const;
+	bool HasVolume() const;
+	uint8_t GetPanning() const;
+	uint8_t GetVolume() const;
 };
 
 class ModuleCommand : public ModuleAllocator

@@ -86,6 +86,26 @@ ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t /*env*/) const
 	return NULL;
 }
 
+bool ModuleOldInstrument::IsPanned() const
+{
+	return false;
+}
+
+bool ModuleOldInstrument::HasVolume() const
+{
+	return false;
+}
+
+uint8_t ModuleOldInstrument::GetPanning() const
+{
+	return 0;
+}
+
+uint8_t ModuleOldInstrument::GetVolume() const
+{
+	return 0;
+}
+
 ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t Const, env;
@@ -164,6 +184,26 @@ bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
 bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
 {
 	return Envelopes[env]->GetLooped();
+}
+
+bool ModuleNewInstrument::IsPanned() const
+{
+	return (Panning & 128) == 0;
+}
+
+bool ModuleNewInstrument::HasVolume() const
+{
+	return true;
+}
+
+uint8_t ModuleNewInstrument::GetPanning() const
+{
+	return Panning & 0x7F;
+}
+
+uint8_t ModuleNewInstrument::GetVolume() const
+{
+	return Volume & 0x7F;
 }
 
 ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const
