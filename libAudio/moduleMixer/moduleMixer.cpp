@@ -142,6 +142,10 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 			return;
 		}
 		channel->Instrument = instr;
+		if (instr->HasVolume())
+			channel->RawVolume = instr->GetVolume();
+		if (instr->IsPanned())
+			channel->RawPanning = instr->GetPanning();
 	}
 	channel->Sample = p_Samples[nSample - 1];
 	ReloadSample(channel);
