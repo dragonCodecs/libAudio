@@ -1060,7 +1060,7 @@ bool ModuleFile::ProcessEffects()
 			case CMD_PANNING:
 				if (TickCount > channel->StartTick)
 					break;
-				channel->Panning = param;
+				channel->RawPanning = param;
 				channel->Flags |= CHN_FASTVOLRAMP;
 				break;
 			case CMD_FINEVIBRATO:
@@ -1297,7 +1297,7 @@ bool ModuleFile::AdvanceTick()
 				env = instr->GetEnvelope(ENVELOPE_PANNING);
 				if (env->GetEnabled() && env->HasNodes())
 				{
-					uint16_t pan = channel->Panning;
+					uint16_t pan = channel->RawPanning;
 					int8_t panningValue = env->Apply(channel->EnvPanningPos) - 32;
 					clipInt<int8_t>(panningValue, -32, 32);
 					if (pan >= 64)
@@ -1305,7 +1305,7 @@ bool ModuleFile::AdvanceTick()
 					else
 						pan += (panningValue * pan) / 32;
 					clipInt<uint16_t>(pan, 0, 128);
-					channel->RawPanning = pan;
+					channel->Panning = pan;
 					channel->EnvPanningPos++;
 					if (env->GetLooped())
 					{
