@@ -1333,7 +1333,7 @@ bool ModuleFile::AdvanceTick()
 			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
 			clipInt<uint16_t>(vol, 0, 128);
 			channel->Volume = vol;
-			CLIPINT(channel->Period, MinPeriod, MaxPeriod);
+			clipInt(channel->Period, MinPeriod, MaxPeriod);
 			period = channel->Period;
 			if ((channel->Flags & (CHN_GLISSANDO | CHN_PORTAMENTO)) == (CHN_GLISSANDO | CHN_PORTAMENTO))
 				period = GetPeriodFromNote(/*GetNoteFromPeriod(period)*/channel->Note, channel->FineTune, channel->C4Speed);
@@ -1371,6 +1371,14 @@ bool ModuleFile::AdvanceTick()
 						if (channel->EnvPitchPos == ++endTick)
 							channel->EnvPitchPos = env->GetLoopBegin();
 					}
+					if (env->GetSustained() && (channel->Flags & CHN_NOTEOFF) == 0)
+					{
+						uint16_t endTick = env->GetSustainEnd();
+						if (channel->EnvPitchPos == ++endTick)
+							channel->EnvPitchPos = env->GetSustainBegin();
+					}
+					else if (env->IsAtEnd(channel->EnvPitchPos))
+						channel->EnvPitchPos = env->GetLastTick();
 				}
 			}
 			if ((channel->Flags & CHN_VIBRATO) != 0)
