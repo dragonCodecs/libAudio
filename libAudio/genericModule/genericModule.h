@@ -471,7 +471,7 @@ public:
 	uint8_t ChannelVolume, ChannelVolumeSlide;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
-	uint8_t FineTune, Panning, Arpeggio;
+	uint8_t FineTune, RawPanning, Panning;
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
 	uint16_t PortamentoSlide, Flags;
@@ -479,7 +479,7 @@ public:
 	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
 	uint32_t PortamentoDest;
-	uint8_t Portamento;
+	uint8_t Portamento, Arpeggio;
 	uint8_t Tremor, TremorCount;
 	uint8_t LeftVol, RightVol;
 	uint8_t NewLeftVol, NewRightVol;
@@ -490,7 +490,7 @@ public:
 	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
 	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
 	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos, FadeOutVol;
-	int DCOffsR, DCOffsL;
+	int DCOffsL, DCOffsR;
 
 public:
 	Channel();
