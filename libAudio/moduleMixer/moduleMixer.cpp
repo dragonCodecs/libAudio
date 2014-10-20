@@ -593,6 +593,14 @@ inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 	}
 }
 
+inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
+{
+	if (param == 0)
+		param = channel->PanningSlide;
+	else
+		channel->PanningSlide = param;
+}
+
 // Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
 inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
 {
@@ -1066,6 +1074,9 @@ bool ModuleFile::ProcessEffects()
 					break;
 				channel->RawPanning = param;
 				channel->Flags |= CHN_FASTVOLRAMP;
+				break;
+			case CMD_PANNINGSLIDE:
+				PanningSlide(channel, param);
 				break;
 			case CMD_FINEVIBRATO:
 				channel->Vibrato(param, 1);
