@@ -227,6 +227,13 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
 		throw new ModuleLoaderError(E_BAD_IT);
+
+	if (env == ENVELOPE_PANNING)
+	{
+		// This requires signed/unsigned conversion
+		for (uint8_t i = 0; i < nNodes; i++)
+			Nodes[i].Value ^= 0x80;
+	}
 }
 
 ModuleEnvelope::ModuleEnvelope(IT_Intern */*p_IT*/, uint8_t flags, uint8_t loopBegin, uint8_t loopEnd, uint8_t susLoopBegin, uint8_t susLoopEnd) :
