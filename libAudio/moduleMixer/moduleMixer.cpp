@@ -134,6 +134,8 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 		ModuleInstrument *instr = p_Instruments[nSample - 1];
 		uint8_t nSample = instr->Map(channel->Note - 1);
 		channel->EnvVolumePos = 0;
+		channel->EnvPanningPos = 0;
+		channel->EnvPitchPos = 0;
 		if (nSample == 0)
 		{
 			channel->Sample = NULL;
@@ -229,6 +231,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		else
 			sample = p_Samples[nSample - 1];
 		channel->EnvVolumePos = 0;
+		channel->EnvPanningPos = 0;
 		channel->EnvPitchPos = 0;
 		channel->Sample = sample;
 		if (sample != NULL)
@@ -1313,7 +1316,7 @@ bool ModuleFile::AdvanceTick()
 				if (env->GetEnabled() && env->HasNodes())
 				{
 					uint16_t pan = channel->RawPanning;
-					int8_t panningValue = env->Apply(channel->EnvPanningPos) - 32;
+					int8_t panningValue = env->Apply(channel->EnvPanningPos) - 128;
 					clipInt<int8_t>(panningValue, -32, 32);
 					if (pan >= 64)
 						pan += (panningValue * (128 - pan)) / 32;
