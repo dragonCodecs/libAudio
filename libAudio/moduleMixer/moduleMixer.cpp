@@ -1515,6 +1515,13 @@ bool ModuleFile::AdvanceTick()
 			clipInt<uint32_t>(period, MinPeriod, MaxPeriod);
 			// Calculate the increment from the frequency from the period
 			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
+			// Silence impulse tracker notes that fall off the bottom of the reproduction spectrum
+			if (ModuleType == MODULE_IT && freq < 256)
+			{
+				channel->FadeOutVol = 0;
+				channel->Volume = 0;
+				channel->Flags |= CHN_NOTEFADE;
+			}
 			inc = muldiv(freq, 0x10000, MixSampleRate) + 1;
 			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
 				inc = -inc;
