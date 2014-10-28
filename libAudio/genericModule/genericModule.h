@@ -484,7 +484,7 @@ public:
 	uint8_t ChannelVolume, ChannelVolumeSlide;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
-	uint8_t FineTune, RawPanning, Panning;
+	uint8_t FineTune, RawPanning, Panning, PanningSlide;
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
 	uint16_t PortamentoSlide, Flags;
@@ -550,6 +550,7 @@ private:
 	void VolumeSlide(Channel *channel, uint8_t param);
 	void ChannelVolumeSlide(Channel *channel, uint8_t param);
 	void GlobalVolumeSlide(uint8_t param);
+	void PanningSlide(Channel *channel, uint8_t param);
 	void PortamentoUp(Channel *channel, uint8_t param);
 	void PortamentoDown(Channel *channel, uint8_t param);
 	void FinePortamentoUp(Channel *channel, uint8_t param);

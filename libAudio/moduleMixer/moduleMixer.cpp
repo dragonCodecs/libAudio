@@ -615,10 +615,38 @@ inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 
 inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 {
+	int16_t panningSlide = 0;
+	bool FirstTick = (TickCount == 0);
+
 	if (param == 0)
 		param = channel->PanningSlide;
 	else
 		channel->PanningSlide = param;
+
+	if ((param & 0x0F) == 0x0F && (param & 0xF0) != 0)
+	{
+		if (FirstTick)
+			panningSlide = -((param & 0xF0) >> 2);
+	}
+	else if ((param & 0xF0) == 0xF0 && (param & 0x0F) != 0)
+	{
+		if (FirstTick)
+			panningSlide = (param & 0x0F) << 2;
+	}
+	else if (!FirstTick)
+	{
+		if (param & 0x0F)
+			panningSlide = (param & 0x0F) << 2;
+		else
+			panningSlide = -((param & 0xF0) >> 2);
+	}
+	if (panningSlide != 0)
+	{
+		panningSlide >>= 1; // TODO: Fix panning so it uses all 8 bits it can rather than 7, and remove this line.
+		panningSlide += channel->RawPanning;
+		clipInt<int16_t>(panningSlide, 0, 128);
+		channel->RawPanning = uint8_t(panningSlide);
+	}
 }
 
 // Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
