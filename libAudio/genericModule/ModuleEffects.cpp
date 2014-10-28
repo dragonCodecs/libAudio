@@ -166,10 +166,10 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 			Effect = CMD_OFFSET;
 			Param = param;
 			break;
-		/*case 16:
+		case 16:
 			Effect = CMD_PANNINGSLIDE;
 			Param = param;
-			break;*/
+			break;
 		case 17:
 			Effect = CMD_RETRIGER;
 			Param = param;
