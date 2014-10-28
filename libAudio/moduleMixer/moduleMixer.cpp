@@ -394,6 +394,21 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 	}
 }
 
+void Channel::ChannelEffect(uint8_t param)
+{
+	switch (param)
+	{
+		case 0x00:
+			Flags &= ~CHN_SURROUND;
+			break;
+		case 0x01:
+			Flags |= CHN_SURROUND;
+			RawPanning = 64;
+			break;
+		// There are also some (Open)MPT extended modes we might want to suport here hence this structure.
+	}
+}
+
 void ModuleFile::ProcessS3MExtended(Channel *channel)
 {
 	uint8_t param = channel->RowParam;
@@ -442,7 +457,9 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			break;
-		case CMD_S3MEX_SURROUND:
+		case CMD_S3MEX_CHNEFFECT:
+			if (TickCount == channel->StartTick)
+				channel->ChannelEffect(param & 0x0F);
 			break;
 		case CMD_S3MEX_OFFSET:
 			if (TickCount == channel->StartTick && channel->RowNote != 0 && channel->RowNote < 0x80)
