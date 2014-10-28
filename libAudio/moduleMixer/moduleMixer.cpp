@@ -432,15 +432,21 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			if (TickCount != channel->StartTick)
 				break;
 			channel->C4Speed = S3MSpeedTable[param];
-			channel->FineTune =  param;
+			channel->FineTune = param;
 			if (channel->Period != 0)
 				channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
 			break;
 		case CMD_S3MEX_VIBRATOWAVE:
-			channel->VibratoType = param & 0x07;
+			if (ModuleType == MODULE_S3M)
+				channel->VibratoType = param & 0x03;
+			else
+				channel->VibratoType = param & 0x07;
 			break;
 		case CMD_S3MEX_TREMOLOWAVE:
-			channel->TremoloType = param & 0x07;
+			if (ModuleType == MODULE_S3M)
+				channel->TremoloType = param & 0x03;
+			else
+				channel->TremoloType = param & 0x07;
 			break;
 		case CMD_S3MEX_PANWAVE:
 			channel->PanbrelloType = param & 0x07;
@@ -474,6 +480,9 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			break;
 		case CMD_S3MEX_NOTECUT:
 			channel->NoteCut(TickCount == param);
+			break;
+		case CMD_S3MEX_DELAYPAT:
+			PatternDelay = param;
 			break;
 	}
 }
