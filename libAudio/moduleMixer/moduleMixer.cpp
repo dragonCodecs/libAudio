@@ -85,7 +85,10 @@ void ModuleFile::ResetChannelPanning()
 		else
 		{
 			for (i = 0; i < p_Header->nChannels; i++)
+			{
 				Channels[i].RawPanning = p_Header->Panning[i];
+				Channels[i].Flags |= (p_Header->PanSurround[i] ? CHN_SURROUND : 0);
+			}
 		}
 	}
 	else if (ModuleType == MODULE_STM)
