@@ -223,7 +223,10 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(N
 		else if (p_Header->Panning[i] <= 64)
 			p_Header->Panning[i] *= 2;
 		else if (p_Header->Panning[i] == 100)
+		{
 			p_Header->Panning[i] = 64;
+			p_Header->PanSurround[i] = true;
+		}
 	}
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];

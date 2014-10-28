@@ -137,6 +137,7 @@ private:
 	uint8_t Separation;
 	uint32_t MessageOffs;
 	uint8_t Volumes[64];
+	bool PanSurround[64];
 
 private:
 	uint8_t nChannels;
@@ -513,6 +514,7 @@ public:
 	void NoteCut(bool Triggered);
 	void Vibrato(uint8_t param, uint8_t Multiplier);
 	void Panbrello(uint8_t param);
+	void ChannelEffect(uint8_t param);
 
 	// Channel mixing processing
 	uint32_t GetSampleCount(uint32_t Samples);
