@@ -221,10 +221,10 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(N
 			break;
 		}
 		else if (p_Header->Panning[i] <= 64)
-			p_Header->Panning[i] *= 2;
+			p_Header->Panning[i] <<= 2;
 		else if (p_Header->Panning[i] == 100)
 		{
-			p_Header->Panning[i] = 64;
+			p_Header->Panning[i] = 128;
 			p_Header->PanSurround[i] = true;
 		}
 	}

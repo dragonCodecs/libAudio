@@ -72,7 +72,7 @@ void ModuleFile::ResetChannelPanning()
 			if (j == 0 || j == 3)
 				Channels[i].RawPanning = 0;
 			else
-				Channels[i].RawPanning = 128;
+				Channels[i].RawPanning = 256;
 		}
 	}
 	else if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT)
@@ -80,7 +80,7 @@ void ModuleFile::ResetChannelPanning()
 		if (p_Header->Panning == NULL)
 		{
 			for (i = 0; i < p_Header->nChannels; i++)
-				Channels[i].RawPanning = 64;
+				Channels[i].RawPanning = 128;
 		}
 		else
 		{
@@ -96,9 +96,9 @@ void ModuleFile::ResetChannelPanning()
 		for (i = 0; i < p_Header->nChannels; i++)
 		{
 			if ((i % 2) != 0)
-				Channels[i].RawPanning = 32;
+				Channels[i].RawPanning = 64;
 			else
-				Channels[i].RawPanning = 96;
+				Channels[i].RawPanning = 192;
 		}
 	}
 }
@@ -406,7 +406,7 @@ void Channel::ChannelEffect(uint8_t param)
 			break;
 		case 0x01:
 			Flags |= CHN_SURROUND;
-			RawPanning = 64;
+			RawPanning = 128;
 			break;
 		// There are also some (Open)MPT extended modes we might want to suport here hence this structure.
 	}
@@ -462,7 +462,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 		case CMD_S3MEX_PANNING:
 			if (TickCount == channel->StartTick)
 			{
-				channel->RawPanning = (param + (param << 4)) >> 1;
+				channel->RawPanning = param | (param << 4);
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			break;
@@ -654,9 +654,8 @@ inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 	}
 	if (panningSlide != 0)
 	{
-		panningSlide >>= 1; // TODO: Fix panning so it uses all 8 bits it can rather than 7, and remove this line.
 		panningSlide += channel->RawPanning;
-		clipInt<int16_t>(panningSlide, 0, 128);
+		clipInt<int16_t>(panningSlide, 0, 256);
 		channel->RawPanning = uint8_t(panningSlide);
 	}
 }
@@ -1013,7 +1012,7 @@ bool ModuleFile::ProcessEffects()
 			}
 			else if (channel->RowVolEffect == VOLCMD_PANNING)
 			{
-				channel->RawPanning = channel->RowVolParam;
+				channel->RawPanning = channel->RowVolParam << 1;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 		}
@@ -1375,11 +1374,11 @@ bool ModuleFile::AdvanceTick()
 					uint16_t pan = channel->RawPanning;
 					int8_t panningValue = env->Apply(channel->EnvPanningPos) - 128;
 					clipInt<int8_t>(panningValue, -32, 32);
-					if (pan >= 64)
-						pan += (panningValue * (128 - pan)) / 32;
+					if (pan >= 128)
+						pan += (panningValue * (256 - pan)) / 32;
 					else
 						pan += (panningValue * pan) / 32;
-					clipInt<uint16_t>(pan, 0, 128);
+					clipInt<uint16_t>(pan, 0, 256);
 					channel->Panning = pan;
 					channel->EnvPanningPos++;
 					if (env->GetLooped())
@@ -1487,7 +1486,7 @@ bool ModuleFile::AdvanceTick()
 				else
 					Delta = SinusTable[PanPos];
 				Pan += (Delta * channel->PanbrelloDepth) >> 4;
-				clipInt<uint16_t>(Pan, 0, 128);
+				clipInt<uint16_t>(Pan, 0, 256);
 				channel->Panning = Pan;
 				channel->PanbrelloPos += channel->PanbrelloSpeed;
 			}
@@ -1539,8 +1538,8 @@ bool ModuleFile::AdvanceTick()
 		{
 			if (MixChannels == 2)
 			{
-				channel->NewLeftVol = (channel->Volume * channel->Panning) >> 7;
-				channel->NewRightVol = (channel->Volume * (128 - channel->Panning)) >> 7;
+				channel->NewLeftVol = (channel->Volume * channel->Panning) >> 8;
+				channel->NewRightVol = (channel->Volume * (256 - channel->Panning)) >> 8;
 			}
 			else
 				channel->NewLeftVol = channel->NewRightVol = channel->Volume;
