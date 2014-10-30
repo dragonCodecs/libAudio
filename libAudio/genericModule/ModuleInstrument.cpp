@@ -198,7 +198,7 @@ bool ModuleNewInstrument::HasVolume() const
 
 uint8_t ModuleNewInstrument::GetPanning() const
 {
-	return Panning & 0x7F;
+	return (Panning & 0x7F) << 1;
 }
 
 uint8_t ModuleNewInstrument::GetVolume() const

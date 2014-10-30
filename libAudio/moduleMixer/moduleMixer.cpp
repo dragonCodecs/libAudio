@@ -1012,7 +1012,7 @@ bool ModuleFile::ProcessEffects()
 			}
 			else if (channel->RowVolEffect == VOLCMD_PANNING)
 			{
-				channel->RawPanning = channel->RowVolParam << 1;
+				channel->RawPanning = channel->RowVolParam << 2;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 		}
