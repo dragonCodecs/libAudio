@@ -97,7 +97,7 @@ private:
 	uint16_t nInstruments;
 	uint16_t nPatterns;
 	uint8_t *Orders;
-	uint8_t *Panning;
+	uint16_t *Panning;
 	uint16_t Flags;
 	uint16_t CreationVersion;
 	uint16_t FormatVersion;

@@ -122,11 +122,13 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	// Panning?
 	if (DontCare[1] == 0xFC)
 	{
-		uint32_t i;
-		Panning = new uint8_t[32];
-		fread(Panning, 32, 1, f_S3M);
+		uint8_t i;
+		Panning = new uint16_t[32];
 		for (i = 0; i < 32; i++)
 		{
+			uint8_t value;
+			fread(&value, 1, 1, f_S3M);
+			Panning[i] = value;
 			if ((Panning[i] & 0x20) != 0)
 				Panning[i] = ((Panning[i] & 0x0F) << 4) | (Panning[i] & 0x0F);
 			else
@@ -391,8 +393,13 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(&MessageOffs, 4, 1, f_IT);
 	fread(&DontCare, 4, 1, f_IT);
 
-	Panning = new uint8_t[64];
-	fread(Panning, 64, 1, f_IT);
+	Panning = new uint16_t[64];
+	for (uint8_t i = 0; i < 64; i++)
+	{
+		uint8_t value;
+		fread(&value, 1, 1, f_IT);
+		Panning[i] = value;
+	}
 	//Volumes = new uint8_t[64];
 	fread(Volumes, 64, 1, f_IT);
 
