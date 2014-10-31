@@ -656,7 +656,7 @@ inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 	{
 		panningSlide += channel->RawPanning;
 		clipInt<int16_t>(panningSlide, 0, 256);
-		channel->RawPanning = uint8_t(panningSlide);
+		channel->RawPanning = uint16_t(panningSlide);
 	}
 }
 
