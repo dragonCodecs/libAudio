@@ -1536,7 +1536,7 @@ bool ModuleFile::AdvanceTick()
 		channel->SampleData = ((channel->NewSampleData != NULL && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : NULL);
 		if (channel->SampleData != NULL)
 		{
-			if (MixChannels == 2)
+			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
 			{
 				channel->NewLeftVol = (channel->Volume * channel->Panning) >> 8;
 				channel->NewRightVol = (channel->Volume * (256 - channel->Panning)) >> 8;
