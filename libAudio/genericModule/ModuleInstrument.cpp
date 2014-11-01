@@ -228,7 +228,7 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
 		throw new ModuleLoaderError(E_BAD_IT);
 
-	if (env == ENVELOPE_PANNING)
+	if (env != ENVELOPE_VOLUME)
 	{
 		// This requires signed/unsigned conversion
 		for (uint8_t i = 0; i < nNodes; i++)
