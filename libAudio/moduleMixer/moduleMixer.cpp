@@ -1433,17 +1433,18 @@ bool ModuleFile::AdvanceTick()
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_PITCH);
 				if (env->GetEnabled() && env->HasNodes())
 				{
-					int8_t pitchValue = env->Apply(channel->EnvPitchPos) - 32;
-					if (pitchValue < 0)
+					int8_t pitchValue = env->Apply(channel->EnvPitchPos) - 128;
+					clipInt<int8_t>(pitchValue, -32, 32);
+					/*if (pitchValue < 0)
 					{
-						uint8_t adjust = ((uint8_t)-pitchValue) << 3;
+						uint16_t adjust = uint16_t(-pitchValue) << 3;
 						period = LinearSlideUp(period, adjust);
 					}
 					else
 					{
-						uint8_t adjust = ((uint8_t)pitchValue) << 3;
+						uint16_t adjust = uint16_t(pitchValue) << 3;
 						period = LinearSlideDown(period, adjust);
-					}
+					}*/
 					channel->EnvPitchPos++;
 					if (env->GetLooped())
 					{
