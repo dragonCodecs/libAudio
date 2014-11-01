@@ -135,7 +135,7 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 	if (p_Instruments != NULL)
 	{
 		ModuleInstrument *instr = p_Instruments[nSample - 1];
-		uint8_t nSample = instr->Map(channel->Note - 1);
+		nSample = instr->Map(channel->Note - 1);
 		channel->EnvVolumePos = 0;
 		channel->EnvPanningPos = 0;
 		channel->EnvPitchPos = 0;
@@ -147,13 +147,17 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 			return;
 		}
 		channel->Instrument = instr;
+	}
+	channel->Sample = p_Samples[nSample - 1];
+	ReloadSample(channel);
+	if (p_Instruments != NULL)
+	{
+		ModuleInstrument *instr = channel->Instrument;
 		if (instr->HasVolume())
 			channel->RawVolume = instr->GetVolume();
 		if (instr->IsPanned())
 			channel->RawPanning = instr->GetPanning();
 	}
-	channel->Sample = p_Samples[nSample - 1];
-	ReloadSample(channel);
 }
 
 uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed)
