@@ -292,7 +292,9 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 	{
 		if (ModuleType == MODULE_IT && (channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0)
 		{
-			// Reset envelopes and auto-vibrato*
+			channel->EnvVolumePos = 0;
+			channel->EnvPanningPos = 0;
+			channel->EnvPitchPos = 0;
 			channel->Flags &= ~CHN_NOTEFADE;
 			channel->FadeOutVol = 0xFFFF;
 		}
