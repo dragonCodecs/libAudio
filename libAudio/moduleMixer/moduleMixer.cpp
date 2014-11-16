@@ -41,8 +41,18 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 	else
 		GlobalVolume = p_Header->GlobalVolume;
 	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
-	Channels = new Channel[p_Header->nChannels]();
-	MixerChannels = new uint32_t[p_Header->nChannels];
+	// If we have the possibility of NNAs, allocate a full set of channels.
+	if (p_Instruments != NULL)
+	{
+		Channels = new Channel[128]();
+		MixerChannels = new uint32_t[128];
+	}
+	// Otherwise just allocate the number in the song as that's all we can process in this case.
+	else
+	{
+		Channels = new Channel[p_Header->nChannels]();
+		MixerChannels = new uint32_t[p_Header->nChannels];
+	}
 	Rows = 2;
 	ResetChannelPanning();
 	InitialiseTables();
