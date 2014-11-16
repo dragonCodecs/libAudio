@@ -80,9 +80,9 @@ void ModuleFile::ResetChannelPanning()
 		{
 			uint8_t j = i % 4;
 			if (j == 0 || j == 3)
-				Channels[i].RawPanning = 0;
+				Channels[i].RawPanning = 64;
 			else
-				Channels[i].RawPanning = 256;
+				Channels[i].RawPanning = 192;
 		}
 	}
 	else if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT)
