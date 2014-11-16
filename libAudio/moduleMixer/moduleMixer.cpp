@@ -1140,7 +1140,15 @@ bool ModuleFile::ProcessEffects()
 				note = sample = 0;
 			}
 			if (note == 0 && sample != 0)
-				channel->RawVolume = p_Samples[sample - 1]->GetVolume();
+			{
+				if (p_Instruments != NULL)
+				{
+					if (channel->Instrument != NULL)
+						channel->RawVolume = channel->Instrument->GetVolume();
+				}
+				else
+					channel->RawVolume = p_Samples[sample - 1]->GetVolume();
+			}
 			if (note >= 0xFE)
 				sample = 0;
 			if (note != 0 && note <= 128)
@@ -1150,7 +1158,10 @@ bool ModuleFile::ProcessEffects()
 			if (note != 0)
 			{
 				if (sample == 0 && channel->NewSample != 0 && note <= 0x80)
+				{
 					SampleChange(channel, channel->NewSample);
+					channel->NewSample = 0;
+				}
 				NoteChange(channel, note, cmd);
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
