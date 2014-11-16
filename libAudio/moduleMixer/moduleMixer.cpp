@@ -310,6 +310,138 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 	channel->LeftVol = channel->RightVol = 0;
 }
 
+uint8_t ModuleFile::FindFreeNNAChannel() const
+{
+	uint8_t i, res = 0;
+	uint32_t volWeight = 64 << 16;
+	uint16_t envVolumePos = 0xFFFF;
+	for (i = p_Header->nChannels; i < 128; i++)
+	{
+		const Channel &chn = Channels[i];
+		uint32_t weight = chn.RawVolume;
+		if (chn.FadeOutVol == 0)
+			return i;
+		if ((chn.Flags & CHN_NOTEFADE) != 0)
+			weight *= chn.FadeOutVol;
+		else
+			weight <<= 16;
+		if ((chn.Flags & CHN_LOOP) != 0)
+			weight >>= 1;
+		if (weight < volWeight || (weight == volWeight && chn.EnvVolumePos > envVolumePos))
+		{
+			envVolumePos = chn.EnvVolumePos;
+			volWeight = weight;
+			res = i;
+		}
+	}
+	return res;
+}
+
+void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
+{
+	uint8_t i;
+	ModuleSample *sample = channel->Sample;
+	ModuleInstrument *instr = channel->Instrument;
+	if (note > 0x80 || note < 1)
+		return;
+	// TODO: Handle force cut.. maybe..
+	if (nSample != 0)
+	{
+		instr = p_Instruments[nSample - 1];
+		if (instr != NULL)
+		{
+			nSample = instr->Map(note - 1);
+			if (nSample != 0)
+				sample = p_Samples[nSample - 1];
+		}
+		else
+			sample = NULL;
+	}
+
+	for (i = 0; i < 128; i++)
+	{
+		Channel *dnaChannel = &Channels[i];
+		if (dnaChannel->Instrument != NULL && (i >= p_Header->nChannels || dnaChannel == channel))
+		{
+			bool duplicate = false;
+			switch (dnaChannel->Instrument->GetDCT())
+			{
+				case DCT_NOTE:
+					if (note != 0 && dnaChannel->Note == note)
+						duplicate = true;
+					break;
+				case DCT_SAMPLE:
+					if (sample != NULL && sample == dnaChannel->Sample)
+						duplicate = true;
+					break;
+				case DCT_INSTRUMENT:
+					if (instr == dnaChannel->Instrument)
+						duplicate = true;
+					break;
+			}
+
+			if (duplicate)
+			{
+				switch (dnaChannel->Instrument->GetDNA())
+				{
+					case DNA_NOTECUT:
+						dnaChannel->NoteOff();
+						dnaChannel->RawVolume = 0;
+						break;
+					case DNA_NOTEOFF:
+						dnaChannel->NoteOff();
+						break;
+					case DNA_NOTEFADE:
+						dnaChannel->Flags |= CHN_NOTEFADE;
+						break;
+				}
+				if (dnaChannel->RawVolume == 0)
+				{
+					dnaChannel->FadeOutVol = 0;
+					dnaChannel->Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
+				}
+			}
+		}
+	}
+
+	if (channel->RawVolume != 0 && channel->Length != 0 && channel->FadeOutVol != 0)
+	{
+		uint8_t newChannel = FindFreeNNAChannel();
+		if (newChannel != 0)
+		{
+			// With the new channel, duplicate it and clear certain effects
+			Channel *nnaChannel = &Channels[newChannel];
+			*nnaChannel = *channel;
+			nnaChannel->Flags &= ~(CHN_VIBRATO | CHN_TREMOLO | CHN_PANBRELLO | CHN_PORTAMENTO);
+			nnaChannel->RowEffect = CMD_NONE;
+			// Then check what the NNA is supposed to be
+			switch (instr->GetNNA())
+			{
+				case NNA_NOTEOFF:
+					nnaChannel->NoteOff();
+					break;
+				case NNA_NOTECUT:
+					nnaChannel->FadeOutVol = 0;
+				case NNA_NOTEFADE:
+					nnaChannel->Flags |= CHN_NOTEFADE;
+					break;
+			}
+			// NNA_CONTINUE is done implicitly in just duplicating the channel here, so only cull already silent samples.
+			if (nnaChannel->Volume == 0)
+			{
+				nnaChannel->FadeOutVol = 0;
+				nnaChannel->Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
+			}
+			// And clean up on the original channel so it can be used in the main effects processing.
+			channel->Length = 0;
+			channel->Pos = 0;
+			channel->PosLo = 0;
+			channel->DCOffsL = 0;
+			channel->DCOffsR = 0;
+		}
+	}
+}
+
 void ModuleFile::ProcessMODExtended(Channel *channel)
 {
 	uint8_t param = channel->RowParam;
