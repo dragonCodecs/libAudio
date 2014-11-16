@@ -541,9 +541,9 @@ private:
 	uint8_t **p_PCM;
 
 	// Mixer info
-	uint32_t MixSampleRate, MixChannels, MixBitsPerSample;
+	uint32_t MixSampleRate, MixBitsPerSample;
 	uint32_t TickCount, SamplesToMix, MinPeriod, MaxPeriod;
-	uint16_t Row, NextRow, Rows;
+	uint16_t MixChannels, Row, NextRow, Rows;
 	uint32_t MusicSpeed, MusicTempo;
 	uint16_t Pattern, NewPattern, NextPattern;
 	uint32_t RowsPerBeat, SamplesPerTick;
