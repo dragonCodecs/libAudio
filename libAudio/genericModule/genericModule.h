@@ -342,6 +342,9 @@ public:
 	virtual bool HasVolume() const = 0;
 	virtual uint8_t GetPanning() const = 0;
 	virtual uint8_t GetVolume() const = 0;
+	virtual uint8_t GetNNA() const = 0;
+	virtual uint8_t GetDCT() const = 0;
+	virtual uint8_t GetDNA() const = 0;
 };
 
 class ModuleOldInstrument : public ModuleInstrument
@@ -371,6 +374,9 @@ public:
 	bool HasVolume() const;
 	uint8_t GetPanning() const;
 	uint8_t GetVolume() const;
+	uint8_t GetNNA() const;
+	uint8_t GetDCT() const;
+	uint8_t GetDNA() const;
 };
 
 class ModuleNewInstrument : public ModuleInstrument
@@ -379,7 +385,7 @@ private:
 	char *FileName;
 	uint8_t NNA;
 	uint8_t DCT;
-	uint8_t DCA;
+	uint8_t DNA;
 	uint16_t FadeOut;
 	uint8_t PPS;
 	uint8_t PPC;
@@ -406,6 +412,9 @@ public:
 	bool HasVolume() const;
 	uint8_t GetPanning() const;
 	uint8_t GetVolume() const;
+	uint8_t GetNNA() const;
+	uint8_t GetDCT() const;
+	uint8_t GetDNA() const;
 };
 
 class ModuleCommand : public ModuleAllocator

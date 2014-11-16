@@ -75,5 +75,19 @@
 #define CMD_S3MEX_DELAYSAMP		0x0D
 #define CMD_S3MEX_DELAYPAT		0x0E
 
+#define NNA_NOTECUT		0
+#define NNA_CONTINE		1
+#define NNA_NOTEOFF		2
+#define NNA_NOTEFADE	3
+
+#define DCT_OFF			0
+#define DCT_SAMPLE		1
+#define DCT_NOTE		2
+#define DCT_INSTRUMENT	3
+
+#define DNA_NOTECUT		0
+#define DNA_NOTEOFF		1
+#define DNA_NOTEFADE	2
+
 #endif /*__effects_H__*/
 

@@ -106,6 +106,21 @@ uint8_t ModuleOldInstrument::GetVolume() const
 	return 0;
 }
 
+uint8_t ModuleOldInstrument::GetNNA() const
+{
+	return NNA;
+}
+
+uint8_t ModuleOldInstrument::GetDCT() const
+{
+	return DCT_OFF;
+}
+
+uint8_t ModuleOldInstrument::GetDNA() const
+{
+	return DNA_NOTECUT;
+}
+
 ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t Const, env;
@@ -122,7 +137,7 @@ ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 	fread(&Const, 1, 1, f_IT);
 	fread(&NNA, 1, 1, f_IT);
 	fread(&DCT, 1, 1, f_IT);
-	fread(&DCA, 1, 1, f_IT);
+	fread(&DNA, 1, 1, f_IT);
 	fread(&FadeOut, 2, 1, f_IT);
 	fread(&PPS, 1, 1, f_IT);
 	fread(&PPC, 1, 1, f_IT);
@@ -140,7 +155,7 @@ ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleIn
 	fread(DontCare, 6, 1, f_IT);
 	fread(SampleMapping, 240, 1, f_IT);
 
-	if (Const != 0 || NNA > 3 || DCT > 3 || DCA > 2)
+	if (Const != 0 || NNA > 3 || DCT > 3 || DNA > 2)
 		throw new ModuleLoaderError(E_BAD_IT);
 
 	FadeOut <<= 6;
@@ -206,9 +221,19 @@ uint8_t ModuleNewInstrument::GetVolume() const
 	return Volume & 0x7F;
 }
 
-ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const
+uint8_t ModuleNewInstrument::GetNNA() const
 {
-	return Envelopes[env];
+	return NNA;
+}
+
+uint8_t ModuleNewInstrument::GetDCT() const
+{
+	return DCT;
+}
+
+uint8_t ModuleNewInstrument::GetDNA() const
+{
+	return DNA;
 }
 
 ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
