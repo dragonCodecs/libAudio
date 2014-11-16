@@ -201,6 +201,11 @@ bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
 	return Envelopes[env]->GetLooped();
 }
 
+ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const
+{
+	return Envelopes[env];
+}
+
 bool ModuleNewInstrument::IsPanned() const
 {
 	return (Panning & 128) == 0;
