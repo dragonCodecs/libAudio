@@ -1152,7 +1152,11 @@ bool ModuleFile::ProcessEffects()
 			if (note >= 0xFE)
 				sample = 0;
 			if (note != 0 && note <= 128)
+			{
 				channel->NewNote = note;
+				if (p_Instruments != NULL)
+					HandleNNA(channel, sample, note);
+			}
 			if (sample != 0)
 				SampleChange(channel, sample);
 			if (note != 0)
