@@ -385,10 +385,6 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	fread(&InitialTempo, 1, 1, f_IT);
 	fread(&Separation, 1, 1, f_IT);
 	fread(&Const, 1, 1, f_IT);
-
-	if (Const != 0)
-		throw new ModuleLoaderError(E_BAD_IT);
-
 	fread(&MsgLength, 2, 1, f_IT);
 	fread(&MessageOffs, 4, 1, f_IT);
 	fread(&DontCare, 4, 1, f_IT);
