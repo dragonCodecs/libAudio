@@ -41,7 +41,9 @@ typedef struct _FLAC_Decoder_Context
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	uint8_t buffer[16384];
+	uint8_t *buffer;
+	uint32_t bufferLen;
+	uint8_t playbackBuffer[16384];
 	/*!
 	 * @internal
 	 * The amount to shift the sample data by to convert it
@@ -52,7 +54,8 @@ typedef struct _FLAC_Decoder_Context
 	 * The count of the number of bytes left to process
 	 * (also thinkable as the number of bytes left to read)
 	 */
-	int nRead;
+	uint32_t nRead;
+	uint32_t nAvail;
 	/*!
 	 * @internal
 	 * The playback class instance for the FLAC file
@@ -186,17 +189,18 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	short *PCM = (short *)p_FF->buffer;
-	const int *Left = buffers[0];
-	const int *Right = buffers[1];
-	uint8_t sampleShift = p_FF->sampleShift;
-	uint32_t i = 0;
+	uint8_t j, channels = p_FF->fi_Info->Channels, sampleShift = p_FF->sampleShift;
+	uint32_t i, len = p_frame->header.blocksize;
+	if (len > (p_FF->bufferLen / channels))
+		len = p_FF->bufferLen / channels;
 
-	for (i = (p_FF->nRead / 2); i < p_frame->header.blocksize; i++)
+	for (i = 0; i < len; i++)
 	{
-		PCM[(i * 2) + 0] = (short)(Left[i] >> sampleShift);
-		PCM[(i * 2) + 1] = (short)(Right[i] >> sampleShift);
+		for (j = 0; j < channels; j++)
+			PCM[(i * channels) + j] = (short)(buffers[j][i] >> sampleShift);
 	}
-	p_FF->nRead = p_frame->header.blocksize * 4;
+	p_FF->nRead = len * channels * (p_FF->fi_Info->BitsPerSample / 8);
+	p_FF->nAvail = p_FF->nRead;
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -229,9 +233,11 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 				p_FI->BitsPerSample = 16;
 				p_FF->sampleShift = 8;
 			}
+			p_FF->bufferLen = p_md->channels * p_md->max_blocksize;
+			p_FF->buffer = new uint8_t[p_FF->bufferLen * (p_md->bits_per_sample / 8)];
 			p_FI->TotalTime = p_md->total_samples / p_md->sample_rate;
 			if (ExternalPlayback == 0)
-				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->buffer, 16384, p_FLACFile);
+				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->playbackBuffer, 16384, p_FLACFile);
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -394,6 +400,7 @@ int FLAC_CloseFileR(void *p_FLACFile)
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 
 	delete p_FF->p_Playback;
+	delete [] p_FF->buffer;
 
 	ret = !FLAC__stream_decoder_finish(p_FF->p_dec);
 	FLAC__stream_decoder_delete(p_FF->p_dec);
@@ -416,40 +423,34 @@ int FLAC_CloseFileR(void *p_FLACFile)
 long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	long ret = 0;
-	long readtot = 1;
+	uint32_t ret = 0;
 	FLAC__StreamDecoderState state;
 
-	if (p_FF->nRead <= 0)
+	if (nOutBufferLen < 0)
+		return -1;
+	while (ret < uint32_t(nOutBufferLen))
 	{
-		while (readtot < nOutBufferLen && readtot != 0)
+		uint32_t len;
+		if (p_FF->nAvail == 0)
 		{
 			FLAC__stream_decoder_process_single(p_FF->p_dec);
 			state = FLAC__stream_decoder_get_state(p_FF->p_dec);
 			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
 			{
-				readtot = -2;
-				break;
+				p_FF->nAvail = 0;
+				if (ret == 0)
+					return -2;
+				else
+					break;
 			}
-			readtot = p_FF->nRead;
 		}
+		len = p_FF->nAvail;
+		if (len > (nOutBufferLen - ret))
+			len = nOutBufferLen - ret;
+		memcpy(OutBuffer + ret, p_FF->buffer + (p_FF->nRead - p_FF->nAvail), len);
+		ret += len;
+		p_FF->nAvail -= len;
 	}
-
-	state = FLAC__stream_decoder_get_state(p_FF->p_dec);
-	if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
-	{
-		return -2;
-	}
-	// Write back at most nOutBufferLen in data!
-	if (OutBuffer != p_FF->buffer)
-	{
-		if (p_FF->nRead - nOutBufferLen >= 0)
-			memcpy(OutBuffer, p_FF->buffer + (16384 - p_FF->nRead), nOutBufferLen);
-		else
-			memcpy(OutBuffer, p_FF->buffer + (16384 - p_FF->nRead), p_FF->nRead);
-	}
-	p_FF->nRead -= nOutBufferLen;
-	ret = nOutBufferLen;
 
 	return ret;
 }
