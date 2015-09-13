@@ -8,11 +8,12 @@
  * This was originally written in the oldest style of C you can find and was written for Unix.
  */
 
-typedef struct {
-		double re, im;
-	} COMPLEX;
+typedef struct
+{
+	double re, im;
+} COMPLEX;
 
-// Only define __FFT_C__ if you really need these macro'ed operations.
+/* Only define __FFT_C__ if you really need these macro'ed operations. */
 #ifdef __FFT_C__
 #define		c_re(c)		((c).re)
 #define		c_im(c)		((c).im)
@@ -39,8 +40,8 @@ typedef struct {
 extern "C" {
 #endif
 
-int fft(COMPLEX *in, unsigned n, COMPLEX *out);
-int rft(COMPLEX *in, unsigned n, COMPLEX *out);
+extern int fft(COMPLEX *in, unsigned n, COMPLEX *out);
+extern int rft(COMPLEX *in, unsigned n, COMPLEX *out);
 
 #ifdef __cplusplus
 }
