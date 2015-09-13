@@ -17,6 +17,7 @@ inline int round(double a)
 #endif
 #include <chrono>
 #include <thread>
+#include <mutex>
 #include <memory>
 #include <GTK++.h>
 #include <libAudio.h>
@@ -56,8 +57,7 @@ void *p_AudioFile;
 pthread_t SoundThread;
 pthread_attr_t ThreadAttr;
 std::unique_ptr<Spectrometer> Interface;
-pthread_mutex_t DrawMutex;
-pthread_mutexattr_t MutexAttr;
+std::mutex drawMutex;
 #ifdef __linux__
 char **files;
 uint32_t fileCount;
@@ -104,9 +104,8 @@ private:
 			if (p_Playback && p_Playback->IsPlaying() == true)
 			{
 				p_Playback->Stop();
-				pthread_mutex_lock(&DrawMutex);
+				std::lock_guard<std::mutex> drawLock(drawMutex);
 				pthread_cancel(SoundThread);
-				pthread_mutex_unlock(&DrawMutex);
 			}
 			p_Playback = nullptr;
 			if (p_AudioFile != nullptr)
@@ -148,8 +147,8 @@ private:
 
 	static bool Draw(GtkWidget *widget, GdkEventExpose *event, void *data)
 	{
+		std::lock_guard<std::mutex> drawLock(drawMutex);
 		Spectrometer *self = (Spectrometer *)data;
-		pthread_mutex_lock(&DrawMutex);
 		self->Spectr->glBegin();
 
 		if (self->Data != nullptr && self->Function != nullptr)
@@ -161,16 +160,13 @@ private:
 		self->Spectr->glSwapBuffers();
 		self->Spectr->glEnd();
 
-		pthread_mutex_unlock(&DrawMutex);
 		return false;
 	}
 
 	static long Callback(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 	{
-		long ret;
-		static GdkRectangle rect = {0, 0, 456, 214};
-		pthread_mutex_lock(&DrawMutex);
-		ret = Audio_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
+		std::lock_guard<std::mutex> drawLock(drawMutex);
+		long ret = Audio_FillBuffer(p_AudioPtr, OutBuffer, nOutBufferLen);
 
 		if (ret > 0)
 		{
@@ -178,7 +174,6 @@ private:
 			Interface->lenData = ret;
 		}
 
-		pthread_mutex_unlock(&DrawMutex);
 		return ret;
 	}
 
@@ -210,20 +205,18 @@ private:
 	{
 		Spectrometer *self = (Spectrometer *)data;
 		p_Playback->Pause();
-		pthread_mutex_lock(&DrawMutex);
+		std::lock_guard<std::mutex> drawLock(drawMutex);
 		pthread_cancel(SoundThread);
-		pthread_mutex_unlock(&DrawMutex);
 		self->btnPause->Disable();
 		self->btnPlay->Enable();
 	}
 
 	static void btnNext_Click(GtkWidget *, void *data)
 	{
+		std::lock_guard<std::mutex> drawLock(drawMutex);
 		Spectrometer *self = (Spectrometer *)data;
-		pthread_mutex_lock(&DrawMutex);
 		self->fnNo = (self->fnNo + 1) % nFunctions;
 		self->Function = Functions[self->fnNo];
-		pthread_mutex_unlock(&DrawMutex);
 	}
 
 	static void btnAbout_Click(GtkWidget *, void *data)
@@ -399,10 +392,6 @@ public:
 		fileNo = 0;
 #endif
 
-		pthread_mutexattr_init(&MutexAttr);
-		pthread_mutexattr_settype(&MutexAttr, PTHREAD_MUTEX_ERRORCHECK);
-		pthread_mutex_init(&DrawMutex, &MutexAttr);
-		pthread_mutexattr_destroy(&MutexAttr);
 		fnNo = 1;
 		Function = Functions[fnNo];
 	}
@@ -456,9 +445,8 @@ public:
 		if (p_Playback && p_Playback->IsPlaying() == true)
 		{
 			p_Playback->Stop();
-			pthread_mutex_lock(&DrawMutex);
+			std::lock_guard<std::mutex> drawLock(drawMutex);
 			pthread_cancel(SoundThread);
-			pthread_mutex_unlock(&DrawMutex);
 		}
 		p_Playback = nullptr;
 		if (p_AudioFile != nullptr)
