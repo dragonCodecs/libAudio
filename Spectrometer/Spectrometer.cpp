@@ -1,6 +1,7 @@
+#include <stdint.h>
 #ifdef _WINDOWS
+#define _WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define _usleep _sleep
 // The following hack is because M$ have a nasty habit of leaving this function out the C RunTime which is bad.
 inline int round(double a)
 {
@@ -13,18 +14,9 @@ inline int round(double a)
 	else
 		return b;
 }
-#else
-#include <ctype.h>
-#include <time.h>
-#define MSECS_IN_SEC 1000
-#define NSECS_IN_MSEC 1000000
-#define _usleep(milisec) \
-	{\
-		struct timespec req = {milisec / MSECS_IN_SEC, (milisec % MSECS_IN_SEC) * NSECS_IN_MSEC}; \
-		nanosleep(&req, NULL); \
-	}
-#include <inttypes.h>
 #endif
+#include <chrono>
+#include <thread>
 #include <GTK++.h>
 #include <libAudio.h>
 #include "Playback.h"
@@ -205,7 +197,7 @@ private:
 		pthread_attr_setscope(&ThreadAttr, PTHREAD_SCOPE_PROCESS);
 		pthread_create(&SoundThread, &ThreadAttr, PlaybackThread, NULL);
 		pthread_attr_destroy(&ThreadAttr);
-		_usleep(10);
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		self->btnPlay->Disable();
 		self->btnPause->Enable();
 	}
