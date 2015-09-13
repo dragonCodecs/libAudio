@@ -1,17 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #ifdef _WINDOWS
+#define _WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define _usleep _sleep
-#else
-#include <ctype.h>
-#include <time.h>
-#define _usleep(milisec) \
-	{\
-		struct timespec req = {0, milisec}; \
-		nanosleep(&req, NULL); \
-	}
 #endif
+#include <chrono>
+#include <thread>
 #include <libAudio.h>
 #include <pthread.h>
 #include "Playback.h"
@@ -172,7 +167,7 @@ void Playback::Play()
 
 		if (this->Playing == true && Playing != AL_PLAYING && this->Paused == false)
 			alSourcePlay(sourceNum);
-		_usleep(40);
+		std::this_thread::sleep_for(std::chrono::milliseconds(40));
 		if (this->Paused || !this->Playing)
 			break;
 	}
@@ -195,7 +190,7 @@ finish:
 			if (this->Playing == true && Playing != AL_PLAYING)
 				alSourcePlay(sourceNum);
 
-			_usleep(40);
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 		}
 	}
 }
