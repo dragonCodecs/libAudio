@@ -1,44 +1,42 @@
-GCC ?= gcc
-GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
-ifeq ($(shell if [ $(GCC_VER) -ge 4 ]; then echo 1; else echo 0; fi), 1)
-GCC_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden
-else
-GCC_FLAGS = 
-endif
-CC = $(GCC) $(GCC_FLAGS)
-PKGS = libAudio libGTK++ openal gl gobject-2.0
-EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKGS))
-CFLAGS = -O2 -g -c $(EXTRA_CFLAGS) -o $@
-LIBS = $(shell pkg-config --libs $(PKGS)) -lstdc++ -lm
-LFLAGS = $(O) $(LIBS) -o $(EXE)
-CHMOD = chmod 0755
+include Makefile.inc
 STRIP = strip -s
 
+PKG_CONFIG_PKGS = libAudio libGTK++ openal gl gobject-2.0
+EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKG_CONFIG_PKGS))
+CFLAGS = $(OPTIM_FLAGS) -c -Wall -Wextra -pedantic $(EXTRA_CFLAGS) -o $@ $<
+LIBS = $(shell pkg-config --libs $(PKG_CONFIG_PKGS)) -lm -ldl -lz -luuid -lresolv
+LFLAGS = $(OPTIM_FLAGS) $(O) $(LIBS) -o $(EXE)
+
+EXEDIR = ../bin
+
 O = FFT.o AboutBox.o DrawingFunctions.o Playback.o VUMeter.o Icon.o Spectrometer.o
-EXE = Spectrometer.out
+EXE = Spectrometer
 
 default: all
 
 all: $(EXE)
 
-Spectrometer.out: $(O)
-	$(CC) $(LFLAGS)
-	$(CHMOD) $(EXE)
-	$(STRIP) $(EXE)
+$(EXE): $(O)
+	$(call run-cmd,ccld,$(LFLAGS))
+	$(call run-cmd,chmod,$(EXE))
+	$(call debug-strip,$(EXE))
 
-install: all
-	install -m755 -D $(EXE) ../bin/Spectrometer
+$(EXEDIR):
+	$(call run-cmd,install_dir,$(EXEDIR))
+
+install: all $(EXEDIR)
+	$(call run-cmd,install_exe,$(EXE),$(EXEDIR))
 
 clean:
-	rm -f *.o *.out *~
+	$(call run-cmd,rm,Spectrometer,*.o $(EXE))
 
 .cpp.o:
-	$(CC) $(CFLAGS) $<
+	$(call run-cmd,cxx,$(CFLAGS) -std=c++11)
 
 .c.o:
-	$(GCC) $(CFLAGS) $<
+	$(call run-cmd,cc,$(CFLAGS))
 
-.PHONY: .cpp.o clean install all default
+.PHONY: .cpp.o .c.o clean install all default
 
 FFT.o: FFT.c
 AboutBox.o: AboutBox.cpp
