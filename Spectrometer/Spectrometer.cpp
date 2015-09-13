@@ -57,6 +57,7 @@ void *p_AudioFile;
 pthread_t SoundThread;
 pthread_attr_t ThreadAttr;
 std::unique_ptr<Spectrometer> Interface;
+std::thread playThread;
 std::mutex drawMutex;
 #ifdef __linux__
 char **files;
@@ -102,11 +103,9 @@ private:
 		{
 			self->Data = nullptr;
 			if (p_Playback && p_Playback->IsPlaying())
-			{
 				p_Playback->Stop();
-				std::lock_guard<std::mutex> drawLock(drawMutex);
-				pthread_cancel(SoundThread);
-			}
+			if (playThread.joinable())
+				playThread.join();
 			p_Playback = nullptr;
 			if (p_AudioFile != nullptr)
 			{
@@ -177,25 +176,17 @@ private:
 		return ret;
 	}
 
-	static void *PlaybackThread(void *)
+	void playback()
 	{
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr);
-		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);
-
-		Interface->Spectr->AddTimeout();
+		Spectr->AddTimeout();
 		p_Playback->Play();
-		Interface->Spectr->RemoveTimeout();
-		return 0;
+		Spectr->RemoveTimeout();
 	}
 
 	static void btnPlay_Click(GtkWidget *, void *data)
 	{
 		Spectrometer *self = (Spectrometer *)data;
-		pthread_attr_init(&ThreadAttr);
-		pthread_attr_setdetachstate(&ThreadAttr, PTHREAD_CREATE_DETACHED);
-		pthread_attr_setscope(&ThreadAttr, PTHREAD_SCOPE_PROCESS);
-		pthread_create(&SoundThread, &ThreadAttr, PlaybackThread, nullptr);
-		pthread_attr_destroy(&ThreadAttr);
+		playThread = std::thread([self](){ self->playback(); });
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		self->btnPlay->Disable();
 		self->btnPause->Enable();
@@ -205,8 +196,7 @@ private:
 	{
 		Spectrometer *self = (Spectrometer *)data;
 		p_Playback->Pause();
-		std::lock_guard<std::mutex> drawLock(drawMutex);
-		pthread_cancel(SoundThread);
+		playThread.join();
 		self->btnPause->Disable();
 		self->btnPlay->Enable();
 	}
@@ -443,11 +433,9 @@ public:
 		hMainWnd->DoMessageLoop();
 
 		if (p_Playback && p_Playback->IsPlaying())
-		{
 			p_Playback->Stop();
-			std::lock_guard<std::mutex> drawLock(drawMutex);
-			pthread_cancel(SoundThread);
-		}
+		if (playThread.joinable())
+			playThread.join();
 		p_Playback = nullptr;
 		if (p_AudioFile != nullptr)
 		{

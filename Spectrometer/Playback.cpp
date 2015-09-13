@@ -173,7 +173,7 @@ void Playback::Play()
 		if (this->Playing == true && Playing != AL_PLAYING && this->Paused == false)
 			alSourcePlay(sourceNum);
 		_usleep(40);
-		if (this->Paused == true)
+		if (this->Paused || !this->Playing)
 			break;
 	}
 
