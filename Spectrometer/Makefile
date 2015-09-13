@@ -4,6 +4,7 @@ STRIP = strip -s
 PKG_CONFIG_PKGS = libAudio libGTK++ openal gl gobject-2.0
 EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKG_CONFIG_PKGS))
 CFLAGS = $(OPTIM_FLAGS) -c -Wall -Wextra -pedantic $(EXTRA_CFLAGS) -o $@ $<
+DEPFLAGS = $(OPTIM_FLAGS) -E -MM -Wall -Wextra -pedantic $(EXTRA_CFLAGS) -o .dep/$*.d $<
 LIBS = $(shell pkg-config --libs $(PKG_CONFIG_PKGS)) -lm -ldl -lz -luuid -lresolv
 LFLAGS = $(OPTIM_FLAGS) $(O) $(LIBS) -o $(EXE)
 
@@ -14,7 +15,10 @@ EXE = Spectrometer
 
 default: all
 
-all: $(EXE)
+all: .dep $(EXE)
+
+.dep:
+	$(call run-cmd,install_dir,.dep)
 
 $(EXE): $(O)
 	$(call run-cmd,ccld,$(LFLAGS))
@@ -27,21 +31,17 @@ $(EXEDIR):
 install: all $(EXEDIR)
 	$(call run-cmd,install_exe,$(EXE),$(EXEDIR))
 
-clean:
-	$(call run-cmd,rm,Spectrometer,*.o $(EXE))
+clean: .dep
+	$(call run-cmd,rm,Spectrometer,*.o $(EXE) .dep/*.d)
 
 .cpp.o:
+	$(call makedep,$(DEPFLAGS) -std=c++11)
 	$(call run-cmd,cxx,$(CFLAGS) -std=c++11)
 
 .c.o:
+	$(call makedep,$(DEPFLAGS))
 	$(call run-cmd,cc,$(CFLAGS))
 
 .PHONY: .cpp.o .c.o clean install all default
 
-FFT.o: FFT.c
-AboutBox.o: AboutBox.cpp
-DrawingFunctions.o: DrawingFunctions.cpp
-Playback.o: Playback.cpp
-VUMeter.o: VUMeter.cpp
-Icon.o: Icon.cpp
-Spectrometer.o: Spectrometer.cpp
+-include .dep/*.d
