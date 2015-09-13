@@ -17,6 +17,7 @@ inline int round(double a)
 #endif
 #include <chrono>
 #include <thread>
+#include <memory>
 #include <GTK++.h>
 #include <libAudio.h>
 #include "Playback.h"
@@ -40,14 +41,21 @@ inline int round(double a)
 #include <math.h>
 #include "Icon.h"
 
+template<typename T, typename... Args>
+inline std::unique_ptr<T> make_unique(Args &&... args)
+{
+	typedef typename std::remove_const<T>::type typeT;
+	return std::unique_ptr<T>(new typeT(std::forward<Args>(args)...));
+}
+
 class Spectrometer;
 
-Playback *p_Playback;
+std::unique_ptr<Playback> p_Playback;
 uint8_t *Buff;
 void *p_AudioFile;
 pthread_t SoundThread;
 pthread_attr_t ThreadAttr;
-Spectrometer *Interface;
+std::unique_ptr<Spectrometer> Interface;
 pthread_mutex_t DrawMutex;
 pthread_mutexattr_t MutexAttr;
 #ifdef __linux__
@@ -88,48 +96,44 @@ private:
 			self->fileNo++;
 		}
 		else
-			FN = NULL;
+			FN = nullptr;
 #endif
-		if (FN != NULL)
+		if (FN != nullptr)
 		{
-			self->Data = NULL;
-			if (p_Playback != NULL)
+			self->Data = nullptr;
+			if (p_Playback && p_Playback->IsPlaying() == true)
 			{
-				if (p_Playback->IsPlaying() == true)
-				{
-					p_Playback->Stop();
-					pthread_mutex_lock(&DrawMutex);
-					pthread_cancel(SoundThread);
-					pthread_mutex_unlock(&DrawMutex);
-				}
-				delete p_Playback;
-				p_Playback = NULL;
+				p_Playback->Stop();
+				pthread_mutex_lock(&DrawMutex);
+				pthread_cancel(SoundThread);
+				pthread_mutex_unlock(&DrawMutex);
 			}
-			if (p_AudioFile != NULL)
+			p_Playback = nullptr;
+			if (p_AudioFile != nullptr)
 			{
 				Audio_CloseFileR(p_AudioFile);
-				p_AudioFile = NULL;
+				p_AudioFile = nullptr;
 			}
-			if (Buff != NULL)
+			if (Buff != nullptr)
 			{
-				delete Buff;
-				Buff = NULL;
+				delete [] Buff;
+				Buff = nullptr;
 			}
 
 			p_AudioFile = Audio_OpenR(FN);
-			if (p_AudioFile == NULL)
+			if (p_AudioFile == nullptr)
 			{
 				self->hMainWnd->MessageBox(GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "Error, the file you requested could not be used for playback, please try again with another.",
 					"libAudio Spectrometer");
 #ifndef __linux__
 				g_free(FN);
-				FN = NULL;
+				FN = nullptr;
 #endif
 				return;
 			}
 			p_FI = Audio_GetFileInfo(p_AudioFile);
 			Buff = new uint8_t[8192];
-			p_Playback = new Playback(p_FI, Callback, Buff, 8192, p_AudioFile);
+			p_Playback = make_unique<Playback>(p_FI, Callback, Buff, 8192, p_AudioFile);
 			self->LeftMeter->ResetMeter();
 			self->RightMeter->ResetMeter();
 
@@ -138,7 +142,7 @@ private:
 		}
 #ifndef __linux__
 		g_free(FN);
-		FN = NULL;
+		FN = nullptr;
 #endif
 	}
 
@@ -148,7 +152,7 @@ private:
 		pthread_mutex_lock(&DrawMutex);
 		self->Spectr->glBegin();
 
-		if (self->Data != NULL && self->Function != NULL)
+		if (self->Data != nullptr && self->Function != nullptr)
 		{
 			self->Function(self->Data, self->lenData);
 			self->UpdateVUs();
@@ -180,8 +184,8 @@ private:
 
 	static void *PlaybackThread(void *)
 	{
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr);
+		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);
 
 		Interface->Spectr->AddTimeout();
 		p_Playback->Play();
@@ -195,7 +199,7 @@ private:
 		pthread_attr_init(&ThreadAttr);
 		pthread_attr_setdetachstate(&ThreadAttr, PTHREAD_CREATE_DETACHED);
 		pthread_attr_setscope(&ThreadAttr, PTHREAD_SCOPE_PROCESS);
-		pthread_create(&SoundThread, &ThreadAttr, PlaybackThread, NULL);
+		pthread_create(&SoundThread, &ThreadAttr, PlaybackThread, nullptr);
 		pthread_attr_destroy(&ThreadAttr);
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		self->btnPlay->Disable();
@@ -340,7 +344,7 @@ private:
 	}
 
 public:
-	Spectrometer() : FirstBuffer(true), PostValues(false), VolL(0), VolR(0), Data(NULL), LeftMeter(new VUMeter()), RightMeter(new VUMeter())
+	Spectrometer() : Data(nullptr), FirstBuffer(true), PostValues(false), VolL(0), VolR(0), LeftMeter(new VUMeter()), RightMeter(new VUMeter())
 	{
 		GTKFrame *frame;
 		GTKButton *btnAbout;
@@ -387,9 +391,9 @@ public:
 		Spectr->SetHandler("expose_event", (void *)Draw, this);
 		horBox->AddChild(Spectr);
 
-		p_AudioFile = NULL;
-		Buff = NULL;
-		p_Playback = NULL;
+		p_AudioFile = nullptr;
+		Buff = nullptr;
+		p_Playback = nullptr;
 		ExternalPlayback = TRUE;
 #ifdef __linux__
 		fileNo = 0;
@@ -406,12 +410,12 @@ public:
 	~Spectrometer()
 	{
 		//delete hMainWnd;
-		Spectr = NULL;
-		Surface = NULL;
-		btnPause = NULL;
-		btnPlay = NULL;
-		btnOpen= NULL;
-		hMainWnd = NULL;
+		Spectr = nullptr;
+		Surface = nullptr;
+		btnPause = nullptr;
+		btnPlay = nullptr;
+		btnOpen= nullptr;
+		hMainWnd = nullptr;
 	}
 
 	void Run()
@@ -449,22 +453,18 @@ public:
 
 		hMainWnd->DoMessageLoop();
 
-		if (p_Playback != NULL)
+		if (p_Playback && p_Playback->IsPlaying() == true)
 		{
-			if (p_Playback->IsPlaying() == true)
-			{
-				p_Playback->Stop();
-				pthread_mutex_lock(&DrawMutex);
-				pthread_cancel(SoundThread);
-				pthread_mutex_unlock(&DrawMutex);
-			}
-			delete p_Playback;
-			p_Playback = NULL;
+			p_Playback->Stop();
+			pthread_mutex_lock(&DrawMutex);
+			pthread_cancel(SoundThread);
+			pthread_mutex_unlock(&DrawMutex);
 		}
-		if (p_AudioFile != NULL)
+		p_Playback = nullptr;
+		if (p_AudioFile != nullptr)
 		{
 			Audio_CloseFileR(p_AudioFile);
-			p_AudioFile = NULL;
+			p_AudioFile = nullptr;
 		}
 
 		g_object_unref(Surface);
@@ -479,7 +479,7 @@ public:
 void findFiles(int argc, char **argv)
 {
 	fileCount = 0;
-	files = NULL;
+	files = nullptr;
 	for (int i = 1; i < argc; i++)
 	{
 		struct stat s;
@@ -510,9 +510,9 @@ int main(int argc, char **argv)
 	if (fileCount == 0)
 		return 1;
 #endif
-	Interface = new Spectrometer();
+	Interface = make_unique<Spectrometer>();
 	Interface->Run();
-	delete Interface;
+	Interface = nullptr;
 #ifdef __linux__
 	free(files);
 #endif
