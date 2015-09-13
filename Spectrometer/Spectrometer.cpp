@@ -4,8 +4,8 @@
 // The following hack is because M$ have a nasty habit of leaving this function out the C RunTime which is bad.
 inline int round(double a)
 {
-	int b = (int)a;
-	double c = a - (double)b;
+	int b = int(a);
+	double c = a - double(b);
 	if (c >= 0.5)
 		return b + 1;
 	else if (c <= -0.5)
