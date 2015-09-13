@@ -101,7 +101,7 @@ private:
 		if (FN != nullptr)
 		{
 			self->Data = nullptr;
-			if (p_Playback && p_Playback->IsPlaying() == true)
+			if (p_Playback && p_Playback->IsPlaying())
 			{
 				p_Playback->Stop();
 				std::lock_guard<std::mutex> drawLock(drawMutex);
@@ -442,7 +442,7 @@ public:
 
 		hMainWnd->DoMessageLoop();
 
-		if (p_Playback && p_Playback->IsPlaying() == true)
+		if (p_Playback && p_Playback->IsPlaying())
 		{
 			p_Playback->Stop();
 			std::lock_guard<std::mutex> drawLock(drawMutex);
