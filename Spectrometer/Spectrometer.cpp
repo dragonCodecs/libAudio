@@ -70,8 +70,7 @@ std::unique_ptr<Spectrometer> Interface;
 std::thread playThread;
 std::mutex drawMutex;
 #ifdef __linux__
-char **files;
-uint32_t fileCount;
+std::vector<char *> files;
 #endif
 
 class Spectrometer
@@ -100,14 +99,12 @@ private:
 		FileTypeNames.push_back("Any file type");
 		char *FN = self->hMainWnd->FileOpen("Please select a file to open..", FileTypes, FileTypeNames);
 #else
-		char *FN;
-		if (self->fileNo < fileCount)
+		char *FN = nullptr;
+		if (self->fileNo < files.size())
 		{
 			FN = files[self->fileNo];
 			self->fileNo++;
 		}
-		else
-			FN = nullptr;
 #endif
 		if (FN != nullptr)
 		{
@@ -458,26 +455,16 @@ public:
 };
 
 #ifdef __linux__
-#define reallocFiles() \
-	fileCount++; \
-	files = (char **)realloc(files, sizeof(char *) * fileCount)
-
 void findFiles(int argc, char **argv)
 {
-	fileCount = 0;
-	files = nullptr;
-	for (int i = 1; i < argc; i++)
+	files.clear();
+	for (int i = 1; i < argc; ++i)
 	{
 		struct stat s;
 		if (stat(argv[i], &s) == 0)
-		{
-			reallocFiles();
-			files[fileCount - 1] = argv[i];
-		}
+			files.push_back(argv[i]);
 	}
 }
-
-#undef reallocFiles
 #endif
 
 #if defined(_WINDOWS) && !defined(_CONSOLE)
@@ -493,15 +480,12 @@ int main(int argc, char **argv)
 
 #ifdef __linux__
 	findFiles(argc, argv);
-	if (fileCount == 0)
+	if (files.size() == 0)
 		return 1;
 #endif
 	Interface = make_unique<Spectrometer>();
 	Interface->Run();
 	Interface = nullptr;
-#ifdef __linux__
-	free(files);
-#endif
 
 	return 0;
 }
