@@ -147,16 +147,17 @@ private:
 	bool draw()
 	{
 		std::lock_guard<std::mutex> drawLock(drawMutex);
-		Spectr->glBegin();
 
 		if (Data != nullptr && Function != nullptr)
 		{
+			Spectr->glBegin();
+
 			Function(Data, lenData);
 			UpdateVUs();
-		}
 
-		Spectr->glSwapBuffers();
-		Spectr->glEnd();
+			Spectr->glSwapBuffers();
+			Spectr->glEnd();
+		}
 
 		return false;
 	}
