@@ -64,7 +64,7 @@ inline typename uniquePtr_t<T>::typeArrT make_unique(size_t N)
 class Spectrometer;
 
 std::unique_ptr<Playback> p_Playback;
-uint8_t *Buff;
+std::unique_ptr<uint8_t []> Buff;
 void *p_AudioFile;
 std::unique_ptr<Spectrometer> Interface;
 std::thread playThread;
@@ -119,11 +119,6 @@ private:
 				Audio_CloseFileR(p_AudioFile);
 				p_AudioFile = nullptr;
 			}
-			if (Buff != nullptr)
-			{
-				delete [] Buff;
-				Buff = nullptr;
-			}
 
 			p_AudioFile = Audio_OpenR(FN);
 			if (p_AudioFile == nullptr)
@@ -137,8 +132,7 @@ private:
 				return;
 			}
 			p_FI = Audio_GetFileInfo(p_AudioFile);
-			Buff = new uint8_t[8192];
-			p_Playback = make_unique<Playback>(p_FI, Callback, Buff, 8192, p_AudioFile);
+			p_Playback = make_unique<Playback>(p_FI, Callback, Buff.get(), 8192, p_AudioFile);
 			self->LeftMeter->ResetMeter();
 			self->RightMeter->ResetMeter();
 
@@ -406,6 +400,7 @@ public:
 
 	void Run()
 	{
+		Buff = make_unique<uint8_t []>(8192);
 		hMainWnd->ShowWindow();
 
 		Surface = Interface->Spectr->GetWidget()->window;
@@ -451,6 +446,7 @@ public:
 		}
 
 		g_object_unref(Surface);
+		Buff = nullptr;
 	}
 };
 
