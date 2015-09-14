@@ -42,11 +42,23 @@ inline int round(double a)
 #include <math.h>
 #include "Icon.h"
 
+template<typename T> struct uniquePtr_t
+	{ typedef std::unique_ptr<T> typeT; };
+template<typename T> struct uniquePtr_t<T []>
+	{ typedef std::unique_ptr<T []> typeArrT; };
+
 template<typename T, typename... Args>
-inline std::unique_ptr<T> make_unique(Args &&... args)
+inline typename uniquePtr_t<T>::typeT make_unique(Args &&... args)
 {
 	typedef typename std::remove_const<T>::type typeT;
 	return std::unique_ptr<T>(new typeT(std::forward<Args>(args)...));
+}
+
+template<typename T>
+inline typename uniquePtr_t<T>::typeArrT make_unique(size_t N)
+{
+	typedef typename std::remove_const<typename std::remove_extent<T>::type>::type typeT;
+	return std::unique_ptr<T>(new typeT[N]());
 }
 
 class Spectrometer;
@@ -54,8 +66,6 @@ class Spectrometer;
 std::unique_ptr<Playback> p_Playback;
 uint8_t *Buff;
 void *p_AudioFile;
-pthread_t SoundThread;
-pthread_attr_t ThreadAttr;
 std::unique_ptr<Spectrometer> Interface;
 std::thread playThread;
 std::mutex drawMutex;
