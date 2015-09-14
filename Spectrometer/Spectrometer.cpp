@@ -97,16 +97,16 @@ private:
 		std::vector<const char *> FileTypes, FileTypeNames;
 		FileTypes.push_back("*.*");
 		FileTypeNames.push_back("Any file type");
-		char *FN = self->hMainWnd->FileOpen("Please select a file to open..", FileTypes, FileTypeNames);
+		char *file = self->hMainWnd->FileOpen("Please select a file to open..", FileTypes, FileTypeNames);
 #else
-		char *FN = nullptr;
+		char *file = nullptr;
 		if (self->fileNo < files.size())
 		{
-			FN = files[self->fileNo];
-			self->fileNo++;
+			file = files[self->fileNo];
+			++self->fileNo;
 		}
 #endif
-		if (FN != nullptr)
+		if (file != nullptr)
 		{
 			self->Data = nullptr;
 			if (p_Playback && p_Playback->IsPlaying())
@@ -120,14 +120,14 @@ private:
 				p_AudioFile = nullptr;
 			}
 
-			p_AudioFile = Audio_OpenR(FN);
+			p_AudioFile = Audio_OpenR(file);
 			if (p_AudioFile == nullptr)
 			{
 				self->hMainWnd->MessageBox(GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "Error, the file you requested could not be used for playback, please try again with another.",
 					"libAudio Spectrometer");
 #ifndef __linux__
-				g_free(FN);
-				FN = nullptr;
+				g_free(file);
+				file = nullptr;
 #endif
 				return;
 			}
@@ -140,8 +140,8 @@ private:
 			self->btnPlay->Enable();
 		}
 #ifndef __linux__
-		g_free(FN);
-		FN = nullptr;
+		g_free(file);
+		file = nullptr;
 #endif
 	}
 
