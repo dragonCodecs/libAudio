@@ -90,9 +90,9 @@ private:
 	double VolL, VolR;
 	VUMeter *LeftMeter, *RightMeter;
 
-	static void btnOpen_Click(GtkWidget *widget, void *data)
+	void btnOpenClick()
 	{
-		Spectrometer *self = (Spectrometer *)data;
+		Spectrometer *self = this;
 #ifndef __linux__
 		std::vector<const char *> FileTypes, FileTypeNames;
 		FileTypes.push_back("*.*");
@@ -145,10 +145,10 @@ private:
 #endif
 	}
 
-	static bool Draw(GtkWidget *widget, GdkEventExpose *event, void *data)
+	bool draw()
 	{
 		std::lock_guard<std::mutex> drawLock(drawMutex);
-		Spectrometer *self = (Spectrometer *)data;
+		Spectrometer *self = this;
 		self->Spectr->glBegin();
 
 		if (self->Data != nullptr && self->Function != nullptr)
@@ -184,36 +184,36 @@ private:
 		Spectr->RemoveTimeout();
 	}
 
-	static void btnPlay_Click(GtkWidget *, void *data)
+	void btnPlayClick()
 	{
-		Spectrometer *self = (Spectrometer *)data;
+		Spectrometer *self = this;
 		playThread = std::thread([self](){ self->playback(); });
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		self->btnPlay->Disable();
 		self->btnPause->Enable();
 	}
 
-	static void btnPause_Click(GtkWidget *, void *data)
+	void btnPauseClick()
 	{
-		Spectrometer *self = (Spectrometer *)data;
+		Spectrometer *self = this;
 		p_Playback->Pause();
 		playThread.join();
 		self->btnPause->Disable();
 		self->btnPlay->Enable();
 	}
 
-	static void btnNext_Click(GtkWidget *, void *data)
+	void btnNextClick()
 	{
 		std::lock_guard<std::mutex> drawLock(drawMutex);
-		Spectrometer *self = (Spectrometer *)data;
+		Spectrometer *self = this;
 		self->fnNo = (self->fnNo + 1) % nFunctions;
 		self->Function = Functions[self->fnNo];
 	}
 
-	static void btnAbout_Click(GtkWidget *, void *data)
+	void btnAboutClick()
 	{
 		AboutBox *about;
-		Spectrometer *self = (Spectrometer *)data;
+		Spectrometer *self = this;
 		about = new AboutBox(self->hMainWnd);
 		about->Run();
 		delete about;
@@ -330,6 +330,12 @@ private:
 public:
 	Spectrometer() : Data(nullptr), FirstBuffer(true), PostValues(false), VolL(0), VolR(0), LeftMeter(new VUMeter()), RightMeter(new VUMeter())
 	{
+		void (*const openClicked)(GtkWidget *, Spectrometer *) = [](GtkWidget *, Spectrometer *self) { self->btnOpenClick(); };
+		void (*const playClicked)(GtkWidget *, Spectrometer *) = [](GtkWidget *, Spectrometer *self) { self->btnPlayClick(); };
+		void (*const pauseClicked)(GtkWidget *, Spectrometer *) = [](GtkWidget *, Spectrometer *self) { self->btnPauseClick(); };
+		void (*const nextClicked)(GtkWidget *, Spectrometer *) = [](GtkWidget *, Spectrometer *self) { self->btnNextClick(); };
+		void (*const aboutClicked)(GtkWidget *, Spectrometer *) = [](GtkWidget *, Spectrometer *self) { self->btnAboutClick(); };
+		bool (*const doDraw)(GtkWidget *, GdkEventExpose *, Spectrometer *) = [](GtkWidget *, GdkEventExpose *, Spectrometer *self) { return self->draw(); };
 		GTKFrame *frame;
 		GTKButton *btnAbout;
 		GTKHBox *horBox;
@@ -349,21 +355,21 @@ public:
 		hMainWnd->AddChild(horBox);
 		horBox = new GTKHBox(FALSE, 7);
 		btnOpen = new GTKButton("_Open file");
-		btnOpen->SetOnClicked((void *)btnOpen_Click, this);
+		btnOpen->SetOnClicked((void *)openClicked, this);
 		horBox->AddChild(btnOpen);
 		btnPlay = new GTKButton("_Play");
 		btnPlay->Disable();
-		btnPlay->SetOnClicked((void *)btnPlay_Click, this);
+		btnPlay->SetOnClicked((void *)playClicked, this);
 		horBox->AddChild(btnPlay);
 		btnPause = new GTKButton("_Pause");
 		btnPause->Disable();
-		btnPause->SetOnClicked((void *)btnPause_Click, this);
+		btnPause->SetOnClicked((void *)pauseClicked, this);
 		horBox->AddChild(btnPause);
 		btnNext = new GTKButton("_Next Visualisation");
-		btnNext->SetOnClicked((void *)btnNext_Click, this);
+		btnNext->SetOnClicked((void *)nextClicked, this);
 		horBox->AddChild(btnNext);
 		btnAbout = new GTKButton("_About");
-		btnAbout->SetOnClicked((void *)btnAbout_Click, this);
+		btnAbout->SetOnClicked((void *)aboutClicked, this);
 		horBox->AddChild(btnAbout);
 		frame = new GTKFrame("Visualisation");
 		verBox->AddChild(frame);
@@ -372,7 +378,7 @@ public:
 		horBox->SetBorder(2);
 		frame->AddChild(horBox);
 		Spectr = new GTKGLDrawingArea(456, 214, GLBase::MakeStandardConfig());
-		Spectr->SetHandler("expose_event", (void *)Draw, this);
+		Spectr->SetHandler("expose_event", (void *)doDraw, this);
 		horBox->AddChild(Spectr);
 
 		p_AudioFile = nullptr;
