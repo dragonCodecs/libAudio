@@ -92,23 +92,22 @@ private:
 
 	void btnOpenClick()
 	{
-		Spectrometer *self = this;
 #ifndef __linux__
 		std::vector<const char *> FileTypes, FileTypeNames;
 		FileTypes.push_back("*.*");
 		FileTypeNames.push_back("Any file type");
-		char *file = self->hMainWnd->FileOpen("Please select a file to open..", FileTypes, FileTypeNames);
+		char *file = hMainWnd->FileOpen("Please select a file to open..", FileTypes, FileTypeNames);
 #else
 		char *file = nullptr;
-		if (self->fileNo < files.size())
+		if (fileNo < files.size())
 		{
-			file = files[self->fileNo];
-			++self->fileNo;
+			file = files[fileNo];
+			++fileNo;
 		}
 #endif
 		if (file != nullptr)
 		{
-			self->Data = nullptr;
+			Data = nullptr;
 			if (p_Playback && p_Playback->IsPlaying())
 				p_Playback->Stop();
 			if (playThread.joinable())
@@ -123,7 +122,7 @@ private:
 			p_AudioFile = Audio_OpenR(file);
 			if (p_AudioFile == nullptr)
 			{
-				self->hMainWnd->MessageBox(GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "Error, the file you requested could not be used for playback, please try again with another.",
+				hMainWnd->MessageBox(GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "Error, the file you requested could not be used for playback, please try again with another.",
 					"libAudio Spectrometer");
 #ifndef __linux__
 				g_free(file);
@@ -133,11 +132,11 @@ private:
 			}
 			p_FI = Audio_GetFileInfo(p_AudioFile);
 			p_Playback = make_unique<Playback>(p_FI, Callback, Buff.get(), 8192, p_AudioFile);
-			self->LeftMeter->ResetMeter();
-			self->RightMeter->ResetMeter();
+			LeftMeter->ResetMeter();
+			RightMeter->ResetMeter();
 
-			self->btnPause->Disable();
-			self->btnPlay->Enable();
+			btnPause->Disable();
+			btnPlay->Enable();
 		}
 #ifndef __linux__
 		g_free(file);
@@ -148,17 +147,16 @@ private:
 	bool draw()
 	{
 		std::lock_guard<std::mutex> drawLock(drawMutex);
-		Spectrometer *self = this;
-		self->Spectr->glBegin();
+		Spectr->glBegin();
 
-		if (self->Data != nullptr && self->Function != nullptr)
+		if (Data != nullptr && Function != nullptr)
 		{
-			self->Function(self->Data, self->lenData);
-			self->UpdateVUs();
+			Function(Data, lenData);
+			UpdateVUs();
 		}
 
-		self->Spectr->glSwapBuffers();
-		self->Spectr->glEnd();
+		Spectr->glSwapBuffers();
+		Spectr->glEnd();
 
 		return false;
 	}
@@ -186,35 +184,30 @@ private:
 
 	void btnPlayClick()
 	{
-		Spectrometer *self = this;
-		playThread = std::thread([self](){ self->playback(); });
+		playThread = std::thread([this](){ playback(); });
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		self->btnPlay->Disable();
-		self->btnPause->Enable();
+		btnPlay->Disable();
+		btnPause->Enable();
 	}
 
 	void btnPauseClick()
 	{
-		Spectrometer *self = this;
 		p_Playback->Pause();
 		playThread.join();
-		self->btnPause->Disable();
-		self->btnPlay->Enable();
+		btnPause->Disable();
+		btnPlay->Enable();
 	}
 
 	void btnNextClick()
 	{
 		std::lock_guard<std::mutex> drawLock(drawMutex);
-		Spectrometer *self = this;
-		self->fnNo = (self->fnNo + 1) % nFunctions;
-		self->Function = Functions[self->fnNo];
+		fnNo = (fnNo + 1) % nFunctions;
+		Function = Functions[fnNo];
 	}
 
 	void btnAboutClick()
 	{
-		AboutBox *about;
-		Spectrometer *self = this;
-		about = new AboutBox(self->hMainWnd);
+		AboutBox *about = new AboutBox(hMainWnd);
 		about->Run();
 		delete about;
 	}
