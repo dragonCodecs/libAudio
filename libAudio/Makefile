@@ -86,6 +86,7 @@ clean:
 
 loadAudio.o: loadAudio.cpp
 libAudio_Common.o: libAudio_Common.cpp
+libAudio_Common.o: CFLAGS += -std=c++11
 loadOggVorbis.o: loadOggVorbis.cpp
 loadWAV.o: loadWAV.cpp
 loadAAC.o: loadAAC.cpp
