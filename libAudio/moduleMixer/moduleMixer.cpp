@@ -1294,7 +1294,15 @@ bool ModuleFile::ProcessEffects()
 			case CMD_PANNING:
 				if (TickCount > channel->StartTick)
 					break;
-				channel->RawPanning = param;
+				if (ModuleType == MODULE_MOD || ModuleType == MODULE_IT)
+					channel->RawPanning = param;
+				else if (param <= 128)
+					channel->RawPanning = param << 1;
+				else if (param == 164)
+				{
+					channel->RawPanning = 128;
+					channel->Flags |= CHN_SURROUND;
+				}
 				channel->Flags |= CHN_FASTVOLRAMP;
 				break;
 			case CMD_PANNINGSLIDE:
