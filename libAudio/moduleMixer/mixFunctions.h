@@ -262,7 +262,9 @@ void DeinitialiseTables()
 #define SNDMIX_BEGINSAMPLELOOP8 \
 	int32_t Pos = chn->PosLo; \
 	int32_t Increment = chn->Increment.iValue; \
-	const signed char *p = (signed char *)(chn->SampleData + chn->Pos); \
+	const signed char *p = ((signed char *)chn->SampleData) + chn->Pos; \
+	if (chn->Sample->GetStereo()) \
+		p += chn->Pos; \
 	int32_t *vol = Buff; \
 	do \
 	{
@@ -270,7 +272,9 @@ void DeinitialiseTables()
 #define SNDMIX_BEGINSAMPLELOOP16 \
 	int32_t Pos = chn->PosLo; \
 	int32_t Increment = chn->Increment.iValue; \
-	const signed short *p = (signed short *)(chn->SampleData + (chn->Pos << 1)); \
+	const signed short *p = ((signed short *)chn->SampleData) + chn->Pos; \
+	if (chn->Sample->GetStereo()) \
+		p += chn->Pos; \
 	int32_t *vol = Buff; \
 	do \
 	{
