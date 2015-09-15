@@ -82,11 +82,16 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int n
 	if (p_AudioPtr == NULL)
 		return;
 
+	std::chrono::seconds bufferSize(nBuffLen);
+
 	this->p_FI = p_FI;
 	FillBuffer = DataCallback;
 	buffer = BuffPtr;
 	nBufferLen = nBuffLen;
 	this->p_AudioPtr = p_AudioPtr;
+
+	bufferSize /= p_FI->Channels * (p_FI->BitsPerSample / 8);
+	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize) / p_FI->BitRate;
 
 	// Initialize OpenAL ready
 	init();
@@ -167,7 +172,7 @@ void Playback::Play()
 
 		if (this->Playing == true && Playing != AL_PLAYING && this->Paused == false)
 			alSourcePlay(sourceNum);
-		std::this_thread::sleep_for(std::chrono::milliseconds(40));
+		std::this_thread::sleep_for(sleepTime);
 		if (this->Paused || !this->Playing)
 			break;
 	}
@@ -190,7 +195,7 @@ finish:
 			if (this->Playing == true && Playing != AL_PLAYING)
 				alSourcePlay(sourceNum);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+			std::this_thread::sleep_for(sleepTime);
 		}
 	}
 }
