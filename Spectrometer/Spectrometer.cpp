@@ -178,7 +178,7 @@ private:
 
 	void playback()
 	{
-		Spectr->AddTimeout();
+		Spectr->AddTimeout(std::chrono::duration_cast<std::chrono::milliseconds>(p_Playback->bufferTime()).count());
 		p_Playback->Play();
 		Spectr->RemoveTimeout();
 	}
@@ -186,7 +186,6 @@ private:
 	void btnPlayClick()
 	{
 		playThread = std::thread([this](){ playback(); });
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		btnPlay->Disable();
 		btnPause->Enable();
 	}
