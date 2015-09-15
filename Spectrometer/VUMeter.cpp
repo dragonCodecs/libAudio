@@ -1,7 +1,6 @@
-#ifndef _WINDOWS
-#include <inttypes.h>
-#else
-typedef unsigned int uint32_t;
+#include <stdint.h>
+#ifdef _WINDOWS
+#define _WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 #include <GTK++.h>
