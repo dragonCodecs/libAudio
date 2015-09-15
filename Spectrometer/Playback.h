@@ -15,6 +15,7 @@
 #define __CDECL__
 #define __FASTCALL__ inline
 #endif
+#include <chrono>
 
 extern int fseek_wrapper(void *p_file, int64_t offset, int origin);
 extern int GetBuffFmt(int BPS, int Channels);
@@ -39,6 +40,7 @@ private:
 	int nBufferLen;
 	bool Resuming;
 	static bool OpenALInit;
+	std::chrono::nanoseconds sleepTime;
 
 public:
 	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
@@ -48,6 +50,7 @@ public:
 	bool IsPlaying();
 	bool IsPaused();
 	~Playback();
+	const std::chrono::nanoseconds bufferTime() noexcept { return sleepTime; }
 
 protected:
 	bool Playing, Paused;
