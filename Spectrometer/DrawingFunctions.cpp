@@ -112,7 +112,7 @@ void SideBySideVer_Spe(short *Data, int lenData)
 		glBegin(GL_LINE_STRIP);
 			glColor4f(1.0, 1.0, 1.0, 1.0);
 		for (n = 0; n < m / 2; n++)
-			glVertex2d(n, base + log(max(sqrt((opoints[n].re * opoints[n].re) + (opoints[n].im * opoints[n].im)) / 128.0, 1.0)));
+			glVertex2d(n, base + log(max(sqrt(opoints[n].re * opoints[n].re) / 128.0, 1.0)));
 		glEnd();
 	}
 }
@@ -153,7 +153,7 @@ void SideBySideVer_logSpe(short *Data, int lenData)
 		glBegin(GL_LINE_STRIP);
 			glColor4f(1.0, 1.0, 1.0, 1.0);
 		for (n = 0; n < m / 2; n++)
-			glVertex2d(log(n + 1.0), base + log(max(sqrt((opoints[n].re * opoints[n].re) + (opoints[n].im * opoints[n].im)) / 64.0, 1.0)));
+			glVertex2d(log(n + 1.0), base + log(max(sqrt(opoints[n].re * opoints[n].re) / 64.0, 1.0)));
 		glEnd();
 	}
 }
