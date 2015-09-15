@@ -108,6 +108,11 @@ private:
 	 * Static member which holds whether or not OpenAL has been initialised yet or not
 	 */
 	static bool OpenALInit;
+	/*!
+	 * @internal
+	 * Holds the sleep time required to keep accurate timing of playback while not wasting CPU resources
+	 */
+	uint64_t sleepTime;
 
 public:
 	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);

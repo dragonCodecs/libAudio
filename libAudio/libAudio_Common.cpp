@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 /*!
  * @internal
  * @file libAudio_Common.cpp
@@ -10,34 +11,9 @@
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-/*!
- * @internal
- * The Windows definition of a cross-platform sleep function
- */
-#define _usleep _sleep
-#else
-#include <ctype.h>
-#include <time.h>
-/*!
- * @internal
- * The number of Miliseconds in one Second
- */
-#define MSECS_IN_SEC 1000
-/*!
- * @internal
- * The number of Nanoseconds in one Milisecond
- */
-#define NSECS_IN_MSEC 1000000
-/*!
- * @internal
- * The non-Windows definition of a cross-platform sleep function
- */
-#define _usleep(milisec) \
-	{\
-		struct timespec req = {milisec / MSECS_IN_SEC, (milisec % MSECS_IN_SEC) * NSECS_IN_MSEC}; \
-		nanosleep(&req, NULL); \
-	}
 #endif
+#include <chrono>
+#include <thread>
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
@@ -178,11 +154,16 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int n
 	if (p_AudioPtr == NULL)
 		return;
 
+	std::chrono::seconds bufferSize(nBuffLen);
+
 	this->p_FI = p_FI;
 	FillBuffer = DataCallback;
 	buffer = BuffPtr;
 	nBufferLen = nBuffLen;
 	this->p_AudioPtr = p_AudioPtr;
+
+	bufferSize /= p_FI->Channels * (p_FI->BitsPerSample / 8);
+	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize).count() / p_FI->BitRate;
 
 	// Initialize OpenAL ready
 	init();
@@ -294,7 +275,7 @@ void Playback::Play()
 
 		if (Playing != AL_PLAYING)
 			alSourcePlay(sourceNum);
-		_usleep(40);
+		std::this_thread::sleep_for(std::chrono::nanoseconds(sleepTime));
 	}
 
 finish:
@@ -317,7 +298,7 @@ finish:
 
 		if (Playing != AL_PLAYING)
 			alSourcePlay(sourceNum);
-		_usleep(40);
+		std::this_thread::sleep_for(std::chrono::nanoseconds(sleepTime));
 	}
 }
 
