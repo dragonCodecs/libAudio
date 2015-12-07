@@ -3,7 +3,8 @@ include ../Makefile.inc
 PKG_CONFIG_PKGS = openal ogg vorbis vorbisfile vorbisenc flac wavpack
 EXTRA_DEFINE = -DHAVE_STDINT_H -DlibAUDIO -D__NO_OptimFROG__
 EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKG_CONFIG_PKGS))
-CFLAGS = -c $(OPTIM_FLAGS) -pedantic -Wall -Wextra $(EXTRA_CFLAGS) $(EXTRA_DEFINE) -o $@ $<
+CFLAGS = $(OPTIM_FLAGS) -c -Wall -Wextra -pedantic $(EXTRA_CFLAGS) $(EXTRA_DEFINE) -o $@ $<
+DEPFLAGS = $(OPTIM_FLAGS) -E -MM -Wall -Wextra -pedantic $(EXTRA_CFLAGS) $(EXTRA_DEFINE) -o .dep/$*.d $<
 EXTRA_LIBS = $(shell pkg-config --libs $(PKG_CONFIG_PKGS))
 LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -z defs -o $(SO)
@@ -41,9 +42,23 @@ A = libAudio.a
 PC = libAudio.pc
 IN = libAudio.pc.in
 
+DEPS = .dep .dep/moduleMixer .dep/fixedPoint .dep/genericModule
+
 default: all
 
-all: $(SO) $(PC)
+all: $(DEPS) $(SO) $(PC)
+
+.dep:
+	$(call run-cmd,install_dir,.dep)
+
+.dep/moduleMixer:
+	$(call run-cmd,install_dir,.dep/moduleMixer)
+
+.dep/fixedPoint:
+	$(call run-cmd,install_dir,.dep/fixedPoint)
+
+.dep/genericModule:
+	$(call run-cmd,install_dir,.dep/genericModule)
 
 install: all
 	$(call run-cmd,install_dir,$(LIBDIR))
@@ -72,53 +87,59 @@ $(SO): $(O)
 libAudio.pc: $(IN)
 	$(call run-cmd,sed,$(IN),$(PC))
 
-clean:
-	$(call run-cmd,rm,mixIT,mixIT/*.o)
+clean: $(DEPS)
 	$(call run-cmd,rm,moduleMixer,moduleMixer/*.o)
 	$(call run-cmd,rm,fixedPoint,fixedPoint/*.o)
 	$(call run-cmd,rm,genericModule,genericModule/*.o)
 	$(call run-cmd,rm,libAudio,*.o $(SOMAJ)* $(A) $(PC))
+	$(call run-cmd,rm,makedep,.dep/*.d .dep/moduleMixer/*.d .dep/fixedPoint/*.d .dep/genericModule/*.d)
 
 .cpp.o:
-	$(call run-cmd,cxx,$(CFLAGS))
+	$(call makedep,$(CXX),$(DEPFLAGS) -std=c++11)
+	$(call run-cmd,cxx,$(CFLAGS) -std=c++11)
 
 .PHONY: clean libAudio.pc install all uninstall default .cpp.o
 
-loadAudio.o: loadAudio.cpp
-libAudio_Common.o: libAudio_Common.cpp
-libAudio_Common.o: CFLAGS += -std=c++11
-loadOggVorbis.o: loadOggVorbis.cpp
-loadWAV.o: loadWAV.cpp
-loadAAC.o: loadAAC.cpp
-loadM4A.o: loadM4A.cpp
-loadMP3.o: loadMP3.cpp
-loadMPC.o: loadMPC.cpp
-loadFLAC.o: loadFLAC.cpp
-fixedPoint/fixedPoint.o: CFLAGS += -std=c++11
-fixedPoint/fixedPoint.o: fixedPoint/fixedPoint.cpp
-genericModule/ModuleFile.o: genericModule/ModuleFile.cpp
-genericModule/ModuleHeader.o: genericModule/ModuleHeader.cpp
-genericModule/ModuleSample.o: genericModule/ModuleSample.cpp
-genericModule/ModulePattern.o: genericModule/ModulePattern.cpp
-genericModule/ModuleEffects.o: genericModule/ModuleEffects.cpp
-loadMOD.o: loadMOD.cpp
-moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp moduleMixer/mixFunctions.h moduleMixer/mixFunctionTables.h moduleMixer/waveTables.h \
-	moduleMixer/frequencyTables.h moduleMixer/moduleMixer.h
-loadSNDH.o: loadSNDH.cpp
-loadS3M.o: loadS3M.cpp
-loadSTM.o: loadSTM.cpp
-loadAON.o: loadAON.cpp
-loadFC1x.o: loadFC1x.cpp
+-include .dep/*.d
+-include .dep/moduleMixer/*.d
+-include .dep/fixedPoint/*.d
+-include .dep/genericModule/*.d
+
+#loadAudio.o: loadAudio.cpp
+#libAudio_Common.o: libAudio_Common.cpp
+#libAudio_Common.o: CFLAGS += -std=c++11
+#loadOggVorbis.o: loadOggVorbis.cpp
+#loadWAV.o: loadWAV.cpp
+#loadAAC.o: loadAAC.cpp
+#loadM4A.o: loadM4A.cpp
+#loadMP3.o: loadMP3.cpp
+#loadMPC.o: loadMPC.cpp
+#loadFLAC.o: loadFLAC.cpp
+#fixedPoint/fixedPoint.o: CFLAGS += -std=c++11
+#fixedPoint/fixedPoint.o: fixedPoint/fixedPoint.cpp
+#genericModule/ModuleFile.o: genericModule/ModuleFile.cpp
+#genericModule/ModuleHeader.o: genericModule/ModuleHeader.cpp
+#genericModule/ModuleSample.o: genericModule/ModuleSample.cpp
+#genericModule/ModulePattern.o: genericModule/ModulePattern.cpp
+#genericModule/ModuleEffects.o: genericModule/ModuleEffects.cpp
+#loadMOD.o: loadMOD.cpp
+#moduleMixer/moduleMixer.o: moduleMixer/moduleMixer.cpp moduleMixer/mixFunctions.h moduleMixer/mixFunctionTables.h moduleMixer/waveTables.h \
+#	moduleMixer/frequencyTables.h moduleMixer/moduleMixer.h
+#loadSNDH.o: loadSNDH.cpp
+#loadS3M.o: loadS3M.cpp
+#loadSTM.o: loadSTM.cpp
+#loadAON.o: loadAON.cpp
+#loadFC1x.o: loadFC1x.cpp
 #loadIT.o: loadIT.cpp
 #mixIT/mixIT.o: mixIT/mixIT.cpp
-loadSID.o: loadSID.cpp
-loadWavPack.o: loadWavPack.cpp
-loadOptimFROG.o: loadOptimFROG.cpp
-loadShorten.o: loadShorten.cpp
-loadRealAudio.o: loadRealAudio.cpp
-loadWMA.o: loadWMA.cpp
+#loadSID.o: loadSID.cpp
+#loadWavPack.o: loadWavPack.cpp
+#loadOptimFROG.o: loadOptimFROG.cpp
+#loadShorten.o: loadShorten.cpp
+#loadRealAudio.o: loadRealAudio.cpp
+#loadWMA.o: loadWMA.cpp
 
-saveAudio.o: saveAudio.cpp
-saveOggVorbis.o: saveOggVorbis.cpp
-saveFLAC.o: saveFLAC.cpp
-saveM4A.o: saveM4A.cpp
+#saveAudio.o: saveAudio.cpp
+#saveOggVorbis.o: saveOggVorbis.cpp
+#saveFLAC.o: saveFLAC.cpp
+#saveM4A.o: saveM4A.cpp
