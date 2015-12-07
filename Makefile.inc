@@ -27,10 +27,13 @@ export quiet Q BUILD_VERBOSE
 
 endif
 
+quiet_cmd_cc = " CC    $@"
+cmd_cc = $(CC) $(2)
 quiet_cmd_cxx = " CXX   $@"
-cmd_cxx = $(CC) $(2)
+cmd_cxx = $(CXX) $(2)
 quiet_cmd_ccld = " CCLD  $@"
 cmd_ccld = $(CC) $(2)
+cmd_makedep = $(1) $(2)
 quiet_cmd_strip = " STRIP $@"
 cmd_strip = $(STRIP) $(1)
 quiet_cmd_ar = " AR    $(2)"
@@ -61,8 +64,18 @@ define run-cmd
 	@$(cmd_$(1))
 endef
 
+define makedep
+	@if [ -z "$(quiet)" ]; then \
+		echo $(cmd_makedep); \
+	fi
+	@$(cmd_makedep)
+	@if [ "$(dir $<)" != "./" ]; then \
+		sed -i "s|^$(notdir $@):|$@:|" .dep/$*.d; \
+	fi
+endef
+
 define debug-strip
-	$(Q)if [ $(DEBUG) -eq 0 ]; then \
+	@if [ $(DEBUG) -eq 0 ]; then \
 		echo $($(quiet)cmd_strip); \
 		$(cmd_strip); \
 	fi
@@ -77,6 +90,7 @@ endef
 
 # Set up build engine variables
 GCC ?= gcc
+GXX ?= g++
 ifeq ($(strip $(DEBUG)), 1)
 	OPTIM_FLAGS = -ggdb
 	GCC_FLAGS = 
@@ -90,7 +104,8 @@ else
 	OPTIM_FLAGS = -O2
 	DEBUG = 0
 endif
-CC = $(GCC) $(GCC_FLAGS)
+CC = $(GCC)
+CXX = $(GXX) $(GCC_FLAGS)
 CHMOD = chmod 0755
 STRIP = strip -x
 RM = rm -f
@@ -99,7 +114,8 @@ RANLIB = ranlib
 LN = ln -sfT
 INSTALL = install
 INSTALL_FILE = install -m644
+INSTALL_EXE = install -m755
 INSTALL_DIR = mkdir -p
 UID = $(shell id -u)
 
-export GCC DEBUG UID
+export GCC GXX DEBUG UID

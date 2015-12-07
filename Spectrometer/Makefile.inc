@@ -91,7 +91,7 @@ endef
 GCC ?= gcc
 GXX ?= g++
 ifeq ($(strip $(DEBUG)), 1)
-	OPTIM_FLAGS = -Og -ggdb
+	OPTIM_FLAGS = -ggdb
 	GCC_FLAGS = 
 else
 	GCC_VER = $(shell gcc -dumpversion | cut -d . -f 1)
@@ -117,4 +117,4 @@ INSTALL_EXE = install -m755
 INSTALL_DIR = mkdir -p
 UID = $(shell id -u)
 
-export GCC DEBUG UID
+export GCC GXX DEBUG UID
