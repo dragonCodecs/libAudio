@@ -277,7 +277,9 @@ void DeinitialiseTables()
 		p += chn->Pos; \
 	int32_t *vol = Buff; \
 	do \
-	{
+	{ \
+		if (int32_t(chn->Pos + (Pos >> 16)) < 0) \
+			break;
 
 #define SNDMIX_ENDSAMPLELOOP \
 		Pos += Increment; \
