@@ -659,6 +659,23 @@ inline int ModuleFile::PatternLoop(uint32_t param)
 	return -1;
 }
 
+inline void ModuleFile::FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint8_t, const uint8_t))
+{
+	if (param == 0)
+		param = channel->FineVolumeSlide;
+	else
+		channel->FineVolumeSlide = param;
+
+	if (TickCount == channel->StartTick)
+	{
+		uint16_t NewVolume = op(channel->RawVolume, param << 1);
+		if (ModuleType == MODULE_MOD)
+			channel->Flags |= CHN_FASTVOLRAMP;
+		clipInt<uint16_t>(NewVolume, 0, 128);
+		channel->RawVolume = uint8_t(NewVolume);
+	}
+}
+
 inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 {
 	uint16_t NewVolume;
@@ -670,19 +687,19 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	NewVolume = channel->RawVolume;
 
 	// TODO: Complete recode to take into account S3M FineVolume slides
-	if (ModuleType == MODULE_S3M || ModuleType == MODULE_STM)
+	if (ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT)
 	{
 		if ((param & 0x0F) == 0x0F)
 		{
 			if ((param & 0xF0) != 0)
-				return; // FineVolumeUp(channel, param >> 4);
+				return FineVolumeSlide(channel, param >> 4, [](const uint8_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return uint16_t(Volume) + Adjust; });
 			else if (TickCount > channel->StartTick)
 				NewVolume -= 0x1E; //0x0F * 2;
 		}
 		else if ((param & 0xF0) == 0xF0)
 		{
 			if ((param & 0x0F) != 0)
-				return; // FineVolumeDown(channel, param & 0x0F);
+				return FineVolumeSlide(channel, param >> 4, [](const uint8_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return uint16_t(Volume) - Adjust; });
 			else if (TickCount > channel->StartTick)
 				NewVolume += 0x1E; //0x0F * 2;
 		}
@@ -690,14 +707,14 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 
 	if (TickCount > channel->StartTick)
 	{
-		if ((param & 0xF0) != 0)
+		if ((param & 0xF0) != 0 && (param & 0x0F) == 0)
 			NewVolume += (param & 0xF0) >> 3;
-		else
+		else if ((param & 0x0F) != 0 && (param & 0xF0) == 0)
 			NewVolume -= (param & 0x0F) << 1;
 		if (ModuleType == MODULE_MOD)
 			channel->Flags |= CHN_FASTVOLRAMP;
 		clipInt<uint16_t>(NewVolume, 0, 128);
-		channel->RawVolume = NewVolume & 0xFF;
+		channel->RawVolume = uint8_t(NewVolume);
 	}
 }
 

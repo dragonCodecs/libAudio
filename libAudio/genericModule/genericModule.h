@@ -489,8 +489,9 @@ public:
 	uint8_t Note, RampLength;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
-	uint8_t RawVolume, Volume, VolumeSlide, AutoVibratoPos;
+	uint8_t RawVolume, Volume, VolumeSlide, FineVolumeSlide;
 	uint8_t ChannelVolume, ChannelVolumeSlide;
+	uint8_t AutoVibratoPos, reserved;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
 	uint8_t FineTune, PanningSlide;
@@ -558,6 +559,7 @@ private:
 
 	// Effects functions
 	void VolumeSlide(Channel *channel, uint8_t param);
+	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint8_t, const uint8_t));
 	void ChannelVolumeSlide(Channel *channel, uint8_t param);
 	void GlobalVolumeSlide(uint8_t param);
 	void PanningSlide(Channel *channel, uint8_t param);
