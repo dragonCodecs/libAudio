@@ -14,6 +14,7 @@
 #define CHN_NOTEOFF			0x0400
 #define CHN_NOTEFADE		0x0800
 #define CHN_LPINGPONG		0x1000
+#define CHN_FPINGPONG		0x2000
 #define CHN_SURROUND		0x4000
 
 template<typename T> inline void clipInt(T &num, const T min, const T max)
