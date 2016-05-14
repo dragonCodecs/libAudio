@@ -245,14 +245,16 @@ void ModuleCommand::SetAONEffect(uint8_t effect, uint8_t param)
 			break;
 		case 21:
 			Effect = CMD_
-			break;
+			break;*/
 		case 22:
-			Effect = CMD_
+			Effect = CMD_TONEPORTAVOLUP;
+			Param = param;
 			break;
 		case 23:
-			Effect = CMD_
+			Effect = CMD_TONEPORTAVOLDOWN;
+			Param = param;
 			break;
-		case 24:
+		/*case 24:
 			Effect = CMD_
 			break;
 		case 25:
