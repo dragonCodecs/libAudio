@@ -277,9 +277,7 @@ void DeinitialiseTables()
 		p += chn->Pos; \
 	int32_t *vol = Buff; \
 	do \
-	{ \
-		if (int32_t(chn->Pos + (Pos >> 16)) < 0) \
-			break;
+	{
 
 #define SNDMIX_ENDSAMPLELOOP \
 		Pos += Increment; \
@@ -443,8 +441,8 @@ void DeinitialiseTables()
 
 // Stereo
 #define SNDMIX_GETSTEREOVOLNOIDO(shift) \
-	int pcmL = p[((Pos >> 16) * 2) + 0] shift; \
-	int pcmR = p[((Pos >> 16) * 2) + 1] shift;
+	int pcmL = p[((Pos >> 16) << 1) + 0] shift; \
+	int pcmR = p[((Pos >> 16) << 1) + 1] shift;
 
 #define SNDMIX_GETSTEREOVOLNOIDO8 \
 	SNDMIX_GETSTEREOVOLNOIDO(<< 7)

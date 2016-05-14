@@ -1812,8 +1812,7 @@ bool ModuleFile::AdvanceTick()
 
 uint32_t Channel::GetSampleCount(uint32_t samples)
 {
-	uint32_t deltaHi, deltaLo, maxSamples;
-	uint32_t pos, posLo, sampleCount;
+	uint32_t deltaHi, deltaLo, maxSamples, sampleCount;
 	uint32_t loopStart = ((Flags & CHN_LOOP) != 0 ? LoopStart : 0);
 	int16dot16 increment = Increment;
 	if (samples == 0 || Increment.iValue == 0 || Length == 0)
@@ -1827,7 +1826,7 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 		if (increment.iValue < 0)
 		{
 			int delta = ((loopStart - Pos) << 16) - (PosLo & 0xFFFF);
-			Pos = loopStart | (delta >> 16);
+			Pos = loopStart + (delta >> 16);
 			PosLo = delta & 0xFFFF;
 			if (Pos < loopStart || Pos >= (loopStart + Length) / 2)
 			{
@@ -1843,9 +1842,6 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 				return 0;
 			}
 		}
-		// In theory this can't happen, and the compiler tells us this too.. need to work out if theory matches practice.
-		else if (Pos < 0)
-			Pos = 0;
 	}
 	else if (Pos >= Length)
 	{
@@ -1877,15 +1873,13 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 				Pos = loopStart;
 		}
 	}
-	pos = Pos;
-	if (pos < loopStart)
+	if (Pos < loopStart)
 	{
-		if (pos < 0 || Increment.iValue < 0)
+		if ((Pos & 0x80000000) || Increment.iValue < 0)
 			return 0;
 	}
-	if (pos < 0 || pos >= Length)
+	if ((Pos & 0x80000000) || Pos >= Length)
 		return 0;
-	posLo = PosLo;
 	sampleCount = samples;
 	if (increment.iValue < 0)
 		increment.iValue = -increment.iValue;
@@ -1898,15 +1892,21 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 	deltaLo = increment.Value.Lo * (samples - 1);
 	if (Increment.iValue < 0)
 	{
-		uint32_t posDest = pos - deltaHi - ((deltaLo - posLo) >> 16);
-		if (posDest < loopStart)
-			sampleCount = (((pos - loopStart) << 16) + posLo) / increment.iValue;
+		uint32_t posDest = Pos - deltaHi - ((deltaLo - PosLo) >> 16);
+		if (posDest & 0x80000000 || posDest < loopStart)
+		{
+			sampleCount = (((Pos - loopStart) << 16) + PosLo) / increment.iValue;
+			++sampleCount;
+		}
 	}
 	else
 	{
-		uint32_t posDest = pos + deltaHi + ((deltaLo + posLo) >> 16);
+		uint32_t posDest = Pos + deltaHi + ((deltaLo + PosLo) >> 16);
 		if (posDest >= Length)
-			sampleCount = (((Length - pos) << 16) - posLo) / increment.iValue;
+		{
+			sampleCount = (((Length - Pos) << 16) - PosLo) / increment.iValue;
+			++sampleCount;
+		}
 	}
 	if (sampleCount <= 1)
 		return 1;
