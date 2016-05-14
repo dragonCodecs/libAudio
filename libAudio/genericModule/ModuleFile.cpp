@@ -118,7 +118,7 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments
 ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	char StrMagic[4];
-	uint32_t BlockLen, i, SampleLengths;
+	uint32_t BlockLen, i, SampleLengths, InstrPos, PCMPos;
 	uint8_t ChannelMul;
 	FILE *f_AON = p_AF->f_Module;
 
@@ -143,8 +143,8 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	BlockLen = Swap32(BlockLen);
 	if (strncmp(StrMagic, "INST", 4) != 0 || (BlockLen % 32) != 0)
 		throw new ModuleLoaderError(E_BAD_AON);
-	p_Header->nInstruments = BlockLen >> 5;
-	// TODO: Write instrument stuff up for main mixer to allow this to work
+	p_Header->nSamples = BlockLen >> 5;
+	InstrPos = ftell(f_AON);
 	fseek(f_AON, BlockLen, SEEK_CUR);
 
 	fread(StrMagic, 4, 1, f_AON);
@@ -160,14 +160,25 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	}
 	if (strncmp(StrMagic, "WLEN", 4) != 0 || BlockLen != 0x0100)
 		throw new ModuleLoaderError(E_BAD_AON);
-	p_Header->nSamples = BlockLen >> 2;
-	p_Samples = new ModuleSample *[64];
+	LengthPCM = new uint32_t[64];
 	for (i = 0, SampleLengths = 0; i < 64; i++)
 	{
-		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, NULL);
-		SampleLengths += p_Samples[i]->GetLength();
+		fread(LengthPCM + i, 4, 1, f_AON);
+		LengthPCM[i] = Swap32(LengthPCM[i]);
+		SampleLengths += LengthPCM[i];
+		if (LengthPCM[i] != 0)
+			nPCM = i + 1;
+	}
+	PCMPos = ftell(f_AON);
+
+	p_Samples = new ModuleSample *[p_Header->nSamples];
+	for (i = 0; i < p_Header->nSamples; i++)
+	{
+		fseek(f_AON, InstrPos + (i << 5), SEEK_SET);
+		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, nullptr, LengthPCM);
 	}
 
+	fseek(f_AON, PCMPos, SEEK_SET);
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&BlockLen, 4, 1, f_AON);
 	BlockLen = Swap32(BlockLen);

@@ -61,9 +61,9 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 	}
 	//ret->Channels = p_AF->p_File->GetChannels();
 
-	//if (ExternalPlayback == 0)
-	//	p_AF->p_Playback = new Playback(ret, AON_FillBuffer, p_AF->buffer, 8192, p_AONFile);
-	//p_AF->p_File->InitMixer(ret);
+	if (ExternalPlayback == 0)
+		p_AF->p_Playback = new Playback(ret, AON_FillBuffer, p_AF->buffer, 8192, p_AONFile);
+	p_AF->p_File->InitMixer(ret);
 
 	return ret;
 }
@@ -105,7 +105,7 @@ void AON_Play(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	//p_AF->p_Playback->Play();
+	p_AF->p_Playback->Play();
 }
 
 void AON_Pause(void *p_AONFile)
