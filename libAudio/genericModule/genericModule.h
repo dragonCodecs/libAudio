@@ -563,7 +563,7 @@ private:
 
 	// Effects functions
 	void VolumeSlide(Channel *channel, uint8_t param);
-	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint8_t, const uint8_t));
+	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t));
 	void ChannelVolumeSlide(Channel *channel, uint8_t param);
 	void GlobalVolumeSlide(uint8_t param);
 	void PanningSlide(Channel *channel, uint8_t param);

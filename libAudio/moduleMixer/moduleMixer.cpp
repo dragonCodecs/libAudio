@@ -659,7 +659,7 @@ inline int ModuleFile::PatternLoop(uint32_t param)
 	return -1;
 }
 
-inline void ModuleFile::FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint8_t, const uint8_t))
+inline void ModuleFile::FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t))
 {
 	if (param == 0)
 		param = channel->FineVolumeSlide;
@@ -686,20 +686,19 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 		channel->VolumeSlide = param;
 	NewVolume = channel->RawVolume;
 
-	// TODO: Complete recode to take into account S3M FineVolume slides
 	if (ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT)
 	{
 		if ((param & 0x0F) == 0x0F)
 		{
 			if ((param & 0xF0) != 0)
-				return FineVolumeSlide(channel, param >> 4, [](const uint8_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return uint16_t(Volume) + Adjust; });
+				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume + Adjust; });
 			else if (TickCount > channel->StartTick)
 				NewVolume -= 0x1E; //0x0F * 2;
 		}
 		else if ((param & 0xF0) == 0xF0)
 		{
 			if ((param & 0x0F) != 0)
-				return FineVolumeSlide(channel, param >> 4, [](const uint8_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return uint16_t(Volume) - Adjust; });
+				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume - Adjust; });
 			else if (TickCount > channel->StartTick)
 				NewVolume += 0x1E; //0x0F * 2;
 		}
