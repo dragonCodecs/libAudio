@@ -3,7 +3,7 @@
 #include "genericModule.h"
 #include <stdlib.h>
 
-uint16_t Periods[60] =
+static const uint16_t Periods[60] =
 {
 	1712, 1616, 1525, 1440, 1357, 1281, 1209, 1141, 1077, 1017, 961, 907,
 	856, 808, 762, 720, 678, 640, 604, 570, 538, 508, 480, 453,

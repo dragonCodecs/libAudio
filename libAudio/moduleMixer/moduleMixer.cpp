@@ -74,7 +74,7 @@ void ModuleFile::DeinitMixer()
 void ModuleFile::ResetChannelPanning()
 {
 	uint8_t i;
-	if (ModuleType == MODULE_MOD)
+	if (ModuleType == MODULE_MOD || ModuleType == MODULE_AON)
 	{
 		for (i = 0; i < p_Header->nChannels; i++)
 		{
@@ -1736,6 +1736,7 @@ bool ModuleFile::AdvanceTick()
 			}
 			else
 				channel->NewLeftVol = channel->NewRightVol = channel->Volume;
+
 			channel->RightRamp = channel->LeftRamp = 0;
 			// Do we need to ramp the volume up or down?
 			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->LeftVol != channel->NewLeftVol || channel->RightVol != channel->NewRightVol))

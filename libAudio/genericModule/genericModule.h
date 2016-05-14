@@ -167,12 +167,13 @@ private:
 
 protected:
 	ModuleSample(uint32_t ID, uint8_t Type);
+	void ResetID(uint32_t ID);
 
 public:
 	static ModuleSample *LoadSample(MOD_Intern *p_MF, uint32_t i);
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
-	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name);
+	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
 	static ModuleSample *LoadSample(IT_Intern *p_IF, uint32_t i);
 
 	virtual ~ModuleSample();
@@ -223,7 +224,7 @@ public:
 	ModuleSampleNative(MOD_Intern *p_MF, uint32_t i);
 	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
 	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
-	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name);
+	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
 	ModuleSampleNative(IT_Intern *p_IF, uint32_t i);
 	~ModuleSampleNative();
 
@@ -540,6 +541,8 @@ private:
 	ModulePattern **p_Patterns;
 	ModuleInstrument **p_Instruments;
 	uint8_t **p_PCM;
+	uint32_t *LengthPCM;
+	uint32_t nPCM;
 
 	// Mixer info
 	uint32_t MixSampleRate, MixBitsPerSample;

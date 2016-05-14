@@ -254,12 +254,18 @@ ModuleFile::~ModuleFile()
 
 	DeinitMixer();
 
-	for (i = 0; i < p_Header->nSamples; i++)
+	delete [] LengthPCM;
+	if (ModuleType != MODULE_AON)
+		nPCM = p_Header->nSamples;
+	for (i = 0; i < nPCM; i++)
 		delete [] p_PCM[i];
 	delete [] p_PCM;
 	for (i = 0; i < p_Header->nPatterns; i++)
 		delete p_Patterns[i];
 	delete [] p_Patterns;
+	for (i = 0; i < p_Header->nInstruments; i++)
+		delete p_Instruments[i];
+	delete [] p_Instruments;
 	for (i = 0; i < p_Header->nSamples; i++)
 		delete p_Samples[i];
 	delete [] p_Samples;
@@ -386,17 +392,17 @@ void ModuleFile::STMLoadPCM(FILE *f_STM)
 void ModuleFile::AONLoadPCM(FILE *f_AON)
 {
 	uint32_t i;
-	p_PCM = new uint8_t *[64];
-	for (i = 0; i < 64; i++)
+	p_PCM = new uint8_t *[nPCM];
+	for (i = 0; i < nPCM; i++)
 	{
-		uint32_t Length = p_Samples[i]->GetLength();
+		uint32_t Length = LengthPCM[i];
 		if (Length != 0)
 		{
 			p_PCM[i] = new uint8_t[Length];
 			fread(p_PCM[i], Length, 1, f_AON);
 		}
 		else
-			p_PCM[i] = NULL;
+			p_PCM[i] = nullptr;
 	}
 }
 

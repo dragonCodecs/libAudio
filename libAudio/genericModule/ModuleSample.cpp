@@ -1,6 +1,7 @@
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
 #include "genericModule.h"
+#include <stdlib.h>
 
 ModuleSample::ModuleSample(uint32_t id, uint8_t type) : Type(type), ID(id)
 {
@@ -8,6 +9,11 @@ ModuleSample::ModuleSample(uint32_t id, uint8_t type) : Type(type), ID(id)
 
 ModuleSample::~ModuleSample()
 {
+}
+
+void ModuleSample::ResetID(uint32_t id)
+{
+	ID = id;
 }
 
 ModuleSample *ModuleSample::LoadSample(MOD_Intern *p_MF, uint32_t i)
@@ -30,9 +36,9 @@ ModuleSample *ModuleSample::LoadSample(STM_Intern *p_SF, uint32_t i)
 	return new ModuleSampleNative(p_SF, i);
 }
 
-ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name)
+ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths)
 {
-	return new ModuleSampleNative(p_AF, i, Name);
+	return new ModuleSampleNative(p_AF, i, Name, pcmLengths);
 }
 
 ModuleSample *ModuleSample::LoadSample(IT_Intern *p_IF, uint32_t i)
@@ -191,13 +197,108 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
-ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name, uint32_t *pcmLengths) : ModuleSample(i, 1), Name(name)
 {
+	uint8_t Type, ID;
 	FILE *f_AON = p_AF->f_Module;
 
-	Name = name;
-	fread(&Length, 4, 1, f_AON);
-	Length = Swap32(Length);
+	fread(&Type, 1, 1, f_AON);
+	fread(&Volume, 1, 1, f_AON);
+	fread(&FineTune, 1, 1, f_AON);
+	fread(&ID, 1, 1, f_AON);
+	ResetID(ID);
+	Length = pcmLengths[ID];
+	SampleFlags = 0;
+
+	printf("%u(%u, %u) => %u, %u - ", ID, i, Type, Length, FineTune);
+	if (Type == 0)
+	{
+		uint32_t SampleStart, SampleLen;
+		VibratoSpeed = VibratoDepth = VibratoType = 0;
+
+		fread(&SampleStart, 4, 1, f_AON);
+		SampleStart = Swap32(SampleStart) << 1;
+		fread(&SampleLen, 4, 1, f_AON);
+		Length = Swap32(SampleLen) << 1;
+		fread(&LoopStart, 4, 1, f_AON);
+		LoopStart = Swap32(LoopStart) << 1;
+		fread(&LoopEnd, 4, 1, f_AON);
+		LoopEnd = (Swap32(LoopEnd) << 1) + LoopStart;
+		if (LoopEnd == 2)
+			LoopEnd = LoopStart = 0;
+		if (LoopEnd != LoopStart)
+			SampleFlags |= SAMPLE_FLAGS_LOOP;
+		printf("%u, %u, %u, %u(%u)", SampleStart, Length, LoopStart, LoopEnd, LoopEnd - LoopStart);
+	}
+	else if (Type == 1)
+	{
+		uint8_t LoopLen, Const;
+		/*
+		; Wavetable 8 bit
+		synth8_partwaveDmaLen	rs.b	1	; in words (--> up to 512 bytes)
+
+		rs.b	1	; Unused
+		rs.b	1
+		rs.b	1
+		rs.b	1
+		rs.b	1
+
+		synth8_VIBpara		rs.b	1	; the same param. like with effect '4'
+		synth8_vibdelay		rs.b	1	; framecnt
+		synth8_vibwave		rs.b	1	; sine,triangle,rectangle
+		synth8_WAVEspd		rs.b	1	; framecnt
+		synth8_WAVElen		rs.b	1
+		synth8_WAVErep		rs.b	1
+		synth8_WAVEreplen	rs.b	1
+		synth8_WAVErepCtrl	rs.b	1	; 0=Repeatnormal/1=Backwards/1=PingPong
+
+		rsset	32-4
+		instr_Astart		rs.b	1	; Vol_startlevel
+		instr_Aadd			rs.b	1	; Zeit bis maximalLevel
+		instr_Aend			rs.b	1	; Vol_endlevel
+		instr_Asub			rs.b	1	; Zeit bis endlevel
+		*/
+
+		fread(&LoopLen, 1, 1, f_AON);
+		for (uint8_t i = 0; i < 9; ++i)
+			fread(&Const, 1, 1, f_AON);
+		fread(&VibratoDepth, 1, 1, f_AON);
+		fread(&VibratoSpeed, 1, 1, f_AON);
+		fread(&VibratoType, 1, 1, f_AON);
+		for (uint8_t i = 0; i < 4; ++i)
+		{
+			fread(&Const, 1, 1, f_AON);
+			printf("%u, ", Const);
+		}
+		fread(&Const, 0, 0, f_AON);
+		if (Const == 1)
+			SampleFlags |= SAMPLE_FLAGS_LREVERSE;
+		else if (Const == 2)
+			SampleFlags |= SAMPLE_FLAGS_LPINGPONG;
+		for (uint8_t i = 0; i < 11; ++i)
+			fread(&Const, 1, 1, f_AON);
+		fread(&Const, 1, 1, f_AON);
+		fread(&Const, 1, 1, f_AON);
+		fread(&Const, 1, 1, f_AON);
+		fread(&Const, 1, 1, f_AON);
+
+		printf("%u, %u", FineTune, LoopLen);
+		if (LoopEnd != LoopStart)
+			SampleFlags |= SAMPLE_FLAGS_LOOP;
+		if (VibratoType == 3)
+			VibratoSpeed = VibratoDepth = 0;
+		Length = 0; // For the sec as we process the wavtable data completely wrong..
+	}
+	if (Volume > 64)
+		Volume = 64;
+	printf("\n");
+
+	/********************************************\
+	|* The following block just initialises the *|
+	|* unused fields to harmless values.        *|
+	\********************************************/
+	C4Speed = 8363;
+	VibratoRate = 0;
 }
 
 ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSample(i, 1)
