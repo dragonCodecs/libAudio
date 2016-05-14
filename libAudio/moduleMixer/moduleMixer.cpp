@@ -53,6 +53,14 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 		Channels = new Channel[p_Header->nChannels]();
 		MixerChannels = new uint32_t[p_Header->nChannels];
 	}
+
+	for (uint8_t i = 0; i < p_Header->nChannels; ++i)
+	{
+		if (i >= 64)
+			break;
+		Channels[i].ChannelVolume = p_Header->Volumes[i];
+	}
+
 	Rows = 2;
 	ResetChannelPanning();
 	InitialiseTables();
