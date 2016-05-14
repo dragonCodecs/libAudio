@@ -78,17 +78,17 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	\********************************************/
 	Packing = 0;
 	C4Speed = 8363;
-	FileName = NULL;
+	FileName = nullptr;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
-#define fread_24bit(Dest, File) \
-{ \
-	uint16_t P1; \
-	uint8_t P2; \
-	fread(&P2, 1, 1, File); \
-	fread(&P1, 2, 1, File); \
-	Dest = (((uint32_t)P2) << 16) | P1; \
+void fread_24bit(uint32_t &dest, FILE *file) noexcept
+{
+	uint16_t P1;
+	uint8_t P2;
+	fread(&P2, 1, 1, file);
+	fread(&P1, 2, 1, file);
+	dest = (uint32_t(P2) << 16) | P1;
 }
 
 ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t type) : ModuleSample(i, type)
@@ -186,7 +186,7 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	Packing = SampleFlags = 0;
-	Name = NULL;
+	Name = nullptr;
 	FineTune = 0;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }

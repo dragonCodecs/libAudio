@@ -22,7 +22,7 @@ void *ModuleAllocator::operator new[](size_t size)
 	return ret;
 }
 
-ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint32_t i, maxPattern;
 	FILE *f_MOD = p_MF->f_Module;
@@ -52,7 +52,7 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint16_t i, *SamplePtrs, *PatternPtrs;
 	FILE *f_S3M = p_SF->f_Module;
@@ -92,7 +92,7 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 	MaxPeriod = 32767;
 }
 
-ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint32_t i;
 	FILE *f_STM = p_SF->f_Module;
@@ -114,7 +114,8 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments
 
 // http://www.tigernt.com/onlineDoc/68000.pdf
 // http://eab.abime.net/showthread.php?t=21516
-ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
+// ftp://ftp.modland.com/pub/documents/format_documentation/Art%20Of%20Noise%20(.aon).txt
+ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	char StrMagic[4];
 	uint32_t BlockLen, i, SampleLengths;
@@ -178,7 +179,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 #ifdef __FC1x_EXPERIMENTAL__
 //	FILE *f_FC1x = p_FF->f_Module;
@@ -187,7 +188,7 @@ ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instrumen
 #endif
 }
 
-ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(NULL), Channels(NULL), MixerChannels(NULL)
+ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint16_t i;
 	uint32_t *SamplePtrs, *PatternPtrs;
@@ -234,7 +235,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(N
 	for (i = 0; i < p_Header->nPatterns; i++)
 	{
 		if (PatternPtrs[i] == 0)
-			p_Patterns[i] = NULL;
+			p_Patterns[i] = nullptr;
 		else
 		{
 			fseek(f_IT, PatternPtrs[i], SEEK_SET);
@@ -267,22 +268,22 @@ ModuleFile::~ModuleFile()
 
 const char *ModuleFile::GetTitle()
 {
-	if (p_Header->Name == NULL)
-		return NULL;
+	if (p_Header->Name == nullptr)
+		return nullptr;
 	return strdup(p_Header->Name);
 }
 
 const char *ModuleFile::GetAuthor()
 {
-	if (p_Header->Author == NULL)
-		return NULL;
+	if (p_Header->Author == nullptr)
+		return nullptr;
 	return strdup(p_Header->Author);
 }
 
 const char *ModuleFile::GetRemark()
 {
-	if (p_Header->Remark == NULL)
-		return NULL;
+	if (p_Header->Remark == nullptr)
+		return nullptr;
 	return strdup(p_Header->Remark);
 }
 
@@ -321,11 +322,11 @@ void ModuleFile::MODLoadPCM(FILE *f_MOD)
 					p_PCM[i][(j * 2) + 1] = delta;
 				}
 				free(compressionTable);
-				compBuffer = compressionTable = NULL;
+				compBuffer = compressionTable = nullptr;
 			}*/
 		}
 		else
-			p_PCM[i] = NULL;
+			p_PCM[i] = nullptr;
 	}
 }
 
@@ -360,7 +361,7 @@ void ModuleFile::S3MLoadPCM(FILE *f_S3M)
 			}
 		}
 		else
-			p_PCM[i] = NULL;
+			p_PCM[i] = nullptr;
 	}
 }
 
@@ -378,7 +379,7 @@ void ModuleFile::STMLoadPCM(FILE *f_STM)
 			fseek(f_STM, Length % 16, SEEK_CUR);
 		}
 		else
-			p_PCM[i] = NULL;
+			p_PCM[i] = nullptr;
 	}
 }
 
@@ -609,7 +610,7 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 		uint32_t Length = p_Samples[i]->GetLength() << ((Sample->Get16Bit() ? 1 : 0) + (Sample->GetStereo() ? 1 : 0));
 		if ((Sample->Flags & 0x01) == 0)
 		{
-			p_PCM[i] = NULL;
+			p_PCM[i] = nullptr;
 			continue;
 		}
 		p_PCM[i] = new uint8_t[Length];

@@ -65,10 +65,10 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 	Separation = 128;
 	InitialSpeed = 6;
 	InitialTempo = 125;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
-	Panning = NULL;
-	Author = NULL;
-	Remark = NULL;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
+	Panning = nullptr;
+	Author = nullptr;
+	Remark = nullptr;
 }
 
 ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
@@ -136,7 +136,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 		}
 	}
 	else
-		Panning = NULL;
+		Panning = nullptr;
 
 	/********************************************\
 	|* The following block just initialises the *|
@@ -145,9 +145,9 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	RestartPos = 255;
 	Separation = 128;
 	nInstruments = 0;
-	InstrumentPtrs = NULL;
-	Author = NULL;
-	Remark = NULL;
+	InstrumentPtrs = nullptr;
+	Author = nullptr;
+	Remark = nullptr;
 }
 
 ModuleHeader::ModuleHeader(STM_Intern *p_SF)
@@ -197,9 +197,9 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF)
 	RestartPos = 255;
 	InitialTempo = 125;
 	nInstruments = 0;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
-	Author = NULL;
-	Remark = NULL;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
+	Author = nullptr;
+	Remark = nullptr;
 }
 
 ModuleHeader::ModuleHeader(AON_Intern *p_AF)
@@ -255,7 +255,7 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 		Remark[BlockLen] = 0;
 	}
 	else
-		Remark = NULL;
+		Remark = nullptr;
 
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&BlockLen, 4, 1, f_AON);
@@ -311,8 +311,8 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	Separation = 128;
 	InitialSpeed = 6;
 	InitialTempo = 125;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
-	Panning = NULL;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
+	Panning = nullptr;
 }
 
 #ifdef __FC1x_EXPERIMENTAL__
@@ -343,13 +343,13 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Name = NULL;
+	Name = nullptr;
 	RestartPos = 255;
 	nInstruments = 0;
 	Separation = 128;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = NULL;
-	Author = NULL;
-	Remark = NULL;
+	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
+	Author = nullptr;
+	Remark = nullptr;
 }
 #endif
 
@@ -428,7 +428,8 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	\********************************************/
 	RestartPos = 255;
 	Separation = 128;
-	Author = NULL;
+	Author = nullptr;
+	Remark = nullptr;
 }
 
 ModuleHeader::~ModuleHeader()

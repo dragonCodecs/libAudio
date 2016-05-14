@@ -39,6 +39,7 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 
 	ret->BitRate = 44100;
 	ret->BitsPerSample = 16;
+	ret->Channels = 2;
 	try
 	{
 		p_AF->p_File = new ModuleFile(p_AF);

@@ -328,11 +328,11 @@ private:
 
 protected:
 	ModuleInstrument(uint32_t ID);
-	virtual ~ModuleInstrument();
 
 public:
 	static ModuleInstrument *LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion);
 
+	virtual ~ModuleInstrument();
 	virtual uint8_t Map(uint8_t Note) = 0;
 	virtual uint16_t GetFadeOut() const = 0;
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;

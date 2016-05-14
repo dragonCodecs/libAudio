@@ -42,7 +42,7 @@ void ModuleFile::InitMixer(FileInfo *p_FI)
 		GlobalVolume = p_Header->GlobalVolume;
 	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
 	// If we have the possibility of NNAs, allocate a full set of channels.
-	if (p_Instruments != NULL)
+	if (p_Instruments != nullptr)
 	{
 		Channels = new Channel[128]();
 		MixerChannels = new uint32_t[128];
@@ -87,7 +87,7 @@ void ModuleFile::ResetChannelPanning()
 	}
 	else if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT)
 	{
-		if (p_Header->Panning == NULL)
+		if (p_Header->Panning == nullptr)
 		{
 			for (i = 0; i < p_Header->nChannels; i++)
 				Channels[i].RawPanning = 128;
@@ -142,7 +142,7 @@ void ModuleFile::ReloadSample(Channel *channel)
 
 void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 {
-	if (p_Instruments != NULL)
+	if (p_Instruments != nullptr)
 	{
 		ModuleInstrument *instr = p_Instruments[nSample - 1];
 		nSample = instr->Map(channel->Note - 1);
@@ -151,8 +151,8 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 		channel->EnvPitchPos = 0;
 		if (nSample == 0)
 		{
-			channel->Sample = NULL;
-			channel->NewSampleData = NULL;
+			channel->Sample = nullptr;
+			channel->NewSampleData = nullptr;
 			channel->Length = 0;
 			return;
 		}
@@ -160,7 +160,7 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 	}
 	channel->Sample = p_Samples[nSample - 1];
 	ReloadSample(channel);
-	if (p_Instruments != NULL)
+	if (p_Instruments != nullptr)
 	{
 		ModuleInstrument *instr = channel->Instrument;
 		if (instr->HasVolume())
@@ -240,25 +240,25 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		return;
 	}
 	channel->Note = note;
-	if (channel->Instrument != NULL)
+	if (channel->Instrument != nullptr)
 	{
 		uint8_t nSample = channel->Instrument->Map(channel->Note - 1);
 		if (nSample == 0)
-			sample = NULL;
+			sample = nullptr;
 		else
 			sample = p_Samples[nSample - 1];
 		channel->EnvVolumePos = 0;
 		channel->EnvPanningPos = 0;
 		channel->EnvPitchPos = 0;
 		channel->Sample = sample;
-		if (sample != NULL)
+		if (sample != nullptr)
 			ReloadSample(channel);
 		else
-			channel->NewSampleData = NULL;
+			channel->NewSampleData = nullptr;
 	}
 	channel->NewSample = 0;
 	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
-	if (sample == NULL)
+	if (sample == nullptr)
 		return;
 	if (period != 0)
 	{
@@ -358,20 +358,20 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 	if (nSample != 0)
 	{
 		instr = p_Instruments[nSample - 1];
-		if (instr != NULL)
+		if (instr != nullptr)
 		{
 			nSample = instr->Map(note - 1);
 			if (nSample != 0)
 				sample = p_Samples[nSample - 1];
 		}
 		else
-			sample = NULL;
+			sample = nullptr;
 	}
 
 	for (i = 0; i < 128; i++)
 	{
 		Channel *dnaChannel = &Channels[i];
-		if (dnaChannel->Instrument != NULL && (i >= p_Header->nChannels || dnaChannel == channel))
+		if (dnaChannel->Instrument != nullptr && (i >= p_Header->nChannels || dnaChannel == channel))
 		{
 			bool duplicate = false;
 			switch (dnaChannel->Instrument->GetDCT())
@@ -381,7 +381,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 						duplicate = true;
 					break;
 				case DCT_SAMPLE:
-					if (sample != NULL && sample == dnaChannel->Sample)
+					if (sample != nullptr && sample == dnaChannel->Sample)
 						duplicate = true;
 					break;
 				case DCT_INSTRUMENT:
@@ -722,7 +722,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 // do the exact same thing, just on different variables.
 inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
 {
-	bool FirstTick = (TickCount == 0);
+	const bool FirstTick = (TickCount == 0);
 	uint16_t SlideDest = channel->ChannelVolume;
 
 	if (param == 0)
@@ -757,7 +757,7 @@ inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
 
 inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 {
-	bool FirstTick = (TickCount == 0);
+	const bool FirstTick = (TickCount == 0);
 	uint16_t SlideDest = GlobalVolume;
 
 	if (param == 0)
@@ -1010,7 +1010,7 @@ inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
 inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 {
 	if (param != 0)
-		channel->PortamentoSlide = ((uint16_t)param) << 2;
+		channel->PortamentoSlide = uint16_t(param) << 2;
 	channel->Flags |= CHN_PORTAMENTO;
 	if (channel->Period != 0 && channel->PortamentoDest != 0)
 	{
@@ -1019,7 +1019,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			int32_t Delta;
 			if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{
-				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
+				uint8_t Slide = uint8_t(channel->PortamentoSlide >> 2);
 				Delta = LinearSlideUp(channel->Period, Slide) - channel->Period;
 				if (Delta < 1)
 					Delta = 1;
@@ -1035,7 +1035,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 			int32_t Delta;
 			if ((channel->Flags & CHN_GLISSANDO) != 0)
 			{
-				uint8_t Slide = (uint8_t)(channel->PortamentoSlide >> 2);
+				uint8_t Slide = uint8_t(channel->PortamentoSlide >> 2);
 				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period;
 				if (Delta > -1)
 					Delta = -1;
@@ -1063,12 +1063,12 @@ void Channel::NoteOff()
 {
 	bool NoteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
-	if (Instrument != NULL && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
+	if (Instrument != nullptr && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
 		Flags |= CHN_NOTEFADE;
 	if (Length == 0)
 		return;
 	// This false gets replaced with a check for sustain loops.
-	if (false && Sample != NULL && NoteOn)
+	if (false && Sample != nullptr && NoteOn)
 	{
 		if (LoopEnd != 0)
 		{
@@ -1091,7 +1091,7 @@ void Channel::NoteOff()
 			Length = Sample->GetLength();
 		}
 	}
-	if (Instrument != NULL)
+	if (Instrument != nullptr)
 	{
 		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
 			Flags |= CHN_NOTEFADE;
@@ -1158,9 +1158,9 @@ bool ModuleFile::ProcessEffects()
 			}
 			if (note == 0 && sample != 0)
 			{
-				if (p_Instruments != NULL)
+				if (p_Instruments != nullptr)
 				{
-					if (channel->Instrument != NULL)
+					if (channel->Instrument != nullptr)
 						channel->RawVolume = channel->Instrument->GetVolume();
 				}
 				else
@@ -1171,7 +1171,7 @@ bool ModuleFile::ProcessEffects()
 			if (note != 0 && note <= 128)
 			{
 				channel->NewNote = note;
-				if (p_Instruments != NULL)
+				if (p_Instruments != nullptr)
 					HandleNNA(channel, sample, note);
 			}
 			if (sample != 0)
@@ -1425,7 +1425,7 @@ bool ModuleFile::Tick()
 			NextPattern = NewPattern + 1;
 			NextRow = 0;
 		}
-		if (p_Patterns[Pattern] == NULL)
+		if (p_Patterns[Pattern] == nullptr)
 			return false;
 		Commands = p_Patterns[Pattern]->GetCommands();
 		Rows = p_Patterns[Pattern]->GetRows();
@@ -1448,7 +1448,7 @@ bool ModuleFile::AdvanceTick()
 	SamplesToMix = (MixSampleRate * 640) / (MusicTempo << 8);
 	SamplesPerTick = SamplesToMix;
 	nMixerChannels = 0;
-	if (p_Instruments == NULL)
+	if (p_Instruments == nullptr)
 		nChannels = p_Header->nChannels;
 	else
 		nChannels = 128;
@@ -1504,7 +1504,7 @@ bool ModuleFile::AdvanceTick()
 			/*clipInt<uint16_t>(vol, 0, 128);
 			//vol <<= 7;*/
 
-			if (channel->Instrument != NULL)
+			if (channel->Instrument != nullptr)
 			{
 				ModuleInstrument *instr = channel->Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
@@ -1613,7 +1613,7 @@ bool ModuleFile::AdvanceTick()
 			}
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
 				clipInt<uint32_t>(period, 452, 3424);
-			if (channel->Instrument != NULL)
+			if (channel->Instrument != nullptr)
 			{
 				ModuleInstrument *instr = channel->Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_PITCH);
@@ -1683,7 +1683,7 @@ bool ModuleFile::AdvanceTick()
 				channel->Panning = Pan;
 				channel->PanbrelloPos += channel->PanbrelloSpeed;
 			}
-			if (channel->Sample != NULL && channel->Sample->GetVibratoDepth() != 0)
+			if (channel->Sample != nullptr && channel->Sample->GetVibratoDepth() != 0)
 			{
 				int8_t Delta;
 				uint8_t VibratoPos;
@@ -1726,8 +1726,8 @@ bool ModuleFile::AdvanceTick()
 		channel->NewLeftVol = channel->NewRightVol = 0;
 		if ((channel->Increment.Value.Hi + 1) >= (int32_t)channel->LoopEnd)
 			channel->Flags &= ~CHN_LOOP;
-		channel->SampleData = ((channel->NewSampleData != NULL && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : NULL);
-		if (channel->SampleData != NULL)
+		channel->SampleData = ((channel->NewSampleData != nullptr && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : nullptr);
+		if (channel->SampleData != nullptr)
 		{
 			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
 			{
@@ -1947,7 +1947,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 		uint32_t samples = count;
 		int *buff = MixBuffer;
 		Channel * const channel = &Channels[MixerChannels[i]];
-		if (channel->SampleData == NULL)
+		if (channel->SampleData == nullptr)
 			continue;
 		do
 		{
