@@ -1230,9 +1230,20 @@ bool ModuleFile::ProcessEffects()
 				channel->Vibrato(param, 4);
 				break;
 			case CMD_TONEPORTAVOL:
-				if (param != 0)
+				if (param != 0) // In theory, this if does nothing as VolumeSlide() is protected too.
 					VolumeSlide(channel, param);
 				TonePortamento(channel, 0);
+				break;
+			case CMD_TONEPORTAVOLUP:
+				// param contains volume in high nibble
+				// Volume low nibble as 0 is "up"
+				VolumeSlide(channel, param & 0xF0);
+				TonePortamento(channel, param & 0x0F);
+				break;
+			case CMD_TONEPORTAVOLDOWN:
+				// Volume high nibble as 0 is "down"
+				VolumeSlide(channel, param >> 4);
+				TonePortamento(channel, param & 0x0F);
 				break;
 			case CMD_VIBRATOVOL:
 				if (param != 0)
@@ -1745,6 +1756,7 @@ bool ModuleFile::AdvanceTick()
 				channel->NewLeftVol = channel->NewRightVol = channel->Volume;
 
 			channel->RightRamp = channel->LeftRamp = 0;
+			// TODO: Process ping-pong flag (pos = -pos)
 			// Do we need to ramp the volume up or down?
 			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->LeftVol != channel->NewLeftVol || channel->RightVol != channel->NewRightVol))
 			{
