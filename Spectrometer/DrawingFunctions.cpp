@@ -77,6 +77,7 @@ void SideBySideVer_Osc(short *Data, int lenData)
 	}
 }
 
+// http://electronics.stackexchange.com/questions/12407/what-is-the-relation-between-fft-length-and-frequency-resolution
 void SideBySideVer_Spe(short *Data, int lenData)
 {
 	static COMPLEX points[4096], opoints[4096];

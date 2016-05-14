@@ -23,7 +23,9 @@ inline int round(double a)
 #include <libAudio.h>
 #include "Playback.h"
 #include "AboutBox.h"
+
 #include <pthread.h>
+
 #include "DrawingFunctions.h"
 #include "VUMeter.h"
 #if defined(__MACOSX__)
