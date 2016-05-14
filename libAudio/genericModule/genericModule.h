@@ -143,6 +143,7 @@ private:
 	uint8_t nChannels;
 	friend class ModuleFile;
 	friend class Channel;
+	ModuleHeader();
 
 public:
 	ModuleHeader(MOD_Intern *p_MF);

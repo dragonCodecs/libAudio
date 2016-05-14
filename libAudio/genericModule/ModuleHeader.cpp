@@ -2,7 +2,14 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
+// Default initalise key fields
+ModuleHeader::ModuleHeader() : RestartPos(255), GlobalVolume(64), InitialSpeed(6), InitialTempo(125), MasterVolume(64), Separation(128),
+	Volumes{64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64}
+{
+}
+
+ModuleHeader::ModuleHeader(MOD_Intern *p_MF) : ModuleHeader()
 {
 	char MODMagic[4];
 	FILE *f_MOD = p_MF->f_Module;
@@ -61,17 +68,13 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF)
 	Flags = 0;
 	nInstruments = 0;
 	CreationVersion = FormatVersion = 0;
-	GlobalVolume = MasterVolume = 64;
-	Separation = 128;
-	InitialSpeed = 6;
-	InitialTempo = 125;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Panning = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
+ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 {
 	uint8_t DontCare[10];
 	char Magic[4];
@@ -142,15 +145,13 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF)
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	RestartPos = 255;
-	Separation = 128;
 	nInstruments = 0;
 	InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(STM_Intern *p_SF)
+ModuleHeader::ModuleHeader(STM_Intern *p_SF) : ModuleHeader()
 {
 	char Const[9];
 	char Reserved[13];
@@ -192,17 +193,13 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF)
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	Flags = 0;
-	MasterVolume = 64;
-	Separation = 128;
-	RestartPos = 255;
-	InitialTempo = 125;
 	nInstruments = 0;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(AON_Intern *p_AF)
+ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 {
 	char Magic1[4], Magic2[42];
 	char StrMagic[4];
@@ -307,16 +304,13 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF)
 	Type = 0;
 	Flags = 0;
 	CreationVersion = FormatVersion = 0;
-	GlobalVolume = MasterVolume = 64;
-	Separation = 128;
-	InitialSpeed = 6;
-	InitialTempo = 125;
+	nInstruments = 0;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Panning = nullptr;
 }
 
 #ifdef __FC1x_EXPERIMENTAL__
-ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
+ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 {
 	char Magic[4];
 	uint32_t IDK1, IDK2;
@@ -344,16 +338,14 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF)
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	Name = nullptr;
-	RestartPos = 255;
 	nInstruments = 0;
-	Separation = 128;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
 #endif
 
-ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
+ModuleHeader::ModuleHeader(IT_Intern *p_IF) : ModuleHeader()
 {
 	char Magic[4], DontCare[4];
 	uint16_t MsgLength, SongFlags;
@@ -426,8 +418,6 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : Remark(NULL)
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	RestartPos = 255;
-	Separation = 128;
 	Author = nullptr;
 	Remark = nullptr;
 }
