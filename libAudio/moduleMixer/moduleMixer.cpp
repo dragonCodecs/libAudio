@@ -698,16 +698,16 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	{
 		if ((param & 0x0F) == 0x0F)
 		{
-			if ((param & 0xF0) != 0)
+			if (param & 0xF0)
 				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume + Adjust; });
-			else if (TickCount > channel->StartTick)
+			else if (TickCount == channel->StartTick)
 				NewVolume -= 0x1E; //0x0F * 2;
 		}
 		else if ((param & 0xF0) == 0xF0)
 		{
-			if ((param & 0x0F) != 0)
+			if (param & 0x0F)
 				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume - Adjust; });
-			else if (TickCount > channel->StartTick)
+			else if (TickCount == channel->StartTick)
 				NewVolume += 0x1E; //0x0F * 2;
 		}
 	}
@@ -715,14 +715,14 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	if (TickCount > channel->StartTick)
 	{
 		if ((param & 0xF0) != 0 && (param & 0x0F) == 0)
-			NewVolume += (param & 0xF0) >> 3;
+			NewVolume += (param & 0xF0) >> 1;
 		else if ((param & 0x0F) != 0 && (param & 0xF0) == 0)
 			NewVolume -= (param & 0x0F) << 1;
 		if (ModuleType == MODULE_MOD)
 			channel->Flags |= CHN_FASTVOLRAMP;
-		clipInt<uint16_t>(NewVolume, 0, 128);
-		channel->RawVolume = uint8_t(NewVolume);
 	}
+	clipInt<uint16_t>(NewVolume, 0, 128);
+	channel->RawVolume = uint8_t(NewVolume);
 }
 
 // TODO: Write these next two functions as one template as both
