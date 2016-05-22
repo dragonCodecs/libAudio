@@ -1399,7 +1399,7 @@ void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 	uint8_t excmd;
 	RowNote = Command->Note;
 	RowSample = Command->Sample;
-	if (RowSample > p_Header->nSamples)
+	if ((p_Header->nInstruments && RowSample > p_Header->nInstruments) || (!p_Header->nInstruments && RowSample > p_Header->nSamples))
 		RowSample = 0;
 	RowVolEffect = Command->VolEffect;
 	RowVolParam = Command->VolParam;
