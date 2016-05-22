@@ -1319,8 +1319,10 @@ bool ModuleFile::ProcessEffects()
 				}
 				break;
 			case CMD_GLOBALVOLUME:
-				if (TickCount == 0)
+				if (TickCount == channel->StartTick)
 				{
+					if (ModuleType == MODULE_IT && param > 128)
+						break;
 					if (param > 128)
 						param = 128;
 					GlobalVolume = param;
