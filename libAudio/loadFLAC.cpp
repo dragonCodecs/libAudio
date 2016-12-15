@@ -5,6 +5,7 @@
 
 #include <FLAC/all.h>
 
+#include "libAudio.hxx"
 #include "libAudio.h"
 #include "libAudio_Common.h"
 
@@ -62,6 +63,18 @@ typedef struct _FLAC_Decoder_Context
 	 */
 	Playback *p_Playback;
 } FLAC_Decoder_Context;
+
+struct flac_t::decoderContext_t
+{
+	FLAC__StreamDecoder *streamDecoder;
+	uint8_t *buffer;
+	uint32_t bufferLen;
+	uint8_t playbackBuffer[16384];
+	uint8_t sampleShift;
+	uint32_t bytesRead;
+	uint32_t bytesAvail;
+	Playback *p_Playback;
+};
 
 /*!
  * @internal
@@ -498,18 +511,27 @@ void FLAC_Stop(void *p_FLACFile)
  */
 bool Is_FLAC(const char *FileName)
 {
-	FILE *f_FLAC = fopen(FileName, "rb");
-	char FLACSig[4];
-	if (f_FLAC == NULL)
+	return flac_t::isFLAC(FileName);
+}
+
+bool flac_t::isFLAC(const int fd) noexcept
+{
+	char flacSig[4];
+	if (fd == -1)
 		return false;
 
-	fread(FLACSig, 4, 1, f_FLAC);
-	fclose(f_FLAC);
-
-	if (strncmp(FLACSig, "fLaC", 4) != 0)
+	if (read(fd, flacSig, 4) != 4 ||
+		strncmp(flacSig, "fLaC", 4) != 0)
 		return false;
-	else
-		return true;
+	return true;
+}
+
+bool flac_t::isFLAC(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isFLAC(file);
 }
 
 /*!
