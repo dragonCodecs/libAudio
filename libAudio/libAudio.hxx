@@ -44,11 +44,9 @@ enum class audioType_t : uint8_t
 	moduleFC1x = 17
 };
 
-// TODO: implement fd_t for this. It will become the new hub of IO in the library as we convert things over to this.
-
 struct audioFile_t
 {
-protected:
+public: // protected:
 	audioType_t _type;
 	fileInfo_t _fileInfo;
 	fd_t _fd;
@@ -66,8 +64,7 @@ public:
 	const fileInfo_t &fileInfo() const noexcept { return _fileInfo; }
 	audioType_t type() const noexcept { return _type; }
 
-	virtual int64_t fillBuffer(void *const buffer, uint32_t length) = 0;
-	virtual bool close() = 0; // This actually isn't a part of the implemented API as it needs to go away.
+	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
 	void play();
 	void pause();
 	void stop();
@@ -79,19 +76,16 @@ public:
 struct oggVorbis_t final : public audioFile_t
 {
 public:
-	int64_t fillBuffer(void *const buffer, uint32_t length) final override;
-	bool close() final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
-
-struct _FLAC_Decoder_Context;
 
 struct flac_t final : public audioFile_t
 {
-private:
+public: // private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
-	friend struct _FLAC_Decoder_Context;
 
+	flac_t() noexcept;
 	flac_t(fd_t &&fd);
 
 public:
@@ -99,8 +93,7 @@ public:
 	static bool isFLAC(const char *const fileName) noexcept;
 	static bool isFLAC(const int fd) noexcept;
 
-	int64_t fillBuffer(void *const buffer, uint32_t length) final override;
-	bool close() final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 
 #endif /*LIBAUDIO_HXX*/
