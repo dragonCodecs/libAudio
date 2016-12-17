@@ -64,13 +64,6 @@ typedef struct _FLAC_Decoder_Context
 	FileInfo *fi_Info;
 	/*!
 	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t *buffer;
-	uint32_t bufferLen;
-	uint8_t playbackBuffer[16384];
-	/*!
-	 * @internal
 	 * The amount to shift the sample data by to convert it
 	 */
 	uint8_t sampleShift;
@@ -210,11 +203,11 @@ int f_feof(const FLAC__StreamDecoder *, void *p_FF)
 FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	short *PCM = (short *)p_FF->buffer;
+	short *PCM = (short *)p_FF->inner.buffer.get();
 	uint8_t j, channels = p_FF->fi_Info->Channels, sampleShift = p_FF->sampleShift;
 	uint32_t i, len = p_frame->header.blocksize;
-	if (len > (p_FF->bufferLen / channels))
-		len = p_FF->bufferLen / channels;
+	if (len > (p_FF->inner.bufferLen / channels))
+		len = p_FF->inner.bufferLen / channels;
 
 	for (i = 0; i < len; i++)
 	{
@@ -255,8 +248,8 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 				p_FI->BitsPerSample = 16;
 				p_FF->sampleShift = 8;
 			}
-			p_FF->bufferLen = p_md->channels * p_md->max_blocksize;
-			p_FF->buffer = new uint8_t[p_FF->bufferLen * (p_md->bits_per_sample / 8)];
+			p_FF->inner.bufferLen = p_md->channels * p_md->max_blocksize;
+			p_FF->inner.buffer.reset(new uint8_t[p_FF->inner.bufferLen * (p_md->bits_per_sample / 8)]);
 			p_FI->TotalTime = p_md->total_samples / p_md->sample_rate;
 			if (ExternalPlayback == 0)
 				p_FF->inner.player.reset(new Playback(p_FI, FLAC_FillBuffer, p_FF->inner.playbackBuffer, 16384, p_FLACFile));
@@ -420,8 +413,6 @@ int FLAC_CloseFileR(void *p_FLACFile)
 	int ret = 0;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 
-	delete [] p_FF->buffer;
-
 	ret = !FLAC__stream_decoder_finish(p_FF->p_dec);
 	FLAC__stream_decoder_delete(p_FF->p_dec);
 	fclose(p_FF->f_FLAC);
@@ -467,7 +458,7 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		len = p_FF->nAvail;
 		if (len > (nOutBufferLen - ret))
 			len = nOutBufferLen - ret;
-		memcpy(OutBuffer + ret, p_FF->buffer + (p_FF->nRead - p_FF->nAvail), len);
+		memcpy(OutBuffer + ret, p_FF->inner.buffer.get() + (p_FF->nRead - p_FF->nAvail), len);
 		ret += len;
 		p_FF->nAvail -= len;
 	}
