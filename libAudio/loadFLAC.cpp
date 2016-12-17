@@ -366,10 +366,9 @@ void *FLAC_OpenR(const char *FileName)
 	if (f_FLAC == NULL)
 		return ret;
 
-	ret = (FLAC_Decoder_Context *)malloc(sizeof(FLAC_Decoder_Context));
+	ret = new (std::nothrow) FLAC_Decoder_Context();
 	if (ret == NULL)
 		return ret;
-	memset(ret, 0x00, sizeof(FLAC_Decoder_Context));
 
 	ret->f_FLAC = f_FLAC;
 	ret->p_dec = p_dec = FLAC__stream_decoder_new();
@@ -426,7 +425,7 @@ int FLAC_CloseFileR(void *p_FLACFile)
 	ret = !FLAC__stream_decoder_finish(p_FF->p_dec);
 	FLAC__stream_decoder_delete(p_FF->p_dec);
 	fclose(p_FF->f_FLAC);
-	free(p_FF);
+	delete p_FF;
 	return ret;
 }
 
