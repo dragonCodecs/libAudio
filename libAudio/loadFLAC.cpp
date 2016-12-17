@@ -21,6 +21,30 @@
  * @internal
  * Internal structure for holding the decoding context for a given FLAC file
  */
+struct flac_t::decoderContext_t
+{
+	FLAC__StreamDecoder *streamDecoder;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
+	std::unique_ptr<uint8_t []> buffer;
+	uint32_t bufferLen;
+	uint8_t playbackBuffer[16384];
+	uint8_t sampleShift;
+	uint32_t bytesRead;
+	uint32_t bytesAvail;
+	/*!
+	 * @internal
+	 * The playback class instance for the FLAC file
+	 */
+	std::unique_ptr<Playback> player;
+};
+
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given FLAC file
+ */
 typedef struct _FLAC_Decoder_Context
 {
 	/*!
@@ -57,24 +81,9 @@ typedef struct _FLAC_Decoder_Context
 	 */
 	uint32_t nRead;
 	uint32_t nAvail;
-	/*!
-	 * @internal
-	 * The playback class instance for the FLAC file
-	 */
-	Playback *p_Playback;
-} FLAC_Decoder_Context;
 
-struct flac_t::decoderContext_t
-{
-	FLAC__StreamDecoder *streamDecoder;
-	uint8_t *buffer;
-	uint32_t bufferLen;
-	uint8_t playbackBuffer[16384];
-	uint8_t sampleShift;
-	uint32_t bytesRead;
-	uint32_t bytesAvail;
-	Playback *p_Playback;
-};
+	flac_t::decoderContext_t inner;
+} FLAC_Decoder_Context;
 
 /*!
  * @internal
@@ -250,7 +259,7 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			p_FF->buffer = new uint8_t[p_FF->bufferLen * (p_md->bits_per_sample / 8)];
 			p_FI->TotalTime = p_md->total_samples / p_md->sample_rate;
 			if (ExternalPlayback == 0)
-				p_FF->p_Playback = new Playback(p_FI, FLAC_FillBuffer, p_FF->playbackBuffer, 16384, p_FLACFile);
+				p_FF->inner.player.reset(new Playback(p_FI, FLAC_FillBuffer, p_FF->inner.playbackBuffer, 16384, p_FLACFile));
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -400,7 +409,7 @@ FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
 /*!
  * Closes an opened audio file
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
- * @return an integer indicating success or failure relative to whether the 
+ * @return an integer indicating success or failure relative to whether the
  * FLAC encoder was able to properly finish encoding
  * @warning Do not use the pointer given by \p p_FLACFile after using
  * this function - please either set it to \c NULL or be extra carefull
@@ -412,7 +421,6 @@ int FLAC_CloseFileR(void *p_FLACFile)
 	int ret = 0;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 
-	delete p_FF->p_Playback;
 	delete [] p_FF->buffer;
 
 	ret = !FLAC__stream_decoder_finish(p_FF->p_dec);
@@ -481,23 +489,26 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
  */
 void FLAC_Play(void *p_FLACFile)
 {
+	if (!p_FLACFile)
+		return;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-
-	p_FF->p_Playback->Play();
+	p_FF->inner.player->Play();
 }
 
 void FLAC_Pause(void *p_FLACFile)
 {
+	if (!p_FLACFile)
+		return;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-
-	p_FF->p_Playback->Pause();
+	p_FF->inner.player->Pause();
 }
 
 void FLAC_Stop(void *p_FLACFile)
 {
+	if (!p_FLACFile)
+		return;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-
-	p_FF->p_Playback->Stop();
+	p_FF->inner.player->Stop();
 }
 
 /*!

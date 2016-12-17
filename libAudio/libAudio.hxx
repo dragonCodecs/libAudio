@@ -84,11 +84,14 @@ public:
 	void stop() final override;
 };
 
+struct _FLAC_Decoder_Context;
+
 struct flac_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
+	friend struct _FLAC_Decoder_Context;
 
 	flac_t(fd_t &&fd);
 
