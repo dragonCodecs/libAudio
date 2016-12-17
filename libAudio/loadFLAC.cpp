@@ -20,8 +20,12 @@
  * @internal
  * Internal structure for holding the decoding context for a given FLAC file
  */
-struct flac_t::decoderContext_t
+struct flac_t::decoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The decoder context handle
+	 */
 	FLAC__StreamDecoder *streamDecoder;
 	/*!
 	 * @internal
@@ -38,6 +42,11 @@ struct flac_t::decoderContext_t
 	 * The playback class instance for the FLAC file
 	 */
 	std::unique_ptr<Playback> player;
+
+	decoderContext_t();
+	~decoderContext_t();
+	bool finish() noexcept;
+	FLAC__StreamDecoderState nextFrame() noexcept;
 };
 
 /*!
@@ -46,11 +55,6 @@ struct flac_t::decoderContext_t
  */
 typedef struct _FLAC_Decoder_Context
 {
-	/*!
-	 * @internal
-	 * The decoder context handle
-	 */
-	FLAC__StreamDecoder *p_dec;
 	/*!
 	 * @internal
 	 * The FLAC file to decode
@@ -344,6 +348,8 @@ void f_error(const FLAC__StreamDecoder */*p_dec*/, FLAC__StreamDecoderErrorStatu
 
 flac_t::flac_t() noexcept : audioFile_t(audioType_t::flac, {}), ctx(new (std::nothrow) decoderContext_t()) { }
 
+flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decoder_new()) { }
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by FLAC_* functions
@@ -365,7 +371,7 @@ void *FLAC_OpenR(const char *FileName)
 		return ret;
 
 	ret->f_FLAC = f_FLAC;
-	ret->p_dec = p_dec = FLAC__stream_decoder_new();
+	p_dec = ret->inner.ctx->streamDecoder;
 
 	fread(Sig, 4, 1, f_FLAC);
 	fseek(f_FLAC, 0, SEEK_SET);
@@ -394,10 +400,20 @@ FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
 
 	p_FF->fi_Info = (FileInfo *)malloc(sizeof(FileInfo));
 	memset(p_FF->fi_Info, 0x00, sizeof(FileInfo));
-	FLAC__stream_decoder_process_until_end_of_metadata(p_FF->p_dec);
+	FLAC__stream_decoder_process_until_end_of_metadata(p_FF->inner.ctx->streamDecoder);
 
 	return p_FF->fi_Info;
 }
+
+bool flac_t::decoderContext_t::finish() noexcept
+{
+	const bool result = !FLAC__stream_decoder_finish(streamDecoder);
+	FLAC__stream_decoder_delete(streamDecoder);
+	streamDecoder = nullptr;
+	return result;
+}
+
+flac_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
 
 /*!
  * Closes an opened audio file
@@ -414,11 +430,16 @@ int FLAC_CloseFileR(void *p_FLACFile)
 	int ret = 0;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 
-	ret = !FLAC__stream_decoder_finish(p_FF->p_dec);
-	FLAC__stream_decoder_delete(p_FF->p_dec);
+	ret = p_FF->inner.ctx->finish();
 	fclose(p_FF->f_FLAC);
 	delete p_FF;
 	return ret;
+}
+
+FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
+{
+	FLAC__stream_decoder_process_single(streamDecoder);
+	return FLAC__stream_decoder_get_state(streamDecoder);
 }
 
 /*!
@@ -445,8 +466,7 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		uint32_t len;
 		if (p_FF->nAvail == 0)
 		{
-			FLAC__stream_decoder_process_single(p_FF->p_dec);
-			state = FLAC__stream_decoder_get_state(p_FF->p_dec);
+			state = p_FF->inner.ctx->nextFrame();
 			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
 			{
 				p_FF->nAvail = 0;
@@ -467,7 +487,7 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	return ret;
 }
 
-int64_t flac_t::fillBuffer(void *const buffer, const uint32_t length)
+int64_t flac_t::fillBuffer(void *const /*buffer*/, const uint32_t /*length*/)
 {
 	return -1;
 }
