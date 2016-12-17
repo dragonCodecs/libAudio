@@ -1,5 +1,5 @@
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -143,6 +143,13 @@ void Audio_Play(void *p_AudioPtr)
 		p_AP->API->Play(p_AP->p_AudioFile);
 }
 
+void audioFile_t::play()
+{
+	if (!player)
+		return;
+	player->Play();
+}
+
 void Audio_Pause(void *p_AudioPtr)
 {
 	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
@@ -150,11 +157,25 @@ void Audio_Pause(void *p_AudioPtr)
 		p_AP->API->Pause(p_AP->p_AudioFile);
 }
 
+void audioFile_t::pause()
+{
+	if (!player)
+		return;
+	player->Pause();
+}
+
 void Audio_Stop(void *p_AudioPtr)
 {
 	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
 	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
 		p_AP->API->Stop(p_AP->p_AudioFile);
+}
+
+void audioFile_t::stop()
+{
+	if (!player)
+		return;
+	player->Stop();
 }
 
 /*!

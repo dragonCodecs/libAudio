@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include "fd.hxx"
+#include "libAudio_Common.h"
 
 struct fileInfo_t final
 {
@@ -51,6 +52,7 @@ protected:
 	audioType_t _type;
 	fileInfo_t _fileInfo;
 	fd_t _fd;
+	std::unique_ptr<Playback> player;
 
 	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type(type), _fileInfo(), _fd(std::move(fd)) { }
 
@@ -65,10 +67,10 @@ public:
 	audioType_t type() const noexcept { return _type; }
 
 	virtual int64_t fillBuffer(void *const buffer, uint32_t length) = 0;
-	virtual bool close() = 0;
-	virtual void play() = 0;
-	virtual void pause() = 0;
-	virtual void stop() = 0;
+	virtual bool close() = 0; // This actually isn't a part of the implemented API as it needs to go away.
+	void play();
+	void pause();
+	void stop();
 
 	audioFile_t(const audioFile_t &) = delete;
 	audioFile_t &operator =(const audioFile_t &) = delete;
@@ -79,9 +81,6 @@ struct oggVorbis_t final : public audioFile_t
 public:
 	int64_t fillBuffer(void *const buffer, uint32_t length) final override;
 	bool close() final override;
-	void play() final override;
-	void pause() final override;
-	void stop() final override;
 };
 
 struct _FLAC_Decoder_Context;
@@ -102,9 +101,6 @@ public:
 
 	int64_t fillBuffer(void *const buffer, uint32_t length) final override;
 	bool close() final override;
-	void play() final override;
-	void pause() final override;
-	void stop() final override;
 };
 
 #endif /*LIBAUDIO_HXX*/

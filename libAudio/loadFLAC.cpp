@@ -5,9 +5,8 @@
 
 #include <FLAC/all.h>
 
-#include "libAudio.hxx"
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
