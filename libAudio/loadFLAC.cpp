@@ -524,18 +524,34 @@ bool Is_FLAC(const char *FileName)
 	return flac_t::isFLAC(FileName);
 }
 
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a FLAC
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a FLAC file or not
+ */
 bool flac_t::isFLAC(const int fd) noexcept
 {
 	char flacSig[4];
-	if (fd == -1)
-		return false;
-
-	if (read(fd, flacSig, 4) != 4 ||
+	if (fd == -1 ||
+		read(fd, flacSig, 4) != 4 ||
 		strncmp(flacSig, "fLaC", 4) != 0)
 		return false;
 	return true;
 }
 
+/*!
+ * Checks the file given by \p fileName for whether it is a FLAC
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a FLAC file or not
+ */
 bool flac_t::isFLAC(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
