@@ -395,6 +395,8 @@ FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
 
 bool flac_t::decoderContext_t::finish() noexcept
 {
+	if (!streamDecoder)
+		return true;
 	const bool result = !FLAC__stream_decoder_finish(streamDecoder);
 	FLAC__stream_decoder_delete(streamDecoder);
 	streamDecoder = nullptr;
