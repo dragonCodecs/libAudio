@@ -62,11 +62,6 @@ typedef struct _FLAC_Decoder_Context
 	FILE *f_FLAC;
 	/*!
 	 * @internal
-	 * The \c FileInfo for the FLAC file being decoded
-	 */
-	FileInfo *fi_Info;
-	/*!
-	 * @internal
 	 * The amount to shift the sample data by to convert it
 	 */
 	uint8_t sampleShift;
@@ -80,6 +75,8 @@ typedef struct _FLAC_Decoder_Context
 
 	flac_t inner;
 } FLAC_Decoder_Context;
+
+FileInfo flacFileInfo;
 
 /*!
  * @internal
@@ -207,7 +204,7 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	short *PCM = (short *)p_FF->inner.ctx->buffer.get();
-	uint8_t j, channels = p_FF->fi_Info->Channels, sampleShift = p_FF->sampleShift;
+	uint8_t j, channels = p_FF->inner._fileInfo.channels, sampleShift = p_FF->sampleShift;
 	uint32_t i, len = p_frame->header.blocksize;
 	if (len > (p_FF->inner.ctx->bufferLen / channels))
 		len = p_FF->inner.ctx->bufferLen / channels;
@@ -217,7 +214,7 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 		for (j = 0; j < channels; j++)
 			PCM[(i * channels) + j] = (short)(buffers[j][i] >> sampleShift);
 	}
-	p_FF->nRead = len * channels * (p_FF->fi_Info->BitsPerSample / 8);
+	p_FF->nRead = len * channels * (p_FF->inner._fileInfo.bitsPerSample / 8);
 	p_FF->nAvail = p_FF->nRead;
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -233,7 +230,7 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	FileInfo *p_FI = p_FF->fi_Info;
+	fileInfo_t &info = p_FF->inner._fileInfo;
 
 	if (p_metadata->type >= FLAC__METADATA_TYPE_UNDEFINED)
 		return;
@@ -242,26 +239,26 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 	{
 		case FLAC__METADATA_TYPE_STREAMINFO:
 		{
-			const FLAC__StreamMetadata_StreamInfo *p_md = &p_metadata->data.stream_info;
-			p_FI->Channels = p_md->channels;
-			p_FI->BitRate = p_md->sample_rate;
-			p_FI->BitsPerSample = p_md->bits_per_sample;
-			if (p_FI->BitsPerSample == 24)
+			const FLAC__StreamMetadata_StreamInfo &streamInfo = p_metadata->data.stream_info;
+			info.channels = streamInfo.channels;
+			info.bitRate = streamInfo.sample_rate;
+			info.bitsPerSample = streamInfo.bits_per_sample;
+			if (info.bitsPerSample == 24)
 			{
-				p_FI->BitsPerSample = 16;
+				info.bitsPerSample = 16;
 				p_FF->sampleShift = 8;
 			}
-			p_FF->inner.ctx->bufferLen = p_md->channels * p_md->max_blocksize;
-			p_FF->inner.ctx->buffer.reset(new uint8_t[p_FF->inner.ctx->bufferLen * (p_md->bits_per_sample / 8)]);
-			p_FI->TotalTime = p_md->total_samples / p_md->sample_rate;
+			p_FF->inner.ctx->bufferLen = streamInfo.channels * streamInfo.max_blocksize;
+			p_FF->inner.ctx->buffer.reset(new uint8_t[p_FF->inner.ctx->bufferLen * (streamInfo.bits_per_sample / 8)]);
+			info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
 			if (ExternalPlayback == 0)
-				p_FF->inner.player.reset(new Playback(p_FI, FLAC_FillBuffer, p_FF->inner.ctx->playbackBuffer, 16384, p_FLACFile));
+				p_FF->inner.player.reset(new Playback(info, FLAC_FillBuffer, p_FF->inner.ctx->playbackBuffer, 16384, p_FLACFile));
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
 		{
 			const FLAC__StreamMetadata_VorbisComment *p_md = &p_metadata->data.vorbis_comment;
-			uint32_t nComment = 0;
+			/*uint32_t nComment = 0;
 			char **p_comments = (char **)malloc(sizeof(char *) * p_md->num_comments);
 
 			for (uint32_t i = 0; i < p_md->num_comments; i++)
@@ -320,7 +317,7 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			}
 
 			free(p_comments);
-			p_comments = 0;
+			p_comments = 0;*/
 
 			break;
 		}
@@ -383,6 +380,7 @@ void *FLAC_OpenR(const char *FileName)
 	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_VORBIS_COMMENT);
+	FLAC__stream_decoder_process_until_end_of_metadata(ret->inner.ctx->streamDecoder);
 
 	return ret;
 }
@@ -390,19 +388,25 @@ void *FLAC_OpenR(const char *FileName)
 /*!
  * This function gets the \c FileInfo structure for an opened file
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c FLAC_Play() or \c FLAC_FillBuffer()
- * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 
-	p_FF->fi_Info = (FileInfo *)malloc(sizeof(FileInfo));
-	memset(p_FF->fi_Info, 0x00, sizeof(FileInfo));
-	FLAC__stream_decoder_process_until_end_of_metadata(p_FF->inner.ctx->streamDecoder);
+	flacFileInfo.TotalTime = p_FF->inner._fileInfo.totalTime;
+	flacFileInfo.BitsPerSample = p_FF->inner._fileInfo.bitsPerSample;
+	flacFileInfo.BitRate = p_FF->inner._fileInfo.bitRate;
+	flacFileInfo.Channels = p_FF->inner._fileInfo.channels;
+	flacFileInfo.Title = p_FF->inner._fileInfo.title.get();
+	flacFileInfo.Artist = p_FF->inner._fileInfo.artist.get();
+	flacFileInfo.Album = p_FF->inner._fileInfo.album.get();
+	flacFileInfo.OtherComments.clear();
+	flacFileInfo.nOtherComments = 0;
 
-	return p_FF->fi_Info;
+	return &flacFileInfo;
 }
 
 bool flac_t::decoderContext_t::finish() noexcept
