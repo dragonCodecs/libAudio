@@ -347,7 +347,7 @@ void *FLAC_OpenR(const char *FileName)
 	if (f_FLAC == nullptr)
 		return ret;
 
-	ret = makeUnique<FLAC_Decoder_Context>();
+	ret = new (std::nothrow) FLAC_Decoder_Context();
 	if (ret == nullptr || !ret->inner.ctx)
 		return ret;
 
