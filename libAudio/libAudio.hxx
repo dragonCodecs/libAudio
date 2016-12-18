@@ -3,25 +3,9 @@
 
 #include <stdint.h>
 #include <memory>
-#include <vector>
 #include "fd.hxx"
+#include "fileInfo.hxx"
 #include "libAudio_Common.h"
-
-struct fileInfo_t final
-{
-	uint64_t totalTime;
-	uint32_t bitsPerSample;
-	uint32_t bitRate;
-	uint32_t channels;
-	// int bitStream;
-	std::unique_ptr<char []> title;
-	std::unique_ptr<char []> artist;
-	std::unique_ptr<char []> album;
-	std::vector<std::unique_ptr<char []>> other;
-
-	fileInfo_t() noexcept : totalTime(0), bitsPerSample(0), bitRate(0),
-		channels(0), title(), artist(), album(), other() { }
-};
 
 enum class audioType_t : uint8_t
 {
