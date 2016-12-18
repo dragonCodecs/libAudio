@@ -94,7 +94,7 @@ void Playback::createBuffers()
 	for (uint32_t i = 0; i < 4; i++)
 	{
 		alBufferi(buffers[i], AL_SIZE, nBufferLen);
-		alBufferi(buffers[i], AL_CHANNELS, p_FI->Channels);
+		alBufferi(buffers[i], AL_CHANNELS, channels);
 	}
 }
 
@@ -119,13 +119,13 @@ void Playback::deinit()
  */
 int Playback::getBufferFormat()
 {
-	if (p_FI->Channels == 2)
+	if (channels == 2)
 		return AL_FORMAT_STEREO16;
-	else if (p_FI->Channels == 1)
+	else if (channels == 1)
 		return AL_FORMAT_MONO16;
-	/*else if (p_FI->BitsPerSample == 8 && p_FI->Channels == 2)
+	/*else if (p_FI->BitsPerSample == 8 && channels == 2)
 		return AL_FORMAT_STEREO8;
-	else if (p_FI->BitsPerSample == 8 && p_FI->Channels == 1)
+	else if (p_FI->BitsPerSample == 8 && channels == 1)
 		return AL_FORMAT_MONO8;*/
 	else
 		return AL_FORMAT_STEREO16;
@@ -156,14 +156,53 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int n
 
 	std::chrono::seconds bufferSize(nBuffLen);
 
-	this->p_FI = p_FI;
+	bitRate = p_FI->BitRate;
+	channels = p_FI->Channels;
 	FillBuffer = DataCallback;
 	buffer = BuffPtr;
 	nBufferLen = nBuffLen;
 	this->p_AudioPtr = p_AudioPtr;
 
-	bufferSize /= p_FI->Channels * (p_FI->BitsPerSample / 8);
-	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize).count() / p_FI->BitRate;
+	bufferSize /= channels * (p_FI->BitsPerSample / 8);
+	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize).count() / bitRate;
+
+	// Initialize OpenAL ready
+	init();
+	createBuffers();
+}
+
+/*!
+ * @internal
+ * The constructor for \c Playback which makes sure that OpenAL has been initialised and
+ * which prepares buffers for the singular source held internally
+ * @param p_FI The \c FileInfo instance for the file to be played
+ * @param DataCallback The function to use to load more data into the buffer
+ * @param BuffPtr The buffer to load data into (which is typically the buffer internal to the decoder)
+ * @param nBuffLen The length of the buffer decoded into
+ * @param p_AudioPtr The typeless pointer to the file's decoding context
+ * @note \p DataCallback should be removed in future versions of this function and in place
+ * \c Audio_FillBuffer() should be called as it does not really have overhead now
+ */
+Playback::Playback(fileInfo_t &info, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr)
+{
+	if (DataCallback == NULL)
+		return;
+	if (BuffPtr == NULL)
+		return;
+	if (p_AudioPtr == NULL)
+		return;
+
+	std::chrono::seconds bufferSize(nBuffLen);
+
+	bitRate = info.bitRate;
+	channels = info.channels;
+	FillBuffer = DataCallback;
+	buffer = BuffPtr;
+	nBufferLen = nBuffLen;
+	this->p_AudioPtr = p_AudioPtr;
+
+	bufferSize /= channels * (info.bitsPerSample / 8);
+	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize).count() / bitRate;
 
 	// Initialize OpenAL ready
 	init();
@@ -205,7 +244,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[0], Fmt, buffer, bufret, p_FI->BitRate);
+		alBufferData(buffers[0], Fmt, buffer, bufret, bitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[0]);
 		nBuffs++;
 	}
@@ -216,7 +255,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[1], Fmt, buffer, bufret, p_FI->BitRate);
+		alBufferData(buffers[1], Fmt, buffer, bufret, bitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[1]);
 		nBuffs++;
 	}
@@ -227,7 +266,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[2], Fmt, buffer, bufret, p_FI->BitRate);
+		alBufferData(buffers[2], Fmt, buffer, bufret, bitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[2]);
 		nBuffs++;
 	}
@@ -238,7 +277,7 @@ void Playback::Play()
 	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
 	if (bufret > 0)
 	{
-		alBufferData(buffers[3], Fmt, buffer, bufret, p_FI->BitRate);
+		alBufferData(buffers[3], Fmt, buffer, bufret, bitRate);
 		alSourceQueueBuffers(sourceNum, 1, &buffers[3]);
 		nBuffs++;
 	}
@@ -268,7 +307,7 @@ void Playback::Play()
 #ifdef __NICE_OUTPUT__
 			DoDisplay(&CharNum, &Proc, ProgressChars);
 #endif
-			alBufferData(buffer, Fmt, this->buffer, bufret, p_FI->BitRate);
+			alBufferData(buffer, Fmt, this->buffer, bufret, bitRate);
 			alSourceQueueBuffers(sourceNum, 1, &buffer);
 
 		}
@@ -323,7 +362,6 @@ void Playback::Stop()
 Playback::~Playback()
 {
 	alDeleteBuffers(4, buffers);
-	free(p_FI);
 #ifdef _WINDOWS
 	deinit();
 #endif

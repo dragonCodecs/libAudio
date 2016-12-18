@@ -46,6 +46,8 @@
 #define __FASTCALL__ inline
 #endif
 
+#include "fileInfo.hxx"
+
 extern int fseek_wrapper(void *p_file, int64_t offset, int origin);
 //extern int64_t ftell_wrapper(void *p_file);
 
@@ -71,9 +73,14 @@ protected:
 	FB_Func FillBuffer;
 	/*!
 	 * @internal
-	 * Pointer to the \c FileInfo structure for the \c p_AudioPtr
+	 * The bit rate to play at, from the input audio file
 	 */
-	FileInfo *p_FI;
+	uint32_t bitRate;
+	/*!
+	 * @internal
+	 * The number of channels to play, from the input audio file
+	 */
+	uint32_t channels;
 	/*!
 	 * @internal
 	 * Pointer to the file to play back's internal decoder context
@@ -116,6 +123,7 @@ private:
 
 public:
 	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
+	Playback(fileInfo_t &p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
 	~Playback();
 	void Play();
 	void Pause();
