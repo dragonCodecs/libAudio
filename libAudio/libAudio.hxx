@@ -80,4 +80,22 @@ public:
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 
+template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>; };
+template<typename T> struct makeUnique_<T []> { using arrayType = std::unique_ptr<T []>; };
+template<typename T, size_t N> struct makeUnique_<T [N]> { struct invalidType { }; };
+
+template<typename T, typename... Args> inline typename makeUnique_<T>::uniqueType makeUnique(Args &&...args) noexcept
+{
+	using consT = typename std::remove_const<T>::type;
+	return std::unique_ptr<T>(new (std::nothrow) consT(std::forward<Args>(args)...));
+}
+
+template<typename T> inline typename makeUnique_<T>::arrayType makeUnique(const size_t num) noexcept
+{
+	using consT = typename std::remove_const<typename std::remove_extent<T>::type>::type;
+	return std::unique_ptr<T>(new (std::nothrow) consT[num]());
+}
+
+template<typename T, typename... Args> inline typename makeUnique_<T>::invalidType makeUnique(Args &&...) noexcept = delete;
+
 #endif /*LIBAUDIO_HXX*/
