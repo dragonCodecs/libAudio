@@ -220,6 +220,38 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
+uint32_t stringsLength(const char *const part) noexcept { return strlen(part); }
+template<typename... Args> uint32_t stringsLength(const char *const part, Args &&...args) noexcept
+	{ return strlen(part) + stringsLength(args...); }
+
+std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, const uint32_t offset, const char *const part) noexcept
+{
+	if (!dst)
+		return nullptr;
+	strcpy(dst.get() + offset, part);
+	return std::move(dst);
+}
+
+template<typename... Args> std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, const uint32_t offset,
+	const char *const part, Args &&...args) noexcept
+{
+	if (!dst)
+		return nullptr;
+	strcpy(dst.get() + offset, part);
+	return stringsConcat(std::move(dst), offset + strlen(part), args...);
+}
+
+template<typename... Args> std::unique_ptr<char []> stringConcat(const char *const part, Args &&...args) noexcept
+	{ return stringsConcat(makeUnique<char []>(stringsLength(part, args...)), 0, part, args...); }
+
+void copyComment(std::unique_ptr<char []> &dst, const char *const src) noexcept
+{
+	if (!dst)
+		dst = stringConcat(src);
+	else
+		dst = stringConcat(dst.get(), " / ", src);
+}
+
 /*!
  * @internal
  * \c f_metadata() is the internal metadata callback for FLAC file decoding.
@@ -257,68 +289,23 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
 		{
-			const FLAC__StreamMetadata_VorbisComment *p_md = &p_metadata->data.vorbis_comment;
-			/*uint32_t nComment = 0;
-			char **p_comments = (char **)malloc(sizeof(char *) * p_md->num_comments);
-
-			for (uint32_t i = 0; i < p_md->num_comments; i++)
+			const FLAC__StreamMetadata_VorbisComment &comments = p_metadata->data.vorbis_comment;
+			for (uint32_t i = 0; i < comments.num_comments; ++i)
 			{
-				p_comments[i] = (char *)p_md->comments->entry;
-			}
-
-			while (p_comments[nComment] && nComment < p_md->num_comments)
-			{
-				if (strncasecmp(p_comments[nComment], "title=", 6) == 0)
-				{
-					if (p_FI->Title == NULL)
-						p_FI->Title = strdup(p_comments[nComment] + 6);
-					else
-					{
-						int nOCText = strlen(p_FI->Title);
-						int nCText = strlen(p_comments[nComment] + 6);
-						p_FI->Title = (const char *)realloc((char *)p_FI->Title, nOCText + nCText + 4);
-						memcpy((char *)p_FI->Title + nOCText, " / ", 3);
-						memcpy((char *)p_FI->Title + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
-					}
-				}
-				else if (strncasecmp(p_comments[nComment], "artist=", 7) == 0)
-				{
-					if (p_FI->Artist == NULL)
-						p_FI->Artist = strdup(p_comments[nComment] + 7);
-					else
-					{
-						int nOCText = strlen(p_FI->Artist);
-						int nCText = strlen(p_comments[nComment] + 7);
-						p_FI->Artist = (const char *)realloc((char *)p_FI->Artist, nOCText + nCText + 4);
-						memcpy((char *)p_FI->Artist + nOCText, " / ", 3);
-						memcpy((char *)p_FI->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
-					}
-				}
-				else if (strncasecmp(p_comments[nComment], "album=", 6) == 0)
-				{
-					if (p_FI->Album == NULL)
-						p_FI->Album = strdup(p_comments[nComment] + 6);
-					else
-					{
-						int nOCText = strlen(p_FI->Album);
-						int nCText = strlen(p_comments[nComment] + 6);
-						p_FI->Album = (const char *)realloc((char *)p_FI->Album, nOCText + nCText + 4);
-						memcpy((char *)p_FI->Album + nOCText, " / ", 3);
-						memcpy((char *)p_FI->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
-					}
-				}
+				auto comment = reinterpret_cast<const char *const>(comments.comments[i].entry);
+				if (strncasecmp(comment, "title=", 6) == 0)
+					copyComment(info.title, comment + 6);
+				else if (strncasecmp(comment, "artist=", 7) == 0)
+					copyComment(info.artist, comment + 7);
+				else if (strncasecmp(comment, "album=", 6) == 0)
+					copyComment(info.album, comment + 6);
 				else
 				{
-					p_FI->OtherComments.push_back(strdup(p_comments[nComment]));
-					p_FI->nOtherComments++;
+					std::unique_ptr<char []> other;
+					copyComment(other, comment);
+					info.other.emplace_back(std::move(other));
 				}
-
-				nComment++;
 			}
-
-			free(p_comments);
-			p_comments = 0;*/
-
 			break;
 		}
 		default:
@@ -327,8 +314,6 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			break;
 		}
 	}
-
-	return;
 }
 
 /*!
