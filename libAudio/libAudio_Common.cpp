@@ -175,7 +175,7 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int n
  * @internal
  * The constructor for \c Playback which makes sure that OpenAL has been initialised and
  * which prepares buffers for the singular source held internally
- * @param p_FI The \c FileInfo instance for the file to be played
+ * @param info The \c fileInfo_t instance for the file to be played
  * @param DataCallback The function to use to load more data into the buffer
  * @param BuffPtr The buffer to load data into (which is typically the buffer internal to the decoder)
  * @param nBuffLen The length of the buffer decoded into
@@ -183,7 +183,7 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int n
  * @note \p DataCallback should be removed in future versions of this function and in place
  * \c Audio_FillBuffer() should be called as it does not really have overhead now
  */
-Playback::Playback(fileInfo_t &info, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr)
+Playback::Playback(const fileInfo_t &info, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr)
 {
 	if (DataCallback == NULL)
 		return;

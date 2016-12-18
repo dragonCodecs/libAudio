@@ -123,7 +123,7 @@ private:
 
 public:
 	Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
-	Playback(fileInfo_t &p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
+	Playback(const fileInfo_t &p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int nBuffLen, void *p_AudioPtr);
 	~Playback();
 	void Play();
 	void Pause();
