@@ -336,24 +336,27 @@ flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decode
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by FLAC_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *FLAC_OpenR(const char *FileName)
 {
-	FLAC_Decoder_Context *ret = NULL;
-	FLAC__StreamDecoder *p_dec = NULL;
+	FLAC_Decoder_Context *ret = nullptr;
 	char Sig[4];
 
 	FILE *f_FLAC = fopen(FileName, "rb");
-	if (f_FLAC == NULL)
+	if (f_FLAC == nullptr)
 		return ret;
 
-	ret = new (std::nothrow) FLAC_Decoder_Context();
+	ret = makeUnique<FLAC_Decoder_Context>();
 	if (ret == nullptr || !ret->inner.ctx)
 		return ret;
 
 	ret->f_FLAC = f_FLAC;
-	p_dec = ret->inner.ctx->streamDecoder;
+	FLAC__StreamDecoder *const p_dec = ret->inner.ctx->streamDecoder;
+
+	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
+	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
+	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
 	fread(Sig, 4, 1, f_FLAC);
 	fseek(f_FLAC, 0, SEEK_SET);
@@ -361,11 +364,7 @@ void *FLAC_OpenR(const char *FileName)
 		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
 	else
 		FLAC__stream_decoder_init_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
-
-	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
-	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
-	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_VORBIS_COMMENT);
-	FLAC__stream_decoder_process_until_end_of_metadata(ret->inner.ctx->streamDecoder);
+	FLAC__stream_decoder_process_until_end_of_metadata(p_dec);
 
 	return ret;
 }
