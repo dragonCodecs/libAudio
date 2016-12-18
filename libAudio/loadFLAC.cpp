@@ -281,10 +281,10 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 				p_FF->sampleShift = 8;
 			}
 			p_FF->inner.ctx->bufferLen = streamInfo.channels * streamInfo.max_blocksize;
-			p_FF->inner.ctx->buffer.reset(new uint8_t[p_FF->inner.ctx->bufferLen * (streamInfo.bits_per_sample / 8)]);
+			p_FF->inner.ctx->buffer = makeUnique<uint8_t []>(p_FF->inner.ctx->bufferLen * (streamInfo.bits_per_sample / 8));
 			info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
-			if (ExternalPlayback == 0)
-				p_FF->inner.player.reset(new Playback(info, FLAC_FillBuffer, p_FF->inner.ctx->playbackBuffer, 16384, p_FLACFile));
+			if (ExternalPlayback == 0 && p_FF->inner.ctx->buffer != nullptr)
+				p_FF->inner.player = makeUnique<Playback>(info, FLAC_FillBuffer, p_FF->inner.ctx->playbackBuffer, 16384, p_FLACFile);
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -328,7 +328,7 @@ void f_error(const FLAC__StreamDecoder */*p_dec*/, FLAC__StreamDecoderErrorStatu
 {
 }
 
-flac_t::flac_t() noexcept : audioFile_t(audioType_t::flac, {}), ctx(new (std::nothrow) decoderContext_t()) { }
+flac_t::flac_t() noexcept : audioFile_t(audioType_t::flac, {}), ctx(makeUnique<decoderContext_t>()) { }
 
 flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decoder_new()) { }
 
