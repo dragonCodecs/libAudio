@@ -159,7 +159,7 @@ int Audio_CloseFileR(void *p_AudioPtr)
 	return API->CloseFileR(p_AudioFile);
 }
 
-long audioCloseFileR(void *audioFile)
+int audioCloseFileR(void *audioFile)
 {
 	const audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
 	delete file;
@@ -189,8 +189,8 @@ void audioPlay(void *audioFile)
 
 void audioFile_t::play()
 {
-	if (player)
-		player->Play();
+	if (_player)
+		_player->Play();
 }
 
 void Audio_Pause(void *p_AudioPtr)
@@ -209,8 +209,8 @@ void audioPause(void *audioFile)
 
 void audioFile_t::pause()
 {
-	if (player)
-		player->Pause();
+	if (_player)
+		_player->Pause();
 }
 
 void Audio_Stop(void *p_AudioPtr)
@@ -229,8 +229,8 @@ void audioStop(void *audioFile)
 
 void audioFile_t::stop()
 {
-	if (player)
-		player->Stop();
+	if (_player)
+		_player->Stop();
 }
 
 /*!

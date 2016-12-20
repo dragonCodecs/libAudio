@@ -34,7 +34,7 @@ public: // protected:
 	audioType_t _type;
 	fileInfo_t _fileInfo;
 	fd_t _fd;
-	std::unique_ptr<Playback> player;
+	std::unique_ptr<Playback> _player;
 
 	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type(type), _fileInfo(), _fd(std::move(fd)) { }
 
@@ -46,8 +46,10 @@ public:
 	static bool isAudio(const char *const fileName) noexcept;
 	static bool isAudio(const int fd) noexcept;
 	const fileInfo_t &fileInfo() const noexcept { return _fileInfo; }
+	fileInfo_t &fileInfo() noexcept { return _fileInfo; }
 	audioType_t type() const noexcept { return _type; }
 	const fd_t &fd() const noexcept { return _fd; }
+	void player(std::unique_ptr<Playback> &&player) noexcept { _player = std::move(player); }
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
 	void play();
@@ -77,6 +79,7 @@ public:
 	static flac_t *openR(const char *const fileName) noexcept;
 	static bool isFLAC(const char *const fileName) noexcept;
 	static bool isFLAC(const int fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
