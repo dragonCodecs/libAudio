@@ -35,7 +35,12 @@ struct flac_t::decoderContext_t final
 	uint32_t bufferLen;
 	uint8_t playbackBuffer[16384];
 	uint8_t sampleShift;
-	uint32_t bytesRead;
+	/*!
+	 * @internal
+	 * The count of the number of bytes left to process
+	 * (also thinkable as the number of bytes left to read)
+	 */
+	uint32_t bytesRemain;
 	uint32_t bytesAvail;
 	/*!
 	 * @internal
@@ -60,13 +65,6 @@ typedef struct _FLAC_Decoder_Context
 	 * The amount to shift the sample data by to convert it
 	 */
 	uint8_t sampleShift;
-	/*!
-	 * @internal
-	 * The count of the number of bytes left to process
-	 * (also thinkable as the number of bytes left to read)
-	 */
-	uint32_t nRead;
-	uint32_t nAvail;
 
 	flac_t inner;
 } FLAC_Decoder_Context;
@@ -201,8 +199,8 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 		for (j = 0; j < channels; j++)
 			PCM[(i * channels) + j] = (short)(buffers[j][i] >> sampleShift);
 	}
-	p_FF->nRead = len * channels * (p_FF->inner._fileInfo.bitsPerSample / 8);
-	p_FF->nAvail = p_FF->nRead;
+	p_FF->inner.ctx->bytesAvail = len * channels * (p_FF->inner._fileInfo.bitsPerSample / 8);
+	p_FF->inner.ctx->bytesRemain = p_FF->inner.ctx->bytesAvail;
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -432,7 +430,7 @@ FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
@@ -445,24 +443,24 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	while (ret < uint32_t(nOutBufferLen))
 	{
 		uint32_t len;
-		if (p_FF->nAvail == 0)
+		if (p_FF->inner.ctx->bytesRemain == 0)
 		{
 			state = p_FF->inner.ctx->nextFrame();
 			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
 			{
-				p_FF->nAvail = 0;
+				p_FF->inner.ctx->bytesRemain = 0;
 				if (ret == 0)
 					return -2;
 				else
 					break;
 			}
 		}
-		len = p_FF->nAvail;
+		len = p_FF->inner.ctx->bytesRemain;
 		if (len > (nOutBufferLen - ret))
 			len = nOutBufferLen - ret;
-		memcpy(OutBuffer + ret, p_FF->inner.ctx->buffer.get() + (p_FF->nRead - p_FF->nAvail), len);
+		memcpy(OutBuffer + ret, p_FF->inner.ctx->buffer.get() + (p_FF->inner.ctx->bytesAvail - p_FF->inner.ctx->bytesRemain), len);
 		ret += len;
-		p_FF->nAvail -= len;
+		p_FF->inner.ctx->bytesRemain -= len;
 	}
 
 	return ret;
