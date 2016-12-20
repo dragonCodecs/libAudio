@@ -462,7 +462,8 @@ bool flac_t::isFLAC(const int fd) noexcept
 	char flacSig[4];
 	if (fd == -1 ||
 		read(fd, flacSig, 4) != 4 ||
-		strncmp(flacSig, "fLaC", 4) != 0)
+		(strncmp(flacSig, "fLaC", 4) != 0 &&
+		strncmp(flacSig, "OggS", 4) != 0))
 		return false;
 	return true;
 }
