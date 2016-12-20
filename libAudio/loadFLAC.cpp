@@ -428,42 +428,33 @@ FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
  * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	uint32_t ret = 0;
-	FLAC__StreamDecoderState state;
+	{ return reinterpret_cast<FLAC_Decoder_Context *>(p_FLACFile)->inner.fillBuffer((void *const)OutBuffer, uint32_t(nOutBufferLen)); }
 
-	if (nOutBufferLen < 0)
-		return -1;
-	while (ret < uint32_t(nOutBufferLen))
+int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	auto buffer = reinterpret_cast<char *const>(bufferPtr);
+	uint32_t ret = 0;
+	while (ret < length)
 	{
-		uint32_t len;
-		if (p_FF->inner.ctx->bytesRemain == 0)
+		if (ctx->bytesRemain == 0)
 		{
-			state = p_FF->inner.ctx->nextFrame();
+			const FLAC__StreamDecoderState state = ctx->nextFrame();
 			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
 			{
-				p_FF->inner.ctx->bytesRemain = 0;
+				ctx->bytesRemain = 0;
 				if (ret == 0)
 					return -2;
-				else
-					break;
+				break;
 			}
 		}
-		len = p_FF->inner.ctx->bytesRemain;
-		if (len > (nOutBufferLen - ret))
-			len = nOutBufferLen - ret;
-		memcpy(OutBuffer + ret, p_FF->inner.ctx->buffer.get() + (p_FF->inner.ctx->bytesAvail - p_FF->inner.ctx->bytesRemain), len);
+		uint32_t len = ctx->bytesRemain;
+		if (len > (length - ret))
+			len = length - ret;
+		memcpy(buffer + ret, ctx->buffer.get() + (ctx->bytesAvail - ctx->bytesRemain), len);
 		ret += len;
-		p_FF->inner.ctx->bytesRemain -= len;
+		ctx->bytesRemain -= len;
 	}
-
 	return ret;
-}
-
-int64_t flac_t::fillBuffer(void *const /*buffer*/, const uint32_t /*length*/)
-{
-	return -1;
 }
 
 /*!
