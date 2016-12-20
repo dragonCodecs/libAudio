@@ -30,7 +30,7 @@ enum class audioType_t : uint8_t
 
 struct audioFile_t
 {
-public: // protected:
+protected:
 	audioType_t _type;
 	fileInfo_t _fileInfo;
 	fd_t _fd;
@@ -68,14 +68,12 @@ public:
 
 struct flac_t final : public audioFile_t
 {
-public: // private:
+private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
 
-	flac_t() noexcept;
-	flac_t(fd_t &&fd) noexcept;
-
 public:
+	flac_t(fd_t &&fd) noexcept;
 	static flac_t *openR(const char *const fileName) noexcept;
 	static bool isFLAC(const char *const fileName) noexcept;
 	static bool isFLAC(const int fd) noexcept;

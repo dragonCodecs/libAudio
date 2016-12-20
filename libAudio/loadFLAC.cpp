@@ -299,9 +299,7 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
  */
 void f_error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *) noexcept { }
 
-flac_t::flac_t() noexcept : audioFile_t(audioType_t::flac, {}), ctx(makeUnique<decoderContext_t>()) { }
 flac_t::flac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-
 flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decoder_new()) { }
 
 flac_t *flac_t::openR(const char *const fileName) noexcept
