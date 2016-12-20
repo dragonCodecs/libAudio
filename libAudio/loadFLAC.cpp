@@ -57,11 +57,6 @@ typedef struct _FLAC_Decoder_Context
 {
 	/*!
 	 * @internal
-	 * The FLAC file to decode
-	 */
-	FILE *f_FLAC;
-	/*!
-	 * @internal
 	 * The amount to shift the sample data by to convert it
 	 */
 	uint8_t sampleShift;
@@ -90,17 +85,21 @@ FileInfo flacFileInfo;
  */
 FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buffer, size_t *bytes, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
+	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
 
 	if (*bytes > 0)
 	{
-		*bytes = fread(Buffer, 1, *bytes, f_FLAC);
-		if (ferror(f_FLAC) > 0)
+		ssize_t result = fd.read(Buffer, *bytes);
+		*bytes = 0;
+		if (result < 0)
 			return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
-		else if (*bytes == 0)
+		else if (result == 0)
 			return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
 		else
+		{
+			*bytes = size_t(result);
 			return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+		}
 	}
 
 	return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
@@ -118,13 +117,10 @@ FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buff
  */
 FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *, uint64_t amount, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
+	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
 
-	if (f_FLAC == stdin)
-		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
-	else if (fseek(f_FLAC, (long)amount, SEEK_SET) < 0)
+	if (lseek(fd, amount, SEEK_SET) < 0)
 		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
-
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
@@ -140,15 +136,11 @@ FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *, uint64_t amou
  */
 FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *, uint64_t *offset, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
-	long pos;
-
-	if (f_FLAC == stdin)
-		return FLAC__STREAM_DECODER_TELL_STATUS_UNSUPPORTED;
-	else if ((pos = ftell(f_FLAC)) < 0)
+	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
+	const off_t pos = lseek(fd, 0, SEEK_CUR);
+	if (pos < 0)
 		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
-
-	*offset = (uint64_t)pos;
+	*offset = uint64_t(pos);
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
@@ -163,16 +155,12 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *, uint64_t *off
  */
 FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *, uint64_t *len, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
-	struct stat m_stat;
-
-	if (f_FLAC == stdin)
-		return FLAC__STREAM_DECODER_LENGTH_STATUS_UNSUPPORTED;
-
-	if (fstat(fileno(f_FLAC), &m_stat) != 0)
+	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
+	struct stat fileStat;
+	if (fstat(fd, &fileStat) != 0)
 		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 
-	*len = m_stat.st_size;
+	*len = fileStat.st_size;
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
@@ -186,9 +174,8 @@ FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *, uint64_t *le
  */
 int f_feof(const FLAC__StreamDecoder *, void *p_FF)
 {
-	FILE *f_FLAC = ((FLAC_Decoder_Context *)p_FF)->f_FLAC;
-
-	return (feof(f_FLAC) == 0 ? FALSE : TRUE);
+	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
+	return fd.isEOF() ? 1 : 0;
 }
 
 /*!
@@ -350,26 +337,24 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
  */
 void *FLAC_OpenR(const char *FileName)
 {
-	FLAC_Decoder_Context *ret = nullptr;
 	char Sig[4];
 
-	FILE *f_FLAC = fopen(FileName, "rb");
-	if (f_FLAC == nullptr)
-		return ret;
-
-	ret = new (std::nothrow) FLAC_Decoder_Context();
+	FLAC_Decoder_Context *const ret = new (std::nothrow) FLAC_Decoder_Context();
 	if (ret == nullptr || !ret->inner.ctx)
-		return ret;
+		return nullptr;
 
-	ret->f_FLAC = f_FLAC;
+	ret->inner._fd = fd_t(FileName, O_RDONLY | O_NOCTTY);
+	const fd_t &fd = ret->inner._fd;
+	if (!fd.valid())
+		return nullptr;
 	FLAC__StreamDecoder *const p_dec = ret->inner.ctx->streamDecoder;
 
 	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
-	fread(Sig, 4, 1, f_FLAC);
-	fseek(f_FLAC, 0, SEEK_SET);
+	fd.read(Sig, 4);
+	lseek(fd, 0, SEEK_SET);
 	if (strncmp(Sig, "OggS", 4) == 0)
 		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
 	else
@@ -421,19 +406,15 @@ flac_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  * @return an integer indicating success or failure relative to whether the
  * FLAC encoder was able to properly finish encoding
  * @warning Do not use the pointer given by \p p_FLACFile after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
- * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 int FLAC_CloseFileR(void *p_FLACFile)
 {
-	int ret = 0;
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-
-	ret = p_FF->inner.ctx->finish();
-	fclose(p_FF->f_FLAC);
 	delete p_FF;
-	return ret;
+	return 0;
 }
 
 FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
