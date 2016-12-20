@@ -58,13 +58,6 @@ struct flac_t::decoderContext_t final
 	FLAC__StreamDecoderState nextFrame() noexcept;
 };
 
-typedef struct _FLAC_Decoder_Context
-{
-	flac_t inner;
-} FLAC_Decoder_Context;
-
-FileInfo flacFileInfo;
-
 /*!
  * @internal
  * \c f_fread() is the internal read callback for FLAC file decoding. This prevents
@@ -75,10 +68,9 @@ FileInfo flacFileInfo;
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we had success or not
  */
-FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buffer, size_t *bytes, void *p_FF)
+FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buffer, size_t *bytes, void *ctx)
 {
-	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
-
+	const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
 	if (*bytes > 0)
 	{
 		ssize_t result = fd.read(Buffer, *bytes);
@@ -107,10 +99,9 @@ FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buff
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if the seek worked or not
  */
-FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *, uint64_t amount, void *p_FF)
+FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *, uint64_t amount, void *ctx)
 {
-	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
-
+	const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
 	if (lseek(fd, amount, SEEK_SET) < 0)
 		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
@@ -126,9 +117,9 @@ FLAC__StreamDecoderSeekStatus f_fseek(const FLAC__StreamDecoder *, uint64_t amou
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we were able to determine the position or not
  */
-FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *, uint64_t *offset, void *p_FF)
+FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *, uint64_t *offset, void *ctx)
 {
-	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
+	const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
 	const off_t pos = lseek(fd, 0, SEEK_CUR);
 	if (pos < 0)
 		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
@@ -145,9 +136,9 @@ FLAC__StreamDecoderTellStatus f_ftell(const FLAC__StreamDecoder *, uint64_t *off
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating if we were able to determine the length or not
  */
-FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *, uint64_t *len, void *p_FF)
+FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *, uint64_t *len, void *ctx)
 {
-	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
+	const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
 	struct stat fileStat;
 	if (fstat(fd, &fileStat) != 0)
 		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
@@ -164,9 +155,9 @@ FLAC__StreamDecoderLengthStatus f_flen(const FLAC__StreamDecoder *, uint64_t *le
  * @param p_FF Pointer to our internal context for the given FLAC file
  * @return A status indicating whether we have reached the end of the file or not
  */
-int f_feof(const FLAC__StreamDecoder *, void *p_FF)
+int f_feof(const FLAC__StreamDecoder *, void *ctx)
 {
-	const fd_t &fd = ((FLAC_Decoder_Context *)p_FF)->inner.fd();
+	const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
 	return fd.isEOF() ? 1 : 0;
 }
 
@@ -179,23 +170,24 @@ int f_feof(const FLAC__StreamDecoder *, void *p_FF)
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  * @return A constant status indicating that it's safe to continue reading the file
  */
-FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *p_FLACFile)
+FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *audioFile)
 {
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	short *PCM = (short *)p_FF->inner.ctx->buffer.get();
-	const uint8_t channels = p_FF->inner._fileInfo.channels;
-	const uint8_t sampleShift = p_FF->inner.ctx->sampleShift;
+	const flac_t &file = *reinterpret_cast<flac_t *>(audioFile);
+	auto &ctx = *file.context();
+	short *PCM = reinterpret_cast<short *>(ctx.buffer.get());
+	const uint8_t channels = file.fileInfo().channels;
+	const uint8_t sampleShift = ctx.sampleShift;
 	uint32_t len = p_frame->header.blocksize;
-	if (len > (p_FF->inner.ctx->bufferLen / channels))
-		len = p_FF->inner.ctx->bufferLen / channels;
+	if (len > (ctx.bufferLen / channels))
+		len = ctx.bufferLen / channels;
 
 	for (uint32_t i = 0; i < len; i++)
 	{
 		for (uint8_t j = 0; j < channels; j++)
 			PCM[(i * channels) + j] = (short)(buffers[j][i] >> sampleShift);
 	}
-	p_FF->inner.ctx->bytesAvail = len * channels * (p_FF->inner._fileInfo.bitsPerSample / 8);
-	p_FF->inner.ctx->bytesRemain = p_FF->inner.ctx->bytesAvail;
+	ctx.bytesAvail = len * channels * (file.fileInfo().bitsPerSample / 8);
+	ctx.bytesRemain = ctx.bytesAvail;
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -239,10 +231,11 @@ void copyComment(std::unique_ptr<char []> &dst, const char *const src) noexcept
  * @param p_metadata The item of metadata to process
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  */
-void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *p_FLACFile)
+void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *audioFile)
 {
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	fileInfo_t &info = p_FF->inner._fileInfo;
+	flac_t &file = *reinterpret_cast<flac_t *>(audioFile);
+	auto &ctx = *file.context();
+	fileInfo_t &info = file.fileInfo();
 
 	if (p_metadata->type >= FLAC__METADATA_TYPE_UNDEFINED)
 		return;
@@ -258,13 +251,13 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			if (info.bitsPerSample == 24)
 			{
 				info.bitsPerSample = 16;
-				p_FF->inner.ctx->sampleShift = 8;
+				ctx.sampleShift = 8;
 			}
-			p_FF->inner.ctx->bufferLen = streamInfo.channels * streamInfo.max_blocksize;
-			p_FF->inner.ctx->buffer = makeUnique<uint8_t []>(p_FF->inner.ctx->bufferLen * (streamInfo.bits_per_sample / 8));
+			ctx.bufferLen = streamInfo.channels * streamInfo.max_blocksize;
+			ctx.buffer = makeUnique<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
 			info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
-			if (ExternalPlayback == 0 && p_FF->inner.ctx->buffer != nullptr)
-				p_FF->inner.player = makeUnique<Playback>(info, FLAC_FillBuffer, p_FF->inner.ctx->playbackBuffer, 16384, p_FLACFile);
+			if (ExternalPlayback == 0 && ctx.buffer != nullptr)
+				file.player(makeUnique<Playback>(info, FLAC_FillBuffer, ctx.playbackBuffer, 16384, audioFile));
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -304,8 +297,7 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  * @note Implemented as a no-operation due to how the rest of the decoder is structured
  */
-void f_error(const FLAC__StreamDecoder * /*p_dec*/, FLAC__StreamDecoderErrorStatus /*errStat*/,
-	void * /*p_FLACFile*/) noexcept { }
+void f_error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *) noexcept { }
 
 flac_t::flac_t() noexcept : audioFile_t(audioType_t::flac, {}), ctx(makeUnique<decoderContext_t>()) { }
 flac_t::flac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
@@ -315,7 +307,7 @@ flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decode
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!flacFile || !flacFile->_fd.valid() || !isFLAC(flacFile->_fd))
+	if (!flacFile || !flacFile->ctx || !flacFile->_fd.valid() || !isFLAC(flacFile->_fd))
 		return nullptr;
 
 	lseek(flacFile->_fd, 0, SEEK_SET);
@@ -332,15 +324,11 @@ void *FLAC_OpenR(const char *FileName)
 {
 	char Sig[4];
 
-	FLAC_Decoder_Context *const ret = new (std::nothrow) FLAC_Decoder_Context();
-	if (ret == nullptr || !ret->inner.ctx)
+	flac_t *const ret = flac_t::openR(FileName);
+	if (!ret)
 		return nullptr;
-
-	ret->inner._fd = fd_t(FileName, O_RDONLY | O_NOCTTY);
-	const fd_t &fd = ret->inner._fd;
-	if (!fd.valid())
-		return nullptr;
-	FLAC__StreamDecoder *const p_dec = ret->inner.ctx->streamDecoder;
+	const fd_t &fd = ret->fd();
+	FLAC__StreamDecoder *const p_dec = ret->context()->streamDecoder;
 
 	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
@@ -361,25 +349,9 @@ void *FLAC_OpenR(const char *FileName)
  * This function gets the \c FileInfo structure for an opened file
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c FLAC_Play() or \c FLAC_FillBuffer()
- * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
-{
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-
-	flacFileInfo.TotalTime = p_FF->inner._fileInfo.totalTime;
-	flacFileInfo.BitsPerSample = p_FF->inner._fileInfo.bitsPerSample;
-	flacFileInfo.BitRate = p_FF->inner._fileInfo.bitRate;
-	flacFileInfo.Channels = p_FF->inner._fileInfo.channels;
-	flacFileInfo.Title = p_FF->inner._fileInfo.title.get();
-	flacFileInfo.Artist = p_FF->inner._fileInfo.artist.get();
-	flacFileInfo.Album = p_FF->inner._fileInfo.album.get();
-	flacFileInfo.OtherComments.clear();
-	flacFileInfo.nOtherComments = 0;
-
-	return &flacFileInfo;
-}
+	{ return audioFileInfo(p_FLACFile); }
 
 bool flac_t::decoderContext_t::finish() noexcept
 {
@@ -401,14 +373,8 @@ flac_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  * @warning Do not use the pointer given by \p p_FLACFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
- * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
-int FLAC_CloseFileR(void *p_FLACFile)
-{
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	delete p_FF;
-	return 0;
-}
+int FLAC_CloseFileR(void *p_FLACFile) { return audioCloseFileR(p_FLACFile); }
 
 FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
 {
@@ -428,7 +394,7 @@ FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
  * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return reinterpret_cast<FLAC_Decoder_Context *>(p_FLACFile)->inner.fillBuffer((void *const)OutBuffer, uint32_t(nOutBufferLen)); }
+	{ return audioFillBuffer(p_FLACFile, OutBuffer, nOutBufferLen); }
 
 int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -463,34 +429,10 @@ int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @warning If \c ExternalPlayback was a non-zero value for
  * the call to \c FLAC_OpenR() used to open the file at \p p_FLACFile,
  * this function will do nothing.
- * @bug \p p_FLACFile must not be NULL as no checking on the parameter is done. FIXME!
- *
- * @bug Futher to the \p p_FLACFile check bug on this function, if this function is
- *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void FLAC_Play(void *p_FLACFile)
-{
-	if (!p_FLACFile)
-		return;
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	p_FF->inner.play();
-}
-
-void FLAC_Pause(void *p_FLACFile)
-{
-	if (!p_FLACFile)
-		return;
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	p_FF->inner.pause();
-}
-
-void FLAC_Stop(void *p_FLACFile)
-{
-	if (!p_FLACFile)
-		return;
-	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
-	p_FF->inner.stop();
-}
+void FLAC_Play(void *p_FLACFile) { audioPlay(p_FLACFile); }
+void FLAC_Pause(void *p_FLACFile) { audioPause(p_FLACFile); }
+void FLAC_Stop(void *p_FLACFile) { audioStop(p_FLACFile); }
 
 /*!
  * Checks the file given by \p FileName for whether it is an FLAC
@@ -549,10 +491,10 @@ bool flac_t::isFLAC(const char *const fileName) noexcept
 API_Functions FLACDecoder =
 {
 	FLAC_OpenR,
-	FLAC_GetFileInfo,
-	FLAC_FillBuffer,
-	FLAC_CloseFileR,
-	FLAC_Play,
-	FLAC_Pause,
-	FLAC_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
