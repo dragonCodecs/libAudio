@@ -154,6 +154,13 @@ typedef struct _API_Functions
 	void (__CDECL__ *Stop)(void *p_File);
 } API_Functions;
 
+FileInfo *audioFileInfo(void *audioFile);
+long audioFillBuffer(void *audioFile, uint8_t *buffer, int length);
+long audioCloseFileR(void *audioFile);
+void audioPlay(void *audioFile);
+void audioPause(void *audioFile);
+void audioStop(void *audioFile);
+
 /*!
  * @internal
  * This structure is what is returned in place of the internal

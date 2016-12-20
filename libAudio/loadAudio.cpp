@@ -16,6 +16,8 @@
  */
 uint8_t ExternalPlayback = 0;
 
+FileInfo audioInfo;
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by Audio_* functions
@@ -90,6 +92,26 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
 	return p_AP->API->GetFileInfo(p_AP->p_AudioFile);
 }
 
+FileInfo *audioFileInfo(void *audioFile)
+{
+	const audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	if (!file)
+		return nullptr;
+	const fileInfo_t &fileInfo = file->fileInfo();
+
+	audioInfo.TotalTime = fileInfo.totalTime;
+	audioInfo.BitsPerSample = fileInfo.bitsPerSample;
+	audioInfo.BitRate = fileInfo.bitRate;
+	audioInfo.Channels = fileInfo.channels;
+	audioInfo.Title = fileInfo.title.get();
+	audioInfo.Artist = fileInfo.artist.get();
+	audioInfo.Album = fileInfo.album.get();
+	audioInfo.OtherComments.clear();
+	audioInfo.nOtherComments = 0;
+
+	return &audioInfo;
+}
+
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
@@ -106,6 +128,14 @@ long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 	if (p_AP == NULL || OutBuffer == NULL || p_AP->p_AudioFile == NULL)
 		return -3;
 	return p_AP->API->FillBuffer(p_AP->p_AudioFile, OutBuffer, nOutBufferLen);
+}
+
+long audioFillBuffer(void *audioFile, uint8_t *buffer, int length)
+{
+	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	if (!file)
+		return 0;
+	return file->fillBuffer(static_cast<void *>(buffer), uint32_t(length));
 }
 
 /*!
@@ -129,6 +159,13 @@ int Audio_CloseFileR(void *p_AudioPtr)
 	return API->CloseFileR(p_AudioFile);
 }
 
+long audioCloseFileR(void *audioFile)
+{
+	const audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	delete file;
+	return 0;
+}
+
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
  * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenR()
@@ -143,11 +180,17 @@ void Audio_Play(void *p_AudioPtr)
 		p_AP->API->Play(p_AP->p_AudioFile);
 }
 
+void audioPlay(void *audioFile)
+{
+	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	if (file)
+		file->play();
+}
+
 void audioFile_t::play()
 {
-	if (!player)
-		return;
-	player->Play();
+	if (player)
+		player->Play();
 }
 
 void Audio_Pause(void *p_AudioPtr)
@@ -157,11 +200,17 @@ void Audio_Pause(void *p_AudioPtr)
 		p_AP->API->Pause(p_AP->p_AudioFile);
 }
 
+void audioPause(void *audioFile)
+{
+	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	if (file)
+		file->pause();
+}
+
 void audioFile_t::pause()
 {
-	if (!player)
-		return;
-	player->Pause();
+	if (player)
+		player->Pause();
 }
 
 void Audio_Stop(void *p_AudioPtr)
@@ -171,11 +220,17 @@ void Audio_Stop(void *p_AudioPtr)
 		p_AP->API->Stop(p_AP->p_AudioFile);
 }
 
+void audioStop(void *audioFile)
+{
+	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	if (file)
+		file->stop();
+}
+
 void audioFile_t::stop()
 {
-	if (!player)
-		return;
-	player->Stop();
+	if (player)
+		player->Stop();
 }
 
 /*!
