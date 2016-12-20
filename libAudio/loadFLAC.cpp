@@ -34,6 +34,10 @@ struct flac_t::decoderContext_t final
 	std::unique_ptr<uint8_t []> buffer;
 	uint32_t bufferLen;
 	uint8_t playbackBuffer[16384];
+	/*!
+	 * @internal
+	 * The amount to shift the sample data by to convert it
+	 */
 	uint8_t sampleShift;
 	/*!
 	 * @internal
@@ -54,18 +58,8 @@ struct flac_t::decoderContext_t final
 	FLAC__StreamDecoderState nextFrame() noexcept;
 };
 
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given FLAC file
- */
 typedef struct _FLAC_Decoder_Context
 {
-	/*!
-	 * @internal
-	 * The amount to shift the sample data by to convert it
-	 */
-	uint8_t sampleShift;
-
 	flac_t inner;
 } FLAC_Decoder_Context;
 
@@ -189,14 +183,15 @@ FLAC__StreamDecoderWriteStatus f_data(const FLAC__StreamDecoder *, const FLAC__F
 {
 	FLAC_Decoder_Context *p_FF = (FLAC_Decoder_Context *)p_FLACFile;
 	short *PCM = (short *)p_FF->inner.ctx->buffer.get();
-	uint8_t j, channels = p_FF->inner._fileInfo.channels, sampleShift = p_FF->sampleShift;
-	uint32_t i, len = p_frame->header.blocksize;
+	const uint8_t channels = p_FF->inner._fileInfo.channels;
+	const uint8_t sampleShift = p_FF->inner.ctx->sampleShift;
+	uint32_t len = p_frame->header.blocksize;
 	if (len > (p_FF->inner.ctx->bufferLen / channels))
 		len = p_FF->inner.ctx->bufferLen / channels;
 
-	for (i = 0; i < len; i++)
+	for (uint32_t i = 0; i < len; i++)
 	{
-		for (j = 0; j < channels; j++)
+		for (uint8_t j = 0; j < channels; j++)
 			PCM[(i * channels) + j] = (short)(buffers[j][i] >> sampleShift);
 	}
 	p_FF->inner.ctx->bytesAvail = len * channels * (p_FF->inner._fileInfo.bitsPerSample / 8);
@@ -263,7 +258,7 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			if (info.bitsPerSample == 24)
 			{
 				info.bitsPerSample = 16;
-				p_FF->sampleShift = 8;
+				p_FF->inner.ctx->sampleShift = 8;
 			}
 			p_FF->inner.ctx->bufferLen = streamInfo.channels * streamInfo.max_blocksize;
 			p_FF->inner.ctx->buffer = makeUnique<uint8_t []>(p_FF->inner.ctx->bufferLen * (streamInfo.bits_per_sample / 8));
