@@ -324,13 +324,23 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
  * @param p_FLACFile Pointer to our internal context for the given FLAC file
  * @note Implemented as a no-operation due to how the rest of the decoder is structured
  */
-void f_error(const FLAC__StreamDecoder */*p_dec*/, FLAC__StreamDecoderErrorStatus /*errStat*/, void */*p_FLACFile*/)
-{
-}
+void f_error(const FLAC__StreamDecoder * /*p_dec*/, FLAC__StreamDecoderErrorStatus /*errStat*/,
+	void * /*p_FLACFile*/) noexcept { }
 
 flac_t::flac_t() noexcept : audioFile_t(audioType_t::flac, {}), ctx(makeUnique<decoderContext_t>()) { }
+flac_t::flac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 
 flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decoder_new()) { }
+
+flac_t *flac_t::openR(const char *const fileName) noexcept
+{
+	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!flacFile || !flacFile->_fd.valid() || !isFLAC(flacFile->_fd))
+		return nullptr;
+
+	lseek(flacFile->_fd, 0, SEEK_SET);
+	return flacFile.release();
+}
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer

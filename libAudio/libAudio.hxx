@@ -47,6 +47,7 @@ public:
 	static bool isAudio(const int fd) noexcept;
 	const fileInfo_t &fileInfo() const noexcept { return _fileInfo; }
 	audioType_t type() const noexcept { return _type; }
+	const fd_t &fd() const noexcept { return _fd; }
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
 	void play();
@@ -70,7 +71,7 @@ public: // private:
 	std::unique_ptr<decoderContext_t> ctx;
 
 	flac_t() noexcept;
-	flac_t(fd_t &&fd);
+	flac_t(fd_t &&fd) noexcept;
 
 public:
 	static flac_t *openR(const char *const fileName) noexcept;
