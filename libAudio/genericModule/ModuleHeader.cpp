@@ -345,61 +345,61 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 }
 #endif
 
-ModuleHeader::ModuleHeader(IT_Intern *p_IF) : ModuleHeader()
+ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 {
 	char Magic[4], DontCare[4];
 	uint16_t MsgLength, SongFlags;
 	uint8_t Const;
-	FILE *f_IT = p_IF->f_Module;
+	const fd_t &fd = file.fd();
 
-	fread(Magic, 4, 1, f_IT);
-	if (strncmp(Magic, "IMPM", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_IT);
+	if (fd.read(Magic, 4) != 4 ||
+		strncmp(Magic, "IMPM", 4) != 0)
+		throw ModuleLoaderError(E_BAD_IT);
 
 	Name = new char[27];
-	fread(Name, 26, 1, f_IT);
+	fd.read(Name, 26);
 	if (Name[25] != 0)
 		Name[26] = 0;
 
-	fread(DontCare, 2, 1, f_IT);
-	fread(&nOrders, 2, 1, f_IT);
-	fread(&nInstruments, 2, 1, f_IT);
-	fread(&nSamples, 2, 1, f_IT);
-	fread(&nPatterns, 2, 1, f_IT);
-	fread(&CreationVersion, 2, 1, f_IT);
-	fread(&FormatVersion, 2, 1, f_IT);
-	fread(&SongFlags, 2, 1, f_IT);
+	fd.read(DontCare, 2);
+	fd.read(&nOrders, 2);
+	fd.read(&nInstruments, 2);
+	fd.read(&nSamples, 2);
+	fd.read(&nPatterns, 2);
+	fd.read(&CreationVersion, 2);
+	fd.read(&FormatVersion, 2);
+	fd.read(&SongFlags, 2);
 	// TODO: Handle special.
-	fread(DontCare, 2, 1, f_IT);
-	fread(&GlobalVolume, 1, 1, f_IT);
-	fread(&MasterVolume, 1, 1, f_IT);
-	fread(&InitialSpeed, 1, 1, f_IT);
-	fread(&InitialTempo, 1, 1, f_IT);
-	fread(&Separation, 1, 1, f_IT);
-	fread(&Const, 1, 1, f_IT);
-	fread(&MsgLength, 2, 1, f_IT);
-	fread(&MessageOffs, 4, 1, f_IT);
-	fread(&DontCare, 4, 1, f_IT);
+	fd.read(DontCare, 2);
+	fd.read(&GlobalVolume, 1);
+	fd.read(&MasterVolume, 1);
+	fd.read(&InitialSpeed, 1);
+	fd.read(&InitialTempo, 1);
+	fd.read(&Separation, 1);
+	fd.read(&Const, 1);
+	fd.read(&MsgLength, 2);
+	fd.read(&MessageOffs, 4);
+	fd.read(&DontCare, 4);
 
 	Panning = new uint16_t[64];
 	for (uint8_t i = 0; i < 64; i++)
 	{
 		uint8_t value;
-		fread(&value, 1, 1, f_IT);
+		fd.read(&value, 1);
 		Panning[i] = value;
 	}
 	//Volumes = new uint8_t[64];
-	fread(Volumes, 64, 1, f_IT);
+	fd.read(Volumes, 64);
 
 	Orders = new uint8_t[nOrders];
-	fread(Orders, nOrders, 1, f_IT);
+	fd.read(Orders, nOrders);
 
 	InstrumentPtrs = new uint32_t[nInstruments];
-	fread(InstrumentPtrs, nInstruments, 4, f_IT);
+	fd.read(InstrumentPtrs, nInstruments * 4);
 	SamplePtrs = new uint32_t[nSamples];
-	fread(SamplePtrs, nSamples, 4, f_IT);
+	fd.read(SamplePtrs, nSamples * 4);
 	PatternPtrs = new uint32_t[nPatterns];
-	fread(PatternPtrs, nPatterns, 4, f_IT);
+	fd.read(PatternPtrs, nPatterns * 4);
 
 	Flags = 0;
 	Flags |= (SongFlags & 0x0010) == 0 ? FILE_FLAGS_AMIGA_SLIDES : FILE_FLAGS_LINEAR_SLIDES;
@@ -408,9 +408,9 @@ ModuleHeader::ModuleHeader(IT_Intern *p_IF) : ModuleHeader()
 
 	if (MessageOffs != 0)
 	{
-		fseek(f_IT, MessageOffs, SEEK_SET);
+		fd.seek(MessageOffs, SEEK_SET);
 		Remark = new char[MsgLength + 1];
-		fread(Remark, MsgLength, 1, f_IT);
+		fd.read(Remark, MsgLength);
 		Remark[MsgLength] = 0;
 	}
 

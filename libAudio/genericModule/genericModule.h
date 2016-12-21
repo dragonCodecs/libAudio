@@ -158,7 +158,7 @@ public:
 #ifdef __FC1x_EXPERIMENTAL__
 	ModuleHeader(FC1x_Intern *p_FF);
 #endif
-	ModuleHeader(IT_Intern *p_IF);
+	ModuleHeader(modIT_t &file);
 	virtual ~ModuleHeader();
 };
 

@@ -33,6 +33,14 @@ void *IT_OpenR(const char *FileName)
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());
+		delete e;
+		fclose(f_IT);
+		delete ret;
+		return nullptr;
+	}
+	catch (ModuleLoaderError &e)
+	{
+		printf("%s\n", e.GetError());
 		fclose(f_IT);
 		delete ret;
 		return nullptr;
