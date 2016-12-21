@@ -10,17 +10,39 @@ modIT_t::modIT_t(/*fd_t &&fd*/) noexcept : moduleFile_t(audioType_t::moduleIT, f
 
 void *IT_OpenR(const char *FileName)
 {
-	IT_Intern *ret = NULL;
-	FILE *f_IT = NULL;
+	IT_Intern *const ret = new (std::nothrow) IT_Intern();
+	if (ret == nullptr)
+		return nullptr;
 
-	ret = new (std::nothrow) IT_Intern();
-	if (ret == NULL)
-		return ret;
-
-	f_IT = fopen(FileName, "rb");
-	if (f_IT == NULL)
-		return f_IT;
+	FILE *const f_IT = fopen(FileName, "rb");
+	if (f_IT == nullptr)
+	{
+		delete ret;
+		return nullptr;
+	}
 	ret->f_Module = f_IT;
+
+	fileInfo_t &info = ret->inner.fileInfo();
+	info.bitRate = 44100;
+	info.bitsPerSample = 16;
+	info.channels = 2;
+	try
+	{
+		ret->p_File = new ModuleFile(ret);
+	}
+	catch (ModuleLoaderError *e)
+	{
+		printf("%s\n", e->GetError());
+		fclose(f_IT);
+		delete ret;
+		return nullptr;
+	}
+	info.title.reset(const_cast<char *>(ret->p_File->GetTitle()));
+	info.artist.reset(const_cast<char *>(ret->p_File->GetAuthor()));
+
+	if (ExternalPlayback == 0)
+		ret->p_Playback = new Playback(info, IT_FillBuffer, ret->buffer, 8192, const_cast<IT_Intern *>(ret));
+	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
 
 	return ret;
 }
@@ -28,7 +50,8 @@ void *IT_OpenR(const char *FileName)
 FileInfo *IT_GetFileInfo(void *p_ITFile)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	FileInfo *ret = NULL;
+	return audioFileInfo(&p_IF->inner);
+	/*FileInfo *ret = NULL;
 
 	if (p_IF == NULL)
 		return ret;
@@ -57,7 +80,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 		p_IF->p_Playback = new Playback(ret, IT_FillBuffer, p_IF->buffer, 8192, p_ITFile);
 	p_IF->p_File->InitMixer(ret);
 
-	return ret;
+	return ret;*/
 }
 
 #if 0
