@@ -44,7 +44,7 @@ public:
 	audioFile_t &operator =(audioFile_t &&) = default;
 	static audioFile_t *openR(const char *const fileName) noexcept;
 	static bool isAudio(const char *const fileName) noexcept;
-	static bool isAudio(const int fd) noexcept;
+	static bool isAudio(const int32_t fd) noexcept;
 	const fileInfo_t &fileInfo() const noexcept { return _fileInfo; }
 	fileInfo_t &fileInfo() noexcept { return _fileInfo; }
 	audioType_t type() const noexcept { return _type; }
@@ -76,10 +76,30 @@ public:
 	flac_t(fd_t &&fd) noexcept;
 	static flac_t *openR(const char *const fileName) noexcept;
 	static bool isFLAC(const char *const fileName) noexcept;
-	static bool isFLAC(const int fd) noexcept;
+	static bool isFLAC(const int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
+struct moduleFile_t : public audioFile_t
+{
+protected:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+	moduleFile_t(audioType_t type, fd_t &&fd) noexcept;
+
+public:
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
+struct modIT_t final : public moduleFile_t
+{
+public:
+	modIT_t(/*fd_t &&fd*/) noexcept;
+	static bool isIT(const char *const fileName) noexcept;
+	static bool isIT(const int32_t fd) noexcept;
 };
 
 template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>; };
