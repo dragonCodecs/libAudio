@@ -169,20 +169,10 @@ FileInfo *IT_GetFileInfo_(void *p_ITFile)
 
 long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int32_t ret = 0, Read;
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
 	if (p_IF->p_File == NULL)
 		return -1;
-	do
-	{
-		Read = p_IF->p_File->Mix(p_IF->buffer, nOutBufferLen - ret);
-		if (Read >= 0 && OutBuffer != p_IF->buffer)
-			memcpy(OutBuffer + ret, p_IF->buffer, Read);
-		if (Read >= 0)
-			ret += Read;
-	}
-	while (ret < nOutBufferLen && Read >= 0);
-	return (ret == 0 ? Read : ret);
+	return p_IF->p_File->Mix(OutBuffer, nOutBufferLen);
 }
 
 int IT_CloseFileR(void *p_ITFile)
