@@ -41,7 +41,7 @@ void *IT_OpenR(const char *FileName)
 	info.artist.reset(const_cast<char *>(ret->p_File->GetAuthor()));
 
 	if (ExternalPlayback == 0)
-		ret->p_Playback = new Playback(info, IT_FillBuffer, ret->buffer, 8192, const_cast<IT_Intern *>(ret));
+		ret->inner.player(makeUnique<Playback>(info, IT_FillBuffer, ret->buffer, 8192, const_cast<IT_Intern *>(ret)));
 	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
 
 	return ret;
@@ -68,8 +68,6 @@ int IT_CloseFileR(void *p_ITFile)
 	if (p_IF == NULL)
 		return 0;
 
-	delete p_IF->p_Playback;
-	p_IF->p_Playback = nullptr;
 	delete p_IF->p_File;
 	p_IF->p_File = nullptr;
 
@@ -81,22 +79,22 @@ int IT_CloseFileR(void *p_ITFile)
 void IT_Play(void *p_ITFile)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-
-	p_IF->p_Playback->Play();
+	if (p_IF)
+		audioPlay(&p_IF->inner);
 }
 
 void IT_Pause(void *p_ITFile)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-
-	p_IF->p_Playback->Pause();
+	if (p_IF)
+		audioPause(&p_IF->inner);
 }
 
 void IT_Stop(void *p_ITFile)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-
-	p_IF->p_Playback->Stop();
+	if (p_IF)
+		audioStop(&p_IF->inner);
 }
 
 bool Is_IT(const char *FileName)
