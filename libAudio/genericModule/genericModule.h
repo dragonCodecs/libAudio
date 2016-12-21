@@ -1,6 +1,8 @@
 #ifndef __GenericModule_H__
 #define __GenericModule_H__
 
+#include "../libAudio.hxx"
+
 /***************************\
 |* ----=== WARNING ===---- *|
 |*   This set of classes   *|
@@ -22,6 +24,8 @@ template<typename T> struct moduleIntern : T
 	Playback *p_Playback;
 	uint8_t buffer[8192];
 	ModuleFile *p_File;
+
+	moduleIntern() noexcept : T(), f_Module(nullptr), p_FI(nullptr), p_Playback(nullptr), p_File(nullptr) { }
 };
 
 struct modIntern { };
@@ -29,7 +33,7 @@ struct s3mIntern { };
 struct stmIntern { };
 struct aonIntern { };
 struct fc1xIntern { };
-struct itIntern { };
+struct itIntern { modIT_t inner; };
 
 typedef moduleIntern<modIntern> MOD_Intern;
 typedef moduleIntern<s3mIntern> S3M_Intern;
@@ -633,5 +637,11 @@ inline uint16_t Swap16(uint16_t i)
 {
 	return ((i >> 8) & 0xFF) | ((i & 0xFF) << 8);
 }
+
+struct moduleFile_t::decoderContext_t
+{
+	uint8_t playbackBuffer[8192];
+	std::unique_ptr<ModuleFile> mod;
+};
 
 #endif /*__GenericModule_H__*/

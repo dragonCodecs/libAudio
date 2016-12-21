@@ -6,15 +6,16 @@
 #include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
+modIT_t::modIT_t(/*fd_t &&fd*/) noexcept : moduleFile_t(audioType_t::moduleIT, fd_t()) { }
+
 void *IT_OpenR(const char *FileName)
 {
 	IT_Intern *ret = NULL;
 	FILE *f_IT = NULL;
 
-	ret = (IT_Intern *)malloc(sizeof(IT_Intern));
+	ret = new (std::nothrow) IT_Intern();
 	if (ret == NULL)
 		return ret;
-	memset(ret, 0x00, sizeof(IT_Intern));
 
 	f_IT = fopen(FileName, "rb");
 	if (f_IT == NULL)
@@ -169,10 +170,12 @@ int IT_CloseFileR(void *p_ITFile)
 		return 0;
 
 	delete p_IF->p_Playback;
+	p_IF->p_Playback = nullptr;
 	delete p_IF->p_File;
+	p_IF->p_File = nullptr;
 
 	ret = fclose(p_IF->f_Module);
-	free(p_IF);
+	delete p_IF;
 	return ret;
 }
 
