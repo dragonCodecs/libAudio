@@ -8,6 +8,12 @@
 #define O_NOCTTY _O_BINARY
 #endif
 
+#ifdef __GNUC__
+#define WARN_UNUSED		__attribute__((warn_unused_result))
+#else
+#define WARN_UNUSED
+#endif
+
 /*!
  * @internal
  * While this is supposed to be a very thin, RAII-only layer,
@@ -55,17 +61,17 @@ public:
 		return *this;
 	}
 
-	operator int32_t() const noexcept { return fd; }
-	bool operator ==(const int32_t desc) const noexcept { return fd == desc; }
-	bool valid() const noexcept { return fd != -1; }
-	bool isEOF() const noexcept { return eof; }
+	operator int32_t() const noexcept WARN_UNUSED { return fd; }
+	bool operator ==(const int32_t desc) const noexcept WARN_UNUSED { return fd == desc; }
+	bool valid() const noexcept WARN_UNUSED { return fd != -1; }
+	bool isEOF() const noexcept WARN_UNUSED { return eof; }
 	void swap(fd_t &desc) noexcept
 	{
 		std::swap(fd, desc.fd);
 		std::swap(eof, desc.eof);
 	}
 
-	ssize_t read(void *const bufferPtr, const size_t len) const noexcept
+	ssize_t read(void *const bufferPtr, const size_t len) const noexcept WARN_UNUSED
 	{
 		if (eof)
 			return 0;
@@ -74,7 +80,9 @@ public:
 			eof = true;
 		return result;
 	}
-	ssize_t write(const void *const bufferPtr, const size_t len) const noexcept { return ::write(fd, bufferPtr, len); }
+	ssize_t write(const void *const bufferPtr, const size_t len) const noexcept WARN_UNUSED { return ::write(fd, bufferPtr, len); }
+	off_t seek(off_t offset, int32_t whence) const noexcept WARN_UNUSED { return ::lseek(fd, offset, whence); }
+	off_t tell() const noexcept WARN_UNUSED { return seek(0, SEEK_CUR); }
 
 	fd_t(const fd_t &) = delete;
 	fd_t &operator =(const fd_t &) = delete;
