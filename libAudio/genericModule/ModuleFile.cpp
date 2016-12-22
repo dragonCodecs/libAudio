@@ -207,7 +207,8 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	uint32_t *SamplePtrs, *PatternPtrs;
 	FILE *f_IT = p_IF->f_Module;
 
-	p_Header = new ModuleHeader(p_IF);
+	p_Header = new ModuleHeader(p_IF->inner);
+	fseek(f_IT, p_IF->inner.fd().tell(), SEEK_SET);
 	if (p_Header->nInstruments != 0)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
