@@ -363,13 +363,8 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 
 	Name = makeUnique<char []>(27);
 	Panning = makeUnique<uint16_t []>(64);
-	Orders = new uint8_t[nOrders];
-	InstrumentPtrs = new uint32_t[nInstruments];
-	SamplePtrs = new uint32_t[nSamples];
-	PatternPtrs = new uint32_t[nPatterns];
 
-	if (!Name || !Panning || !Orders || !InstrumentPtrs ||
-		!SamplePtrs || !PatternPtrs ||
+	if (!Name || !Panning ||
 		!fd.read(Name, 26) ||
 		!fd.read(DontCare, 2) ||
 		!fd.read(&nOrders, 2) ||
@@ -405,8 +400,14 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 		Panning[i] = value;
 	}
 
+	Orders = new uint8_t[nOrders];
+	InstrumentPtrs = new uint32_t[nInstruments];
+	SamplePtrs = new uint32_t[nSamples];
+	PatternPtrs = new uint32_t[nPatterns];
+
 	//Volumes = new uint8_t[64];
-	if (!fd.read(Volumes, 64) ||
+	if (!Orders || !InstrumentPtrs || !SamplePtrs || !PatternPtrs ||
+		!fd.read(Volumes, 64) ||
 		!fd.read(Orders, nOrders) ||
 		!fd.read(InstrumentPtrs, nInstruments * 4) ||
 		!fd.read(SamplePtrs, nSamples * 4) ||
