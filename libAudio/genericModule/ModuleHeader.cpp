@@ -71,7 +71,6 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF) : ModuleHeader()
 	nInstruments = 0;
 	CreationVersion = FormatVersion = 0;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
-	Panning = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
@@ -130,7 +129,7 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 	if (DontCare[1] == 0xFC)
 	{
 		uint8_t i;
-		Panning = new uint16_t[32];
+		Panning = makeUnique<uint16_t []>(32);
 		for (i = 0; i < 32; i++)
 		{
 			uint8_t value;
@@ -142,8 +141,6 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 				Panning[i] = 128;
 		}
 	}
-	else
-		Panning = nullptr;
 
 	/********************************************\
 	|* The following block just initialises the *|
@@ -314,7 +311,6 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	CreationVersion = FormatVersion = 0;
 	nInstruments = 0;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
-	Panning = nullptr;
 }
 
 #ifdef __FC1x_EXPERIMENTAL__
@@ -366,7 +362,9 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 		throw ModuleLoaderError(E_BAD_IT);
 
 	Name = makeUnique<char []>(27);
-	if (!Name ||
+	Panning = makeUnique<uint16_t []>(64);
+
+	if (!Name || !Panning ||
 		!fd.read(Name, 26) ||
 		!fd.read(DontCare, 2) ||
 		!fd.read(&nOrders, 2) ||
@@ -392,11 +390,13 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 	if (Name[25] != 0)
 		Name[26] = 0;
 
-	Panning = new uint16_t[64];
+	// This loop is unfortunately necessary to perform a width conversion
+	// from the read value to our internal panning value.
 	for (uint8_t i = 0; i < 64; i++)
 	{
 		uint8_t value;
-		fd.read(&value, 1);
+		if (!fd.read(value))
+			throw ModuleLoaderError(E_BAD_IT);
 		Panning[i] = value;
 	}
 	//Volumes = new uint8_t[64];
@@ -435,7 +435,6 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 
 ModuleHeader::~ModuleHeader()
 {
-	delete [] Panning;
 	delete [] (uint16_t *)InstrumentPtrs;
 	delete [] (uint16_t *)PatternPtrs;
 	delete [] (uint16_t *)SamplePtrs;
