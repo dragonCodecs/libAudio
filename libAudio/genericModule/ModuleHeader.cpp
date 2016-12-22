@@ -366,31 +366,30 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 
 	Name = makeUnique<char []>(27);
 	if (!Name ||
-		fd.read(Name, 26) != 26)
+		!fd.read(Name, 26) ||
+		!fd.read(DontCare, 2) ||
+		!fd.read(&nOrders, 2) ||
+		!fd.read(&nInstruments, 2) ||
+		!fd.read(&nSamples, 2) ||
+		!fd.read(&nPatterns, 2) ||
+		!fd.read(&CreationVersion, 2) ||
+		!fd.read(&FormatVersion, 2) ||
+		!fd.read(&SongFlags, 2) ||
+		// TODO: Handle special.
+		!fd.read(DontCare, 2) ||
+		!fd.read(&GlobalVolume, 1) ||
+		!fd.read(&MasterVolume, 1) ||
+		!fd.read(&InitialSpeed, 1) ||
+		!fd.read(&InitialTempo, 1) ||
+		!fd.read(&Separation, 1) ||
+		!fd.read(&Const, 1) ||
+		!fd.read(&MsgLength, 2) ||
+		!fd.read(&MessageOffs, 4) ||
+		!fd.read(&DontCare, 4))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	if (Name[25] != 0)
 		Name[26] = 0;
-
-	fd.read(DontCare, 2);
-	fd.read(&nOrders, 2);
-	fd.read(&nInstruments, 2);
-	fd.read(&nSamples, 2);
-	fd.read(&nPatterns, 2);
-	fd.read(&CreationVersion, 2);
-	fd.read(&FormatVersion, 2);
-	fd.read(&SongFlags, 2);
-	// TODO: Handle special.
-	fd.read(DontCare, 2);
-	fd.read(&GlobalVolume, 1);
-	fd.read(&MasterVolume, 1);
-	fd.read(&InitialSpeed, 1);
-	fd.read(&InitialTempo, 1);
-	fd.read(&Separation, 1);
-	fd.read(&Const, 1);
-	fd.read(&MsgLength, 2);
-	fd.read(&MessageOffs, 4);
-	fd.read(&DontCare, 4);
 
 	Panning = new uint16_t[64];
 	for (uint8_t i = 0; i < 64; i++)
