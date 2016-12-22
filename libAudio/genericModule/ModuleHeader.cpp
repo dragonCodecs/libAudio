@@ -355,13 +355,14 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 
 ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 {
-	char Magic[4], DontCare[4];
+	std::array<char, 4> magic;
+	char DontCare[4];
 	uint16_t MsgLength, SongFlags;
 	uint8_t Const;
 	const fd_t &fd = file.fd();
 
-	if (fd.read(Magic, 4) != 4 ||
-		strncmp(Magic, "IMPM", 4) != 0)
+	if (!fd.read(magic) ||
+		strncmp(magic.data(), "IMPM", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
 	Name = makeUnique<char []>(27);
