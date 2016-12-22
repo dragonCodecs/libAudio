@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <utility>
+#include <memory>
 
 #ifdef _MSVC
 #define O_NOCTTY _O_BINARY
@@ -71,14 +72,30 @@ public:
 		std::swap(eof, desc.eof);
 	}
 
-	ssize_t read(void *const bufferPtr, const size_t len) const noexcept WARN_UNUSED
+	template<typename T> bool read(T &value) const noexcept
+		{ return read(&value, sizeof(T)); }
+	template<typename T, size_t N> bool read(std::array<T, N> &value) const noexcept
+		{ return read(value.data(), N); }
+	template<typename T> bool read(const std::unique_ptr<T> &value, const size_t valueLen) const noexcept
+		{ return read(value.get(), valueLen); }
+
+	bool read(void *const value, const size_t valueLen) const noexcept WARN_UNUSED
 	{
+		size_t actualLen;
+		return read(value, valueLen, actualLen);
+	}
+
+	bool read(void *const value, const size_t valueLen, size_t &actualLen) const noexcept WARN_UNUSED
+	{
+		actualLen = 0;
 		if (eof)
-			return 0;
-		const ssize_t result = ::read(fd, bufferPtr, len);
+			return false;
+		const ssize_t result = ::read(fd, value, valueLen);
 		if (result == 0)
 			eof = true;
-		return result;
+		else if (result > 0)
+			actualLen = size_t(result);
+		return actualLen == valueLen;
 	}
 	ssize_t write(const void *const bufferPtr, const size_t len) const noexcept WARN_UNUSED { return ::write(fd, bufferPtr, len); }
 	off_t seek(off_t offset, int32_t whence) const noexcept WARN_UNUSED { return ::lseek(fd, offset, whence); }
