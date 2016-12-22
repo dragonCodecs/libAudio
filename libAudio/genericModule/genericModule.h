@@ -77,18 +77,19 @@ typedef moduleIntern<itIntern> IT_Intern;
 class ModuleLoaderError
 {
 private:
-	uint32_t Error;
+	const uint32_t Error;
 
 public:
-	ModuleLoaderError(uint32_t Error);
-	const char *GetError();
+	ModuleLoaderError(const uint32_t Error);
+	const char *GetError() const noexcept { return error(); }
+	const char *error() const noexcept;
 };
 
 class ModuleAllocator
 {
 public:
-	void *operator new(size_t s);
-	void *operator new[](size_t s);
+	void *operator new(const size_t s);
+	void *operator new[](const size_t s);
 };
 
 class ModuleHeader : public ModuleAllocator

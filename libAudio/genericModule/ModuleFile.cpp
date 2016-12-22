@@ -8,14 +8,16 @@
 #endif
 #endif
 
-void *ModuleAllocator::operator new(size_t size)
+moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t(type, std::move(fd)), ctx() { }
+
+void *ModuleAllocator::operator new(const size_t size)
 {
 	void *ret = ::operator new(size);
 	memset(ret, 0x00, size);
 	return ret;
 }
 
-void *ModuleAllocator::operator new[](size_t size)
+void *ModuleAllocator::operator new[](const size_t size)
 {
 	void *ret = ::operator new[](size);
 	memset(ret, 0x00, size);
@@ -674,7 +676,7 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 
 ModuleLoaderError::ModuleLoaderError(uint32_t error) : Error(error) { }
 
-const char *ModuleLoaderError::GetError()
+const char *ModuleLoaderError::error() const noexcept
 {
 	switch (Error)
 	{

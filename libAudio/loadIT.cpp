@@ -38,9 +38,9 @@ void *IT_OpenR(const char *FileName)
 		delete ret;
 		return nullptr;
 	}
-	catch (ModuleLoaderError &e)
+	catch (const ModuleLoaderError &e)
 	{
-		printf("%s\n", e.GetError());
+		printf("%s\n", e.error());
 		fclose(f_IT);
 		delete ret;
 		return nullptr;
