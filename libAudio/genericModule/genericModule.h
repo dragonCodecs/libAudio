@@ -143,8 +143,8 @@ private:
 	// IT
 	uint8_t Separation;
 	uint32_t MessageOffs;
-	uint8_t Volumes[64];
-	bool PanSurround[64];
+	std::array<uint8_t, 64> Volumes;
+	std::array<bool, 64> PanSurround;
 
 private:
 	uint8_t nChannels;

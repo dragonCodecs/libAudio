@@ -4,7 +4,7 @@
 
 // Default initalise key fields
 ModuleHeader::ModuleHeader() : RestartPos(255), GlobalVolume(64), InitialSpeed(6), InitialTempo(125), MasterVolume(64), Separation(128),
-	Volumes{64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 
+	Volumes{64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
 		64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64}
 {
 }
@@ -404,9 +404,8 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 	SamplePtrs = new uint32_t[nSamples];
 	PatternPtrs = new uint32_t[nPatterns];
 
-	//Volumes = new uint8_t[64];
 	if (!Orders || !InstrumentPtrs || !SamplePtrs || !PatternPtrs ||
-		!fd.read(Volumes, 64) ||
+		!fd.read(Volumes) ||
 		!fd.read(Orders, nOrders) ||
 		!fd.read(InstrumentPtrs, nInstruments * 4) ||
 		!fd.read(SamplePtrs, nSamples * 4) ||
