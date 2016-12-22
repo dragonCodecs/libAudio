@@ -311,7 +311,7 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
  */
 void *FLAC_OpenR(const char *FileName)
 {
-	char Sig[4];
+	std::array<char, 4> sig;
 
 	flac_t *const ret = flac_t::openR(FileName);
 	if (!ret)
@@ -323,13 +323,13 @@ void *FLAC_OpenR(const char *FileName)
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
-	if (fd.read(Sig, 4) != 4)
+	if (!fd.read(sig))
 	{
 		delete ret;
 		return nullptr;
 	}
 	lseek(fd, 0, SEEK_SET);
-	if (strncmp(Sig, "OggS", 4) == 0)
+	if (strncmp(sig.data(), "OggS", 4) == 0)
 		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
 	else
 		FLAC__stream_decoder_init_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
