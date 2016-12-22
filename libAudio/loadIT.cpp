@@ -14,13 +14,13 @@ void *IT_OpenR(const char *FileName)
 	if (ret == nullptr)
 		return nullptr;
 
-	FILE *const f_IT = fopen(FileName, "rb");
-	if (f_IT == nullptr)
+	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
+	if (!ret->inner.fd().valid())
 	{
 		delete ret;
 		return nullptr;
 	}
-	ret->f_Module = f_IT;
+	ret->f_Module = fdopen(ret->inner.fd(), "rb");
 
 	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
@@ -34,14 +34,14 @@ void *IT_OpenR(const char *FileName)
 	{
 		printf("%s\n", e->GetError());
 		delete e;
-		fclose(f_IT);
+		fclose(ret->f_Module);
 		delete ret;
 		return nullptr;
 	}
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
-		fclose(f_IT);
+		fclose(ret->f_Module);
 		delete ret;
 		return nullptr;
 	}
