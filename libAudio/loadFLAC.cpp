@@ -73,17 +73,13 @@ FLAC__StreamDecoderReadStatus f_fread(const FLAC__StreamDecoder *, uint8_t *Buff
 	const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
 	if (*bytes > 0)
 	{
-		ssize_t result = fd.read(Buffer, *bytes);
-		*bytes = 0;
-		if (result < 0)
+		bool result = fd.read(Buffer, *bytes, *bytes);
+		if (!result && !fd.isEOF())
 			return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
-		else if (result == 0)
+		else if (!result)
 			return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
 		else
-		{
-			*bytes = size_t(result);
 			return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
-		}
 	}
 
 	return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
