@@ -290,7 +290,7 @@ const char *ModuleFile::GetTitle()
 {
 	if (p_Header->Name == nullptr)
 		return nullptr;
-	return strdup(p_Header->Name);
+	return strdup(p_Header->Name.get());
 }
 
 const char *ModuleFile::GetAuthor()
@@ -681,6 +681,8 @@ const char *ModuleLoaderError::error() const noexcept
 {
 	switch (Error)
 	{
+		case E_BAD_MOD:
+			return "Bad ProTracker Module";
 		case E_BAD_S3M:
 			return "Bad Scream Tracker III Module";
 		case E_BAD_STM:

@@ -14,8 +14,10 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF) : ModuleHeader()
 	char MODMagic[4];
 	FILE *f_MOD = p_MF->f_Module;
 
-	Name = new char[21];
-	fread(Name, 20, 1, f_MOD);
+	Name = makeUnique<char []>(21);
+	if (!Name)
+		throw new ModuleLoaderError(E_BAD_MOD);
+	fread(Name.get(), 20, 1, f_MOD);
 	if (Name[19] != 0)
 		Name[20] = 0;
 
@@ -82,8 +84,10 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 	uint16_t Special, RawFlags;
 	FILE *f_S3M = p_SF->f_Module;
 
-	Name = new char[29];
-	fread(Name, 28, 1, f_S3M);
+	Name = makeUnique<char []>(29);
+	if (!Name)
+		throw new ModuleLoaderError(E_BAD_S3M);
+	fread(Name.get(), 28, 1, f_S3M);
 	if (Name[27] != 0)
 		Name[28] = 0;
 	fread(&Const, 1, 1, f_S3M);
@@ -158,8 +162,10 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF) : ModuleHeader()
 	uint8_t _nPatterns, i;
 	FILE *f_STM = p_SF->f_Module;
 
-	Name = new char[21];
-	fread(Name, 20, 1, f_STM);
+	Name = makeUnique<char []>(21);
+	if (!Name)
+		throw new ModuleLoaderError(E_BAD_STM);
+	fread(Name.get(), 20, 1, f_STM);
 	if (Name[19] != 0)
 		Name[20] = 0;
 	fread(Const, 9, 1, f_STM);
@@ -220,8 +226,10 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 
 	nChannels = Magic1[3] - '0';
 
-	Name = new char[BlockLen + 1];
-	fread(Name, BlockLen, 1, f_AON);
+	Name = makeUnique<char []>(BlockLen + 1);
+	if (!Name)
+		throw new ModuleLoaderError(E_BAD_AON);
+	fread(Name.get(), BlockLen, 1, f_AON);
 	Name[BlockLen] = 0;
 
 	fread(StrMagic, 4, 1, f_AON);
@@ -356,8 +364,11 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 		strncmp(Magic, "IMPM", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	Name = new char[27];
-	fd.read(Name, 26);
+	Name = makeUnique<char []>(27);
+	if (!Name ||
+		fd.read(Name, 26) != 26)
+		throw ModuleLoaderError(E_BAD_IT);
+
 	if (Name[25] != 0)
 		Name[26] = 0;
 
@@ -429,7 +440,6 @@ ModuleHeader::~ModuleHeader()
 	delete [] (uint16_t *)PatternPtrs;
 	delete [] (uint16_t *)SamplePtrs;
 	delete [] Orders;
-	delete [] Name;
 	delete [] Author;
 	delete [] Remark;
 }

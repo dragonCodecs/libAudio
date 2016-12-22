@@ -53,11 +53,12 @@ typedef moduleIntern<itIntern> IT_Intern;
 #define MODULE_FC1x		5
 #define MODULE_IT		6
 
-#define E_BAD_S3M		1
-#define E_BAD_STM		2
-#define E_BAD_AON		3
-#define E_BAD_FC1x		4
-#define E_BAD_IT		5
+#define E_BAD_MOD		1
+#define E_BAD_S3M		2
+#define E_BAD_STM		3
+#define E_BAD_AON		4
+#define E_BAD_FC1x		5
+#define E_BAD_IT		6
 
 #define FILE_FLAGS_AMIGA_SLIDES		0x01
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
@@ -96,7 +97,7 @@ class ModuleHeader : public ModuleAllocator
 {
 private:
 	// Common fields
-	char *Name;
+	std::unique_ptr<char []> Name;
 	char *Remark;
 	uint16_t nOrders;
 	uint16_t nSamples;
