@@ -363,8 +363,13 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 
 	Name = makeUnique<char []>(27);
 	Panning = makeUnique<uint16_t []>(64);
+	Orders = new uint8_t[nOrders];
+	InstrumentPtrs = new uint32_t[nInstruments];
+	SamplePtrs = new uint32_t[nSamples];
+	PatternPtrs = new uint32_t[nPatterns];
 
-	if (!Name || !Panning ||
+	if (!Name || !Panning || !Orders || !InstrumentPtrs ||
+		!SamplePtrs || !PatternPtrs ||
 		!fd.read(Name, 26) ||
 		!fd.read(DontCare, 2) ||
 		!fd.read(&nOrders, 2) ||
@@ -399,18 +404,14 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 			throw ModuleLoaderError(E_BAD_IT);
 		Panning[i] = value;
 	}
+
 	//Volumes = new uint8_t[64];
-	fd.read(Volumes, 64);
-
-	Orders = new uint8_t[nOrders];
-	fd.read(Orders, nOrders);
-
-	InstrumentPtrs = new uint32_t[nInstruments];
-	fd.read(InstrumentPtrs, nInstruments * 4);
-	SamplePtrs = new uint32_t[nSamples];
-	fd.read(SamplePtrs, nSamples * 4);
-	PatternPtrs = new uint32_t[nPatterns];
-	fd.read(PatternPtrs, nPatterns * 4);
+	if (!fd.read(Volumes, 64) ||
+		!fd.read(Orders, nOrders) ||
+		!fd.read(InstrumentPtrs, nInstruments * 4) ||
+		!fd.read(SamplePtrs, nSamples * 4) ||
+		!fd.read(PatternPtrs, nPatterns * 4))
+		throw ModuleLoaderError(E_BAD_IT);
 
 	Flags = 0;
 	Flags |= (SongFlags & 0x0010) == 0 ? FILE_FLAGS_AMIGA_SLIDES : FILE_FLAGS_LINEAR_SLIDES;
@@ -419,9 +420,10 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 
 	if (MessageOffs != 0)
 	{
-		fd.seek(MessageOffs, SEEK_SET);
 		Remark = new char[MsgLength + 1];
-		fd.read(Remark, MsgLength);
+		if (fd.seek(MessageOffs, SEEK_SET) != MessageOffs ||
+			!fd.read(Remark, MsgLength))
+			throw ModuleLoaderError(E_BAD_IT);
 		Remark[MsgLength] = 0;
 	}
 
