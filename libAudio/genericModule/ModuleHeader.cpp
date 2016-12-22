@@ -55,8 +55,8 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF) : ModuleHeader()
 	nOrders = 0;
 	fread(&nOrders, 1, 1, f_MOD);
 	fread(&RestartPos, 1, 1, f_MOD);
-	Orders = new uint8_t[128];
-	fread(Orders, 128, 1, f_MOD);
+	Orders = makeUnique<uint8_t []>(128);
+	fread(Orders.get(), 128, 1, f_MOD);
 	if (nOrders > 128)
 		nOrders = 128;
 	if (RestartPos > 127)
@@ -118,8 +118,8 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 	if (CreationVersion < 0x1320 && (RawFlags & 0x40) != 0)
 		Flags |= FILE_FLAGS_FAST_SLIDES;
 
-	Orders = new uint8_t[nOrders];
-	fread(Orders, nOrders, 1, f_S3M);
+	Orders = makeUnique<uint8_t []>(nOrders);
+	fread(Orders.get(), nOrders, 1, f_S3M);
 	SamplePtrs = new uint16_t[nSamples];
 	fread(SamplePtrs, nSamples, 2, f_S3M);
 	PatternPtrs = new uint16_t[nPatterns];
@@ -179,9 +179,9 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF) : ModuleHeader()
 		throw new ModuleLoaderError(E_BAD_STM);
 
 	nOrders = 128;
-	Orders = new uint8_t[128];
+	Orders = makeUnique<uint8_t []>(128);
 	fseek(f_STM, 1040, SEEK_SET);
-	fread(Orders, 128, 1, f_STM);
+	fread(Orders.get(), 128, 1, f_STM);
 	for (i = 0; i < nOrders; i++)
 	{
 		if (Orders[i] >= 99)
@@ -294,7 +294,7 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 		BlockLen--;
 	if (strncmp(StrMagic, "PLST", 4) != 0 || BlockLen != nOrders)
 		throw new ModuleLoaderError(E_BAD_AON);
-	Orders = new uint8_t[nOrders];
+	Orders = makeUnique<uint8_t []>(nOrders);
 	for (i = 0; i < nOrders; i++)
 		fread(&Orders[i], 1, 1, f_AON);
 	// If odd read length
@@ -341,7 +341,6 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Name = nullptr;
 	nInstruments = 0;
 	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Author = nullptr;
@@ -400,7 +399,7 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 		Panning[i] = value;
 	}
 
-	Orders = new uint8_t[nOrders];
+	Orders = makeUnique<uint8_t []>(nOrders);
 	InstrumentPtrs = new uint32_t[nInstruments];
 	SamplePtrs = new uint32_t[nSamples];
 	PatternPtrs = new uint32_t[nPatterns];
@@ -441,7 +440,6 @@ ModuleHeader::~ModuleHeader()
 	delete [] (uint16_t *)InstrumentPtrs;
 	delete [] (uint16_t *)PatternPtrs;
 	delete [] (uint16_t *)SamplePtrs;
-	delete [] Orders;
 	delete [] Author;
 	delete [] Remark;
 }

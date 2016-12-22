@@ -103,7 +103,7 @@ private:
 	uint16_t nSamples;
 	uint16_t nInstruments;
 	uint16_t nPatterns;
-	uint8_t *Orders;
+	std::unique_ptr<uint8_t []> Orders;
 	std::unique_ptr<uint16_t []> Panning;
 	uint16_t Flags;
 	uint16_t CreationVersion;
