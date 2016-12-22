@@ -213,12 +213,7 @@ template<typename... Args> std::unique_ptr<char []> stringConcat(const char *con
 	{ return stringsConcat(makeUnique<char []>(stringsLength(part, args...)), 0, part, args...); }
 
 void copyComment(std::unique_ptr<char []> &dst, const char *const src) noexcept
-{
-	if (!dst)
-		dst = stringConcat(src);
-	else
-		dst = stringConcat(dst.get(), " / ", src);
-}
+	{ dst = !dst ? stringConcat(src) : stringConcat(dst.get(), " / ", src); }
 
 /*!
  * @internal
