@@ -415,18 +415,18 @@ public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleNewInstrument();
 
-	uint8_t Map(uint8_t Note);
-	uint16_t GetFadeOut() const;
+	uint8_t Map(uint8_t Note) noexcept override final;
+	uint16_t GetFadeOut() const noexcept override final;
 	bool GetEnvEnabled(uint8_t env) const;
 	bool GetEnvLooped(uint8_t env) const;
-	ModuleEnvelope *GetEnvelope(uint8_t env) const;
-	bool IsPanned() const;
-	bool HasVolume() const;
-	uint8_t GetPanning() const;
-	uint8_t GetVolume() const;
-	uint8_t GetNNA() const;
-	uint8_t GetDCT() const;
-	uint8_t GetDNA() const;
+	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
+	bool IsPanned() const noexcept override final;
+	bool HasVolume() const noexcept override final;
+	uint8_t GetPanning() const noexcept override final;
+	uint8_t GetVolume() const noexcept override final;
+	uint8_t GetNNA() const noexcept override final;
+	uint8_t GetDCT() const noexcept override final;
+	uint8_t GetDNA() const noexcept override final;
 };
 
 class ModuleCommand : public ModuleAllocator

@@ -176,7 +176,7 @@ ModuleNewInstrument::~ModuleNewInstrument()
 	delete [] FileName;
 }
 
-uint8_t ModuleNewInstrument::Map(uint8_t Note)
+uint8_t ModuleNewInstrument::Map(uint8_t Note) noexcept
 {
 	uint8_t sample = 0;
 	for (uint16_t i = 0; i < 120; i++)
@@ -187,60 +187,22 @@ uint8_t ModuleNewInstrument::Map(uint8_t Note)
 	return sample;
 }
 
-uint16_t ModuleNewInstrument::GetFadeOut() const
-{
-	return FadeOut;
-}
+uint16_t ModuleNewInstrument::GetFadeOut() const noexcept { return FadeOut; }
 
 bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
-{
-	return Envelopes[env]->GetEnabled();
-}
+	{ return Envelopes[env]->GetEnabled(); }
 
 bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
-{
-	return Envelopes[env]->GetLooped();
-}
+	{ return Envelopes[env]->GetLooped(); }
 
-ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const
-{
-	return Envelopes[env];
-}
-
-bool ModuleNewInstrument::IsPanned() const
-{
-	return (Panning & 128) == 0;
-}
-
-bool ModuleNewInstrument::HasVolume() const
-{
-	return true;
-}
-
-uint8_t ModuleNewInstrument::GetPanning() const
-{
-	return (Panning & 0x7F) << 1;
-}
-
-uint8_t ModuleNewInstrument::GetVolume() const
-{
-	return Volume & 0x7F;
-}
-
-uint8_t ModuleNewInstrument::GetNNA() const
-{
-	return NNA;
-}
-
-uint8_t ModuleNewInstrument::GetDCT() const
-{
-	return DCT;
-}
-
-uint8_t ModuleNewInstrument::GetDNA() const
-{
-	return DNA;
-}
+ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept { return Envelopes[env]; }
+bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128); }
+bool ModuleNewInstrument::HasVolume() const noexcept { return true; }
+uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7F) << 1; }
+uint8_t ModuleNewInstrument::GetVolume() const noexcept { return Volume & 0x7F; }
+uint8_t ModuleNewInstrument::GetNNA() const noexcept { return NNA; }
+uint8_t ModuleNewInstrument::GetDCT() const noexcept { return DCT; }
+uint8_t ModuleNewInstrument::GetDNA() const noexcept { return DNA; }
 
 ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 {
