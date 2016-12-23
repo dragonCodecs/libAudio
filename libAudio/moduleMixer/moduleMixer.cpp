@@ -143,7 +143,7 @@ void ModuleFile::ReloadSample(Channel *channel)
 		channel->Flags |= CHN_LPINGPONG;
 	else
 		channel->Flags &= ~CHN_LPINGPONG;
-	channel->NewSampleData = p_PCM[sample->ID];
+	channel->NewSampleData = p_PCM[sample->id()];
 	channel->FineTune = sample->GetFineTune();
 	channel->C4Speed = sample->GetC4Speed();
 	if (channel->LoopEnd > channel->Length)
@@ -282,7 +282,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		if (channel->PortamentoDest == channel->Period || (channel->Length == 0 && ModuleType != MODULE_S3M))
 		{
 			channel->Sample = sample;
-			channel->NewSampleData = p_PCM[sample->ID];
+			channel->NewSampleData = p_PCM[sample->id()];
 			channel->Length = sample->GetLength();
 			if (sample->GetLooped())
 			{

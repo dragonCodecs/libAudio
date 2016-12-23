@@ -162,32 +162,32 @@ public:
 #ifdef __FC1x_EXPERIMENTAL__
 	ModuleHeader(FC1x_Intern *p_FF);
 #endif
-	ModuleHeader(modIT_t &file);
+	ModuleHeader(const modIT_t &file);
 	virtual ~ModuleHeader();
 };
 
 class ModuleSample : public ModuleAllocator
 {
 protected:
-	uint8_t Type;
+	const uint8_t _type;
 
 private:
-	uint32_t ID;
-	friend class ModuleFile;
+	uint32_t _id;
 
 protected:
-	ModuleSample(uint32_t ID, uint8_t Type);
-	void ResetID(uint32_t ID);
+	ModuleSample(const uint32_t id, const uint8_t type) noexcept : _type(type), _id(id) { }
+	void ResetID(const uint32_t id) noexcept { _id = id; }
 
 public:
 	static ModuleSample *LoadSample(MOD_Intern *p_MF, uint32_t i);
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
-	static ModuleSample *LoadSample(IT_Intern *p_IF, uint32_t i);
+	static ModuleSample *LoadSample(const modIT_t &file, const uint32_t i);
 
-	virtual ~ModuleSample();
-	uint8_t GetType();
+	virtual ~ModuleSample() noexcept = default;
+	uint8_t GetType() const noexcept { return _type; }
+	uint32_t id() const noexcept { return _id; }
 	virtual uint32_t GetLength() = 0;
 	virtual uint32_t GetLoopStart() = 0;
 	virtual uint32_t GetLoopEnd() = 0;
@@ -235,7 +235,7 @@ public:
 	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
 	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
 	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
-	ModuleSampleNative(IT_Intern *p_IF, uint32_t i);
+	ModuleSampleNative(const modIT_t &file, const uint32_t i);
 	~ModuleSampleNative();
 
 	uint32_t GetLength();

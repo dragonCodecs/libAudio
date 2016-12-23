@@ -235,11 +235,12 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
-	SamplePtrs = (uint32_t *)p_Header->SamplePtrs;
-	for (i = 0; i < p_Header->nSamples; i++)
+	uint32_t *const sampleOffsets = reinterpret_cast<uint32_t *>(p_Header->SamplePtrs);
+	for (i = 0; i < p_Header->nSamples; ++i)
 	{
-		fseek(f_IT, SamplePtrs[i], SEEK_SET);
-		p_Samples[i] = ModuleSample::LoadSample(p_IF, i);
+		if (!fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
+			throw ModuleLoaderError(E_BAD_IT);
+		p_Samples[i] = ModuleSample::LoadSample(p_IF->inner, i);
 	}
 
 	p_Header->nChannels = 64;

@@ -3,19 +3,6 @@
 #include "genericModule.h"
 #include <stdlib.h>
 
-ModuleSample::ModuleSample(uint32_t id, uint8_t type) : Type(type), ID(id)
-{
-}
-
-ModuleSample::~ModuleSample()
-{
-}
-
-void ModuleSample::ResetID(uint32_t id)
-{
-	ID = id;
-}
-
 ModuleSample *ModuleSample::LoadSample(MOD_Intern *p_MF, uint32_t i)
 {
 	return new ModuleSampleNative(p_MF, i);
@@ -41,15 +28,8 @@ ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name,
 	return new ModuleSampleNative(p_AF, i, Name, pcmLengths);
 }
 
-ModuleSample *ModuleSample::LoadSample(IT_Intern *p_IF, uint32_t i)
-{
-	return new ModuleSampleNative(p_IF, i);
-}
-
-uint8_t ModuleSample::GetType()
-{
-	return Type;
-}
+ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
+	{ return new ModuleSampleNative(file, i); }
 
 ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSample(i, 1)
 {
@@ -126,7 +106,7 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	if (Name[27] != 0)
 		Name[28] = 0;
 	fread(Magic, 4, 1, f_S3M);
-	if (Type == 1)
+	if (_type == 1)
 	{
 		if (memcmp(Magic, "SCRS", 4) != 0)
 			throw new ModuleLoaderError(E_BAD_S3M);
@@ -301,45 +281,49 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 	VibratoRate = 0;
 }
 
-ModuleSampleNative::ModuleSampleNative(IT_Intern *p_IF, uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : ModuleSample(i, 1)
 {
-	char Magic[4], Const;
-	FILE *f_IT = p_IF->f_Module;
+	char Const;
+	std::array<char, 4> magic;
+	const fd_t &fd = file.fd();
 
-	fread(&Magic, 4, 1, f_IT);
-	if (strncmp(Magic, "IMPS", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_IT);
+	fd.read(magic);
+	if (strncmp(magic.data(), "IMPS", 4) != 0)
+		throw ModuleLoaderError(E_BAD_IT);
+
 	FileName = new char[13];
 	Name = new char[27];
-	fread(FileName, 12, 1, f_IT);
+
+	fd.read(FileName, 12);
+	fd.read(&Const, 1);
+	fd.read(&InstrVol, 1);
+	fd.read(&Flags, 1);
+	fd.read(&Volume, 1);
+	fd.read(Name, 26);
+	fd.read(&Packing, 1);
+	fd.read(&DefaultPan, 1);
+	fd.read(&Length, 4);
+	fd.read(&LoopStart, 4);
+	fd.read(&LoopEnd, 4);
+	fd.read(&C4Speed, 4);
+	fd.read(&SusLoopBegin, 4);
+	fd.read(&SusLoopEnd, 4);
+	fd.read(&SamplePos, 4);
+	fd.read(&VibratoSpeed, 1);
+	fd.read(&VibratoDepth, 1);
+	fd.read(&VibratoType, 1);
+	fd.read(&VibratoRate, 1);
+
 	if (FileName[11] != 0)
 		FileName[12] = 0;
-	fread(&Const, 1, 1, f_IT);
-	fread(&InstrVol, 1, 1, f_IT);
-	fread(&Flags, 1, 1, f_IT);
-	fread(&Volume, 1, 1, f_IT);
 	if (Volume > 64)
 		Volume = 64;
-	fread(Name, 26, 1, f_IT);
 	if (Name[25] != 0)
 		Name[26] = 0;
-	fread(&Packing, 1, 1, f_IT);
-	fread(&DefaultPan, 1, 1, f_IT);
-	fread(&Length, 4, 1, f_IT);
-	fread(&LoopStart, 4, 1, f_IT);
-	fread(&LoopEnd, 4, 1, f_IT);
-	fread(&C4Speed, 4, 1, f_IT);
-	fread(&SusLoopBegin, 4, 1, f_IT);
-	fread(&SusLoopEnd, 4, 1, f_IT);
-	fread(&SamplePos, 4, 1, f_IT);
-	fread(&VibratoSpeed, 1, 1, f_IT);
-	fread(&VibratoDepth, 1, 1, f_IT);
-	fread(&VibratoType, 1, 1, f_IT);
-	fread(&VibratoRate, 1, 1, f_IT);
 
 	if (Const != 0 || Packing > 63 || VibratoSpeed > 64 || VibratoDepth > 64 ||
 		/*VibratoType > 4  ||*/ (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
-		throw new ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError(E_BAD_IT);
 
 	if (C4Speed == 0)
 		C4Speed = 8363;
