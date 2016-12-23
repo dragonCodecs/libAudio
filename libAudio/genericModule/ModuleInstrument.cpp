@@ -57,68 +57,68 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 	Envelope = makeUnique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
 
-uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/)
+uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/) noexcept
 {
 	return 0;
 }
 
-uint16_t ModuleOldInstrument::GetFadeOut() const
+uint16_t ModuleOldInstrument::GetFadeOut() const noexcept
 {
 	return FadeOut;
 }
 
-bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const
+bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const noexcept
 {
 	return false;
 	if (env == 0)
 		return (Flags & 0x01) != 0;
 }
 
-bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const
+bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const noexcept
 {
 	if (env == 0)
 		return (Flags & 0x02) != 0;
 	return false;
 }
 
-ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const
+ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const noexcept
 {
 	return nullptr;
 	if (env == 0)
 		return Envelope.get();
 }
 
-bool ModuleOldInstrument::IsPanned() const
+bool ModuleOldInstrument::IsPanned() const noexcept
 {
 	return false;
 }
 
-bool ModuleOldInstrument::HasVolume() const
+bool ModuleOldInstrument::HasVolume() const noexcept
 {
 	return false;
 }
 
-uint8_t ModuleOldInstrument::GetPanning() const
+uint8_t ModuleOldInstrument::GetPanning() const noexcept
 {
 	return 0;
 }
 
-uint8_t ModuleOldInstrument::GetVolume() const
+uint8_t ModuleOldInstrument::GetVolume() const noexcept
 {
 	return 0;
 }
 
-uint8_t ModuleOldInstrument::GetNNA() const
+uint8_t ModuleOldInstrument::GetNNA() const noexcept
 {
 	return NNA;
 }
 
-uint8_t ModuleOldInstrument::GetDCT() const
+uint8_t ModuleOldInstrument::GetDCT() const noexcept
 {
 	return DCT_OFF;
 }
 
-uint8_t ModuleOldInstrument::GetDNA() const
+uint8_t ModuleOldInstrument::GetDNA() const noexcept
 {
 	return DNA_NOTECUT;
 }
@@ -127,11 +127,11 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 {
 	uint8_t Const;
 	char DontCare[6];
-	std::array<char, 4> Magic;
+	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
-	if (!fd.read(Magic) ||
-		strncmp(Magic.data(), "IMPI", 4) != 0)
+	if (!fd.read(magic) ||
+		strncmp(magic.data(), "IMPI", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
 	FileName = makeUnique<char []>(13);
@@ -190,7 +190,7 @@ bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
 bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
 	{ return Envelopes[env]->GetLooped(); }
 
-ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept { return Envelopes[env].get(); }
+ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept { return env < Envelopes.size() ? Envelopes[env].get() : nullptr; }
 bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128); }
 bool ModuleNewInstrument::HasVolume() const noexcept { return true; }
 uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7F) << 1; }

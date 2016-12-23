@@ -344,19 +344,19 @@ protected:
 public:
 	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
 
-	virtual ~ModuleInstrument() { }
-	virtual uint8_t Map(uint8_t Note) = 0;
-	virtual uint16_t GetFadeOut() const = 0;
+	virtual ~ModuleInstrument() noexcept { }
+	virtual uint8_t Map(uint8_t Note) noexcept = 0;
+	virtual uint16_t GetFadeOut() const noexcept = 0;
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;
 	virtual bool GetEnvLooped(uint8_t env) const = 0;
-	virtual ModuleEnvelope *GetEnvelope(uint8_t env) const = 0;
-	virtual bool IsPanned() const = 0;
-	virtual bool HasVolume() const = 0;
-	virtual uint8_t GetPanning() const = 0;
-	virtual uint8_t GetVolume() const = 0;
-	virtual uint8_t GetNNA() const = 0;
-	virtual uint8_t GetDCT() const = 0;
-	virtual uint8_t GetDNA() const = 0;
+	virtual ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept = 0;
+	virtual bool IsPanned() const noexcept = 0;
+	virtual bool HasVolume() const noexcept = 0;
+	virtual uint8_t GetPanning() const noexcept = 0;
+	virtual uint8_t GetVolume() const noexcept = 0;
+	virtual uint8_t GetNNA() const noexcept = 0;
+	virtual uint8_t GetDCT() const noexcept = 0;
+	virtual uint8_t GetDNA() const noexcept = 0;
 };
 
 class ModuleOldInstrument final : public ModuleInstrument
@@ -377,18 +377,18 @@ public:
 	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleOldInstrument() = default;
 
-	uint8_t Map(uint8_t Note) override final;
-	uint16_t GetFadeOut() const override final;
-	bool GetEnvEnabled(uint8_t env) const override final;
-	bool GetEnvLooped(uint8_t env) const override final;
-	ModuleEnvelope *GetEnvelope(uint8_t env) const override final;
-	bool IsPanned() const override final;
-	bool HasVolume() const override final;
-	uint8_t GetPanning() const override final;
-	uint8_t GetVolume() const override final;
-	uint8_t GetNNA() const override final;
-	uint8_t GetDCT() const override final;
-	uint8_t GetDNA() const override final;
+	uint8_t Map(uint8_t Note) noexcept override final;
+	uint16_t GetFadeOut() const noexcept override final;
+	bool GetEnvEnabled(uint8_t env) const noexcept override final;
+	bool GetEnvLooped(uint8_t env) const noexcept override final;
+	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
+	bool IsPanned() const noexcept override final;
+	bool HasVolume() const noexcept override final;
+	uint8_t GetPanning() const noexcept override final;
+	uint8_t GetVolume() const noexcept override final;
+	uint8_t GetNNA() const noexcept override final;
+	uint8_t GetDCT() const noexcept override final;
+	uint8_t GetDNA() const noexcept override final;
 };
 
 class ModuleNewInstrument final : public ModuleInstrument
