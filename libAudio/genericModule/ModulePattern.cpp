@@ -155,36 +155,35 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nC
 	}
 }
 
-inline bool readInc(uint8_t *var, uint16_t &i, uint16_t len, FILE *f_IT)
+inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &fd)
 {
-	if (i > len)
+	if (i > len || !fd.read(var))
 		return true;
-	fread(var, 1, 1, f_IT);
-	i++;
+	++i;
 	return false;
 }
 
-ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nChannels)
+ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels(nChannels)
 {
-	char DontCare[4];
+	std::array<char, 4> DontCare;
 	uint8_t b, ChannelMask[64];
 	uint16_t len, row, channel, j;
 	ModuleCommand LastCommand[64];
-	FILE *f_IT = p_IF->f_Module;
+	const fd_t &fd = file.fd();
 
-	fread(&len, 2, 1, f_IT);
-	fread(&Rows, 2, 1, f_IT);
+	fd.read(len);
+	fd.read(&Rows, 2);
 	Commands = new ModuleCommand *[nChannels];
 	for (channel = 0; channel < nChannels; channel++)
 		Commands[channel] = new ModuleCommand[Rows];
-	fread(DontCare, 4, 1, f_IT);
+	fd.read(DontCare);
 
 	row = 0;
 	j = 0;
 	while (row < Rows)
 	{
 		channel = 0;
-		if (readInc(&b, j, len, f_IT))
+		if (readInc(b, j, len, fd))
 			break;
 		if (b == 0)
 		{
@@ -194,14 +193,14 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 		channel = b & 0x7F;
 		if (channel != 0)
 			channel = (channel - 1) & 0x3F;
-		if ((b & 0x80) != 0 && readInc(&ChannelMask[channel], j, len, f_IT))
-			break;	
+		if ((b & 0x80) != 0 && readInc(ChannelMask[channel], j, len, fd))
+			break;
 		if (channel < nChannels)
 			Commands[channel][row].SetITRepVal(ChannelMask[channel], LastCommand[channel]);
 		if ((ChannelMask[channel] & 0x01) != 0)
 		{
 			uint8_t note;
-			if (readInc(&note, j, len, f_IT))
+			if (readInc(note, j, len, fd))
 				break;
 			if (channel < nChannels)
 			{
@@ -212,7 +211,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 		if ((ChannelMask[channel] & 0x02) != 0)
 		{
 			uint8_t sample;
-			if (readInc(&sample, j, len, f_IT))
+			if (readInc(sample, j, len, fd))
 				break;
 			if (channel < nChannels)
 			{
@@ -223,7 +222,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 		if ((ChannelMask[channel] & 0x04) != 0)
 		{
 			uint8_t volume;
-			if (readInc(&volume, j, len, f_IT))
+			if (readInc(volume, j, len, fd))
 				break;
 			if (channel < nChannels)
 			{
@@ -234,7 +233,7 @@ ModulePattern::ModulePattern(IT_Intern *p_IF, uint32_t nChannels) : Channels(nCh
 		if ((ChannelMask[channel] & 0x08) != 0)
 		{
 			uint8_t effect, param;
-			if (readInc(&effect, j, len, f_IT) || readInc(&param, j, len, f_IT))
+			if (readInc(effect, j, len, fd) || readInc(param, j, len, fd))
 				break;
 			if (channel < nChannels)
 			{

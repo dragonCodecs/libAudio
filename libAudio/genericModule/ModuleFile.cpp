@@ -246,6 +246,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	p_Header->nChannels = 64;
 	for (i = 0; i < 64; i++)
 	{
+		p_Header->PanSurround[i] = false;
 		if (p_Header->Panning[i] > 128)
 		{
 			p_Header->nChannels = i;
@@ -268,11 +269,13 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 			p_Patterns[i] = nullptr;
 		else
 		{
-			fseek(f_IT, PatternPtrs[i], SEEK_SET);
-			p_Patterns[i] = new ModulePattern(p_IF, p_Header->nChannels);
+			if (fd.seek(PatternPtrs[i], SEEK_SET) != PatternPtrs[i])
+				throw ModuleLoaderError(E_BAD_IT);
+			p_Patterns[i] = new ModulePattern(p_IF->inner, p_Header->nChannels);
 		}
 	}
 
+	fseek(f_IT, fd.tell(), SEEK_SET);
 	ITLoadPCM(f_IT);
 	MinPeriod = 8;
 	MaxPeriod = 61440;//32767;

@@ -475,7 +475,7 @@ public:
 	ModulePattern(S3M_Intern *p_SF, uint32_t nChannels);
 	ModulePattern(STM_Intern *p_SF);
 	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
-	ModulePattern(IT_Intern *p_IF, uint32_t nChannels);
+	ModulePattern(const modIT_t &file, const uint32_t nChannels);
 	virtual ~ModulePattern();
 
 	ModuleCommand **GetCommands() const;
