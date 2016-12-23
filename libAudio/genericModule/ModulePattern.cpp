@@ -171,12 +171,19 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 	std::array<ModuleCommand, 64> lastCmd;
 	const fd_t &fd = file.fd();
 
-	fd.read(len);
-	fd.read(&Rows, 2);
 	Commands = new ModuleCommand *[nChannels];
-	for (uint16_t channel = 0; channel < nChannels; channel++)
+	if (!Commands ||
+		!fd.read(len) ||
+		!fd.read(&Rows, 2) ||
+		!fd.read(dontCare))
+		throw ModuleLoaderError(E_BAD_IT);
+
+	for (uint16_t channel = 0; channel < nChannels; ++channel)
+	{
 		Commands[channel] = new ModuleCommand[Rows];
-	fd.read(dontCare);
+		if (!Commands[channel])
+			throw ModuleLoaderError(E_BAD_IT);
+	}
 
 	uint16_t row = 0;
 	uint16_t j = 0;
