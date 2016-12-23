@@ -134,8 +134,8 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 		strncmp(Magic.data(), "IMPI", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	FileName = new char[13];
-	Name = new char[27];
+	FileName = makeUnique<char []>(13);
+	Name = makeUnique<char []>(27);
 
 	fd.read(FileName, 12);
 	fd.read(&Const, 1);
@@ -165,19 +165,8 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 		throw ModuleLoaderError(E_BAD_IT);
 
 	FadeOut <<= 6;
-	Envelopes = new ModuleEnvelope *[3];
-	for (uint8_t env = 0; env < 3; env++)
-		Envelopes[env] = new ModuleEnvelope(file, env);
-}
-
-ModuleNewInstrument::~ModuleNewInstrument()
-{
-	uint8_t i;
-	for (i = 0; i < 3; i++)
-		delete Envelopes[i];
-	delete [] Envelopes;
-	delete [] Name;
-	delete [] FileName;
+	for (uint8_t env = 0; env < Envelopes.size(); ++env)
+		Envelopes[env] = makeUnique<ModuleEnvelope>(file, env);
 }
 
 uint8_t ModuleNewInstrument::Map(uint8_t Note) noexcept
@@ -199,7 +188,7 @@ bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
 bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
 	{ return Envelopes[env]->GetLooped(); }
 
-ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept { return Envelopes[env]; }
+ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept { return Envelopes[env].get(); }
 bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128); }
 bool ModuleNewInstrument::HasVolume() const noexcept { return true; }
 uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7F) << 1; }

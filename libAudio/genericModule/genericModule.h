@@ -391,10 +391,10 @@ public:
 	uint8_t GetDNA() const override final;
 };
 
-class ModuleNewInstrument : public ModuleInstrument
+class ModuleNewInstrument final : public ModuleInstrument
 {
 private:
-	char *FileName;
+	std::unique_ptr<char []> FileName;
 	uint8_t NNA;
 	uint8_t DCT;
 	uint8_t DNA;
@@ -407,13 +407,13 @@ private:
 	uint8_t RandPanning;
 	uint16_t TrackerVersion;
 	uint8_t nSamples;
-	char *Name;
+	std::unique_ptr<char []> Name;
 	uint8_t SampleMapping[240];
-	ModuleEnvelope **Envelopes;
+	std::array<std::unique_ptr<ModuleEnvelope>, 3> Envelopes;
 
 public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
-	~ModuleNewInstrument();
+	~ModuleNewInstrument() = default;
 
 	uint8_t Map(uint8_t Note) noexcept override final;
 	uint16_t GetFadeOut() const noexcept override final;
