@@ -62,66 +62,20 @@ uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/) noexcept
 	return 0;
 }
 
-uint16_t ModuleOldInstrument::GetFadeOut() const noexcept
-{
-	return FadeOut;
-}
-
+uint16_t ModuleOldInstrument::GetFadeOut() const noexcept { return FadeOut; }
 bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const noexcept
-{
-	return false;
-	if (env == 0)
-		return (Flags & 0x01) != 0;
-}
-
+	{ return !env ? (Flags & 0x01) : false; }
 bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const noexcept
-{
-	if (env == 0)
-		return (Flags & 0x02) != 0;
-	return false;
-}
-
+	{ return !env ? (Flags & 0x02) : false; }
 ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const noexcept
-{
-	return nullptr;
-	if (env == 0)
-		return Envelope.get();
-}
-
-bool ModuleOldInstrument::IsPanned() const noexcept
-{
-	return false;
-}
-
-bool ModuleOldInstrument::HasVolume() const noexcept
-{
-	return false;
-}
-
-uint8_t ModuleOldInstrument::GetPanning() const noexcept
-{
-	return 0;
-}
-
-uint8_t ModuleOldInstrument::GetVolume() const noexcept
-{
-	return 0;
-}
-
-uint8_t ModuleOldInstrument::GetNNA() const noexcept
-{
-	return NNA;
-}
-
-uint8_t ModuleOldInstrument::GetDCT() const noexcept
-{
-	return DCT_OFF;
-}
-
-uint8_t ModuleOldInstrument::GetDNA() const noexcept
-{
-	return DNA_NOTECUT;
-}
+	{ return !env ? Envelope.get() : nullptr; }
+bool ModuleOldInstrument::IsPanned() const noexcept { return false; }
+bool ModuleOldInstrument::HasVolume() const noexcept { return false; }
+uint8_t ModuleOldInstrument::GetPanning() const noexcept { return 0; }
+uint8_t ModuleOldInstrument::GetVolume() const noexcept { return 0; }
+uint8_t ModuleOldInstrument::GetNNA() const noexcept { return NNA; }
+uint8_t ModuleOldInstrument::GetDCT() const noexcept { return DCT_OFF; }
+uint8_t ModuleOldInstrument::GetDNA() const noexcept { return DNA_NOTECUT; }
 
 ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
 {
@@ -183,14 +137,12 @@ uint8_t ModuleNewInstrument::Map(uint8_t Note) noexcept
 }
 
 uint16_t ModuleNewInstrument::GetFadeOut() const noexcept { return FadeOut; }
-
 bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
 	{ return Envelopes[env]->GetEnabled(); }
-
 bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
 	{ return Envelopes[env]->GetLooped(); }
-
-ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept { return env < Envelopes.size() ? Envelopes[env].get() : nullptr; }
+ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept
+	{ return env < Envelopes.size() ? Envelopes[env].get() : nullptr; }
 bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128); }
 bool ModuleNewInstrument::HasVolume() const noexcept { return true; }
 uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7F) << 1; }
