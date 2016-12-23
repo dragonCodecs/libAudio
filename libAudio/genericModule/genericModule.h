@@ -336,10 +336,10 @@ public:
 class ModuleInstrument : public ModuleAllocator
 {
 private:
-	const uint32_t id;
+	const uint32_t _id;
 
 protected:
-	ModuleInstrument(const uint32_t id_) noexcept : id(id_) { }
+	ModuleInstrument(const uint32_t id) noexcept : _id(id) { }
 
 public:
 	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
