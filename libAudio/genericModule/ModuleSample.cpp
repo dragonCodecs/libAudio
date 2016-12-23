@@ -35,9 +35,9 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 {
 	uint16_t Short;
 	FILE *f_MOD = p_MF->f_Module;
-	Name = new char[23];
+	Name = makeUnique<char []>(23);
 
-	fread(Name, 22, 1, f_MOD);
+	fread(Name.get(), 22, 1, f_MOD);
 	if (Name[21] != 0)
 		Name[22] = 0;
 
@@ -64,7 +64,6 @@ ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSam
 	\********************************************/
 	Packing = 0;
 	C4Speed = 8363;
-	FileName = nullptr;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
@@ -82,10 +81,10 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 	uint8_t DontCare[12];
 	char Magic[4];
 	FILE *f_S3M = p_SF->f_Module;
-	Name = new char[29];
-	FileName = new char[13];
+	Name = makeUnique<char []>(29);
+	FileName = makeUnique<char []>(13);
 
-	fread(FileName, 12, 1, f_S3M);
+	fread(FileName.get(), 12, 1, f_S3M);
 	if (FileName[11] != 0)
 		FileName[12] = 0;
 	fread_24bit(SamplePos, f_S3M);
@@ -102,7 +101,7 @@ ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t typ
 		printf("%d => Stereo\n", i);
 	fread(&C4Speed, 4, 1, f_S3M);
 	fread(DontCare, 12, 1, f_S3M);
-	fread(Name, 28, 1, f_S3M);
+	fread(Name.get(), 28, 1, f_S3M);
 	if (Name[27] != 0)
 		Name[28] = 0;
 	fread(Magic, 4, 1, f_S3M);
@@ -135,8 +134,8 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	uint32_t Reserved3;
 	FILE *f_STM = p_SF->f_Module;
 
-	Name = new char[13];
-	fread(Name, 12, 1, f_STM);
+	Name = makeUnique<char []>(13);
+	fread(Name.get(), 12, 1, f_STM);
 	if (Name[11] != 0)
 		Name[12] = 0;
 	fread(&ID, 1, 1, f_STM);
@@ -172,7 +171,6 @@ ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSam
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	Packing = SampleFlags = 0;
-	Name = nullptr;
 	FineTune = 0;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
@@ -291,8 +289,8 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		strncmp(magic.data(), "IMPS", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	FileName = new char[13];
-	Name = new char[27];
+	FileName = makeUnique<char []>(13);
+	Name = makeUnique<char []>(27);
 
 	if (!FileName || !Name ||
 		!fd.read(FileName, 12) ||
@@ -314,7 +312,7 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		!fd.read(&VibratoDepth, 1) ||
 		!fd.read(&VibratoType, 1) ||
 		!fd.read(&VibratoRate, 1))
-	throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError(E_BAD_IT);
 
 	if (FileName[11] != 0)
 		FileName[12] = 0;

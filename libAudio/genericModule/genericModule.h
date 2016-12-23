@@ -204,10 +204,10 @@ public:
 	virtual bool GetBidiLoop() = 0;
 };
 
-class ModuleSampleNative : public ModuleSample
+class ModuleSampleNative final : public ModuleSample
 {
 private:
-	char *Name;
+	std::unique_ptr<char []> Name;
 	uint32_t Length;
 	uint8_t FineTune;
 	uint8_t Volume;
@@ -216,7 +216,7 @@ private:
 	uint32_t LoopEnd;
 
 private:
-	char *FileName;
+	std::unique_ptr<char []> FileName;
 	uint32_t SamplePos; // actually 24-bit..
 	uint8_t Packing;
 	uint8_t Flags, SampleFlags;
