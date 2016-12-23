@@ -19,30 +19,32 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, uint32_t i) : Modu
 	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
+	if (!fd.read(magic) ||
+		strncmp(magic.data(), "IMPI", 4) != 0)
+		throw ModuleLoaderError(E_BAD_IT);
+
 	FileName = makeUnique<char []>(13);
 	Name = makeUnique<char []>(27);
 
-	fd.read(magic);
-	if (strncmp(magic.data(), "IMPI", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_IT);
-
-	fd.read(FileName, 12);
-	fd.read(&Const, 1);
-	fd.read(&Flags, 1);
-	fd.read(&LoopBegin, 1);
-	fd.read(&LoopEnd, 1);
-	fd.read(&SusLoopBegin, 1);
-	fd.read(&SusLoopEnd, 1);
-	fd.read(DontCare, 2);
-	fd.read(&FadeOut, 2);
-	fd.read(&NNA, 1);
-	fd.read(&DNC, 1);
-	fd.read(&TrackerVersion, 2);
-	fd.read(&nSamples, 1);
-	fd.read(DontCare, 1);
-	fd.read(Name, 26);
-	fd.read(DontCare, 6);
-	fd.read(SampleMapping, 240);
+	if (!FileName || !Name ||
+		!fd.read(FileName, 12) ||
+		!fd.read(&Const, 1) ||
+		!fd.read(&Flags, 1) ||
+		!fd.read(&LoopBegin, 1) ||
+		!fd.read(&LoopEnd, 1) ||
+		!fd.read(&SusLoopBegin, 1) ||
+		!fd.read(&SusLoopEnd, 1) ||
+		!fd.read(DontCare, 2) ||
+		!fd.read(&FadeOut, 2) ||
+		!fd.read(&NNA, 1) ||
+		!fd.read(&DNC, 1) ||
+		!fd.read(&TrackerVersion, 2) ||
+		!fd.read(&nSamples, 1) ||
+		!fd.read(DontCare, 1) ||
+		!fd.read(Name, 26) ||
+		!fd.read(DontCare, 6) ||
+		!fd.read(SampleMapping, 240))
+		throw ModuleLoaderError(E_BAD_IT);
 
 	if (FileName[11] != 0)
 		FileName[12] = 0;
