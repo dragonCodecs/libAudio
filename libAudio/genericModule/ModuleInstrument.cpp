@@ -15,16 +15,18 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, uint32_t i) : Modu
 	uint8_t LoopBegin, LoopEnd;
 	uint8_t SusLoopBegin, SusLoopEnd;
 	uint8_t Const;
-	char Magic[4], DontCare[6];
+	char DontCare[6];
+	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
-	fd.read(Magic, 4);
-	if (strncmp(Magic, "IMPI", 4) != 0)
+	FileName = makeUnique<char []>(13);
+	Name = makeUnique<char []>(27);
+
+	fd.read(magic);
+	if (strncmp(magic.data(), "IMPI", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_IT);
-	FileName = new char[13];
+
 	fd.read(FileName, 12);
-	if (FileName[11] != 0)
-		FileName[12] = 0;
 	fd.read(&Const, 1);
 	fd.read(&Flags, 1);
 	fd.read(&LoopBegin, 1);
@@ -38,24 +40,19 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, uint32_t i) : Modu
 	fd.read(&TrackerVersion, 2);
 	fd.read(&nSamples, 1);
 	fd.read(DontCare, 1);
-	Name = new char[27];
 	fd.read(Name, 26);
-	if (Name[25] != 0)
-		Name[26] = 0;
 	fd.read(DontCare, 6);
 	fd.read(SampleMapping, 240);
+
+	if (FileName[11] != 0)
+		FileName[12] = 0;
+	if (Name[25] != 0)
+		Name[26] = 0;
 
 	if (Const != 0 || NNA > 3 || DNC > 1)
 		throw new ModuleLoaderError(E_BAD_IT);
 
-	Envelope = new ModuleEnvelope(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
-}
-
-ModuleOldInstrument::~ModuleOldInstrument()
-{
-	delete Envelope;
-	delete [] Name;
-	delete [] FileName;
+	Envelope = makeUnique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
 
 uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/)

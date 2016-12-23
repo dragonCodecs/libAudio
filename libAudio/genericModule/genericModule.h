@@ -359,36 +359,36 @@ public:
 	virtual uint8_t GetDNA() const = 0;
 };
 
-class ModuleOldInstrument : public ModuleInstrument
+class ModuleOldInstrument final : public ModuleInstrument
 {
 private:
-	char *FileName;
+	std::unique_ptr<char []> FileName;
 	uint8_t Flags;
 	uint16_t FadeOut;
 	uint8_t NNA;
 	uint8_t DNC;
 	uint16_t TrackerVersion;
 	uint8_t nSamples;
-	char *Name;
+	std::unique_ptr<char []> Name;
 	uint8_t SampleMapping[240];
-	ModuleEnvelope *Envelope;
+	std::unique_ptr<ModuleEnvelope> Envelope;
 
 public:
 	ModuleOldInstrument(const modIT_t &file, uint32_t i);
-	~ModuleOldInstrument();
+	~ModuleOldInstrument() = default;
 
-	uint8_t Map(uint8_t Note);
-	uint16_t GetFadeOut() const;
-	bool GetEnvEnabled(uint8_t env) const;
-	bool GetEnvLooped(uint8_t env) const;
-	ModuleEnvelope *GetEnvelope(uint8_t env) const;
-	bool IsPanned() const;
-	bool HasVolume() const;
-	uint8_t GetPanning() const;
-	uint8_t GetVolume() const;
-	uint8_t GetNNA() const;
-	uint8_t GetDCT() const;
-	uint8_t GetDNA() const;
+	uint8_t Map(uint8_t Note) override final;
+	uint16_t GetFadeOut() const override final;
+	bool GetEnvEnabled(uint8_t env) const override final;
+	bool GetEnvLooped(uint8_t env) const override final;
+	ModuleEnvelope *GetEnvelope(uint8_t env) const override final;
+	bool IsPanned() const override final;
+	bool HasVolume() const override final;
+	uint8_t GetPanning() const override final;
+	uint8_t GetVolume() const override final;
+	uint8_t GetNNA() const override final;
+	uint8_t GetDCT() const override final;
+	uint8_t GetDNA() const override final;
 };
 
 class ModuleNewInstrument : public ModuleInstrument
