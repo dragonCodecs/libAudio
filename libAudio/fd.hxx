@@ -75,7 +75,7 @@ public:
 	template<typename T> bool read(T &value) const noexcept
 		{ return read(&value, sizeof(T)); }
 	template<typename T, size_t N> bool read(std::array<T, N> &value) const noexcept
-		{ return read(value.data(), N); }
+		{ return read(value.data(), N * sizeof(T)); }
 	template<typename T> bool read(const std::unique_ptr<T> &value, const size_t valueLen) const noexcept
 		{ return read(value.get(), valueLen); }
 

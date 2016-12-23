@@ -162,7 +162,7 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 		!fd.read(&LoopEnd, 1) ||
 		!fd.read(&SusLoopBegin, 1) ||
 		!fd.read(&SusLoopEnd, 1) ||
-		!fd.read(Nodes, 75) ||
+		!fd.read(Nodes) ||
 		!fd.read(&DontCare, 1))
 		throw ModuleLoaderError(E_BAD_IT);
 
@@ -179,93 +179,43 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 
 ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8_t loopBegin,
 	const uint8_t loopEnd, const uint8_t susLoopBegin, const uint8_t susLoopEnd) noexcept :
-	Type(0), Flags(flags), LoopBegin(loopBegin), LoopEnd(loopEnd), SusLoopBegin(susLoopBegin), SusLoopEnd(susLoopEnd)
-{
-}
+	Type(0), Flags(flags), LoopBegin(loopBegin), LoopEnd(loopEnd), SusLoopBegin(susLoopBegin), SusLoopEnd(susLoopEnd) { }
 
-uint8_t ModuleEnvelope::Apply(uint16_t Tick)
+uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 {
-	uint8_t pt, n1, n2, ret;
-	for (pt = 0; pt < (nNodes - 1); pt++)
+	uint8_t pt, n1 = 0, ret = 0;
+	for (pt = 0; pt < (nNodes - 1); ++pt)
 	{
-		if (Tick <= Nodes[pt].Tick)
+		if (currentTick <= Nodes[pt].Tick)
 			break;
 	}
-	if (Tick >= Nodes[pt].Tick)
+	if (currentTick >= Nodes[pt].Tick)
 		return Nodes[pt].Value;
-	if (pt != 0)
+	if (pt)
 	{
 		n1 = Nodes[pt - 1].Tick;
 		ret = Nodes[pt - 1].Value;
 	}
-	else
+	uint8_t n2 = Nodes[pt].Tick;
+	if (n2 > n1 && currentTick > n1)
 	{
-		n1 = 0;
-		ret = 0;
-	}
-	n2 = Nodes[pt].Tick;
-	if (n2 > n1 && Tick > n1)
-	{
-		int16_t val = Tick - n1;
-		val *= ((int16_t)Nodes[pt].Value) - ret;
+		int16_t val = currentTick - n1;
+		val *= int16_t(Nodes[pt].Value) - ret;
 		n2 -= n1;
 		return ret + (val / n2);
 	}
-	else
-		return ret;
+	return ret;
 }
 
-bool ModuleEnvelope::GetEnabled() const
-{
-	return (Flags & 0x01) != 0;
-}
-
-bool ModuleEnvelope::GetLooped() const
-{
-	return (Flags & 0x02) != 0;
-}
-
-bool ModuleEnvelope::GetSustained() const
-{
-	return (Flags & 0x04) != 0;
-}
-
-bool ModuleEnvelope::HasNodes() const
-{
-	return nNodes != 0;
-}
-
-bool ModuleEnvelope::IsAtEnd(uint16_t Tick) const
-{
-	return Tick > GetLastTick();
-}
-
-bool ModuleEnvelope::IsZeroLoop() const
-{
-	return LoopEnd == LoopBegin;
-}
-
-uint16_t ModuleEnvelope::GetLoopEnd() const
-{
-	return Nodes[LoopEnd].Tick;
-}
-
-uint16_t ModuleEnvelope::GetLoopBegin() const
-{
-	return Nodes[LoopBegin].Tick;
-}
-
-uint16_t ModuleEnvelope::GetSustainEnd() const
-{
-	return Nodes[SusLoopBegin].Tick;
-}
-
-uint16_t ModuleEnvelope::GetSustainBegin() const
-{
-	return Nodes[SusLoopBegin].Tick;
-}
-
-uint16_t ModuleEnvelope::GetLastTick() const
-{
-	return Nodes[nNodes - 1].Tick;
-}
+bool ModuleEnvelope::GetEnabled() const noexcept { return (Flags & 0x01); }
+bool ModuleEnvelope::GetLooped() const noexcept { return (Flags & 0x02); }
+bool ModuleEnvelope::GetSustained() const noexcept { return (Flags & 0x04); }
+bool ModuleEnvelope::HasNodes() const noexcept { return nNodes; }
+bool ModuleEnvelope::IsAtEnd(const uint16_t currentTick) const noexcept
+	{ return currentTick > GetLastTick(); }
+bool ModuleEnvelope::IsZeroLoop() const noexcept { return LoopEnd == LoopBegin; }
+uint16_t ModuleEnvelope::GetLoopEnd() const noexcept { return Nodes[LoopEnd].Tick; }
+uint16_t ModuleEnvelope::GetLoopBegin() const noexcept { return Nodes[LoopBegin].Tick; }
+uint16_t ModuleEnvelope::GetSustainEnd() const noexcept { return Nodes[SusLoopBegin].Tick; }
+uint16_t ModuleEnvelope::GetSustainBegin() const noexcept { return Nodes[SusLoopBegin].Tick; }
+uint16_t ModuleEnvelope::GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }

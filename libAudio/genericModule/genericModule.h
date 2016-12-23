@@ -296,11 +296,11 @@ public:
 };
 
 #pragma pack(push, 1)
-typedef struct EnvelopeNode
+struct envelopeNode_t final
 {
 	uint8_t Value;
 	uint16_t Tick;
-} EnvelopeNode;
+};
 #pragma pack(pop)
 
 class ModuleEnvelope : public ModuleAllocator
@@ -313,24 +313,24 @@ private:
 	uint8_t LoopEnd;
 	uint8_t SusLoopBegin;
 	uint8_t SusLoopEnd;
-	EnvelopeNode Nodes[25];
+	std::array<envelopeNode_t, 25> Nodes;
 
 public:
 	ModuleEnvelope(const modIT_t &file, const uint8_t env);
 	ModuleEnvelope(const modIT_t &file, const uint8_t Flags, const uint8_t LoopBegin,
 		const uint8_t LoopEnd, const uint8_t SusLoopBegin, const uint8_t SusLoopEnd) noexcept;
-	uint8_t Apply(uint16_t Tick);
-	bool GetEnabled() const;
-	bool GetLooped() const;
-	bool GetSustained() const;
-	bool HasNodes() const;
-	bool IsAtEnd(uint16_t Tick) const;
-	bool IsZeroLoop() const;
-	uint16_t GetLoopEnd() const;
-	uint16_t GetLoopBegin() const;
-	uint16_t GetSustainEnd() const;
-	uint16_t GetSustainBegin() const;
-	uint16_t GetLastTick() const;
+	uint8_t Apply(const uint16_t Tick) noexcept;
+	bool GetEnabled() const noexcept;
+	bool GetLooped() const noexcept;
+	bool GetSustained() const noexcept;
+	bool HasNodes() const noexcept;
+	bool IsAtEnd(const uint16_t Tick) const noexcept;
+	bool IsZeroLoop() const noexcept;
+	uint16_t GetLoopEnd() const noexcept;
+	uint16_t GetLoopBegin() const noexcept;
+	uint16_t GetSustainEnd() const noexcept;
+	uint16_t GetSustainBegin() const noexcept;
+	uint16_t GetLastTick() const noexcept;
 };
 
 class ModuleInstrument : public ModuleAllocator
