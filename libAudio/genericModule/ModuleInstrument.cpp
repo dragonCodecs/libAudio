@@ -156,17 +156,18 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 	uint8_t DontCare;
 	const fd_t &fd = file.fd();
 
-	fd.read(&Flags, 1);
-	fd.read(&nNodes, 1);
-	fd.read(&LoopBegin, 1);
-	fd.read(&LoopEnd, 1);
-	fd.read(&SusLoopBegin, 1);
-	fd.read(&SusLoopEnd, 1);
-	fd.read(Nodes, 75);
-	fd.read(&DontCare, 1);
+	if (!fd.read(&Flags, 1) ||
+		!fd.read(&nNodes, 1) ||
+		!fd.read(&LoopBegin, 1) ||
+		!fd.read(&LoopEnd, 1) ||
+		!fd.read(&SusLoopBegin, 1) ||
+		!fd.read(&SusLoopEnd, 1) ||
+		!fd.read(Nodes, 75) ||
+		!fd.read(&DontCare, 1))
+		throw ModuleLoaderError(E_BAD_IT);
 
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
-		throw new ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError(E_BAD_IT);
 
 	if (env != ENVELOPE_VOLUME)
 	{
