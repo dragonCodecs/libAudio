@@ -2,56 +2,53 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-ModuleInstrument::ModuleInstrument(uint32_t id) : ID(id) { }
-ModuleInstrument::~ModuleInstrument() { }
-
-ModuleInstrument *ModuleInstrument::LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion)
+ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, uint32_t i, uint16_t FormatVersion)
 {
 	if (FormatVersion < 0x0200)
-		return new ModuleOldInstrument(p_IT, i);
+		return new ModuleOldInstrument(file, i);
 	else
-		return new ModuleNewInstrument(p_IT, i);
+		return new ModuleNewInstrument(file, i);
 }
 
-ModuleOldInstrument::ModuleOldInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
+ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t LoopBegin, LoopEnd;
 	uint8_t SusLoopBegin, SusLoopEnd;
 	uint8_t Const;
 	char Magic[4], DontCare[6];
-	FILE *f_IT = p_IT->f_Module;
+	const fd_t &fd = file.fd();
 
-	fread(Magic, 4, 1, f_IT);
+	fd.read(Magic, 4);
 	if (strncmp(Magic, "IMPI", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_IT);
 	FileName = new char[13];
-	fread(FileName, 12, 1, f_IT);
+	fd.read(FileName, 12);
 	if (FileName[11] != 0)
 		FileName[12] = 0;
-	fread(&Const, 1, 1, f_IT);
-	fread(&Flags, 1, 1, f_IT);
-	fread(&LoopBegin, 1, 1, f_IT);
-	fread(&LoopEnd, 1, 1, f_IT);
-	fread(&SusLoopBegin, 1, 1, f_IT);
-	fread(&SusLoopEnd, 1, 1, f_IT);
-	fread(DontCare, 2, 1, f_IT);
-	fread(&FadeOut, 2, 1, f_IT);
-	fread(&NNA, 1, 1, f_IT);
-	fread(&DNC, 1, 1, f_IT);
-	fread(&TrackerVersion, 2, 1, f_IT);
-	fread(&nSamples, 1, 1, f_IT);
-	fread(DontCare, 1, 1, f_IT);
+	fd.read(&Const, 1);
+	fd.read(&Flags, 1);
+	fd.read(&LoopBegin, 1);
+	fd.read(&LoopEnd, 1);
+	fd.read(&SusLoopBegin, 1);
+	fd.read(&SusLoopEnd, 1);
+	fd.read(DontCare, 2);
+	fd.read(&FadeOut, 2);
+	fd.read(&NNA, 1);
+	fd.read(&DNC, 1);
+	fd.read(&TrackerVersion, 2);
+	fd.read(&nSamples, 1);
+	fd.read(DontCare, 1);
 	Name = new char[27];
-	fread(Name, 26, 1, f_IT);
+	fd.read(Name, 26);
 	if (Name[25] != 0)
 		Name[26] = 0;
-	fread(DontCare, 6, 1, f_IT);
-	fread(SampleMapping, 240, 1, f_IT);
+	fd.read(DontCare, 6);
+	fd.read(SampleMapping, 240);
 
 	if (Const != 0 || NNA > 3 || DNC > 1)
 		throw new ModuleLoaderError(E_BAD_IT);
 
-	Envelope = new ModuleEnvelope(p_IT, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
+	Envelope = new ModuleEnvelope(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
 
 ModuleOldInstrument::~ModuleOldInstrument()
@@ -121,47 +118,47 @@ uint8_t ModuleOldInstrument::GetDNA() const
 	return DNA_NOTECUT;
 }
 
-ModuleNewInstrument::ModuleNewInstrument(IT_Intern *p_IT, uint32_t i) : ModuleInstrument(i)
+ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, uint32_t i) : ModuleInstrument(i)
 {
-	uint8_t Const, env;
+	uint8_t Const;
 	char Magic[4], DontCare[6];
-	FILE *f_IT = p_IT->f_Module;
+	const fd_t &fd = file.fd();
 
-	fread(Magic, 4, 1, f_IT);
+	fd.read(Magic, 4);
 	if (strncmp(Magic, "IMPI", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_IT);
 	FileName = new char[13];
-	fread(FileName, 12, 1, f_IT);
+	fd.read(FileName, 12);
 	if (FileName[11] != 0)
 		FileName[12] = 0;
-	fread(&Const, 1, 1, f_IT);
-	fread(&NNA, 1, 1, f_IT);
-	fread(&DCT, 1, 1, f_IT);
-	fread(&DNA, 1, 1, f_IT);
-	fread(&FadeOut, 2, 1, f_IT);
-	fread(&PPS, 1, 1, f_IT);
-	fread(&PPC, 1, 1, f_IT);
-	fread(&Volume, 1, 1, f_IT);
-	fread(&Panning, 1, 1, f_IT);
-	fread(&RandVolume, 1, 1, f_IT);
-	fread(&RandPanning, 1, 1, f_IT);
-	fread(&TrackerVersion, 2, 1, f_IT);
-	fread(&nSamples, 1, 1, f_IT);
-	fread(DontCare, 1, 1, f_IT);
+	fd.read(&Const, 1);
+	fd.read(&NNA, 1);
+	fd.read(&DCT, 1);
+	fd.read(&DNA, 1);
+	fd.read(&FadeOut, 2);
+	fd.read(&PPS, 1);
+	fd.read(&PPC, 1);
+	fd.read(&Volume, 1);
+	fd.read(&Panning, 1);
+	fd.read(&RandVolume, 1);
+	fd.read(&RandPanning, 1);
+	fd.read(&TrackerVersion, 2);
+	fd.read(&nSamples, 1);
+	fd.read(DontCare, 1);
 	Name = new char[27];
-	fread(Name, 26, 1, f_IT);
+	fd.read(Name, 26);
 	if (Name[25] != 0)
 		Name[26] = 0;
-	fread(DontCare, 6, 1, f_IT);
-	fread(SampleMapping, 240, 1, f_IT);
+	fd.read(DontCare, 6);
+	fd.read(SampleMapping, 240);
 
 	if (Const != 0 || NNA > 3 || DCT > 3 || DNA > 2)
 		throw new ModuleLoaderError(E_BAD_IT);
 
 	FadeOut <<= 6;
 	Envelopes = new ModuleEnvelope *[3];
-	for (env = 0; env < 3; env++)
-		Envelopes[env] = new ModuleEnvelope(p_IT, env);
+	for (uint8_t env = 0; env < 3; env++)
+		Envelopes[env] = new ModuleEnvelope(file, env);
 }
 
 ModuleNewInstrument::~ModuleNewInstrument()
@@ -176,9 +173,8 @@ ModuleNewInstrument::~ModuleNewInstrument()
 
 uint8_t ModuleNewInstrument::Map(uint8_t Note)
 {
-	uint16_t i;
 	uint8_t sample = 0;
-	for (i = 0; i < 120; i++)
+	for (uint16_t i = 0; i < 120; i++)
 	{
 		if (SampleMapping[i << 1] <= Note)
 			sample = SampleMapping[(i << 1) + 1];
@@ -241,19 +237,19 @@ uint8_t ModuleNewInstrument::GetDNA() const
 	return DNA;
 }
 
-ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
+ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 {
 	uint8_t DontCare;
-	FILE *f_IT = p_IT->f_Module;
+	const fd_t &fd = file.fd();
 
-	fread(&Flags, 1, 1, f_IT);
-	fread(&nNodes, 1, 1, f_IT);
-	fread(&LoopBegin, 1, 1, f_IT);
-	fread(&LoopEnd, 1, 1, f_IT);
-	fread(&SusLoopBegin, 1, 1, f_IT);
-	fread(&SusLoopEnd, 1, 1, f_IT);
-	fread(Nodes, 75, 1, f_IT);
-	fread(&DontCare, 1, 1, f_IT);
+	fd.read(&Flags, 1);
+	fd.read(&nNodes, 1);
+	fd.read(&LoopBegin, 1);
+	fd.read(&LoopEnd, 1);
+	fd.read(&SusLoopBegin, 1);
+	fd.read(&SusLoopEnd, 1);
+	fd.read(Nodes, 75);
+	fd.read(&DontCare, 1);
 
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
 		throw new ModuleLoaderError(E_BAD_IT);
@@ -266,7 +262,8 @@ ModuleEnvelope::ModuleEnvelope(IT_Intern *p_IT, uint8_t env) : Type(env)
 	}
 }
 
-ModuleEnvelope::ModuleEnvelope(IT_Intern */*p_IT*/, uint8_t flags, uint8_t loopBegin, uint8_t loopEnd, uint8_t susLoopBegin, uint8_t susLoopEnd) :
+ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8_t loopBegin,
+	const uint8_t loopEnd, const uint8_t susLoopBegin, const uint8_t susLoopEnd) noexcept :
 	Type(0), Flags(flags), LoopBegin(loopBegin), LoopEnd(loopEnd), SusLoopBegin(susLoopBegin), SusLoopEnd(susLoopEnd)
 {
 }

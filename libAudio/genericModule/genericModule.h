@@ -314,8 +314,9 @@ private:
 	EnvelopeNode Nodes[25];
 
 public:
-	ModuleEnvelope(IT_Intern *p_IT, uint8_t env);
-	ModuleEnvelope(IT_Intern *p_IT, uint8_t Flags, uint8_t LoopBegin, uint8_t LoopEnd, uint8_t SusLoopBegin, uint8_t SusLoopEnd);
+	ModuleEnvelope(const modIT_t &file, const uint8_t env);
+	ModuleEnvelope(const modIT_t &file, const uint8_t Flags, const uint8_t LoopBegin,
+		const uint8_t LoopEnd, const uint8_t SusLoopBegin, const uint8_t SusLoopEnd) noexcept;
 	uint8_t Apply(uint16_t Tick);
 	bool GetEnabled() const;
 	bool GetLooped() const;
@@ -333,15 +334,15 @@ public:
 class ModuleInstrument : public ModuleAllocator
 {
 private:
-	uint32_t ID;
+	const uint32_t id;
 
 protected:
-	ModuleInstrument(uint32_t ID);
+	ModuleInstrument(uint32_t id_) noexcept : id(id_) { }
 
 public:
-	static ModuleInstrument *LoadInstrument(IT_Intern *p_IT, uint32_t i, uint16_t FormatVersion);
+	static ModuleInstrument *LoadInstrument(const modIT_t &file, uint32_t i, uint16_t FormatVersion);
 
-	virtual ~ModuleInstrument();
+	virtual ~ModuleInstrument() { }
 	virtual uint8_t Map(uint8_t Note) = 0;
 	virtual uint16_t GetFadeOut() const = 0;
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;
@@ -371,7 +372,7 @@ private:
 	ModuleEnvelope *Envelope;
 
 public:
-	ModuleOldInstrument(IT_Intern *p_IT, uint32_t i);
+	ModuleOldInstrument(const modIT_t &file, uint32_t i);
 	~ModuleOldInstrument();
 
 	uint8_t Map(uint8_t Note);
@@ -409,7 +410,7 @@ private:
 	ModuleEnvelope **Envelopes;
 
 public:
-	ModuleNewInstrument(IT_Intern *p_IT, uint32_t i);
+	ModuleNewInstrument(const modIT_t &file, uint32_t i);
 	~ModuleNewInstrument();
 
 	uint8_t Map(uint8_t Note);

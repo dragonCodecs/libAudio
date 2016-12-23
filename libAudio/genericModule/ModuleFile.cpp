@@ -206,17 +206,18 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	uint16_t i;
 	uint32_t *SamplePtrs, *PatternPtrs;
 	FILE *f_IT = p_IF->f_Module;
+	const fd_t &fd = p_IF->inner.fd();
 
 	p_Header = new ModuleHeader(p_IF->inner);
-	fseek(f_IT, p_IF->inner.fd().tell(), SEEK_SET);
 	if (p_Header->nInstruments != 0)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
-		SamplePtrs = (uint32_t *)p_Header->InstrumentPtrs;
+		SamplePtrs = reinterpret_cast<uint32_t *>(p_Header->InstrumentPtrs);
 		for (i = 0; i < p_Header->nInstruments; i++)
 		{
-			fseek(f_IT, SamplePtrs[i], SEEK_SET);
-			p_Instruments[i] = ModuleInstrument::LoadInstrument(p_IF, i, p_Header->FormatVersion);
+			if (fd.seek(SamplePtrs[i], SEEK_SET) != SamplePtrs[i])
+				throw ModuleLoaderError(E_BAD_IT);
+			p_Instruments[i] = ModuleInstrument::LoadInstrument(p_IF->inner, i, p_Header->FormatVersion);
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
