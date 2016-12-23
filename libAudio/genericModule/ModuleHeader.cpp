@@ -348,7 +348,7 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 }
 #endif
 
-ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader()
 {
 	std::array<char, 4> magic;
 	char DontCare[4];
@@ -401,6 +401,8 @@ ModuleHeader::ModuleHeader(modIT_t &file) : ModuleHeader()
 
 	Orders = makeUnique<uint8_t []>(nOrders);
 	InstrumentPtrs = new uint32_t[nInstruments];
+	// TODO: Implement managedPtr_t<> to handle type elision of uint32_t to void
+	// for storage and retrieval + proper deletion of these.
 	SamplePtrs = new uint32_t[nSamples];
 	PatternPtrs = new uint32_t[nPatterns];
 
