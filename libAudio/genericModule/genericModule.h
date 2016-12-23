@@ -339,10 +339,10 @@ private:
 	const uint32_t id;
 
 protected:
-	ModuleInstrument(uint32_t id_) noexcept : id(id_) { }
+	ModuleInstrument(const uint32_t id_) noexcept : id(id_) { }
 
 public:
-	static ModuleInstrument *LoadInstrument(const modIT_t &file, uint32_t i, uint16_t FormatVersion);
+	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
 
 	virtual ~ModuleInstrument() { }
 	virtual uint8_t Map(uint8_t Note) = 0;
@@ -374,7 +374,7 @@ private:
 	std::unique_ptr<ModuleEnvelope> Envelope;
 
 public:
-	ModuleOldInstrument(const modIT_t &file, uint32_t i);
+	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleOldInstrument() = default;
 
 	uint8_t Map(uint8_t Note) override final;
@@ -412,7 +412,7 @@ private:
 	ModuleEnvelope **Envelopes;
 
 public:
-	ModuleNewInstrument(const modIT_t &file, uint32_t i);
+	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleNewInstrument();
 
 	uint8_t Map(uint8_t Note);

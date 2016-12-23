@@ -2,7 +2,7 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, uint32_t i, uint16_t FormatVersion)
+ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion)
 {
 	if (FormatVersion < 0x0200)
 		return new ModuleOldInstrument(file, i);
@@ -10,7 +10,7 @@ ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, uint32_t
 		return new ModuleNewInstrument(file, i);
 }
 
-ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, uint32_t i) : ModuleInstrument(i)
+ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t LoopBegin, LoopEnd;
 	uint8_t SusLoopBegin, SusLoopEnd;
@@ -117,7 +117,7 @@ uint8_t ModuleOldInstrument::GetDNA() const
 	return DNA_NOTECUT;
 }
 
-ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, uint32_t i) : ModuleInstrument(i)
+ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t Const;
 	char Magic[4], DontCare[6];
