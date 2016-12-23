@@ -64,22 +64,28 @@ uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/)
 
 uint16_t ModuleOldInstrument::GetFadeOut() const
 {
-	return 0;
+	return FadeOut;
 }
 
-bool ModuleOldInstrument::GetEnvEnabled(uint8_t /*env*/) const
+bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const
 {
+	return false;
+	if (env == 0)
+		return (Flags & 0x01) != 0;
+}
+
+bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const
+{
+	if (env == 0)
+		return (Flags & 0x02) != 0;
 	return false;
 }
 
-bool ModuleOldInstrument::GetEnvLooped(uint8_t /*env*/) const
+ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const
 {
-	return false;
-}
-
-ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t /*env*/) const
-{
-	return NULL;
+	return nullptr;
+	if (env == 0)
+		return Envelope.get();
 }
 
 bool ModuleOldInstrument::IsPanned() const
