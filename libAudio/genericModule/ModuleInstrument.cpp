@@ -137,24 +137,26 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	FileName = makeUnique<char []>(13);
 	Name = makeUnique<char []>(27);
 
-	fd.read(FileName, 12);
-	fd.read(&Const, 1);
-	fd.read(&NNA, 1);
-	fd.read(&DCT, 1);
-	fd.read(&DNA, 1);
-	fd.read(&FadeOut, 2);
-	fd.read(&PPS, 1);
-	fd.read(&PPC, 1);
-	fd.read(&Volume, 1);
-	fd.read(&Panning, 1);
-	fd.read(&RandVolume, 1);
-	fd.read(&RandPanning, 1);
-	fd.read(&TrackerVersion, 2);
-	fd.read(&nSamples, 1);
-	fd.read(DontCare, 1);
-	fd.read(Name, 26);
-	fd.read(DontCare, 6);
-	fd.read(SampleMapping, 240);
+	if (!FileName || !Name ||
+		!fd.read(FileName, 12) ||
+		!fd.read(&Const, 1) ||
+		!fd.read(&NNA, 1) ||
+		!fd.read(&DCT, 1) ||
+		!fd.read(&DNA, 1) ||
+		!fd.read(&FadeOut, 2) ||
+		!fd.read(&PPS, 1) ||
+		!fd.read(&PPC, 1) ||
+		!fd.read(&Volume, 1) ||
+		!fd.read(&Panning, 1) ||
+		!fd.read(&RandVolume, 1) ||
+		!fd.read(&RandPanning, 1) ||
+		!fd.read(&TrackerVersion, 2) ||
+		!fd.read(&nSamples, 1) ||
+		!fd.read(DontCare, 1) ||
+		!fd.read(Name, 26) ||
+		!fd.read(DontCare, 6) ||
+		!fd.read(SampleMapping, 240))
+		throw ModuleLoaderError(E_BAD_IT);
 
 	if (FileName[11] != 0)
 		FileName[12] = 0;
