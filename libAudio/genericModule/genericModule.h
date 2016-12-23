@@ -91,6 +91,8 @@ class ModuleAllocator
 public:
 	void *operator new(const size_t s);
 	void *operator new[](const size_t s);
+	void *operator new(const size_t s, const std::nothrow_t &);
+	void *operator new[](const size_t s, const std::nothrow_t &);
 };
 
 class ModuleHeader : public ModuleAllocator

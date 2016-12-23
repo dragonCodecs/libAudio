@@ -24,6 +24,20 @@ void *ModuleAllocator::operator new[](const size_t size)
 	return ret;
 }
 
+void *ModuleAllocator::operator new(const size_t size, const std::nothrow_t &)
+{
+	void *ret = ::operator new(size, std::nothrow);
+	memset(ret, 0x00, size);
+	return ret;
+}
+
+void *ModuleAllocator::operator new[](const size_t size, const std::nothrow_t &)
+{
+	void *ret = ::operator new[](size, std::nothrow);
+	memset(ret, 0x00, size);
+	return ret;
+}
+
 ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint32_t i, maxPattern;
