@@ -155,7 +155,7 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nC
 	}
 }
 
-inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &fd)
+inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &fd) noexcept
 {
 	if (i > len || !fd.read(var))
 		return true;
@@ -165,39 +165,40 @@ inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &f
 
 ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels(nChannels)
 {
-	std::array<char, 4> DontCare;
-	uint8_t b, ChannelMask[64];
-	uint16_t len, row, channel, j;
-	ModuleCommand LastCommand[64];
+	std::array<char, 4> dontCare;
+	std::array<uint8_t, 64> channelMask;
+	uint16_t len;
+	std::array<ModuleCommand, 64> lastCmd;
 	const fd_t &fd = file.fd();
 
 	fd.read(len);
 	fd.read(&Rows, 2);
 	Commands = new ModuleCommand *[nChannels];
-	for (channel = 0; channel < nChannels; channel++)
+	for (uint16_t channel = 0; channel < nChannels; channel++)
 		Commands[channel] = new ModuleCommand[Rows];
-	fd.read(DontCare);
+	fd.read(dontCare);
 
-	row = 0;
-	j = 0;
+	uint16_t row = 0;
+	uint16_t j = 0;
 	while (row < Rows)
 	{
-		channel = 0;
+		uint16_t channel = 0;
+		uint8_t b;
 		if (readInc(b, j, len, fd))
 			break;
 		if (b == 0)
 		{
-			row++;
+			++row;
 			continue;
 		}
 		channel = b & 0x7F;
 		if (channel != 0)
 			channel = (channel - 1) & 0x3F;
-		if ((b & 0x80) != 0 && readInc(ChannelMask[channel], j, len, fd))
+		if ((b & 0x80) != 0 && readInc(channelMask[channel], j, len, fd))
 			break;
 		if (channel < nChannels)
-			Commands[channel][row].SetITRepVal(ChannelMask[channel], LastCommand[channel]);
-		if ((ChannelMask[channel] & 0x01) != 0)
+			Commands[channel][row].SetITRepVal(channelMask[channel], lastCmd[channel]);
+		if ((channelMask[channel] & 0x01) != 0)
 		{
 			uint8_t note;
 			if (readInc(note, j, len, fd))
@@ -205,10 +206,10 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 			if (channel < nChannels)
 			{
 				Commands[channel][row].SetITNote(note);
-				LastCommand[channel].SetITNote(note);
+				lastCmd[channel].SetITNote(note);
 			}
 		}
-		if ((ChannelMask[channel] & 0x02) != 0)
+		if ((channelMask[channel] & 0x02) != 0)
 		{
 			uint8_t sample;
 			if (readInc(sample, j, len, fd))
@@ -216,10 +217,10 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 			if (channel < nChannels)
 			{
 				Commands[channel][row].SetSample(sample);
-				LastCommand[channel].SetSample(sample);
+				lastCmd[channel].SetSample(sample);
 			}
 		}
-		if ((ChannelMask[channel] & 0x04) != 0)
+		if ((channelMask[channel] & 0x04) != 0)
 		{
 			uint8_t volume;
 			if (readInc(volume, j, len, fd))
@@ -227,10 +228,10 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 			if (channel < nChannels)
 			{
 				Commands[channel][row].SetITVolume(volume);
-				LastCommand[channel].SetITVolume(volume);
+				lastCmd[channel].SetITVolume(volume);
 			}
 		}
-		if ((ChannelMask[channel] & 0x08) != 0)
+		if ((channelMask[channel] & 0x08) != 0)
 		{
 			uint8_t effect, param;
 			if (readInc(effect, j, len, fd) || readInc(param, j, len, fd))
@@ -238,7 +239,7 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 			if (channel < nChannels)
 			{
 				Commands[channel][row].SetITEffect(effect, param);
-				LastCommand[channel].SetITEffect(effect, param);
+				lastCmd[channel].SetITEffect(effect, param);
 			}
 		}
 	}
@@ -252,22 +253,7 @@ ModulePattern::~ModulePattern()
 	delete [] Commands;
 }
 
-ModuleCommand **ModulePattern::GetCommands() const
-{
-	return Commands;
-}
-
-uint16_t ModulePattern::GetRows() const
-{
-	return Rows;
-}
-
-void ModuleCommand::SetSample(uint8_t sample)
-{
-	Sample = sample;
-}
-
-void ModuleCommand::SetVolume(uint8_t volume)
+void ModuleCommand::SetVolume(const uint8_t volume) noexcept
 {
 	VolEffect = VOLCMD_VOLUME;
 	VolParam = volume;
@@ -371,32 +357,32 @@ void ModuleCommand::SetAONArpIndex(uint8_t Index)
 	ArpIndex = Index;
 }
 
-void ModuleCommand::SetITRepVal(uint8_t ChannelMask, ModuleCommand &LastCommand)
+void ModuleCommand::SetITRepVal(const uint8_t channelMask, const ModuleCommand &lastCmd) noexcept
 {
-	if ((ChannelMask & 0x10) != 0)
-		Note = LastCommand.Note;
-	if ((ChannelMask & 0x20) != 0)
-		Sample = LastCommand.Sample;
-	if ((ChannelMask & 0x40) != 0)
+	if ((channelMask & 0x10) != 0)
+		Note = lastCmd.Note;
+	if ((channelMask & 0x20) != 0)
+		Sample = lastCmd.Sample;
+	if ((channelMask & 0x40) != 0)
 	{
-		VolEffect = LastCommand.VolEffect;
-		VolParam = LastCommand.VolParam;
+		VolEffect = lastCmd.VolEffect;
+		VolParam = lastCmd.VolParam;
 	}
-	if ((ChannelMask & 0x80) != 0)
+	if ((channelMask & 0x80) != 0)
 	{
-		Effect = LastCommand.Effect;
-		Param = LastCommand.Param;
+		Effect = lastCmd.Effect;
+		Param = lastCmd.Param;
 	}
 }
 
-void ModuleCommand::SetITNote(uint8_t note)
+void ModuleCommand::SetITNote(uint8_t note) noexcept
 {
 	if (note < 0x80)
 		note++;
 	Note = note;
 }
 
-void ModuleCommand::SetITVolume(uint8_t volume)
+void ModuleCommand::SetITVolume(const uint8_t volume) noexcept
 {
 	if (volume <= 64)
 	{

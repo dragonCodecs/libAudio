@@ -446,8 +446,8 @@ private:
 	friend class Channel;
 
 public:
-	void SetSample(uint8_t Sample);
-	void SetVolume(uint8_t Volume);
+	void SetSample(const uint8_t _sample) noexcept { Sample = _sample; }
+	void SetVolume(const uint8_t Volume) noexcept;
 	void SetMODData(uint8_t Data[4]);
 	void SetS3MNote(uint8_t Note, uint8_t Sample);
 	void SetS3MVolume(uint8_t Volume);
@@ -457,10 +457,10 @@ public:
 	void SetAONNote(uint8_t Note);
 	void SetAONArpIndex(uint8_t Index);
 	void SetAONEffect(uint8_t Effect, uint8_t Param);
-	void SetITRepVal(uint8_t ChannelMask, ModuleCommand &LastCommand);
-	void SetITNote(uint8_t Note);
-	void SetITVolume(uint8_t Volume);
-	void SetITEffect(uint8_t Effect, uint8_t Param);
+	void SetITRepVal(const uint8_t channelMask, const ModuleCommand &lastCommand) noexcept;
+	void SetITNote(uint8_t note) noexcept;
+	void SetITVolume(const uint8_t volume) noexcept;
+	void SetITEffect(const uint8_t Effect, const uint8_t Param);
 };
 
 class ModulePattern : public ModuleAllocator
@@ -478,8 +478,8 @@ public:
 	ModulePattern(const modIT_t &file, const uint32_t nChannels);
 	virtual ~ModulePattern();
 
-	ModuleCommand **GetCommands() const;
-	uint16_t GetRows() const;
+	ModuleCommand **GetCommands() const { return Commands; }
+	uint16_t GetRows() const noexcept { return Rows; }
 };
 
 typedef struct _int16dot16_t
