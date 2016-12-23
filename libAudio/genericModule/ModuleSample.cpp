@@ -287,32 +287,34 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
-	fd.read(magic);
-	if (strncmp(magic.data(), "IMPS", 4) != 0)
+	if (!fd.read(magic) ||
+		strncmp(magic.data(), "IMPS", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
 	FileName = new char[13];
 	Name = new char[27];
 
-	fd.read(FileName, 12);
-	fd.read(&Const, 1);
-	fd.read(&InstrVol, 1);
-	fd.read(&Flags, 1);
-	fd.read(&Volume, 1);
-	fd.read(Name, 26);
-	fd.read(&Packing, 1);
-	fd.read(&DefaultPan, 1);
-	fd.read(&Length, 4);
-	fd.read(&LoopStart, 4);
-	fd.read(&LoopEnd, 4);
-	fd.read(&C4Speed, 4);
-	fd.read(&SusLoopBegin, 4);
-	fd.read(&SusLoopEnd, 4);
-	fd.read(&SamplePos, 4);
-	fd.read(&VibratoSpeed, 1);
-	fd.read(&VibratoDepth, 1);
-	fd.read(&VibratoType, 1);
-	fd.read(&VibratoRate, 1);
+	if (!FileName || !Name ||
+		!fd.read(FileName, 12) ||
+		!fd.read(&Const, 1) ||
+		!fd.read(&InstrVol, 1) ||
+		!fd.read(&Flags, 1) ||
+		!fd.read(&Volume, 1) ||
+		!fd.read(Name, 26) ||
+		!fd.read(&Packing, 1) ||
+		!fd.read(&DefaultPan, 1) ||
+		!fd.read(&Length, 4) ||
+		!fd.read(&LoopStart, 4) ||
+		!fd.read(&LoopEnd, 4) ||
+		!fd.read(&C4Speed, 4) ||
+		!fd.read(&SusLoopBegin, 4) ||
+		!fd.read(&SusLoopEnd, 4) ||
+		!fd.read(&SamplePos, 4) ||
+		!fd.read(&VibratoSpeed, 1) ||
+		!fd.read(&VibratoDepth, 1) ||
+		!fd.read(&VibratoType, 1) ||
+		!fd.read(&VibratoRate, 1))
+	throw ModuleLoaderError(E_BAD_IT);
 
 	if (FileName[11] != 0)
 		FileName[12] = 0;
