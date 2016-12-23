@@ -343,81 +343,17 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 	SampleFlags |= (Flags & 0x40) ? SAMPLE_FLAGS_LPINGPONG : 0;
 }
 
-ModuleSampleNative::~ModuleSampleNative()
-{
-	delete [] Name;
-	delete [] FileName;
-}
-
-uint32_t ModuleSampleNative::GetLength()
-{
-	return Length;
-}
-
-uint32_t ModuleSampleNative::GetLoopStart()
-{
-	return LoopStart;
-}
-
-uint32_t ModuleSampleNative::GetLoopEnd()
-{
-	return LoopEnd;
-}
-
-uint8_t ModuleSampleNative::GetFineTune()
-{
-	return FineTune;
-}
-
-uint32_t ModuleSampleNative::GetC4Speed()
-{
-	return C4Speed;
-}
-
-uint8_t ModuleSampleNative::GetVolume()
-{
-	return Volume << 1;
-}
-
-uint8_t ModuleSampleNative::GetVibratoSpeed()
-{
-	return VibratoSpeed;
-}
-
-uint8_t ModuleSampleNative::GetVibratoDepth()
-{
-	return VibratoDepth;
-}
-
-uint8_t ModuleSampleNative::GetVibratoType()
-{
-	return VibratoType;
-}
-
-uint8_t ModuleSampleNative::GetVibratoRate()
-{
-	return VibratoRate;
-}
-
 bool ModuleSampleNative::Get16Bit()
-{
-	return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0;
-}
+	{ return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0; }
 
 bool ModuleSampleNative::GetStereo()
-{
-	return (SampleFlags & SAMPLE_FLAGS_STEREO) != 0;
-}
+	{ return (SampleFlags & SAMPLE_FLAGS_STEREO) != 0; }
 
 bool ModuleSampleNative::GetLooped()
-{
-	return (SampleFlags & SAMPLE_FLAGS_LOOP) != 0;
-}
+	{ return (SampleFlags & SAMPLE_FLAGS_LOOP) != 0; }
 
 bool ModuleSampleNative::GetBidiLoop()
-{
-	return (SampleFlags & SAMPLE_FLAGS_LPINGPONG) != 0;
-}
+	{ return (SampleFlags & SAMPLE_FLAGS_LPINGPONG) != 0; }
 
 ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type) : ModuleSample(i, Type)
 {

@@ -236,22 +236,22 @@ public:
 	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
 	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
 	ModuleSampleNative(const modIT_t &file, const uint32_t i);
-	~ModuleSampleNative();
+	~ModuleSampleNative() = default;
 
-	uint32_t GetLength();
-	uint32_t GetLoopStart();
-	uint32_t GetLoopEnd();
-	uint8_t GetFineTune();
-	uint32_t GetC4Speed();
-	uint8_t GetVolume();
-	uint8_t GetVibratoSpeed();
-	uint8_t GetVibratoDepth();
-	uint8_t GetVibratoType();
-	uint8_t GetVibratoRate();
-	bool Get16Bit();
-	bool GetStereo();
-	bool GetLooped();
-	bool GetBidiLoop();
+	uint32_t GetLength() override final { return Length; }
+	uint32_t GetLoopStart() override final { return LoopStart; }
+	uint32_t GetLoopEnd() override final { return LoopEnd; }
+	uint8_t GetFineTune() override final { return FineTune; }
+	uint32_t GetC4Speed() override final { return C4Speed; }
+	uint8_t GetVolume() override final { return Volume; }
+	uint8_t GetVibratoSpeed() override final { return VibratoSpeed; }
+	uint8_t GetVibratoDepth() override final { return VibratoDepth; }
+	uint8_t GetVibratoType() override final { return VibratoType; }
+	uint8_t GetVibratoRate() override final { return VibratoRate; }
+	bool Get16Bit() override final;
+	bool GetStereo() override final;
+	bool GetLooped() override final;
+	bool GetBidiLoop() override final;
 };
 
 class ModuleSampleAdlib : public ModuleSample

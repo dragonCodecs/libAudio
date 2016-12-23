@@ -238,7 +238,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	uint32_t *const sampleOffsets = reinterpret_cast<uint32_t *>(p_Header->SamplePtrs);
 	for (i = 0; i < p_Header->nSamples; ++i)
 	{
-		if (!fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
+		if (fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
 			throw ModuleLoaderError(E_BAD_IT);
 		p_Samples[i] = ModuleSample::LoadSample(p_IF->inner, i);
 	}
