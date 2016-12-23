@@ -52,7 +52,7 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 		Name[26] = 0;
 
 	if (Const != 0 || NNA > 3 || DNC > 1)
-		throw new ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError(E_BAD_IT);
 
 	Envelope = makeUnique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
@@ -126,16 +126,18 @@ uint8_t ModuleOldInstrument::GetDNA() const
 ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t Const;
-	char Magic[4], DontCare[6];
+	char DontCare[6];
+	std::array<char, 4> Magic;
 	const fd_t &fd = file.fd();
 
-	fd.read(Magic, 4);
-	if (strncmp(Magic, "IMPI", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_IT);
+	if (!fd.read(Magic) ||
+		strncmp(Magic.data(), "IMPI", 4) != 0)
+		throw ModuleLoaderError(E_BAD_IT);
+
 	FileName = new char[13];
+	Name = new char[27];
+
 	fd.read(FileName, 12);
-	if (FileName[11] != 0)
-		FileName[12] = 0;
 	fd.read(&Const, 1);
 	fd.read(&NNA, 1);
 	fd.read(&DCT, 1);
@@ -150,15 +152,17 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	fd.read(&TrackerVersion, 2);
 	fd.read(&nSamples, 1);
 	fd.read(DontCare, 1);
-	Name = new char[27];
 	fd.read(Name, 26);
-	if (Name[25] != 0)
-		Name[26] = 0;
 	fd.read(DontCare, 6);
 	fd.read(SampleMapping, 240);
 
+	if (FileName[11] != 0)
+		FileName[12] = 0;
+	if (Name[25] != 0)
+		Name[26] = 0;
+
 	if (Const != 0 || NNA > 3 || DCT > 3 || DNA > 2)
-		throw new ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError(E_BAD_IT);
 
 	FadeOut <<= 6;
 	Envelopes = new ModuleEnvelope *[3];
