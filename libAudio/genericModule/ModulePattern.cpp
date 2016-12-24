@@ -12,10 +12,16 @@ static const uint16_t Periods[60] =
 	107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60, 57
 };
 
-ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nChannels), Rows(64)
+ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t _rows, const uint32_t type) :
+	Channels(_channels), Commands(makeUnique<commandPtr_t []>(_channels)), Rows(_rows)
+{
+	if (!Commands)
+		throw ModuleLoaderError(type);
+}
+
+ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_MOD)
 {
 	uint32_t channel, row;
-	Commands = new ModuleCommand *[nChannels];
 	for (row = 0; row < 64; row++)
 	{
 		for (channel = 0; channel < nChannels; channel++)
@@ -23,7 +29,11 @@ ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nC
 			// Read 4 bytes of data and unpack it into the structure.
 			uint8_t Data[4];
 			if (row == 0)
-				Commands[channel] = new ModuleCommand[64];
+			{
+				Commands[channel] = makeUnique<ModuleCommand []>(64);
+				if (!Commands[channel])
+					throw ModuleLoaderError(E_BAD_MOD);
+			}
 			fread(Data, 4, 1, p_MF->f_Module);
 			Commands[channel][row].SetMODData(Data);
 		}
@@ -34,14 +44,17 @@ ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : Channels(nC
 	if (cnt + 1 >= Length) \
 		break
 
-ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nChannels), Rows(64)
+ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_S3M)
 {
 	uint32_t j, Length;
 	uint8_t row;
 	FILE *f_S3M = p_SF->f_Module;
-	Commands = new ModuleCommand *[nChannels];
 	for (j = 0; j < nChannels; j++)
-		Commands[j] = new ModuleCommand[64];
+	{
+		Commands[j] = makeUnique<ModuleCommand []>(64);
+		if (!Commands[j])
+			throw ModuleLoaderError(E_BAD_S3M);
+	}
 	fread(&Length, sizeof(uint16_t), 1, f_S3M);
 	for (j = 0, row = 0; row < 64;)
 	{
@@ -93,12 +106,11 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : Channels(nC
 
 #undef checkLength
 
-ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4), Rows(64)
+ModulePattern::ModulePattern(STM_Intern *p_SF) : ModulePattern(4, 64, E_BAD_STM)
 {
 	uint8_t row, channel;
 	FILE *f_STM = p_SF->f_Module;
 
-	Commands = new ModuleCommand *[4];
 	for (row = 0; row < 64; row++)
 	{
 		for (channel = 0; channel < 4; channel++)
@@ -109,7 +121,11 @@ ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4), Rows(64)
 			uint8_t Effect;
 
 			if (row == 0)
-				Commands[channel] = new ModuleCommand[64];
+			{
+				Commands[channel] = makeUnique<ModuleCommand []>(64);
+				if (!Commands[channel])
+					throw ModuleLoaderError(E_BAD_STM);
+			}
 			fread(&Note, 1, 1, f_STM);
 			Commands[channel][row].SetSTMNote(Note);
 			fread(&Param, 1, 1, f_STM);
@@ -125,12 +141,11 @@ ModulePattern::ModulePattern(STM_Intern *p_SF) : Channels(4), Rows(64)
 	}
 }
 
-ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nChannels), Rows(64)
+ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_AON)
 {
 	uint8_t row, channel;
 	FILE *f_AON = p_AF->f_Module;
 
-	Commands = new ModuleCommand *[nChannels];
 	for (row = 0; row < 64; row++)
 	{
 		for (channel = 0; channel < nChannels; channel++)
@@ -140,7 +155,11 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : Channels(nC
 			uint8_t ArpIndex = 0;
 
 			if (row == 0)
-				Commands[channel] = new ModuleCommand[64];
+			{
+				Commands[channel] = makeUnique<ModuleCommand []>(64);
+				if (!Commands[channel])
+					throw ModuleLoaderError(E_BAD_AON);
+			}
 			fread(&Note, 1, 1, f_AON);
 			Commands[channel][row].SetAONNote(Note);
 			fread(&Samp, 1, 1, f_AON);
@@ -171,7 +190,7 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 	std::array<ModuleCommand, 64> lastCmd;
 	const fd_t &fd = file.fd();
 
-	Commands = new ModuleCommand *[nChannels];
+	Commands = makeUnique<commandPtr_t []>(nChannels);
 	if (!Commands ||
 		!fd.read(len) ||
 		!fd.read(&Rows, 2) ||
@@ -180,7 +199,7 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 
 	for (uint16_t channel = 0; channel < nChannels; ++channel)
 	{
-		Commands[channel] = new ModuleCommand[Rows];
+		Commands[channel] = makeUnique<ModuleCommand []>(Rows);
 		if (!Commands[channel])
 			throw ModuleLoaderError(E_BAD_IT);
 	}
@@ -250,14 +269,6 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 			}
 		}
 	}
-}
-
-ModulePattern::~ModulePattern()
-{
-	uint8_t channel;
-	for (channel = 0; channel < Channels; channel++)
-		delete [] Commands[channel];
-	delete [] Commands;
 }
 
 void ModuleCommand::SetVolume(const uint8_t volume) noexcept

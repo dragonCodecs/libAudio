@@ -463,12 +463,17 @@ public:
 	void SetITEffect(const uint8_t Effect, const uint8_t Param);
 };
 
-class ModulePattern : public ModuleAllocator
+class ModulePattern final : public ModuleAllocator
 {
+public:
+	using commandPtr_t = std::unique_ptr<ModuleCommand []>;
+
 private:
-	uint32_t Channels;
-	ModuleCommand **Commands;
+	const uint32_t Channels;
+	std::unique_ptr<commandPtr_t []> Commands;
 	uint16_t Rows;
+
+	ModulePattern(const uint32_t _channels, const uint16_t _rows, const uint32_t type);
 
 public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);
@@ -476,10 +481,9 @@ public:
 	ModulePattern(STM_Intern *p_SF);
 	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
 	ModulePattern(const modIT_t &file, const uint32_t nChannels);
-	virtual ~ModulePattern();
 
-	ModuleCommand **GetCommands() const { return Commands; }
-	uint16_t GetRows() const noexcept { return Rows; }
+	commandPtr_t *commands() const { return Commands.get(); }
+	uint16_t rows() const noexcept { return Rows; }
 };
 
 typedef struct _int16dot16_t

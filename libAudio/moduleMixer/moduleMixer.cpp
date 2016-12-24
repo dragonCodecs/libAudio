@@ -1425,8 +1425,6 @@ bool ModuleFile::Tick()
 	TickCount++;
 	if (TickCount >= (MusicSpeed * (PatternDelay + 1)) + FrameDelay)
 	{
-		uint32_t i;
-		ModuleCommand **Commands;
 		TickCount = 0;
 		PatternDelay = 0;
 		FrameDelay = 0;
@@ -1451,12 +1449,13 @@ bool ModuleFile::Tick()
 			NextPattern = NewPattern + 1;
 			NextRow = 0;
 		}
-		if (p_Patterns[Pattern] == nullptr)
+		if (!p_Patterns[Pattern])
 			return false;
-		Commands = p_Patterns[Pattern]->GetCommands();
-		Rows = p_Patterns[Pattern]->GetRows();
-		for (i = 0; i < p_Header->nChannels; i++)
-			Channels[i].SetData(&Commands[i][Row], p_Header);
+		const ModulePattern &pattern = *p_Patterns[Pattern];
+		const auto commands = pattern.commands();
+		Rows = pattern.rows();
+		for (uint32_t i = 0; i < p_Header->nChannels; ++i)
+			Channels[i].SetData(&commands[i][Row], p_Header);
 	}
 	if (MusicSpeed == 0)
 		MusicSpeed = 1;
