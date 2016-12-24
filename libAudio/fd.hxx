@@ -91,7 +91,7 @@ public:
 		if (eof)
 			return false;
 		const ssize_t result = ::read(fd, value, valueLen);
-		if (result == 0)
+		if (result == 0 && valueLen != 0)
 			eof = true;
 		else if (result > 0)
 			actualLen = size_t(result);
