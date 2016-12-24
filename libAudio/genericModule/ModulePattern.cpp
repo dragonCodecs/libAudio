@@ -12,8 +12,8 @@ static const uint16_t Periods[60] =
 	107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60, 57
 };
 
-ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t _rows, const uint32_t type) :
-	Channels(_channels), Commands(makeUnique<commandPtr_t []>(_channels)), Rows(_rows)
+ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type) :
+	Channels(_channels), Commands(makeUnique<commandPtr_t []>(_channels)), _rows(rows)
 {
 	if (!Commands)
 		throw ModuleLoaderError(type);
@@ -22,7 +22,7 @@ ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t _rows, con
 ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_MOD)
 {
 	uint32_t channel, row;
-	for (row = 0; row < 64; row++)
+	for (row = 0; row < _rows; row++)
 	{
 		for (channel = 0; channel < nChannels; channel++)
 		{
@@ -30,7 +30,7 @@ ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : ModulePatte
 			uint8_t Data[4];
 			if (row == 0)
 			{
-				Commands[channel] = makeUnique<ModuleCommand []>(64);
+				Commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!Commands[channel])
 					throw ModuleLoaderError(E_BAD_MOD);
 			}
@@ -51,12 +51,12 @@ ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : ModulePatte
 	FILE *f_S3M = p_SF->f_Module;
 	for (j = 0; j < nChannels; j++)
 	{
-		Commands[j] = makeUnique<ModuleCommand []>(64);
+		Commands[j] = makeUnique<ModuleCommand []>(_rows);
 		if (!Commands[j])
 			throw ModuleLoaderError(E_BAD_S3M);
 	}
 	fread(&Length, sizeof(uint16_t), 1, f_S3M);
-	for (j = 0, row = 0; row < 64;)
+	for (j = 0, row = 0; row < _rows;)
 	{
 		/* Begin: temp */
 		uint8_t Note;
@@ -111,7 +111,7 @@ ModulePattern::ModulePattern(STM_Intern *p_SF) : ModulePattern(4, 64, E_BAD_STM)
 	uint8_t row, channel;
 	FILE *f_STM = p_SF->f_Module;
 
-	for (row = 0; row < 64; row++)
+	for (row = 0; row < _rows; row++)
 	{
 		for (channel = 0; channel < 4; channel++)
 		{
@@ -122,7 +122,7 @@ ModulePattern::ModulePattern(STM_Intern *p_SF) : ModulePattern(4, 64, E_BAD_STM)
 
 			if (row == 0)
 			{
-				Commands[channel] = makeUnique<ModuleCommand []>(64);
+				Commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!Commands[channel])
 					throw ModuleLoaderError(E_BAD_STM);
 			}
@@ -146,7 +146,7 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : ModulePatte
 	uint8_t row, channel;
 	FILE *f_AON = p_AF->f_Module;
 
-	for (row = 0; row < 64; row++)
+	for (row = 0; row < _rows; row++)
 	{
 		for (channel = 0; channel < nChannels; channel++)
 		{
@@ -156,7 +156,7 @@ ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : ModulePatte
 
 			if (row == 0)
 			{
-				Commands[channel] = makeUnique<ModuleCommand []>(64);
+				Commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!Commands[channel])
 					throw ModuleLoaderError(E_BAD_AON);
 			}
@@ -193,20 +193,20 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t nChannels) : Channels
 	Commands = makeUnique<commandPtr_t []>(nChannels);
 	if (!Commands ||
 		!fd.read(len) ||
-		!fd.read(&Rows, 2) ||
+		!fd.read(&_rows, 2) ||
 		!fd.read(dontCare))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	for (uint16_t channel = 0; channel < nChannels; ++channel)
 	{
-		Commands[channel] = makeUnique<ModuleCommand []>(Rows);
+		Commands[channel] = makeUnique<ModuleCommand []>(_rows);
 		if (!Commands[channel])
 			throw ModuleLoaderError(E_BAD_IT);
 	}
 
 	uint16_t row = 0;
 	uint16_t j = 0;
-	while (row < Rows)
+	while (row < _rows)
 	{
 		uint16_t channel = 0;
 		uint8_t b;

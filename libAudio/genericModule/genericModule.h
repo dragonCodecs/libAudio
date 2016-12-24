@@ -471,9 +471,9 @@ public:
 private:
 	const uint32_t Channels;
 	std::unique_ptr<commandPtr_t []> Commands;
-	uint16_t Rows;
+	uint16_t _rows;
 
-	ModulePattern(const uint32_t _channels, const uint16_t _rows, const uint32_t type);
+	ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type);
 
 public:
 	ModulePattern(MOD_Intern *p_MF, uint32_t nChannels);
@@ -483,7 +483,7 @@ public:
 	ModulePattern(const modIT_t &file, const uint32_t nChannels);
 
 	commandPtr_t *commands() const { return Commands.get(); }
-	uint16_t rows() const noexcept { return Rows; }
+	uint16_t rows() const noexcept { return _rows; }
 };
 
 typedef struct _int16dot16_t
