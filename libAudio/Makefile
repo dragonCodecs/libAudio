@@ -31,8 +31,8 @@ O_SID = loadSID.o
 O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(O_SNDH) $(O_SID) \
 	loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA) saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
-VERMIN = .1
-VERREV = .43
+VERMIN = .2
+VERREV = .0
 VER = $(VERMAJ)$(VERMIN)$(VERREV)
 SOMAJ = libAudio.so
 SOMIN = $(SOMAJ)$(VERMAJ)
