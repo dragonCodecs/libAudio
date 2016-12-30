@@ -217,10 +217,8 @@ ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instrumen
 
 ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
-	uint16_t i;
-	uint32_t *PatternPtrs;
-	FILE *f_IT = p_IF->f_Module;
 	const fd_t &fd = p_IF->inner.fd();
+	uint16_t i;
 
 	p_Header = new ModuleHeader(p_IF->inner);
 	if (p_Header->nInstruments != 0)
@@ -262,7 +260,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	}
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
-	PatternPtrs = (uint32_t *)p_Header->PatternPtrs;
+	uint32_t *const PatternPtrs = reinterpret_cast<uint32_t *>(p_Header->PatternPtrs);
 	for (i = 0; i < p_Header->nPatterns; i++)
 	{
 		if (PatternPtrs[i] == 0)
@@ -275,8 +273,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 		}
 	}
 
-	fseek(f_IT, fd.tell(), SEEK_SET);
-	ITLoadPCM(f_IT);
+	itLoadPCM(p_IF->inner);
 	MinPeriod = 8;
 	MaxPeriod = 61440;//32767;
 }
@@ -439,7 +436,7 @@ void ModuleFile::AONLoadPCM(FILE *f_AON)
 	}
 }
 
-uint32_t ITBitstreamRead(uint8_t &buff, uint8_t &buffLen, FILE *f_IT, uint8_t bits)
+uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, uint8_t bits)
 {
 	uint32_t ret = 0;
 	uint8_t i = 0;
@@ -450,7 +447,7 @@ uint32_t ITBitstreamRead(uint8_t &buff, uint8_t &buffLen, FILE *f_IT, uint8_t bi
 		{
 			if (buffLen == 0)
 			{
-				fread(&buff, 1, 1, f_IT);
+				fd.read(buff);
 				buffLen = 8;
 			}
 			ret |= (buff & 1) << i;
@@ -461,7 +458,7 @@ uint32_t ITBitstreamRead(uint8_t &buff, uint8_t &buffLen, FILE *f_IT, uint8_t bi
 	return ret;
 }
 
-void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp)
+void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool deltaComp)
 {
 	uint8_t buff, buffLen, bitWidth = 9;
 	int8_t delta = 0, adjDelta = 0;
@@ -475,7 +472,8 @@ void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp
 		{
 			blockLen = 0x8000;
 			buffLen = 0;
-			ITBitstreamRead(buff, buffLen, f_IT, 16);
+			// First we ignore 16 bits..
+			itBitstreamRead(buff, buffLen, fd, 16);
 			bitWidth = 9;
 			delta = 0;
 			adjDelta = 0;
@@ -486,15 +484,15 @@ void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp
 		do
 		{
 			uint16_t bits;
-			bits = ITBitstreamRead(buff, buffLen, f_IT, bitWidth);
-			if (feof(f_IT) == true)
+			bits = itBitstreamRead(buff, buffLen, fd, bitWidth);
+			if (fd.isEOF())
 				return;
 			if (bitWidth < 7)
 			{
 				uint16_t special = 1 << (bitWidth - 1);
 				if (bits == special)
 				{
-					uint8_t bits = ITBitstreamRead(buff, buffLen, f_IT, 3) + 1;
+					uint8_t bits = itBitstreamRead(buff, buffLen, fd, 3) + 1;
 					if (bits < bitWidth)
 						bitWidth = bits;
 					else
@@ -545,7 +543,7 @@ void ITUnpackPCM8(ModuleSample *sample, uint8_t *PCM, FILE *f_IT, bool deltaComp
 	}
 }
 
-void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaComp)
+void itUnpackPCM16(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, bool deltaComp)
 {
 	uint8_t buff, buffLen, bitWidth = 17;
 	int16_t delta = 0, adjDelta = 0;
@@ -559,7 +557,8 @@ void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaCo
 		{
 			blockLen = 0x4000;
 			buffLen = 0;
-			ITBitstreamRead(buff, buffLen, f_IT, 16);
+			// First we ignore 16 bits
+			itBitstreamRead(buff, buffLen, fd, 16);
 			bitWidth = 17;
 			delta = 0;
 			adjDelta = 0;
@@ -570,15 +569,15 @@ void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaCo
 		do
 		{
 			uint32_t bits;
-			if (feof(f_IT) == true)
+			if (fd.isEOF())
 				return;
-			bits = ITBitstreamRead(buff, buffLen, f_IT, bitWidth);
+			bits = itBitstreamRead(buff, buffLen, fd, bitWidth);
 			if (bitWidth < 7)
 			{
 				uint32_t special = 1 << (bitWidth - 1);
 				if (bits == special)
 				{
-					uint8_t bits = ITBitstreamRead(buff, buffLen, f_IT, 4) + 1;
+					uint8_t bits = itBitstreamRead(buff, buffLen, fd, 4) + 1;
 					if (bits < bitWidth)
 						bitWidth = bits;
 					else
@@ -630,7 +629,7 @@ void ITUnpackPCM16(ModuleSample *sample, uint16_t *PCM, FILE *f_IT, bool deltaCo
 }
 
 template<typename T>
-void StereoInterleve(T *pcmIn, T *pcmOut, uint32_t Length)
+void stereoInterleave(T *pcmIn, T *pcmOut, uint32_t Length)
 {
 	for (uint32_t i = 0; i < Length; i++)
 	{
@@ -639,13 +638,13 @@ void StereoInterleve(T *pcmIn, T *pcmOut, uint32_t Length)
 	}
 }
 
-void ModuleFile::ITLoadPCM(FILE *f_IT)
+void ModuleFile::itLoadPCM(const modIT_t &file)
 {
-	uint32_t i;
+	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[p_Header->nSamples];
-	for (i = 0; i < p_Header->nSamples; i++)
+	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
-		ModuleSampleNative *Sample = ((ModuleSampleNative *)p_Samples[i]);
+		ModuleSampleNative *const Sample = reinterpret_cast<ModuleSampleNative *>(p_Samples[i]);
 		uint32_t Length = p_Samples[i]->GetLength() << ((Sample->Get16Bit() ? 1 : 0) + (Sample->GetStereo() ? 1 : 0));
 		if ((Sample->Flags & 0x01) == 0)
 		{
@@ -653,16 +652,17 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 			continue;
 		}
 		p_PCM[i] = new uint8_t[Length];
-		fseek(f_IT, Sample->SamplePos, SEEK_SET);
+		if (fd.seek(Sample->SamplePos, SEEK_SET) != Sample->SamplePos)
+			throw ModuleLoaderError(E_BAD_IT);
 		if ((Sample->Flags & 0x08) != 0)
 		{
 			if (Sample->Get16Bit())
-				ITUnpackPCM16(Sample, (uint16_t *)p_PCM[i], f_IT, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
+				itUnpackPCM16(Sample, reinterpret_cast<uint16_t *>(p_PCM[i]), fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
 			else
-				ITUnpackPCM8(Sample, p_PCM[i], f_IT, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
+				itUnpackPCM8(Sample, p_PCM[i], fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
 		}
-		else
-			fread(p_PCM[i], Length, 1, f_IT);
+		else if (!fd.read(p_PCM[i], Length))
+			throw ModuleLoaderError(E_BAD_IT);
 		if ((Sample->Packing & 0x01) == 0)
 		{
 			uint32_t j;
@@ -683,9 +683,9 @@ void ModuleFile::ITLoadPCM(FILE *f_IT)
 		{
 			uint8_t *outBuff = new uint8_t[Length];
 			if (Sample->Get16Bit())
-				StereoInterleve((uint16_t *)p_PCM[i], (uint16_t *)outBuff, p_Samples[i]->GetLength());
+				stereoInterleave(reinterpret_cast<uint16_t *>(p_PCM[i]), reinterpret_cast<uint16_t *>(outBuff), p_Samples[i]->GetLength());
 			else
-				StereoInterleve(p_PCM[i], outBuff, p_Samples[i]->GetLength());
+				stereoInterleave(p_PCM[i], outBuff, p_Samples[i]->GetLength());
 			delete [] p_PCM[i];
 			p_PCM[i] = outBuff;
 		}
