@@ -1452,7 +1452,7 @@ bool ModuleFile::Tick()
 		if (!p_Patterns[Pattern])
 			return false;
 		const ModulePattern &pattern = *p_Patterns[Pattern];
-		const auto commands = pattern.commands();
+		const auto &commands = pattern.commands();
 		Rows = pattern.rows();
 		for (uint32_t i = 0; i < p_Header->nChannels; ++i)
 			Channels[i].SetData(&commands[i][Row], p_Header);

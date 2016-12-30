@@ -2,6 +2,7 @@
 #define __GenericModule_H__
 
 #include "../libAudio.hxx"
+#include "../fixedVector.hxx"
 
 /***************************\
 |* ----=== WARNING ===---- *|
@@ -470,7 +471,7 @@ public:
 
 private:
 	const uint32_t Channels;
-	std::unique_ptr<commandPtr_t []> Commands;
+	fixedVector_t<commandPtr_t> _commands;
 	uint16_t _rows;
 
 	ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type);
@@ -482,7 +483,7 @@ public:
 	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
 	ModulePattern(const modIT_t &file, const uint32_t nChannels);
 
-	commandPtr_t *commands() const { return Commands.get(); }
+	const fixedVector_t<commandPtr_t> &commands() const { return _commands; }
 	uint16_t rows() const noexcept { return _rows; }
 };
 
