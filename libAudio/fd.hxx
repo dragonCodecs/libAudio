@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <utility>
 #include <memory>
+#include "managedPtr.hxx"
 
 #ifdef _MSVC
 #define O_NOCTTY _O_BINARY
@@ -77,6 +78,10 @@ public:
 	template<typename T, size_t N> bool read(std::array<T, N> &value) const noexcept
 		{ return read(value.data(), N * sizeof(T)); }
 	template<typename T> bool read(const std::unique_ptr<T> &value, const size_t valueLen) const noexcept
+		{ return read(value.get(), valueLen); }
+	template<typename T> bool read(const managedPtr_t<T> &value, const size_t valueLen) const noexcept
+		{ return read(value.get(), valueLen); }
+	bool read(const managedPtr_t<void> &value, const size_t valueLen) const noexcept
 		{ return read(value.get(), valueLen); }
 
 	bool read(void *const value, const size_t valueLen) const noexcept WARN_UNUSED

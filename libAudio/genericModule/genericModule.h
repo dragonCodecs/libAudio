@@ -3,6 +3,7 @@
 
 #include "../libAudio.hxx"
 #include "../fixedVector.hxx"
+#include "../managedPtr.hxx"
 
 /***************************\
 |* ----=== WARNING ===---- *|
@@ -111,12 +112,12 @@ private:
 	uint16_t Flags;
 	uint16_t CreationVersion;
 	uint16_t FormatVersion;
-	void *InstrumentPtrs;
+	managedPtr_t<void> InstrumentPtrs;
 	// Slightly badly named
 	// SamplePtrs = pointers to where the sample *descriptors* are
-	void *SamplePtrs;
+	managedPtr_t<void> SamplePtrs;
 	// PatternPtrs = pointers to where the compressed pattern data is
-	void *PatternPtrs;
+	managedPtr_t<void> PatternPtrs;
 
 	// Fields specific to certain formats
 

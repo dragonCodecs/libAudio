@@ -70,12 +70,12 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 
 ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
-	uint16_t i, *SamplePtrs, *PatternPtrs;
+	uint16_t i;
 	FILE *f_S3M = p_SF->f_Module;
 
 	p_Header = new ModuleHeader(p_SF);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
-	SamplePtrs = (uint16_t *)p_Header->SamplePtrs;
+	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
 		uint32_t SeekLoc = ((uint32_t)(SamplePtrs[i])) << 4;
@@ -95,7 +95,7 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 	}
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
-	PatternPtrs = (uint16_t *)p_Header->PatternPtrs;
+	uint16_t *const PatternPtrs = p_Header->PatternPtrs.get<uint16_t>();
 	for (i = 0; i < p_Header->nPatterns; i++)
 	{
 		uint32_t SeekLoc = ((uint32_t)PatternPtrs[i]) << 4;
@@ -224,7 +224,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	if (p_Header->nInstruments != 0)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
-		uint32_t *const instrOffsets = reinterpret_cast<uint32_t *>(p_Header->InstrumentPtrs);
+		uint32_t *const instrOffsets = p_Header->InstrumentPtrs.get<uint32_t>();
 		for (i = 0; i < p_Header->nInstruments; ++i)
 		{
 			if (fd.seek(instrOffsets[i], SEEK_SET) != instrOffsets[i])
@@ -233,7 +233,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
-	uint32_t *const sampleOffsets = reinterpret_cast<uint32_t *>(p_Header->SamplePtrs);
+	uint32_t *const sampleOffsets = p_Header->SamplePtrs.get<uint32_t>();
 	for (i = 0; i < p_Header->nSamples; ++i)
 	{
 		if (fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
@@ -260,7 +260,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	}
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
-	uint32_t *const PatternPtrs = reinterpret_cast<uint32_t *>(p_Header->PatternPtrs);
+	uint32_t *const PatternPtrs = p_Header->PatternPtrs.get<uint32_t>();
 	for (i = 0; i < p_Header->nPatterns; i++)
 	{
 		if (PatternPtrs[i] == 0)

@@ -70,7 +70,6 @@ ModuleHeader::ModuleHeader(MOD_Intern *p_MF) : ModuleHeader()
 	Flags = 0;
 	nInstruments = 0;
 	CreationVersion = FormatVersion = 0;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
@@ -121,9 +120,9 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 	Orders = makeUnique<uint8_t []>(nOrders);
 	fread(Orders.get(), nOrders, 1, f_S3M);
 	SamplePtrs = new uint16_t[nSamples];
-	fread(SamplePtrs, nSamples, 2, f_S3M);
+	fread(SamplePtrs.get(), nSamples, 2, f_S3M);
 	PatternPtrs = new uint16_t[nPatterns];
-	fread(PatternPtrs, nPatterns, 2, f_S3M);
+	fread(PatternPtrs.get(), nPatterns, 2, f_S3M);
 
 	// Panning?
 	if (DontCare[1] == 0xFC)
@@ -147,7 +146,6 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	nInstruments = 0;
-	InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
@@ -197,7 +195,6 @@ ModuleHeader::ModuleHeader(STM_Intern *p_SF) : ModuleHeader()
 	\********************************************/
 	Flags = 0;
 	nInstruments = 0;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
@@ -310,7 +307,6 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	Flags = 0;
 	CreationVersion = FormatVersion = 0;
 	nInstruments = 0;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 }
 
 #ifdef __FC1x_EXPERIMENTAL__
@@ -342,7 +338,6 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	nInstruments = 0;
-	SamplePtrs = PatternPtrs = InstrumentPtrs = nullptr;
 	Author = nullptr;
 	Remark = nullptr;
 }
@@ -438,9 +433,6 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader()
 
 ModuleHeader::~ModuleHeader()
 {
-	delete [] (uint16_t *)InstrumentPtrs;
-	delete [] (uint16_t *)PatternPtrs;
-	delete [] (uint16_t *)SamplePtrs;
 	delete [] Author;
 	delete [] Remark;
 }
