@@ -8,7 +8,7 @@
 #endif
 #endif
 
-moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t(type, std::move(fd)), ctx() { }
+moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t(type, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 
 void *ModuleAllocator::operator new(const size_t size)
 {

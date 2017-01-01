@@ -93,6 +93,9 @@ protected:
 	moduleFile_t(audioType_t type, fd_t &&fd) noexcept;
 
 public:
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 

@@ -15,7 +15,7 @@ void *IT_OpenR(const char *FileName)
 		return nullptr;
 
 	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
-	if (!ret->inner.fd().valid())
+	if (!ret->inner.fd().valid() || !ret->inner.context())
 	{
 		delete ret;
 		return nullptr;
@@ -28,7 +28,7 @@ void *IT_OpenR(const char *FileName)
 	info.channels = 2;
 	try
 	{
-		ret->p_File = makeUnique<ModuleFile>(ret->inner);
+		ret->inner.context()->mod = makeUnique<ModuleFile>(ret->inner);
 	}
 	catch (ModuleLoaderError *e)
 	{
@@ -45,12 +45,12 @@ void *IT_OpenR(const char *FileName)
 		delete ret;
 		return nullptr;
 	}
-	info.title.reset(const_cast<char *>(ret->p_File->GetTitle()));
-	info.artist.reset(const_cast<char *>(ret->p_File->GetAuthor()));
+	info.title.reset(const_cast<char *>(ret->inner.context()->mod->GetTitle()));
+	info.artist.reset(const_cast<char *>(ret->inner.context()->mod->GetAuthor()));
 
 	if (ExternalPlayback == 0)
 		ret->inner.player(makeUnique<Playback>(info, IT_FillBuffer, ret->buffer, 8192, const_cast<IT_Intern *>(ret)));
-	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+	ret->inner.context()->mod->InitMixer(audioFileInfo(&ret->inner));
 
 	return ret;
 }
@@ -64,20 +64,17 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (p_IF->p_File == NULL)
+	if (!p_IF->inner.context()->mod)
 		return -1;
-	return p_IF->p_File->Mix(OutBuffer, nOutBufferLen);
+	return p_IF->inner.context()->mod->Mix(OutBuffer, nOutBufferLen);
 }
 
 int IT_CloseFileR(void *p_ITFile)
 {
 	int ret = 0;
 	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (p_IF == NULL)
+	if (!p_IF)
 		return 0;
-
-	delete p_IF->p_File;
-	p_IF->p_File = nullptr;
 
 	ret = fclose(p_IF->f_Module);
 	delete p_IF;
