@@ -296,7 +296,7 @@ flac_t::decoderContext_t::decoderContext_t() : streamDecoder(FLAC__stream_decode
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!flacFile || !flacFile->ctx || !flacFile->_fd.valid() || !isFLAC(flacFile->_fd))
+	if (!flacFile || !flacFile->valid() || !isFLAC(flacFile->_fd))
 		return nullptr;
 
 	lseek(flacFile->_fd, 0, SEEK_SET);

@@ -79,6 +79,7 @@ public:
 	static bool isFLAC(const char *const fileName) noexcept;
 	static bool isFLAC(const int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
