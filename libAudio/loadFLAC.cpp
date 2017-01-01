@@ -313,11 +313,11 @@ void *FLAC_OpenR(const char *FileName)
 {
 	std::array<char, 4> sig;
 
-	std::unique_ptr<flac_t> ret(flac_t::openR(FileName));
-	if (!ret)
+	std::unique_ptr<flac_t> file(flac_t::openR(FileName));
+	if (!file)
 		return nullptr;
-	const fd_t &fd = ret->fd();
-	FLAC__StreamDecoder *const p_dec = ret->context()->streamDecoder;
+	const fd_t &fd = file->fd();
+	FLAC__StreamDecoder *const p_dec = file->context()->streamDecoder;
 
 	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
@@ -327,12 +327,12 @@ void *FLAC_OpenR(const char *FileName)
 		return nullptr;
 	lseek(fd, 0, SEEK_SET);
 	if (strncmp(sig.data(), "OggS", 4) == 0)
-		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret.get());
+		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, file.get());
 	else
-		FLAC__stream_decoder_init_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret.get());
+		FLAC__stream_decoder_init_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, file.get());
 	FLAC__stream_decoder_process_until_end_of_metadata(p_dec);
 
-	return ret.release();
+	return file.release();
 }
 
 /*!
@@ -389,8 +389,8 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	auto buffer = reinterpret_cast<char *const>(bufferPtr);
-	uint32_t ret = 0;
-	while (ret < length)
+	uint32_t filled = 0;
+	while (filled < length)
 	{
 		if (ctx->bytesRemain == 0)
 		{
@@ -398,19 +398,19 @@ int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
 			{
 				ctx->bytesRemain = 0;
-				if (ret == 0)
+				if (filled == 0)
 					return -2;
 				break;
 			}
 		}
 		uint32_t len = ctx->bytesRemain;
-		if (len > (length - ret))
-			len = length - ret;
-		memcpy(buffer + ret, ctx->buffer.get() + (ctx->bytesAvail - ctx->bytesRemain), len);
-		ret += len;
+		if (len > (length - filled))
+			len = length - filled;
+		memcpy(buffer + filled, ctx->buffer.get() + (ctx->bytesAvail - ctx->bytesRemain), len);
+		filled += len;
 		ctx->bytesRemain -= len;
 	}
-	return ret;
+	return filled;
 }
 
 /*!
