@@ -221,7 +221,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	uint16_t i;
 
 	p_Header = new ModuleHeader(p_IF->inner);
-	if (p_Header->nInstruments != 0)
+	if (p_Header->nInstruments)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
 		uint32_t *const instrOffsets = p_Header->InstrumentPtrs.get<uint32_t>();

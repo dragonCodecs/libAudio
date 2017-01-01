@@ -42,13 +42,7 @@ namespace managedPtr
 		managedPtr_t(managedPtr_t &&ptr) noexcept : managedPtr_t() { swap(ptr); }
 		~managedPtr_t() noexcept { if (del) del(ptr); }
 		managedPtr_t &operator =(managedPtr_t &&ptr) noexcept { swap(ptr); return *this; }
-
-		managedPtr_t &operator =(T *obj) noexcept
-		{
-			managedPtr_t p(obj);
-			*this = std::move(p);
-			return *this;
-		}
+		managedPtr_t &operator =(T *obj) noexcept { return *this = managedPtr_t(obj); }
 
 		operator T &() const noexcept { return *ptr; }
 		explicit operator T &&() const = delete;
@@ -78,16 +72,12 @@ namespace managedPtr
 	public:
 		constexpr managedPtr_t() noexcept : ptr(nullptr), del(nullptr) { }
 		managedPtr_t(managedPtr_t &&ptr) noexcept : managedPtr_t() { swap(ptr); }
-		template<typename T> managedPtr_t(managedPtr_t<T> &&p) noexcept : ptr(std::move(p.ptr)), del(std::move(p.del)) { }
+		template<typename T> managedPtr_t(managedPtr_t<T> &&p) noexcept : ptr(p.ptr), del(p.del) { p.ptr = nullptr; p.del = nullptr; }
 		~managedPtr_t() noexcept { if (del) del(ptr); }
 		managedPtr_t &operator =(managedPtr_t &&ptr) noexcept { swap(ptr); return *this; }
 
-		template<typename T> managedPtr_t &operator =(T *obj) noexcept
-		{
-			managedPtr_t<T> p(obj);
-			*this = std::move(p);
-			return *this;
-		}
+		template<typename T> managedPtr_t &operator =(T *obj) noexcept { return *this = managedPtr_t<T>(obj); }
+		template<typename T> managedPtr_t &operator =(managedPtr_t<T> &&ptr) noexcept { return *this = managedPtr_t(std::move(ptr)); }
 
 		void *operator ->() const noexcept { return ptr; }
 		void *get() noexcept { return ptr; }
