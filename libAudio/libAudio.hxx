@@ -102,7 +102,8 @@ public:
 struct modIT_t final : public moduleFile_t
 {
 public:
-	modIT_t(/*fd_t &&fd*/) noexcept;
+	modIT_t(fd_t &&fd) noexcept;
+	static modIT_t *openR(const char *const fileName) noexcept;
 	static bool isIT(const char *const fileName) noexcept;
 	static bool isIT(const int32_t fd) noexcept;
 };

@@ -35,14 +35,12 @@ struct s3mIntern { };
 struct stmIntern { };
 struct aonIntern { };
 struct fc1xIntern { };
-struct itIntern { modIT_t inner; };
 
 typedef moduleIntern<modIntern> MOD_Intern;
 typedef moduleIntern<s3mIntern> S3M_Intern;
 typedef moduleIntern<stmIntern> STM_Intern;
 typedef moduleIntern<aonIntern> AON_Intern;
 typedef moduleIntern<fc1xIntern> FC1x_Intern;
-typedef moduleIntern<itIntern> IT_Intern;
 
 #include "effects.h"
 

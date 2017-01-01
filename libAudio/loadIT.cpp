@@ -6,125 +6,93 @@
 #include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
-modIT_t::modIT_t(/*fd_t &&fd*/) noexcept : moduleFile_t(audioType_t::moduleIT, fd_t()) { }
+modIT_t::modIT_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std::move(fd)) { }
+
+modIT_t *modIT_t::openR(const char *const fileName) noexcept
+{
+	std::unique_ptr<modIT_t> itFile(makeUnique<modIT_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!itFile || !itFile->valid() || !isIT(itFile->_fd))
+		return nullptr;
+
+	lseek(itFile->_fd, 0, SEEK_SET);
+	return itFile.release();
+}
 
 void *IT_OpenR(const char *FileName)
 {
-	IT_Intern *const ret = new (std::nothrow) IT_Intern();
-	if (ret == nullptr)
+	std::unique_ptr<modIT_t> ret(modIT_t::openR(FileName));
+	if (!ret)
 		return nullptr;
 
-	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
-	if (!ret->inner.fd().valid() || !ret->inner.context())
-	{
-		delete ret;
-		return nullptr;
-	}
-	ret->f_Module = fdopen(ret->inner.fd(), "rb");
+	auto &ctx = *ret->context();
+	fileInfo_t &info = ret->fileInfo();
 
-	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
 	try
 	{
-		ret->inner.context()->mod = makeUnique<ModuleFile>(ret->inner);
+		ctx.mod = makeUnique<ModuleFile>(*ret);
 	}
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());
 		delete e;
-		fclose(ret->f_Module);
-		delete ret;
 		return nullptr;
 	}
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
-		fclose(ret->f_Module);
-		delete ret;
 		return nullptr;
 	}
-	info.title.reset(const_cast<char *>(ret->inner.context()->mod->GetTitle()));
-	info.artist.reset(const_cast<char *>(ret->inner.context()->mod->GetAuthor()));
+	info.title.reset(const_cast<char *>(ctx.mod->GetTitle()));
+	info.artist.reset(const_cast<char *>(ctx.mod->GetAuthor()));
 
-	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<Playback>(info, IT_FillBuffer, ret->buffer, 8192, const_cast<IT_Intern *>(ret)));
-	ret->inner.context()->mod->InitMixer(audioFileInfo(&ret->inner));
+	if (!ExternalPlayback)
+		ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));
+	ctx.mod->InitMixer(audioFileInfo(ret.get()));
 
-	return ret;
+	return ret.release();
 }
 
 FileInfo *IT_GetFileInfo(void *p_ITFile)
-{
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	return audioFileInfo(&p_IF->inner);
-}
+	{ return audioFileInfo(p_ITFile); }
 
 long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (!p_IF->inner.context()->mod)
-		return -1;
-	return p_IF->inner.context()->mod->Mix(OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_ITFile, OutBuffer, nOutBufferLen); }
 
-int IT_CloseFileR(void *p_ITFile)
-{
-	int ret = 0;
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (!p_IF)
-		return 0;
+int IT_CloseFileR(void *p_ITFile) { return audioCloseFileR(p_ITFile); }
+void IT_Play(void *p_ITFile) { audioPlay(p_ITFile); }
+void IT_Pause(void *p_ITFile) { audioPause(p_ITFile); }
+void IT_Stop(void *p_ITFile) { audioStop(p_ITFile); }
 
-	ret = fclose(p_IF->f_Module);
-	delete p_IF;
-	return ret;
-}
+bool Is_IT(const char *FileName) { return modIT_t::isIT(FileName); }
 
-void IT_Play(void *p_ITFile)
+bool modIT_t::isIT(const int32_t fd) noexcept
 {
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (p_IF)
-		audioPlay(&p_IF->inner);
-}
-
-void IT_Pause(void *p_ITFile)
-{
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (p_IF)
-		audioPause(&p_IF->inner);
-}
-
-void IT_Stop(void *p_ITFile)
-{
-	IT_Intern *p_IF = (IT_Intern *)p_ITFile;
-	if (p_IF)
-		audioStop(&p_IF->inner);
-}
-
-bool Is_IT(const char *FileName)
-{
-	FILE *f_IT = fopen(FileName, "rb");
-	char ITSig[4];
-	if (f_IT == NULL)
+	char itSig[4];
+	if (fd == -1 ||
+		read(fd, itSig, 4) != 4 ||
+		memcmp(itSig, "IMPM", 4) != 0)
 		return false;
-
-	fread(ITSig, 4, 1, f_IT);
-	fclose(f_IT);
-
-	if (strncmp(ITSig, "IMPM", 4) != 0)
-		return false;
-
 	return true;
+}
+
+bool modIT_t::isIT(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isIT(file);
 }
 
 API_Functions ITDecoder =
 {
 	IT_OpenR,
-	IT_GetFileInfo,
+	audioFileInfo,
 	IT_FillBuffer,
-	IT_CloseFileR,
-	IT_Play,
-	IT_Pause,
-	IT_Stop
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
