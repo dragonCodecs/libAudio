@@ -50,7 +50,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 		printf("%s\n", e->GetError());
 		return NULL;
 	}
-	ret->Title = p_MF->p_File->GetTitle();
+	ret->Title = p_MF->p_File->title().release();
 
 	if (ExternalPlayback == 0)
 		p_MF->p_Playback = new Playback(ret, MOD_FillBuffer, p_MF->buffer, 8192, p_MODFile);

@@ -49,10 +49,10 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 		printf("%s\n", e->GetError());
 		return NULL;
 	}
-	ret->Title = p_AF->p_File->GetTitle();
-	ret->Artist = p_AF->p_File->GetAuthor();
+	ret->Title = p_AF->p_File->title().release();
+	ret->Artist = p_AF->p_File->author().release();
 	{
-		const char *Remark = p_AF->p_File->GetRemark();
+		const char *Remark = p_AF->p_File->remark().release();
 		if (Remark != NULL)
 		{
 			ret->OtherComments.push_back(Remark);

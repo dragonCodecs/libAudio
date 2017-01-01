@@ -50,7 +50,7 @@ FileInfo *STM_GetFileInfo(void *p_STMFile)
 		printf("%s\n", e->GetError());
 		return NULL;
 	}
-	ret->Title = p_SF->p_File->GetTitle();
+	ret->Title = p_SF->p_File->title().release();
 
 	if (ExternalPlayback == 0)
 		p_SF->p_Playback = new Playback(ret, STM_FillBuffer, p_SF->buffer, 8192, p_STMFile);

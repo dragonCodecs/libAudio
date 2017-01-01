@@ -30,23 +30,14 @@ void *IT_OpenR(const char *FileName)
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try
-	{
-		ctx.mod = makeUnique<ModuleFile>(*ret);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		delete e;
-		return nullptr;
-	}
+	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
 		return nullptr;
 	}
-	info.title.reset(const_cast<char *>(ctx.mod->GetTitle()));
-	info.artist.reset(const_cast<char *>(ctx.mod->GetAuthor()));
+	info.title = ctx.mod->title();
+	info.artist = ctx.mod->author();
 
 	if (!ExternalPlayback)
 		ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));

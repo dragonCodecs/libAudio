@@ -48,8 +48,8 @@ FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 		printf("%s\n", e->GetError());
 		return NULL;
 	}
-	ret->Title = p_SF->p_File->GetTitle();
-	ret->Channels = p_SF->p_File->GetChannels();
+	ret->Title = p_SF->p_File->title().release();
+	ret->Channels = p_SF->p_File->channels();
 
 	if (ExternalPlayback == 0)
 		p_SF->p_Playback = new Playback(ret, S3M_FillBuffer, p_SF->buffer, 8192, p_S3MFile);

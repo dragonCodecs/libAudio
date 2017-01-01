@@ -19,6 +19,8 @@ class Channel;
 class ModuleSample;
 class ModulePattern;
 
+using stringPtr_t = std::unique_ptr<char []>;
+
 template<typename T> struct moduleIntern : T
 {
 	FILE *f_Module;
@@ -628,24 +630,37 @@ public:
 	ModuleFile(const modIT_t &file);
 	virtual ~ModuleFile();
 
-	const char *GetTitle();
-	const char *GetAuthor();
-	const char *GetRemark();
-	uint8_t GetChannels();
+	stringPtr_t title() const noexcept;
+	stringPtr_t author() const noexcept;
+	stringPtr_t remark() const noexcept;
+	uint8_t channels() const noexcept;
 	void InitMixer(FileInfo *p_FI);
 	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 };
 
-inline uint32_t Swap32(uint32_t i)
+inline uint32_t swapBytes(const uint32_t val) noexcept
 {
-	return ((i >> 24) & 0xFF) | ((i >> 8) & 0xFF00) |
-		((i & 0xFF00) << 8) | ((i & 0xFF) << 24);
+	return ((val >> 24) & 0xFF) | ((val >> 8) & 0xFF00) |
+		((val & 0xFF00) << 8) | ((val & 0xFF) << 24);
 }
 
-inline uint16_t Swap16(uint16_t i)
+inline uint16_t swapBytes(const uint16_t val) noexcept
+	{ return ((val >> 8) & 0xFF) | ((val & 0xFF) << 8); }
+
+inline uint32_t Swap32(uint32_t i) noexcept { return swapBytes(i); }
+inline uint16_t Swap16(uint16_t i) noexcept { return swapBytes(i); }
+
+inline stringPtr_t stringDup(const char *const str) noexcept
 {
-	return ((i >> 8) & 0xFF) | ((i & 0xFF) << 8);
+	stringPtr_t ret = str ? makeUnique<char []>(strlen(str) + 1) : nullptr;
+	if (!ret)
+		return nullptr;
+	strncpy(ret.get(), str, strlen(str) + 1);
+	return ret;
 }
+
+inline stringPtr_t stringDup(const stringPtr_t &str) noexcept
+	{ return stringDup(str.get()); }
 
 struct moduleFile_t::decoderContext_t
 {

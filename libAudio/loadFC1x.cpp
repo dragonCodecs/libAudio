@@ -48,8 +48,8 @@ FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
 		printf("%s\n", e->GetError());
 		return NULL;
 	}
-	ret->Title = p_FF->p_File->GetTitle();
-	ret->Channels = p_FF->p_File->GetChannels();
+	ret->Title = p_FF->p_File->title().release();
+	ret->Channels = p_FF->p_File->channels();
 
 	if (ExternalPlayback == 0)
 		p_FF->p_Playback = new Playback(ret, FC1x_FillBuffer, p_FF->buffer, 8192, p_FC1xFile);
