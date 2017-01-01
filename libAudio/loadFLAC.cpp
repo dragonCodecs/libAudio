@@ -247,8 +247,8 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			ctx.bufferLen = streamInfo.channels * streamInfo.max_blocksize;
 			ctx.buffer = makeUnique<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
 			info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
-			if (ExternalPlayback == 0 && ctx.buffer != nullptr)
-				file.player(makeUnique<Playback>(info, FLAC_FillBuffer, ctx.playbackBuffer, 16384, audioFile));
+			if (!ExternalPlayback && ctx.buffer != nullptr)
+				file.player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 16384, audioFile));
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -313,7 +313,7 @@ void *FLAC_OpenR(const char *FileName)
 {
 	std::array<char, 4> sig;
 
-	flac_t *const ret = flac_t::openR(FileName);
+	std::unique_ptr<flac_t> ret(flac_t::openR(FileName));
 	if (!ret)
 		return nullptr;
 	const fd_t &fd = ret->fd();
@@ -324,18 +324,15 @@ void *FLAC_OpenR(const char *FileName)
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
 	if (!fd.read(sig))
-	{
-		delete ret;
 		return nullptr;
-	}
 	lseek(fd, 0, SEEK_SET);
 	if (strncmp(sig.data(), "OggS", 4) == 0)
-		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
+		FLAC__stream_decoder_init_ogg_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret.get());
 	else
-		FLAC__stream_decoder_init_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret);
+		FLAC__stream_decoder_init_stream(p_dec, f_fread, f_fseek, f_ftell, f_flen, f_feof, f_data, f_metadata, f_error, ret.get());
 	FLAC__stream_decoder_process_until_end_of_metadata(p_dec);
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -436,10 +433,7 @@ void FLAC_Stop(void *p_FLACFile) { audioStop(p_FLACFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an FLAC file or not
  */
-bool Is_FLAC(const char *FileName)
-{
-	return flac_t::isFLAC(FileName);
-}
+bool Is_FLAC(const char *FileName) { return flac_t::isFLAC(FileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a FLAC
