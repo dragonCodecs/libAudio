@@ -215,12 +215,12 @@ ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instrumen
 #endif
 }
 
-ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instruments(), Channels(), MixerChannels()
 {
-	const fd_t &fd = p_IF->inner.fd();
+	const fd_t &fd = file.fd();
 	uint16_t i;
 
-	p_Header = new ModuleHeader(p_IF->inner);
+	p_Header = new ModuleHeader(file);
 	if (p_Header->nInstruments)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
@@ -229,7 +229,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 		{
 			if (fd.seek(instrOffsets[i], SEEK_SET) != instrOffsets[i])
 				throw ModuleLoaderError(E_BAD_IT);
-			p_Instruments[i] = ModuleInstrument::LoadInstrument(p_IF->inner, i, p_Header->FormatVersion);
+			p_Instruments[i] = ModuleInstrument::LoadInstrument(file, i, p_Header->FormatVersion);
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
@@ -238,7 +238,7 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 	{
 		if (fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
 			throw ModuleLoaderError(E_BAD_IT);
-		p_Samples[i] = ModuleSample::LoadSample(p_IF->inner, i);
+		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	}
 
 	p_Header->nChannels = 64;
@@ -269,11 +269,11 @@ ModuleFile::ModuleFile(IT_Intern *p_IF) : ModuleType(MODULE_IT), p_Instruments(n
 		{
 			if (fd.seek(PatternPtrs[i], SEEK_SET) != PatternPtrs[i])
 				throw ModuleLoaderError(E_BAD_IT);
-			p_Patterns[i] = new ModulePattern(p_IF->inner, p_Header->nChannels);
+			p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 		}
 	}
 
-	itLoadPCM(p_IF->inner);
+	itLoadPCM(file);
 	MinPeriod = 8;
 	MaxPeriod = 61440;//32767;
 }

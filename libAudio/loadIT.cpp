@@ -28,7 +28,7 @@ void *IT_OpenR(const char *FileName)
 	info.channels = 2;
 	try
 	{
-		ret->p_File = new ModuleFile(ret);
+		ret->p_File = makeUnique<ModuleFile>(ret->inner);
 	}
 	catch (ModuleLoaderError *e)
 	{

@@ -627,7 +627,7 @@ public:
 	ModuleFile(STM_Intern *p_SF);
 	ModuleFile(AON_Intern *p_AF);
 	ModuleFile(FC1x_Intern *p_FF);
-	ModuleFile(IT_Intern *p_IF);
+	ModuleFile(const modIT_t &file);
 	virtual ~ModuleFile();
 
 	const char *GetTitle();
