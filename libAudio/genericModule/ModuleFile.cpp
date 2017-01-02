@@ -302,30 +302,20 @@ ModuleFile::~ModuleFile()
 	delete p_Header;
 }
 
-const char *ModuleFile::GetTitle()
-{
-	if (p_Header->Name == nullptr)
-		return nullptr;
-	return strdup(p_Header->Name.get());
-}
+stringPtr_t ModuleFile::title() const noexcept
+	{ return p_Header ? stringDup(p_Header->Name) : nullptr; }
 
-const char *ModuleFile::GetAuthor()
-{
-	if (p_Header->Author == nullptr)
-		return nullptr;
-	return strdup(p_Header->Author);
-}
+stringPtr_t ModuleFile::author() const noexcept
+	{ return p_Header ? stringDup(p_Header->Author) : nullptr; }
 
-const char *ModuleFile::GetRemark()
-{
-	if (p_Header->Remark == nullptr)
-		return nullptr;
-	return strdup(p_Header->Remark);
-}
+stringPtr_t ModuleFile::remark() const noexcept
+	{ return p_Header ? stringDup(p_Header->Remark) : nullptr; }
 
-uint8_t ModuleFile::GetChannels()
+uint8_t ModuleFile::channels() const noexcept
 {
-	return (p_Header->MasterVolume & 0x80) == 0 ? 1 : 2;
+	if (!p_Header)
+		return 0;
+	return (p_Header->MasterVolume & 0x80) ? 2 : 1;
 }
 
 void ModuleFile::MODLoadPCM(FILE *f_MOD)
