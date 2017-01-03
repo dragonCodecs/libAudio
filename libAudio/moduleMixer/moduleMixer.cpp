@@ -1144,7 +1144,7 @@ bool ModuleFile::ProcessEffects()
 		if (cmd == CMD_MOD_EXTENDED || cmd == CMD_S3M_EXTENDED)
 		{
 			uint8_t excmd = (param & 0xF0) >> 4;
-			if (channel->StartTick == 0 && TickCount == 0)
+			if (!channel->StartTick && !TickCount)
 			{
 				if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
 					(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_LOOP))
@@ -1264,12 +1264,13 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_TREMOLO;
 				break;
 			case CMD_OFFSET:
-				if (TickCount > channel->StartTick)
-					break;
-				channel->Pos = ((uint32_t)param) << 8;
-				channel->PosLo = 0;
-				if (channel->Pos > channel->Length)
-					channel->Pos = channel->Length;
+				if (TickCount == channel->StartTick)
+				{
+					channel->Pos = uint32_t(param) << 8;
+					channel->PosLo = 0;
+					if (channel->Pos > channel->Length)
+						channel->Pos = channel->Length;
+				}
 				break;
 			case CMD_VOLUMESLIDE:
 				if (param != 0 || ModuleType != MODULE_MOD)
@@ -1466,9 +1467,9 @@ bool ModuleFile::AdvanceTick()
 {
 	uint8_t i, nChannels;
 
-	if (Tick() == false)
+	if (!Tick())
 		return false;
-	if (MusicTempo == 0)
+	if (!MusicTempo)
 		return false;
 	SamplesToMix = (MixSampleRate * 640) / (MusicTempo << 8);
 	SamplesPerTick = SamplesToMix;
