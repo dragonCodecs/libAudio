@@ -322,34 +322,39 @@ void ModuleFile::MODLoadPCM(FILE *f_MOD)
 {
 	uint32_t i;
 	p_PCM = new uint8_t *[p_Header->nSamples];
-	for (i = 0; i < p_Header->nSamples; i++)
+	for (i = 0; i < p_Header->nSamples; ++i)
 	{
 		uint32_t Length = p_Samples[i]->GetLength();
 		if (Length != 0)
 		{
 			p_PCM[i] = new uint8_t[Length];
 			fread(p_PCM[i], Length, 1, f_MOD);
-			p_PCM[i][0] = p_PCM[i][1] = 0;
-			/*if (strncasecmp((char *)p_PCM[i] + 2, "ADPCM", 5) == 0)
+			// TODO: This is hard, ok? MPT does wierd stuff here on memory buffers.
+			// The decompression loop is now correct, as is the memory allocation.
+			// However, I do not think the seek is correct, nor some of the length compensation code.
+			// There really is no nice way either to express the sample's real length yet..
+			// not sure that rewriting it is even correct, seeing we over-read (according to MPT), not under.
+			/*if (strncasecmp(reinterpret_cast<char *>(p_PCM[i]), "ADPCM", 5) == 0)
 			{
-				uint32_t j;
-				uint8_t *compressionTable = p_PCM[i];
-				uint8_t *compBuffer = &p_PCM[i][16];
+				const std::unique_ptr<uint8_t []> _(p_PCM[i]);
+				const uint8_t *const compressionTable = _.get() + 5;
+				const uint8_t *const compBuffer = _.get() + 5 + 16;
 				uint8_t delta = 0;
-				Length -= 16;
+				Length -= 16 + 5 - 1;
+				Length &= ~1;
+				p_PCM = new uint8_t[Length];
 				p_Samples[i]->Length = Length;
-				Length *= 2;
-				p_PCM[i] = (uint8_t *)malloc(Length);
-				for (j = 0; j < p_Samples[i]->Length; j++)
+				Length >>= 1;
+				for (uint32_t j = 0, k = 0; j < Length; ++j)
 				{
 					delta += compressionTable[compBuffer[j] & 0x0F];
-					p_PCM[i][(j * 2) + 0] = delta;
+					p_PCM[i][k++] = delta;
 					delta += compressionTable[(compBuffer[j] >> 4) & 0x0F];
-					p_PCM[i][(j * 2) + 1] = delta;
+					p_PCM[i][k++] = delta;
 				}
-				free(compressionTable);
-				compBuffer = compressionTable = nullptr;
+				fseek(f_MOD, -Length, SEEK_CUR);
 			}*/
+			p_PCM[i][0] = p_PCM[i][1] = 0;
 		}
 		else
 			p_PCM[i] = nullptr;
