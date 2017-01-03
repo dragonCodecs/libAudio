@@ -53,9 +53,9 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 		fseek(f_MOD, 4, SEEK_CUR);
 
 	// Count the number of patterns present
-	for (i = 0, maxPattern = 0; i < 128; i++)
+	for (i = 0, maxPattern = 0; i < p_Header->nOrders; i++)
 	{
-		if (p_Header->Orders[i] < 64)
+		if (p_Header->Orders[i] < 128)
 			maxPattern = max(maxPattern, p_Header->Orders[i]);
 	}
 	p_Header->nPatterns = maxPattern + 1;
