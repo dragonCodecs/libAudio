@@ -125,45 +125,29 @@ float WFIRCoef(int Cnr, float Offs, float Cut, int Width, int Type)
 		switch (Type)
 		{
 			case WFIR_HANN:
-			{
 				Wc = 0.5 - 0.5 * cos(Idl * PosU);
 				break;
-			}
 			case WFIR_HAMMING:
-			{
 				Wc = 0.54 - 0.45 * cos(Idl * PosU);
 				break;
-			}
 			case WFIR_BLACKMANEXACT:
-			{
 				Wc = 0.42 - 0.50 * cos(Idl * PosU) + 0.08 * cos(2.0 * Idl * PosU);
 				break;
-			}
 			case WFIR_BLACKMAN3T61:
-			{
 				Wc = 0.44959 - 0.49254 * cos(Idl * PosU) + 0.05677 * cos(2.0 * Idl * PosU);
 				break;
-			}
 			case WFIR_BLACKMAN3T67:
-			{
 				Wc = 0.42323 - 0.49755 * cos(Idl * PosU) + 0.07922 * cos(2.0 * Idl * PosU);
 				break;
-			}
 			case WFIR_BLACKMAN4T92:
-			{
 				Wc = 0.35875 - 0.48829 * cos(Idl * PosU) + 0.14128 * cos(2.0 * Idl * PosU) - 0.01168 * cos(3.0 * Idl * PosU);
 				break;
-			}
 			case WFIR_BLACKMAN4T74:
-			{
 				Wc = 0.40217 - 0.49703 * cos(Idl * PosU) + 0.09392 * cos(2.0 * Idl * PosU) - 0.00183 * cos(3.0 * Idl * PosU);
 				break;
-			}
 			case WFIR_KAISER4T:
-			{
 				Wc = 0.40243 - 0.49804 * cos(Idl * PosU) + 0.09831 * cos(2.0 * Idl * PosU) - 0.00122 * cos(3.0 * Idl * PosU);
 				break;
-			}
 			default:
 				Wc = 1.0;
 		}
@@ -261,7 +245,7 @@ void DeinitialiseTables()
 // TODO: Figure out if anything here can be made unsigned by adjusting the maths any
 #define SNDMIX_BEGINSAMPLELOOP8 \
 	int32_t Pos = chn->PosLo; \
-	int32_t Increment = chn->Increment.iValue; \
+	const int32_t Increment = chn->Increment.iValue; \
 	const signed char *p = ((signed char *)chn->SampleData) + chn->Pos; \
 	if (chn->Sample->GetStereo()) \
 		p += chn->Pos; \
@@ -271,7 +255,7 @@ void DeinitialiseTables()
 
 #define SNDMIX_BEGINSAMPLELOOP16 \
 	int32_t Pos = chn->PosLo; \
-	int32_t Increment = chn->Increment.iValue; \
+	const int32_t Increment = chn->Increment.iValue; \
 	const signed short *p = ((signed short *)chn->SampleData) + chn->Pos; \
 	if (chn->Sample->GetStereo()) \
 		p += chn->Pos; \
@@ -343,7 +327,7 @@ void DeinitialiseTables()
 
 // Mono
 #define SNDMIX_GETMONOVOLNOIDO \
-	int pcm = p[Pos >> 16]
+	auto pcm = p[Pos >> 16]
 
 #define SNDMIX_GETMONOVOLNOIDO8 \
 	SNDMIX_GETMONOVOLNOIDO << 8;
@@ -359,11 +343,11 @@ void DeinitialiseTables()
 
 #define SNDMIX_GETMONOVOLLINEAR8 \
 	SNDMIX_GETMONOVOLLINEAR \
-	int pcm = (SrcVol << 7) + (posLo * (DestVol - SrcVol));
+	auto pcm = (SrcVol << 7) + (posLo * (DestVol - SrcVol));
 
 #define SNDMIX_GETMONOVOLLINEAR16 \
 	SNDMIX_GETMONOVOLLINEAR \
-	int pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 9);
+	auto pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 9);
 
 #define SNDMIX_GETMONOVOLHQSRC \
 	int posHi = Pos >> 16; \
@@ -441,8 +425,8 @@ void DeinitialiseTables()
 
 // Stereo
 #define SNDMIX_GETSTEREOVOLNOIDO(shift) \
-	int pcmL = p[((Pos >> 16) << 1) + 0] shift; \
-	int pcmR = p[((Pos >> 16) << 1) + 1] shift;
+	auto pcmL = p[((Pos >> 16) << 1) + 0] shift; \
+	auto pcmR = p[((Pos >> 16) << 1) + 1] shift;
 
 #define SNDMIX_GETSTEREOVOLNOIDO8 \
 	SNDMIX_GETSTEREOVOLNOIDO(<< 8)
@@ -452,17 +436,16 @@ void DeinitialiseTables()
 
 // Volume
 #define SNDMIX_STORESTEREOVOL \
-	vol[0] += pcmL * (chn->RightVol << 4); \
-	vol[1] += pcmR * (chn->LeftVol << 4); \
+	vol[0] += pcmL * (chn->LeftVol << 4); \
+	vol[1] += pcmR * (chn->RightVol << 4); \
 	vol += 2;
 
 #define SNDMIX_RAMPSTEREOVOL \
 	RampLeftVol += chn->LeftRamp; \
 	RampRightVol += chn->RightRamp; \
-	vol[0] += pcmL * (RampRightVol << 4); \
-	vol[1] += pcmR * (RampLeftVol << 4); \
+	vol[0] += pcmL * (RampLeftVol << 4); \
+	vol[1] += pcmR * (RampRightVol << 4); \
 	vol += 2;
-
 
 // Interfaces
 // Mono 8-bit
