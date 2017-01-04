@@ -113,40 +113,44 @@ void MOD_Stop(void *p_MODFile)
 	p_MF->p_Playback->Stop();
 }
 
-bool Is_MOD(const char *FileName)
+bool Is_MOD(const char *FileName) { return modMOD_t::isMOD(FileName); }
+
+bool modMOD_t::isMOD(const int32_t fd) noexcept
 {
-	FILE *f_MOD = fopen(FileName, "rb");
+	constexpr const uint32_t seekOffset = (30 * 31) + 150;
 	char MODMagic[4];
-	if (f_MOD == NULL)
+	if (fd == -1 ||
+		lseek(fd, seekOffset, SEEK_CUR) != seekOffset ||
+		read(fd, MODMagic, 4) != 4)
 		return false;
-
-	fseek(f_MOD, (30 * 31) + 150, SEEK_CUR);
-	fread(MODMagic, 4, 1, f_MOD);
-	fclose(f_MOD);
-
-	if (strncmp(MODMagic, "M.K.", 4) == 0 || strncmp(MODMagic, "M!K!", 4) == 0 ||
-		strncmp(MODMagic, "M&K!", 4) == 0 || strncmp(MODMagic, "N.T.", 4) == 0)
-		return true;
-	else if (strncmp(MODMagic, "CD81", 4) == 0 || strncmp(MODMagic, "OKTA", 4) == 0)
-		return true;
-	else if (strncmp(MODMagic, "FLT", 3) == 0 && MODMagic[3] >= '4' && MODMagic[3] <= '9')
-		return true;
-	else if (strncmp(MODMagic + 1, "CHN", 3) == 0 && MODMagic[0] >= '4' && MODMagic[0] <= '9')
-		return true;
-	else if (strncmp(MODMagic + 2, "CH", 2) == 0 && MODMagic[0] == '1' && MODMagic[1] >= '0' && MODMagic[1] <= '9')
-		return true;
-	else if (strncmp(MODMagic + 2, "CH", 2) == 0 && MODMagic[0] == '2' && MODMagic[1] >= '0' && MODMagic[1] <= '9')
-		return true;
-	else if (strncmp(MODMagic + 2, "CH", 2) == 0 && MODMagic[0] == '3' && MODMagic[1] >= '0' && MODMagic[1] <= '9')
-		return true;
-	else if (strncmp(MODMagic, "TDZ", 3) == 0 && MODMagic[3] >= '4' && MODMagic[3] <= '9')
-		return true;
-	else if (strncmp(MODMagic, "16CN", 4) == 0)
-		return true;
-	else if (strncmp(MODMagic, "32CN", 4) == 0)
+	else if (strncmp(MODMagic, "M.K.", 4) == 0 ||
+		strncmp(MODMagic, "M!K!", 4) == 0 ||
+		strncmp(MODMagic, "M&K!", 4) == 0 ||
+		strncmp(MODMagic, "N.T.", 4) == 0 ||
+		strncmp(MODMagic, "CD81", 4) == 0 ||
+		strncmp(MODMagic, "OKTA", 4) == 0 ||
+		(strncmp(MODMagic, "FLT", 3) == 0 &&
+		MODMagic[3] >= '4' && MODMagic[3] <= '9') ||
+		(strncmp(MODMagic + 1, "CHN", 3) == 0 &&
+		MODMagic[0] >= '4' && MODMagic[0] <= '9') ||
+		(strncmp(MODMagic + 2, "CH", 2) == 0 &&
+		(MODMagic[0] == '1' || MODMagic[0] == '2' || MODMagic[0] == '3') &&
+		MODMagic[1] >= '0' && MODMagic[1] <= '9') ||
+		(strncmp(MODMagic, "TDZ", 3) == 0 &&
+		MODMagic[3] >= '4' && MODMagic[3] <= '9') ||
+		strncmp(MODMagic, "16CN", 4) == 0 ||
+		strncmp(MODMagic, "32CN", 4) == 0)
 		return true;
 	else // Probbaly not a MOD, but just as likely with the above tests that it is..
 		return false; // so we can't do old ProTracker MODs with 15 samples and can't take the auto-detect tests 100% seriously.
+}
+
+bool modMOD_t::isMOD(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isMOD(file);
 }
 
 API_Functions MODDecoder =

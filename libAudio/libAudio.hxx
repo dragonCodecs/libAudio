@@ -99,6 +99,15 @@ public:
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 
+struct modMOD_t final : public moduleFile_t
+{
+public:
+	modMOD_t(fd_t &&fd) noexcept;
+	static modMOD_t *openR(const char *const fileName) noexcept;
+	static bool isMOD(const char *const fileName) noexcept;
+	static bool isMOD(const int32_t fd) noexcept;
+};
+
 struct modIT_t final : public moduleFile_t
 {
 public:
