@@ -102,6 +102,7 @@ public:
 struct modMOD_t final : public moduleFile_t
 {
 public:
+	modMOD_t() noexcept;
 	modMOD_t(fd_t &&fd) noexcept;
 	static modMOD_t *openR(const char *const fileName) noexcept;
 	static bool isMOD(const char *const fileName) noexcept;

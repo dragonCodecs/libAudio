@@ -6,19 +6,21 @@
 #include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
+modMOD_t::modMOD_t() noexcept : modMOD_t(fd_t()) { }
+modMOD_t::modMOD_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std::move(fd)) { }
+
 void *MOD_OpenR(const char *FileName)
 {
-	MOD_Intern *ret = NULL;
-	FILE *f_MOD = NULL;
+	MOD_Intern *const ret = new (std::nothrow) MOD_Intern();
+	if (ret == nullptr)
+		return nullptr;
 
-	ret = (MOD_Intern *)malloc(sizeof(MOD_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(MOD_Intern));
-
-	f_MOD = fopen(FileName, "rb");
-	if (f_MOD == NULL)
+	FILE *const f_MOD = fopen(FileName, "rb");
+	if (f_MOD == nullptr)
+	{
+		delete ret;
 		return f_MOD;
+	}
 	ret->f_Module = f_MOD;
 
 	return ret;
