@@ -23,42 +23,31 @@ void *MOD_OpenR(const char *FileName)
 	}
 	ret->f_Module = f_MOD;
 
+	fileInfo_t &info = ret->inner.fileInfo();
+	info.bitRate = 44100;
+	info.bitsPerSample = 16;
+	info.channels = 2;
+	try { ret->p_File = new ModuleFile(ret); }
+	catch (ModuleLoaderError *e)
+	{
+		printf("%s\n", e->GetError());
+		fclose(f_MOD);
+		delete ret;
+		return nullptr;
+	}
+	info.title = ret->p_File->title();
+
+	if (ExternalPlayback == 0)
+		ret->p_Playback = new Playback(info, MOD_FillBuffer, ret->buffer, 8192, const_cast<MOD_Intern *>(ret));
+	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+
 	return ret;
 }
 
 FileInfo *MOD_GetFileInfo(void *p_MODFile)
 {
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	FileInfo *ret = NULL;
-
-	if (p_MF == NULL)
-		return ret;
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-	p_MF->p_FI = ret;
-
-	ret->BitRate = 44100;
-	ret->BitsPerSample = 16;
-	ret->Channels = 2;
-	try
-	{
-		p_MF->p_File = new ModuleFile(p_MF);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		return NULL;
-	}
-	ret->Title = p_MF->p_File->title().release();
-
-	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new Playback(ret, MOD_FillBuffer, p_MF->buffer, 8192, p_MODFile);
-	p_MF->p_File->InitMixer(ret);
-
-	return ret;
+	return audioFileInfo(&p_MF->inner);
 }
 
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
@@ -90,7 +79,7 @@ int MOD_CloseFileR(void *p_MODFile)
 	delete p_MF->p_File;
 
 	ret = fclose(p_MF->f_Module);
-	free(p_MF);
+	delete p_MF;
 	return ret;
 }
 
