@@ -25,7 +25,7 @@ template<typename T> inline void clipInt(T &num, const T min, const T max)
 		num = max;
 }
 
-template<> inline void clipInt<uint16_t>(uint16_t &num, uint16_t min, uint16_t max)
+template<> inline void clipInt<uint16_t>(uint16_t &num, const uint16_t min, const uint16_t max)
 {
 	if ((num & 0x8000) != 0 || (min != 0 && num < min))
 		num = min;
@@ -33,7 +33,7 @@ template<> inline void clipInt<uint16_t>(uint16_t &num, uint16_t min, uint16_t m
 		num = max;
 }
 
-template<> inline void clipInt<uint32_t>(uint32_t &num, uint32_t min, uint32_t max)
+template<> inline void clipInt<uint32_t>(uint32_t &num, const uint32_t min, const uint32_t max)
 {
 	if ((num & 0x80000000) != 0 || (min != 0 && num < min))
 		num = min;
@@ -45,7 +45,6 @@ template<> inline void clipInt<uint32_t>(uint32_t &num, uint32_t min, uint32_t m
 int32_t muldiv(int32_t a, int32_t b, int32_t c)
 {
 	int32_t result;
-	uint64_t e;
 	int32_t d = a;
 	if (a < 0)
 		a = -a;
@@ -55,11 +54,11 @@ int32_t muldiv(int32_t a, int32_t b, int32_t c)
 	d ^= c;
 	if (c < 0)
 		c = -c;
-	e = (uint64_t)a * (uint64_t)b;
-	if ((uint64_t)c < e)
-		result = (int32_t)(e / (uint64_t)c);
+	const uint64_t e = uint64_t(a) * uint64_t(b);
+	if (uint64_t(c) < e)
+		result = int32_t(e / uint64_t(c));
 	else
-		result = 0x7FFFFFFF;
+		return 0x7FFFFFFF;
 	if (d < 0)
 		result = -result;
 	return result;

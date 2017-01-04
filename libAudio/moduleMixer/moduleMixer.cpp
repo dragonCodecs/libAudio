@@ -1169,11 +1169,11 @@ bool ModuleFile::ProcessEffects()
 				channel->RawVolume = 0;
 				note = sample = 0;
 			}
-			if (note == 0 && sample != 0)
+			if (!note && sample)
 			{
-				if (p_Instruments != nullptr)
+				if (p_Instruments)
 				{
-					if (channel->Instrument != nullptr)
+					if (channel->Instrument)
 						channel->RawVolume = channel->Instrument->GetVolume();
 				}
 				else
@@ -1187,11 +1187,14 @@ bool ModuleFile::ProcessEffects()
 				if (p_Instruments != nullptr)
 					HandleNNA(channel, sample, note);
 			}
-			if (sample != 0)
-				SampleChange(channel, sample);
-			if (note != 0)
+			if (sample)
 			{
-				if (sample == 0 && channel->NewSample != 0 && note <= 0x80)
+				SampleChange(channel, sample);
+				channel->NewSample = 0;
+			}
+			if (note)
+			{
+				if (!sample && channel->NewSample && note < 0x80)
 				{
 					SampleChange(channel, channel->NewSample);
 					channel->NewSample = 0;
@@ -1209,6 +1212,7 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 		}
+
 		switch (cmd)
 		{
 			case CMD_NONE:
