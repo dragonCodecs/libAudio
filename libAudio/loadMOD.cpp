@@ -52,20 +52,10 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int32_t ret = 0, Read;
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
 	if (p_MF->p_File == NULL)
 		return -1;
-	do
-	{
-		Read = p_MF->p_File->Mix(p_MF->buffer, nOutBufferLen - ret);
-		if (Read >= 0 && OutBuffer != p_MF->buffer)
-			memcpy(OutBuffer + ret, p_MF->buffer, Read);
-		if (Read >= 0)
-			ret += Read;
-	}
-	while (ret < nOutBufferLen && Read >= 0);
-	return (ret == 0 ? Read : ret);
+	return p_MF->p_File->Mix(OutBuffer, nOutBufferLen);
 }
 
 int MOD_CloseFileR(void *p_MODFile)
