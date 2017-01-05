@@ -15,13 +15,13 @@ void *MOD_OpenR(const char *FileName)
 	if (ret == nullptr)
 		return nullptr;
 
-	FILE *const f_MOD = fopen(FileName, "rb");
-	if (f_MOD == nullptr)
+	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
+	if (!ret->inner.fd().valid())
 	{
 		delete ret;
-		return f_MOD;
+		return nullptr;
 	}
-	ret->f_Module = f_MOD;
+	ret->f_Module = fdopen(ret->inner.fd(), "rb");
 
 	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
@@ -31,7 +31,15 @@ void *MOD_OpenR(const char *FileName)
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());
-		fclose(f_MOD);
+		delete e;
+		fclose(ret->f_Module);
+		delete ret;
+		return nullptr;
+	}
+	catch (const ModuleLoaderError &e)
+	{
+		printf("%s\n", e.error());
+		fclose(ret->f_Module);
 		delete ret;
 		return nullptr;
 	}
