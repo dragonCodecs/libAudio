@@ -43,7 +43,7 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 	uint32_t i, maxPattern;
 	FILE *f_MOD = p_MF->f_Module;
 
-	p_Header = new ModuleHeader(p_MF);
+	p_Header = new ModuleHeader(p_MF->inner);
 	fseek(f_MOD, 20, SEEK_SET);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)

@@ -9,54 +9,57 @@ ModuleHeader::ModuleHeader() : RestartPos(255), GlobalVolume(64), InitialSpeed(6
 {
 }
 
-ModuleHeader::ModuleHeader(MOD_Intern *p_MF) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader()
 {
-	char MODMagic[4];
-	FILE *f_MOD = p_MF->f_Module;
+	std::array<char, 4> magic;
+	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(21);
-	if (!Name)
-		throw new ModuleLoaderError(E_BAD_MOD);
-	fread(Name.get(), 20, 1, f_MOD);
-	if (Name[19] != 0)
-		Name[20] = 0;
+	Orders = makeUnique<uint8_t []>(128);
+
+	if (!Name || !Orders)
+		throw ModuleLoaderError(E_BAD_MOD);
+
+	fd.read(Name, 20);
+	fd.seek((30 * 31) + 130, SEEK_CUR);
+	fd.read(magic);
 
 	// Defaults
 	nSamples = 31;
 	nChannels = 4;
 	// Now find out the actual values
-	fseek(f_MOD, (30 * 31) + 130, SEEK_CUR);
-	fread(MODMagic, 4, 1, f_MOD);
-	if (strncmp(MODMagic, "M.K.", 4) == 0 || strncmp(MODMagic, "M!K!", 4) == 0 ||
-		strncmp(MODMagic, "M&K!", 4) == 0 || strncmp(MODMagic, "N.T.", 4) == 0)
+	if (strncmp(magic.data(), "M.K.", 4) == 0 || strncmp(magic.data(), "M!K!", 4) == 0 ||
+		strncmp(magic.data(), "M&K!", 4) == 0 || strncmp(magic.data(), "N.T.", 4) == 0)
 		nChannels = 4;
-	else if (strncmp(MODMagic, "CD81", 4) == 0 || strncmp(MODMagic, "OKTA", 4) == 0)
+	else if (strncmp(magic.data(), "CD81", 4) == 0 || strncmp(magic.data(), "OKTA", 4) == 0)
 		nChannels = 8;
-	else if (strncmp(MODMagic, "FLT", 3) == 0 && MODMagic[3] >= '4' && MODMagic[3] <= '9')
-		nChannels = MODMagic[3] - '0';
-	else if (strncmp(MODMagic + 1, "CHN", 3) == 0 && MODMagic[0] >= '4' && MODMagic[0] <= '9')
-		nChannels = MODMagic[0] - '0';
-	else if (strncmp(MODMagic + 2, "CH", 2) == 0 && MODMagic[0] == '1' && MODMagic[1] >= '0' && MODMagic[1] <= '9')
-		nChannels = MODMagic[1] - '0' + 10;
-	else if (strncmp(MODMagic + 2, "CH", 2) == 0 && MODMagic[0] == '2' && MODMagic[1] >= '0' && MODMagic[1] <= '9')
-		nChannels = MODMagic[1] - '0' + 20;
-	else if (strncmp(MODMagic + 2, "CH", 2) == 0 && MODMagic[0] == '3' && MODMagic[1] >= '0' && MODMagic[1] <= '9')
-		nChannels = MODMagic[1] - '0' + 30;
-	else if (strncmp(MODMagic, "TDZ", 3) == 0 && MODMagic[3] >= '4' && MODMagic[3] <= '9')
-		nChannels = MODMagic[3] - '0';
-	else if (strncmp(MODMagic, "16CN", 4) == 0)
+	else if (strncmp(magic.data(), "FLT", 3) == 0 && magic[3] >= '4' && magic[3] <= '9')
+		nChannels = magic[3] - '0';
+	else if (strncmp(magic.data() + 1, "CHN", 3) == 0 && magic[0] >= '4' && magic[0] <= '9')
+		nChannels = magic[0] - '0';
+	else if (strncmp(magic.data() + 2, "CH", 2) == 0 && magic[0] == '1' && magic[1] >= '0' && magic[1] <= '9')
+		nChannels = magic[1] - '0' + 10;
+	else if (strncmp(magic.data() + 2, "CH", 2) == 0 && magic[0] == '2' && magic[1] >= '0' && magic[1] <= '9')
+		nChannels = magic[1] - '0' + 20;
+	else if (strncmp(magic.data() + 2, "CH", 2) == 0 && magic[0] == '3' && magic[1] >= '0' && magic[1] <= '9')
+		nChannels = magic[1] - '0' + 30;
+	else if (strncmp(magic.data(), "TDZ", 3) == 0 && magic[3] >= '4' && magic[3] <= '9')
+		nChannels = magic[3] - '0';
+	else if (strncmp(magic.data(), "16CN", 4) == 0)
 		nChannels = 16;
-	else if (strncmp(MODMagic, "32CN", 4) == 0)
+	else if (strncmp(magic.data(), "32CN", 4) == 0)
 		nChannels = 32;
 	else
 		nSamples = 15;
 
-	fseek(f_MOD, -134, SEEK_CUR);
+	fd.seek(-134, SEEK_CUR);
 	nOrders = 0;
-	fread(&nOrders, 1, 1, f_MOD);
-	fread(&RestartPos, 1, 1, f_MOD);
-	Orders = makeUnique<uint8_t []>(128);
-	fread(Orders.get(), 128, 1, f_MOD);
+	fd.read(&nOrders, 1);
+	fd.read(&RestartPos, 1);
+	fd.read(Orders.get(), 128);
+
+	if (Name[19] != 0)
+		Name[20] = 0;
 	if (nOrders > 128)
 		nOrders = 128;
 	if (RestartPos > 127)

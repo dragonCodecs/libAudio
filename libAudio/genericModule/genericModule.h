@@ -157,7 +157,7 @@ private:
 	ModuleHeader();
 
 public:
-	ModuleHeader(MOD_Intern *p_MF);
+	ModuleHeader(const modMOD_t &file);
 	ModuleHeader(S3M_Intern *p_SF);
 	ModuleHeader(STM_Intern *p_SF);
 	ModuleHeader(AON_Intern *p_AF);
