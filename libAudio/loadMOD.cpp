@@ -38,7 +38,7 @@ void *MOD_OpenR(const char *FileName)
 	info.title = ret->p_File->title();
 
 	if (ExternalPlayback == 0)
-		ret->p_Playback = new Playback(info, MOD_FillBuffer, ret->buffer, 8192, const_cast<MOD_Intern *>(ret));
+		ret->inner.player(makeUnique<Playback>(info, MOD_FillBuffer, ret->buffer, 8192, const_cast<MOD_Intern *>(ret)));
 	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
 
 	return ret;
@@ -75,7 +75,6 @@ int MOD_CloseFileR(void *p_MODFile)
 	if (p_MF == NULL)
 		return 0;
 
-	delete p_MF->p_Playback;
 	delete p_MF->p_File;
 
 	ret = fclose(p_MF->f_Module);
@@ -86,22 +85,19 @@ int MOD_CloseFileR(void *p_MODFile)
 void MOD_Play(void *p_MODFile)
 {
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-
-	p_MF->p_Playback->Play();
+	audioPlay(&p_MF->inner);
 }
 
 void MOD_Pause(void *p_MODFile)
 {
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-
-	p_MF->p_Playback->Pause();
+	audioPause(&p_MF->inner);
 }
 
 void MOD_Stop(void *p_MODFile)
 {
 	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-
-	p_MF->p_Playback->Stop();
+	audioStop(&p_MF->inner);
 }
 
 bool Is_MOD(const char *FileName) { return modMOD_t::isMOD(FileName); }
