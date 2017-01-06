@@ -11,18 +11,23 @@ ModuleHeader::ModuleHeader() : RestartPos(255), GlobalVolume(64), InitialSpeed(6
 
 ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader()
 {
+	constexpr const uint32_t seekOffset = (30 * 31) + 130;
 	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(21);
 	Orders = makeUnique<uint8_t []>(128);
+	nOrders = 0;
 
-	if (!Name || !Orders)
+	if (!Name || !Orders ||
+		!fd.read(Name, 20) ||
+		fd.seek(seekOffset, SEEK_CUR) != (seekOffset + 20) ||
+		!fd.read(magic) ||
+		fd.seek(-134, SEEK_CUR) != (seekOffset - 130 + 20) ||
+		!fd.read(&nOrders, 1) ||
+		!fd.read(&RestartPos, 1) ||
+		!fd.read(Orders.get(), 128))
 		throw ModuleLoaderError(E_BAD_MOD);
-
-	fd.read(Name, 20);
-	fd.seek((30 * 31) + 130, SEEK_CUR);
-	fd.read(magic);
 
 	// Defaults
 	nSamples = 31;
@@ -51,12 +56,6 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader()
 		nChannels = 32;
 	else
 		nSamples = 15;
-
-	fd.seek(-134, SEEK_CUR);
-	nOrders = 0;
-	fd.read(&nOrders, 1);
-	fd.read(&RestartPos, 1);
-	fd.read(Orders.get(), 128);
 
 	if (Name[19] != 0)
 		Name[20] = 0;
