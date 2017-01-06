@@ -3,10 +3,8 @@
 #include "genericModule.h"
 #include <stdlib.h>
 
-ModuleSample *ModuleSample::LoadSample(MOD_Intern *p_MF, uint32_t i)
-{
-	return new ModuleSampleNative(p_MF, i);
-}
+ModuleSample *ModuleSample::LoadSample(const modMOD_t &file, const uint32_t i)
+	{ return new ModuleSampleNative(file, i); }
 
 ModuleSample *ModuleSample::LoadSample(S3M_Intern *p_SF, uint32_t i)
 {
@@ -31,24 +29,27 @@ ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name,
 ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
-ModuleSampleNative::ModuleSampleNative(MOD_Intern *p_MF, uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) : ModuleSample(i, 1)
 {
-	uint16_t Short;
-	FILE *f_MOD = p_MF->f_Module;
+	uint16_t length16, loopStart16, loopEnd16;
+	const fd_t &fd = file.fd();
+
 	Name = makeUnique<char []>(23);
 
-	fread(Name.get(), 22, 1, f_MOD);
+	if (!Name ||
+		!fd.read(Name.get(), 22) ||
+		!fd.read(&length16, 2) ||
+		!fd.read(&FineTune, 1) ||
+		!fd.read(&Volume, 1) ||
+		!fd.read(&loopStart16, 2) ||
+		!fd.read(&loopEnd16, 2))
+		throw ModuleLoaderError(E_BAD_MOD);
+
+	Length = Swap16(length16) * 2;
+	LoopStart = Swap16(loopStart16) * 2;
+	LoopEnd = Swap16(loopEnd16) * 2;
 	if (Name[21] != 0)
 		Name[22] = 0;
-
-	fread(&Short, 2, 1, f_MOD);
-	Length = Swap16(Short) * 2;
-	fread(&FineTune, 1, 1, f_MOD);
-	fread(&Volume, 1, 1, f_MOD);
-	fread(&Short, 2, 1, f_MOD);
-	LoopStart = Swap16(Short) * 2;
-	fread(&Short, 2, 1, f_MOD);
-	LoopEnd = Swap16(Short) * 2;
 	if (Volume > 64)
 		Volume = 64;
 	FineTune &= 0x0F;

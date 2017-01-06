@@ -41,13 +41,16 @@ void *ModuleAllocator::operator new[](const size_t size, const std::nothrow_t &)
 ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint32_t i, maxPattern;
+	const fd_t &fd = p_MF->inner.fd();
 	FILE *f_MOD = p_MF->f_Module;
 
 	p_Header = new ModuleHeader(p_MF->inner);
-	fseek(f_MOD, 20, SEEK_SET);
+	if (fd.seek(20, SEEK_SET) != 20)
+		throw ModuleLoaderError(E_BAD_MOD);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
-		p_Samples[i] = ModuleSample::LoadSample(p_MF, i);
+		p_Samples[i] = ModuleSample::LoadSample(p_MF->inner, i);
+	fseek(f_MOD, fd.tell(), SEEK_SET);
 	fseek(f_MOD, 130, SEEK_CUR);
 	if (p_Header->nSamples != 15)
 		fseek(f_MOD, 4, SEEK_CUR);

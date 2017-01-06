@@ -181,7 +181,7 @@ protected:
 	void ResetID(const uint32_t id) noexcept { _id = id; }
 
 public:
-	static ModuleSample *LoadSample(MOD_Intern *p_MF, uint32_t i);
+	static ModuleSample *LoadSample(const modMOD_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(S3M_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(STM_Intern *p_SF, uint32_t i);
 	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
@@ -233,7 +233,7 @@ private:
 	friend class ModuleFile;
 
 public:
-	ModuleSampleNative(MOD_Intern *p_MF, uint32_t i);
+	ModuleSampleNative(const modMOD_t &file, const uint32_t i);
 	ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t Type);
 	ModuleSampleNative(STM_Intern *p_SF, uint32_t i);
 	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
