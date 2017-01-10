@@ -19,23 +19,23 @@ ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t rows, cons
 		throw ModuleLoaderError(type);
 }
 
-ModulePattern::ModulePattern(MOD_Intern *p_MF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_MOD)
+ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_MOD)
 {
-	uint32_t channel, row;
-	for (row = 0; row < _rows; row++)
+	const fd_t &fd = file.fd();
+	for (uint32_t row = 0; row < _rows; row++)
 	{
-		for (channel = 0; channel < nChannels; channel++)
+		for (uint32_t channel = 0; channel < nChannels; channel++)
 		{
 			// Read 4 bytes of data and unpack it into the structure.
-			uint8_t Data[4];
+			std::array<uint8_t, 4> Data;
 			if (row == 0)
 			{
 				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError(E_BAD_MOD);
 			}
-			fread(Data, 4, 1, p_MF->f_Module);
-			_commands[channel][row].SetMODData(Data);
+			fd.read(Data);
+			_commands[channel][row].SetMODData(Data.data());
 		}
 	}
 }

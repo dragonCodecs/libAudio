@@ -50,10 +50,7 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(p_MF->inner, i);
-	fseek(f_MOD, fd.tell(), SEEK_SET);
-	fseek(f_MOD, 130, SEEK_CUR);
-	if (p_Header->nSamples != 15)
-		fseek(f_MOD, 4, SEEK_CUR);
+	fd.seek(130 + (p_Header->nSamples != 15 ? 4 : 0), SEEK_CUR);
 
 	// Count the number of patterns present
 	for (i = 0, maxPattern = 0; i < p_Header->nOrders; i++)
@@ -64,8 +61,9 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 	p_Header->nPatterns = maxPattern + 1;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(p_MF, p_Header->nChannels);
+		p_Patterns[i] = new ModulePattern(p_MF->inner, p_Header->nChannels);
 
+	fseek(f_MOD, fd.tell(), SEEK_SET);
 	MODLoadPCM(f_MOD);
 	MinPeriod = 56;
 	MaxPeriod = 7040;
