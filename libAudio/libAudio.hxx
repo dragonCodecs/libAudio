@@ -122,7 +122,7 @@ template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>;
 template<typename T> struct makeUnique_<T []> { using arrayType = std::unique_ptr<T []>; };
 template<typename T, size_t N> struct makeUnique_<T [N]> { struct invalidType { }; };
 
-template<typename T, typename... Args> inline typename makeUnique_<T>::uniqueType makeUnique(Args &&...args) noexcept
+template<typename T, typename... Args> inline typename makeUnique_<T>::uniqueType makeUnique(Args &&...args) noexcept(noexcept(T(std::forward<Args>(args)...)))
 {
 	using consT = typename std::remove_const<T>::type;
 	return std::unique_ptr<T>(new (std::nothrow) consT(std::forward<Args>(args)...));
