@@ -60,7 +60,7 @@ ALCcontext *Playback::context = NULL;
 void Playback::init()
 {
 #ifndef _WINDOWS
-	if (OpenALInit == false)
+	if (!OpenALInit)
 #endif
 	{
 		device = alcOpenDevice(NULL);
@@ -169,6 +169,7 @@ Playback::Playback(FileInfo *p_FI, FB_Func DataCallback, uint8_t *BuffPtr, int n
 	// Initialize OpenAL ready
 	init();
 	createBuffers();
+	Resuming = false;
 }
 
 /*!
@@ -207,6 +208,7 @@ Playback::Playback(const fileInfo_t &info, FB_Func DataCallback, uint8_t *BuffPt
 	// Initialize OpenAL ready
 	init();
 	createBuffers();
+	Resuming = false;
 }
 
 #ifdef __NICE_OUTPUT__
@@ -230,8 +232,10 @@ void DoDisplay(int *p_CN, int *p_P, char *Chars)
 void Playback::Play()
 {
 	long bufret = 1;
-	int nBuffs = 0, Playing;
+	int nBuffs = 0, isPlaying;
 	int Fmt = getBufferFormat();
+	Playing = true;
+	Paused = false;
 #ifdef __NICE_OUTPUT__
 	static char *ProgressChars = "\xB3/\-\\";
 	int CharNum = 0, Proc = 0;
@@ -241,112 +245,138 @@ void Playback::Play()
 	fprintf(stdout, "Playing: *\b");
 	fflush(stdout);
 #endif
-	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
-	if (bufret > 0)
+	if (!Resuming)
 	{
-		alBufferData(buffers[0], Fmt, buffer, bufret, bitRate);
-		alSourceQueueBuffers(sourceNum, 1, &buffers[0]);
-		nBuffs++;
-	}
+		bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
+		if (bufret > 0)
+		{
+			alBufferData(buffers[0], Fmt, buffer, bufret, bitRate);
+			alSourceQueueBuffers(sourceNum, 1, &buffers[0]);
+			nBuffs++;
+		}
 #ifdef __NICE_OUTPUT__
-	DoDisplay(&CharNum, &Proc, ProgressChars);
+		DoDisplay(&CharNum, &Proc, ProgressChars);
 #endif
 
-	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
-	if (bufret > 0)
-	{
-		alBufferData(buffers[1], Fmt, buffer, bufret, bitRate);
-		alSourceQueueBuffers(sourceNum, 1, &buffers[1]);
-		nBuffs++;
-	}
+		bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
+		if (bufret > 0)
+		{
+			alBufferData(buffers[1], Fmt, buffer, bufret, bitRate);
+			alSourceQueueBuffers(sourceNum, 1, &buffers[1]);
+			nBuffs++;
+		}
 #ifdef __NICE_OUTPUT__
-	DoDisplay(&CharNum, &Proc, ProgressChars);
+		DoDisplay(&CharNum, &Proc, ProgressChars);
 #endif
 
-	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
-	if (bufret > 0)
-	{
-		alBufferData(buffers[2], Fmt, buffer, bufret, bitRate);
-		alSourceQueueBuffers(sourceNum, 1, &buffers[2]);
-		nBuffs++;
-	}
+		bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
+		if (bufret > 0)
+		{
+			alBufferData(buffers[2], Fmt, buffer, bufret, bitRate);
+			alSourceQueueBuffers(sourceNum, 1, &buffers[2]);
+			nBuffs++;
+		}
 #ifdef __NICE_OUTPUT__
-	DoDisplay(&CharNum, &Proc, ProgressChars);
+		DoDisplay(&CharNum, &Proc, ProgressChars);
 #endif
 
-	bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
-	if (bufret > 0)
-	{
-		alBufferData(buffers[3], Fmt, buffer, bufret, bitRate);
-		alSourceQueueBuffers(sourceNum, 1, &buffers[3]);
-		nBuffs++;
-	}
+		bufret = FillBuffer(p_AudioPtr, buffer, nBufferLen);
+		if (bufret > 0)
+		{
+			alBufferData(buffers[3], Fmt, buffer, bufret, bitRate);
+			alSourceQueueBuffers(sourceNum, 1, &buffers[3]);
+			nBuffs++;
+		}
 #ifdef __NICE_OUTPUT__
-	DoDisplay(&CharNum, &Proc, ProgressChars);
+		DoDisplay(&CharNum, &Proc, ProgressChars);
 #endif
 
-	alSourcePlay(sourceNum);
+		alSourcePlay(sourceNum);
+	}
+	Resuming = true;
 
 	while (bufret > 0)
 	{
 		int Processed;
 		alGetSourcei(sourceNum, AL_BUFFERS_PROCESSED, &Processed);
-		alGetSourcei(sourceNum, AL_SOURCE_STATE, &Playing);
+		alGetSourcei(sourceNum, AL_SOURCE_STATE, &isPlaying);
 
 		while (Processed--)
 		{
-			uint32_t buffer;
-
-			alSourceUnqueueBuffers(sourceNum, 1, &buffer);
-			bufret = FillBuffer(p_AudioPtr, this->buffer, nBufferLen);
-			if (bufret <= 0)
+			if (Playing && !Paused)
 			{
-				nBuffs -= (Processed + 1);
-				goto finish;
-			}
-#ifdef __NICE_OUTPUT__
-			DoDisplay(&CharNum, &Proc, ProgressChars);
-#endif
-			alBufferData(buffer, Fmt, this->buffer, bufret, bitRate);
-			alSourceQueueBuffers(sourceNum, 1, &buffer);
+				uint32_t buffer;
 
+				alSourceUnqueueBuffers(sourceNum, 1, &buffer);
+				bufret = FillBuffer(p_AudioPtr, this->buffer, nBufferLen);
+				if (bufret <= 0)
+				{
+					nBuffs -= (Processed + 1);
+					goto finish;
+				}
+#ifdef __NICE_OUTPUT__
+				DoDisplay(&CharNum, &Proc, ProgressChars);
+#endif
+				alBufferData(buffer, Fmt, this->buffer, bufret, bitRate);
+				alSourceQueueBuffers(sourceNum, 1, &buffer);
+			}
 		}
 
-		if (Playing != AL_PLAYING)
+		if (Playing && isPlaying != AL_PLAYING && !Paused)
 			alSourcePlay(sourceNum);
 		std::this_thread::sleep_for(std::chrono::nanoseconds(sleepTime));
+		if (Paused || !Playing)
+			break;
 	}
 
 finish:
 #ifdef __NICE_OUTPUT__
-	fprintf(stdout, "*\n");
+	printf(stdout, "*\n");
 	fflush(stdout);
 #endif
-	alGetSourcei(sourceNum, AL_SOURCE_STATE, &Playing);
-	while (nBuffs > 0)
+	if (Playing && !Paused)
 	{
-		int Processed;
-		alGetSourcei(sourceNum, AL_BUFFERS_PROCESSED, &Processed);
-
-		while (Processed--)
+		alGetSourcei(sourceNum, AL_SOURCE_STATE, &isPlaying);
+		while (nBuffs > 0)
 		{
-			uint32_t buffer;
-			alSourceUnqueueBuffers(sourceNum, 1, &buffer);
-			nBuffs--;
-		}
+			int Processed;
+			alGetSourcei(sourceNum, AL_BUFFERS_PROCESSED, &Processed);
 
-		if (Playing != AL_PLAYING)
-			alSourcePlay(sourceNum);
-		std::this_thread::sleep_for(std::chrono::nanoseconds(sleepTime));
+			while (Processed--)
+			{
+				uint32_t buffer;
+				alSourceUnqueueBuffers(sourceNum, 1, &buffer);
+				nBuffs--;
+			}
+
+			if (Playing && Playing != AL_PLAYING)
+				alSourcePlay(sourceNum);
+			std::this_thread::sleep_for(std::chrono::nanoseconds(sleepTime));
+		}
 	}
+}
+
+bool Playback::IsPlaying()
+{
+	return Playing;
+}
+
+bool Playback::IsPaused()
+{
+	return Paused;
 }
 
 void Playback::Pause()
 {
+	alSourcePause(sourceNum);
+	Playing = false;
+	Paused = true;
 }
 
 void Playback::Stop()
 {
+	alSourceStop(sourceNum);
+	Playing = Paused = Resuming = false;
 }
 
 /*!

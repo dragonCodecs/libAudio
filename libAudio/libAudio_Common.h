@@ -110,6 +110,7 @@ private:
 	static ALCcontext *context;
 	uint8_t *buffer;
 	int nBufferLen;
+	bool Resuming;
 	/*!
 	 * @internal
 	 * Static member which holds whether or not OpenAL has been initialised yet or not
@@ -128,6 +129,11 @@ public:
 	void Play();
 	void Pause();
 	void Stop();
+	bool IsPlaying();
+	bool IsPaused();
+
+protected:
+	bool Playing, Paused;
 
 private:
 	void init();
