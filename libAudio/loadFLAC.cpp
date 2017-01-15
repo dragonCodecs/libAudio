@@ -263,12 +263,14 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 					copyComment(info.artist, comment + 7);
 				else if (strncasecmp(comment, "album=", 6) == 0)
 					copyComment(info.album, comment + 6);
+#ifndef __arm__
 				else
 				{
 					std::unique_ptr<char []> other;
 					copyComment(other, comment);
 					info.other.emplace_back(std::move(other));
 				}
+#endif
 			}
 			break;
 		}
