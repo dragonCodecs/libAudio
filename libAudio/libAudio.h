@@ -281,6 +281,10 @@ libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr, int Type);
 // Set this to a non-zero value if using your own payback routines. This must be set by a call to *_GetFileInfo().
 libAUDIO_API uint8_t ExternalPlayback;
 
+// Set this to zero if you do not want the genericModule/moduleMixer
+// powered decoders to initialise a mixer instance
+libAUDIO_API uint8_t ToPlayback;
+
 // Master Audio API Defines
 
 #define AUDIO_OGG_VORBIS	1

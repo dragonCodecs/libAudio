@@ -39,9 +39,12 @@ void *IT_OpenR(const char *FileName)
 	info.title = ctx.mod->title();
 	info.artist = ctx.mod->author();
 
-	if (!ExternalPlayback)
-		ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));
-	ctx.mod->InitMixer(audioFileInfo(ret.get()));
+	if (ToPlayback)
+	{
+		if (!ExternalPlayback)
+			ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));
+		ctx.mod->InitMixer(audioFileInfo(ret.get()));
+	}
 
 	return ret.release();
 }

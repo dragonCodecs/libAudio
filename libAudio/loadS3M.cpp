@@ -51,9 +51,12 @@ FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 	ret->Title = p_SF->p_File->title().release();
 	ret->Channels = p_SF->p_File->channels();
 
-	if (ExternalPlayback == 0)
-		p_SF->p_Playback = new Playback(ret, S3M_FillBuffer, p_SF->buffer, 8192, p_S3MFile);
-	p_SF->p_File->InitMixer(ret);
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			p_SF->p_Playback = new Playback(ret, S3M_FillBuffer, p_SF->buffer, 8192, p_S3MFile);
+		p_SF->p_File->InitMixer(ret);
+	}
 
 	return ret;
 }

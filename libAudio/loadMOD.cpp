@@ -45,9 +45,12 @@ void *MOD_OpenR(const char *FileName)
 	}
 	info.title = ret->p_File->title();
 
-	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<Playback>(info, MOD_FillBuffer, ret->buffer, 8192, const_cast<MOD_Intern *>(ret)));
-	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			ret->inner.player(makeUnique<Playback>(info, MOD_FillBuffer, ret->buffer, 8192, const_cast<MOD_Intern *>(ret)));
+		ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+	}
 
 	return ret;
 }

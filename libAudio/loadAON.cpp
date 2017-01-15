@@ -61,9 +61,12 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 	}
 	//ret->Channels = p_AF->p_File->GetChannels();
 
-	if (ExternalPlayback == 0)
-		p_AF->p_Playback = new Playback(ret, AON_FillBuffer, p_AF->buffer, 8192, p_AONFile);
-	p_AF->p_File->InitMixer(ret);
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			p_AF->p_Playback = new Playback(ret, AON_FillBuffer, p_AF->buffer, 8192, p_AONFile);
+		p_AF->p_File->InitMixer(ret);
+	}
 
 	return ret;
 }

@@ -52,9 +52,12 @@ FileInfo *STM_GetFileInfo(void *p_STMFile)
 	}
 	ret->Title = p_SF->p_File->title().release();
 
-	if (ExternalPlayback == 0)
-		p_SF->p_Playback = new Playback(ret, STM_FillBuffer, p_SF->buffer, 8192, p_STMFile);
-	p_SF->p_File->InitMixer(ret);
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			p_SF->p_Playback = new Playback(ret, STM_FillBuffer, p_SF->buffer, 8192, p_STMFile);
+		p_SF->p_File->InitMixer(ret);
+	}
 
 	return ret;
 }

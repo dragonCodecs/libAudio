@@ -51,9 +51,12 @@ FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
 	ret->Title = p_FF->p_File->title().release();
 	ret->Channels = p_FF->p_File->channels();
 
-	if (ExternalPlayback == 0)
-		p_FF->p_Playback = new Playback(ret, FC1x_FillBuffer, p_FF->buffer, 8192, p_FC1xFile);
-	p_FF->p_File->InitMixer(ret);
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			p_FF->p_Playback = new Playback(ret, FC1x_FillBuffer, p_FF->buffer, 8192, p_FC1xFile);
+		p_FF->p_File->InitMixer(ret);
+	}
 
 	return ret;
 }

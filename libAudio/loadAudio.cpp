@@ -15,6 +15,7 @@
  * external playback is wanted or not - 0 means internal is active.
  */
 uint8_t ExternalPlayback = 0;
+uint8_t ToPlayback = 1;
 
 FileInfo audioInfo;
 
