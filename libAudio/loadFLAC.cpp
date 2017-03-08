@@ -244,6 +244,8 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 				info.bitsPerSample = 16;
 				ctx.sampleShift = 8;
 			}
+			else
+				ctx.sampleShift = 0;
 			ctx.bufferLen = streamInfo.channels * streamInfo.max_blocksize;
 			ctx.buffer = makeUnique<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
 			info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
