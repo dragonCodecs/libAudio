@@ -10,7 +10,7 @@ struct fileInfo_t final
 	uint64_t totalTime;
 	uint32_t bitsPerSample;
 	uint32_t bitRate;
-	uint32_t channels;
+	uint8_t channels;
 	// int bitStream;
 	std::unique_ptr<char []> title;
 	std::unique_ptr<char []> artist;
