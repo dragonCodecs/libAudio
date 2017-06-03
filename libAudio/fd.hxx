@@ -1,3 +1,6 @@
+#ifndef FD__HXX
+#define FD__HXX
+
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -35,13 +38,7 @@ private:
 		return oldVal;
 	}
 
-	int32_t release() noexcept
-	{
-		return exchange(fd, -1);
-		/*int32_t desc = fd;
-		fd = -1;
-		return desc;*/
-	}
+	int32_t release() noexcept { return exchange(fd, -1); }
 
 	void reset(const int32_t desc = -1) noexcept
 	{
@@ -109,3 +106,5 @@ public:
 	fd_t(const fd_t &) = delete;
 	fd_t &operator =(const fd_t &) = delete;
 };
+
+#endif /*FD__HXX*/

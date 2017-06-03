@@ -39,7 +39,7 @@ public:
 	boundedIterator_t &operator -=(const size_t n) noexcept { if (!((index - n) & (1 << ((sizeof(size_t) * 8) - 1)))) index -= n; return *this; }
 	boundedIterator_t &operator -(const size_t n) const noexcept { return boundedIterator_t(*this) -= n; }
 
-	bool operator ==(const boundedIterator_t &b) const noexcept { return data == b.data && index == b.index && max = b.max; }
+	bool operator ==(const boundedIterator_t &b) const noexcept { return data == b.data && index == b.index && max == b.max; }
 	bool operator !=(const boundedIterator_t &b) const noexcept { return !(*this == b); }
 };
 
