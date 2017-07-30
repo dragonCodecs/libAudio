@@ -53,7 +53,7 @@ struct flac_t::decoderContext_t final
 	std::unique_ptr<Playback> player;
 
 	decoderContext_t();
-	~decoderContext_t();
+	~decoderContext_t() noexcept;
 	bool finish() noexcept;
 	FLAC__StreamDecoderState nextFrame() noexcept;
 };
