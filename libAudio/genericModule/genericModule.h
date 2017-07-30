@@ -419,8 +419,8 @@ public:
 
 	uint8_t Map(uint8_t Note) noexcept override final;
 	uint16_t GetFadeOut() const noexcept override final;
-	bool GetEnvEnabled(uint8_t env) const;
-	bool GetEnvLooped(uint8_t env) const;
+	bool GetEnvEnabled(uint8_t env) const override final;
+	bool GetEnvLooped(uint8_t env) const override final;
 	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
 	bool IsPanned() const noexcept override final;
 	bool HasVolume() const noexcept override final;
