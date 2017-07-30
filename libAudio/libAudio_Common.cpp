@@ -349,7 +349,7 @@ finish:
 				nBuffs--;
 			}
 
-			if (Playing && Playing != AL_PLAYING)
+			if (Playing && isPlaying != AL_PLAYING)
 				alSourcePlay(sourceNum);
 			std::this_thread::sleep_for(std::chrono::nanoseconds(sleepTime));
 		}
