@@ -11,16 +11,34 @@ modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, st
 void *S3M_OpenR(const char *FileName)
 {
 	S3M_Intern *const ret = new (std::nothrow) S3M_Intern();
-	if (ret == NULL)
+	if (ret == nullptr)
 		return ret;
 
 	FILE *const f_S3M = fopen(FileName, "rb");
-	if (f_S3M == NULL)
+	if (f_S3M == nullptr)
 	{
 		delete ret;
 		return f_S3M;
 	}
 	ret->f_Module = f_S3M;
+
+	fileInfo_t &info = ret->inner.fileInfo();
+	info.bitRate = 44100;
+	info.bitsPerSample = 16;
+	try { ret->p_File = new ModuleFile(ret); }
+	catch (ModuleLoaderError *e)
+	{
+		printf("%s\n", e->GetError());
+		fclose(f_S3M);
+		delete ret;
+		return nullptr;
+	}
+	info.title = ret->p_File->title();
+	info.channels = ret->p_File->channels();
+
+	if (ExternalPlayback == 0)
+		ret->p_Playback = new Playback(info, S3M_FillBuffer, ret->buffer, 8192, const_cast<S3M_Intern *>(ret));
+	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
 
 	return ret;
 }
@@ -28,46 +46,14 @@ void *S3M_OpenR(const char *FileName)
 FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 {
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	FileInfo *ret = NULL;
-
-	if (p_SF == NULL)
-		return ret;
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-	p_SF->p_FI = ret;
-
-	ret->BitRate = 44100;
-	ret->BitsPerSample = 16;
-	try
-	{
-		p_SF->p_File = new ModuleFile(p_SF);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		return NULL;
-	}
-	ret->Title = p_SF->p_File->title().release();
-	ret->Channels = p_SF->p_File->channels();
-
-	if (ToPlayback)
-	{
-		if (ExternalPlayback == 0)
-			p_SF->p_Playback = new Playback(ret, S3M_FillBuffer, p_SF->buffer, 8192, p_S3MFile);
-		p_SF->p_File->InitMixer(ret);
-	}
-
-	return ret;
+	return audioFileInfo(&p_SF->inner);
 }
 
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	int32_t ret = 0, Read;
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	if (p_SF->p_File == NULL)
+	if (p_SF->p_File == nullptr)
 		return -1;
 	do
 	{
@@ -85,7 +71,7 @@ int S3M_CloseFileR(void *p_S3MFile)
 {
 	int ret = 0;
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	if (p_SF == NULL)
+	if (p_SF == nullptr)
 		return 0;
 
 	delete p_SF->p_Playback;
