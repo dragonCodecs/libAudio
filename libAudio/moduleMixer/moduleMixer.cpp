@@ -155,33 +155,35 @@ void ModuleFile::ReloadSample(Channel &channel)
 	channel.AutoVibratoPos = 0;
 }
 
-void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
+void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
 {
+	uint32_t sample = nSample - 1;
 	if (p_Instruments != nullptr)
 	{
-		ModuleInstrument *instr = p_Instruments[nSample - 1];
-		nSample = instr->Map(channel->Note - 1);
-		channel->EnvVolumePos = 0;
-		channel->EnvPanningPos = 0;
-		channel->EnvPitchPos = 0;
-		if (nSample == 0)
+		ModuleInstrument *instr = p_Instruments[sample];
+		sample = instr->Map(channel.Note - 1);
+		channel.EnvVolumePos = 0;
+		channel.EnvPanningPos = 0;
+		channel.EnvPitchPos = 0;
+		if (sample == 0)
 		{
-			channel->Sample = nullptr;
-			channel->NewSampleData = nullptr;
-			channel->Length = 0;
+			channel.Sample = nullptr;
+			channel.NewSampleData = nullptr;
+			channel.Length = 0;
 			return;
 		}
-		channel->Instrument = instr;
+		channel.Instrument = instr;
+		--sample;
 	}
-	channel->Sample = p_Samples[nSample - 1];
-	ReloadSample(*channel);
+	channel.Sample = p_Samples[sample];
+	ReloadSample(channel);
 	if (p_Instruments != nullptr)
 	{
-		ModuleInstrument *instr = channel->Instrument;
+		ModuleInstrument *instr = channel.Instrument;
 		if (instr->HasVolume())
-			channel->RawVolume = instr->GetVolume();
+			channel.RawVolume = instr->GetVolume();
 		if (instr->IsPanned())
-			channel->RawPanning = instr->GetPanning();
+			channel.RawPanning = instr->GetPanning();
 	}
 }
 
@@ -1190,14 +1192,14 @@ bool ModuleFile::ProcessEffects()
 			}
 			if (sample)
 			//{
-				SampleChange(channel, sample);
+				SampleChange(*channel, sample);
 			//	channel->NewSample = 0;
 			//}
 			if (note)
 			{
 				if (!sample && channel->NewSample && note <= 0x80)
 				{
-					SampleChange(channel, channel->NewSample);
+					SampleChange(*channel, channel->NewSample);
 					channel->NewSample = 0;
 				}
 				NoteChange(channel, note, cmd);

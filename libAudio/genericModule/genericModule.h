@@ -599,7 +599,7 @@ private:
 	bool Tick();
 	bool ProcessEffects();
 	void ResetChannelPanning();
-	void SampleChange(Channel *channel, uint32_t sample);
+	void SampleChange(Channel &channel, const uint32_t sample);
 	void ReloadSample(Channel &channel);
 	void NoteChange(Channel * const channel, uint8_t note, uint8_t cmd);
 	void HandleNNA(Channel *channel, uint32_t sample, uint8_t note);
