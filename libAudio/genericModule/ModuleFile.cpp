@@ -42,7 +42,6 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 {
 	uint32_t i, maxPattern;
 	const fd_t &fd = p_MF->inner.fd();
-	FILE *f_MOD = p_MF->f_Module;
 
 	p_Header = new ModuleHeader(p_MF->inner);
 	if (fd.seek(20, SEEK_SET) != 20)
@@ -63,8 +62,7 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 	for (i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(p_MF->inner, p_Header->nChannels);
 
-	fseek(f_MOD, fd.tell(), SEEK_SET);
-	MODLoadPCM(f_MOD);
+	modLoadPCM(p_MF->inner);
 	MinPeriod = 56;
 	MaxPeriod = 7040;
 }
@@ -319,8 +317,9 @@ uint8_t ModuleFile::channels() const noexcept
 	return (p_Header->MasterVolume & 0x80) ? 2 : 1;
 }
 
-void ModuleFile::MODLoadPCM(FILE *f_MOD)
+void ModuleFile::modLoadPCM(const modMOD_t &file)
 {
+	const fd_t &fd = file.fd();
 	uint32_t i;
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; ++i)
@@ -329,7 +328,8 @@ void ModuleFile::MODLoadPCM(FILE *f_MOD)
 		if (Length != 0)
 		{
 			p_PCM[i] = new uint8_t[Length];
-			fread(p_PCM[i], Length, 1, f_MOD);
+			if (!fd.read(p_PCM[i], Length))
+				throw ModuleLoaderError(E_BAD_MOD);
 			// TODO: This is hard, ok? MPT does wierd stuff here on memory buffers.
 			// The decompression loop is now correct, as is the memory allocation.
 			// However, I do not think the seek is correct, nor some of the length compensation code.

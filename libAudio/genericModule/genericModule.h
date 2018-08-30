@@ -614,7 +614,7 @@ private:
 	inline void MonoFromStereo(uint32_t count);
 
 private:
-	void MODLoadPCM(FILE *f_MOD);
+	void modLoadPCM(const modMOD_t &file);
 	void S3MLoadPCM(FILE *f_S3M);
 	void STMLoadPCM(FILE *f_STM);
 	void AONLoadPCM(FILE *f_AON);
