@@ -27,7 +27,7 @@ void *MOD_OpenR(const char *FileName)
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ret->p_File = new ModuleFile(ret); }
+	try { ret->p_File = new ModuleFile(ret->inner); }
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());

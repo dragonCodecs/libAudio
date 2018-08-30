@@ -38,17 +38,17 @@ void *ModuleAllocator::operator new[](const size_t size, const std::nothrow_t &)
 	return ret;
 }
 
-ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint32_t i, maxPattern;
-	const fd_t &fd = p_MF->inner.fd();
+	const fd_t &fd = file.fd();
 
-	p_Header = new ModuleHeader(p_MF->inner);
+	p_Header = new ModuleHeader(file);
 	if (fd.seek(20, SEEK_SET) != 20)
 		throw ModuleLoaderError(E_BAD_MOD);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
-		p_Samples[i] = ModuleSample::LoadSample(p_MF->inner, i);
+		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	fd.seek(130 + (p_Header->nSamples != 15 ? 4 : 0), SEEK_CUR);
 
 	// Count the number of patterns present
@@ -60,9 +60,9 @@ ModuleFile::ModuleFile(MOD_Intern *p_MF) : ModuleType(MODULE_MOD), p_Instruments
 	p_Header->nPatterns = maxPattern + 1;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(p_MF->inner, p_Header->nChannels);
+		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 
-	modLoadPCM(p_MF->inner);
+	modLoadPCM(file);
 	MinPeriod = 56;
 	MaxPeriod = 7040;
 }

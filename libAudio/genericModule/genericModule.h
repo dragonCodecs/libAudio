@@ -622,7 +622,7 @@ private:
 	void DeinitMixer();
 
 public:
-	ModuleFile(MOD_Intern *p_MF);
+	ModuleFile(const modMOD_t &file);
 	ModuleFile(S3M_Intern *p_SF);
 	ModuleFile(STM_Intern *p_SF);
 	ModuleFile(AON_Intern *p_AF);
