@@ -9,97 +9,55 @@
 modMOD_t::modMOD_t() noexcept : modMOD_t(fd_t()) { }
 modMOD_t::modMOD_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std::move(fd)) { }
 
+modMOD_t *modMOD_t::openR(const char *const fileName) noexcept
+{
+	auto modFile = makeUnique<modMOD_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!modFile || !modFile->valid() || !isMOD(modFile->_fd))
+		return nullptr;
+	lseek(modFile->_fd, 0, SEEK_SET);
+	return modFile.release();
+}
+
 void *MOD_OpenR(const char *FileName)
 {
-	MOD_Intern *const ret = new (std::nothrow) MOD_Intern();
-	if (ret == nullptr)
+	std::unique_ptr<modMOD_t> ret{modMOD_t::openR(FileName)};
+	if (!ret)
 		return nullptr;
 
-	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
-	if (!ret->inner.fd().valid())
-	{
-		delete ret;
-		return nullptr;
-	}
-	ret->f_Module = fdopen(ret->inner.fd(), "rb");
+	auto &ctx = *ret->context();
+	fileInfo_t &info = ret->fileInfo();
 
-	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ret->p_File = new ModuleFile(ret->inner); }
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		delete e;
-		fclose(ret->f_Module);
-		delete ret;
-		return nullptr;
-	}
+	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
-		fclose(ret->f_Module);
-		delete ret;
 		return nullptr;
 	}
-	info.title = ret->p_File->title();
+	info.title = ctx.mod->title();
 
 	if (ToPlayback)
 	{
 		if (ExternalPlayback == 0)
-			ret->inner.player(makeUnique<Playback>(info, MOD_FillBuffer, ret->buffer, 8192, const_cast<MOD_Intern *>(ret)));
-		ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+			ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));
+		ctx.mod->InitMixer(audioFileInfo(ret.get()));
 	}
 
-	return ret;
+	return ret.release();
 }
 
 FileInfo *MOD_GetFileInfo(void *p_MODFile)
-{
-	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	return audioFileInfo(&p_MF->inner);
-}
+	{ return audioFileInfo(p_MODFile); }
 
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	if (p_MF->p_File == NULL)
-		return -1;
-	return p_MF->p_File->Mix(OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_MODFile, OutBuffer, nOutBufferLen); }
 
-int MOD_CloseFileR(void *p_MODFile)
-{
-	int ret = 0;
-	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	if (p_MF == NULL)
-		return 0;
-
-	delete p_MF->p_File;
-
-	ret = fclose(p_MF->f_Module);
-	delete p_MF;
-	return ret;
-}
-
-void MOD_Play(void *p_MODFile)
-{
-	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	audioPlay(&p_MF->inner);
-}
-
-void MOD_Pause(void *p_MODFile)
-{
-	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	audioPause(&p_MF->inner);
-}
-
-void MOD_Stop(void *p_MODFile)
-{
-	MOD_Intern *p_MF = (MOD_Intern *)p_MODFile;
-	audioStop(&p_MF->inner);
-}
+int MOD_CloseFileR(void *p_MODFile) { return audioCloseFileR(p_MODFile); }
+void MOD_Play(void *p_MODFile) { audioPlay(p_MODFile); }
+void MOD_Pause(void *p_MODFile) { audioPause(p_MODFile); }
+void MOD_Stop(void *p_MODFile) { audioStop(p_MODFile); }
 
 bool Is_MOD(const char *FileName) { return modMOD_t::isMOD(FileName); }
 
@@ -144,10 +102,10 @@ bool modMOD_t::isMOD(const char *const fileName) noexcept
 API_Functions MODDecoder =
 {
 	MOD_OpenR,
-	MOD_GetFileInfo,
-	MOD_FillBuffer,
-	MOD_CloseFileR,
-	MOD_Play,
-	MOD_Pause,
-	MOD_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
