@@ -14,13 +14,13 @@ void *S3M_OpenR(const char *FileName)
 	if (ret == nullptr)
 		return ret;
 
-	FILE *const f_S3M = fopen(FileName, "rb");
-	if (f_S3M == nullptr)
+	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
+	if (!ret->inner.fd().valid())
 	{
 		delete ret;
-		return f_S3M;
+		return nullptr;
 	}
-	ret->f_Module = f_S3M;
+	ret->f_Module = fdopen(ret->inner.fd(), "rb");
 
 	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
@@ -29,7 +29,15 @@ void *S3M_OpenR(const char *FileName)
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());
-		fclose(f_S3M);
+		delete e;
+		fclose(ret->f_Module);
+		delete ret;
+		return nullptr;
+	}
+	catch (const ModuleLoaderError &e)
+	{
+		printf("%s\n", e.GetError());
+		fclose(ret->f_Module);
 		delete ret;
 		return nullptr;
 	}
