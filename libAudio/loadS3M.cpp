@@ -5,19 +5,21 @@
 #include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
+modS3M_t::modS3M_t() noexcept : modS3M_t{fd_t{}} { }
+modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, std::move(fd)} { }
+
 void *S3M_OpenR(const char *FileName)
 {
-	S3M_Intern *ret = NULL;
-	FILE *f_S3M = NULL;
-
-	ret = (S3M_Intern *)malloc(sizeof(S3M_Intern));
+	S3M_Intern *const ret = new (std::nothrow) S3M_Intern();
 	if (ret == NULL)
 		return ret;
-	memset(ret, 0x00, sizeof(S3M_Intern));
 
-	f_S3M = fopen(FileName, "rb");
+	FILE *const f_S3M = fopen(FileName, "rb");
 	if (f_S3M == NULL)
+	{
+		delete ret;
 		return f_S3M;
+	}
 	ret->f_Module = f_S3M;
 
 	return ret;
@@ -90,7 +92,7 @@ int S3M_CloseFileR(void *p_S3MFile)
 	delete p_SF->p_File;
 
 	ret = fclose(p_SF->f_Module);
-	free(p_SF);
+	delete p_SF;
 	return ret;
 }
 
