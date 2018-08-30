@@ -156,7 +156,7 @@ private:
 
 public:
 	ModuleHeader(const modMOD_t &file);
-	ModuleHeader(S3M_Intern *p_SF);
+	ModuleHeader(const modS3M_t &file);
 	ModuleHeader(STM_Intern *p_SF);
 	ModuleHeader(AON_Intern *p_AF);
 #ifdef __FC1x_EXPERIMENTAL__

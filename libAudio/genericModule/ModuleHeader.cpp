@@ -76,40 +76,40 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader()
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader()
 {
-	uint8_t DontCare[10];
-	char Magic[4];
+	std::array<char, 4> magic;
+	std::array<uint8_t, 10> dontCare;
 	uint8_t Const;
 	uint16_t Special, RawFlags;
-	FILE *f_S3M = p_SF->f_Module;
+	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(29);
 	if (!Name)
 		throw new ModuleLoaderError(E_BAD_S3M);
-	fread(Name.get(), 28, 1, f_S3M);
+	fd.read(Name, 28);
 	if (Name[27] != 0)
 		Name[28] = 0;
-	fread(&Const, 1, 1, f_S3M);
-	fread(&Type, 1, 1, f_S3M);
-	fread(DontCare, 2, 1, f_S3M);
-	fread(&nOrders, 2, 1, f_S3M);
-	fread(&nSamples, 2, 1, f_S3M);
-	fread(&nPatterns, 2, 1, f_S3M);
-	fread(&RawFlags, 2, 1, f_S3M);
-	fread(&CreationVersion, 2, 1, f_S3M);
-	fread(&FormatVersion, 2, 1, f_S3M);
-	fread(Magic, 4, 1, f_S3M);
-	fread(&GlobalVolume, 1, 1, f_S3M);
-	fread(&InitialSpeed, 1, 1, f_S3M);
-	fread(&InitialTempo, 1, 1, f_S3M);
-	fread(&MasterVolume, 1, 1, f_S3M);
-	fread(DontCare, 10, 1, f_S3M);
-	fread(&Special, 2, 1, f_S3M);
-	fread(ChannelSettings, 32, 1, f_S3M);
+	fd.read(Const);
+	fd.read(Type);
+	fd.read<2>(dontCare);
+	fd.read(nOrders);
+	fd.read(nSamples);
+	fd.read(nPatterns);
+	fd.read(RawFlags);
+	fd.read(CreationVersion);
+	fd.read(FormatVersion);
+	fd.read(magic);
+	fd.read(GlobalVolume);
+	fd.read(InitialSpeed);
+	fd.read(InitialTempo);
+	fd.read(MasterVolume);
+	fd.read(dontCare);
+	fd.read(Special);
+	fd.read(ChannelSettings, 32);
 
 	if (Const != 0x1A || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
-		memcmp(Magic, "SCRM", 4) != 0)
+		memcmp(magic.data(), "SCRM", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_S3M);
 
 	if ((RawFlags & 0x04) != 0)
@@ -120,21 +120,21 @@ ModuleHeader::ModuleHeader(S3M_Intern *p_SF) : ModuleHeader()
 		Flags |= FILE_FLAGS_FAST_SLIDES;
 
 	Orders = makeUnique<uint8_t []>(nOrders);
-	fread(Orders.get(), nOrders, 1, f_S3M);
+	fd.read(Orders.get(), nOrders);
 	SamplePtrs = new uint16_t[nSamples];
-	fread(SamplePtrs.get(), nSamples, 2, f_S3M);
+	fd.read(SamplePtrs.get(), nSamples * 2);
 	PatternPtrs = new uint16_t[nPatterns];
-	fread(PatternPtrs.get(), nPatterns, 2, f_S3M);
+	fd.read(PatternPtrs.get(), nPatterns * 2);
 
 	// Panning?
-	if (DontCare[1] == 0xFC)
+	if (dontCare[1] == 0xFC)
 	{
 		uint8_t i;
 		Panning = makeUnique<uint16_t []>(32);
 		for (i = 0; i < 32; i++)
 		{
 			uint8_t value;
-			fread(&value, 1, 1, f_S3M);
+			fd.read(value);
 			Panning[i] = value;
 			if ((Panning[i] & 0x20) != 0)
 				Panning[i] = ((Panning[i] & 0x0F) << 4) | (Panning[i] & 0x0F);
