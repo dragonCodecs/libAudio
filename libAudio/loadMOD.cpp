@@ -49,15 +49,12 @@ void *MOD_OpenR(const char *FileName)
 
 FileInfo *MOD_GetFileInfo(void *p_MODFile)
 	{ return audioFileInfo(p_MODFile); }
-
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_MODFile, OutBuffer, nOutBufferLen); }
-
 int MOD_CloseFileR(void *p_MODFile) { return audioCloseFileR(p_MODFile); }
 void MOD_Play(void *p_MODFile) { audioPlay(p_MODFile); }
 void MOD_Pause(void *p_MODFile) { audioPause(p_MODFile); }
 void MOD_Stop(void *p_MODFile) { audioStop(p_MODFile); }
-
 bool Is_MOD(const char *FileName) { return modMOD_t::isMOD(FileName); }
 
 bool modMOD_t::isMOD(const int32_t fd) noexcept
