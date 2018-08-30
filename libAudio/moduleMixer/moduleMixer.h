@@ -42,7 +42,7 @@ template<> inline void clipInt<uint32_t>(uint32_t &num, const uint32_t min, cons
 }
 
 // Return (a * b) / c [ - no divide error ]
-int32_t muldiv(int32_t a, int32_t b, int32_t c)
+inline int32_t muldiv(int32_t a, int32_t b, int32_t c)
 {
 	int32_t result;
 	int32_t d = a;
