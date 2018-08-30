@@ -10,7 +10,7 @@ modIT_t::modIT_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std::
 
 modIT_t *modIT_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<modIT_t> itFile(makeUnique<modIT_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	auto itFile = makeUnique<modIT_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
 	if (!itFile || !itFile->valid() || !isIT(itFile->_fd))
 		return nullptr;
 
@@ -20,7 +20,7 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 
 void *IT_OpenR(const char *FileName)
 {
-	std::unique_ptr<modIT_t> ret(modIT_t::openR(FileName));
+	std::unique_ptr<modIT_t> ret{modIT_t::openR(FileName)};
 	if (!ret)
 		return nullptr;
 
@@ -84,7 +84,7 @@ API_Functions ITDecoder =
 {
 	IT_OpenR,
 	audioFileInfo,
-	IT_FillBuffer,
+	audioFillBuffer,
 	audioCloseFileR,
 	audioPlay,
 	audioPause,
