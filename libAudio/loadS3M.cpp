@@ -54,20 +54,10 @@ FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int32_t ret = 0, Read;
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
 	if (p_SF->p_File == nullptr)
 		return -1;
-	do
-	{
-		Read = p_SF->p_File->Mix(p_SF->buffer, nOutBufferLen - ret);
-		if (Read >= 0 && OutBuffer != p_SF->buffer)
-			memcpy(OutBuffer + ret, p_SF->buffer, Read);
-		if (Read >= 0)
-			ret += Read;
-	}
-	while (ret < nOutBufferLen && Read >= 0);
-	return (ret == 0 ? Read : ret);
+	return p_SF->p_File->Mix(OutBuffer, nOutBufferLen);
 }
 
 int S3M_CloseFileR(void *p_S3MFile)
