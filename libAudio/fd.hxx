@@ -78,8 +78,14 @@ public:
 		{ return read(value.get(), valueLen); }
 	template<typename T> bool read(const managedPtr_t<T> &value, const size_t valueLen) const noexcept
 		{ return read(value.get(), valueLen); }
-	bool read(const managedPtr_t<void> &value, const size_t valueLen) const noexcept
+	bool read(const managedPtr_t<void> &value, const size_t valueLen) const noexcept WARN_UNUSED
 		{ return read(value.get(), valueLen); }
+
+	template<size_t length, typename T, size_t N> bool read(std::array<T, N> &value) const noexcept
+	{
+		static_assert(length <= N, "Can't request to read more than the std::array<> length");
+		return read(value.data(), length * sizeof(T));
+	}
 
 	bool read(void *const value, const size_t valueLen) const noexcept WARN_UNUSED
 	{
