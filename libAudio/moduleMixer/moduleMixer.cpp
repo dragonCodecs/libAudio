@@ -127,31 +127,32 @@ void ModuleFile::ResetChannelPanning()
 	}
 }
 
-void ModuleFile::ReloadSample(Channel *channel)
+void ModuleFile::ReloadSample(Channel &channel)
 {
-	ModuleSample *sample = channel->Sample;
-	channel->RawVolume = sample->GetVolume();
-	channel->NewSample = 0;
-	channel->Length = sample->GetLength();
-	channel->LoopStart = (sample->GetLoopStart() < channel->Length ? sample->GetLoopStart() : channel->Length);
-	channel->LoopEnd = sample->GetLoopEnd();
-	if (sample->GetLooped())
-		channel->Flags |= CHN_LOOP;
+	ModuleSample &sample = *channel.Sample;
+	//if (channel.Instrument == nullptr)
+	channel.RawVolume = sample.GetVolume();
+	channel.NewSample = 0;
+	channel.Length = sample.GetLength();
+	channel.LoopStart = (sample.GetLoopStart() < channel.Length ? sample.GetLoopStart() : channel.Length);
+	channel.LoopEnd = sample.GetLoopEnd();
+	if (sample.GetLooped())
+		channel.Flags |= CHN_LOOP;
 	else
-		channel->Flags &= ~CHN_LOOP;
-	if (sample->GetBidiLoop())
-		channel->Flags |= CHN_LPINGPONG;
+		channel.Flags &= ~CHN_LOOP;
+	if (sample.GetBidiLoop())
+		channel.Flags |= CHN_LPINGPONG;
 	else
-		channel->Flags &= ~CHN_LPINGPONG;
-	channel->NewSampleData = p_PCM[sample->id()];
-	channel->FineTune = sample->GetFineTune();
-	channel->C4Speed = sample->GetC4Speed();
-	if (channel->LoopEnd > channel->Length)
-		channel->LoopEnd = channel->Length;
-	if (channel->Length > channel->LoopEnd)
-		channel->Length = channel->LoopEnd;
-	channel->NewSample = 0;
-	channel->AutoVibratoPos = 0;
+		channel.Flags &= ~CHN_LPINGPONG;
+	channel.NewSampleData = p_PCM[sample.id()];
+	channel.FineTune = sample.GetFineTune();
+	channel.C4Speed = sample.GetC4Speed();
+	if (channel.LoopEnd > channel.Length)
+		channel.LoopEnd = channel.Length;
+	if (channel.Length > channel.LoopEnd)
+		channel.Length = channel.LoopEnd;
+	channel.NewSample = 0;
+	channel.AutoVibratoPos = 0;
 }
 
 void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
@@ -173,7 +174,7 @@ void ModuleFile::SampleChange(Channel *channel, uint32_t nSample)
 		channel->Instrument = instr;
 	}
 	channel->Sample = p_Samples[nSample - 1];
-	ReloadSample(channel);
+	ReloadSample(*channel);
 	if (p_Instruments != nullptr)
 	{
 		ModuleInstrument *instr = channel->Instrument;
@@ -266,7 +267,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		channel->EnvPitchPos = 0;
 		channel->Sample = sample;
 		if (sample != nullptr)
-			ReloadSample(channel);
+			ReloadSample(*channel);
 		else
 			channel->NewSampleData = nullptr;
 	}
