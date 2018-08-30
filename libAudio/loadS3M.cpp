@@ -36,9 +36,12 @@ void *S3M_OpenR(const char *FileName)
 	info.title = ret->p_File->title();
 	info.channels = ret->p_File->channels();
 
-	if (ExternalPlayback == 0)
-		ret->p_Playback = new Playback(info, S3M_FillBuffer, ret->buffer, 8192, const_cast<S3M_Intern *>(ret));
-	ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+	if (ToPlayback)
+	{
+		if (!ExternalPlayback)
+			ret->inner.player(makeUnique<Playback>(info, S3M_FillBuffer, ret->buffer, 8192, const_cast<S3M_Intern *>(ret)));
+		ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+	}
 
 	return ret;
 }
@@ -74,7 +77,6 @@ int S3M_CloseFileR(void *p_S3MFile)
 	if (p_SF == nullptr)
 		return 0;
 
-	delete p_SF->p_Playback;
 	delete p_SF->p_File;
 
 	ret = fclose(p_SF->f_Module);
@@ -85,22 +87,19 @@ int S3M_CloseFileR(void *p_S3MFile)
 void S3M_Play(void *p_S3MFile)
 {
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-
-	p_SF->p_Playback->Play();
+	audioPlay(&p_SF->inner);
 }
 
 void S3M_Pause(void *p_S3MFile)
 {
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-
-	p_SF->p_Playback->Pause();
+	audioPause(&p_SF->inner);
 }
 
 void S3M_Stop(void *p_S3MFile)
 {
 	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-
-	p_SF->p_Playback->Stop();
+	audioStop(&p_SF->inner);
 }
 
 bool Is_S3M(const char *FileName) { return modS3M_t::isS3M(FileName); }
