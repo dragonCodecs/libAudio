@@ -85,33 +85,29 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader()
 	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(29);
-	if (!Name)
-		throw new ModuleLoaderError(E_BAD_S3M);
-	fd.read(Name, 28);
+	if (!Name ||
+		!fd.read(Name, 28) ||
+		!fd.read(Const) ||
+		!fd.read(Type) ||
+		!fd.read<2>(dontCare) ||
+		!fd.read(nOrders) ||
+		!fd.read(nSamples) ||
+		!fd.read(nPatterns) ||
+		!fd.read(RawFlags) ||
+		!fd.read(CreationVersion) ||
+		!fd.read(FormatVersion) ||
+		!fd.read(magic) ||
+		!fd.read(GlobalVolume) ||
+		!fd.read(InitialSpeed) ||
+		!fd.read(InitialTempo) ||
+		!fd.read(MasterVolume) ||
+		!fd.read(dontCare) ||
+		!fd.read(Special) ||
+		!fd.read(ChannelSettings, 32))
+		throw ModuleLoaderError(E_BAD_S3M);
+
 	if (Name[27] != 0)
 		Name[28] = 0;
-	fd.read(Const);
-	fd.read(Type);
-	fd.read<2>(dontCare);
-	fd.read(nOrders);
-	fd.read(nSamples);
-	fd.read(nPatterns);
-	fd.read(RawFlags);
-	fd.read(CreationVersion);
-	fd.read(FormatVersion);
-	fd.read(magic);
-	fd.read(GlobalVolume);
-	fd.read(InitialSpeed);
-	fd.read(InitialTempo);
-	fd.read(MasterVolume);
-	fd.read(dontCare);
-	fd.read(Special);
-	fd.read(ChannelSettings, 32);
-
-	if (Const != 0x1A || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
-		memcmp(magic.data(), "SCRM", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_S3M);
-
 	if ((RawFlags & 0x04) != 0)
 		Flags |= FILE_FLAGS_AMIGA_SLIDES;
 	if ((RawFlags & 0x10) != 0)
@@ -119,25 +115,33 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader()
 	if (CreationVersion < 0x1320 && (RawFlags & 0x40) != 0)
 		Flags |= FILE_FLAGS_FAST_SLIDES;
 
+	if (Const != 0x1A || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
+		memcmp(magic.data(), "SCRM", 4) != 0)
+		throw ModuleLoaderError(E_BAD_S3M);
+
 	Orders = makeUnique<uint8_t []>(nOrders);
-	fd.read(Orders.get(), nOrders);
 	SamplePtrs = new uint16_t[nSamples];
-	fd.read(SamplePtrs.get(), nSamples * 2);
 	PatternPtrs = new uint16_t[nPatterns];
-	fd.read(PatternPtrs.get(), nPatterns * 2);
+	if (!Orders || !SamplePtrs || !PatternPtrs ||
+		!fd.read(Orders.get(), nOrders) ||
+		!fd.read(SamplePtrs.get(), nSamples * 2) ||
+		!fd.read(PatternPtrs.get(), nPatterns * 2))
+		throw ModuleLoaderError(E_BAD_S3M);
 
 	// Panning?
 	if (dontCare[1] == 0xFC)
 	{
 		uint8_t i;
 		Panning = makeUnique<uint16_t []>(32);
+		if (!Panning)
+			throw ModuleLoaderError(E_BAD_S3M);
 		for (i = 0; i < 32; i++)
 		{
 			uint8_t value;
-			fd.read(value);
-			Panning[i] = value;
-			if ((Panning[i] & 0x20) != 0)
-				Panning[i] = ((Panning[i] & 0x0F) << 4) | (Panning[i] & 0x0F);
+			if (!fd.read(value))
+				throw ModuleLoaderError(E_BAD_S3M);
+			else if (value & 0x20)
+				Panning[i] = ((value & 0x0F) << 4) | (value & 0x0F);
 			else
 				Panning[i] = 128;
 		}
