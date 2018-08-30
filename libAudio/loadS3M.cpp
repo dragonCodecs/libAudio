@@ -115,23 +115,31 @@ void S3M_Stop(void *p_S3MFile)
 	p_SF->p_Playback->Stop();
 }
 
-bool Is_S3M(const char *FileName)
+bool Is_S3M(const char *FileName) { return modS3M_t::isS3M(FileName); }
+
+bool modS3M_t::isS3M(const int32_t fd) noexcept
 {
-	FILE *f_S3M = fopen(FileName, "rb");
+	constexpr const uint32_t seekOffset1 = 28;
+	constexpr const uint32_t seekOffset2 = seekOffset1 + 16;
 	char S3MMagic1, S3MMagic2[4];
-	if (f_S3M == NULL)
+	if (fd == -1 ||
+		lseek(fd, seekOffset1, SEEK_SET) != seekOffset1 ||
+		read(fd, &S3MMagic1, 1) != 1 ||
+		lseek(fd, seekOffset2, SEEK_SET) != seekOffset2 ||
+		read(fd, S3MMagic2, 4) != 4 ||
+		S3MMagic1 != 0x1A ||
+		strncmp(S3MMagic2, "SCRM", 4) != 0)
 		return false;
-
-	fseek(f_S3M, 28, SEEK_CUR);
-	fread(&S3MMagic1, 1, 1, f_S3M);
-	fseek(f_S3M, 15, SEEK_CUR);
-	fread(S3MMagic2, 4, 1, f_S3M);
-	fclose(f_S3M);
-
-	if (S3MMagic1 == 0x1A && strncmp(S3MMagic2, "SCRM", 4) == 0)
-		return true;
 	else
+		return true;
+}
+
+bool modS3M_t::isS3M(const char *const fileName) noexcept
+{
+	fd_t file{fileName, O_RDONLY | O_NOCTTY};
+	if (!file.valid())
 		return false;
+	return isS3M(file);
 }
 
 API_Functions S3MDecoder =
