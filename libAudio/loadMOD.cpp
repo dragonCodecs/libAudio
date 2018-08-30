@@ -66,7 +66,7 @@ bool modMOD_t::isMOD(const int32_t fd) noexcept
 	constexpr const uint32_t seekOffset = (30 * 31) + 150;
 	char MODMagic[4];
 	if (fd == -1 ||
-		lseek(fd, seekOffset, SEEK_CUR) != seekOffset ||
+		lseek(fd, seekOffset, SEEK_SET) != seekOffset ||
 		read(fd, MODMagic, 4) != 4)
 		return false;
 	else if (strncmp(MODMagic, "M.K.", 4) == 0 ||
