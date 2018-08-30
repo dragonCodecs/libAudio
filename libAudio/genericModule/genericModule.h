@@ -245,7 +245,7 @@ public:
 	uint32_t GetLoopEnd() override final { return LoopEnd; }
 	uint8_t GetFineTune() override final { return FineTune; }
 	uint32_t GetC4Speed() override final { return C4Speed; }
-	uint8_t GetVolume() override final { return Volume; }
+	uint8_t GetVolume() override final { return Volume << 1; }
 	uint8_t GetVibratoSpeed() override final { return VibratoSpeed; }
 	uint8_t GetVibratoDepth() override final { return VibratoDepth; }
 	uint8_t GetVibratoType() override final { return VibratoType; }
