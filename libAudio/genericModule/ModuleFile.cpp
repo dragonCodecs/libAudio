@@ -70,9 +70,11 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint16_t i;
+	const fd_t &fd = p_SF->inner.fd();
 	FILE *f_S3M = p_SF->f_Module;
 
-	p_Header = new ModuleHeader(p_SF);
+	p_Header = new ModuleHeader(p_SF->inner);
+	fseek(f_S3M, fd.tell(), SEEK_SET);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
 	for (i = 0; i < p_Header->nSamples; i++)
