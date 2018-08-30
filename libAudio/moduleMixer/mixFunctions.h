@@ -436,15 +436,15 @@ void DeinitialiseTables()
 
 // Volume
 #define SNDMIX_STORESTEREOVOL \
-	vol[0] += pcmL * (chn->LeftVol << 4); \
-	vol[1] += pcmR * (chn->RightVol << 4); \
+	vol[0] += pcmL * (chn->LeftVol << 3); \
+	vol[1] += pcmR * (chn->RightVol << 3); \
 	vol += 2;
 
 #define SNDMIX_RAMPSTEREOVOL \
 	RampLeftVol += chn->LeftRamp; \
 	RampRightVol += chn->RightRamp; \
-	vol[0] += pcmL * (RampLeftVol << 4); \
-	vol[1] += pcmR * (RampRightVol << 4); \
+	vol[0] += pcmL * (RampLeftVol << 3); \
+	vol[1] += pcmR * (RampRightVol << 3); \
 	vol += 2;
 
 // Interfaces
