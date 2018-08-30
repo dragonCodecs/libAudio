@@ -40,7 +40,7 @@ protected:
 
 public:
 	audioFile_t(audioFile_t &&) = default;
-	virtual ~audioFile_t() noexcept { }
+	virtual ~audioFile_t() noexcept = default;
 	audioFile_t &operator =(audioFile_t &&) = default;
 	static audioFile_t *openR(const char *const fileName) noexcept;
 	static bool isAudio(const char *const fileName) noexcept;
@@ -107,6 +107,16 @@ public:
 	static modMOD_t *openR(const char *const fileName) noexcept;
 	static bool isMOD(const char *const fileName) noexcept;
 	static bool isMOD(const int32_t fd) noexcept;
+};
+
+struct modS3M_t final : public moduleFile_t
+{
+public:
+	modS3M_t() noexcept;
+	modS3M_t(fd_t &&fd) noexcept;
+	static modS3M_t *openR(const char *const fileName) noexcept;
+	static bool isS3M(const char *const fileName) noexcept;
+	static bool isS3M(const int32_t fd) noexcept;
 };
 
 struct modIT_t final : public moduleFile_t

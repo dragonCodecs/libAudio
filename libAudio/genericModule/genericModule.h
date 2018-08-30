@@ -32,7 +32,7 @@ template<typename T> struct moduleIntern : T
 	moduleIntern() noexcept : T(), f_Module(nullptr), p_FI(nullptr), p_Playback(nullptr), p_File(nullptr) { }
 };
 
-struct s3mIntern { };
+struct s3mIntern { modS3M_t inner; };
 struct stmIntern { };
 struct aonIntern { };
 struct fc1xIntern { };
