@@ -71,7 +71,6 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 {
 	uint16_t i;
 	const fd_t &fd = p_SF->inner.fd();
-	FILE *f_S3M = p_SF->f_Module;
 
 	p_Header = new ModuleHeader(p_SF->inner);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
@@ -104,9 +103,8 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 			throw ModuleLoaderError(E_BAD_S3M);
 		p_Patterns[i] = new ModulePattern(p_SF->inner, p_Header->nChannels);
 	}
-	fseek(f_S3M, fd.tell(), SEEK_SET);
 
-	S3MLoadPCM(f_S3M);
+	s3mLoadPCM(p_SF->inner);
 	MinPeriod = 64;
 	MaxPeriod = 32767;
 }
@@ -324,9 +322,8 @@ uint8_t ModuleFile::channels() const noexcept
 void ModuleFile::modLoadPCM(const modMOD_t &file)
 {
 	const fd_t &fd = file.fd();
-	uint32_t i;
 	p_PCM = new uint8_t *[p_Header->nSamples];
-	for (i = 0; i < p_Header->nSamples; ++i)
+	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		uint32_t Length = p_Samples[i]->GetLength();
 		if (Length != 0)
@@ -366,32 +363,33 @@ void ModuleFile::modLoadPCM(const modMOD_t &file)
 	}
 }
 
-void ModuleFile::S3MLoadPCM(FILE *f_S3M)
+void ModuleFile::s3mLoadPCM(const modS3M_t &file)
 {
-	uint32_t i;
+	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[p_Header->nSamples];
-	for (i = 0; i < p_Header->nSamples; i++)
+	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
-		uint32_t SeekLoc, Length = p_Samples[i]->GetLength() << (p_Samples[i]->Get16Bit() ? 1 : 0);
-		if (Length != 0 && p_Samples[i]->GetType() == 1)
+		const uint32_t length = p_Samples[i]->GetLength() << (p_Samples[i]->Get16Bit() ? 1 : 0);
+		if (length != 0 && p_Samples[i]->GetType() == 1)
 		{
-			SeekLoc = ((ModuleSampleNative *)p_Samples[i])->SamplePos << 4;
-			p_PCM[i] = new uint8_t[Length];
-			fseek(f_S3M, SeekLoc, SEEK_SET);
-			fread(p_PCM[i], Length, 1, f_S3M);
+			const auto *sample = reinterpret_cast<ModuleSampleNative *>(p_Samples[i]);
+			const uint32_t offset = uint32_t{sample->SamplePos} << 4;
+			p_PCM[i] = new uint8_t[length];
+			if (fd.seek(offset, SEEK_SET) != offset ||
+				!fd.read(p_PCM[i], length))
+				throw ModuleLoaderError(E_BAD_S3M);
 			if (p_Header->FormatVersion == 2)
 			{
-				uint32_t j;
 				if (p_Samples[i]->Get16Bit())
 				{
-					uint16_t *pcm = (uint16_t *)p_PCM[i];
-					for (j = 0; j < (Length >> 1); j++)
+					auto *pcm = reinterpret_cast<uint16_t *>(p_PCM[i]);
+					for (uint32_t j = 0; j < (length >> 1); j++)
 						pcm[j] ^= 0x8000;
 				}
 				else
 				{
-					uint8_t *pcm = (uint8_t *)p_PCM[i];
-					for (j = 0; j < Length; j++)
+					auto *pcm = reinterpret_cast<uint8_t *>(p_PCM[i]);
+					for (uint32_t j = 0; j < length; j++)
 						pcm[j] ^= 0x80;
 				}
 			}
@@ -439,11 +437,9 @@ void ModuleFile::AONLoadPCM(FILE *f_AON)
 uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, uint8_t bits)
 {
 	uint32_t ret = 0;
-	uint8_t i = 0;
-
 	if (bits > 0)
 	{
-		for (i = 0; i < bits; i++)
+		for (uint8_t i = 0; i < bits; i++)
 		{
 			if (buffLen == 0)
 			{

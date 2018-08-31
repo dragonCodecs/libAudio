@@ -613,7 +613,7 @@ private:
 
 private:
 	void modLoadPCM(const modMOD_t &file);
-	void S3MLoadPCM(FILE *f_S3M);
+	void s3mLoadPCM(const modS3M_t &file);
 	void STMLoadPCM(FILE *f_STM);
 	void AONLoadPCM(FILE *f_AON);
 	void itLoadPCM(const modIT_t &file);
