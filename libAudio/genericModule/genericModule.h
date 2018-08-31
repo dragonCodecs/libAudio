@@ -477,7 +477,7 @@ private:
 
 public:
 	ModulePattern(const modMOD_t &file, const uint32_t nChannels);
-	ModulePattern(S3M_Intern *p_SF, uint32_t nChannels);
+	ModulePattern(const modS3M_t &file, const uint32_t nChannels);
 	ModulePattern(STM_Intern *p_SF);
 	ModulePattern(AON_Intern *p_AF, uint32_t nChannels);
 	ModulePattern(const modIT_t &file, const uint32_t nChannels);

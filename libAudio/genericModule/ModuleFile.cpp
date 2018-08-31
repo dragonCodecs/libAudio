@@ -83,13 +83,12 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 			throw ModuleLoaderError(E_BAD_S3M);
 		p_Samples[i] = ModuleSample::LoadSample(p_SF->inner, i);
 	}
-	fseek(f_S3M, fd.tell(), SEEK_SET);
 
 	// Count the number of channels present
 	p_Header->nChannels = 32;
-	for (i = 0; i < 32; i++)
+	for (i = 0; i < 32; ++i)
 	{
-		if ((p_Header->ChannelSettings[i] & 0x80) != 0)
+		if (p_Header->ChannelSettings[i] & 0x80)
 		{
 			p_Header->nChannels = i;
 			break;
@@ -98,12 +97,14 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	uint16_t *const PatternPtrs = p_Header->PatternPtrs.get<uint16_t>();
-	for (i = 0; i < p_Header->nPatterns; i++)
+	for (i = 0; i < p_Header->nPatterns; ++i)
 	{
-		uint32_t SeekLoc = ((uint32_t)PatternPtrs[i]) << 4;
-		fseek(f_S3M, SeekLoc, SEEK_SET);
-		p_Patterns[i] = new ModulePattern(p_SF, p_Header->nChannels);
+		const uint32_t offset = uint32_t{PatternPtrs[i]} << 4;
+		if (fd.seek(offset, SEEK_SET) != offset)
+			throw ModuleLoaderError(E_BAD_S3M);
+		p_Patterns[i] = new ModulePattern(p_SF->inner, p_Header->nChannels);
 	}
+	fseek(f_S3M, fd.tell(), SEEK_SET);
 
 	S3MLoadPCM(f_S3M);
 	MinPeriod = 64;

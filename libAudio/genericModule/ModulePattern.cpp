@@ -40,66 +40,68 @@ ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t nChannels) : M
 	}
 }
 
-#define checkLength(cnt, Length) \
-	if (cnt + 1 >= Length) \
+#define checkLength(cnt, length) \
+	if (cnt + 1 >= length) \
 		break
 
-ModulePattern::ModulePattern(S3M_Intern *p_SF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_S3M)
+ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_S3M)
 {
-	uint32_t j, Length;
-	uint8_t row;
-	FILE *f_S3M = p_SF->f_Module;
-	for (j = 0; j < nChannels; j++)
+	uint32_t length;
+	const fd_t &fd = file.fd();
+
+	for (uint32_t i = 0; i < nChannels; ++i)
 	{
-		_commands[j] = makeUnique<ModuleCommand []>(_rows);
-		if (!_commands[j])
+		_commands[i] = makeUnique<ModuleCommand []>(_rows);
+		if (!_commands[i])
 			throw ModuleLoaderError(E_BAD_S3M);
 	}
-	fread(&Length, sizeof(uint16_t), 1, f_S3M);
-	for (j = 0, row = 0; row < _rows;)
-	{
-		/* Begin: temp */
-		uint8_t Note;
-		uint8_t Sample;
-		uint8_t Volume;
-		uint8_t Effect;
-		uint8_t Param;
-		/* End: temp */
+	if (!fd.read(&length, sizeof(uint16_t)))
+		throw ModuleLoaderError(E_BAD_S3M);
 
-		uint8_t byte, channel;
-		checkLength(j, Length);
-		fread(&byte, 1, 1, f_S3M);
-		if (byte == 0)
+	for (uint32_t j = 0, row = 0; row < _rows && j < length;)
+	{
+		uint8_t byte;
+		checkLength(j, length);
+		if (!fd.read(byte))
+			throw ModuleLoaderError(E_BAD_S3M);
+		else if (byte == 0)
 		{
-			row++;
+			++row;
 			continue;
 		}
-		channel = (byte & 0x1F);
-		if ((byte & 0x20) != 0)
+
+		const uint8_t channel = byte & 0x1F;
+		if (byte & 0x20)
 		{
-			fread(&Note, 1, 1, f_S3M);
-			fread(&Sample, 1, 1, f_S3M);
-			if (channel < nChannels)
-				_commands[channel][row].SetS3MNote(Note, Sample);
+			uint8_t note, sample;
+			if (!fd.read(note) ||
+				!fd.read(sample))
+				throw ModuleLoaderError(E_BAD_S3M);
+			else if (channel < nChannels)
+				_commands[channel][row].SetS3MNote(note, sample);
 			j += 2;
-			checkLength(j, Length);
+			checkLength(j, length);
 		}
-		if ((byte & 0x40) != 0)
+		if (byte & 0x40)
 		{
-			fread(&Volume, 1, 1, f_S3M);
-			if (channel < nChannels)
-				_commands[channel][row].SetS3MVolume(Volume);
-			j++;
-			checkLength(j, Length);
+			uint8_t volume;
+			if (!fd.read(volume))
+				throw ModuleLoaderError(E_BAD_S3M);
+			else if (channel < nChannels)
+				_commands[channel][row].SetS3MVolume(volume);
+			++j;
+			checkLength(j, length);
 		}
-		if ((byte & 0x80) != 0)
+		if (byte & 0x80)
 		{
-			fread(&Effect, 1, 1, f_S3M);
-			fread(&Param, 1, 1, f_S3M);
+			uint8_t effect, param;
+			if (!fd.read(effect) ||
+				!fd.read(param))
+				throw ModuleLoaderError(E_BAD_S3M);
 			if (channel < nChannels)
-				_commands[channel][row].SetS3MEffect(Effect, Param);
+				_commands[channel][row].SetS3MEffect(effect, param);
 			j += 2;
-			checkLength(j, Length);
+			checkLength(j, length);
 		}
 	}
 }
