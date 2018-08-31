@@ -6,14 +6,17 @@
 ModuleSample *ModuleSample::LoadSample(const modMOD_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
-ModuleSample *ModuleSample::LoadSample(S3M_Intern *p_SF, uint32_t i)
+ModuleSample *ModuleSample::LoadSample(const modS3M_t &file, const uint32_t i)
 {
-	uint8_t Type;
-	fread(&Type, 1, 1, p_SF->f_Module);
-	if (Type > 1)
-		return new ModuleSampleAdlib(p_SF, i, Type);
+	uint8_t type;
+	const fd_t &fd = file.fd();
+
+	if (!fd.read(type))
+		throw ModuleLoaderError(E_BAD_S3M);
+	if (type > 1)
+		return new ModuleSampleAdlib(file, i, type);
 	else
-		return new ModuleSampleNative(p_SF, i, Type);
+		return new ModuleSampleNative(file, i, type);
 }
 
 ModuleSample *ModuleSample::LoadSample(STM_Intern *p_SF, uint32_t i)
@@ -68,50 +71,53 @@ ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) :
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
-void fread_24bit(uint32_t &dest, FILE *file) noexcept
+bool read24b(const fd_t &fd, uint32_t &dest) noexcept
 {
-	uint16_t P1;
-	uint8_t P2;
-	fread(&P2, 1, 1, file);
-	fread(&P1, 2, 1, file);
-	dest = (uint32_t(P2) << 16) | P1;
+	uint16_t low;
+	uint8_t high;
+	if (!fd.read(high) ||
+		!fd.read(low))
+		return false;
+	dest = (uint32_t{high} << 16) | low;
+	return true;
 }
 
-ModuleSampleNative::ModuleSampleNative(S3M_Intern *p_SF, uint32_t i, uint8_t type) : ModuleSample(i, type)
+ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t type) : ModuleSample(i, type)
 {
-	uint8_t DontCare[12];
-	char Magic[4];
-	FILE *f_S3M = p_SF->f_Module;
+	std::array<uint8_t, 12> dontCare;
+	std::array<char, 4> magic;
+	const fd_t &fd = file.fd();
+
 	Name = makeUnique<char []>(29);
 	FileName = makeUnique<char []>(13);
 
-	fread(FileName.get(), 12, 1, f_S3M);
+	if (!Name || !FileName)
+		throw ModuleLoaderError(E_BAD_S3M);
+	fd.read(FileName, 12);
+	read24b(fd, SamplePos);
+	fd.read(Length);
+	fd.read(LoopStart);
+	fd.read(LoopEnd);
+	fd.read(Volume);
+	fd.read<1>(dontCare);
+	fd.read(Packing);
+	fd.read(Flags);
+	fd.read(C4Speed);
+	fd.read(dontCare);
+	fd.read(Name, 28);
+	fd.read(magic);
+
+	if (_type == 1 && memcmp(magic.data(), "SCRS", 4) != 0)
+		throw ModuleLoaderError(E_BAD_S3M);
+
 	if (FileName[11] != 0)
 		FileName[12] = 0;
-	fread_24bit(SamplePos, f_S3M);
-	fread(&Length, 4, 1, f_S3M);
-	fread(&LoopStart, 4, 1, f_S3M);
-	fread(&LoopEnd, 4, 1, f_S3M);
-	fread(&Volume, 1, 1, f_S3M);
-	fread(DontCare, 1, 1, f_S3M);
-	fread(&Packing, 1, 1, f_S3M);
 	if (Packing == 1)
 		printf("%d => ADPCM sample\n", i);
-	fread(&Flags, 1, 1, f_S3M);
 	if ((Flags & 2) != 0)
 		printf("%d => Stereo\n", i);
-	fread(&C4Speed, 4, 1, f_S3M);
-	fread(DontCare, 12, 1, f_S3M);
-	fread(Name.get(), 28, 1, f_S3M);
 	if (Name[27] != 0)
 		Name[28] = 0;
-	fread(Magic, 4, 1, f_S3M);
-	if (_type == 1)
-	{
-		if (memcmp(Magic, "SCRS", 4) != 0)
-			throw new ModuleLoaderError(E_BAD_S3M);
-	}
-
 	// If looping not enabled, zero the Loop fields
 	if ((Flags & 1) == 0)
 		LoopStart = LoopEnd = 0;
@@ -356,43 +362,45 @@ bool ModuleSampleNative::GetLooped()
 bool ModuleSampleNative::GetBidiLoop()
 	{ return (SampleFlags & SAMPLE_FLAGS_LPINGPONG) != 0; }
 
-ModuleSampleAdlib::ModuleSampleAdlib(S3M_Intern *p_SF, uint32_t i, uint8_t Type) : ModuleSample(i, Type)
+ModuleSampleAdlib::ModuleSampleAdlib(const modS3M_t &file, const uint32_t i, const uint8_t type) : ModuleSample(i, type)
 {
-	uint8_t DontCare[12];
-	char Magic[4];
-	FILE *f_S3M = p_SF->f_Module;
+	std::array<char, 4> magic;
+	std::array<uint8_t, 12> dontCare;
+	uint32_t zero;
+	const fd_t &fd = file.fd();
+
 	Name = new char[29];
 	FileName = new char[13];
 
-	fread(FileName, 12, 1, f_S3M);
+	if (!fd.read(FileName, 12) ||
+		!read24b(fd, zero) || zero ||
+		!fd.read(D00) ||
+		!fd.read(D01) ||
+		!fd.read(D02) ||
+		!fd.read(D03) ||
+		!fd.read(D04) ||
+		!fd.read(D05) ||
+		!fd.read(D06) ||
+		!fd.read(D07) ||
+		!fd.read(D08) ||
+		!fd.read(D09) ||
+		!fd.read(D0A) ||
+		!fd.read(D0B) ||
+		!fd.read(Volume) ||
+		!fd.read(DONTKNOW) ||
+		!fd.read<2>(dontCare) ||
+		!fd.read(C4Speed) ||
+		!fd.read(dontCare) ||
+		!fd.read(Name, 28) ||
+		!fd.read(magic) ||
+		memcmp(magic.data(), "SCRI", 4) != 0)
+		throw ModuleLoaderError(E_BAD_S3M);
+
+	C4Speed = uint16_t(C4Speed);
 	if (FileName[11] != 0)
 		FileName[12] = 0;
-	fread(DontCare, 3, 1, f_S3M);
-	if (DontCare[0] != DontCare[1] || DontCare[1] != DontCare[2] || DontCare[0] != 0)
-		throw new ModuleLoaderError(E_BAD_S3M);
-	fread(&D00, 1, 1, f_S3M);
-	fread(&D01, 1, 1, f_S3M);
-	fread(&D02, 1, 1, f_S3M);
-	fread(&D03, 1, 1, f_S3M);
-	fread(&D04, 1, 1, f_S3M);
-	fread(&D05, 1, 1, f_S3M);
-	fread(&D06, 1, 1, f_S3M);
-	fread(&D07, 1, 1, f_S3M);
-	fread(&D08, 1, 1, f_S3M);
-	fread(&D09, 1, 1, f_S3M);
-	fread(&D0A, 1, 1, f_S3M);
-	fread(&D0B, 1, 1, f_S3M);
-	fread(&Volume, 1, 1, f_S3M);
-	fread(&DONTKNOW, 1, 1, f_S3M);
-	fread(DontCare, 2, 1, f_S3M);
-	fread(&C4Speed, 4, 1, f_S3M);
-	fread(DontCare, 12, 1, f_S3M);
-	fread(Name, 28, 1, f_S3M);
 	if (Name[27] != 0)
 		Name[28] = 0;
-	fread(Magic, 4, 1, f_S3M);
-	if (memcmp(Magic, "SCRI", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_S3M);
 }
 
 ModuleSampleAdlib::~ModuleSampleAdlib()

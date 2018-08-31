@@ -74,15 +74,16 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 	FILE *f_S3M = p_SF->f_Module;
 
 	p_Header = new ModuleHeader(p_SF->inner);
-	fseek(f_S3M, fd.tell(), SEEK_SET);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
-	for (i = 0; i < p_Header->nSamples; i++)
+	for (i = 0; i < p_Header->nSamples; ++i)
 	{
-		uint32_t SeekLoc = ((uint32_t)(SamplePtrs[i])) << 4;
-		fseek(f_S3M, SeekLoc, SEEK_SET);
-		p_Samples[i] = ModuleSample::LoadSample(p_SF, i);
+		const uint32_t offset = uint32_t{SamplePtrs[i]} << 4;
+		if (fd.seek(offset, SEEK_SET) != offset)
+			throw ModuleLoaderError(E_BAD_S3M);
+		p_Samples[i] = ModuleSample::LoadSample(p_SF->inner, i);
 	}
+	fseek(f_S3M, fd.tell(), SEEK_SET);
 
 	// Count the number of channels present
 	p_Header->nChannels = 32;
