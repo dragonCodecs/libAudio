@@ -8,98 +8,53 @@
 modS3M_t::modS3M_t() noexcept : modS3M_t{fd_t{}} { }
 modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, std::move(fd)} { }
 
+modS3M_t *modS3M_t::openR(const char *const fileName) noexcept
+{
+	auto s3mFile = makeUnique<modS3M_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!s3mFile || !s3mFile->valid() || !isS3M(s3mFile->_fd))
+		return nullptr;
+	lseek(s3mFile->_fd, 0, SEEK_SET);
+	return s3mFile.release();
+}
+
 void *S3M_OpenR(const char *FileName)
 {
-	S3M_Intern *const ret = new (std::nothrow) S3M_Intern();
-	if (ret == nullptr)
-		return ret;
-
-	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
-	if (!ret->inner.fd().valid())
-	{
-		delete ret;
+	std::unique_ptr<modS3M_t> ret{modS3M_t::openR(FileName)};
+	if (!ret)
 		return nullptr;
-	}
-	ret->f_Module = fdopen(ret->inner.fd(), "rb");
 
-	fileInfo_t &info = ret->inner.fileInfo();
+	auto &ctx = *ret->context();
+	fileInfo_t &info = ret->fileInfo();
+
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
-	try { ret->p_File = new ModuleFile(ret->inner); }
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		delete e;
-		fclose(ret->f_Module);
-		delete ret;
-		return nullptr;
-	}
+	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.GetError());
-		fclose(ret->f_Module);
-		delete ret;
 		return nullptr;
 	}
-	info.title = ret->p_File->title();
-	info.channels = ret->p_File->channels();
+	info.title = ctx.mod->title();
+	info.channels = ctx.mod->channels();
 
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			ret->inner.player(makeUnique<Playback>(info, S3M_FillBuffer, ret->buffer, 8192, const_cast<S3M_Intern *>(ret)));
-		ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+			ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));
+		ctx.mod->InitMixer(audioFileInfo(ret.get()));
 	}
 
-	return ret;
+	return ret.release();
 }
 
 FileInfo *S3M_GetFileInfo(void *p_S3MFile)
-{
-	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	return audioFileInfo(&p_SF->inner);
-}
-
+	{ return audioFileInfo(p_S3MFile); }
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	if (p_SF->p_File == nullptr)
-		return -1;
-	return p_SF->p_File->Mix(OutBuffer, nOutBufferLen);
-}
-
-int S3M_CloseFileR(void *p_S3MFile)
-{
-	int ret = 0;
-	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	if (p_SF == nullptr)
-		return 0;
-
-	delete p_SF->p_File;
-
-	ret = fclose(p_SF->f_Module);
-	delete p_SF;
-	return ret;
-}
-
-void S3M_Play(void *p_S3MFile)
-{
-	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	audioPlay(&p_SF->inner);
-}
-
-void S3M_Pause(void *p_S3MFile)
-{
-	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	audioPause(&p_SF->inner);
-}
-
-void S3M_Stop(void *p_S3MFile)
-{
-	S3M_Intern *p_SF = (S3M_Intern *)p_S3MFile;
-	audioStop(&p_SF->inner);
-}
-
+	{ return audioFillBuffer(p_S3MFile, OutBuffer, nOutBufferLen); }
+int S3M_CloseFileR(void *p_S3MFile) { return audioCloseFileR(p_S3MFile); }
+void S3M_Play(void *p_S3MFile) { audioPlay(p_S3MFile); }
+void S3M_Pause(void *p_S3MFile) { audioPause(p_S3MFile); }
+void S3M_Stop(void *p_S3MFile) { audioStop(p_S3MFile); }
 bool Is_S3M(const char *FileName) { return modS3M_t::isS3M(FileName); }
 
 bool modS3M_t::isS3M(const int32_t fd) noexcept
@@ -130,10 +85,10 @@ bool modS3M_t::isS3M(const char *const fileName) noexcept
 API_Functions S3MDecoder =
 {
 	S3M_OpenR,
-	S3M_GetFileInfo,
-	S3M_FillBuffer,
-	S3M_CloseFileR,
-	S3M_Play,
-	S3M_Pause,
-	S3M_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
