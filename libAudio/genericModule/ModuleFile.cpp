@@ -67,12 +67,12 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	uint16_t i;
-	const fd_t &fd = p_SF->inner.fd();
+	const fd_t &fd = file.fd();
 
-	p_Header = new ModuleHeader(p_SF->inner);
+	p_Header = new ModuleHeader(file);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
 	for (i = 0; i < p_Header->nSamples; ++i)
@@ -80,7 +80,7 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 		const uint32_t offset = uint32_t{SamplePtrs[i]} << 4;
 		if (fd.seek(offset, SEEK_SET) != offset)
 			throw ModuleLoaderError(E_BAD_S3M);
-		p_Samples[i] = ModuleSample::LoadSample(p_SF->inner, i);
+		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	}
 
 	// Count the number of channels present
@@ -101,10 +101,10 @@ ModuleFile::ModuleFile(S3M_Intern *p_SF) : ModuleType(MODULE_S3M), p_Instruments
 		const uint32_t offset = uint32_t{PatternPtrs[i]} << 4;
 		if (fd.seek(offset, SEEK_SET) != offset)
 			throw ModuleLoaderError(E_BAD_S3M);
-		p_Patterns[i] = new ModulePattern(p_SF->inner, p_Header->nChannels);
+		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 	}
 
-	s3mLoadPCM(p_SF->inner);
+	s3mLoadPCM(file);
 	MinPeriod = 64;
 	MaxPeriod = 32767;
 }

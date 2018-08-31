@@ -25,7 +25,7 @@ void *S3M_OpenR(const char *FileName)
 	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
-	try { ret->p_File = new ModuleFile(ret); }
+	try { ret->p_File = new ModuleFile(ret->inner); }
 	catch (ModuleLoaderError *e)
 	{
 		printf("%s\n", e->GetError());

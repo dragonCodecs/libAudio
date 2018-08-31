@@ -621,7 +621,7 @@ private:
 
 public:
 	ModuleFile(const modMOD_t &file);
-	ModuleFile(S3M_Intern *p_SF);
+	ModuleFile(const modS3M_t &file);
 	ModuleFile(STM_Intern *p_SF);
 	ModuleFile(AON_Intern *p_AF);
 	ModuleFile(FC1x_Intern *p_FF);
