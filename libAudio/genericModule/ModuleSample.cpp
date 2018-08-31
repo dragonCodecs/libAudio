@@ -71,14 +71,13 @@ ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) :
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
+// This sucks, is a massive hack, but works on x86* because of how numbers are stored :(
 bool read24b(const fd_t &fd, uint32_t &dest) noexcept
 {
-	uint16_t low;
-	uint8_t high;
-	if (!fd.read(high) ||
-		!fd.read(low))
+	dest = 0;
+	if (!fd.read(&dest, 3))
 		return false;
-	dest = (uint32_t{high} << 16) | low;
+	dest >>= 8;
 	return true;
 }
 
