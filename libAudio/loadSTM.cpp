@@ -109,21 +109,27 @@ void STM_Stop(void *p_STMFile)
 	p_SF->p_Playback->Stop();
 }
 
-bool Is_STM(const char *FileName)
+bool Is_STM(const char *FileName) { return modSTM_t::isSTM(FileName); }
+
+bool modSTM_t::isSTM(const int32_t fd) noexcept
 {
-	FILE *f_STM = fopen(FileName, "rb");
+	constexpr uint32_t offset = 20;
 	char STMMagic[9];
-	if (f_STM == nullptr)
+	if (fd == -1 ||
+		lseek(fd, offset, SEEK_SET) != offset ||
+		read(fd, STMMagic, 9) != 9 ||
+		memcmp(STMMagic, "!Scream!\x1A", 9) != 0)
 		return false;
-
-	fseek(f_STM, 20, SEEK_CUR);
-	fread(&STMMagic, 9, 1, f_STM);
-	fclose(f_STM);
-
-	if (strncmp(STMMagic, "!Scream!\x1A", 9) == 0)
-		return true;
 	else
+		return true;
+}
+
+bool modSTM_t::isSTM(const char *const fileName) noexcept
+{
+	fd_t file{fileName, O_RDONLY | O_NOCTTY};
+	if (!file.valid())
 		return false;
+	return isSTM(file);
 }
 
 API_Functions STMDecoder =
