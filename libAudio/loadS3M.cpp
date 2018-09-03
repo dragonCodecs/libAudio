@@ -5,7 +5,6 @@
 #include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
-modS3M_t::modS3M_t() noexcept : modS3M_t{fd_t{}} { }
 modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, std::move(fd)} { }
 
 modS3M_t *modS3M_t::openR(const char *const fileName) noexcept

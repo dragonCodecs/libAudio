@@ -111,11 +111,20 @@ public:
 struct modS3M_t final : public moduleFile_t
 {
 public:
-	modS3M_t() noexcept;
 	modS3M_t(fd_t &&fd) noexcept;
 	static modS3M_t *openR(const char *const fileName) noexcept;
 	static bool isS3M(const char *const fileName) noexcept;
 	static bool isS3M(const int32_t fd) noexcept;
+};
+
+struct modSTM_t final : public moduleFile_t
+{
+public:
+	modSTM_t() noexcept;
+	modSTM_t(fd_t &&fd) noexcept;
+	static modSTM_t *openR(const char *const fileName) noexcept;
+	static bool isSTM(const char *const fileName) noexcept;
+	static bool isSTM(const int32_t fd) noexcept;
 };
 
 struct modIT_t final : public moduleFile_t

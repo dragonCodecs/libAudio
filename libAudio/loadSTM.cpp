@@ -6,19 +6,21 @@
 #include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
+modSTM_t::modSTM_t() noexcept : modSTM_t{fd_t{}} { }
+modSTM_t::modSTM_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleSTM, std::move(fd)} { }
+
 void *STM_OpenR(const char *FileName)
 {
-	STM_Intern *ret = NULL;
-	FILE *f_STM = NULL;
-
-	ret = (STM_Intern *)malloc(sizeof(STM_Intern));
+	STM_Intern *const ret = new (std::nothrow) STM_Intern();
 	if (ret == NULL)
 		return ret;
-	memset(ret, 0x00, sizeof(STM_Intern));
 
-	f_STM = fopen(FileName, "rb");
+	FILE *const f_STM = fopen(FileName, "rb");
 	if (f_STM == NULL)
+	{
+		delete ret;
 		return f_STM;
+	}
 	ret->f_Module = f_STM;
 
 	return ret;
@@ -91,7 +93,7 @@ int STM_CloseFileR(void *p_STMFile)
 	delete p_SF->p_File;
 
 	ret = fclose(p_SF->f_Module);
-	free(p_SF);
+	delete p_SF;
 	return ret;
 }
 
