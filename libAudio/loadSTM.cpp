@@ -12,16 +12,39 @@ modSTM_t::modSTM_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleSTM, st
 void *STM_OpenR(const char *FileName)
 {
 	STM_Intern *const ret = new (std::nothrow) STM_Intern();
-	if (ret == NULL)
+	if (ret == nullptr)
 		return ret;
 
 	FILE *const f_STM = fopen(FileName, "rb");
-	if (f_STM == NULL)
+	if (f_STM == nullptr)
 	{
 		delete ret;
 		return f_STM;
 	}
 	ret->f_Module = f_STM;
+
+	fileInfo_t &info = ret->inner.fileInfo();
+	info.bitRate = 44100;
+	info.bitsPerSample = 16;
+	info.channels = 2;
+
+	try { ret->p_File = new ModuleFile(ret); }
+	catch (ModuleLoaderError *e)
+	{
+		printf("%s\n", e->GetError());
+		delete e;
+		fclose(f_STM);
+		delete ret;
+		return nullptr;
+	}
+	info.title = ret->p_File->title();
+
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			ret->p_Playback = new Playback(info, STM_FillBuffer, ret->buffer, 8192, const_cast<STM_Intern *>(ret));
+		ret->p_File->InitMixer(audioFileInfo(&ret->inner));
+	}
 
 	return ret;
 }
@@ -29,46 +52,14 @@ void *STM_OpenR(const char *FileName)
 FileInfo *STM_GetFileInfo(void *p_STMFile)
 {
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
-	FileInfo *ret = NULL;
-
-	if (p_SF == NULL)
-		return ret;
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-	p_SF->p_FI = ret;
-
-	ret->BitRate = 44100;
-	ret->BitsPerSample = 16;
-	ret->Channels = 2;
-	try
-	{
-		p_SF->p_File = new ModuleFile(p_SF);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		return NULL;
-	}
-	ret->Title = p_SF->p_File->title().release();
-
-	if (ToPlayback)
-	{
-		if (ExternalPlayback == 0)
-			p_SF->p_Playback = new Playback(ret, STM_FillBuffer, p_SF->buffer, 8192, p_STMFile);
-		p_SF->p_File->InitMixer(ret);
-	}
-
-	return ret;
+	return audioFileInfo(&p_SF->inner);
 }
 
 long STM_FillBuffer(void *p_STMFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	int32_t ret = 0, Read;
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
-	if (p_SF->p_File == NULL)
+	if (p_SF->p_File == nullptr)
 		return -1;
 	do
 	{
@@ -86,7 +77,7 @@ int STM_CloseFileR(void *p_STMFile)
 {
 	int ret = 0;
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
-	if (p_SF == NULL)
+	if (p_SF == nullptr)
 		return 0;
 
 	delete p_SF->p_Playback;
@@ -122,7 +113,7 @@ bool Is_STM(const char *FileName)
 {
 	FILE *f_STM = fopen(FileName, "rb");
 	char STMMagic[9];
-	if (f_STM == NULL)
+	if (f_STM == nullptr)
 		return false;
 
 	fseek(f_STM, 20, SEEK_CUR);
