@@ -18,3 +18,4 @@ compiler = meson.get_compiler('cpp')
 add_project_arguments('-fvisibility=hidden', '-fvisibility-inlines-hidden', language: 'cpp')
 
 subdir('libAudio')
+subdir('player')
