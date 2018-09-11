@@ -1,3 +1,17 @@
+libOpenAL = dependency('openal')
+libOGG = dependency('ogg')
+libVorbis = [dependency('vorbis'), dependency('vorbisfile'), dependency('vorbisenc')]
+libFLAC = dependency('flac')
+libWavPack = dependency('wavpack')
+libMPC = compiler.find_library('mpcdec')
+libAAC = [compiler.find_library('faac'), compiler.find_library('faad')]
+libMP4v2 = compiler.find_library('mp4v2')
+libMAD = compiler.find_library('mad')
+libID3Tag = compiler.find_library('id3tag')
+maths = compiler.find_library('m', required: false)
+
+#-lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
+
 #WMA = loadWMA.o
 srcWMA = []
 #SHORTEN = loadShorten.o
@@ -24,6 +38,8 @@ libAudioSrcs = [
 libAudio = shared_library(
 	'libAudio',
 	libAudioSrcs,
+	dependencies: [libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
+	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', '-D__NO_OptimFROG__'],
 	name_prefix: '',
 	install: true,
 	version: meson.project_version()
