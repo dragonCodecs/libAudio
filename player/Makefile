@@ -8,7 +8,7 @@ INSTALL_FILE = $(INSTALL) -m755
 STRIP = strip -s
 
 O = main.o
-EXE = libAudio_TestApp
+EXE = libAudio
 
 default: all
 
@@ -23,7 +23,7 @@ install: all
 	$(call run-cmd,install_file,$(EXE),../bin)
 
 clean:
-	$(call run-cmd,rm,libAudio_TestApp,$(O) $(EXE))
+	$(call run-cmd,rm,player,$(O) $(EXE))
 
 .cpp.o:
 	$(call run-cmd,cxx,$(CFLAGS))
