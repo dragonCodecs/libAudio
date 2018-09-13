@@ -15,13 +15,13 @@ void *STM_OpenR(const char *FileName)
 	if (ret == nullptr)
 		return ret;
 
-	FILE *const f_STM = fopen(FileName, "rb");
-	if (f_STM == nullptr)
+	ret->inner.fd({FileName, O_RDONLY | O_NOCTTY});
+	if (!ret->inner.fd().valid())
 	{
 		delete ret;
-		return f_STM;
+		return nullptr;
 	}
-	ret->f_Module = f_STM;
+	ret->f_Module = fdopen(ret->inner.fd(), "rb");
 
 	fileInfo_t &info = ret->inner.fileInfo();
 	info.bitRate = 44100;
@@ -33,7 +33,14 @@ void *STM_OpenR(const char *FileName)
 	{
 		printf("%s\n", e->GetError());
 		delete e;
-		fclose(f_STM);
+		fclose(ret->f_Module);
+		delete ret;
+		return nullptr;
+	}
+	catch (const ModuleLoaderError &e)
+	{
+		printf("%s\n", e.GetError());
+		fclose(ret->f_Module);
 		delete ret;
 		return nullptr;
 	}
