@@ -9,7 +9,7 @@ ModuleHeader::ModuleHeader() : RestartPos(255), GlobalVolume(64), InitialSpeed(6
 {
 }
 
-ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 {
 	constexpr const uint32_t seekOffset = (30 * 31) + 130;
 	std::array<char, 4> magic;
@@ -76,7 +76,7 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader()
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> magic;
 	std::array<uint8_t, 10> dontCare;
@@ -156,7 +156,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader()
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 {
 	std::array<char, 9> magic;
 	std::array<char, 13> reserved;
@@ -352,7 +352,7 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 }
 #endif
 
-ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> magic;
 	char DontCare[4];
