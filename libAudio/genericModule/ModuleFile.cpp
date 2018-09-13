@@ -116,10 +116,10 @@ ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments
 	FILE *f_STM = p_SF->f_Module;
 
 	p_Header = new ModuleHeader(p_SF->inner);
-	fseek(f_STM, fd.tell(), SEEK_SET);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
-		p_Samples[i] = ModuleSample::LoadSample(p_SF, i);
+		p_Samples[i] = ModuleSample::LoadSample(p_SF->inner, i);
+	fseek(f_STM, fd.tell(), SEEK_SET);
 	fseek(f_STM, 128, SEEK_CUR);
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)

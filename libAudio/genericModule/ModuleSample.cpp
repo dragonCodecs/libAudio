@@ -19,10 +19,8 @@ ModuleSample *ModuleSample::LoadSample(const modS3M_t &file, const uint32_t i)
 		return new ModuleSampleNative(file, i, type);
 }
 
-ModuleSample *ModuleSample::LoadSample(STM_Intern *p_SF, uint32_t i)
-{
-	return new ModuleSampleNative(p_SF, i);
-}
+ModuleSample *ModuleSample::LoadSample(const modSTM_t &file, const uint32_t i)
+	{ return new ModuleSampleNative(file, i); }
 
 ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths)
 {
@@ -133,34 +131,34 @@ ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, c
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
-ModuleSampleNative::ModuleSampleNative(STM_Intern *p_SF, uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) : ModuleSample(i, 1)
 {
-	uint8_t ID, Disk, Reserved2;
-	uint16_t Reserved1, C3Speed, Unknown;
-	uint32_t Reserved3;
-	FILE *f_STM = p_SF->f_Module;
+	uint8_t id, disk, reserved2;
+	uint16_t reserved1, c3Speed, unknown;
+	uint32_t reserved3;
+	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(13);
-	fread(Name.get(), 12, 1, f_STM);
+	if (!Name ||
+		!fd.read(Name, 12) ||
+		!fd.read(id) || id > 0 ||
+		!fd.read(disk) ||
+		!fd.read(reserved1) ||
+		!fd.read(Length) ||
+		!fd.read(LoopStart) ||
+		!fd.read(LoopEnd) ||
+		!fd.read(Volume) ||
+		!fd.read(reserved2) ||
+		!fd.read(c3Speed) ||
+		!fd.read(reserved3) ||
+		// XXX: One spec says this is the "Length in Paragraphs", need to figure out what that means.
+		!fd.read(unknown))
+		throw ModuleLoaderError(E_BAD_STM);
+
+	// TODO: What's the diff. between them?
+	C4Speed = c3Speed;
 	if (Name[11] != 0)
 		Name[12] = 0;
-	fread(&ID, 1, 1, f_STM);
-	fread(&Disk, 1, 1, f_STM);
-	fread(&Reserved1, 2, 1, f_STM);
-	fread(&Length, 2, 1, f_STM);
-	fread(&LoopStart, 2, 1, f_STM);
-	fread(&LoopEnd, 2, 1, f_STM);
-	fread(&Volume, 1, 1, f_STM);
-	fread(&Reserved2, 1, 1, f_STM);
-	fread(&C3Speed, 2, 1, f_STM);
-	// TODO: What's the diff. between them?
-	C4Speed = C3Speed;
-	fread(&Reserved3, 4, 1, f_STM);
-	// XXX: One spec says this is the "Length in Paragraphs", need to figure out what that means.
-	fread(&Unknown, 2, 1, f_STM);
-	if (ID > 0)
-		throw new ModuleLoaderError(E_BAD_STM);
-
 	SampleFlags = 0;
 	if (LoopEnd < LoopStart || LoopEnd == 0xFFFF)
 	{
