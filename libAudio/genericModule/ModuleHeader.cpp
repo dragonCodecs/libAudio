@@ -163,32 +163,28 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	uint8_t patternCount_;
 	const fd_t &fd = file.fd();
 
+	nOrders = 128;
 	Name = makeUnique<char []>(21);
-	Orders = makeUnique<uint8_t []>(128);
+	Orders = makeUnique<uint8_t []>(nOrders);
 	if (!Name || !Orders ||
 		!fd.read(Name, 20) ||
 		!fd.read(magic) ||
-		!fd.read(Type) ||
+		strncmp(magic.data(), "!Scream!\x1A", 9) != 0 ||
+		!fd.read(Type) || Type != 2 ||
 		!fd.read(FormatVersion) ||
 		!fd.read(InitialSpeed) ||
 		!fd.read(patternCount_) ||
 		!fd.read(GlobalVolume) ||
-		!fd.read(reserved))
+		!fd.read(reserved) ||
+		fd.seek(1040, SEEK_SET) != 1040 ||
+		!fd.read(Orders, nOrders) ||
+		fd.seek(48, SEEK_SET) != 48)
 		throw ModuleLoaderError(E_BAD_STM);
 
 	InitialSpeed >>= 4;
 	nPatterns = patternCount_;
 	if (Name[19] != 0)
 		Name[20] = 0;
-
-	if (strncmp(magic.data(), "!Scream!\x1A", 9) != 0 || Type != 2)
-		throw ModuleLoaderError(E_BAD_STM);
-
-	nOrders = 128;
-	if (fd.seek(1040, SEEK_SET) != 1040 ||
-		!fd.read(Orders, 128) ||
-		fd.seek(48, SEEK_SET) != 48)
-		throw ModuleLoaderError(E_BAD_STM);
 
 	for (uint8_t i = 0; i < nOrders; ++i)
 	{
