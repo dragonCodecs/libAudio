@@ -17,22 +17,22 @@ PKGDIR = $(LIBDIR)/pkgconfig/
 INCDIR = $(PREFIX)/include/
 
 #WMA = loadWMA.o
-WMA = 
+WMA =
 #SHORTEN = loadShorten.o
-SHORTEN = 
+SHORTEN =
 #OPTIMFROG = loadOptimFROG.o
-OPTIMFROG = 
+OPTIMFROG =
 H = libAudio.h
 O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/ModuleInstrument.o genericModule/ModuleSample.o genericModule/ModulePattern.o genericModule/ModuleEffects.o moduleMixer/moduleMixer.o \
 	loadMOD.o loadS3M.o loadSTM.o loadAON.o loadFC1x.o loadIT.o
 #O_SNDH = loadSNDH.o
-O_SNDH = 
+O_SNDH =
 O_SID = loadSID.o
 O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(O_SNDH) $(O_SID) \
 	loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA) saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o
 VERMAJ = .0
 VERMIN = .2
-VERREV = .0
+VERREV = .1
 VER = $(VERMAJ)$(VERMIN)$(VERREV)
 SOMAJ = libAudio.so
 SOMIN = $(SOMAJ)$(VERMAJ)
