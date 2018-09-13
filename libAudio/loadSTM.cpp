@@ -41,8 +41,8 @@ void *STM_OpenR(const char *FileName)
 
 	if (ToPlayback)
 	{
-		if (ExternalPlayback == 0)
-			ret->p_Playback = new Playback(info, STM_FillBuffer, ret->buffer, 8192, const_cast<STM_Intern *>(ret));
+		if (!ExternalPlayback)
+			ret->inner.player(makeUnique<Playback>(info, STM_FillBuffer, ret->buffer, 8192, const_cast<STM_Intern *>(ret)));
 		ret->p_File->InitMixer(audioFileInfo(&ret->inner));
 	}
 
@@ -80,7 +80,6 @@ int STM_CloseFileR(void *p_STMFile)
 	if (p_SF == nullptr)
 		return 0;
 
-	delete p_SF->p_Playback;
 	delete p_SF->p_File;
 
 	ret = fclose(p_SF->f_Module);
@@ -91,22 +90,19 @@ int STM_CloseFileR(void *p_STMFile)
 void STM_Play(void *p_STMFile)
 {
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
-
-	p_SF->p_Playback->Play();
+	audioPlay(&p_SF->inner);
 }
 
 void STM_Pause(void *p_STMFile)
 {
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
-
-	p_SF->p_Playback->Pause();
+	audioPause(&p_SF->inner);
 }
 
 void STM_Stop(void *p_STMFile)
 {
 	STM_Intern *p_SF = (STM_Intern *)p_STMFile;
-
-	p_SF->p_Playback->Stop();
+	audioStop(&p_SF->inner);
 }
 
 bool Is_STM(const char *FileName) { return modSTM_t::isSTM(FileName); }
