@@ -156,42 +156,45 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader()
 	Remark = nullptr;
 }
 
-ModuleHeader::ModuleHeader(STM_Intern *p_SF) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader()
 {
-	char Const[9];
-	char Reserved[13];
-	uint8_t _nPatterns, i;
-	FILE *f_STM = p_SF->f_Module;
+	std::array<char, 9> magic;
+	std::array<char, 13> reserved;
+	uint8_t patternCount_;
+	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(21);
-	if (!Name)
-		throw new ModuleLoaderError(E_BAD_STM);
-	fread(Name.get(), 20, 1, f_STM);
+	Orders = makeUnique<uint8_t []>(128);
+	if (!Name || !Orders ||
+		!fd.read(Name, 20) ||
+		!fd.read(magic) ||
+		!fd.read(Type) ||
+		!fd.read(FormatVersion) ||
+		!fd.read(InitialSpeed) ||
+		!fd.read(patternCount_) ||
+		!fd.read(GlobalVolume) ||
+		!fd.read(reserved))
+		throw ModuleLoaderError(E_BAD_STM);
+
+	InitialSpeed >>= 4;
+	nPatterns = patternCount_;
 	if (Name[19] != 0)
 		Name[20] = 0;
-	fread(Const, 9, 1, f_STM);
-	fread(&Type, 1, 1, f_STM);
-	fread(&FormatVersion, 2, 1, f_STM);
-	fread(&InitialSpeed, 1, 1, f_STM);
-	InitialSpeed >>= 4;
-	fread(&_nPatterns, 1, 1, f_STM);
-	nPatterns = _nPatterns;
-	fread(&GlobalVolume, 1, 1, f_STM);
-	fread(Reserved, 13, 1, f_STM);
 
-	if (strncmp(Const, "!Scream!\x1A", 9) != 0 || Type != 2)
-		throw new ModuleLoaderError(E_BAD_STM);
+	if (strncmp(magic.data(), "!Scream!\x1A", 9) != 0 || Type != 2)
+		throw ModuleLoaderError(E_BAD_STM);
 
 	nOrders = 128;
-	Orders = makeUnique<uint8_t []>(128);
-	fseek(f_STM, 1040, SEEK_SET);
-	fread(Orders.get(), 128, 1, f_STM);
-	for (i = 0; i < nOrders; i++)
+	if (fd.seek(1040, SEEK_SET) != 1040 ||
+		!fd.read(Orders, 128) ||
+		fd.seek(48, SEEK_SET) != 48)
+		throw ModuleLoaderError(E_BAD_STM);
+
+	for (uint8_t i = 0; i < nOrders; ++i)
 	{
 		if (Orders[i] >= 99)
 			Orders[i] = 255;
 	}
-	fseek(f_STM, 48, SEEK_SET);
 	nSamples = 31;
 	nChannels = 4;
 
