@@ -108,36 +108,38 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t nChannels) : M
 
 #undef checkLength
 
-ModulePattern::ModulePattern(STM_Intern *p_SF) : ModulePattern(4, 64, E_BAD_STM)
+ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_STM)
 {
 	uint8_t row, channel;
-	FILE *f_STM = p_SF->f_Module;
+	const fd_t &fd = file.fd();
 
-	for (row = 0; row < _rows; row++)
+	for (row = 0; row < _rows; ++row)
 	{
-		for (channel = 0; channel < 4; channel++)
+		for (channel = 0; channel < 4; ++channel)
 		{
-			uint8_t Note;
-			uint8_t Param;
-			uint8_t Volume;
-			uint8_t Effect;
-
 			if (row == 0)
 			{
 				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError(E_BAD_STM);
 			}
-			fread(&Note, 1, 1, f_STM);
+
+			uint8_t Note;
+			uint8_t Param;
+
+			if (!fd.read(Note) ||
+				!fd.read(Param))
+				throw ModuleLoaderError(E_BAD_STM);
 			_commands[channel][row].SetSTMNote(Note);
-			fread(&Param, 1, 1, f_STM);
-			Volume = Param & 0x07;
+			uint8_t Volume = Param & 0x07;
 			_commands[channel][row].SetSample(Param >> 3);
-			fread(&Param, 1, 1, f_STM);
+			if (!fd.read(Param))
+				throw ModuleLoaderError(E_BAD_STM);
 			Volume += Param >> 1;
 			_commands[channel][row].SetVolume(Volume);
-			Effect = Param & 0x0F;
-			fread(&Param, 1, 1, f_STM);
+			const uint8_t Effect = Param & 0x0F;
+			if (!fd.read(Param))
+				throw ModuleLoaderError(E_BAD_STM);
 			_commands[channel][row].SetSTMEffect(Effect, Param);
 		}
 	}
