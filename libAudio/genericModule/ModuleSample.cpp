@@ -135,6 +135,7 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 {
 	uint8_t id, disk, reserved2;
 	uint16_t reserved1, c3Speed, unknown;
+	uint16_t length_, loopStart_, loopEnd_;
 	uint32_t reserved3;
 	const fd_t &fd = file.fd();
 
@@ -144,9 +145,9 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 		!fd.read(id) || id > 0 ||
 		!fd.read(disk) ||
 		!fd.read(reserved1) ||
-		!fd.read(Length) ||
-		!fd.read(LoopStart) ||
-		!fd.read(LoopEnd) ||
+		!fd.read(length_) ||
+		!fd.read(loopStart_) ||
+		!fd.read(loopEnd_) ||
 		!fd.read(Volume) ||
 		!fd.read(reserved2) ||
 		!fd.read(c3Speed) ||
@@ -155,6 +156,9 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 		!fd.read(unknown))
 		throw ModuleLoaderError(E_BAD_STM);
 
+	Length = length_;
+	LoopStart = loopStart_;
+	LoopEnd = loopEnd_;
 	// TODO: What's the diff. between them?
 	C4Speed = c3Speed;
 	if (Name[11] != 0)
