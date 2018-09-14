@@ -81,10 +81,10 @@ bool modSTM_t::isSTM(const char *const fileName) noexcept
 API_Functions STMDecoder =
 {
 	STM_OpenR,
-	STM_GetFileInfo,
-	STM_FillBuffer,
-	STM_CloseFileR,
-	STM_Play,
-	STM_Pause,
-	STM_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
