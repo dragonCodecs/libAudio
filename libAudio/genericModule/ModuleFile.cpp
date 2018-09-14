@@ -40,26 +40,26 @@ void *ModuleAllocator::operator new[](const size_t size, const std::nothrow_t &)
 
 ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
-	uint32_t i, maxPattern;
 	const fd_t &fd = file.fd();
 
 	p_Header = new ModuleHeader(file);
 	if (fd.seek(20, SEEK_SET) != 20)
 		throw ModuleLoaderError(E_BAD_MOD);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
-	for (i = 0; i < p_Header->nSamples; i++)
+	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	fd.seek(130 + (p_Header->nSamples != 15 ? 4 : 0), SEEK_CUR);
 
 	// Count the number of patterns present
-	for (i = 0, maxPattern = 0; i < p_Header->nOrders; i++)
+	uint32_t maxPattern{};
+	for (uint16_t i = 0; i < p_Header->nOrders; i++)
 	{
 		if (p_Header->Orders[i] < 128)
 			maxPattern = max(maxPattern, p_Header->Orders[i]);
 	}
 	p_Header->nPatterns = maxPattern + 1;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
-	for (i = 0; i < p_Header->nPatterns; i++)
+	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 
 	modLoadPCM(file);
@@ -69,13 +69,12 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 
 ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
-	uint16_t i;
 	const fd_t &fd = file.fd();
 
 	p_Header = new ModuleHeader(file);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
-	for (i = 0; i < p_Header->nSamples; ++i)
+	for (uint16_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		const uint32_t offset = uint32_t{SamplePtrs[i]} << 4;
 		if (fd.seek(offset, SEEK_SET) != offset)
@@ -85,7 +84,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 
 	// Count the number of channels present
 	p_Header->nChannels = 32;
-	for (i = 0; i < 32; ++i)
+	for (uint8_t i = 0; i < 32; ++i)
 	{
 		if (p_Header->ChannelSettings[i] & 0x80)
 		{
@@ -96,7 +95,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	uint16_t *const PatternPtrs = p_Header->PatternPtrs.get<uint16_t>();
-	for (i = 0; i < p_Header->nPatterns; ++i)
+	for (uint16_t i = 0; i < p_Header->nPatterns; ++i)
 	{
 		const uint32_t offset = uint32_t{PatternPtrs[i]} << 4;
 		if (fd.seek(offset, SEEK_SET) != offset)
