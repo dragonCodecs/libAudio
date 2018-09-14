@@ -10,8 +10,6 @@ libMAD = compiler.find_library('mad')
 libID3Tag = compiler.find_library('id3tag')
 maths = compiler.find_library('m', required: false)
 
-#-lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
-
 #WMA = loadWMA.o
 srcWMA = []
 #SHORTEN = loadShorten.o
