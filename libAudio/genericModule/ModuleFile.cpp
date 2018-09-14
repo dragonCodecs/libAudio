@@ -108,23 +108,23 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 	MaxPeriod = 32767;
 }
 
-ModuleFile::ModuleFile(STM_Intern *p_SF) : ModuleType(MODULE_STM), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
-	const fd_t &fd = p_SF->inner.fd();
+	const fd_t &fd = file.fd();
 
-	p_Header = new ModuleHeader(p_SF->inner);
+	p_Header = new ModuleHeader(file);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
-		p_Samples[i] = ModuleSample::LoadSample(p_SF->inner, i);
+		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	fd.seek(128, SEEK_CUR);
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(p_SF->inner);
+		p_Patterns[i] = new ModulePattern(file);
 	const uint32_t pcmOffset = 1104 + (1024 * p_Header->nPatterns);
 	if (fd.seek(pcmOffset, SEEK_SET) != pcmOffset)
 		throw ModuleLoaderError(E_BAD_STM);
 
-	stmLoadPCM(p_SF->inner);
+	stmLoadPCM(file);
 	MinPeriod = 64;
 	MaxPeriod = 32767;
 }
