@@ -120,7 +120,6 @@ public:
 struct modSTM_t final : public moduleFile_t
 {
 public:
-	modSTM_t() noexcept;
 	modSTM_t(fd_t &&fd) noexcept;
 	static modSTM_t *openR(const char *const fileName) noexcept;
 	static bool isSTM(const char *const fileName) noexcept;
