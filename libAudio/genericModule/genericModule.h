@@ -4,6 +4,7 @@
 #include "../libAudio.hxx"
 #include "../fixedVector.hxx"
 #include "../managedPtr.hxx"
+#include <array>
 
 /***************************\
 |* ----=== WARNING ===---- *|
