@@ -1,14 +1,12 @@
 #include "libAudio.h"
+#include <stdint.h>
 #include <stdio.h>
 #ifdef _WINDOWS
 #include <conio.h>
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
 #endif
 //#include <process.h>
 //#include <windows.h>
+#include <stddef.h>
 
 int main(int argc, char **argv)
 {
@@ -30,9 +28,8 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		printf("File %s, TotalTime: %llum %llus, BitRate: %uHz, Title: %s, Artist: %s, Album: %s, Channels: %d\n", argv[i],
-			(p_FI->TotalTime / 60), (p_FI->TotalTime % 60),
-			p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
+		printf("File %s, TotalTime: %" PRIu64 "m %us, BitRate: %uHz, Title: %s, Artist: %s, Album: %s, Channels: %d\n", argv[i],
+			p_FI->TotalTime / 60, uint8_t(p_FI->TotalTime % 60), p_FI->BitRate, p_FI->Title, p_FI->Artist, p_FI->Album, p_FI->Channels);
 		/*{ // The following code makes the UTF-8 returned in p_FI display correctly under Windows.. the only OS that has a problem with this..
 			wchar_t *Title;
 			int wTitleLen = MultiByteToWideChar(CP_UTF8, 0, p_FI->Title, -1, NULL, NULL);
