@@ -60,7 +60,7 @@ void *OggVorbis_OpenR(const char *FileName)
 	callbacks.read_func = (size_t (__CDECL__ *)(void *, size_t, size_t, void *))fread;
 	callbacks.seek_func = fseek_wrapper;
 	callbacks.tell_func = (long (__CDECL__ *)(void *))ftell;
-	ov_open_callbacks(f_Ogg, (OggVorbis_File *)ret, NULL, 0, callbacks);
+	ov_open_callbacks(f_Ogg, &ret->ovf, NULL, 0, callbacks);
 
 	return ret;
 }
@@ -196,7 +196,7 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
 
 	delete p_VF->p_Playback;
 
-	ret = ov_clear((OggVorbis_File *)p_VF);
+	ret = ov_clear(&p_VF->ovf);
 	free(p_VorbisFile);
 	return ret;
 }
