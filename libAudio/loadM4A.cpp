@@ -152,7 +152,7 @@ int MP4DecSeek(void *MP4File, int64_t pos)
 {
 #ifdef _WINDOWS
 	return (_fseeki64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 	return fseeko((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE;
 #else
 	return (fseeko64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
