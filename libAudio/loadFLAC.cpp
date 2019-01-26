@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <array>
 
 #include <FLAC/all.h>
 
