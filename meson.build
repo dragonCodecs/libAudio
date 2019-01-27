@@ -13,9 +13,10 @@ if meson.version() < '0.47.0'
 	error('Meson is too old for this library')
 endif
 
-compiler = meson.get_compiler('cpp')
+cxx = meson.get_compiler('cpp')
 
 add_project_arguments('-fvisibility=hidden', '-fvisibility-inlines-hidden', language: 'cpp')
+add_project_arguments(cxx.get_supported_arguments('-Wvla', '-Wimplicit-fallthrough'), language: 'cpp')
 
 subdir('libAudio')
 subdir('player')
