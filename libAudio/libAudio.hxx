@@ -6,6 +6,7 @@
 #include "fd.hxx"
 #include "fileInfo.hxx"
 #include "libAudio_Common.h"
+#include "playback.hxx"
 
 enum class audioType_t : uint8_t
 {
@@ -35,6 +36,7 @@ protected:
 	fileInfo_t _fileInfo;
 	fd_t _fd;
 	std::unique_ptr<Playback> _player;
+	std::unique_ptr<playback_t> _newPlayer;
 
 	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type(type), _fileInfo(), _fd(std::move(fd)) { }
 

@@ -1,3 +1,6 @@
+#ifndef LIB_AUDIO__HXX
+#define LIB_AUDIO__HXX
+
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -305,3 +308,5 @@ libAUDIO_API uint8_t ToPlayback;
 #define AUDIO_STM			15
 #define AUDIO_AON			16
 #define AUDIO_FC1x			17
+
+#endif /*LIB_AUDIO__HXX*/

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "libAudio.h"
-#include "libAudio.hxx"
+#include "fileInfo.hxx"
 
 using bufferFillFunc_t = long (*)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 
