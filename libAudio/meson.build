@@ -30,7 +30,7 @@ libAudioSrcs = [
 	'loadAudio.cpp', 'libAudio_Common.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
 	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'fixedPoint/fixedPoint.cpp', genericModuleSrcs, srcSNDH, srcSID,
 	'loadWavPack.cpp', srcOptimFROG, srcShorten, 'loadRealAudio.cpp', srcWMA,
-	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp'
+	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp', 'playback.cxx'
 ]
 
 libAudio = shared_library(
