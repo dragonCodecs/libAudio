@@ -8,6 +8,7 @@ template<typename T> struct opaquePtr_t final
 private:
 	T *ptr;
 	delete_t deleteFunc;
+	template<typename U> friend struct opaquePtr_t;
 
 public:
 	constexpr opaquePtr_t() noexcept : ptr{nullptr}, deleteFunc{nullptr} { }
@@ -15,6 +16,13 @@ public:
 	opaquePtr_t(opaquePtr_t &&p) noexcept : opaquePtr_t{} { swap(p); }
 	~opaquePtr_t() noexcept { if (deleteFunc) deleteFunc(ptr); }
 	opaquePtr_t &operator =(opaquePtr_t &&p) noexcept { swap(p); return *this; }
+
+	template<typename U, bool = std::is_base_of<T, U>::value && !std::is_same<T, U>::value>
+		opaquePtr_t(opaquePtr_t<U> &&p) noexcept : ptr{p.ptr}, deleteFunc{p.deleteFunc}
+	{
+		p.ptr = nullptr;
+		p.deleteFunc = nullptr;
+	}
 
 	operator T &() const noexcept { return *ptr; }
 	explicit operator T &&() const = delete;
