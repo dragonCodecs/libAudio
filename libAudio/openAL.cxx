@@ -1,7 +1,17 @@
 #include "openAL.hxx"
 
 alSource_t::alSource_t() noexcept : source{AL_NONE}
-	{ alGenSources(1, &source); }
+{
+	alGenSources(1, &source);
+	if (!source)
+		return;
+	alSourcef(source, AL_GAIN, 1);
+	alSourcef(source, AL_PITCH, 1);
+	alSource3f(source, AL_POSITION, 0, 0, 0);
+	alSource3f(source, AL_VELOCITY, 0, 0, 0);
+	alSource3f(source, AL_DIRECTION, 0, 0, 0);
+	alSourcef(source, AL_ROLLOFF_FACTOR, 0);
+}
 
 alSource_t::~alSource_t() noexcept
 {
