@@ -64,7 +64,7 @@ void openALPlayback_t::refill(const uint32_t count) noexcept
 {
 	for (uint32_t i = 0; i < count; ++i) try
 	{
-		ALuint _buffer = source.dequeue(1);
+		ALuint _buffer = source.dequeueOne();
 		alBuffer_t &buffer = find(_buffer);
 		if (eof)
 			buffer.isQueued(false);

@@ -40,7 +40,7 @@ public:
 	alSource_t(alSource_t &&_source) noexcept;
 	~alSource_t() noexcept;
 	void queue(alBuffer_t &buffer) const noexcept;
-	ALuint dequeue(const uint32_t count) const noexcept;
+	ALuint dequeueOne() const noexcept;
 	void play() const noexcept;
 	void pause() const noexcept;
 	void stop() const noexcept;

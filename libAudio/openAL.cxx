@@ -50,7 +50,7 @@ void alSource_t::queue(alBuffer_t &buffer) const noexcept
 	buffer.isQueued(true);
 }
 
-ALuint alSource_t::dequeue(const uint32_t count) const noexcept
+ALuint alSource_t::dequeueOne() const noexcept
 {
 	ALuint buffer = AL_NONE;
 	alSourceUnqueueBuffers(source, 1, &buffer);
