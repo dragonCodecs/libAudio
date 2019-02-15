@@ -9,6 +9,21 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #endif
+#include "uniquePtr.hxx"
+
+struct alContext_t final
+{
+private:
+	ALCdevice *device;
+	ALCcontext *context;
+
+	alContext_t() noexcept;
+	void makeCurrent() noexcept;
+
+public:
+	static alContext_t *ensure() noexcept;
+	~alContext_t() noexcept;
+};
 
 struct alBuffer_t;
 
@@ -56,5 +71,7 @@ public:
 	alBuffer_t(const alBuffer_t &) = delete;
 	alBuffer_t &operator =(const alBuffer_t &) = delete;
 };
+
+extern std::unique_ptr<alContext_t> alContext;
 
 #endif /*OPEN_AL__HXX*/

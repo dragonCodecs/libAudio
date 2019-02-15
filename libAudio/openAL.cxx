@@ -1,5 +1,29 @@
 #include "openAL.hxx"
 
+std::unique_ptr<alContext_t> alContext;
+
+alContext_t *alContext_t::ensure() noexcept
+{
+	if (!alContext)
+		alContext = makeUnique<alContext_t>();
+	alContext->makeCurrent();
+	return alContext.get();
+}
+
+alContext_t::alContext_t() noexcept : device{alcOpenDevice(NULL)},
+	context{alcCreateContext(device, NULL)} { }
+
+alContext_t::~alContext_t()
+{
+	if (alcGetCurrentContext() == context)
+		alcMakeContextCurrent(NULL);
+	alcDestroyContext(context);
+	alcCloseDevice(device);
+}
+
+void alContext_t::makeCurrent() noexcept
+	{ alcMakeContextCurrent(context); }
+
 alSource_t::alSource_t() noexcept : source{AL_NONE}
 {
 	alGenSources(1, &source);
