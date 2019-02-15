@@ -3,8 +3,8 @@
 
 #include <memory>
 
-template<typename T> struct makeUnique_ { using uniqueType = unique_ptr<T>; };
-template<typename T> struct makeUnique_<T []> { using arrayType = unique_ptr<T []>; };
+template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>; };
+template<typename T> struct makeUnique_<T []> { using arrayType = std::unique_ptr<T []>; };
 template<typename T, size_t N> struct makeUnique_<T [N]> { struct invalidType { }; };
 
 template<typename T, typename... args_t> inline typename makeUnique_<T>::uniqueType makeUnique(args_t &&...args)
