@@ -103,6 +103,7 @@ void openALPlayback_t::player() noexcept
 	{
 		lock.unlock();
 
+		std::this_thread::sleep_for(sleepTime());
 		lock.lock();
 	}
 

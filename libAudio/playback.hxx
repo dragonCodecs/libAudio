@@ -2,6 +2,7 @@
 #define PLAYBACK__HXX
 
 #include <mutex>
+#include <chrono>
 #include <stdint.h>
 #include "libAudio.h"
 #include "fileInfo.hxx"
@@ -39,6 +40,7 @@ protected:
 	uint8_t bitsPerSample() const noexcept;
 	uint32_t bitRate() const noexcept;
 	uint8_t channels() const noexcept;
+	std::chrono::nanoseconds sleepTime() const noexcept;
 	playbackMode_t mode() const noexcept;
 	bool isPlaying() const noexcept;
 
@@ -59,6 +61,7 @@ private:
 	uint8_t bitsPerSample;
 	uint32_t bitRate;
 	uint8_t channels;
+	std::chrono::nanoseconds sleepTime;
 	playbackMode_t playbackMode;
 	opaquePtr_t<audioPlayer_t> player;
 
