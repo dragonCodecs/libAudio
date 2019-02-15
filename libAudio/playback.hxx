@@ -10,7 +10,7 @@
 
 using bufferFillFunc_t = long (*)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 
-enum class playState_t
+enum class playState_t : uint8_t
 {
 	stop,
 	stopped,
@@ -19,7 +19,7 @@ enum class playState_t
 	paused
 };
 
-enum class playbackMode_t
+enum class playbackMode_t : uint8_t
 	{ wait, async };
 
 struct playback_t;
