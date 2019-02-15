@@ -5,7 +5,7 @@ std::unique_ptr<alContext_t> alContext;
 alContext_t *alContext_t::ensure() noexcept
 {
 	if (!alContext)
-		alContext = makeUnique<alContext_t>();
+		alContext = makeUniqueT<alContext_t>();
 	alContext->makeCurrent();
 	return alContext.get();
 }

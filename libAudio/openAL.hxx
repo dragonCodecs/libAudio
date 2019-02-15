@@ -17,8 +17,11 @@ private:
 	ALCdevice *device;
 	ALCcontext *context;
 
-	alContext_t() noexcept;
 	void makeCurrent() noexcept;
+
+protected:
+	alContext_t() noexcept;
+	friend std::unique_ptr<alContext_t> makeUniqueT<alContext_t>();
 
 public:
 	static alContext_t *ensure() noexcept;
