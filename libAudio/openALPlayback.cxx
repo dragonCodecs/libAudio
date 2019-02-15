@@ -59,6 +59,31 @@ void openALPlayback_t::refill() noexcept
 	}
 }
 
+void openALPlayback_t::refill(const uint32_t count) noexcept
+{
+	for (uint32_t i = 0; i < count; ++i) try
+	{
+		ALuint _buffer = source.dequeue(1);
+		alBuffer_t &buffer = find(_buffer);
+		if (eof)
+			buffer.isQueued(false);
+		else
+			fillBuffer(buffer);
+	}
+	catch (std::invalid_argument &error)
+		{ puts(error.what()); }
+}
+
+alBuffer_t &openALPlayback_t::find(const ALuint _buffer)
+{
+	for (alBuffer_t &buffer : buffers)
+	{
+		if (buffer == _buffer)
+			return buffer;
+	}
+	throw std::invalid_argument{"Requested buffer ID does not exist"};
+}
+
 void openALPlayback_t::play()
 {
 	if (!isPlaying())

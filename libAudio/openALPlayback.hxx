@@ -18,6 +18,8 @@ private:
 	ALenum format() const noexcept;
 	bool haveQueued() const noexcept;
 	void refill() noexcept;
+	void refill(const uint32_t count) noexcept;
+	alBuffer_t &find(const ALuint buffer);
 	void player() noexcept;
 
 public:
