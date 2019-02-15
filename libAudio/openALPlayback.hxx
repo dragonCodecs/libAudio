@@ -1,12 +1,15 @@
 #ifndef OPEN_AL_PLAYBACK__HXX
 #define OPEN_AL_PLAYBACK__HXX
 
+#include <array>
 #include "playback.hxx"
 #include "openAL.hxx"
 
 struct openALPlayback_t final : audioPlayer_t
 {
 private:
+	std::array<alBuffer_t, 4> buffers;
+
 	long fillBuffer(alBuffer_t &buffer) noexcept;
 	ALenum format() const noexcept;
 

@@ -1,6 +1,7 @@
 #include "openALPlayback.hxx"
 
-openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player} { }
+openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
+	buffers{{}} { }
 openALPlayback_t::~openALPlayback_t() { }
 
 long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept

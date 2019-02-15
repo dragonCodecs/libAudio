@@ -10,7 +10,7 @@ playback_t::playback_t(void *const audioFile_, const bufferFillFunc_t fillBuffer
 
 void playback_t::play()
 {
-	if (player)
+	if (audioFile && player)
 		player->play();
 }
 
