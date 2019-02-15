@@ -8,3 +8,6 @@ alBuffer_t::~alBuffer_t() noexcept
 	if (buffer != AL_NONE)
 		alDeleteBuffers(1, &buffer);
 }
+
+void alBuffer_t::fill(const void *const data, const uint32_t dataLength, const ALenum format, uint32_t frequency)
+	{ alBufferData(buffer, format, data, dataLength, frequency); }

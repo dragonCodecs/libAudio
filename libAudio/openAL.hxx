@@ -1,6 +1,7 @@
 #ifndef OPEN_AL__HXX
 #define OPEN_AL__HXX
 
+#include <stdint.h>
 #ifdef _WINDOWS
 #include <al.h>
 #include <alc.h>
@@ -18,7 +19,7 @@ public:
 	alBuffer_t() noexcept;
 	alBuffer_t(alBuffer_t &&_buffer) noexcept;
 	~alBuffer_t() noexcept;
-	operator ALuint() const noexcept { return buffer; }
+	void fill(const void *const data, const uint32_t dataLength, const ALenum format, uint32_t frequency);
 
 	alBuffer_t(const alBuffer_t &) = delete;
 	alBuffer_t &operator =(const alBuffer_t &) = delete;

@@ -29,7 +29,7 @@ O_MOD = genericModule/ModuleFile.o genericModule/ModuleHeader.o genericModule/Mo
 O_SNDH =
 O_SID = loadSID.o
 O = loadAudio.o libAudio_Common.o loadOggVorbis.o loadWAV.o loadAAC.o loadM4A.o loadMP3.o loadMPC.o loadFLAC.o fixedPoint/fixedPoint.o $(O_MOD) $(O_SNDH) $(O_SID) \
-	loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA) saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o playback.o
+	loadWavPack.o $(OPTIMFROG) $(SHORTEN) loadRealAudio.o $(WMA) saveAudio.o saveOggVorbis.o saveFLAC.o saveM4A.o openAL.o openALPlayback.o playback.o
 VERMAJ = .0
 VERMIN = .2
 VERREV = .1
