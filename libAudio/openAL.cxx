@@ -19,6 +19,13 @@ alSource_t::~alSource_t() noexcept
 		alDeleteSources(1, &source);
 }
 
+void alSource_t::queue(alBuffer_t &buffer) const noexcept
+{
+	ALuint _buffer = buffer;
+	alSourceQueueBuffers(source, 1, &_buffer);
+	buffer.isQueued(true);
+}
+
 alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}
 	{ alGenBuffers(1, &buffer); }
 
@@ -29,4 +36,4 @@ alBuffer_t::~alBuffer_t() noexcept
 }
 
 void alBuffer_t::fill(const void *const data, const uint32_t dataLength, const ALenum format,
-	uint32_t frequency) noexcept { alBufferData(buffer, format, data, dataLength, frequency); }
+	uint32_t frequency) const noexcept { alBufferData(buffer, format, data, dataLength, frequency); }
