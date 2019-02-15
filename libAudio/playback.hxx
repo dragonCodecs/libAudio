@@ -1,12 +1,12 @@
 #ifndef PLAYBACK__HXX
 #define PLAYBACK__HXX
 
+#include <stdint.h>
 #include <mutex>
 #include <chrono>
-#include <stdint.h>
 #include "libAudio.h"
 #include "fileInfo.hxx"
-#include "opaquePtr.hxx"
+#include "uniquePtr.hxx"
 
 using bufferFillFunc_t = long (*)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 
@@ -63,7 +63,7 @@ private:
 	uint8_t channels;
 	std::chrono::nanoseconds sleepTime;
 	playbackMode_t playbackMode;
-	opaquePtr_t<audioPlayer_t> player;
+	std::unique_ptr<audioPlayer_t> player;
 
 protected:
 	long refillBuffer() noexcept;
