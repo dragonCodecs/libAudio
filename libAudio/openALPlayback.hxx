@@ -9,6 +9,7 @@
 struct openALPlayback_t final : audioPlayer_t
 {
 private:
+	alContext_t *context;
 	alSource_t source;
 	std::array<alBuffer_t, 4> buffers;
 	bool eof;
