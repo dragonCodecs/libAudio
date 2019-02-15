@@ -1,5 +1,14 @@
 #include "openAL.hxx"
 
+alSource_t::alSource_t() noexcept : source{AL_NONE}
+	{ alGenSources(1, &source); }
+
+alSource_t::~alSource_t() noexcept
+{
+	if (source != AL_NONE)
+		alDeleteSources(1, &source);
+}
+
 alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}
 	{ alGenBuffers(1, &buffer); }
 
@@ -9,5 +18,5 @@ alBuffer_t::~alBuffer_t() noexcept
 		alDeleteBuffers(1, &buffer);
 }
 
-void alBuffer_t::fill(const void *const data, const uint32_t dataLength, const ALenum format, uint32_t frequency)
-	{ alBufferData(buffer, format, data, dataLength, frequency); }
+void alBuffer_t::fill(const void *const data, const uint32_t dataLength, const ALenum format,
+	uint32_t frequency) noexcept { alBufferData(buffer, format, data, dataLength, frequency); }
