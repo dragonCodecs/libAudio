@@ -1,14 +1,17 @@
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
-	buffers{{}}, eof{false} { }
+	source{}, buffers{{}}, eof{false} { }
 openALPlayback_t::~openALPlayback_t() { }
 
 long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 {
 	const long result = refillBuffer();
 	if (result > 0)
+	{
 		_buffer.fill(buffer(), bufferLength(), format(), bitRate());
+		source.queue(_buffer);
+	}
 	else
 		eof = true;
 	return result;
