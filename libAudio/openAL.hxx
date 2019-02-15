@@ -22,6 +22,9 @@ public:
 	alSource_t(alSource_t &&_source) noexcept;
 	~alSource_t() noexcept;
 	void queue(alBuffer_t &buffer) const noexcept;
+	void play() const noexcept;
+	void pause() const noexcept;
+	void stop() const noexcept;
 
 	alSource_t(const alSource_t &) = delete;
 	alSource_t &operator =(const alSource_t &) = delete;

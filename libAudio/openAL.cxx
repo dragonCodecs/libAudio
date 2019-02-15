@@ -26,6 +26,10 @@ void alSource_t::queue(alBuffer_t &buffer) const noexcept
 	buffer.isQueued(true);
 }
 
+void alSource_t::play() const noexcept { alSourcePlay(source); }
+void alSource_t::pause() const noexcept { alSourcePause(source); }
+void alSource_t::stop() const noexcept { alSourceStop(source); }
+
 alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}
 	{ alGenBuffers(1, &buffer); }
 
