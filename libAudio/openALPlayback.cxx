@@ -1,3 +1,4 @@
+#include <exception>
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
@@ -127,7 +128,10 @@ void openALPlayback_t::player() noexcept
 	while (state == playState_t::playing)
 	{
 		lock.unlock();
-
+		const int processed = source.processedBuffers();
+		refill(processed);
+		if (source.state() != AL_PLAYING && haveQueued())
+			source.play();
 		std::this_thread::sleep_for(sleepTime());
 		lock.lock();
 	}
