@@ -22,6 +22,7 @@ public:
 	alSource_t(alSource_t &&_source) noexcept;
 	~alSource_t() noexcept;
 	void queue(alBuffer_t &buffer) const noexcept;
+	ALuint dequeue(const uint32_t count) const noexcept;
 	void play() const noexcept;
 	void pause() const noexcept;
 	void stop() const noexcept;
@@ -40,16 +41,17 @@ private:
 
 protected:
 	operator ALuint() const noexcept { return buffer; }
-	void isQueued(const bool _queued) noexcept { queued = _queued; }
 	friend struct alSource_t;
 
 public:
 	alBuffer_t() noexcept;
 	alBuffer_t(alBuffer_t &&_buffer) noexcept;
 	~alBuffer_t() noexcept;
+	bool operator ==(const ALuint value) const noexcept;
 	void fill(const void *const data, const uint32_t dataLength, const ALenum format,
 		uint32_t frequency) const noexcept;
 	bool isQueued() const noexcept { return queued; }
+	void isQueued(const bool _queued) noexcept { queued = _queued; }
 
 	alBuffer_t(const alBuffer_t &) = delete;
 	alBuffer_t &operator =(const alBuffer_t &) = delete;
