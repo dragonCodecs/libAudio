@@ -30,6 +30,20 @@ void alSource_t::play() const noexcept { alSourcePlay(source); }
 void alSource_t::pause() const noexcept { alSourcePause(source); }
 void alSource_t::stop() const noexcept { alSourceStop(source); }
 
+int alSource_t::processedBuffers() const noexcept
+{
+	int result = 0;
+	alGetSourcei(source, AL_BUFFERS_PROCESSED, &result);
+	return result;
+}
+
+int alSource_t::state() const noexcept
+{
+	int result = 0;
+	alGetSourcei(source, AL_SOURCE_STATE, &result);
+	return result;
+}
+
 alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}
 	{ alGenBuffers(1, &buffer); }
 

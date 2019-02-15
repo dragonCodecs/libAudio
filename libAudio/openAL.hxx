@@ -25,6 +25,8 @@ public:
 	void play() const noexcept;
 	void pause() const noexcept;
 	void stop() const noexcept;
+	int processedBuffers() const noexcept;
+	int state() const noexcept;
 
 	alSource_t(const alSource_t &) = delete;
 	alSource_t &operator =(const alSource_t &) = delete;
