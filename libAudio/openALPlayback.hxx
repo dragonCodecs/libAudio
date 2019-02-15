@@ -9,9 +9,12 @@ struct openALPlayback_t final : audioPlayer_t
 {
 private:
 	std::array<alBuffer_t, 4> buffers;
+	bool eof;
 
 	long fillBuffer(alBuffer_t &buffer) noexcept;
 	ALenum format() const noexcept;
+	bool haveQueued() const noexcept;
+	void refill() noexcept;
 
 public:
 	openALPlayback_t(playback_t &_player);

@@ -1,7 +1,7 @@
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
-	buffers{{}} { }
+	buffers{{}}, eof{false} { }
 openALPlayback_t::~openALPlayback_t() { }
 
 long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
@@ -9,6 +9,8 @@ long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 	const long result = refillBuffer();
 	if (result > 0)
 		_buffer.fill(buffer(), bufferLength(), format(), bitRate());
+	else
+		eof = true;
 	return result;
 }
 
@@ -33,8 +35,32 @@ ALenum openALPlayback_t::format() const noexcept
 	return 0;
 }
 
+bool openALPlayback_t::haveQueued() const noexcept
+{
+	for (const alBuffer_t &buffer : buffers)
+	{
+		if (buffer.isQueued())
+			return true;
+	}
+	return false;
+}
+
+void openALPlayback_t::refill() noexcept
+{
+	for (alBuffer_t &buffer : buffers)
+	{
+		if (buffer.isQueued())
+			continue;
+		else if (eof)
+			return;
+		fillBuffer(buffer);
+	}
+}
+
 void openALPlayback_t::play()
 {
+	refill();
+	//
 }
 
 void openALPlayback_t::pause()
