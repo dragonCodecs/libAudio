@@ -2,11 +2,11 @@
 #define LIBAUDIO_HXX
 
 #include <stdint.h>
-#include <memory>
 #include "fd.hxx"
 #include "fileInfo.hxx"
 #include "libAudio_Common.h"
 #include "playback.hxx"
+#include "uniquePtr.hxx"
 
 enum class audioType_t : uint8_t
 {
@@ -136,23 +136,5 @@ public:
 	static bool isIT(const char *const fileName) noexcept;
 	static bool isIT(const int32_t fd) noexcept;
 };
-
-template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>; };
-template<typename T> struct makeUnique_<T []> { using arrayType = std::unique_ptr<T []>; };
-template<typename T, size_t N> struct makeUnique_<T [N]> { struct invalidType { }; };
-
-template<typename T, typename... Args> inline typename makeUnique_<T>::uniqueType makeUnique(Args &&...args) noexcept(noexcept(T(std::forward<Args>(args)...)))
-{
-	using consT = typename std::remove_const<T>::type;
-	return std::unique_ptr<T>(new (std::nothrow) consT(std::forward<Args>(args)...));
-}
-
-template<typename T> inline typename makeUnique_<T>::arrayType makeUnique(const size_t num) noexcept
-{
-	using consT = typename std::remove_const<typename std::remove_extent<T>::type>::type;
-	return std::unique_ptr<T>(new (std::nothrow) consT[num]());
-}
-
-template<typename T, typename... Args> inline typename makeUnique_<T>::invalidType makeUnique(Args &&...) noexcept = delete;
 
 #endif /*LIBAUDIO_HXX*/
