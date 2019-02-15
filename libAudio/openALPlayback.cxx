@@ -1,8 +1,7 @@
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
-	source{}, buffers{{}}, eof{false} { }
-openALPlayback_t::~openALPlayback_t() { }
+	source{}, buffers{{}}, eof{false}, playerThread{} { }
 
 long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 {
@@ -62,14 +61,59 @@ void openALPlayback_t::refill() noexcept
 
 void openALPlayback_t::play()
 {
-	refill();
-	//
+	if (!isPlaying())
+	{
+		playerThread = std::thread{[this]() { player(); }};
+		if (mode() == playbackMode_t::wait)
+			playerThread.join();
+	}
 }
 
 void openALPlayback_t::pause()
 {
+	std::unique_lock<std::mutex> lock{stateMutex};
+	if (isPlaying())
+	{
+		state = playState_t::pause;
+		lock.unlock();
+		if (mode() == playbackMode_t::async)
+			playerThread.join();
+	}
 }
 
 void openALPlayback_t::stop()
 {
+	std::unique_lock<std::mutex> lock{stateMutex};
+	if (isPlaying())
+	{
+		state = playState_t::stop;
+		lock.unlock();
+		if (mode() == playbackMode_t::async)
+			playerThread.join();
+	}
+}
+
+void openALPlayback_t::player() noexcept
+{
+	std::unique_lock<std::mutex> lock{stateMutex};
+	refill();
+	source.play();
+	state = playState_t::playing;
+	while (state == playState_t::playing)
+	{
+		lock.unlock();
+
+		lock.lock();
+	}
+
+	if (state == playState_t::pause)
+	{
+		source.pause();
+		state = playState_t::paused;
+	}
+	else
+	{
+		source.stop();
+		state = playState_t::stopped;
+	}
 }

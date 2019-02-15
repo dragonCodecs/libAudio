@@ -2,6 +2,7 @@
 #define OPEN_AL_PLAYBACK__HXX
 
 #include <array>
+#include <thread>
 #include "playback.hxx"
 #include "openAL.hxx"
 
@@ -11,15 +12,17 @@ private:
 	alSource_t source;
 	std::array<alBuffer_t, 4> buffers;
 	bool eof;
+	std::thread playerThread;
 
 	long fillBuffer(alBuffer_t &buffer) noexcept;
 	ALenum format() const noexcept;
 	bool haveQueued() const noexcept;
 	void refill() noexcept;
+	void player() noexcept;
 
 public:
 	openALPlayback_t(playback_t &_player);
-	~openALPlayback_t() final override;
+	~openALPlayback_t() final override { stop(); }
 	void play() final override;
 	void pause() final override;
 	void stop() final override;

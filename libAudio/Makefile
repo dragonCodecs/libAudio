@@ -6,7 +6,7 @@ EXTRA_CFLAGS = $(shell pkg-config --cflags $(PKG_CONFIG_PKGS))
 CFLAGS = $(OPTIM_FLAGS) -c -Wall -Wextra -pedantic $(EXTRA_CFLAGS) $(EXTRA_DEFINE) -o $@ $<
 DEPFLAGS = $(OPTIM_FLAGS) -E -MM -Wall -Wextra -pedantic $(EXTRA_CFLAGS) $(EXTRA_DEFINE) -o .dep/$*.d $<
 EXTRA_LIBS = $(shell pkg-config --libs $(PKG_CONFIG_PKGS))
-LIBS = -lstdc++ $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
+LIBS = -lstdc++ -pthread $(EXTRA_LIBS) -lmpcdec -lfaac -lfaad -lmp4v2 -lmad -lid3tag -lm
 LFLAGS = -shared $(O) $(LIBS) -Wl,-soname,$(SOMAJ) -z defs -o $(SO)
 
 SED = sed -e 's:@LIBDIR@:$(LIBDIR):g' -e 's:@PREFIX@:$(PREFIX):g'

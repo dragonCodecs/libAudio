@@ -1,3 +1,4 @@
+threading = dependency('threads')
 libOpenAL = dependency('openal')
 libOGG = dependency('ogg')
 libVorbis = [dependency('vorbis'), dependency('vorbisfile'), dependency('vorbisenc')]
@@ -36,7 +37,7 @@ libAudioSrcs = [
 libAudio = shared_library(
 	'libAudio',
 	libAudioSrcs,
-	dependencies: [libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
+	dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', '-D__NO_OptimFROG__'],
 	name_prefix: '',
 	install: true,
