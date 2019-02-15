@@ -16,8 +16,9 @@ private:
 
 public:
 	alBuffer_t() noexcept;
-	//
+	alBuffer_t(alBuffer_t &&_buffer) noexcept;
 	~alBuffer_t() noexcept;
+	operator ALuint() const noexcept { return buffer; }
 
 	alBuffer_t(const alBuffer_t &) = delete;
 	alBuffer_t &operator =(const alBuffer_t &) = delete;
