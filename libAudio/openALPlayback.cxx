@@ -2,17 +2,8 @@
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
-	context{alContext_t::ensure()}, source{}, buffers{{}}, eof{false}, playerThread{}
-	{ setupBuffers(); }
-
-void openALPlayback_t::setupBuffers() const noexcept
-{
-	for (const alBuffer_t &buffer : buffers)
-	{
-		buffer.length(bufferLength());
-		buffer.channels(channels());
-	}
-}
+	context{alContext_t::ensure()}, source{}, buffers{{}}, bufferFormat{format()},
+	eof{false}, playerThread{} { }
 
 bool openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 {

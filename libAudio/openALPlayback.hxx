@@ -12,10 +12,10 @@ private:
 	alContext_t *context;
 	alSource_t source;
 	std::array<alBuffer_t, 4> buffers;
+	ALenum bufferFormat;
 	bool eof;
 	std::thread playerThread;
 
-	void setupBuffers() const noexcept;
 	bool fillBuffer(alBuffer_t &buffer) noexcept;
 	ALenum format() const noexcept;
 	bool haveQueued() const noexcept;
