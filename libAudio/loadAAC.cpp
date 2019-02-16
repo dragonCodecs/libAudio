@@ -8,7 +8,7 @@
 #include <neaacdec.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -85,7 +85,7 @@ typedef struct _AAC_Intern
 	 * @internal
 	 * The playback class instance for the AAC file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 } AAC_Intern;
 
 /*!
@@ -141,7 +141,7 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 	ret->BitsPerSample = 16;
 
 	if (ExternalPlayback == 0)
-		p_AF->p_Playback = new Playback(ret, AAC_FillBuffer, p_AF->buffer, 8192, p_AACFile);
+		p_AF->p_Playback = new playback_t(p_AACFile, AAC_FillBuffer, p_AF->buffer, 8192, ret);
 	ADC->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(p_AF->p_dec, ADC);
 
@@ -359,21 +359,21 @@ void AAC_Play(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 
-	p_AF->p_Playback->Play();
+	p_AF->p_Playback->play();
 }
 
 void AAC_Pause(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 
-	p_AF->p_Playback->Pause();
+	p_AF->p_Playback->pause();
 }
 
 void AAC_Stop(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 
-	p_AF->p_Playback->Stop();
+	p_AF->p_Playback->stop();
 }
 
 /*!

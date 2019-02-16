@@ -3,7 +3,6 @@
 #include <math.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
 modMOD_t::modMOD_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std::move(fd)) { }

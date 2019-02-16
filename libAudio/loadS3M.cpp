@@ -2,7 +2,6 @@
 #include <malloc.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
 modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, std::move(fd)} { }

@@ -5,7 +5,7 @@
 #include <id3tag.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 #include <limits.h>
 
@@ -88,7 +88,7 @@ typedef struct _MP3_Intern
 	 * @internal
 	 * The playback class instance for the MP3 file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	/*!
 	 * @internal
 	 * The end-of-file flag
@@ -377,7 +377,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	ret->Channels = (p_MF->p_Frame->header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
 
 	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new Playback(ret, MP3_FillBuffer, p_MF->buffer, 8192, p_MP3File);
+		p_MF->p_Playback = new playback_t(p_MP3File, MP3_FillBuffer, p_MF->buffer, 8192, ret);
 	p_MF->p_FI = ret;
 
 	return ret;
@@ -557,21 +557,21 @@ void MP3_Play(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 
-	p_MF->p_Playback->Play();
+	p_MF->p_Playback->play();
 }
 
 void MP3_Pause(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 
-	p_MF->p_Playback->Pause();
+	p_MF->p_Playback->pause();
 }
 
 void MP3_Stop(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 
-	p_MF->p_Playback->Stop();
+	p_MF->p_Playback->stop();
 }
 
 /*!

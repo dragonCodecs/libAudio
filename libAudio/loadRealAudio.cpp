@@ -1,6 +1,6 @@
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 typedef struct _RealMedia_File
 {

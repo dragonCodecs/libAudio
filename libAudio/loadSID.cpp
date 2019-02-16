@@ -1,5 +1,5 @@
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 bool Is_SID(const char *FileName)
 {

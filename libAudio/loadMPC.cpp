@@ -11,7 +11,7 @@
 #endif
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -54,7 +54,7 @@ typedef struct _MPC_Intern
 	 * @internal
 	 * The playback class instance for the MPC file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	/*!
 	 * @internal
 	 * The internal decoded data buffer
@@ -262,7 +262,7 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 	ret->TotalTime = p_MF->info->samples / ret->BitRate;
 
 	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new Playback(ret, MPC_FillBuffer, p_MF->buffer, 8192, p_MPCFile);
+		p_MF->p_Playback = new playback_t(p_MPCFile, MPC_FillBuffer, p_MF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -372,21 +372,21 @@ void MPC_Play(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
 
-	p_MF->p_Playback->Play();
+	p_MF->p_Playback->play();
 }
 
 void MPC_Pause(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
 
-	p_MF->p_Playback->Pause();
+	p_MF->p_Playback->pause();
 }
 
 void MPC_Stop(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
 
-	p_MF->p_Playback->Stop();
+	p_MF->p_Playback->stop();
 }
 
 /*!

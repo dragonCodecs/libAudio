@@ -2,7 +2,7 @@
 #include <vorbis/vorbisfile.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -33,7 +33,7 @@ typedef struct _OggVorbis_Intern
 	 * @internal
 	 * The playback class instance for the Ogg|Vorbis file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 } OggVorbis_Intern;
 
 /*!
@@ -147,7 +147,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 	}
 
 	if (ExternalPlayback == 0)
-		p_VF->p_Playback = new Playback(ret, OggVorbis_FillBuffer, p_VF->buffer, 8192, p_VorbisFile);
+		p_VF->p_Playback = new playback_t(p_VorbisFile, OggVorbis_FillBuffer, p_VF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -214,17 +214,17 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
  */
 void OggVorbis_Play(void *p_VorbisFile)
 {
-	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Play();
+	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->play();
 }
 
 void OggVorbis_Pause(void *p_VorbisFile)
 {
-	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Pause();
+	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->pause();
 }
 
 void OggVorbis_Stop(void *p_VorbisFile)
 {
-	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->Stop();
+	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->stop();
 }
 
 #define CHECK_OK(actual, expected) \

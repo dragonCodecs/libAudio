@@ -2,7 +2,6 @@
 #include <malloc.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
 #include "genericModule/genericModule.h"
 
 void *AON_OpenR(const char *FileName)

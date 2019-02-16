@@ -1,6 +1,6 @@
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 #include "loadWMA.h"
 
 #define _USE_MATH_DEFINES
@@ -54,7 +54,7 @@ typedef struct _MDCTContext
 typedef struct _WMA_Intern
 {
 	FILE *f_WMA;
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	BYTE buffer[8192];
 	FileInfo *p_FI;
 	ASFFileHeader *p_InitBlock;
@@ -2139,7 +2139,7 @@ FileInfo *WMA_GetFileInfo(void *p_WMAFile)
 	//(double)p_WF->p_ASFMain->play_time;// / 1000.0;
 
 	if (ExternalPlayback == 0)
-		p_WF->p_Playback = new Playback(ret, WMA_FillBuffer, p_WF->buffer, 8192, p_WMAFile);
+		p_WF->p_Playback = new playback_t(p_WMAFile, WMA_FillBuffer, p_WF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -2309,21 +2309,21 @@ void WMA_Play(void *p_WMAFile)
 {
 	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
 
-	p_WF->p_Playback->Play();
+	p_WF->p_Playback->play();
 }
 
 void WMA_Pause(void *p_WMAFile)
 {
 	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
 
-	p_WF->p_Playback->Pause();
+	p_WF->p_Playback->pause();
 }
 
 void WMA_Stop(void *p_WMAFile)
 {
 	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
 
-	p_WF->p_Playback->Stop();
+	p_WF->p_Playback->stop();
 }
 
 bool Is_WMA(char *FileName)

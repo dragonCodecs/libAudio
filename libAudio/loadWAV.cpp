@@ -4,7 +4,7 @@
 #include <malloc.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -45,7 +45,7 @@ typedef struct _WAV_Intern
 	 * @internal
 	 * The playback class instance for the WAV file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	/*!
 	 * @internal
 	 * The \c FileInfo for the WAV file being decoded
@@ -167,7 +167,7 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	p_WF->DataEnd += ftell(f_WAV);
 
 	if (ExternalPlayback == 0)
-		p_WF->p_Playback = new Playback(ret, WAV_FillBuffer, p_WF->buffer, 8192, p_WAVFile);
+		p_WF->p_Playback = new playback_t(p_WAVFile, WAV_FillBuffer, p_WF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -298,21 +298,21 @@ void WAV_Play(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
 
-	p_WF->p_Playback->Play();
+	p_WF->p_Playback->play();
 }
 
 void WAV_Pause(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
 
-	p_WF->p_Playback->Pause();
+	p_WF->p_Playback->pause();
 }
 
 void WAV_Stop(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
 
-	p_WF->p_Playback->Stop();
+	p_WF->p_Playback->stop();
 }
 
 /*!

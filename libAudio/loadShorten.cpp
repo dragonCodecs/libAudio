@@ -3,7 +3,7 @@
 #include <Shorten/shorten.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 typedef struct _Shorten_Intern
 {

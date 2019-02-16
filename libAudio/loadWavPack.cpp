@@ -8,7 +8,7 @@
 #include <string>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -64,7 +64,7 @@ typedef struct _WavPack_Intern
 	 * @internal
 	 * The playback class instance for the WavPack file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	/*!
 	 * @internal
 	 * The error feedback buffer needed for various WavPack call
@@ -258,7 +258,7 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 	}
 
 	if (ExternalPlayback == 0)
-		p_WF->p_Playback = new Playback(ret, WavPack_FillBuffer, p_WF->buffer, 8192, p_WVPFile);
+		p_WF->p_Playback = new playback_t(p_WVPFile, WavPack_FillBuffer, p_WF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -348,21 +348,21 @@ void WavPack_Play(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
 
-	p_WF->p_Playback->Play();
+	p_WF->p_Playback->play();
 }
 
 void WavPack_Pause(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
 
-	p_WF->p_Playback->Pause();
+	p_WF->p_Playback->pause();
 }
 
 void WavPack_Stop(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
 
-	p_WF->p_Playback->Stop();
+	p_WF->p_Playback->stop();
 }
 
 /*!

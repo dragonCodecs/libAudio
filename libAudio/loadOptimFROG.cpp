@@ -3,7 +3,7 @@
 #include <OptimFROG/OptimFROG.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -43,7 +43,7 @@ typedef struct _OFROG_Intern
 	 * @internal
 	 * The playback class instance for the AAC file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	/*!
 	 * @internal
 	 * The internal decoded data buffer
@@ -226,7 +226,7 @@ FileInfo *OptimFROG_GetFileInfo(void *p_OFGFile)
 	free(p_OFT);
 
 	if (ExternalPlayback == 0)
-		p_OF->p_Playback = new Playback(ret, OptimFROG_FillBuffer, p_OF->buffer, 8192, p_OFGFile);
+		p_OF->p_Playback = new playback_t(p_OFGFile, OptimFROG_FillBuffer, p_OF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -304,21 +304,21 @@ void OptimFROG_Play(void *p_OFGFile)
 {
 	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
 
-	p_OF->p_Playback->Play();
+	p_OF->p_Playback->play();
 }
 
 void OptimFROG_Pause(void *p_OFGFile)
 {
 	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
 
-	p_OF->p_Playback->Pause();
+	p_OF->p_Playback->pause();
 }
 
 void OptimFROG_Stop(void *p_OFGFile)
 {
 	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
 
-	p_OF->p_Playback->Stop();
+	p_OF->p_Playback->stop();
 }
 
 /*!

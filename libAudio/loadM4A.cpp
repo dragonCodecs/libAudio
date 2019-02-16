@@ -8,7 +8,7 @@
 #include <mp4v2/mp4v2.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -98,7 +98,7 @@ typedef struct _M4A_Intern
 	 * @internal
 	 * The playback class instance for the M4A/MP4 file
 	 */
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	/*!
 	 * @internal
 	 * The MP4v2 tags structure allocated and filled for the metadata
@@ -306,7 +306,7 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	p_MF->nCurrLoop = 0;
 
 	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new Playback(ret, M4A_FillBuffer, p_MF->buffer, 8192, p_M4AFile);
+		p_MF->p_Playback = new playback_t(p_M4AFile, M4A_FillBuffer, p_MF->buffer, 8192, ret);
 
 	return ret;
 }
@@ -407,21 +407,21 @@ void M4A_Play(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 
-	p_MF->p_Playback->Play();
+	p_MF->p_Playback->play();
 }
 
 void M4A_Pause(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 
-	p_MF->p_Playback->Pause();
+	p_MF->p_Playback->pause();
 }
 
 void M4A_Stop(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 
-	p_MF->p_Playback->Stop();
+	p_MF->p_Playback->stop();
 }
 
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
