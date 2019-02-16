@@ -82,7 +82,7 @@ int alSource_t::state() const noexcept
 	return result;
 }
 
-alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}
+alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}, queued{false}
 	{ alGenBuffers(1, &buffer); }
 
 alBuffer_t::~alBuffer_t() noexcept
