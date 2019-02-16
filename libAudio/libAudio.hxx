@@ -53,6 +53,7 @@ public:
 	const fd_t &fd() const noexcept { return _fd; }
 	void fd(fd_t &&fd) noexcept { _fd.swap(fd); }
 	void player(std::unique_ptr<Playback> &&player) noexcept { _player = std::move(player); }
+	void player(std::unique_ptr<playback_t> &&player) noexcept { _newPlayer = std::move(player); }
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
 	void play();
