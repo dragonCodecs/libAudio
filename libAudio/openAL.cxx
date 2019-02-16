@@ -10,8 +10,8 @@ alContext_t *alContext_t::ensure() noexcept
 	return alContext.get();
 }
 
-alContext_t::alContext_t() noexcept : device{alcOpenDevice(nullptr)},
-	context{alcCreateContext(device, nullptr)} { }
+alContext_t::alContext_t() noexcept : device{alcOpenDevice(alcGetString(nullptr,
+	ALC_DEFAULT_DEVICE_SPECIFIER))}, context{alcCreateContext(device, nullptr)} { }
 
 alContext_t::~alContext_t()
 {
