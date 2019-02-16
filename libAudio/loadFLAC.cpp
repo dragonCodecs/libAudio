@@ -47,11 +47,6 @@ struct flac_t::decoderContext_t final
 	 */
 	uint32_t bytesRemain;
 	uint32_t bytesAvail;
-	/*!
-	 * @internal
-	 * The playback class instance for the FLAC file
-	 */
-	std::unique_ptr<Playback> player;
 
 	decoderContext_t();
 	~decoderContext_t() noexcept;
@@ -297,7 +292,7 @@ void f_error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *
 
 flac_t::flac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 flac_t::decoderContext_t::decoderContext_t() : streamDecoder{FLAC__stream_decoder_new()}, buffer{},
-	bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0}, player{} { }
+	bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0} { }
 
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
