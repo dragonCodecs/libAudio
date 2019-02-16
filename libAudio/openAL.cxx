@@ -10,13 +10,13 @@ alContext_t *alContext_t::ensure() noexcept
 	return alContext.get();
 }
 
-alContext_t::alContext_t() noexcept : device{alcOpenDevice(NULL)},
-	context{alcCreateContext(device, NULL)} { }
+alContext_t::alContext_t() noexcept : device{alcOpenDevice(nullptr)},
+	context{alcCreateContext(device, nullptr)} { }
 
 alContext_t::~alContext_t()
 {
 	if (alcGetCurrentContext() == context)
-		alcMakeContextCurrent(NULL);
+		alcMakeContextCurrent(nullptr);
 	alcDestroyContext(context);
 	alcCloseDevice(device);
 }
