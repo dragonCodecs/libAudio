@@ -10,8 +10,9 @@ bool openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 	const long result = refillBuffer();
 	if (result > 0)
 	{
-		_buffer.fill(buffer(), bufferLength(), bufferFormat, bitRate());
+		_buffer.fill(buffer(), result, bufferFormat, bitRate());
 		source.queue(_buffer);
+		eof = result < bufferLength();
 	}
 	else
 		eof = true;
