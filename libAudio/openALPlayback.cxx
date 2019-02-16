@@ -70,7 +70,7 @@ void openALPlayback_t::refill(const uint32_t count) noexcept
 		if (eof)
 			buffer.isQueued(false);
 		else
-			fillBuffer(buffer);
+			buffer.isQueued(fillBuffer(buffer));
 	}
 	catch (std::invalid_argument &error)
 		{ puts(error.what()); }
@@ -88,9 +88,11 @@ alBuffer_t &openALPlayback_t::find(const ALuint _buffer)
 
 void openALPlayback_t::play()
 {
+	std::unique_lock<std::mutex> lock{stateMutex};
 	if (!isPlaying())
 	{
-		playerThread = std::thread{[this]() { player(); }};
+		playerThread = std::thread{[this]() noexcept { player(); }};
+		lock.unlock();
 		if (mode() == playbackMode_t::wait)
 			playerThread.join();
 	}
@@ -124,16 +126,24 @@ void openALPlayback_t::player() noexcept
 {
 	std::unique_lock<std::mutex> lock{stateMutex};
 	refill();
-	source.play();
-	state = playState_t::playing;
+	if (haveQueued())
+	{
+		source.play();
+		state = playState_t::playing;
+	}
 	lock.unlock();
 
 	while (state == playState_t::playing)
 	{
 		const int processed = source.processedBuffers();
 		refill(processed);
-		if (source.state() != AL_PLAYING && haveQueued())
-			source.play();
+		if (source.state() != AL_PLAYING)
+		{
+			if (haveQueued())
+				source.play();
+			else
+				break;
+		}
 		std::this_thread::sleep_for(sleepTime());
 	}
 
