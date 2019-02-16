@@ -15,7 +15,8 @@ private:
 	bool eof;
 	std::thread playerThread;
 
-	long fillBuffer(alBuffer_t &buffer) noexcept;
+	void setupBuffers() const noexcept;
+	bool fillBuffer(alBuffer_t &buffer) noexcept;
 	ALenum format() const noexcept;
 	bool haveQueued() const noexcept;
 	void refill() noexcept;

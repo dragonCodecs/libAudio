@@ -66,6 +66,8 @@ public:
 	alBuffer_t(alBuffer_t &&_buffer) noexcept;
 	~alBuffer_t() noexcept;
 	bool operator ==(const ALuint value) const noexcept;
+	void length(const uint32_t bufferLength) const noexcept;
+	void channels(const uint8_t channels) const noexcept;
 	void fill(const void *const data, const uint32_t dataLength, const ALenum format,
 		uint32_t frequency) const noexcept;
 	bool isQueued() const noexcept { return queued; }
