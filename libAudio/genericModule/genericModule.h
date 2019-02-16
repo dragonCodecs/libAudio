@@ -26,7 +26,7 @@ template<typename T> struct moduleIntern : T
 {
 	FILE *f_Module;
 	FileInfo *p_FI;
-	Playback *p_Playback;
+	playback_t *p_Playback;
 	uint8_t buffer[8192];
 	ModuleFile *p_File;
 

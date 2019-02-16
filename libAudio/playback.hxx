@@ -72,6 +72,8 @@ protected:
 public:
 	playback_t(void *const audioFile, const bufferFillFunc_t fillBuffer, uint8_t *const buffer,
 		const uint32_t bufferLength, const fileInfo_t &fileInfo);
+	playback_t(void *const audioFile, const bufferFillFunc_t fillBuffer, uint8_t *const buffer,
+		const uint32_t bufferLength, const FileInfo *const fileInfo);
 	void mode(playbackMode_t mode) noexcept;
 	void play();
 	void pause();

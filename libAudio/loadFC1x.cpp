@@ -54,7 +54,7 @@ FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
 	if (ToPlayback)
 	{
 		if (ExternalPlayback == 0)
-			p_FF->p_Playback = new Playback(ret, FC1x_FillBuffer, p_FF->buffer, 8192, p_FC1xFile);
+			p_FF->p_Playback = new playback_t(p_FC1xFile, FC1x_FillBuffer, p_FF->buffer, 8192, ret);
 		p_FF->p_File->InitMixer(ret);
 	}
 
@@ -98,21 +98,21 @@ void FC1x_Play(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
 
-	p_FF->p_Playback->Play();
+	p_FF->p_Playback->play();
 }
 
 void FC1x_Pause(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
 
-	p_FF->p_Playback->Pause();
+	p_FF->p_Playback->pause();
 }
 
 void FC1x_Stop(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
 
-	p_FF->p_Playback->Stop();
+	p_FF->p_Playback->stop();
 }
 
 bool Is_FC1x(const char *FileName)

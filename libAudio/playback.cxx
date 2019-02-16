@@ -9,7 +9,17 @@ playback_t::playback_t(void *const audioFile_, const bufferFillFunc_t fillBuffer
 	channels{fileInfo.channels}, sleepTime{}, playbackMode{playbackMode_t::wait}, player{makeUniqueT<player_t>(*this)}
 {
 	std::chrono::seconds bufferSize{bufferLength};
-	bufferSize /= channels * (fileInfo.bitsPerSample / 8);
+	bufferSize /= channels * (bitsPerSample / 8);
+	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize) / bitRate;
+}
+
+playback_t::playback_t(void *const audioFile_, const bufferFillFunc_t fillBuffer_, uint8_t *const buffer_,
+	const uint32_t bufferLength_, const FileInfo *const fileInfo) : audioFile{audioFile_}, fillBuffer{fillBuffer_},
+	buffer{buffer_}, bufferLength{bufferLength_}, bitsPerSample(fileInfo->BitsPerSample), bitRate{fileInfo->BitRate},
+	channels(fileInfo->Channels), sleepTime{}, playbackMode{playbackMode_t::wait}, player{makeUniqueT<player_t>(*this)}
+{
+	std::chrono::seconds bufferSize{bufferLength};
+	bufferSize /= channels * (bitsPerSample / 8);
 	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize) / bitRate;
 }
 

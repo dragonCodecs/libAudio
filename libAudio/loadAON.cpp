@@ -64,7 +64,7 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 	if (ToPlayback)
 	{
 		if (ExternalPlayback == 0)
-			p_AF->p_Playback = new Playback(ret, AON_FillBuffer, p_AF->buffer, 8192, p_AONFile);
+			p_AF->p_Playback = new playback_t(p_AONFile, AON_FillBuffer, p_AF->buffer, 8192, ret);
 		p_AF->p_File->InitMixer(ret);
 	}
 
@@ -108,21 +108,21 @@ void AON_Play(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	p_AF->p_Playback->Play();
+	p_AF->p_Playback->play();
 }
 
 void AON_Pause(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	p_AF->p_Playback->Pause();
+	p_AF->p_Playback->pause();
 }
 
 void AON_Stop(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 
-	p_AF->p_Playback->Stop();
+	p_AF->p_Playback->stop();
 }
 
 bool Is_AON(const char *FileName)
