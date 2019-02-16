@@ -28,12 +28,26 @@ template<typename function_t> struct alCall_t
 	function_t function;
 	const char *const functionName;
 
+	template<typename... args_t> void operator ()(args_t &&... args) const noexcept
+	{
+		function(std::forward<args_t>(args)...);
+		const auto error = alGetError();
+		if (error != AL_NO_ERROR)
+			fprintf(stderr, "libAudio: %s() - %s\n", functionName, alErrorString(error));
+	}
+};
+
+template<typename function_t> struct alcCall_t
+{
+	function_t function;
+	const char *const functionName;
+
 	template<typename... args_t, typename result_t = decltype(declval<function_t>()(declval<args_t>()...)),
 		typename = typename std::enable_if<!std::is_same<result_t, void>::value>::type>
 		auto operator ()(args_t &&... args) const noexcept -> result_t
 	{
 		auto result = function(std::forward<args_t>(args)...);
-		const auto error = alGetError();
+		const auto error = alcGetError(nullptr);
 		if (error != AL_NO_ERROR)
 			fprintf(stderr, "libAudio: %s() - %s\n", functionName, alErrorString(error));
 		return result;
@@ -44,23 +58,24 @@ template<typename function_t> struct alCall_t
 		void operator ()(args_t &&... args) const noexcept
 	{
 		function(std::forward<args_t>(args)...);
-		const auto error = alGetError();
+		const auto error = alcGetError(nullptr);
 		if (error != AL_NO_ERROR)
 			fprintf(stderr, "libAudio: %s() - %s\n", functionName, alErrorString(error));
 	}
 };
 
 #define AL_CALL(function) alCall_t<decltype((function))>{function, #function}
+#define ALC_CALL(function) alcCall_t<decltype((function))>{function, #function}
 
 namespace al
 {
-	auto alcGetString = AL_CALL(::alcGetString);
-	auto alcOpenDevice = AL_CALL(::alcOpenDevice);
-	auto alcCreateContext = AL_CALL(::alcCreateContext);
-	auto alcGetCurrentContext = AL_CALL(::alcGetCurrentContext);
-	auto alcMakeContextCurrent = AL_CALL(::alcMakeContextCurrent);
-	auto alcDestroyContext = AL_CALL(::alcDestroyContext);
-	auto alcCloseDevice = AL_CALL(::alcCloseDevice);
+	auto alcGetString = ALC_CALL(::alcGetString);
+	auto alcOpenDevice = ALC_CALL(::alcOpenDevice);
+	auto alcCreateContext = ALC_CALL(::alcCreateContext);
+	auto alcGetCurrentContext = ALC_CALL(::alcGetCurrentContext);
+	auto alcMakeContextCurrent = ALC_CALL(::alcMakeContextCurrent);
+	auto alcDestroyContext = ALC_CALL(::alcDestroyContext);
+	auto alcCloseDevice = ALC_CALL(::alcCloseDevice);
 	auto alGenSources = AL_CALL(::alGenSources);
 	auto alSourcef = AL_CALL(::alSourcef);
 	auto alSource3f = AL_CALL(::alSource3f);
@@ -77,4 +92,5 @@ namespace al
 	auto alBufferData = AL_CALL(::alBufferData);
 }
 
+#undef ALC_CALL
 #undef AL_CALL
