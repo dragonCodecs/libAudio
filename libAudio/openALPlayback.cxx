@@ -10,7 +10,7 @@ bool openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 	const long result = refillBuffer();
 	if (result > 0)
 	{
-		_buffer.fill(buffer(), bufferLength(), format(), bitRate());
+		_buffer.fill(buffer(), bufferLength(), bufferFormat, bitRate());
 		source.queue(_buffer);
 	}
 	else
@@ -27,7 +27,7 @@ ALenum openALPlayback_t::format() const noexcept
 		if (_channels == 1)
 			return AL_FORMAT_MONO8;
 		else if (_channels == 2)
-			return AL_FORMAT_STEREO16;
+			return AL_FORMAT_STEREO8;
 	}
 	else if (bits == 16)
 	{
