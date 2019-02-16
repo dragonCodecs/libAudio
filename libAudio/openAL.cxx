@@ -32,6 +32,7 @@ alSource_t::alSource_t() noexcept : source{AL_NONE}
 		return;
 	al::alSourcef(source, AL_GAIN, 1);
 	al::alSourcef(source, AL_PITCH, 1);
+	al::alListener3f(AL_POSITION, 0, 0, 0);
 	al::alSource3f(source, AL_POSITION, 0, 0, 0);
 	al::alSource3f(source, AL_VELOCITY, 0, 0, 0);
 	al::alSource3f(source, AL_DIRECTION, 0, 0, 0);
