@@ -134,17 +134,18 @@ void openALPlayback_t::player() noexcept
 	refill();
 	source.play();
 	state = playState_t::playing;
+	lock.unlock();
+
 	while (state == playState_t::playing)
 	{
-		lock.unlock();
 		const int processed = source.processedBuffers();
 		refill(processed);
 		if (source.state() != AL_PLAYING && haveQueued())
 			source.play();
 		std::this_thread::sleep_for(sleepTime());
-		lock.lock();
 	}
 
+	lock.lock();
 	if (state == playState_t::pause)
 	{
 		source.pause();
