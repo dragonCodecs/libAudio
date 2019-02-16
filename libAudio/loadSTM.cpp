@@ -40,7 +40,7 @@ void *STM_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			ret->player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 8192, ret.get()));
+			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(audioFileInfo(ret.get()));
 	}
 

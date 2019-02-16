@@ -251,7 +251,7 @@ void f_metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metad
 			ctx.buffer = makeUnique<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
 			info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
 			if (!ExternalPlayback && ctx.buffer != nullptr)
-				file.player(makeUnique<Playback>(info, audioFillBuffer, ctx.playbackBuffer, 16384, audioFile));
+				file.player(makeUnique<playback_t>(audioFile, audioFillBuffer, ctx.playbackBuffer, 16384, info));
 			break;
 		}
 		case FLAC__METADATA_TYPE_VORBIS_COMMENT:
