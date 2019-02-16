@@ -68,6 +68,13 @@ int alSource_t::processedBuffers() const noexcept
 	return result;
 }
 
+int alSource_t::queuedBuffers() const noexcept
+{
+	int result = 0;
+	alGetSourcei(source, AL_BUFFERS_QUEUED, &result);
+	return result;
+}
+
 int alSource_t::state() const noexcept
 {
 	int result = 0;

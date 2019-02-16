@@ -45,6 +45,7 @@ public:
 	void pause() const noexcept;
 	void stop() const noexcept;
 	int processedBuffers() const noexcept;
+	int queuedBuffers() const noexcept;
 	int state() const noexcept;
 
 	alSource_t(const alSource_t &) = delete;
