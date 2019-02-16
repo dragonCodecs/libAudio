@@ -86,9 +86,5 @@ alBuffer_t::~alBuffer_t() noexcept
 
 bool alBuffer_t::operator ==(const ALuint value) const noexcept
 	{ return buffer == value; }
-void alBuffer_t::length(const uint32_t bufferLength) const noexcept
-	{ alBufferi(buffer, AL_SIZE, bufferLength); }
-void alBuffer_t::channels(const uint8_t _channels) const noexcept
-	{ alBufferi(buffer, AL_CHANNELS, _channels); }
 void alBuffer_t::fill(const void *const data, const uint32_t dataLength, const ALenum format,
 	uint32_t frequency) const noexcept { alBufferData(buffer, format, data, dataLength, frequency); }
