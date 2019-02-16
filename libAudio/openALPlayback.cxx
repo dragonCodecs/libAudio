@@ -14,7 +14,7 @@ void openALPlayback_t::setupBuffers() const noexcept
 	}
 }
 
-long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
+bool openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 {
 	const long result = refillBuffer();
 	if (result > 0)
@@ -24,7 +24,7 @@ long openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 	}
 	else
 		eof = true;
-	return result;
+	return result > 0;
 }
 
 ALenum openALPlayback_t::format() const noexcept
@@ -64,9 +64,8 @@ void openALPlayback_t::refill() noexcept
 	{
 		if (buffer.isQueued())
 			continue;
-		else if (eof)
+		else if (eof || !fillBuffer(buffer))
 			return;
-		fillBuffer(buffer);
 	}
 }
 
