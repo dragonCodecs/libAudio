@@ -191,9 +191,7 @@ void audioPlay(void *audioFile)
 void audioFile_t::play()
 {
 	if (_player)
-		_player->Play();
-	if (_newPlayer)
-		_newPlayer->play();
+		_player->play();
 }
 
 void Audio_Pause(void *p_AudioPtr)
@@ -213,9 +211,7 @@ void audioPause(void *audioFile)
 void audioFile_t::pause()
 {
 	if (_player)
-		_player->Pause();
-	if (_newPlayer)
-		_newPlayer->pause();
+		_player->pause();
 }
 
 void Audio_Stop(void *p_AudioPtr)
@@ -235,9 +231,7 @@ void audioStop(void *audioFile)
 void audioFile_t::stop()
 {
 	if (_player)
-		_player->Stop();
-	if (_newPlayer)
-		_newPlayer->stop();
+		_player->stop();
 }
 
 /*!

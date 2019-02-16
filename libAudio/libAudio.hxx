@@ -35,8 +35,7 @@ protected:
 	audioType_t _type;
 	fileInfo_t _fileInfo;
 	fd_t _fd;
-	std::unique_ptr<Playback> _player;
-	std::unique_ptr<playback_t> _newPlayer;
+	std::unique_ptr<playback_t> _player;
 
 	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type(type), _fileInfo(), _fd(std::move(fd)) { }
 
@@ -52,8 +51,7 @@ public:
 	audioType_t type() const noexcept { return _type; }
 	const fd_t &fd() const noexcept { return _fd; }
 	void fd(fd_t &&fd) noexcept { _fd.swap(fd); }
-	void player(std::unique_ptr<Playback> &&player) noexcept { _player = std::move(player); }
-	void player(std::unique_ptr<playback_t> &&player) noexcept { _newPlayer = std::move(player); }
+	void player(std::unique_ptr<playback_t> &&player) noexcept { _player = std::move(player); }
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
 	void play();
