@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <malloc.h>
-#ifdef _WINDOWS
-#include <conio.h>
-#endif
+#include <algorithm>
 
 #include <neaacdec.h>
 #include <mp4v2/mp4v2.h>
@@ -17,17 +15,6 @@
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2009-2013
  */
-
-#ifndef min
-/*!
- * @internal
- * A simple implementation of the min() function as a macro
- * for systems which don't have it (such as, it seems, Linux).
- * This finding might be wrong in that \c min() may exist in a
- * header such as <stdlib.h>
- */
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
 
 /*!
  * @internal
@@ -383,7 +370,7 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 		}
 
-		nUsed = min(p_MF->nSamples - p_MF->samplesUsed, nOutBufferLen - (OBuf - OutBuffer));
+		nUsed = std::min<int64_t>(p_MF->nSamples - p_MF->samplesUsed, nOutBufferLen - (OBuf - OutBuffer));
 		memcpy(OBuf, p_MF->p_Samples + p_MF->samplesUsed, nUsed);
 		OBuf += nUsed;
 		p_MF->samplesUsed += nUsed;
