@@ -1028,7 +1028,7 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 	if (param != 0)
 		channel->PortamentoSlide = uint16_t(param) << 2;
 	channel->Flags |= CHN_PORTAMENTO;
-	if (channel->Period != 0 && channel->PortamentoDest != 0)
+	if (channel->Period && channel->PortamentoDest && TickCount > channel->StartTick)
 	{
 		if (channel->Period < channel->PortamentoDest)
 		{
@@ -1683,7 +1683,7 @@ bool ModuleFile::AdvanceTick()
 			}
 			if ((channel->Flags & CHN_VIBRATO) != 0)
 			{
-				int8_t Delta;
+				int16_t Delta;
 				uint8_t VibratoPos = channel->VibratoPos;
 				uint8_t VibratoType = channel->VibratoType & 0x03;
 				if (VibratoType == 1)
@@ -1694,8 +1694,28 @@ bool ModuleFile::AdvanceTick()
 					Delta = RandomTable[VibratoPos];
 				else
 					Delta = SinusTable[VibratoPos];
-				period += (short)((Delta * channel->VibratoDepth) >> 7);
-				channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
+				const uint8_t depthShift = ModuleType == MODULE_IT ? 7 : 6;
+				Delta = (Delta * channel->VibratoDepth) >> depthShift;
+				if (ModuleType == MODULE_IT && p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
+				{
+					if (Delta < 0)
+					{
+						const int16_t value = -Delta;
+						Delta = LinearSlideDown(period, value >> 2) - period;
+						if (value & 0x03)
+							Delta += FineLinearSlideDown(period, value & 0x03) - period;
+					}
+					else
+					{
+						const int16_t value = Delta;
+						Delta = LinearSlideUp(period, value >> 2) - period;
+						if (value & 0x03)
+							Delta += FineLinearSlideUp(period, value & 0x03) - period;
+					}
+				}
+				period += Delta;
+				if (TickCount || ModuleType == MODULE_IT)
+					channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
 			}
 			if ((channel->Flags & CHN_PANBRELLO) != 0)
 			{
