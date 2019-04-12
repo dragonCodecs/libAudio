@@ -27,7 +27,8 @@ struct m4a_t::decoderContext_t final
 	MP4TrackId nTrack;
 	uint8_t playbackBuffer[8192];
 
-	std::unique_ptr<playback_t> player;
+	decoderContext_t();
+	~decoderContext_t() noexcept;
 };
 
 typedef struct _M4A_Intern
@@ -93,7 +94,7 @@ typedef struct _M4A_Intern
 	 */
 	const MP4Tags *p_Tags;
 
-	m4a_t::decoderContext_t inner;
+	m4a_t inner;
 } M4A_Intern;
 
 void *MP4DecOpen(const char *FileName, MP4FileMode Mode);
@@ -228,6 +229,9 @@ MP4TrackId GetAACTrack(M4A_Intern *ret)
 	return -1;
 }
 
+m4a_t::m4a_t() noexcept : audioFile_t(audioType_t::m4a, {}), ctx(makeUnique<decoderContext_t>()) { }
+m4a_t::decoderContext_t::decoderContext_t() : playbackBuffer{} { }
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by M4A_* functions
@@ -262,6 +266,7 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	uint32_t timescale;
 	const char *value;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
+	auto &ctx = *p_MF->inner.context();
 	FileInfo *ret = NULL;
 
 	p_MF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
@@ -292,10 +297,12 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	p_MF->nCurrLoop = 0;
 
 	if (ExternalPlayback == 0)
-		p_MF->inner.player.reset(new playback_t(p_M4AFile, M4A_FillBuffer, p_MF->inner.playbackBuffer, 8192, ret));
+		p_MF->inner.player(makeUnique<playback_t>(p_M4AFile, M4A_FillBuffer, ctx.playbackBuffer, 8192, ret));
 
 	return ret;
 }
+
+m4a_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!
  * Closes an opened audio file
@@ -376,6 +383,11 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 	return OBuf - OutBuffer;
 }
 
+int64_t m4a_t::fillBuffer(void *const buffer, const uint32_t length)
+{
+	return -1;
+}
+
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
  * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
@@ -392,7 +404,7 @@ void M4A_Play(void *p_M4AFile)
 	if (!p_M4AFile)
 		return;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	p_MF->inner.player->play();
+	p_MF->inner.play();
 }
 
 void M4A_Pause(void *p_M4AFile)
@@ -400,7 +412,7 @@ void M4A_Pause(void *p_M4AFile)
 	if (!p_M4AFile)
 		return;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	p_MF->inner.player->pause();
+	p_MF->inner.pause();
 }
 
 void M4A_Stop(void *p_M4AFile)
@@ -408,7 +420,7 @@ void M4A_Stop(void *p_M4AFile)
 	if (!p_M4AFile)
 		return;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	p_MF->inner.player->stop();
+	p_MF->inner.stop();
 }
 
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
