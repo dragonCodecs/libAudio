@@ -22,6 +22,12 @@
  */
 struct m4a_t::decoderContext_t final
 {
+	NeAACDecHandle p_dec;
+	MP4FileHandle p_MP4;
+	MP4TrackId nTrack;
+	uint8_t playbackBuffer[8192];
+
+	std::unique_ptr<playback_t> player;
 };
 
 typedef struct _M4A_Intern
@@ -82,20 +88,12 @@ typedef struct _M4A_Intern
 	bool eof;
 	/*!
 	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
-	/*!
-	 * @internal
-	 * The playback class instance for the M4A/MP4 file
-	 */
-	playback_t *p_Playback;
-	/*!
-	 * @internal
 	 * The MP4v2 tags structure allocated and filled for the metadata
 	 * in the MP4 file
 	 */
 	const MP4Tags *p_Tags;
+
+	m4a_t::decoderContext_t inner;
 } M4A_Intern;
 
 void *MP4DecOpen(const char *FileName, MP4FileMode Mode);
@@ -297,7 +295,7 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	p_MF->nCurrLoop = 0;
 
 	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new playback_t(p_M4AFile, M4A_FillBuffer, p_MF->buffer, 8192, ret);
+		p_MF->inner.player.reset(new playback_t(p_M4AFile, M4A_FillBuffer, p_MF->inner.playbackBuffer, 8192, ret));
 
 	return ret;
 }
@@ -314,8 +312,6 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 int M4A_CloseFileR(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-
-	delete p_MF->p_Playback;
 
 	NeAACDecClose(p_MF->p_dec);
 	MP4Close(p_MF->p_MP4);
@@ -396,23 +392,26 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
  */
 void M4A_Play(void *p_M4AFile)
 {
+	if (!p_M4AFile)
+		return;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-
-	p_MF->p_Playback->play();
+	p_MF->inner.player->play();
 }
 
 void M4A_Pause(void *p_M4AFile)
 {
+	if (!p_M4AFile)
+		return;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-
-	p_MF->p_Playback->pause();
+	p_MF->inner.player->pause();
 }
 
 void M4A_Stop(void *p_M4AFile)
 {
+	if (!p_M4AFile)
+		return;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-
-	p_MF->p_Playback->stop();
+	p_MF->inner.player->stop();
 }
 
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:

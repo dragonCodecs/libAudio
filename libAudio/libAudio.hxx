@@ -90,6 +90,7 @@ struct m4a_t final : public audioFile_t
 private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
+	friend struct _M4A_Intern;
 
 public:
 	m4a_t(fd_t &&fd) noexcept;
