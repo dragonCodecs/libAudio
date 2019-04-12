@@ -16,7 +16,7 @@ alContext_t *alContext_t::ensure() noexcept
 alContext_t::alContext_t() noexcept : device{al::alcOpenDevice(al::alcGetString(nullptr,
 	ALC_DEFAULT_DEVICE_SPECIFIER))}, context{al::alcCreateContext(device, nullptr)} { }
 
-alContext_t::~alContext_t()
+alContext_t::~alContext_t() noexcept
 {
 	if (al::alcGetCurrentContext() == context)
 		al::alcMakeContextCurrent(nullptr);
