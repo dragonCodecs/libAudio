@@ -236,12 +236,9 @@ MP4TrackId GetAACTrack(M4A_Intern *ret)
  */
 void *M4A_OpenR(const char *FileName)
 {
-	M4A_Intern *ret = NULL;
-
-	ret = (M4A_Intern *)malloc(sizeof(M4A_Intern));
+	M4A_Intern *ret = new (std::nothrow) M4A_Intern();
 	if (ret == NULL)
 		return ret;
-	memset(ret, 0x00, sizeof(M4A_Intern));
 
 	ret->eof = false;
 	ret->p_dec = NeAACDecOpen();
@@ -317,7 +314,7 @@ int M4A_CloseFileR(void *p_M4AFile)
 	MP4Close(p_MF->p_MP4);
 	MP4TagsFree(p_MF->p_Tags);
 
-	free(p_MF);
+	delete p_MF;
 	return 0;
 }
 
