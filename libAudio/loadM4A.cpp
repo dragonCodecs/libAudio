@@ -20,6 +20,10 @@
  * @internal
  * Internal structure for holding the decoding context for a given M4A/MP4 file
  */
+struct m4a_t::decoderContext_t final
+{
+};
+
 typedef struct _M4A_Intern
 {
 	/*!
@@ -424,31 +428,46 @@ void M4A_Stop(void *p_M4AFile)
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MP4/M4A file or not
  */
-bool Is_M4A(const char *FileName)
+bool Is_M4A(const char *FileName) { return m4a_t::isM4A(FileName); }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a MP4/M4A
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP4/M4A file or not
+ */
+bool m4a_t::isM4A(const int fd) noexcept
 {
-	FILE *f_M4A = fopen(FileName, "rb");
-	char Len[4];
-	char TypeSig[4];
-	char FileType[4];
-
-	if (f_M4A == NULL)
+	char length[4], typeSig[4], fileType[4];
+	if (fd == -1 ||
+		read(fd, length, 4) != 4 ||
+		read(fd, typeSig, 4) != 4 ||
+		read(fd, fileType, 4) != 4 ||
+		strncmp(typeSig, "ftyp", 4) != 0 ||
+		(strncmp(fileType, "M4A ", 4) != 0 &&
+		strncmp(fileType, "mp42", 4) != 0))
 		return false;
-
-	// How to deal with endieness:
-	fread(&Len, 4, 1, f_M4A);
-	//if (Len[3] != 32)
-	//	return false;
-
-	fread(TypeSig, 4, 1, f_M4A);
-	fread(FileType, 4, 1, f_M4A);
-	fclose(f_M4A);
-
-	if (strncmp(TypeSig, "ftyp", 4) != 0 ||
-		(strncmp(FileType, "M4A ", 4) != 0 &&
-		strncmp(FileType, "mp42", 4) != 0))
-		return false;
-
 	return true;
+}
+
+/*!
+ * Checks the file given by \p fileName for whether it is a MP4/M4A
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP4/M4A file or not
+ */
+bool m4a_t::isM4A(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isM4A(file);
 }
 
 /*!

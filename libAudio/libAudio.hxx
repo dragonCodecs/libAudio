@@ -85,6 +85,23 @@ public:
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 
+struct m4a_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+public:
+	m4a_t(fd_t &&fd) noexcept;
+	static m4a_t *openR(const char *const fileName) noexcept;
+	static bool isM4A(const char *const fileName) noexcept;
+	static bool isM4A(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
 struct moduleFile_t : public audioFile_t
 {
 protected:
