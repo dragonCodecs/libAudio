@@ -13,7 +13,7 @@
  * @file loadM4A.cpp
  * @brief The implementation of the M4A/MP4 decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2013
+ * @date 2009-2019
  */
 
 /*!
