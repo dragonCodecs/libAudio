@@ -645,18 +645,6 @@ inline uint16_t swapBytes(const uint16_t val) noexcept
 inline uint32_t Swap32(uint32_t i) noexcept { return swapBytes(i); }
 inline uint16_t Swap16(uint16_t i) noexcept { return swapBytes(i); }
 
-inline stringPtr_t stringDup(const char *const str) noexcept
-{
-	stringPtr_t ret = str ? makeUnique<char []>(strlen(str) + 1) : nullptr;
-	if (!ret)
-		return nullptr;
-	strncpy(ret.get(), str, strlen(str) + 1);
-	return ret;
-}
-
-inline stringPtr_t stringDup(const stringPtr_t &str) noexcept
-	{ return stringDup(str.get()); }
-
 struct moduleFile_t::decoderContext_t
 {
 	uint8_t playbackBuffer[8192];
