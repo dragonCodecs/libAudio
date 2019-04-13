@@ -256,6 +256,14 @@ bool mp3_t::readMetadata() noexcept
 	return true;
 }
 
+mp3_t *mp3_t::openR(const char *const fileName) noexcept
+{
+	std::unique_ptr<mp3_t> mp3File(makeUnique<mp3_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!mp3File || !mp3File->valid() || !isMP3(mp3File->_fd) || !mp3File->readMetadata())
+		return nullptr;
+	return mp3File.release();
+}
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by MP3_* functions
@@ -264,21 +272,16 @@ bool mp3_t::readMetadata() noexcept
  */
 void *MP3_OpenR(const char *FileName)
 {
-	MP3_Intern *ret = new (std::nothrow) MP3_Intern(fd_t(FileName, O_RDONLY | O_NOCTTY));
-	if (!ret || !ret->inner.context())
+	std::unique_ptr<mp3_t> file(mp3_t::openR(FileName));
+	if (!file)
 		return nullptr;
-	if (!ret->inner.readMetadata())
-	{
-		delete ret;
-		return nullptr;
-	}
+	auto &ctx = *file->context();
+	const fileInfo_t &info = file->fileInfo();
 
-	auto &ctx = *ret->inner.context();
-	const fileInfo_t &info = ret->inner.fileInfo();
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret, MP3_FillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
-	return ret;
+	return file.release();
 }
 
 /*!
@@ -289,10 +292,7 @@ void *MP3_OpenR(const char *FileName)
  * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
 FileInfo *MP3_GetFileInfo(void *p_MP3File)
-{
-	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	return audioFileInfo(&p_MF->inner);
-}
+	{ return audioFileInfo(p_MP3File); }
 
 mp3_t::decoderContext_t::~decoderContext_t() noexcept
 {
@@ -310,12 +310,7 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
-int MP3_CloseFileR(void *p_MP3File)
-{
-	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	delete p_MF;
-	return 0;
-}
+int MP3_CloseFileR(void *p_MP3File) { return audioCloseFileR(p_MP3File); }
 
 /*!
  * @internal
@@ -386,10 +381,7 @@ int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
  * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
 long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	return audioFillBuffer(&p_MF->inner, OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_MP3File, OutBuffer, nOutBufferLen); }
 
 int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -460,23 +452,9 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @bug Futher to the \p p_MP3File check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void MP3_Play(void *p_MP3File)
-{
-	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	p_MF->inner.play();
-}
-
-void MP3_Pause(void *p_MP3File)
-{
-	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	p_MF->inner.pause();
-}
-
-void MP3_Stop(void *p_MP3File)
-{
-	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	p_MF->inner.stop();
-}
+void MP3_Play(void *p_MP3File) { audioPlay(p_MP3File); }
+void MP3_Pause(void *p_MP3File) { audioPause(p_MP3File); }
+void MP3_Stop(void *p_MP3File) { audioStop(p_MP3File); }
 
 /*!
  * Checks the file given by \p FileName for whether it is an MP3
@@ -539,10 +517,10 @@ bool mp3_t::isMP3(const char *const fileName) noexcept
 API_Functions MP3Decoder =
 {
 	MP3_OpenR,
-	MP3_GetFileInfo,
-	MP3_FillBuffer,
-	MP3_CloseFileR,
-	MP3_Play,
-	MP3_Pause,
-	MP3_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
