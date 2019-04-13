@@ -69,27 +69,10 @@ struct m4a_t::decoderContext_t final
 	void aacTrack(fileInfo_t &fileInfo) noexcept;
 };
 
-void *MP4DecOpen(const char *FileName, MP4FileMode Mode);
-int MP4DecSeek(void *MP4File, int64_t pos);
-int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t);
-int MP4DecWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t);
-int MP4DecClose(void *MP4File);
-
-/*!
- * @internal
- * Structure holding pointers to the \c MP4Dec* functions given in this file.
- * Used in the initialising of the MP4v2 file reader as a set of callbacks so
- * as to prevent run-time issues on Windows.
- */
-MP4FileProvider MP4DecFunctions =
+namespace libAudio
 {
-	MP4DecOpen,
-	MP4DecSeek,
-	MP4DecRead,
-	MP4DecWrite,
-	MP4DecClose
-};
-
+	namespace m4a
+	{
 /*!
  * @internal
  * Internal function used to open the MP4 file for reading
@@ -163,6 +146,25 @@ int MP4DecClose(void *MP4File)
 {
 	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
 }
+
+/*!
+ * @internal
+ * Structure holding pointers to the \c MP4Dec* functions given in this file.
+ * Used in the initialising of the MP4v2 file reader as a set of callbacks so
+ * as to prevent run-time issues on Windows.
+ */
+MP4FileProvider MP4DecFunctions =
+{
+	MP4DecOpen,
+	MP4DecSeek,
+	MP4DecRead,
+	MP4DecWrite,
+	MP4DecClose
+};
+	}
+}
+
+using namespace libAudio;
 
 m4a_t::m4a_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::m4a, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr},
@@ -250,7 +252,7 @@ void *M4A_OpenR(const char *FileName)
 	auto &ctx = *file->context();
 	fileInfo_t &info = file->fileInfo();
 
-	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
+	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &m4a::MP4DecFunctions);
 	ctx.aacTrack(info);
 	if (!ctx.decoder)
 		return nullptr;
