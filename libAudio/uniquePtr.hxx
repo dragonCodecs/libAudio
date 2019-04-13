@@ -51,4 +51,6 @@ inline std::unique_ptr<char []> stringDup(const char *const str)
 inline std::unique_ptr<char []> stringDup(const std::unique_ptr<char []> &str)
 	{ return stringDup(str.get()); }
 
+struct freeDelete final { void operator ()(void *ptr) noexcept { free(ptr); } };
+
 #endif /*UNIQUE_PTR__HXX*/

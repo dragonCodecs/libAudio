@@ -6,6 +6,7 @@
 
 #include "libAudio.h"
 #include "libAudio.hxx"
+#include "string.hxx"
 
 #include <limits.h>
 
@@ -179,6 +180,29 @@ uint32_t ParseXingHeader(mad_bitptr bitStream, uint32_t bitLen)
 	}
 
 	return frames;
+}
+
+char *copyTag(const id3_tag *tags, const char *tag) noexcept
+{
+	std::unique_ptr<char []> result;
+	const id3_frame *frame = id3_tag_findframe(tags, tag, 0);
+	if (!frame)
+		return nullptr;
+	const id3_field *field = id3_frame_field(frame, 1);
+	if (!field)
+		return nullptr;
+	const uint32_t stringCount = id3_field_getnstrings(field);
+	for (uint32_t i = 0; i < stringCount; ++i)
+	{
+		const id3_ucs4_t *const utf32Str = id3_field_getstrings(field, i);
+		if (!utf32Str)
+			continue;
+		std::unique_ptr<id3_utf8_t, freeDelete> str(id3_ucs4_utf8duplicate(utf32Str));
+		if (!str)
+			continue;
+		copyComment(result, reinterpret_cast<char *>(str.get()));
+	}
+	return result.release();
 }
 
 /*!
