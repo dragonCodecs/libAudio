@@ -11,6 +11,8 @@ libMAD = cxx.find_library('mad')
 libID3Tag = cxx.find_library('id3tag')
 maths = cxx.find_library('m', required: false)
 
+cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
+
 #WMA = loadWMA.o
 srcWMA = []
 #SHORTEN = loadShorten.o
