@@ -37,22 +37,6 @@ struct m4a_t::decoderContext_t final
 	 * The MP4v2 track from which the decoded audio data is being read
 	 */
 	MP4TrackId track;
-
-	uint8_t playbackBuffer[8192];
-
-	decoderContext_t();
-	~decoderContext_t() noexcept;
-	void finish() noexcept;
-	void aacTrack(fileInfo_t &fileInfo) noexcept;
-};
-
-typedef struct _M4A_Intern
-{
-	/*!
-	 * @internal
-	 * The \c FileInfo for the AAC file being decoded
-	 */
-	FileInfo *p_FI;
 	/*!
 	 * @internal
 	 * @var int nLoops
@@ -64,18 +48,29 @@ typedef struct _M4A_Intern
 	 * @var int nSamples
 	 * The total number of samples in the current sample buffer
 	 */
-	int nLoops, nCurrLoop, samplesUsed, nSamples;
+	uint32_t frameCount, currentFrame;
+	uint64_t sampleCount, samplesUsed;
 	/*!
 	 * @internal
 	 * Pointer to the static return result of the call to \c NeAACDecDecode()
 	 */
-	uint8_t *p_Samples;
+	uint8_t *samples;
 	/*!
 	 * @internal
 	 * The end-of-file flag
 	 */
 	bool eof;
 
+	uint8_t playbackBuffer[8192];
+
+	decoderContext_t();
+	~decoderContext_t() noexcept;
+	void finish() noexcept;
+	void aacTrack(fileInfo_t &fileInfo) noexcept;
+};
+
+typedef struct _M4A_Intern
+{
 	m4a_t inner;
 } M4A_Intern;
 
@@ -175,8 +170,9 @@ int MP4DecClose(void *MP4File)
 }
 
 m4a_t::m4a_t() noexcept : audioFile_t(audioType_t::m4a, {}), ctx(makeUnique<decoderContext_t>()) { }
-m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr}, track{MP4_INVALID_TRACK_ID},
-	playbackBuffer{} { }
+m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr},
+	track{MP4_INVALID_TRACK_ID}, frameCount{0}, currentFrame{0}, sampleCount{0}, samplesUsed{0},
+	samples{nullptr}, eof{false}, playbackBuffer{} { }
 
 /*!
  * @internal
@@ -209,11 +205,13 @@ void m4a_t::decoderContext_t::aacTrack(fileInfo_t &fileInfo) noexcept
 			return finish(); // Return having cleaned up, rather than crash
 		fileInfo.bitRate = sampleRate;
 		fileInfo.channels = channels;
+		MP4Free(buffer);
 
 		NeAACDecConfiguration *config = NeAACDecGetCurrentConfiguration(decoder);
 		config->outputFormat = FAAD_FMT_16BIT;
 		NeAACDecSetConfiguration(decoder, config);
-		MP4Free(buffer);
+
+		frameCount = MP4GetTrackNumberOfSamples(mp4Stream, track);
 	}
 	/* can't decode this */
 }
@@ -258,7 +256,6 @@ void *M4A_OpenR(const char *FileName)
 	auto &ctx = *ret->inner.context();
 	fileInfo_t &info = ret->inner.fileInfo();
 
-	ret->eof = false;
 	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
 	ctx.aacTrack(ret->inner.fileInfo());
 	if (!ctx.decoder)
@@ -267,8 +264,6 @@ void *M4A_OpenR(const char *FileName)
 		return nullptr;
 	}
 	ret->inner.fetchTags();
-	ret->nLoops = MP4GetTrackNumberOfSamples(ctx.mp4Stream, ctx.track);
-	ret->nCurrLoop = 0;
 
 	if (ExternalPlayback == 0)
 		ret->inner.player(makeUnique<playback_t>(ret, M4A_FillBuffer, ctx.playbackBuffer, 8192, info));
@@ -332,43 +327,42 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 	auto &ctx = *p_MF->inner.context();
 	uint8_t *OBuf = OutBuffer;
 
-	while ((OBuf - OutBuffer) < nOutBufferLen && p_MF->eof == false)
+	while ((OBuf - OutBuffer) < nOutBufferLen && !ctx.eof)
 	{
 		uint32_t nUsed;
-		if (p_MF->samplesUsed == p_MF->nSamples)
+		if (ctx.samplesUsed == ctx.sampleCount)
 		{
-			if (p_MF->nCurrLoop < p_MF->nLoops)
+			if (ctx.currentFrame < ctx.frameCount)
 			{
 				NeAACDecFrameInfo FI;
 				uint8_t *Buff = nullptr;
 				uint32_t nBuff = 0;
-				p_MF->nCurrLoop++;
-				if (MP4ReadSample(ctx.mp4Stream, ctx.track, p_MF->nCurrLoop, &Buff, &nBuff) == false)
+				++ctx.currentFrame;
+				if (!MP4ReadSample(ctx.mp4Stream, ctx.track, ctx.currentFrame, &Buff, &nBuff))
 				{
-					p_MF->eof = true;
+					ctx.eof = true;
 					return -2;
 				}
-				p_MF->p_Samples = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, nBuff);
+				ctx.samples = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, nBuff);
 				MP4Free(Buff);
 
-				p_MF->nSamples = FI.samples * FI.channels;
-				p_MF->samplesUsed = 0;
+				ctx.sampleCount = FI.samples * FI.channels;
+				ctx.samplesUsed = 0;
 				if (FI.error != 0)
 				{
 					printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
-					p_MF->nSamples = 0;
+					ctx.sampleCount = 0;
 					continue;
 				}
 			}
-			else if (p_MF->nCurrLoop == p_MF->nLoops)
+			else if (ctx.currentFrame == ctx.frameCount)
 				return -1;
-
 		}
 
-		nUsed = std::min<int64_t>(p_MF->nSamples - p_MF->samplesUsed, nOutBufferLen - (OBuf - OutBuffer));
-		memcpy(OBuf, p_MF->p_Samples + p_MF->samplesUsed, nUsed);
+		nUsed = std::min<int64_t>(ctx.sampleCount - ctx.samplesUsed, nOutBufferLen - (OBuf - OutBuffer));
+		memcpy(OBuf, ctx.samples + ctx.samplesUsed, nUsed);
 		OBuf += nUsed;
-		p_MF->samplesUsed += nUsed;
+		ctx.samplesUsed += nUsed;
 	}
 
 	return OBuf - OutBuffer;
