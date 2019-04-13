@@ -110,7 +110,6 @@ private:
 	std::unique_ptr<decoderContext_t> ctx;
 
 public:
-	mp3_t() noexcept;
 	mp3_t(fd_t &&fd) noexcept;
 	//static m4a_t *openR(const char *const fileName) noexcept;
 	static bool isMP3(const char *const fileName) noexcept;
