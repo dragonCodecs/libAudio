@@ -230,6 +230,7 @@ void m4a_t::fetchTags() noexcept
 	if (tags->comments)
 		info.other.emplace_back(stringDup(tags->comments));
 
+	info.bitsPerSample = 16;
 	const uint32_t timescale = MP4GetTrackTimeScale(ctx->mp4Stream, ctx->track);
 	info.totalTime = MP4GetTrackDuration(ctx->mp4Stream, ctx->track) / timescale;
 }
@@ -255,6 +256,7 @@ void *M4A_OpenR(const char *FileName)
 		return nullptr;
 	}
 	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
 
 	ret->eof = false;
 	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
@@ -265,6 +267,11 @@ void *M4A_OpenR(const char *FileName)
 		return nullptr;
 	}
 	ret->inner.fetchTags();
+	ret->nLoops = MP4GetTrackNumberOfSamples(ctx.mp4Stream, ctx.track);
+	ret->nCurrLoop = 0;
+
+	if (ExternalPlayback == 0)
+		ret->inner.player(makeUnique<playback_t>(ret, M4A_FillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret;
 }
@@ -279,32 +286,7 @@ void *M4A_OpenR(const char *FileName)
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	auto &ctx = *p_MF->inner.context();
-	fileInfo_t &info = p_MF->inner.fileInfo();
-	FileInfo *ret = nullptr;
-
-	p_MF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == nullptr)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-
-	ret->BitRate = info.bitRate;
-	ret->Channels = info.channels;
-	ret->Album = info.album.get();
-	ret->Artist = info.artist.get();
-	ret->Title = info.title.get();
-	ret->BitsPerSample = 16;
-	ret->nOtherComments = info.other.size();
-	if (info.other.size())
-		ret->OtherComments.push_back(info.other[0].get());
-	ret->TotalTime = info.totalTime;
-	p_MF->nLoops = MP4GetTrackNumberOfSamples(ctx.mp4Stream, ctx.track);
-	p_MF->nCurrLoop = 0;
-
-	if (ExternalPlayback == 0)
-		p_MF->inner.player(makeUnique<playback_t>(p_M4AFile, M4A_FillBuffer, ctx.playbackBuffer, 8192, ret));
-
-	return ret;
+	return audioFileInfo(&p_MF->inner);
 }
 
 void m4a_t::decoderContext_t::finish() noexcept
