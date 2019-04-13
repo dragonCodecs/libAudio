@@ -30,6 +30,21 @@ struct mp3_t::decoderContext_t final
 {
 	/*!
 	 * @internal
+	 * The MP3 stream handle
+	 */
+	mad_stream stream;
+	/*!
+	 * @internal
+	 * The MP3 frame handle
+	 */
+	mad_frame frame;
+	/*!
+	 * @internal
+	 * The MP3 audio synthesis handle
+	 */
+	mad_synth synth;
+	/*!
+	 * @internal
 	 * The internal input data buffer
 	 */
 	std::array<uint8_t, 8192> inputBuffer;
@@ -44,21 +59,6 @@ struct mp3_t::decoderContext_t final
  */
 typedef struct _MP3_Intern
 {
-	/*!
-	 * @internal
-	 * The MP3 stream handle
-	 */
-	mad_stream *p_Stream;
-	/*!
-	 * @internal
-	 * The MP3 frame handle
-	 */
-	mad_frame *p_Frame;
-	/*!
-	 * @internal
-	 * The MP3 audio synthesis handle
-	 */
-	mad_synth *p_Synth;
 	/*!
 	 * @internal
 	 * The internal decoded data buffer
@@ -136,17 +136,14 @@ void *MP3_OpenR(const char *FileName)
 		return ret;
 
 	ret = new (std::nothrow) MP3_Intern(fd_t(FileName, O_RDONLY | O_NOCTTY));
-	if (!ret)
+	if (!ret || !ret->inner.context())
 		return nullptr;
+	auto &ctx = *ret->inner.context();
 
 	ret->f_name = strdup(FileName);
-	ret->p_Stream = (mad_stream *)malloc(sizeof(mad_stream));
-	ret->p_Frame = (mad_frame *)malloc(sizeof(mad_frame));
-	ret->p_Synth = (mad_synth *)malloc(sizeof(mad_synth));
-
-	mad_stream_init(ret->p_Stream);
-	mad_frame_init(ret->p_Frame);
-	mad_synth_init(ret->p_Synth);
+	mad_stream_init(&ctx.stream);
+	mad_frame_init(&ctx.frame);
+	mad_synth_init(&ctx.synth);
 
 	return ret;
 }
@@ -357,27 +354,27 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	fd.seek(id_tag->paddedsize, SEEK_SET);
 	id3_file_close(f_id3);
 
-	const uint32_t rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
+	const uint32_t rem = (!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
 	fd.read(ctx.inputBuffer.data() + rem, ctx.inputBuffer.size() - rem);
-	mad_stream_buffer(p_MF->p_Stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
+	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
 
-	while (p_MF->p_Frame->header.bitrate == 0 || p_MF->p_Frame->header.samplerate == 0)
-		mad_frame_decode(p_MF->p_Frame, p_MF->p_Stream);
+	while (ctx.frame.header.bitrate == 0 || ctx.frame.header.samplerate == 0)
+		mad_frame_decode(&ctx.frame, &ctx.stream);
 	p_MF->InitialFrame = true;
 
-	frameCount = ParseXingHeader(p_MF->p_Stream->anc_ptr, p_MF->p_Stream->anc_bitlen);
+	frameCount = ParseXingHeader(ctx.stream.anc_ptr, ctx.stream.anc_bitlen);
 	if (frameCount != 0)
 	{
 		uint64_t totalTime;
-		mad_timer_t songLength = p_MF->p_Frame->header.duration;
+		mad_timer_t songLength = ctx.frame.header.duration;
 		mad_timer_multiply(&songLength, frameCount);
 		totalTime = mad_timer_count(songLength, MAD_UNITS_SECONDS);
 		if (ret->TotalTime == 0 || ret->TotalTime != totalTime)
 			ret->TotalTime = totalTime;
 	}
-	ret->BitRate = p_MF->p_Frame->header.samplerate;
+	ret->BitRate = ctx.frame.header.samplerate;
 	ret->BitsPerSample = 16;
-	ret->Channels = (p_MF->p_Frame->header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
+	ret->Channels = (ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
 
 	if (ExternalPlayback == 0)
 		p_MF->inner.player(makeUnique<playback_t>(p_MP3File, MP3_FillBuffer, p_MF->buffer, 8192, ret));
@@ -386,7 +383,12 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	return ret;
 }
 
-mp3_t::decoderContext_t::~decoderContext_t() noexcept { }
+mp3_t::decoderContext_t::~decoderContext_t() noexcept
+{
+	mad_synth_finish(&synth);
+	mad_frame_finish(&frame);
+	mad_stream_finish(&stream);
+}
 
 /*!
  * Closes an opened audio file
@@ -400,10 +402,6 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept { }
 int MP3_CloseFileR(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-
-	mad_synth_finish(p_MF->p_Synth);
-	mad_frame_finish(p_MF->p_Frame);
-	mad_stream_finish(p_MF->p_Stream);
 
 	free(p_MF->f_name);
 	delete p_MF;
@@ -423,10 +421,10 @@ void GetData(MP3_Intern *p_MF, bool *eof)
 {
 	auto &ctx = *p_MF->inner.context();
 	const fd_t &fd = p_MF->inner.fd();
-	int rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
+	int rem = (!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
 
-	if (p_MF->p_Stream->next_frame != NULL)
-		memmove(ctx.inputBuffer.data(), p_MF->p_Stream->next_frame, rem);
+	if (ctx.stream.next_frame)
+		memmove(ctx.inputBuffer.data(), ctx.stream.next_frame, rem);
 
 	fd.read(ctx.inputBuffer.data() + rem, ctx.inputBuffer.size() - rem);
 	*eof = fd.isEOF();
@@ -434,7 +432,7 @@ void GetData(MP3_Intern *p_MF, bool *eof)
 	/*if (*eof)
 		memset(p_MF->inbuff + (2 * 8192), 0x00, 8);*/
 
-	mad_stream_buffer(p_MF->p_Stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
+	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
 }
 
 /*!
@@ -446,13 +444,14 @@ void GetData(MP3_Intern *p_MF, bool *eof)
  */
 int DecodeFrame(MP3_Intern *p_MF, bool *eof)
 {
+	auto &ctx = *p_MF->inner.context();
 	if (p_MF->InitialFrame == false)
 	{
-		if (mad_frame_decode(p_MF->p_Frame, p_MF->p_Stream) != 0)
+		if (mad_frame_decode(&ctx.frame, &ctx.stream) != 0)
 		{
-			if (MAD_RECOVERABLE(p_MF->p_Stream->error) == 0)
+			if (MAD_RECOVERABLE(ctx.stream.error) == 0)
 			{
-				if (p_MF->p_Stream->error == MAD_ERROR_BUFLEN)
+				if (ctx.stream.error == MAD_ERROR_BUFLEN)
 				{
 					GetData(p_MF, eof);
 					if (*eof == true)
@@ -461,7 +460,7 @@ int DecodeFrame(MP3_Intern *p_MF, bool *eof)
 				}
 				else
 				{
-					printf("Unrecoverable frame level error (%i).\n", p_MF->p_Stream->error);
+					printf("Unrecoverable frame-level error (%i).\n", ctx.stream.error);
 					return -1;
 				}
 			}
@@ -486,6 +485,7 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 	uint8_t *OBuff = OutBuffer;
+	auto &ctx = *p_MF->inner.context();
 
 	while ((OBuff - OutBuffer) < nOutBufferLen && p_MF->eof == false)
 	{
@@ -496,7 +496,7 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 		{
 			int ret;
 			// Get input if needed, get the stream buffer part of libMAD to process that input.
-			if (p_MF->p_Stream->buffer == NULL || p_MF->p_Stream->error == MAD_ERROR_BUFLEN)
+			if (!ctx.stream.buffer || ctx.stream.error == MAD_ERROR_BUFLEN)
 				GetData(p_MF, &p_MF->eof);
 
 			// Decode a frame:
@@ -507,20 +507,20 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 				p_MF->InitialFrame = false;
 
 			// Synth the PCM
-			mad_synth_frame(p_MF->p_Synth, p_MF->p_Frame);
+			mad_synth_frame(&ctx.synth, &ctx.frame);
 		}
 
 		// copy the PCM to our output buffer
-		for (int i = p_MF->PCMDecoded; i < p_MF->p_Synth->pcm.length; i++)
+		for (uint16_t i = p_MF->PCMDecoded; i < ctx.synth.pcm.length; ++i)
 		{
 			short Sample = 0;
 
-			Sample = FixedToShort(p_MF->p_Synth->pcm.samples[0][i]);
+			Sample = FixedToShort(ctx.synth.pcm.samples[0][i]);
 			out[((i - p_MF->PCMDecoded) * p_MF->p_FI->Channels) + 0] = Sample;
 
 			if (p_MF->p_FI->Channels == 2)
 			{
-				Sample = FixedToShort(p_MF->p_Synth->pcm.samples[1][i]);
+				Sample = FixedToShort(ctx.synth.pcm.samples[1][i]);
 				out[((i - p_MF->PCMDecoded) * p_MF->p_FI->Channels) + 1] = Sample;
 			}
 
@@ -529,7 +529,7 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 			if (((OBuff - OutBuffer) + nOut) >= nOutBufferLen)
 			{
 				p_MF->PCMDecoded = i + 1;
-				i = p_MF->p_Synth->pcm.length;
+				i = ctx.synth.pcm.length;
 			}
 		}
 
