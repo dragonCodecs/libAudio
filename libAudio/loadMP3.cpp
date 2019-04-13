@@ -48,6 +48,11 @@ struct mp3_t::decoderContext_t final
 	 * The internal input data buffer
 	 */
 	std::array<uint8_t, 8192> inputBuffer;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
+	uint8_t playbackBuffer[8192];
 
 	decoderContext_t();
 	~decoderContext_t() noexcept;
@@ -59,11 +64,6 @@ struct mp3_t::decoderContext_t final
  */
 typedef struct _MP3_Intern
 {
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The \c FileInfo for the MP3 file being decoded
@@ -377,7 +377,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	ret->Channels = (ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
 
 	if (ExternalPlayback == 0)
-		p_MF->inner.player(makeUnique<playback_t>(p_MP3File, MP3_FillBuffer, p_MF->buffer, 8192, ret));
+		p_MF->inner.player(makeUnique<playback_t>(p_MP3File, MP3_FillBuffer, ctx.playbackBuffer, 8192, ret));
 	p_MF->p_FI = ret;
 
 	return ret;
@@ -489,7 +489,7 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 
 	while ((OBuff - OutBuffer) < nOutBufferLen && p_MF->eof == false)
 	{
-		short *out = (short *)(p_MF->buffer + (OBuff - OutBuffer));
+		short *out = (short *)(ctx.playbackBuffer + (OBuff - OutBuffer));
 		int nOut = 0;
 
 		if (p_MF->PCMDecoded == 0)
