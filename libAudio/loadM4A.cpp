@@ -69,11 +69,6 @@ struct m4a_t::decoderContext_t final
 	void aacTrack(fileInfo_t &fileInfo) noexcept;
 };
 
-typedef struct _M4A_Intern
-{
-	m4a_t inner;
-} M4A_Intern;
-
 void *MP4DecOpen(const char *FileName, MP4FileMode Mode);
 int MP4DecSeek(void *MP4File, int64_t pos);
 int MP4DecRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t);
@@ -169,7 +164,7 @@ int MP4DecClose(void *MP4File)
 	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
 }
 
-m4a_t::m4a_t() noexcept : audioFile_t(audioType_t::m4a, {}), ctx(makeUnique<decoderContext_t>()) { }
+m4a_t::m4a_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::m4a, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr},
 	track{MP4_INVALID_TRACK_ID}, frameCount{0}, currentFrame{0}, sampleCount{0}, samplesUsed{0},
 	samples{nullptr}, eof{false}, playbackBuffer{} { }
@@ -233,11 +228,13 @@ void m4a_t::fetchTags() noexcept
 	info.totalTime = MP4GetTrackDuration(ctx->mp4Stream, ctx->track) / timescale;
 }
 
-/*m4a_t *m4a_t::openR(const char *const fileName) noexcept
+m4a_t *m4a_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<m4a_t> m4aFile(makeUnique<m4a_t>());
-	mp4Stream = MP4ReadProvider(fileName, 0, &MP4DecFunctions);
-}*/
+	std::unique_ptr<m4a_t> m4aFile(makeUnique<m4a_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!m4aFile || !m4aFile->valid() || !isM4A(m4aFile->_fd))
+		return nullptr;
+	return m4aFile.release();
+}
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -247,28 +244,22 @@ void m4a_t::fetchTags() noexcept
  */
 void *M4A_OpenR(const char *FileName)
 {
-	M4A_Intern *ret = new (std::nothrow) M4A_Intern();
-	if (ret == nullptr || ret->inner.context() == nullptr)
-	{
-		delete ret;
+	std::unique_ptr<m4a_t> file(m4a_t::openR(FileName));
+	if (!file)
 		return nullptr;
-	}
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
 	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
-	ctx.aacTrack(ret->inner.fileInfo());
+	ctx.aacTrack(info);
 	if (!ctx.decoder)
-	{
-		delete ret;
 		return nullptr;
-	}
-	ret->inner.fetchTags();
+	file->fetchTags();
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret, M4A_FillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(makeUnique<playback_t>(file.get(), M4A_FillBuffer, ctx.playbackBuffer, 8192, info));
 
-	return ret;
+	return file.release();
 }
 
 /*!
@@ -279,10 +270,7 @@ void *M4A_OpenR(const char *FileName)
  * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
-{
-	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	return audioFileInfo(&p_MF->inner);
-}
+	{ return audioFileInfo(p_M4AFile); }
 
 void m4a_t::decoderContext_t::finish() noexcept
 {
@@ -303,12 +291,7 @@ m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  * to destroy it via scope
  * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
-int M4A_CloseFileR(void *p_M4AFile)
-{
-	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	delete p_MF;
-	return 0;
-}
+int M4A_CloseFileR(void *p_M4AFile) { return audioCloseFileR(p_M4AFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -322,12 +305,15 @@ int M4A_CloseFileR(void *p_M4AFile)
  * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	auto &ctx = *p_MF->inner.context();
-	uint8_t *OBuf = OutBuffer;
+	{ return audioFillBuffer(p_M4AFile, OutBuffer, nOutBufferLen); }
 
-	while ((OBuf - OutBuffer) < nOutBufferLen && !ctx.eof)
+int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	auto &ctx = *context();
+	auto buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
+	auto *OBuf = buffer;
+
+	while ((OBuf - buffer) < length && !ctx.eof)
 	{
 		uint32_t nUsed;
 		if (ctx.samplesUsed == ctx.sampleCount)
@@ -359,18 +345,13 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 				return -1;
 		}
 
-		nUsed = std::min<int64_t>(ctx.sampleCount - ctx.samplesUsed, nOutBufferLen - (OBuf - OutBuffer));
+		nUsed = std::min<uint64_t>(ctx.sampleCount - ctx.samplesUsed, length - (OBuf - buffer));
 		memcpy(OBuf, ctx.samples + ctx.samplesUsed, nUsed);
 		OBuf += nUsed;
 		ctx.samplesUsed += nUsed;
 	}
 
-	return OBuf - OutBuffer;
-}
-
-int64_t m4a_t::fillBuffer(void *const buffer, const uint32_t length)
-{
-	return -1;
+	return OBuf - buffer;
 }
 
 /*!
@@ -384,29 +365,9 @@ int64_t m4a_t::fillBuffer(void *const buffer, const uint32_t length)
  * @bug Futher to the \p p_M4AFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void M4A_Play(void *p_M4AFile)
-{
-	if (!p_M4AFile)
-		return;
-	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	p_MF->inner.play();
-}
-
-void M4A_Pause(void *p_M4AFile)
-{
-	if (!p_M4AFile)
-		return;
-	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	p_MF->inner.pause();
-}
-
-void M4A_Stop(void *p_M4AFile)
-{
-	if (!p_M4AFile)
-		return;
-	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-	p_MF->inner.stop();
-}
+void M4A_Play(void *p_M4AFile) { audioPlay(p_M4AFile); }
+void M4A_Pause(void *p_M4AFile) { audioPause(p_M4AFile); }
+void M4A_Stop(void *p_M4AFile) { audioStop(p_M4AFile); }
 
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
 // 00 00 00 20 66 74 79 70 4D 34 41 20
@@ -470,10 +431,10 @@ bool m4a_t::isM4A(const char *const fileName) noexcept
 API_Functions M4ADecoder =
 {
 	M4A_OpenR,
-	M4A_GetFileInfo,
-	M4A_FillBuffer,
-	M4A_CloseFileR,
-	M4A_Play,
-	M4A_Pause,
-	M4A_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
