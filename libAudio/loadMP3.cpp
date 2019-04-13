@@ -92,11 +92,6 @@ typedef struct _MP3_Intern
 	char *f_name;
 	/*!
 	 * @internal
-	 * The playback class instance for the MP3 file
-	 */
-	playback_t *p_Playback;
-	/*!
-	 * @internal
 	 * The end-of-file flag
 	 */
 	bool eof;
@@ -387,7 +382,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	ret->Channels = (p_MF->p_Frame->header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
 
 	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new playback_t(p_MP3File, MP3_FillBuffer, p_MF->buffer, 8192, ret);
+		p_MF->inner.player(makeUnique<playback_t>(p_MP3File, MP3_FillBuffer, p_MF->buffer, 8192, ret));
 	p_MF->p_FI = ret;
 
 	return ret;
@@ -408,8 +403,6 @@ int MP3_CloseFileR(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 	int ret;
-
-	delete p_MF->p_Playback;
 
 	mad_synth_finish(p_MF->p_Synth);
 	mad_frame_finish(p_MF->p_Frame);
@@ -571,21 +564,21 @@ void MP3_Play(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 
-	p_MF->p_Playback->play();
+	p_MF->inner.play();
 }
 
 void MP3_Pause(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 
-	p_MF->p_Playback->pause();
+	p_MF->inner.pause();
 }
 
 void MP3_Stop(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 
-	p_MF->p_Playback->stop();
+	p_MF->inner.stop();
 }
 
 /*!
