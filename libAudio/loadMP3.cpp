@@ -72,6 +72,8 @@ struct mp3_t::decoderContext_t final
 
 	decoderContext_t();
 	~decoderContext_t() noexcept;
+	bool readData(const fd_t &fd) noexcept WARN_UNUSED;
+	int32_t decodeFrame(const fd_t &fd) noexcept WARN_UNUSED;
 };
 
 /*!
@@ -375,6 +377,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	ret->BitRate = ctx.frame.header.samplerate;
 	ret->BitsPerSample = 16;
 	ret->Channels = (ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
+	p_MF->inner.fileInfo().channels = ret->Channels;
 
 	if (ExternalPlayback == 0)
 		p_MF->inner.player(makeUnique<playback_t>(p_MP3File, MP3_FillBuffer, ctx.playbackBuffer, 8192, ret));
@@ -417,22 +420,23 @@ int MP3_CloseFileR(void *p_MP3File)
  *   to re-dereference the pointers and memory needed to locate
  *   the member
  */
-void GetData(MP3_Intern *p_MF, bool *eof)
+bool mp3_t::decoderContext_t::readData(const fd_t &fd) noexcept
 {
-	auto &ctx = *p_MF->inner.context();
-	const fd_t &fd = p_MF->inner.fd();
-	int rem = (!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
+	const size_t rem = !stream.buffer ? 0 : stream.bufend - stream.next_frame;
 
-	if (ctx.stream.next_frame)
-		memmove(ctx.inputBuffer.data(), ctx.stream.next_frame, rem);
+	if (stream.next_frame)
+		memmove(inputBuffer.data(), stream.next_frame, rem);
 
-	fd.read(ctx.inputBuffer.data() + rem, ctx.inputBuffer.size() - rem);
-	*eof = fd.isEOF();
+	const size_t count = inputBuffer.size() - rem;
+	if (!fd.read(inputBuffer.data() + rem, count))
+		return false;
+	eof = fd.isEOF();
 
 	/*if (*eof)
 		memset(p_MF->inbuff + (2 * 8192), 0x00, 8);*/
 
-	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
+	mad_stream_buffer(&stream, inputBuffer.data(), inputBuffer.size());
+	return true;
 }
 
 /*!
@@ -442,25 +446,23 @@ void GetData(MP3_Intern *p_MF, bool *eof)
  * @param eof A pointer to the internal eof member
  *   for passing to \c GetData()
  */
-int DecodeFrame(MP3_Intern *p_MF)
+int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
 {
-	auto &ctx = *p_MF->inner.context();
-	if (!ctx.initialFrame)
+	if (!initialFrame)
 	{
-		if (mad_frame_decode(&ctx.frame, &ctx.stream) != 0)
+		if (mad_frame_decode(&frame, &stream) != 0)
 		{
-			if (MAD_RECOVERABLE(ctx.stream.error) == 0)
+			if (MAD_RECOVERABLE(stream.error) == 0)
 			{
-				if (ctx.stream.error == MAD_ERROR_BUFLEN)
+				if (stream.error == MAD_ERROR_BUFLEN)
 				{
-					GetData(p_MF, &ctx.eof);
-					if (ctx.eof)
+					if (!readData(fd) || eof)
 						return -2;
-					return DecodeFrame(p_MF);
+					return decodeFrame(fd);
 				}
 				else
 				{
-					printf("Unrecoverable frame-level error (%i).\n", ctx.stream.error);
+					printf("Unrecoverable frame-level error (%i).\n", stream.error);
 					return -1;
 				}
 			}
@@ -484,23 +486,31 @@ int DecodeFrame(MP3_Intern *p_MF)
 long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	uint32_t offset = 0;
-	auto &ctx = *p_MF->inner.context();
+	return audioFillBuffer(&p_MF->inner, OutBuffer, nOutBufferLen);
+}
 
-	while (offset < nOutBufferLen && !ctx.eof)
+int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	auto *buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
+	uint32_t offset = 0;
+	const fileInfo_t &info = fileInfo();
+	auto &ctx = *context();
+
+	while (offset < length && !ctx.eof)
 	{
 		int16_t *out = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
 		uint32_t nOut = 0;
 
 		if (!ctx.samplesUsed)
 		{
-			int ret;
+			int ret = -1;
 			// Get input if needed, get the stream buffer part of libMAD to process that input.
-			if (!ctx.stream.buffer || ctx.stream.error == MAD_ERROR_BUFLEN)
-				GetData(p_MF, &ctx.eof);
+			if ((!ctx.stream.buffer || ctx.stream.error == MAD_ERROR_BUFLEN) &&
+				!ctx.readData(fd()))
+				return ret;
 
 			// Decode a frame:
-			if ((ret = DecodeFrame(p_MF)))
+			if (ret = ctx.decodeFrame(fd()))
 				return ret;
 
 			if (ctx.initialFrame)
@@ -514,29 +524,27 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 		for (uint16_t index = 0, i = ctx.samplesUsed; i < ctx.synth.pcm.length; ++i)
 		{
 			out[index++] = FixedToShort(ctx.synth.pcm.samples[0][i]);
-			if (p_MF->p_FI->Channels == 2)
+			if (info.channels == 2)
 				out[index++] = FixedToShort(ctx.synth.pcm.samples[1][i]);
-			nOut += sizeof(int16_t) * p_MF->p_FI->Channels;
+			nOut += sizeof(int16_t) * info.channels;
 
-			if ((offset + nOut) >= nOutBufferLen)
+			if ((offset + nOut) >= length)
 			{
 				ctx.samplesUsed = ++i;
 				break;
 			}
 		}
 
-		if ((offset + nOut) < nOutBufferLen)
+		if ((offset + nOut) < length)
 			ctx.samplesUsed = 0;
 
-		if (OutBuffer != ctx.playbackBuffer)
-			memcpy(OutBuffer + offset, out, nOut);
+		if (buffer != ctx.playbackBuffer)
+			memcpy(buffer + offset, out, nOut);
 		offset += nOut;
 	}
 
 	return offset;
 }
-
-int64_t mp3_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened MP3 file using OpenAL on the default audio device
