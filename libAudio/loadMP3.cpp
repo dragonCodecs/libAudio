@@ -28,6 +28,12 @@
 
 struct mp3_t::decoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The internal input data buffer
+	 */
+	std::array<uint8_t, 8192> inputBuffer;
+
 	decoderContext_t();
 	~decoderContext_t() noexcept;
 };
@@ -38,11 +44,6 @@ struct mp3_t::decoderContext_t final
  */
 typedef struct _MP3_Intern
 {
-	/*!
-	 * @internal
-	 * The MP3 file to decode
-	 */
-	FILE *f_MP3;
 	/*!
 	 * @internal
 	 * The MP3 stream handle
@@ -63,11 +64,6 @@ typedef struct _MP3_Intern
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
-	/*!
-	 * @internal
-	 * The internal input data buffer
-	 */
-	uint8_t inbuff[16392];
 	/*!
 	 * @internal
 	 * The \c FileInfo for the MP3 file being decoded
@@ -97,6 +93,8 @@ typedef struct _MP3_Intern
 	bool eof;
 
 	mp3_t inner;
+
+	_MP3_Intern(fd_t &&fd) : inner(std::move(fd)) { }
 } MP3_Intern;
 
 /*!
@@ -119,8 +117,8 @@ inline short FixedToShort(mad_fixed_t Fixed)
 	return (signed short)Fixed;
 }
 
-mp3_t::mp3_t() noexcept : audioFile_t(audioType_t::mp3, {}), ctx(makeUnique<decoderContext_t>()) { }
-mp3_t::decoderContext_t::decoderContext_t() { }
+mp3_t::mp3_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::mp3, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
+mp3_t::decoderContext_t::decoderContext_t() : inputBuffer{} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -137,11 +135,10 @@ void *MP3_OpenR(const char *FileName)
 	if (f_MP3 == NULL)
 		return ret;
 
-	ret = new (std::nothrow) MP3_Intern();
+	ret = new (std::nothrow) MP3_Intern(fd_t(FileName, O_RDONLY | O_NOCTTY));
 	if (!ret)
 		return nullptr;
 
-	ret->f_MP3 = f_MP3;
 	ret->f_name = strdup(FileName);
 	ret->p_Stream = (mad_stream *)malloc(sizeof(mad_stream));
 	ret->p_Frame = (mad_frame *)malloc(sizeof(mad_frame));
@@ -196,10 +193,11 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	uint32_t frameCount;
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
 	FileInfo *ret = NULL;
-	int rem = 0;
 	id3_file *f_id3 = NULL;
 	id3_tag *id_tag = NULL;
 	id3_frame *id_frame = NULL;
+	auto &ctx = *p_MF->inner.context();
+	const fd_t &fd = p_MF->inner.fd();
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)
@@ -356,12 +354,12 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 		}
 	}
 
-	fseek(p_MF->f_MP3, id_tag->paddedsize, SEEK_SET);
+	fd.seek(id_tag->paddedsize, SEEK_SET);
 	id3_file_close(f_id3);
 
-	rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
-	fread(p_MF->inbuff + rem, 2 * 8192 - rem, 1, p_MF->f_MP3);
-	mad_stream_buffer(p_MF->p_Stream, (const uint8_t *)p_MF->inbuff, (2 * 8192));
+	const uint32_t rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
+	fd.read(ctx.inputBuffer.data() + rem, ctx.inputBuffer.size() - rem);
+	mad_stream_buffer(p_MF->p_Stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
 
 	while (p_MF->p_Frame->header.bitrate == 0 || p_MF->p_Frame->header.samplerate == 0)
 		mad_frame_decode(p_MF->p_Frame, p_MF->p_Stream);
@@ -402,16 +400,14 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept { }
 int MP3_CloseFileR(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	int ret;
 
 	mad_synth_finish(p_MF->p_Synth);
 	mad_frame_finish(p_MF->p_Frame);
 	mad_stream_finish(p_MF->p_Stream);
 
 	free(p_MF->f_name);
-	ret = fclose(p_MF->f_MP3);
 	delete p_MF;
-	return ret;
+	return 0;
 }
 
 /*!
@@ -425,18 +421,20 @@ int MP3_CloseFileR(void *p_MP3File)
  */
 void GetData(MP3_Intern *p_MF, bool *eof)
 {
+	auto &ctx = *p_MF->inner.context();
+	const fd_t &fd = p_MF->inner.fd();
 	int rem = (p_MF->p_Stream->buffer == NULL ? 0 : p_MF->p_Stream->bufend - p_MF->p_Stream->next_frame);
 
 	if (p_MF->p_Stream->next_frame != NULL)
-		memmove(p_MF->inbuff, p_MF->p_Stream->next_frame, rem);
+		memmove(ctx.inputBuffer.data(), p_MF->p_Stream->next_frame, rem);
 
-	fread(p_MF->inbuff + rem, (2 * 8192) - rem, 1, p_MF->f_MP3);
-	*eof = (feof(p_MF->f_MP3) == FALSE ? false : true);
+	fd.read(ctx.inputBuffer.data() + rem, ctx.inputBuffer.size() - rem);
+	*eof = fd.isEOF();
 
-	if (*eof == true)
-		memset(p_MF->inbuff + (2 * 8192), 0x00, 8);
+	/*if (*eof)
+		memset(p_MF->inbuff + (2 * 8192), 0x00, 8);*/
 
-	mad_stream_buffer(p_MF->p_Stream, (const uint8_t *)p_MF->inbuff, (2 * 8192));
+	mad_stream_buffer(p_MF->p_Stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
 }
 
 /*!
@@ -563,21 +561,18 @@ int64_t mp3_t::fillBuffer(void *const buffer, const uint32_t length) { return -1
 void MP3_Play(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-
 	p_MF->inner.play();
 }
 
 void MP3_Pause(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-
 	p_MF->inner.pause();
 }
 
 void MP3_Stop(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-
 	p_MF->inner.stop();
 }
 
