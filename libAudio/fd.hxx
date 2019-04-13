@@ -108,6 +108,7 @@ public:
 	ssize_t write(const void *const bufferPtr, const size_t len) const noexcept WARN_UNUSED { return ::write(fd, bufferPtr, len); }
 	off_t seek(off_t offset, int32_t whence) const noexcept WARN_UNUSED { return ::lseek(fd, offset, whence); }
 	off_t tell() const noexcept WARN_UNUSED { return seek(0, SEEK_CUR); }
+	fd_t dup() const noexcept WARN_UNUSED { return ::dup(fd); }
 
 	fd_t(const fd_t &) = delete;
 	fd_t &operator =(const fd_t &) = delete;
