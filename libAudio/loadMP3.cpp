@@ -155,9 +155,9 @@ void *MP3_OpenR(const char *FileName)
 	return ret;
 }
 
-#define MP3_XING (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g')
-#define MP3_INFO (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o')
-#define MP3_XING_FRAMES	0x00000001
+constexpr uint32_t mp3Xing = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
+constexpr uint32_t mp3Info = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
+constexpr uint32_t mp3XingFrames = 0x00000001;
 
 uint32_t mp3_t::decoderContext_t::parseXingHeader() noexcept
 {
@@ -170,12 +170,12 @@ uint32_t mp3_t::decoderContext_t::parseXingHeader() noexcept
 
 	xingHeader = mad_bit_read(bitStream, 32);
 	remaining -= 32;
-	if (xingHeader != MP3_XING && xingHeader != MP3_INFO)
+	if (xingHeader != mp3Xing && xingHeader != mp3Info)
 		return frames;
 	xingHeader = mad_bit_read(bitStream, 32);
 	remaining -= 32;
 
-	if ((xingHeader & MP3_XING_FRAMES) != 0)
+	if ((xingHeader & mp3XingFrames) != 0)
 	{
 		if (remaining < 32)
 			return frames;
