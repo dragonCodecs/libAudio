@@ -26,8 +26,10 @@
 #define SHRT_MAX 0x7FFF
 #endif
 
-struct mp3_t::decoderContext_t
+struct mp3_t::decoderContext_t final
 {
+	decoderContext_t();
+	~decoderContext_t() noexcept;
 };
 
 /*!
@@ -98,6 +100,8 @@ typedef struct _MP3_Intern
 	 * The end-of-file flag
 	 */
 	bool eof;
+
+	mp3_t inner;
 } MP3_Intern;
 
 /*!
@@ -120,6 +124,9 @@ inline short FixedToShort(mad_fixed_t Fixed)
 	return (signed short)Fixed;
 }
 
+mp3_t::mp3_t() noexcept : audioFile_t(audioType_t::mp3, {}), ctx(makeUnique<decoderContext_t>()) { }
+mp3_t::decoderContext_t::decoderContext_t() { }
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by MP3_* functions
@@ -135,10 +142,9 @@ void *MP3_OpenR(const char *FileName)
 	if (f_MP3 == NULL)
 		return ret;
 
-	ret = (MP3_Intern *)malloc(sizeof(MP3_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(MP3_Intern));
+	ret = new (std::nothrow) MP3_Intern();
+	if (!ret)
+		return nullptr;
 
 	ret->f_MP3 = f_MP3;
 	ret->f_name = strdup(FileName);
@@ -387,6 +393,8 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	return ret;
 }
 
+mp3_t::decoderContext_t::~decoderContext_t() noexcept { }
+
 /*!
  * Closes an opened audio file
  * @param p_MP3File A pointer to a file opened with \c MP3_OpenR(), or \c NULL for a no-operation
@@ -409,7 +417,7 @@ int MP3_CloseFileR(void *p_MP3File)
 
 	free(p_MF->f_name);
 	ret = fclose(p_MF->f_MP3);
-	free(p_MF);
+	delete p_MF;
 	return ret;
 }
 
