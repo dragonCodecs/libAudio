@@ -84,18 +84,6 @@ struct mp3_t::decoderContext_t final
  */
 typedef struct _MP3_Intern
 {
-	/*!
-	 * @internal
-	 * The \c FileInfo for the MP3 file being decoded
-	 */
-	FileInfo *p_FI;
-	/*!
-	 * @internal
-	 * A string holding the name of the MP3 file relative to it's opening path
-	 * which is used when reading the ID3 data
-	 */
-	char *f_name;
-
 	mp3_t inner;
 
 	_MP3_Intern(fd_t &&fd) : inner(std::move(fd)) { }
@@ -130,31 +118,6 @@ mp3_t::decoderContext_t::decoderContext_t() : stream{}, frame{}, synth{}, inputB
 	mad_synth_init(&synth);
 }
 
-/*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
- * to the context of the opened file which must be used only by MP3_* functions
- * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
- */
-void *MP3_OpenR(const char *FileName)
-{
-	MP3_Intern *ret = NULL;
-	FILE *f_MP3 = NULL;
-
-	f_MP3 = fopen(FileName, "rb");
-	if (f_MP3 == NULL)
-		return ret;
-
-	ret = new (std::nothrow) MP3_Intern(fd_t(FileName, O_RDONLY | O_NOCTTY));
-	if (!ret || !ret->inner.context())
-		return nullptr;
-	auto &ctx = *ret->inner.context();
-
-	ret->f_name = strdup(FileName);
-
-	return ret;
-}
-
 constexpr uint32_t mp3Xing = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
 constexpr uint32_t mp3Info = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
 constexpr uint32_t mp3XingFrames = 0x00000001;
@@ -186,7 +149,7 @@ uint32_t mp3_t::decoderContext_t::parseXingHeader() noexcept
 	return frames;
 }
 
-char *copyTag(const id3_tag *tags, const char *tag) noexcept
+std::unique_ptr<char []> copyTag(const id3_tag *tags, const char *tag) noexcept
 {
 	std::unique_ptr<char []> result;
 	const id3_frame *frame = id3_tag_findframe(tags, tag, 0);
@@ -206,7 +169,116 @@ char *copyTag(const id3_tag *tags, const char *tag) noexcept
 			continue;
 		copyComment(result, reinterpret_cast<char *>(str.get()));
 	}
-	return result.release();
+	return result;
+}
+
+bool cloneComments(const id3_tag *tags, const char *tag, std::vector<std::unique_ptr<char []>> &comments) noexcept
+{
+	const id3_frame *frame = id3_tag_findframe(tags, tag, 0);
+	if (!frame)
+		return false;
+	const id3_field *field = id3_frame_field(frame, 1);
+	if (!field)
+		return false;
+	const uint32_t stringCount = id3_field_getnstrings(field);
+	for (uint32_t i = 0; i < stringCount; ++i)
+	{
+		const id3_ucs4_t *const utf32Str = id3_field_getstrings(field, i);
+		if (!utf32Str)
+			continue;
+		std::unique_ptr<id3_utf8_t, freeDelete> str(id3_ucs4_utf8duplicate(utf32Str));
+		if (!str)
+			continue;
+		std::unique_ptr<char []> value;
+		copyComment(value, reinterpret_cast<char *>(str.get()));
+		comments.emplace_back(std::move(value));
+	}
+	return true;
+}
+
+uint64_t decodeIntTag(const id3_tag *tags, const char *tag) noexcept
+{
+	std::unique_ptr<char []> result;
+	const id3_frame *frame = id3_tag_findframe(tags, tag, 0);
+	if (!frame)
+		return 0;
+	const id3_field *field = id3_frame_field(frame, 1);
+	if (!field)
+		return 0;
+	const uint32_t stringCount = id3_field_getnstrings(field);
+	if (!stringCount)
+		return 0;
+	const id3_ucs4_t *str = id3_field_getstrings(field, 0);
+	if (!str)
+		return 0;
+	return id3_ucs4_getnumber(str);
+}
+
+bool mp3_t::readMetadata() noexcept
+{
+	const fd_t fileDesc = fd().dup();
+	auto &ctx = *context();
+	fileInfo_t &info = fileInfo();
+	id3_file *const file = id3_file_fdopen(fileDesc, ID3_FILE_MODE_READONLY);
+	const id3_tag *const tags = id3_file_tag(file);
+
+	info.totalTime = decodeIntTag(tags, "TLEN") / 1000;
+	info.album = copyTag(tags, ID3_FRAME_ALBUM);
+	info.artist = copyTag(tags, ID3_FRAME_ARTIST);
+	info.title = copyTag(tags, ID3_FRAME_TITLE);
+	cloneComments(tags, ID3_FRAME_COMMENT, info.other);
+
+	if (fd().seek(tags->paddedsize, SEEK_SET) != int64_t(tags->paddedsize))
+		return false;
+	id3_file_close(file);
+
+	const uint32_t offset = (!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
+	if (!fd().read(ctx.inputBuffer.data() + offset, ctx.inputBuffer.size() - offset))
+		return false;
+	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
+
+	while (ctx.frame.header.bitrate == 0 || ctx.frame.header.samplerate == 0)
+		mad_frame_decode(&ctx.frame, &ctx.stream);
+
+	const uint32_t frameCount = ctx.parseXingHeader();
+	if (frameCount != 0)
+	{
+		mad_timer_t songLength = ctx.frame.header.duration;
+		mad_timer_multiply(&songLength, frameCount);
+		const uint64_t totalTime = mad_timer_count(songLength, MAD_UNITS_SECONDS);
+		if (!info.totalTime || info.totalTime != totalTime)
+			info.totalTime = totalTime;
+	}
+	info.bitRate = ctx.frame.header.samplerate;
+	info.bitsPerSample = 16;
+	info.channels = (ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
+
+	return true;
+}
+
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by MP3_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
+void *MP3_OpenR(const char *FileName)
+{
+	MP3_Intern *ret = new (std::nothrow) MP3_Intern(fd_t(FileName, O_RDONLY | O_NOCTTY));
+	if (!ret || !ret->inner.context())
+		return nullptr;
+	if (!ret->inner.readMetadata())
+	{
+		delete ret;
+		return nullptr;
+	}
+
+	auto &ctx = *ret->inner.context();
+	const fileInfo_t &info = ret->inner.fileInfo();
+	if (ExternalPlayback == 0)
+		ret->inner.player(makeUnique<playback_t>(ret, MP3_FillBuffer, ctx.playbackBuffer, 8192, info));
+
+	return ret;
 }
 
 /*!
@@ -218,99 +290,8 @@ char *copyTag(const id3_tag *tags, const char *tag) noexcept
  */
 FileInfo *MP3_GetFileInfo(void *p_MP3File)
 {
-	uint32_t frameCount;
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-	FileInfo *ret = NULL;
-	id3_file *f_id3 = NULL;
-	id3_tag *id_tag = NULL;
-	id3_frame *id_frame = NULL;
-	auto &ctx = *p_MF->inner.context();
-	const fd_t &fd = p_MF->inner.fd();
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-
-	f_id3 = id3_file_open(/*fileno(p_MF->f_MP3)*/p_MF->f_name, ID3_FILE_MODE_READONLY);
-	id_tag = id3_file_tag(f_id3);
-	id_frame = id3_tag_findframe(id_tag, "TLEN", 0);
-	if (id_frame != NULL)
-	{
-		id3_field *id_field = id3_frame_field(id_frame, 1);
-		if (id_field != NULL)
-		{
-			uint32_t strings = id3_field_getnstrings(id_field);
-			if (strings > 0)
-			{
-				const id3_ucs4_t *str = id3_field_getstrings(id_field, 0);
-				if (str != NULL)
-					ret->TotalTime = id3_ucs4_getnumber(str) / 1000;
-			}
-		}
-	}
-
-	ret->Album = copyTag(id_tag, ID3_FRAME_ALBUM);
-	ret->Artist = copyTag(id_tag, ID3_FRAME_ARTIST);
-	ret->Title = copyTag(id_tag, ID3_FRAME_TITLE);
-
-	id_frame = id3_tag_findframe(id_tag, ID3_FRAME_COMMENT, 0);
-	if (id_frame != NULL)
-	{
-		id3_field *id_field = id3_frame_field(id_frame, 1);
-		if (id_field != NULL)
-		{
-			uint32_t strings = id3_field_getnstrings(id_field);
-			if (strings > 0)
-			{
-				for (uint32_t i = 0; i < strings; i++)
-				{
-					const id3_ucs4_t *str = id3_field_getstrings(id_field, i);
-					if (str != NULL)
-					{
-						char *Comment = (char *)id3_ucs4_utf8duplicate(str);
-						if (Comment == NULL)
-							continue;
-						if (ret->OtherComments.size() == 0)
-							ret->nOtherComments = 0;
-						ret->OtherComments.push_back(Comment);
-						ret->nOtherComments++;
-					}
-				}
-			}
-		}
-	}
-
-	fd.seek(id_tag->paddedsize, SEEK_SET);
-	id3_file_close(f_id3);
-
-	const uint32_t rem = (!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
-	fd.read(ctx.inputBuffer.data() + rem, ctx.inputBuffer.size() - rem);
-	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
-
-	while (ctx.frame.header.bitrate == 0 || ctx.frame.header.samplerate == 0)
-		mad_frame_decode(&ctx.frame, &ctx.stream);
-
-	frameCount = ctx.parseXingHeader();
-	if (frameCount != 0)
-	{
-		uint64_t totalTime;
-		mad_timer_t songLength = ctx.frame.header.duration;
-		mad_timer_multiply(&songLength, frameCount);
-		totalTime = mad_timer_count(songLength, MAD_UNITS_SECONDS);
-		if (ret->TotalTime == 0 || ret->TotalTime != totalTime)
-			ret->TotalTime = totalTime;
-	}
-	ret->BitRate = ctx.frame.header.samplerate;
-	ret->BitsPerSample = 16;
-	ret->Channels = (ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
-	p_MF->inner.fileInfo().channels = ret->Channels;
-
-	if (ExternalPlayback == 0)
-		p_MF->inner.player(makeUnique<playback_t>(p_MP3File, MP3_FillBuffer, ctx.playbackBuffer, 8192, ret));
-	p_MF->p_FI = ret;
-
-	return ret;
+	return audioFileInfo(&p_MF->inner);
 }
 
 mp3_t::decoderContext_t::~decoderContext_t() noexcept
@@ -332,8 +313,6 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept
 int MP3_CloseFileR(void *p_MP3File)
 {
 	MP3_Intern *p_MF = (MP3_Intern *)p_MP3File;
-
-	free(p_MF->f_name);
 	delete p_MF;
 	return 0;
 }

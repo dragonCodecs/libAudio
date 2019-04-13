@@ -118,6 +118,7 @@ public:
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	bool readMetadata() noexcept WARN_UNUSED;
 };
 
 struct moduleFile_t : public audioFile_t
