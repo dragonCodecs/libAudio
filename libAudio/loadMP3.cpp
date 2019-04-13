@@ -26,6 +26,10 @@
 #define SHRT_MAX 0x7FFF
 #endif
 
+struct mp3_t::decoderContext_t
+{
+};
+
 /*!
  * @internal
  * Internal structure for holding the decoding context for a given MP3 file
@@ -542,6 +546,8 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 	return OBuff - OutBuffer;
 }
 
+int64_t mp3_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
+
 /*!
  * Plays an opened MP3 file using OpenAL on the default audio device
  * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
@@ -583,26 +589,49 @@ void MP3_Stop(void *p_MP3File)
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MP3 file or not
  */
-bool Is_MP3(const char *FileName)
+bool Is_MP3(const char *FileName) { return mp3_t::isMP3(FileName); }
+
+inline uint16_t asUint16(uint8_t *value) noexcept
+	{ return (uint16_t{value[0]} << 8) | value[1]; }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a MP3
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP3 file or not
+ */
+bool mp3_t::isMP3(const int fd) noexcept
 {
-	FILE *f_MP3 = fopen(FileName, "rb");
-	char ID3[3];
-	char MP3Sig[2];
-
-	if (f_MP3 == NULL)
+	char id3[3];
+	uint8_t mp3Sig[2];
+	if (fd == -1 ||
+		read(fd, id3, 3) != 3 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		read(fd, mp3Sig, 2) != 2 ||
+		(strncmp(id3, "ID3", 3) != 0 &&
+		asUint16(mp3Sig) != 0xFFFA))
 		return false;
+	return true;
+}
 
-	fread(ID3, 3, 1, f_MP3);
-	fseek(f_MP3, 0, SEEK_SET);
-	fread(MP3Sig, 2, 1, f_MP3);
-	fclose(f_MP3);
-
-	if (strncmp(ID3, "ID3", 3) == 0)
-		return true;
-	if ((((((short)MP3Sig[0]) << 8) | MP3Sig[1]) & 0xFFFA) == 0xFFFA)
-		return true;
-
-	return false;
+/*!
+ * Checks the file given by \p fileName for whether it is a MP3
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP3 file or not
+ */
+bool mp3_t::isMP3(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isMP3(file);
 }
 
 /*!
