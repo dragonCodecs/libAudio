@@ -448,24 +448,20 @@ bool mp3_t::decoderContext_t::readData(const fd_t &fd) noexcept
  */
 int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
 {
-	if (!initialFrame)
+	if (!initialFrame &&
+		mad_frame_decode(&frame, &stream) &&
+		!MAD_RECOVERABLE(stream.error))
 	{
-		if (mad_frame_decode(&frame, &stream) != 0)
+		if (stream.error == MAD_ERROR_BUFLEN)
 		{
-			if (MAD_RECOVERABLE(stream.error) == 0)
-			{
-				if (stream.error == MAD_ERROR_BUFLEN)
-				{
-					if (!readData(fd) || eof)
-						return -2;
-					return decodeFrame(fd);
-				}
-				else
-				{
-					printf("Unrecoverable frame-level error (%i).\n", stream.error);
-					return -1;
-				}
-			}
+			if (!readData(fd) || eof)
+				return -2;
+			return decodeFrame(fd);
+		}
+		else
+		{
+			printf("Unrecoverable frame-level error (%i).\n", stream.error);
+			return -1;
 		}
 	}
 
