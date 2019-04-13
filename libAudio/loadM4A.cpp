@@ -22,44 +22,32 @@
  */
 struct m4a_t::decoderContext_t final
 {
-	NeAACDecHandle p_dec;
-	MP4FileHandle p_MP4;
-	MP4TrackId nTrack;
-	uint8_t playbackBuffer[8192];
-
-	decoderContext_t();
-	~decoderContext_t() noexcept;
-};
-
-typedef struct _M4A_Intern
-{
 	/*!
 	 * @internal
 	 * The decoder context handle
 	 */
-	NeAACDecHandle p_dec;
+	NeAACDecHandle decoder;
 	/*!
 	 * @internal
 	 * The MP4v2 handle for the MP4 file being read from
 	 */
-	MP4FileHandle p_MP4;
+	MP4FileHandle mp4Stream;
 	/*!
 	 * @internal
 	 * The MP4v2 track from which the decoded audio data is being read
 	 */
-	MP4TrackId nTrack;
-	/*!
-	 * @internal
-	 * The count returned as a parameter of \c NeAACDecInit2() holding
-	 * the sample rate of the MP4 audio stream to decode
-	 */
-	uint32_t ActualSampleRate;
-	/*!
-	 * @internal
-	 * The count returned as a parameter of \c NeAACDecInit2() holding
-	 * the number of channels encoded in the MP4 audio stream to decode
-	 */
-	uint8_t ActualChannels;
+	MP4TrackId track;
+
+	uint8_t playbackBuffer[8192];
+
+	decoderContext_t();
+	~decoderContext_t() noexcept;
+	void finish() noexcept;
+	void aacTrack(fileInfo_t &fileInfo) noexcept;
+};
+
+typedef struct _M4A_Intern
+{
 	/*!
 	 * @internal
 	 * The \c FileInfo for the AAC file being decoded
@@ -87,12 +75,6 @@ typedef struct _M4A_Intern
 	 * The end-of-file flag
 	 */
 	bool eof;
-	/*!
-	 * @internal
-	 * The MP4v2 tags structure allocated and filled for the metadata
-	 * in the MP4 file
-	 */
-	const MP4Tags *p_Tags;
 
 	m4a_t inner;
 } M4A_Intern;
@@ -128,7 +110,7 @@ MP4FileProvider MP4DecFunctions =
 void *MP4DecOpen(const char *FileName, MP4FileMode Mode)
 {
 	if (Mode != FILEMODE_READ)
-		return NULL;
+		return nullptr;
 	return fopen(FileName, "rb");
 }
 
@@ -192,6 +174,10 @@ int MP4DecClose(void *MP4File)
 	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
 }
 
+m4a_t::m4a_t() noexcept : audioFile_t(audioType_t::m4a, {}), ctx(makeUnique<decoderContext_t>()) { }
+m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr}, track{MP4_INVALID_TRACK_ID},
+	playbackBuffer{} { }
+
 /*!
  * @internal
  * Internal function used to determine the first usable audio track and initialise decoding on it
@@ -199,56 +185,86 @@ int MP4DecClose(void *MP4File)
  *   which calls this so as to keep name changing and confusion down
  * @return The MP4v2 track ID located for the decoder or -1 on error
  */
-MP4TrackId GetAACTrack(M4A_Intern *ret)
+void m4a_t::decoderContext_t::aacTrack(fileInfo_t &fileInfo) noexcept
 {
 	/* find AAC track */
-	int i, numTracks = MP4GetNumberOfTracks(ret->p_MP4, NULL, 0);
+	const uint32_t trackCount = MP4GetNumberOfTracks(mp4Stream, nullptr, 0);
 
-	for (i = 0; i < numTracks; i++)
+	for (uint32_t i = 0; i < trackCount; ++i)
 	{
-		NeAACDecConfiguration *ADC;
-		uint8_t *Buff = NULL;
-		uint32_t BuffLen = 0;
-		MP4TrackId Track = MP4FindTrackId(ret->p_MP4, i, NULL, 0);
-		const char *TrackType = MP4GetTrackType(ret->p_MP4, Track);
+		const MP4TrackId trackID = MP4FindTrackId(mp4Stream, i, nullptr, 0);
+		const char *type = MP4GetTrackType(mp4Stream, trackID);
 
-		if (!MP4_IS_AUDIO_TRACK_TYPE(TrackType))
+		if (!MP4_IS_AUDIO_TRACK_TYPE(type))
 			continue;
+		track = trackID;
 
-		MP4GetTrackESConfiguration(ret->p_MP4, Track, &Buff, &BuffLen);
+		uint8_t *buffer = nullptr;
+		uint32_t bufferLen = 0;
+		MP4GetTrackESConfiguration(mp4Stream, track, &buffer, &bufferLen);
 
-		NeAACDecInit2(ret->p_dec, Buff, BuffLen, (unsigned long *)&ret->ActualSampleRate, &ret->ActualChannels);
-		ADC = NeAACDecGetCurrentConfiguration(ret->p_dec);
-		ADC->outputFormat = FAAD_FMT_16BIT;
-		NeAACDecSetConfiguration(ret->p_dec, ADC);
-		free(Buff);
-		return Track;
+		unsigned long sampleRate = 0;
+		unsigned char channels = 0;
+		if (NeAACDecInit2(decoder, buffer, bufferLen, &sampleRate, &channels))
+			return finish(); // Return having cleaned up, rather than crash
+		fileInfo.bitRate = sampleRate;
+		fileInfo.channels = channels;
+
+		NeAACDecConfiguration *config = NeAACDecGetCurrentConfiguration(decoder);
+		config->outputFormat = FAAD_FMT_16BIT;
+		NeAACDecSetConfiguration(decoder, config);
+		MP4Free(buffer);
 	}
-
 	/* can't decode this */
-	return -1;
 }
 
-m4a_t::m4a_t() noexcept : audioFile_t(audioType_t::m4a, {}), ctx(makeUnique<decoderContext_t>()) { }
-m4a_t::decoderContext_t::decoderContext_t() : playbackBuffer{} { }
+void m4a_t::fetchTags() noexcept
+{
+	fileInfo_t &info = fileInfo();
+	const MP4Tags *tags = MP4TagsAlloc();
+	MP4TagsFetch(tags, ctx->mp4Stream);
+
+	info.album = stringDup(tags->album);
+	info.artist = stringDup(tags->artist ? tags->artist : tags->albumArtist);
+	info.title = stringDup(tags->name);
+	if (tags->comments)
+		info.other.emplace_back(stringDup(tags->comments));
+
+	const uint32_t timescale = MP4GetTrackTimeScale(ctx->mp4Stream, ctx->track);
+	info.totalTime = MP4GetTrackDuration(ctx->mp4Stream, ctx->track) / timescale;
+}
+
+/*m4a_t *m4a_t::openR(const char *const fileName) noexcept
+{
+	std::unique_ptr<m4a_t> m4aFile(makeUnique<m4a_t>());
+	mp4Stream = MP4ReadProvider(fileName, 0, &MP4DecFunctions);
+}*/
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by M4A_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *M4A_OpenR(const char *FileName)
 {
 	M4A_Intern *ret = new (std::nothrow) M4A_Intern();
-	if (ret == NULL)
-		return ret;
+	if (ret == nullptr || ret->inner.context() == nullptr)
+	{
+		delete ret;
+		return nullptr;
+	}
+	auto &ctx = *ret->inner.context();
 
 	ret->eof = false;
-	ret->p_dec = NeAACDecOpen();
-	ret->p_MP4 = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
-	ret->nTrack = GetAACTrack(ret);
-	ret->p_Tags = MP4TagsAlloc();
+	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &MP4DecFunctions);
+	ctx.aacTrack(ret->inner.fileInfo());
+	if (!ctx.decoder)
+	{
+		delete ret;
+		return nullptr;
+	}
+	ret->inner.fetchTags();
 
 	return ret;
 }
@@ -256,44 +272,33 @@ void *M4A_OpenR(const char *FileName)
 /*!
  * This function gets the \c FileInfo structure for an opened file
  * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c M4A_Play() or \c M4A_FillBuffer()
- * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 {
-	const MP4Tags *p_Tags;
-	uint32_t timescale;
-	const char *value;
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
 	auto &ctx = *p_MF->inner.context();
-	FileInfo *ret = NULL;
+	fileInfo_t &info = p_MF->inner.fileInfo();
+	FileInfo *ret = nullptr;
 
 	p_MF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
+	if (ret == nullptr)
 		return ret;
 	memset(ret, 0x00, sizeof(FileInfo));
 
-	ret->BitRate = p_MF->ActualSampleRate;
-	ret->Channels = p_MF->ActualChannels;
-	MP4TagsFetch(p_MF->p_Tags, p_MF->p_MP4);
-	p_Tags = p_MF->p_Tags;
-
-	ret->Album = p_Tags->album;
-	ret->Artist = (p_Tags->artist == NULL ? p_Tags->albumArtist : p_Tags->artist);
-	ret->Title = p_Tags->name;
+	ret->BitRate = info.bitRate;
+	ret->Channels = info.channels;
+	ret->Album = info.album.get();
+	ret->Artist = info.artist.get();
+	ret->Title = info.title.get();
 	ret->BitsPerSample = 16;
-	value = p_Tags->comments;
-	if (value == NULL)
-		ret->nOtherComments = 0;
-	else
-	{
-		ret->nOtherComments = 1;
-		ret->OtherComments.push_back(value);
-	}
-	timescale = MP4GetTrackTimeScale(p_MF->p_MP4, p_MF->nTrack);
-	ret->TotalTime = MP4GetTrackDuration(p_MF->p_MP4, p_MF->nTrack) / timescale;
-	p_MF->nLoops = MP4GetTrackNumberOfSamples(p_MF->p_MP4, p_MF->nTrack);
+	ret->nOtherComments = info.other.size();
+	if (info.other.size())
+		ret->OtherComments.push_back(info.other[0].get());
+	ret->TotalTime = info.totalTime;
+	p_MF->nLoops = MP4GetTrackNumberOfSamples(ctx.mp4Stream, ctx.track);
 	p_MF->nCurrLoop = 0;
 
 	if (ExternalPlayback == 0)
@@ -302,25 +307,28 @@ FileInfo *M4A_GetFileInfo(void *p_M4AFile)
 	return ret;
 }
 
-m4a_t::decoderContext_t::~decoderContext_t() noexcept { }
+void m4a_t::decoderContext_t::finish() noexcept
+{
+	NeAACDecClose(decoder);
+	decoder = nullptr;
+	MP4Close(mp4Stream);
+	mp4Stream = nullptr;
+}
+
+m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
 
 /*!
  * Closes an opened audio file
  * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_M4AFile after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
- * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 int M4A_CloseFileR(void *p_M4AFile)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
-
-	NeAACDecClose(p_MF->p_dec);
-	MP4Close(p_MF->p_MP4);
-	MP4TagsFree(p_MF->p_Tags);
-
 	delete p_MF;
 	return 0;
 }
@@ -334,11 +342,12 @@ int M4A_CloseFileR(void *p_M4AFile)
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	M4A_Intern *p_MF = (M4A_Intern *)p_M4AFile;
+	auto &ctx = *p_MF->inner.context();
 	uint8_t *OBuf = OutBuffer;
 
 	while ((OBuf - OutBuffer) < nOutBufferLen && p_MF->eof == false)
@@ -349,16 +358,16 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 			if (p_MF->nCurrLoop < p_MF->nLoops)
 			{
 				NeAACDecFrameInfo FI;
-				uint8_t *Buff = NULL;
+				uint8_t *Buff = nullptr;
 				uint32_t nBuff = 0;
 				p_MF->nCurrLoop++;
-				if (MP4ReadSample(p_MF->p_MP4, p_MF->nTrack, p_MF->nCurrLoop, &Buff, &nBuff) == false)
+				if (MP4ReadSample(ctx.mp4Stream, ctx.track, p_MF->nCurrLoop, &Buff, &nBuff) == false)
 				{
 					p_MF->eof = true;
 					return -2;
 				}
-				p_MF->p_Samples = (uint8_t *)NeAACDecDecode(p_MF->p_dec, &FI, Buff, nBuff);
-				free(Buff);
+				p_MF->p_Samples = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, nBuff);
+				MP4Free(Buff);
 
 				p_MF->nSamples = FI.samples * FI.channels;
 				p_MF->samplesUsed = 0;
@@ -394,7 +403,7 @@ int64_t m4a_t::fillBuffer(void *const buffer, const uint32_t length)
  * @warning If \c ExternalPlayback was a non-zero value for
  *   the call to \c M4A_OpenR() used to open the file at \p p_M4AFile,
  *   this function will do nothing.
- * @bug \p p_M4AFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  *
  * @bug Futher to the \p p_M4AFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
