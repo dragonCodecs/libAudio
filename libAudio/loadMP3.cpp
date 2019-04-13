@@ -123,7 +123,12 @@ inline int16_t fixedToShort(mad_fixed_t value)
 
 mp3_t::mp3_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::mp3, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 mp3_t::decoderContext_t::decoderContext_t() : stream{}, frame{}, synth{}, inputBuffer{}, playbackBuffer{},
-	initialFrame{true}, samplesUsed{0}, eof{false} { }
+	initialFrame{true}, samplesUsed{0}, eof{false}
+{
+	mad_stream_init(&stream);
+	mad_frame_init(&frame);
+	mad_synth_init(&synth);
+}
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -146,9 +151,6 @@ void *MP3_OpenR(const char *FileName)
 	auto &ctx = *ret->inner.context();
 
 	ret->f_name = strdup(FileName);
-	mad_stream_init(&ctx.stream);
-	mad_frame_init(&ctx.frame);
-	mad_synth_init(&ctx.synth);
 
 	return ret;
 }
