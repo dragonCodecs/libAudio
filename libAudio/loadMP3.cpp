@@ -228,16 +228,17 @@ bool mp3_t::readMetadata() noexcept
 	info.title = copyTag(tags, ID3_FRAME_TITLE);
 	cloneComments(tags, ID3_FRAME_COMMENT, info.other);
 
-	if (fd().seek(tags->paddedsize, SEEK_SET) != int64_t(tags->paddedsize))
-		return false;
+	int64_t seekOffset = tags->paddedsize;
 	id3_file_close(file);
+	if (fd().seek(seekOffset, SEEK_SET) != seekOffset)
+		return false;
 
 	const uint32_t offset = (!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
 	if (!fd().read(ctx.inputBuffer.data() + offset, ctx.inputBuffer.size() - offset))
 		return false;
 	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), ctx.inputBuffer.size());
 
-	while (ctx.frame.header.bitrate == 0 || ctx.frame.header.samplerate == 0)
+	while (!ctx.frame.header.bitrate || !ctx.frame.header.samplerate)
 		mad_frame_decode(&ctx.frame, &ctx.stream);
 
 	const uint32_t frameCount = ctx.parseXingHeader();
