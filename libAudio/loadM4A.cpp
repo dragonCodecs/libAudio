@@ -256,7 +256,7 @@ void *M4A_OpenR(const char *FileName)
 	file->fetchTags();
 
 	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), M4A_FillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return file.release();
 }
