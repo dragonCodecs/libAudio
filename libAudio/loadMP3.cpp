@@ -429,7 +429,8 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 				return ret;
 
 			// Decode a frame:
-			if (ret = ctx.decodeFrame(fd()))
+			ret = ctx.decodeFrame(fd());
+			if (ret)
 				return ret;
 
 			if (ctx.initialFrame)
