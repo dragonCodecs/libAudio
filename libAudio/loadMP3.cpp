@@ -75,6 +75,7 @@ struct mp3_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 	bool readData(const fd_t &fd) noexcept WARN_UNUSED;
 	int32_t decodeFrame(const fd_t &fd) noexcept WARN_UNUSED;
+	uint32_t parseXingHeader() noexcept WARN_UNUSED;
 };
 
 /*!
@@ -156,26 +157,27 @@ void *MP3_OpenR(const char *FileName)
 #define MP3_INFO (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o')
 #define MP3_XING_FRAMES	0x00000001
 
-uint32_t ParseXingHeader(mad_bitptr bitStream, uint32_t bitLen)
+uint32_t mp3_t::decoderContext_t::parseXingHeader() noexcept
 {
+	mad_bitptr *bitStream = &stream.anc_ptr;
 	uint32_t xingHeader;
 	uint32_t frames = 0;
-	uint32_t remaining = bitLen;
-	if (bitLen < 64)
+	uint32_t remaining = stream.anc_bitlen;
+	if (remaining < 64)
 		return frames;
 
-	xingHeader = mad_bit_read(&bitStream, 32);
+	xingHeader = mad_bit_read(bitStream, 32);
 	remaining -= 32;
 	if (xingHeader != MP3_XING && xingHeader != MP3_INFO)
 		return frames;
-	xingHeader = mad_bit_read(&bitStream, 32);
+	xingHeader = mad_bit_read(bitStream, 32);
 	remaining -= 32;
 
 	if ((xingHeader & MP3_XING_FRAMES) != 0)
 	{
 		if (remaining < 32)
 			return frames;
-		frames = mad_bit_read(&bitStream, 32);
+		frames = mad_bit_read(bitStream, 32);
 		remaining -= 32;
 	}
 
@@ -287,7 +289,7 @@ FileInfo *MP3_GetFileInfo(void *p_MP3File)
 	while (ctx.frame.header.bitrate == 0 || ctx.frame.header.samplerate == 0)
 		mad_frame_decode(&ctx.frame, &ctx.stream);
 
-	frameCount = ParseXingHeader(ctx.stream.anc_ptr, ctx.stream.anc_bitlen);
+	frameCount = ctx.parseXingHeader();
 	if (frameCount != 0)
 	{
 		uint64_t totalTime;
