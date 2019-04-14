@@ -39,13 +39,13 @@ struct m4a_t::decoderContext_t final
 	MP4TrackId track;
 	/*!
 	 * @internal
-	 * @var int nLoops
+	 * @var int frameCount
 	 * The number of frames decoded relative to the total number
-	 * @var int nCurrLoop
+	 * @var int currentFrame
 	 * The total number of frames to decode
 	 * @var int samplesUsed
 	 * The number of samples used so far from the current sample buffer
-	 * @var int nSamples
+	 * @var int sampleCount
 	 * The total number of samples in the current sample buffer
 	 */
 	uint32_t frameCount, currentFrame;

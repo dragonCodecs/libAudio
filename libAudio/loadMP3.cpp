@@ -270,8 +270,7 @@ void *MP3_OpenR(const char *FileName)
  * @warning This function must be called before using \c MP3_Play() or \c MP3_FillBuffer()
  * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *MP3_GetFileInfo(void *p_MP3File)
-	{ return audioFileInfo(p_MP3File); }
+FileInfo *MP3_GetFileInfo(void *p_MP3File) { return audioFileInfo(p_MP3File); }
 
 mp3_t::decoderContext_t::~decoderContext_t() noexcept
 {
