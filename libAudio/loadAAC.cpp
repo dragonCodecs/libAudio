@@ -49,6 +49,16 @@ struct aac_t::decoderContext_t final
 	 * The end-of-file flag
 	 */
 	bool eof;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
+	void *decodeBuffer;
+	/*!
+	 * @internal
+	 * The playback data buffer
+	 */
+	uint8_t playbackBuffer[8192];
 
 	decoderContext_t();
 	~decoderContext_t() noexcept;
@@ -68,11 +78,6 @@ typedef struct _AAC_Intern
 	 * The total number of frames to decode
 	 */
 	int nLoop, nCurrLoop;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
 
 	aac_t inner;
 
@@ -80,7 +85,8 @@ typedef struct _AAC_Intern
 } AAC_Intern;
 
 aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false} { }
+aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, decodeBuffer{nullptr},
+	playbackBuffer{} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -113,7 +119,7 @@ void *AAC_OpenR(const char *FileName)
 	info.bitsPerSample = 16;
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ret->buffer, 8192, info));
+		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
 }
@@ -278,7 +284,7 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		}
 
 		NeAACDecFrameInfo FI{};
-		uint8_t *const Buff2 = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff.get(), FrameLength);
+		ctx.decodeBuffer = NeAACDecDecode(ctx.decoder, &FI, Buff.get(), FrameLength);
 
 		if (FI.error != 0)
 		{
@@ -286,7 +292,7 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 			continue;
 		}
 
-		memcpy(buffer + offset, Buff2, FI.samples * sampleBytes);
+		memcpy(buffer + offset, ctx.decodeBuffer, FI.samples * sampleBytes);
 		offset += FI.samples * sampleBytes;
 	}
 
