@@ -39,6 +39,8 @@
 
 struct aac_t::decoderContext_t final
 {
+	decoderContext_t();
+	~decoderContext_t() noexcept;
 };
 
 /*!
@@ -94,6 +96,9 @@ typedef struct _AAC_Intern
 	aac_t inner;
 } AAC_Intern;
 
+aac_t::aac_t() noexcept : audioFile_t(audioType_t::aac, {}), ctx(makeUnique<decoderContext_t>()) { }
+aac_t::decoderContext_t::decoderContext_t() { }
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by AAC_* functions
@@ -105,9 +110,9 @@ void *AAC_OpenR(const char *FileName)
 	AAC_Intern *ret = NULL;
 	FILE *f_AAC = NULL;
 
-	ret = (AAC_Intern *)malloc(sizeof(AAC_Intern));
-	if (ret == NULL)
-		return ret;
+	ret = new (std::nothrow) AAC_Intern();
+	if (!ret || !ret->inner.context())
+		return nullptr;
 
 	ret->f_AAC = f_AAC = fopen(FileName, "rb");
 	if (f_AAC == NULL)
@@ -154,6 +159,8 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 	return ret;
 }
 
+aac_t::decoderContext_t::~decoderContext_t() noexcept { }
+
 /*!
  * Closes an opened audio file
  * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
@@ -174,7 +181,7 @@ int AAC_CloseFileR(void *p_AACFile)
 	NeAACDecClose(p_AF->p_dec);
 
 	ret = fclose(f_AAC);
-	free(p_AF);
+	delete p_AF;
 	return ret;
 }
 
@@ -334,6 +341,8 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 	return OBuf - OutBuffer;
 }
+
+int64_t aac_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened AAC file using OpenAL on the default audio device
