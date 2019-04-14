@@ -234,35 +234,33 @@ public:
 long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	uint8_t *OBuf = OutBuffer;
-	std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
+	uint32_t offset = 0;
 	const fd_t &fd = p_AF->inner.fd();
 	auto &ctx = *p_AF->inner.context();
 	const uint8_t sampleBytes = p_AF->inner.fileInfo().bitsPerSample / 8;
 
 	if (ctx.eof)
 		return -2;
-	while ((OBuf - OutBuffer) < nOutBufferLen && !ctx.eof)
+	while (offset < nOutBufferLen && !ctx.eof)
 	{
-		NeAACDecFrameInfo FI;
-
+		std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
 		if (!fd.read(frameHeader) ||
 			fd.isEOF())
 		{
 			ctx.eof = fd.isEOF();
 			if (!ctx.eof)
-				return OBuf - OutBuffer;
+				return offset;
 			continue;
 		}
 		bitStream_t stream{frameHeader};
-		const uint32_t read = uint32_t(stream.value(12));
+		const uint16_t read = uint16_t(stream.value(12));
 		if (read != 0xFFF)
 		{
 			ctx.eof = true;
 			continue;
 		}
 		stream.skip(18);
-		const uint32_t FrameLength = uint32_t(stream.value(13));
+		const uint16_t FrameLength = uint16_t(stream.value(13));
 		std::unique_ptr<uint8_t []> Buff = makeUnique<uint8_t []>(FrameLength);
 		memcpy(Buff.get(), frameHeader.data(), frameHeader.size());
 		if (!fd.read(Buff.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
@@ -270,9 +268,10 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		{
 			ctx.eof = fd.isEOF();
 			if (!ctx.eof)
-				return OBuf - OutBuffer;
+				return offset;
 		}
 
+		NeAACDecFrameInfo FI{};
 		uint8_t *const Buff2 = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff.get(), FrameLength);
 
 		if (FI.error != 0)
@@ -281,11 +280,11 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 			continue;
 		}
 
-		memcpy(OBuf, Buff2, FI.samples * sampleBytes);
-		OBuf += FI.samples * sampleBytes;
+		memcpy(OutBuffer + offset, Buff2, FI.samples * sampleBytes);
+		offset += FI.samples * sampleBytes;
 	}
 
-	return OBuf - OutBuffer;
+	return offset;
 }
 
 int64_t aac_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
