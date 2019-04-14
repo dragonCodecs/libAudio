@@ -429,7 +429,7 @@ bool Is_FLAC(const char *FileName) { return flac_t::isFLAC(FileName); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is a FLAC file or not
  */
-bool flac_t::isFLAC(const int fd) noexcept
+bool flac_t::isFLAC(const int32_t fd) noexcept
 {
 	char flacSig[4];
 	if (fd == -1 ||

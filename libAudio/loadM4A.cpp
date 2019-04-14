@@ -392,7 +392,7 @@ bool Is_M4A(const char *FileName) { return m4a_t::isM4A(FileName); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is a MP4/M4A file or not
  */
-bool m4a_t::isM4A(const int fd) noexcept
+bool m4a_t::isM4A(const int32_t fd) noexcept
 {
 	char length[4], typeSig[4], fileType[4];
 	if (fd == -1 ||

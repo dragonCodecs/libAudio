@@ -458,7 +458,7 @@ inline uint16_t asUint16(uint8_t *value) noexcept
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is a MP3 file or not
  */
-bool mp3_t::isMP3(const int fd) noexcept
+bool mp3_t::isMP3(const int32_t fd) noexcept
 {
 	char id3[3];
 	uint8_t mp3Sig[2];
