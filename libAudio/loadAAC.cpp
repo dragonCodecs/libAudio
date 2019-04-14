@@ -39,6 +39,12 @@
 
 struct aac_t::decoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The decoder context handle
+	 */
+	NeAACDecHandle decoder;
+
 	decoderContext_t();
 	~decoderContext_t() noexcept;
 };
@@ -49,11 +55,6 @@ struct aac_t::decoderContext_t final
  */
 typedef struct _AAC_Intern
 {
-	/*!
-	 * @internal
-	 * The decoder context handle
-	 */
-	NeAACDecHandle p_dec;
 	/*!
 	 * @internal
 	 * The \c FileInfo for the AAC file being decoded
@@ -89,7 +90,7 @@ typedef struct _AAC_Intern
 } AAC_Intern;
 
 aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-aac_t::decoderContext_t::decoderContext_t() { }
+aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -106,7 +107,6 @@ void *AAC_OpenR(const char *FileName)
 		return nullptr;
 
 	ret->eof = false;
-	ret->p_dec = NeAACDecOpen();
 
 	return ret;
 }
@@ -124,6 +124,7 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 	FileInfo *ret = NULL;
 	NeAACDecConfiguration *ADC;
 	const fd_t &fd = p_AF->inner.fd();
+	auto &ctx = *p_AF->inner.context();
 
 	p_AF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)
@@ -132,19 +133,22 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 
 	fd.read(p_AF->FrameHeader, ADTS_MAX_SIZE);
 	fd.seek(-ADTS_MAX_SIZE, SEEK_CUR);
-	NeAACDecInit(p_AF->p_dec, p_AF->FrameHeader, ADTS_MAX_SIZE, (ULONG *)&ret->BitRate, (uint8_t *)&ret->Channels);
-	ADC = NeAACDecGetCurrentConfiguration(p_AF->p_dec);
+	NeAACDecInit(ctx.decoder, p_AF->FrameHeader, ADTS_MAX_SIZE, (ULONG *)&ret->BitRate, (uint8_t *)&ret->Channels);
+	ADC = NeAACDecGetCurrentConfiguration(ctx.decoder);
 	ret->BitsPerSample = 16;
 
 	if (ExternalPlayback == 0)
 		p_AF->inner.player(makeUnique<playback_t>(p_AACFile, AAC_FillBuffer, p_AF->buffer, 8192, ret));
 	ADC->outputFormat = FAAD_FMT_16BIT;
-	NeAACDecSetConfiguration(p_AF->p_dec, ADC);
+	NeAACDecSetConfiguration(ctx.decoder, ADC);
 
 	return ret;
 }
 
-aac_t::decoderContext_t::~decoderContext_t() noexcept { }
+aac_t::decoderContext_t::~decoderContext_t() noexcept
+{
+	NeAACDecClose(decoder);
+}
 
 /*!
  * Closes an opened audio file
@@ -158,9 +162,6 @@ aac_t::decoderContext_t::~decoderContext_t() noexcept { }
 int AAC_CloseFileR(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-
-	NeAACDecClose(p_AF->p_dec);
-
 	delete p_AF;
 	return 0;
 }
@@ -266,6 +267,7 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 	uint8_t *OBuf = OutBuffer, *FrameHeader = p_AF->FrameHeader;
 	const fd_t &fd = p_AF->inner.fd();
+	auto &ctx = *p_AF->inner.context();
 
 	if (p_AF->eof == true)
 		return -2;
@@ -306,7 +308,7 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 			}
 		}
 
-		Buff2 = (uint8_t *)NeAACDecDecode(p_AF->p_dec, &FI, Buff, FrameLength);
+		Buff2 = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, FrameLength);
 		free(Buff);
 
 		if (FI.error != 0)
