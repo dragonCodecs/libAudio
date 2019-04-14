@@ -110,7 +110,6 @@ private:
 	std::unique_ptr<decoderContext_t> ctx;
 
 public:
-	aac_t() noexcept;
 	aac_t(fd_t &&fd) noexcept;
 	static aac_t *openR(const char *const fileName) noexcept;
 	static bool isAAC(const char *const fileName) noexcept;
