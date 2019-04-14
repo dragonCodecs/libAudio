@@ -109,7 +109,7 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
 
-	void *nextFrame() noexcept;
+	uint8_t *nextFrame() noexcept;
 
 public:
 	aac_t(fd_t &&fd) noexcept;

@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <malloc.h>
-#ifdef _WINDOWS
-#include <conio.h>
-#include <windows.h>
-#endif
-
+#include <algorithm>
 #include <neaacdec.h>
 
 #include "libAudio.h"
@@ -65,7 +59,7 @@ struct aac_t::decoderContext_t final
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	void *decodeBuffer;
+	uint8_t *decodeBuffer;
 	/*!
 	 * @internal
 	 * The playback data buffer
@@ -235,7 +229,7 @@ public:
 long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_AACFile, OutBuffer, nOutBufferLen); }
 
-void *aac_t::nextFrame() noexcept
+uint8_t *aac_t::nextFrame() noexcept
 {
 	const fd_t &file = fd();
 	auto &ctx = *context();
@@ -265,7 +259,7 @@ void *aac_t::nextFrame() noexcept
 			return nullptr;
 	}
 	NeAACDecFrameInfo FI{};
-	ctx.decodeBuffer = NeAACDecDecode(ctx.decoder, &FI, buffer.get(), FrameLength);
+	ctx.decodeBuffer = static_cast<uint8_t *>(NeAACDecDecode(ctx.decoder, &FI, buffer.get(), FrameLength));
 	if (FI.error != 0)
 	{
 		printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
@@ -275,6 +269,7 @@ void *aac_t::nextFrame() noexcept
 	}
 	const uint8_t sampleBytes = fileInfo().bitsPerSample / 8;
 	ctx.sampleCount = FI.samples * sampleBytes;
+	ctx.samplesUsed = 0;
 	return ctx.decodeBuffer;
 }
 
@@ -288,16 +283,21 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		return -2;
 	while (offset < length && !ctx.eof)
 	{
-		void *decodeBuffer = nextFrame();
-		if (!decodeBuffer)
+		if (ctx.samplesUsed == ctx.sampleCount)
 		{
-			if (!ctx.eof)
-				return offset;
-			continue;
+			if (!nextFrame())
+			{
+				if (!ctx.eof)
+					return offset;
+				continue;
+			}
 		}
+		uint8_t *const decodeBuffer = ctx.decodeBuffer;
 
-		memcpy(buffer + offset, decodeBuffer, ctx.sampleCount);
-		offset += ctx.sampleCount;
+		const uint32_t count = std::min(ctx.sampleCount, uint64_t{length - offset});
+		memcpy(buffer + offset, decodeBuffer + ctx.samplesUsed, count);
+		ctx.samplesUsed += count;
+		offset += count;
 	}
 
 	return offset;
