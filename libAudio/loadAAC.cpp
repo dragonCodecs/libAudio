@@ -73,11 +73,6 @@ typedef struct _AAC_Intern
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
-	/*!
-	 * @internal
-	 * The frame headers read at the start of the file
-	 */
-	uint8_t FrameHeader[ADTS_MAX_SIZE];
 
 	aac_t inner;
 
@@ -101,13 +96,14 @@ void *AAC_OpenR(const char *FileName)
 	auto &ctx = *ret->inner.context();
 	fileInfo_t &info = ret->inner.fileInfo();
 	const fd_t &fd = ret->inner.fd();
+	std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
 
-	if (!fd.read(ret->FrameHeader, ADTS_MAX_SIZE) ||
+	if (!fd.read(frameHeader) ||
 		fd.seek(0, SEEK_SET) != 0)
 		return nullptr;
 	unsigned long bitRate;
 	unsigned char channels;
-	NeAACDecInit(ctx.decoder, ret->FrameHeader, ADTS_MAX_SIZE, &bitRate, &channels);
+	NeAACDecInit(ctx.decoder, frameHeader.data(), frameHeader.size(), &bitRate, &channels);
 	NeAACDecConfiguration *const config = NeAACDecGetCurrentConfiguration(ctx.decoder);
 	config->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(ctx.decoder, config);
@@ -190,6 +186,9 @@ public:
 	bitStream_t(uint8_t *const buffer, const uint32_t bufferLen) noexcept :
 		data{buffer}, bitTotal{bufferLen * 8}, currentBit{0} { }
 
+	template<typename T, size_t N> bitStream_t(std::array<T, N> &buffer) noexcept :
+		bitStream_t(reinterpret_cast<uint8_t *>(buffer.data()), buffer.size()) { }
+
 	/*!
 	* @internal
 	* Internal function used to get the next \p NumBits bits sequentially from the bitstream
@@ -235,7 +234,8 @@ public:
 long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	uint8_t *OBuf = OutBuffer, *FrameHeader = p_AF->FrameHeader;
+	uint8_t *OBuf = OutBuffer;
+	std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
 	const fd_t &fd = p_AF->inner.fd();
 	auto &ctx = *p_AF->inner.context();
 	const uint8_t sampleBytes = p_AF->inner.fileInfo().bitsPerSample / 8;
@@ -244,13 +244,9 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		return -2;
 	while ((OBuf - OutBuffer) < nOutBufferLen && !ctx.eof)
 	{
-		static uint8_t *Buff2 = NULL;
-		uint8_t *Buff = NULL;
-		uint32_t FrameLength = 0;
 		NeAACDecFrameInfo FI;
-		bitStream_t stream{FrameHeader, ADTS_MAX_SIZE};
 
-		if (!fd.read(FrameHeader, ADTS_MAX_SIZE) ||
+		if (!fd.read(frameHeader) ||
 			fd.isEOF())
 		{
 			ctx.eof = fd.isEOF();
@@ -258,6 +254,7 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 				return OBuf - OutBuffer;
 			continue;
 		}
+		bitStream_t stream{frameHeader};
 		const uint32_t read = uint32_t(stream.value(12));
 		if (read != 0xFFF)
 		{
@@ -265,21 +262,18 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 			continue;
 		}
 		stream.skip(18);
-		FrameLength = uint32_t(stream.value(13));
-		Buff = (uint8_t *)malloc(FrameLength);
-		memcpy(Buff, FrameHeader, ADTS_MAX_SIZE);
-		if (!fd.read(Buff + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
+		const uint32_t FrameLength = uint32_t(stream.value(13));
+		std::unique_ptr<uint8_t []> Buff = makeUnique<uint8_t []>(FrameLength);
+		memcpy(Buff.get(), frameHeader.data(), frameHeader.size());
+		if (!fd.read(Buff.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
 			fd.isEOF())
 		{
 			ctx.eof = fd.isEOF();
 			if (!ctx.eof)
-			{
-				free(Buff);
 				return OBuf - OutBuffer;
-			}
 		}
 
-		Buff2 = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, FrameLength);
+		uint8_t *const Buff2 = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff.get(), FrameLength);
 
 		if (FI.error != 0)
 		{
