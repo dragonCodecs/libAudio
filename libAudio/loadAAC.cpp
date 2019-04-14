@@ -113,7 +113,7 @@ void *AAC_OpenR(const char *FileName)
 	info.bitsPerSample = 16;
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret.get(), AAC_FillBuffer, ret->buffer, 8192, info));
+		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ret->buffer, 8192, info));
 
 	return ret.release();
 }
@@ -234,20 +234,26 @@ public:
 long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
+	return audioFillBuffer(&p_AF->inner, OutBuffer, nOutBufferLen);
+}
+
+int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	auto *buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
 	uint32_t offset = 0;
-	const fd_t &fd = p_AF->inner.fd();
-	auto &ctx = *p_AF->inner.context();
-	const uint8_t sampleBytes = p_AF->inner.fileInfo().bitsPerSample / 8;
+	const fd_t &file = fd();
+	auto &ctx = *context();
+	const uint8_t sampleBytes = fileInfo().bitsPerSample / 8;
 
 	if (ctx.eof)
 		return -2;
-	while (offset < nOutBufferLen && !ctx.eof)
+	while (offset < length && !ctx.eof)
 	{
 		std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
-		if (!fd.read(frameHeader) ||
-			fd.isEOF())
+		if (!file.read(frameHeader) ||
+			file.isEOF())
 		{
-			ctx.eof = fd.isEOF();
+			ctx.eof = file.isEOF();
 			if (!ctx.eof)
 				return offset;
 			continue;
@@ -263,10 +269,10 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		const uint16_t FrameLength = uint16_t(stream.value(13));
 		std::unique_ptr<uint8_t []> Buff = makeUnique<uint8_t []>(FrameLength);
 		memcpy(Buff.get(), frameHeader.data(), frameHeader.size());
-		if (!fd.read(Buff.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
-			fd.isEOF())
+		if (!file.read(Buff.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
+			file.isEOF())
 		{
-			ctx.eof = fd.isEOF();
+			ctx.eof = file.isEOF();
 			if (!ctx.eof)
 				return offset;
 		}
@@ -280,14 +286,12 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 			continue;
 		}
 
-		memcpy(OutBuffer + offset, Buff2, FI.samples * sampleBytes);
+		memcpy(buffer + offset, Buff2, FI.samples * sampleBytes);
 		offset += FI.samples * sampleBytes;
 	}
 
 	return offset;
 }
-
-int64_t aac_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened AAC file using OpenAL on the default audio device
