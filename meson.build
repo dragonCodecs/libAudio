@@ -16,7 +16,11 @@ endif
 cxx = meson.get_compiler('cpp')
 
 add_project_arguments('-fvisibility=hidden', '-fvisibility-inlines-hidden', language: 'cpp')
-add_project_arguments(cxx.get_supported_arguments('-Wvla', '-Wimplicit-fallthrough'), language: 'cpp')
+add_project_arguments(
+	cxx.get_supported_arguments(
+		'-Wvla', '-Wimplicit-fallthrough', '-Wno-attributes'
+	), language: 'cpp'
+)
 
 subdir('libAudio')
 subdir('player')

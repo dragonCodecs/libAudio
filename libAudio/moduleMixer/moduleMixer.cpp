@@ -449,7 +449,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 					break;
 				case NNA_NOTECUT:
 					nnaChannel->FadeOutVol = 0;
-					[[clang::fallthrough]];
+					[[clang::fallthrough]]; // Falls through
 				case NNA_NOTEFADE:
 					nnaChannel->Flags |= CHN_NOTEFADE;
 					break;
