@@ -37,6 +37,10 @@
 /* ffmpeg's aac_parser.c specifies the following for ADTS_MAX_SIZE: */
 #define ADTS_MAX_SIZE 7
 
+struct aac_t::decoderContext_t final
+{
+};
+
 /*!
  * @internal
  * Internal structure for holding the decoding context for a given AAC file
@@ -86,6 +90,8 @@ typedef struct _AAC_Intern
 	 * The playback class instance for the AAC file
 	 */
 	playback_t *p_Playback;
+
+	aac_t inner;
 } AAC_Intern;
 
 /*!
@@ -385,24 +391,47 @@ void AAC_Stop(void *p_AACFile)
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an AAC file or not
  */
-bool Is_AAC(const char *FileName)
+bool Is_AAC(const char *FileName) { return aac_t::isAAC(FileName); }
+
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a MP3
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP3 file or not
+ */
+bool aac_t::isAAC(const int32_t fd) noexcept
 {
-	FILE *f_AAC = fopen(FileName, "rb");
-	uint8_t sig[2];
-
-	if (f_AAC == NULL)
+	uint8_t aacSig[2];
+	if (fd == -1 ||
+		read(fd, aacSig, 2) != 2)
 		return false;
-
-	fread(sig, 2, 1, f_AAC);
-	fclose(f_AAC);
-
 	// Detect an ADTS header:
-	sig[1] = sig[1] & 0xF6;
-	if (sig[0] != 0xFF || sig[1] != 0xF0)
+	aacSig[1] &= 0xF6;
+	if (aacSig[0] != 0xFF || aacSig[1] != 0xF0)
 		return false;
 	// not going to bother detecting ADIF yet..
-
 	return true;
+}
+
+/*!
+ * Checks the file given by \p fileName for whether it is a MP3
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP3 file or not
+ */
+bool aac_t::isAAC(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isAAC(file);
 }
 
 /*!

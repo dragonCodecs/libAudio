@@ -103,6 +103,24 @@ public:
 	void fetchTags() noexcept;
 };
 
+struct aac_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+public:
+	aac_t() noexcept;
+	aac_t(fd_t &&fd) noexcept;
+	static aac_t *openR(const char *const fileName) noexcept;
+	static bool isAAC(const char *const fileName) noexcept;
+	static bool isAAC(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
 struct mp3_t final : public audioFile_t
 {
 private:
