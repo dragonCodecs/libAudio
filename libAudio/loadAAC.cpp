@@ -44,6 +44,11 @@ struct aac_t::decoderContext_t final
 	 * The decoder context handle
 	 */
 	NeAACDecHandle decoder;
+	/*!
+	 * @internal
+	 * The end-of-file flag
+	 */
+	bool eof;
 
 	decoderContext_t();
 	~decoderContext_t() noexcept;
@@ -70,11 +75,6 @@ typedef struct _AAC_Intern
 	int nLoop, nCurrLoop;
 	/*!
 	 * @internal
-	 * The end-of-file flag
-	 */
-	bool eof;
-	/*!
-	 * @internal
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
@@ -90,7 +90,7 @@ typedef struct _AAC_Intern
 } AAC_Intern;
 
 aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()} { }
+aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -105,8 +105,6 @@ void *AAC_OpenR(const char *FileName)
 	ret = new (std::nothrow) AAC_Intern(FileName);
 	if (!ret || !ret->inner.context())
 		return nullptr;
-
-	ret->eof = false;
 
 	return ret;
 }
@@ -269,9 +267,9 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	const fd_t &fd = p_AF->inner.fd();
 	auto &ctx = *p_AF->inner.context();
 
-	if (p_AF->eof == true)
+	if (ctx.eof)
 		return -2;
-	while ((OBuf - OutBuffer) < nOutBufferLen && p_AF->eof == false)
+	while ((OBuf - OutBuffer) < nOutBufferLen && !ctx.eof)
 	{
 		static uint8_t *Buff2 = NULL;
 		uint8_t *Buff = NULL;
@@ -282,15 +280,15 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		if (!fd.read(FrameHeader, ADTS_MAX_SIZE) ||
 			fd.isEOF())
 		{
-			p_AF->eof = fd.isEOF();
-			if (!p_AF->eof)
+			ctx.eof = fd.isEOF();
+			if (!ctx.eof)
 				return OBuf - OutBuffer;
 			continue;
 		}
 		const uint32_t read = (uint32_t)GetBit(BS.get(), 12);
 		if (read != 0xFFF)
 		{
-			p_AF->eof = true;
+			ctx.eof = true;
 			continue;
 		}
 		SkipBit(BS.get(), 18);
@@ -300,8 +298,8 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		if (!fd.read(Buff + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
 			fd.isEOF())
 		{
-			p_AF->eof = fd.isEOF();
-			if (!p_AF->eof)
+			ctx.eof = fd.isEOF();
+			if (!ctx.eof)
 			{
 				free(Buff);
 				return OBuf - OutBuffer;
