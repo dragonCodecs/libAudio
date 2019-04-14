@@ -109,6 +109,8 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
 
+	void *nextFrame() noexcept;
+
 public:
 	aac_t(fd_t &&fd) noexcept;
 	static aac_t *openR(const char *const fileName) noexcept;

@@ -51,6 +51,14 @@ struct aac_t::decoderContext_t final
 	bool eof;
 	/*!
 	 * @internal
+	 * @var int samplesUsed
+	 * The number of frames decoded relative to the total number
+	 * @var int sampleCount
+	 * The total number of frames to decode
+	 */
+	uint64_t sampleCount, samplesUsed;
+	/*!
+	 * @internal
 	 * The internal decoded data buffer
 	 */
 	void *decodeBuffer;
@@ -70,23 +78,14 @@ struct aac_t::decoderContext_t final
  */
 typedef struct _AAC_Intern
 {
-	/*!
-	 * @internal
-	 * @var int nLoop
-	 * The number of frames decoded relative to the total number
-	 * @var int nCurrLoop
-	 * The total number of frames to decode
-	 */
-	int nLoop, nCurrLoop;
-
 	aac_t inner;
 
 	_AAC_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
 } AAC_Intern;
 
 aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, decodeBuffer{nullptr},
-	playbackBuffer{} { }
+aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, sampleCount{0},
+	samplesUsed{0}, decodeBuffer{nullptr}, playbackBuffer{} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -243,57 +242,69 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	return audioFillBuffer(&p_AF->inner, OutBuffer, nOutBufferLen);
 }
 
+void *aac_t::nextFrame() noexcept
+{
+	const fd_t &file = fd();
+	auto &ctx = *context();
+	std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
+	if (!file.read(frameHeader) ||
+		file.isEOF())
+	{
+		ctx.eof = file.isEOF();
+		return nullptr;
+	}
+	bitStream_t stream{frameHeader};
+	const uint16_t read = uint16_t(stream.value(12));
+	if (read != 0xFFF)
+	{
+		ctx.eof = true;
+		return nullptr;
+	}
+	stream.skip(18);
+	const uint16_t FrameLength = uint16_t(stream.value(13));
+	std::unique_ptr<uint8_t []> buffer = makeUnique<uint8_t []>(FrameLength);
+	memcpy(buffer.get(), frameHeader.data(), frameHeader.size());
+	if (!file.read(buffer.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
+		file.isEOF())
+	{
+		ctx.eof = file.isEOF();
+		if (!ctx.eof)
+			return nullptr;
+	}
+	NeAACDecFrameInfo FI{};
+	ctx.decodeBuffer = NeAACDecDecode(ctx.decoder, &FI, buffer.get(), FrameLength);
+	if (FI.error != 0)
+	{
+		printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
+		ctx.sampleCount = 0;
+		ctx.samplesUsed = 0;
+		return nullptr;
+	}
+	const uint8_t sampleBytes = fileInfo().bitsPerSample / 8;
+	ctx.sampleCount = FI.samples * sampleBytes;
+	return ctx.decodeBuffer;
+}
+
 int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	auto *buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
 	uint32_t offset = 0;
-	const fd_t &file = fd();
 	auto &ctx = *context();
-	const uint8_t sampleBytes = fileInfo().bitsPerSample / 8;
 
 	if (ctx.eof)
 		return -2;
 	while (offset < length && !ctx.eof)
 	{
-		std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
-		if (!file.read(frameHeader) ||
-			file.isEOF())
+		void *decodeBuffer = nextFrame();
+		if (!decodeBuffer)
 		{
-			ctx.eof = file.isEOF();
 			if (!ctx.eof)
 				return offset;
 			continue;
 		}
-		bitStream_t stream{frameHeader};
-		const uint16_t read = uint16_t(stream.value(12));
-		if (read != 0xFFF)
-		{
-			ctx.eof = true;
-			continue;
-		}
-		stream.skip(18);
-		const uint16_t FrameLength = uint16_t(stream.value(13));
-		std::unique_ptr<uint8_t []> Buff = makeUnique<uint8_t []>(FrameLength);
-		memcpy(Buff.get(), frameHeader.data(), frameHeader.size());
-		if (!file.read(Buff.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
-			file.isEOF())
-		{
-			ctx.eof = file.isEOF();
-			if (!ctx.eof)
-				return offset;
-		}
 
-		NeAACDecFrameInfo FI{};
-		ctx.decodeBuffer = NeAACDecDecode(ctx.decoder, &FI, Buff.get(), FrameLength);
-
-		if (FI.error != 0)
-		{
-			printf("Error: %s\n", NeAACDecGetErrorMessage(FI.error));
-			continue;
-		}
-
-		memcpy(buffer + offset, ctx.decodeBuffer, FI.samples * sampleBytes);
-		offset += FI.samples * sampleBytes;
+		memcpy(buffer + offset, decodeBuffer, ctx.sampleCount);
+		offset += ctx.sampleCount;
 	}
 
 	return offset;
