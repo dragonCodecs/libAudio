@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <malloc.h>
+#include <limits>
 
 #include <mad.h>
 #include <id3tag.h>
@@ -8,24 +7,13 @@
 #include "libAudio.hxx"
 #include "string.hxx"
 
-#include <limits.h>
-
 /*!
  * @internal
  * @file loadMP3.cpp
  * @brief The implementation of the MP3 decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
-
-#ifndef SHRT_MAX
-/*!
- * @internal
- * Backup definition of \c SHRT_MAX, which should be defined in limit.h,
- * but which assumes that short's length is 16 bits
- */
-#define SHRT_MAX 0x7FFF
-#endif
 
 struct mp3_t::decoderContext_t final
 {
@@ -80,17 +68,6 @@ struct mp3_t::decoderContext_t final
 
 /*!
  * @internal
- * Internal structure for holding the decoding context for a given MP3 file
- */
-typedef struct _MP3_Intern
-{
-	mp3_t inner;
-
-	_MP3_Intern(fd_t &&fd) : inner(std::move(fd)) { }
-} MP3_Intern;
-
-/*!
- * @internal
  * This function applies a simple conversion algorithm to convert the input
  * fixed-point MAD sample to a short for playback
  * @param value The fixed point sample to convert
@@ -100,10 +77,11 @@ typedef struct _MP3_Intern
  */
 inline int16_t fixedToShort(mad_fixed_t value)
 {
+	using limits = std::numeric_limits<int16_t>;
 	if (value >= MAD_F_ONE)
-		return SHRT_MAX;
+		return limits::max();
 	if (value <= -MAD_F_ONE)
-		return -SHRT_MAX;
+		return limits::min();
 
 	value = value >> (MAD_F_FRACBITS - 15);
 	return int16_t(value);
