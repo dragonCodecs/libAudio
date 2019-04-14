@@ -201,7 +201,7 @@ void m4a_t::decoderContext_t::aacTrack(fileInfo_t &fileInfo) noexcept
 		fileInfo.channels = channels;
 		MP4Free(buffer);
 
-		NeAACDecConfiguration *config = NeAACDecGetCurrentConfiguration(decoder);
+		NeAACDecConfiguration *const config = NeAACDecGetCurrentConfiguration(decoder);
 		config->outputFormat = FAAD_FMT_16BIT;
 		NeAACDecSetConfiguration(decoder, config);
 
