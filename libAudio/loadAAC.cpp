@@ -87,11 +87,6 @@ typedef struct _AAC_Intern
 	 * The frame headers read at the start of the file
 	 */
 	uint8_t FrameHeader[ADTS_MAX_SIZE];
-	/*!
-	 * @internal
-	 * The playback class instance for the AAC file
-	 */
-	playback_t *p_Playback;
 
 	aac_t inner;
 } AAC_Intern;
@@ -152,7 +147,7 @@ FileInfo *AAC_GetFileInfo(void *p_AACFile)
 	ret->BitsPerSample = 16;
 
 	if (ExternalPlayback == 0)
-		p_AF->p_Playback = new playback_t(p_AACFile, AAC_FillBuffer, p_AF->buffer, 8192, ret);
+		p_AF->inner.player(makeUnique<playback_t>(p_AACFile, AAC_FillBuffer, p_AF->buffer, 8192, ret));
 	ADC->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(p_AF->p_dec, ADC);
 
@@ -175,8 +170,6 @@ int AAC_CloseFileR(void *p_AACFile)
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
 	FILE *f_AAC = p_AF->f_AAC;
 	int ret;
-
-	delete p_AF->p_Playback;
 
 	NeAACDecClose(p_AF->p_dec);
 
@@ -358,22 +351,19 @@ int64_t aac_t::fillBuffer(void *const buffer, const uint32_t length) { return -1
 void AAC_Play(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-
-	p_AF->p_Playback->play();
+	p_AF->inner.play();
 }
 
 void AAC_Pause(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-
-	p_AF->p_Playback->pause();
+	p_AF->inner.pause();
 }
 
 void AAC_Stop(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-
-	p_AF->p_Playback->stop();
+	p_AF->inner.stop();
 }
 
 /*!
