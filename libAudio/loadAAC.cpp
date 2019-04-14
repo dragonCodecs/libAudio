@@ -184,7 +184,7 @@ int AAC_CloseFileR(void *p_AACFile)
  * of data can be sent into FAAD2 correctly as packets so to ease the
  * job of decoding
  */
-typedef struct _BitStream
+struct BitStream final
 {
 	/*!
 	 * @internal
@@ -207,7 +207,7 @@ typedef struct _BitStream
 	 *   number of bits available in the buffer
 	 */
 	long CurrentBit;
-} BitStream;
+};
 
 /*!
  * @internal
@@ -215,24 +215,14 @@ typedef struct _BitStream
  * @param size The length of the buffer to be used
  * @param buffer The buffer to be used
  */
-BitStream *OpenBitStream(int size, uint8_t *buffer)
+std::unique_ptr<BitStream> OpenBitStream(int size, uint8_t *buffer)
 {
-	BitStream *BS = (BitStream *)malloc(sizeof(BitStream));
+	auto BS = makeUnique<BitStream>();
 	BS->Size = size;
 	BS->NumBit = size * 8;
 	BS->CurrentBit = 0;
 	BS->Data = buffer;
 	return BS;
-}
-
-/*!
- * @internal
- * Internal function used to close a buffer being used as a bitstream
- * @param BS The bitstream to close and free
- */
-void CloseBitStream(BitStream *BS)
-{
-	free(BS);
 }
 
 /*!
@@ -298,29 +288,24 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		uint8_t *Buff = NULL;
 		uint32_t FrameLength = 0, read = 0;
 		NeAACDecFrameInfo FI;
-		BitStream *BS = OpenBitStream(ADTS_MAX_SIZE, FrameHeader);
+		auto BS = OpenBitStream(ADTS_MAX_SIZE, FrameHeader);
 
 		read = fread(FrameHeader, 1, ADTS_MAX_SIZE, f_AAC);
 		if (feof(f_AAC) != FALSE)
 		{
 			p_AF->eof = true;
 			if (read != ADTS_MAX_SIZE)
-			{
-				CloseBitStream(BS);
 				return OBuf - OutBuffer;
-			}
 			continue;
 		}
-		read = (uint32_t)GetBit(BS, 12);
+		read = (uint32_t)GetBit(BS.get(), 12);
 		if (read != 0xFFF)
 		{
 			p_AF->eof = true;
-			CloseBitStream(BS);
 			continue;
 		}
-		SkipBit(BS, 18);
-		FrameLength = (uint32_t)GetBit(BS, 13);
-		CloseBitStream(BS);
+		SkipBit(BS.get(), 18);
+		FrameLength = (uint32_t)GetBit(BS.get(), 13);
 		Buff = (uint8_t *)malloc(FrameLength);
 		memcpy(Buff, FrameHeader, ADTS_MAX_SIZE);
 		read = fread(Buff + ADTS_MAX_SIZE, 1, FrameLength - ADTS_MAX_SIZE, f_AAC);
