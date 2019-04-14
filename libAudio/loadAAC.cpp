@@ -37,6 +37,10 @@
 /* ffmpeg's aac_parser.c specifies the following for ADTS_MAX_SIZE: */
 #define ADTS_MAX_SIZE 7
 
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given AAC file
+ */
 struct aac_t::decoderContext_t final
 {
 	/*!
@@ -72,39 +76,23 @@ struct aac_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given AAC file
- */
-typedef struct _AAC_Intern
-{
-	aac_t inner;
-
-	_AAC_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
-} AAC_Intern;
-
 aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, sampleCount{0},
 	samplesUsed{0}, decodeBuffer{nullptr}, playbackBuffer{} { }
 
-/*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
- * to the context of the opened file which must be used only by AAC_* functions
- * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
- */
-void *AAC_OpenR(const char *FileName)
+aac_t *aac_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<AAC_Intern> ret = makeUnique<AAC_Intern>(FileName);
-	if (!ret || !ret->inner.context())
+	std::unique_ptr<aac_t> aacFile(makeUnique<aac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!aacFile || !aacFile->valid() || !isAAC(aacFile->_fd))
 		return nullptr;
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
-	const fd_t &fd = ret->inner.fd();
+
+	auto &ctx = *aacFile->context();
+	fileInfo_t &info = aacFile->fileInfo();
+	const fd_t &file = aacFile->fd();
 	std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
 
-	if (!fd.read(frameHeader) ||
-		fd.seek(0, SEEK_SET) != 0)
+	if (!file.read(frameHeader) ||
+		file.seek(0, SEEK_SET) != 0)
 		return nullptr;
 	unsigned long bitRate;
 	unsigned char channels;
@@ -117,10 +105,27 @@ void *AAC_OpenR(const char *FileName)
 	info.channels = channels;
 	info.bitsPerSample = 16;
 
-	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return aacFile.release();
+}
 
-	return ret.release();
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by AAC_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
+void *AAC_OpenR(const char *FileName)
+{
+	std::unique_ptr<aac_t> file(aac_t::openR(FileName));
+	if (!file)
+		return nullptr;
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
+
+	if (ExternalPlayback == 0)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+
+	return file.release();
 }
 
 /*!
@@ -130,11 +135,7 @@ void *AAC_OpenR(const char *FileName)
  * @warning This function must be called before using \c AAC_Play() or \c AAC_FillBuffer()
  * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *AAC_GetFileInfo(void *p_AACFile)
-{
-	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	return audioFileInfo(&p_AF->inner);
-}
+FileInfo *AAC_GetFileInfo(void *p_AACFile) { return audioFileInfo(p_AACFile); }
 
 aac_t::decoderContext_t::~decoderContext_t() noexcept
 	{ NeAACDecClose(decoder); }
@@ -148,12 +149,7 @@ aac_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int AAC_CloseFileR(void *p_AACFile)
-{
-	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	delete p_AF;
-	return 0;
-}
+int AAC_CloseFileR(void *p_AACFile) { return audioCloseFileR(p_AACFile); }
 
 /*!
  * @internal
@@ -237,10 +233,7 @@ public:
  * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	return audioFillBuffer(&p_AF->inner, OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_AACFile, OutBuffer, nOutBufferLen); }
 
 void *aac_t::nextFrame() noexcept
 {
@@ -321,23 +314,9 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @bug Futher to the \p p_AACFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void AAC_Play(void *p_AACFile)
-{
-	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	p_AF->inner.play();
-}
-
-void AAC_Pause(void *p_AACFile)
-{
-	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	p_AF->inner.pause();
-}
-
-void AAC_Stop(void *p_AACFile)
-{
-	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	p_AF->inner.stop();
-}
+void AAC_Play(void *p_AACFile) { return audioPlay(p_AACFile); }
+void AAC_Pause(void *p_AACFile) { return audioPause(p_AACFile); }
+void AAC_Stop(void *p_AACFile) { return audioStop(p_AACFile); }
 
 /*!
  * Checks the file given by \p FileName for whether it is an AAC
@@ -349,7 +328,6 @@ void AAC_Stop(void *p_AACFile)
  * the file contents to see if it is an AAC file or not
  */
 bool Is_AAC(const char *FileName) { return aac_t::isAAC(FileName); }
-
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a MP3
