@@ -172,7 +172,7 @@ private:
 	 * @internal
 	 * The total number of bits available in the buffer
 	 */
-	uint64_t numBit;
+	uint64_t bitTotal;
 	/*!
 	 * @internal
 	 * The index of the current bit relative to the total
@@ -188,7 +188,7 @@ public:
 	* @param buffer The buffer to be used
 	*/
 	bitStream_t(uint8_t *const buffer, const uint32_t bufferLen) noexcept :
-		data{buffer}, numBit{bufferLen * 8}, currentBit{0} { }
+		data{buffer}, bitTotal{bufferLen * 8}, currentBit{0} { }
 
 	/*!
 	* @internal
@@ -206,7 +206,7 @@ public:
 			const uint8_t value = data[byte] & (1 << bit);
 			result += value >> bit;
 			++currentBit;
-			if (currentBit == numBit)
+			if (currentBit == bitTotal)
 				break;
 		}
 		return result;
