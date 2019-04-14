@@ -342,7 +342,8 @@ bool aac_t::isAAC(const int32_t fd) noexcept
 {
 	uint8_t aacSig[2];
 	if (fd == -1 ||
-		read(fd, aacSig, 2) != 2)
+		read(fd, aacSig, 2) != 2 ||
+		lseek(fd, 0, SEEK_SET) != 0)
 		return false;
 	// Detect an ADTS header:
 	aacSig[1] &= 0xF6;

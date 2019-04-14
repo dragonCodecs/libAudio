@@ -465,6 +465,7 @@ bool mp3_t::isMP3(const int32_t fd) noexcept
 		read(fd, id3, 3) != 3 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		read(fd, mp3Sig, 2) != 2 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
 		(strncmp(id3, "ID3", 3) != 0 &&
 		asUint16(mp3Sig) != 0xFFFB))
 		return false;
