@@ -160,84 +160,66 @@ int AAC_CloseFileR(void *p_AACFile)
  * of data can be sent into FAAD2 correctly as packets so to ease the
  * job of decoding
  */
-struct BitStream final
+struct bitStream_t final
 {
+private:
 	/*!
 	 * @internal
 	 * The data buffer being used as a bitstream
 	 */
-	uint8_t *Data;
+	uint8_t *data;
 	/*!
 	 * @internal
 	 * The total number of bits available in the buffer
 	 */
-	long NumBit;
-	/*!
-	 * @internal
-	 * The total size of the bit-buffer in bytes
-	 */
-	long Size;
+	uint64_t numBit;
 	/*!
 	 * @internal
 	 * The index of the current bit relative to the total
 	 *   number of bits available in the buffer
 	 */
-	long CurrentBit;
-};
+	uint64_t currentBit;
 
-/*!
- * @internal
- * Internal function used to open a buffer as a bitstream
- * @param size The length of the buffer to be used
- * @param buffer The buffer to be used
- */
-std::unique_ptr<BitStream> OpenBitStream(int size, uint8_t *buffer)
-{
-	auto BS = makeUnique<BitStream>();
-	BS->Size = size;
-	BS->NumBit = size * 8;
-	BS->CurrentBit = 0;
-	BS->Data = buffer;
-	return BS;
-}
+public:
+	/*!
+	* @internal
+	* Internal function used to open a buffer as a bitstream
+	* @param bufferLen The length of the buffer to be used
+	* @param buffer The buffer to be used
+	*/
+	bitStream_t(uint8_t *const buffer, const uint32_t bufferLen) noexcept :
+		data{buffer}, numBit{bufferLen * 8}, currentBit{0} { }
 
-/*!
- * @internal
- * Internal function used to get the next \p NumBits bits sequentially from the bitstream
- * @param BS The bitstream to get the bits from
- * @param NumBits The number of bits to get
- */
-ULONG GetBit(BitStream *BS, int NumBits)
-{
-	int Num = 0;
-	ULONG ret = 0;
-
-	if (NumBits == 0)
-		return 0;
-	while (Num < NumBits)
+	/*!
+	* @internal
+	* Internal function used to get the next \p NumBits bits sequentially from the bitstream
+	* @param bitCount The number of bits to get
+	*/
+	uint64_t value(const uint32_t bitCount) noexcept
 	{
-		int Byte = BS->CurrentBit / 8;
-		int Bit = 7 - (BS->CurrentBit % 8);
-		ret = ret << 1;
-		ret += ((BS->Data[Byte] & (1 << Bit)) >> Bit);
-		BS->CurrentBit++;
-		if (BS->CurrentBit == BS->NumBit)
-			return ret;
-		Num++;
+		uint64_t result = 0;
+		for (uint32_t num = 0; num < bitCount; ++num)
+		{
+			const uint32_t byte = currentBit / 8;
+			const uint32_t bit = 7 - (currentBit % 8);
+			result <<= 1;
+			const uint8_t value = data[byte] & (1 << bit);
+			result += value >> bit;
+			++currentBit;
+			if (currentBit == numBit)
+				break;
+		}
+		return result;
 	}
-	return ret;
-}
 
-/*!
- * @internal
- * Internal function used to skip a number of bits in the bitstream
- * @param BS The bitstream to skip the bits in
- * @param NumBits The number of bits to skip
- */
-void SkipBit(BitStream *BS, int NumBits)
-{
-	BS->CurrentBit += NumBits;
-}
+	/*!
+	* @internal
+	* Internal function used to skip a number of bits in the bitstream
+	* @param bitCount The number of bits to skip
+	*/
+	void skip(const uint32_t bitCount) noexcept
+		{ currentBit += bitCount; }
+};
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -266,7 +248,7 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		uint8_t *Buff = NULL;
 		uint32_t FrameLength = 0;
 		NeAACDecFrameInfo FI;
-		auto BS = OpenBitStream(ADTS_MAX_SIZE, FrameHeader);
+		bitStream_t stream{FrameHeader, ADTS_MAX_SIZE};
 
 		if (!fd.read(FrameHeader, ADTS_MAX_SIZE) ||
 			fd.isEOF())
@@ -276,14 +258,14 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 				return OBuf - OutBuffer;
 			continue;
 		}
-		const uint32_t read = (uint32_t)GetBit(BS.get(), 12);
+		const uint32_t read = uint32_t(stream.value(12));
 		if (read != 0xFFF)
 		{
 			ctx.eof = true;
 			continue;
 		}
-		SkipBit(BS.get(), 18);
-		FrameLength = (uint32_t)GetBit(BS.get(), 13);
+		stream.skip(18);
+		FrameLength = uint32_t(stream.value(13));
 		Buff = (uint8_t *)malloc(FrameLength);
 		memcpy(Buff, FrameHeader, ADTS_MAX_SIZE);
 		if (!fd.read(Buff + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
@@ -298,7 +280,6 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 		}
 
 		Buff2 = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, FrameLength);
-		free(Buff);
 
 		if (FI.error != 0)
 		{
