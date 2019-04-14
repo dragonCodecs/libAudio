@@ -62,11 +62,6 @@ typedef struct _AAC_Intern
 {
 	/*!
 	 * @internal
-	 * The \c FileInfo for the AAC file being decoded
-	 */
-	FileInfo *p_FI;
-	/*!
-	 * @internal
 	 * @var int nLoop
 	 * The number of frames decoded relative to the total number
 	 * @var int nCurrLoop
@@ -100,13 +95,31 @@ aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false
  */
 void *AAC_OpenR(const char *FileName)
 {
-	AAC_Intern *ret = NULL;
-
-	ret = new (std::nothrow) AAC_Intern(FileName);
+	std::unique_ptr<AAC_Intern> ret = makeUnique<AAC_Intern>(FileName);
 	if (!ret || !ret->inner.context())
 		return nullptr;
+	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
+	const fd_t &fd = ret->inner.fd();
 
-	return ret;
+	if (!fd.read(ret->FrameHeader, ADTS_MAX_SIZE) ||
+		fd.seek(0, SEEK_SET) != 0)
+		return nullptr;
+	unsigned long bitRate;
+	unsigned char channels;
+	NeAACDecInit(ctx.decoder, ret->FrameHeader, ADTS_MAX_SIZE, &bitRate, &channels);
+	NeAACDecConfiguration *const config = NeAACDecGetCurrentConfiguration(ctx.decoder);
+	config->outputFormat = FAAD_FMT_16BIT;
+	NeAACDecSetConfiguration(ctx.decoder, config);
+
+	info.bitRate = bitRate;
+	info.channels = channels;
+	info.bitsPerSample = 16;
+
+	if (ExternalPlayback == 0)
+		ret->inner.player(makeUnique<playback_t>(ret.get(), AAC_FillBuffer, ret->buffer, 8192, info));
+
+	return ret.release();
 }
 
 /*!
@@ -119,34 +132,11 @@ void *AAC_OpenR(const char *FileName)
 FileInfo *AAC_GetFileInfo(void *p_AACFile)
 {
 	AAC_Intern *p_AF = (AAC_Intern *)p_AACFile;
-	FileInfo *ret = NULL;
-	NeAACDecConfiguration *ADC;
-	const fd_t &fd = p_AF->inner.fd();
-	auto &ctx = *p_AF->inner.context();
-
-	p_AF->p_FI = ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-
-	fd.read(p_AF->FrameHeader, ADTS_MAX_SIZE);
-	fd.seek(-ADTS_MAX_SIZE, SEEK_CUR);
-	NeAACDecInit(ctx.decoder, p_AF->FrameHeader, ADTS_MAX_SIZE, (ULONG *)&ret->BitRate, (uint8_t *)&ret->Channels);
-	ADC = NeAACDecGetCurrentConfiguration(ctx.decoder);
-	ret->BitsPerSample = 16;
-
-	if (ExternalPlayback == 0)
-		p_AF->inner.player(makeUnique<playback_t>(p_AACFile, AAC_FillBuffer, p_AF->buffer, 8192, ret));
-	ADC->outputFormat = FAAD_FMT_16BIT;
-	NeAACDecSetConfiguration(ctx.decoder, ADC);
-
-	return ret;
+	return audioFileInfo(&p_AF->inner);
 }
 
 aac_t::decoderContext_t::~decoderContext_t() noexcept
-{
-	NeAACDecClose(decoder);
-}
+	{ NeAACDecClose(decoder); }
 
 /*!
  * Closes an opened audio file
@@ -266,6 +256,7 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	uint8_t *OBuf = OutBuffer, *FrameHeader = p_AF->FrameHeader;
 	const fd_t &fd = p_AF->inner.fd();
 	auto &ctx = *p_AF->inner.context();
+	const uint8_t sampleBytes = p_AF->inner.fileInfo().bitsPerSample / 8;
 
 	if (ctx.eof)
 		return -2;
@@ -315,8 +306,8 @@ long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 			continue;
 		}
 
-		memcpy(OBuf, Buff2, (FI.samples * (p_AF->p_FI->BitsPerSample / 8)));
-		OBuf += (FI.samples * (p_AF->p_FI->BitsPerSample / 8));
+		memcpy(OBuf, Buff2, FI.samples * sampleBytes);
+		OBuf += FI.samples * sampleBytes;
 	}
 
 	return OBuf - OutBuffer;
