@@ -27,6 +27,11 @@ struct wavPack_t::decoderContext_t final
 	WavpackContext *decoder;
 	/*!
 	 * @internal
+	 * The end-of-file flag
+	 */
+	bool eof;
+	/*!
+	 * @internal
 	 * The WavPack callbacks/reader information handle
 	 */
 	WavpackStreamReader callbacks;
@@ -68,11 +73,6 @@ typedef struct _WavPack_Intern
 	 * The error feedback buffer needed for various WavPack call
 	 */
 	char err[80];
-	/*!
-	 * @internal
-	 * The end-of-file flag
-	 */
-	bool eof;
 
 	wavPack_t inner;
 } WavPack_Intern;
@@ -166,7 +166,7 @@ int f_fcanseek(void *p_file)
 }
 
 wavPack_t::wavPack_t() noexcept : audioFile_t(audioType_t::wavPack, {}), ctx(makeUnique<decoderContext_t>()) { }
-wavPack_t::decoderContext_t::decoderContext_t() noexcept :
+wavPack_t::decoderContext_t::decoderContext_t() noexcept : decoder{nullptr}, eof{false},
 	callbacks{f_fread_wp, f_ftell, f_fseek_abs, f_fseek_rel, f_fungetc, f_flen, f_fcanseek, nullptr} { }
 
 std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const tag) noexcept
@@ -279,20 +279,20 @@ int WavPack_CloseFileR(void *p_WVPFile)
 long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	uint8_t *OBuff = OutBuffer;
+	uint32_t offset = 0;
 	const fileInfo_t &info = p_WF->inner.fileInfo();
 	auto &ctx = *p_WF->inner.context();
-	if (p_WF->eof == true)
-		return -2;
 
-	while (OBuff - OutBuffer < nOutBufferLen && p_WF->eof == false)
+	if (ctx.eof)
+		return -2;
+	while (offset < nOutBufferLen && !ctx.eof)
 	{
 		short *out = (short *)p_WF->buffer;
 		int j = WavpackUnpackSamples(ctx.decoder, p_WF->middlebuff,
 			(4096 / info.channels)) * info.channels;
 
 		if (j == 0)
-			p_WF->eof = true;
+			ctx.eof = true;
 
 		for (int i = 0; i < j; )
 		{
@@ -302,11 +302,11 @@ long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 			i += info.channels;
 		}
 
-		memcpy(OBuff, out, j * 2);
-		OBuff += j * 2;
+		memcpy(OutBuffer + offset, out, j * 2);
+		offset += j * 2;
 	}
 
-	return (OBuff - OutBuffer);
+	return offset;
 }
 
 int64_t wavPack_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
