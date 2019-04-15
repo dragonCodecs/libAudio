@@ -22,6 +22,11 @@ struct wavPack_t::decoderContext_t final
 {
 	/*!
 	 * @internal
+	 * The decoder context handle
+	 */
+	WavpackContext *decoder;
+	/*!
+	 * @internal
 	 * The WavPack callbacks/reader information handle
 	 */
 	WavpackStreamReader callbacks;
@@ -36,11 +41,6 @@ struct wavPack_t::decoderContext_t final
  */
 typedef struct _WavPack_Intern
 {
-	/*!
-	 * @internal
-	 * The decoder context handle
-	 */
-	WavpackContext *p_dec;
 	/*!
 	 * @internal
 	 * The WavPack file to decode
@@ -200,7 +200,7 @@ void *WavPack_OpenR(const char *FileName)
 
 	ret->f_WVP = f_WVP;
 	ret->f_WVPC = f_WVPC;
-	ret->p_dec = WavpackOpenFileInputEx(&ctx.callbacks, f_WVP, f_WVPC, ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
+	ctx.decoder = WavpackOpenFileInputEx(&ctx.callbacks, f_WVP, f_WVPC, ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
 	return ret.release();
 }
@@ -216,6 +216,7 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 {
 	FileInfo *ret = NULL;
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
+	auto &ctx = *p_WF->inner.context();
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	if (ret == NULL)
@@ -223,32 +224,32 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 	memset(ret, 0x00, sizeof(FileInfo));
 
 	p_WF->p_FI = ret;
-	ret->Channels = WavpackGetNumChannels(p_WF->p_dec);
-	ret->BitsPerSample = WavpackGetBitsPerSample(p_WF->p_dec);
-	ret->BitRate = WavpackGetSampleRate(p_WF->p_dec);
+	ret->Channels = WavpackGetNumChannels(ctx.decoder);
+	ret->BitsPerSample = WavpackGetBitsPerSample(ctx.decoder);
+	ret->BitRate = WavpackGetSampleRate(ctx.decoder);
 
 	{
-		int i = WavpackGetTagItem(p_WF->p_dec, "album", NULL, 0) + 1;
+		int i = WavpackGetTagItem(ctx.decoder, "album", NULL, 0) + 1;
 		if (i > 1)
 		{
 			ret->Album = (char *)malloc(i);
-			WavpackGetTagItem(p_WF->p_dec, "album", (char *)ret->Album, i);
+			WavpackGetTagItem(ctx.decoder, "album", (char *)ret->Album, i);
 		}
 	}
 	{
-		int i = WavpackGetTagItem(p_WF->p_dec, "artist", NULL, 0) + 1;
+		int i = WavpackGetTagItem(ctx.decoder, "artist", NULL, 0) + 1;
 		if (i > 1)
 		{
 			ret->Artist = (char *)malloc(i);
-			WavpackGetTagItem(p_WF->p_dec, "artist", (char *)ret->Artist, i);
+			WavpackGetTagItem(ctx.decoder, "artist", (char *)ret->Artist, i);
 		}
 	}
 	{
-		int i = WavpackGetTagItem(p_WF->p_dec, "title", NULL, 0) + 1;
+		int i = WavpackGetTagItem(ctx.decoder, "title", NULL, 0) + 1;
 		if (i > 1)
 		{
 			ret->Title = (char *)malloc(i);
-			WavpackGetTagItem(p_WF->p_dec, "title", (char *)ret->Title, i);
+			WavpackGetTagItem(ctx.decoder, "title", (char *)ret->Title, i);
 		}
 	}
 
@@ -258,7 +259,8 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 	return ret;
 }
 
-wavPack_t::decoderContext_t::~decoderContext_t() noexcept { }
+wavPack_t::decoderContext_t::~decoderContext_t() noexcept
+	{ WavpackCloseFile(decoder); }
 
 /*!
  * Closes an opened audio file
@@ -273,8 +275,6 @@ int WavPack_CloseFileR(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
 	int ret = 0;
-
-	WavpackCloseFile(p_WF->p_dec);
 
 	if (p_WF->f_WVPC != NULL)
 		fclose(p_WF->f_WVPC);
@@ -299,6 +299,7 @@ int WavPack_CloseFileR(void *p_WVPFile)
 long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
+	auto &ctx = *p_WF->inner.context();
 	uint8_t *OBuff = OutBuffer;
 	if (p_WF->eof == true)
 		return -2;
@@ -306,7 +307,7 @@ long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 	while (OBuff - OutBuffer < nOutBufferLen && p_WF->eof == false)
 	{
 		short *out = (short *)p_WF->buffer;
-		int j = WavpackUnpackSamples(p_WF->p_dec, p_WF->middlebuff, (4096 / p_WF->p_FI->Channels)) * p_WF->p_FI->Channels;
+		int j = WavpackUnpackSamples(ctx.decoder, p_WF->middlebuff, (4096 / p_WF->p_FI->Channels)) * p_WF->p_FI->Channels;
 
 		if (j == 0)
 			p_WF->eof = true;
