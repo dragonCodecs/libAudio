@@ -1,14 +1,8 @@
 #ifndef __NO_MPC__
 
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <malloc.h>
 
-#ifdef _WINDOWS
 #include <mpc/mpcdec.h>
-#else
-#include <MusePack/mpcdec.h>
-#endif
 
 #include "libAudio.h"
 #include "libAudio.hxx"
@@ -53,11 +47,6 @@ typedef struct _MPC_Intern
 {
 	/*!
 	 * @internal
-	 * The MPC file to decode
-	 */
-	FILE *f_MPC;
-	/*!
-	 * @internal
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
@@ -100,6 +89,8 @@ typedef struct _MPC_Intern
 	uint32_t PCMUsed;
 
 	mpc_t inner;
+
+	_MPC_Intern(const char *const fileName) noexcept : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
 } MPC_Intern;
 
 /*!
@@ -134,10 +125,10 @@ short FloatToShort(MPC_SAMPLE_FORMAT Sample)
  * @param size The number of bytes to read into the buffer
  * @return The return result of \c fread()
  */
-int f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
+int32_t f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return fread(p_Buffer, 1, size, p_MF->f_MPC);
+	return p_MF->inner.fd().read(p_Buffer, size, nullptr);
 }
 
 /*!
@@ -152,7 +143,7 @@ int f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
 uint8_t f_fseek(mpc_reader *p_MPCFile, int offset)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return (fseek(p_MF->f_MPC, offset, SEEK_SET) == 0 ? TRUE : FALSE);
+	return p_MF->inner.fd().seek(offset, SEEK_SET) == offset;
 }
 
 /*!
@@ -163,10 +154,10 @@ uint8_t f_fseek(mpc_reader *p_MPCFile, int offset)
  *   holds the file to seek through
  * @return An integer giving the read possition of the file in bytes
  */
-int f_ftell(mpc_reader *p_MPCFile)
+int32_t f_ftell(mpc_reader *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return ftell(p_MF->f_MPC);
+	return p_MF->inner.fd().tell();
 }
 
 /*!
@@ -177,13 +168,10 @@ int f_ftell(mpc_reader *p_MPCFile)
  *   holds the file to seek through
  * @return An integer giving the length of the file in bytes
  */
-int f_flen(mpc_reader *p_MPCFile)
+int32_t f_flen(mpc_reader *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	struct stat stats;
-
-	fstat(fileno(p_MF->f_MPC), &stats);
-	return stats.st_size;
+	return p_MF->inner.fd().length();
 }
 
 /*!
@@ -200,11 +188,10 @@ int f_flen(mpc_reader *p_MPCFile)
 uint8_t f_fcanseek(mpc_reader *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-
-	return (fseek(p_MF->f_MPC, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
+	return p_MF->inner.fd().tell() != -1;
 }
 
-mpc_t::mpc_t() noexcept : audioFile_t(audioType_t::musePack, {}), ctx(makeUnique<decoderContext_t>()) { }
+mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 mpc_t::decoderContext_t::decoderContext_t() noexcept { }
 
 /*!
@@ -215,15 +202,10 @@ mpc_t::decoderContext_t::decoderContext_t() noexcept { }
  */
 void *MPC_OpenR(const char *FileName)
 {
-	FILE *f_MPC = fopen(FileName, "rb");
-	if (f_MPC == NULL)
-		return nullptr;
-
-	MPC_Intern *ret = new (std::nothrow) MPC_Intern();
+	MPC_Intern *ret = new (std::nothrow) MPC_Intern(FileName);
 	if (ret == NULL)
 		return ret;
 
-	ret->f_MPC = f_MPC;
 	ret->callbacks = (mpc_reader *)malloc(sizeof(mpc_reader));
 	ret->callbacks->read = f_fread;
 	ret->callbacks->seek = f_fseek;
@@ -349,16 +331,14 @@ mpc_t::decoderContext_t::~decoderContext_t() noexcept { }
 int MPC_CloseFileR(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	int ret;
 
 	mpc_demux_exit(p_MF->demuxer);
 	free(p_MF->info);
 	free(p_MF->frame);
 	free(p_MF->callbacks);
 
-	ret = fclose(p_MF->f_MPC);
 	delete p_MF;
-	return ret;
+	return 0;
 }
 
 /*!

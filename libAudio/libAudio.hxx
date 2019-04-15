@@ -199,7 +199,6 @@ private:
 	std::unique_ptr<decoderContext_t> ctx;
 
 public:
-	mpc_t() noexcept;
 	mpc_t(fd_t &&fd) noexcept;
 	//static mpc_t *openR(const char *const fileName) noexcept;
 	static bool isMPC(const char *const fileName) noexcept;
