@@ -93,32 +93,29 @@ typedef struct _MPC_Intern
 	_MPC_Intern(const char *const fileName) noexcept : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
 } MPC_Intern;
 
-/*!
- * @internal
- * This function applies a simple conversion algorithm to convert the input
- * floating point MPC sample to a short for playback
- * @param Sample The floating point sample to convert
- * @return The converted floating point sample
- * @bug This function applies no noise shaping or dithering
- *   So the output is sub-par to what it could be. FIXME!
- */
-short FloatToShort(MPC_SAMPLE_FORMAT Sample)
-{
-	float s = (Sample * SHORT_MAX);
-
-	// Perform cliping
-	if (s < -SHORT_MAX)
-		s = -SHORT_MAX;
-	if (s > SHORT_MAX)
-		s = SHORT_MAX;
-
-	return (short)s;
-}
-
 namespace libAudio
 {
 	namespace mpc
 	{
+		/*!
+		* @internal
+		* This function applies a simple conversion algorithm to convert the input
+		* floating point MPC sample to a short for playback
+		* @param Sample The floating point sample to convert
+		* @return The converted floating point sample
+		* @bug This function applies no noise shaping or dithering
+		*   So the output is sub-par to what it could be. FIXME!
+		*/
+		int16_t floatToInt16(MPC_SAMPLE_FORMAT sample)
+		{
+			using limits = std::numeric_limits<int16_t>;
+			if (sample <= -1.0F)
+				return -limits::min();
+			else if (sample >= 1.0F)
+				return limits::max();
+			return int16_t(sample * limits::max());
+		}
+
 		/*!
 		* @internal
 		* \c read() is the internal read callback for MPC file decoding.
@@ -292,16 +289,16 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 			if (p_MF->p_FI->Channels == 1)
 			{
-				Sample = FloatToShort(p_MF->frame->buffer[i]);
+				Sample = mpc::floatToInt16(p_MF->frame->buffer[i]);
 				out[(nOut / 2)] = Sample;
 				nOut += 2;
 			}
 			else if (p_MF->p_FI->Channels == 2)
 			{
-				Sample = FloatToShort(p_MF->frame->buffer[(i * 2) + 0]);
+				Sample = mpc::floatToInt16(p_MF->frame->buffer[(i * 2) + 0]);
 				out[(nOut / 2) + 0] = Sample;
 
-				Sample = FloatToShort(p_MF->frame->buffer[(i * 2) + 1]);
+				Sample = mpc::floatToInt16(p_MF->frame->buffer[(i * 2) + 1]);
 				out[(nOut / 2) + 1] = Sample;
 				nOut += 4;
 			}
