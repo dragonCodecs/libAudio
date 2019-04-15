@@ -378,8 +378,8 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 	while (offset < length && !ctx.eof)
 	{
-		int16_t *out = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
-		uint32_t nOut = 0;
+		int16_t *playbackBuffer = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
+		uint32_t count = 0;
 
 		if (!ctx.samplesUsed)
 		{
@@ -404,24 +404,24 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		// copy the PCM to our output buffer
 		for (uint16_t index = 0, i = ctx.samplesUsed; i < ctx.synth.pcm.length; ++i)
 		{
-			out[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[0][i]);
+			playbackBuffer[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[0][i]);
 			if (info.channels == 2)
-				out[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[1][i]);
-			nOut += sizeof(int16_t) * info.channels;
+				playbackBuffer[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[1][i]);
+			count += sizeof(int16_t) * info.channels;
 
-			if ((offset + nOut) >= length)
+			if ((offset + count) >= length)
 			{
 				ctx.samplesUsed = ++i;
 				break;
 			}
 		}
 
-		if ((offset + nOut) < length)
+		if ((offset + count) < length)
 			ctx.samplesUsed = 0;
 
 		if (buffer != ctx.playbackBuffer)
-			memcpy(buffer + offset, out, nOut);
-		offset += nOut;
+			memcpy(buffer + offset, playbackBuffer, count);
+		offset += count;
 	}
 
 	return offset;
