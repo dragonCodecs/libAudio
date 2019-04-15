@@ -20,6 +20,12 @@
 
 struct wavPack_t::decoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The WavPack callbacks/reader information handle
+	 */
+	WavpackStreamReader callbacks;
+
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 };
@@ -30,11 +36,6 @@ struct wavPack_t::decoderContext_t final
  */
 typedef struct _WavPack_Intern
 {
-	/*!
-	 * @internal
-	 * The WavPack callbacks/reader information handle
-	 */
-	WavpackStreamReader *callbacks;
 	/*!
 	 * @internal
 	 * The decoder context handle
@@ -169,7 +170,8 @@ int f_fcanseek(void *p_file)
 }
 
 wavPack_t::wavPack_t() noexcept : audioFile_t(audioType_t::wavPack, {}), ctx(makeUnique<decoderContext_t>()) { }
-wavPack_t::decoderContext_t::decoderContext_t() noexcept { }
+wavPack_t::decoderContext_t::decoderContext_t() noexcept :
+	callbacks{f_fread_wp, f_ftell, f_fseek_abs, f_fseek_rel, f_fungetc, f_flen, f_fcanseek, nullptr} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -182,8 +184,9 @@ void *WavPack_OpenR(const char *FileName)
 	FILE *f_WVP = NULL, *f_WVPC = NULL;
 
 	std::unique_ptr<WavPack_Intern> ret = makeUnique<WavPack_Intern>();
-	if (!ret)
+	if (!ret || !ret->inner.context())
 		return nullptr;
+	auto &ctx = *ret->inner.context();
 
 	f_WVP = fopen(FileName, "rb");
 	if (f_WVP == NULL)
@@ -197,16 +200,7 @@ void *WavPack_OpenR(const char *FileName)
 
 	ret->f_WVP = f_WVP;
 	ret->f_WVPC = f_WVPC;
-	ret->callbacks = (WavpackStreamReader *)malloc(sizeof(WavpackStreamReader));
-	ret->callbacks->read_bytes = f_fread_wp;
-	ret->callbacks->get_pos = f_ftell;
-	ret->callbacks->set_pos_abs = f_fseek_abs;
-	ret->callbacks->set_pos_rel = f_fseek_rel;
-	ret->callbacks->push_back_byte = f_fungetc;
-	ret->callbacks->get_length = f_flen;
-	ret->callbacks->can_seek = f_fcanseek;
-	ret->callbacks->write_bytes = NULL;
-	ret->p_dec = WavpackOpenFileInputEx(ret->callbacks, f_WVP, f_WVPC, ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
+	ret->p_dec = WavpackOpenFileInputEx(&ctx.callbacks, f_WVP, f_WVPC, ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
 	return ret.release();
 }
@@ -287,9 +281,7 @@ int WavPack_CloseFileR(void *p_WVPFile)
 
 	ret = fclose(p_WF->f_WVP);
 
-	free(p_WF->callbacks);
 	delete p_WF;
-
 	return ret;
 }
 
