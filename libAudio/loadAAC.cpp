@@ -275,7 +275,7 @@ uint8_t *aac_t::nextFrame() noexcept
 
 int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	auto *buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
+	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset = 0;
 	auto &ctx = *context();
 

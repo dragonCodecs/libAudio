@@ -363,7 +363,7 @@ long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 
 int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	auto *buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
+	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset = 0;
 	const fileInfo_t &info = fileInfo();
 	auto &ctx = *context();

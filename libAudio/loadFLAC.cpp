@@ -373,7 +373,7 @@ long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	auto buffer = reinterpret_cast<char *const>(bufferPtr);
+	const auto buffer = static_cast<char *>(bufferPtr);
 	uint32_t filled = 0;
 	while (filled < length)
 	{

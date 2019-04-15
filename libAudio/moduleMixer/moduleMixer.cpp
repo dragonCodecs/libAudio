@@ -30,7 +30,7 @@ uint32_t __CDECL__ Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 
 int64_t moduleFile_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	auto buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
+	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	return ctx->mod->Mix(buffer, length);
 }
 

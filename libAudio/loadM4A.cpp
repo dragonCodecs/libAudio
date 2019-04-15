@@ -309,7 +309,7 @@ long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	auto &ctx = *context();
-	auto buffer = reinterpret_cast<uint8_t *const>(bufferPtr);
+	auto buffer = static_cast<uint8_t *>(bufferPtr);
 	auto *OBuf = buffer;
 
 	while ((OBuf - buffer) < length && !ctx.eof)
