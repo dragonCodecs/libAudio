@@ -68,11 +68,6 @@ typedef struct _WavPack_Intern
 	int middlebuff[4096];
 	/*!
 	 * @internal
-	 * The playback class instance for the WavPack file
-	 */
-	playback_t *p_Playback;
-	/*!
-	 * @internal
 	 * The error feedback buffer needed for various WavPack call
 	 */
 	char err[80];
@@ -264,7 +259,7 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 	}
 
 	if (ExternalPlayback == 0)
-		p_WF->p_Playback = new playback_t(p_WVPFile, WavPack_FillBuffer, p_WF->buffer, 8192, ret);
+		p_WF->inner.player(makeUnique<playback_t>(p_WVPFile, WavPack_FillBuffer, p_WF->buffer, 8192, ret));
 
 	return ret;
 }
@@ -284,8 +279,6 @@ int WavPack_CloseFileR(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
 	int ret = 0;
-
-	delete p_WF->p_Playback;
 
 	WavpackCloseFile(p_WF->p_dec);
 
@@ -357,22 +350,19 @@ int64_t wavPack_t::fillBuffer(void *const buffer, const uint32_t length) { retur
 void WavPack_Play(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-
-	p_WF->p_Playback->play();
+	p_WF->inner.play();
 }
 
 void WavPack_Pause(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-
-	p_WF->p_Playback->pause();
+	p_WF->inner.pause();
 }
 
 void WavPack_Stop(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-
-	p_WF->p_Playback->stop();
+	p_WF->inner.stop();
 }
 
 /*!
