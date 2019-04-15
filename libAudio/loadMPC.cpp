@@ -42,6 +42,18 @@ struct mpc_t::decoderContext_t final
 	mpc_demux *demuxer;
 	/*!
 	 * @internal
+	 * The MPC stream information handle which holds the metadata
+	 * returned by \c mpc_demux_get_info()
+	 */
+	mpc_streaminfo streamInfo;
+	/*!
+	 * @internal
+	 * The MPC frame handle which holds, among other things, the decoded
+	 * MPC data returned by \c mpc_demux_decode()
+	 */
+	mpc_frame_info frameInfo;
+	/*!
+	 * @internal
 	 * The MPC callbacks/reader information handle
 	 */
 	mpc_reader callbacks;
@@ -63,21 +75,9 @@ typedef struct _MPC_Intern
 	uint8_t buffer[8192];
 	/*!
 	 * @internal
-	 * The MPC stream information handle which holds the metadata
-	 * returned by \c mpc_demux_get_info()
-	 */
-	mpc_streaminfo *info;
-	/*!
-	 * @internal
 	 * The \c FileInfo for the MP3 file being decoded
 	 */
 	FileInfo *p_FI;
-	/*!
-	 * @internal
-	 * The MPC frame handle which holds, among other things, the decoded
-	 * MPC data returned by \c mpc_demux_decode()
-	 */
-	mpc_frame_info *frame;
 	/*!
 	 * @internal
 	 * The decoded MPC buffer filled by \c mpc_demux_decode()
@@ -198,7 +198,7 @@ namespace libAudio
 using namespace libAudio;
 
 mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-mpc_t::decoderContext_t::decoderContext_t() noexcept :
+mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{},
 	callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 
 /*!
@@ -216,10 +216,7 @@ void *MPC_OpenR(const char *FileName)
 
 	ctx.callbacks.data = &ret->inner;
 	ctx.demuxer = mpc_demux_init(&ctx.callbacks);
-
-	ret->info = (mpc_streaminfo *)malloc(sizeof(mpc_streaminfo));
-	ret->frame = (mpc_frame_info *)malloc(sizeof(mpc_frame_info));
-	ret->frame->buffer = ret->framebuff;
+	ctx.frameInfo.buffer = ret->framebuff;
 
 	return ret.release();
 }
@@ -240,13 +237,13 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	memset(ret, 0x00, sizeof(FileInfo));
 
-	mpc_demux_get_info(ctx.demuxer, p_MF->info);
+	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
 
 	p_MF->p_FI = ret;
-	ret->BitsPerSample = (p_MF->info->bitrate == 0 ? 16 : p_MF->info->bitrate);
-	ret->BitRate = p_MF->info->sample_freq;
-	ret->Channels = p_MF->info->channels;
-	ret->TotalTime = p_MF->info->samples / ret->BitRate;
+	ret->BitsPerSample = (ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate);
+	ret->BitRate = ctx.streamInfo.sample_freq;
+	ret->Channels = ctx.streamInfo.channels;
+	ret->TotalTime = ctx.streamInfo.samples / ret->BitRate;
 
 	if (ExternalPlayback == 0)
 		p_MF->inner.player(makeUnique<playback_t>(p_MPCFile, MPC_FillBuffer, p_MF->buffer, 8192, ret));
@@ -278,26 +275,26 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 		if (p_MF->PCMUsed == 0)
 		{
-			if (mpc_demux_decode(ctx.demuxer, p_MF->frame) != 0 || p_MF->frame->bits == -1)
+			if (mpc_demux_decode(ctx.demuxer, &ctx.frameInfo) != 0 || ctx.frameInfo.bits == -1)
 				return -2;
 		}
 
-		for (uint32_t i = p_MF->PCMUsed; i < p_MF->frame->samples; i++)
+		for (uint32_t i = p_MF->PCMUsed; i < ctx.frameInfo.samples; i++)
 		{
 			short Sample = 0;
 
 			if (p_MF->p_FI->Channels == 1)
 			{
-				Sample = mpc::floatToInt16(p_MF->frame->buffer[i]);
+				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[i]);
 				out[(nOut / 2)] = Sample;
 				nOut += 2;
 			}
 			else if (p_MF->p_FI->Channels == 2)
 			{
-				Sample = mpc::floatToInt16(p_MF->frame->buffer[(i * 2) + 0]);
+				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 0]);
 				out[(nOut / 2) + 0] = Sample;
 
-				Sample = mpc::floatToInt16(p_MF->frame->buffer[(i * 2) + 1]);
+				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 1]);
 				out[(nOut / 2) + 1] = Sample;
 				nOut += 4;
 			}
@@ -305,7 +302,7 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 			if (((OBuff - OutBuffer) + nOut) >= nOutBufferLen)
 			{
 				p_MF->PCMUsed = ++i;
-				i = p_MF->frame->samples;
+				break;
 			}
 		}
 
@@ -336,10 +333,6 @@ mpc_t::decoderContext_t::~decoderContext_t() noexcept
 int MPC_CloseFileR(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-
-	free(p_MF->info);
-	free(p_MF->frame);
-
 	delete p_MF;
 	return 0;
 }
