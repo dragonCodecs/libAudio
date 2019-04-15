@@ -39,6 +39,10 @@
 #define SHORT_MAX SHRT_MAX
 #endif
 
+struct mpc_t::decoderContext_t final
+{
+};
+
 /*!
  * @internal
  * Internal structure for holding the decoding context for a given MPC file
@@ -331,6 +335,8 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 	return OBuff - OutBuffer;
 }
 
+int64_t mpc_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
+
 /*!
  * Closes an opened audio file
  * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR(), or \c NULL for a no-operation
@@ -398,22 +404,44 @@ void MPC_Stop(void *p_MPCFile)
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MPC file or not
  */
-bool Is_MPC(const char *FileName)
+bool Is_MPC(const char *FileName) { return mpc_t::isMPC(FileName); }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a MPC
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MPC file or not
+ */
+bool mpc_t::isMPC(const int32_t fd) noexcept
 {
-	FILE *f_MPC = fopen(FileName, "rb");
-	char MPCSig[3];
-
-	if (f_MPC == NULL)
+	char mpcSig[3];
+	if (fd == -1 ||
+		read(fd, mpcSig, 3) != 3 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		(strncmp(mpcSig, "MP+", 3) != 0 &&
+		strncmp(mpcSig, "MPC", 3) != 0))
 		return false;
-
-	fread(MPCSig, 3, 1, f_MPC);
-	fclose(f_MPC);
-
-	if (strncmp(MPCSig, "MP+", 3) != 0 &&
-		strncmp(MPCSig, "MPC", 3) != 0)
-		return false;
-
 	return true;
+}
+
+/*!
+ * Checks the file given by \p fileName for whether it is a MPC
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MPC file or not
+ */
+bool mpc_t::isMPC(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isMPC(file);
 }
 
 /*!

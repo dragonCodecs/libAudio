@@ -192,4 +192,22 @@ public:
 	static bool isIT(const int32_t fd) noexcept;
 };
 
+struct mpc_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+public:
+	mpc_t() noexcept;
+	mpc_t(fd_t &&fd) noexcept;
+	//static mpc_t *openR(const char *const fileName) noexcept;
+	static bool isMPC(const char *const fileName) noexcept;
+	static bool isMPC(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
 #endif /*LIBAUDIO_HXX*/
