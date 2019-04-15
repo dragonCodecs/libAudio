@@ -253,15 +253,16 @@ int64_t mpc_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		}
 
 		int16_t *playbackBuffer = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
-		uint32_t count = 0, sampleOffset = ctx.samplesUsed;
-		for (uint32_t index = 0, i = sampleOffset; i < ctx.frameInfo.samples; ++i)
+		uint32_t count = 0;
+		const uint32_t sampleOffset = ctx.samplesUsed * info.channels;
+		for (uint32_t index = 0, i = ctx.samplesUsed; i < ctx.frameInfo.samples; ++i)
 		{
-			if (info.channels == 1)
-				playbackBuffer[index++] = mpc::floatToInt16(ctx.frameInfo.buffer[i]);
-			else if (info.channels == 2)
+			playbackBuffer[index] = mpc::floatToInt16(ctx.frameInfo.buffer[sampleOffset + index]);
+			++index;
+			if (info.channels == 2)
 			{
-				playbackBuffer[index++] = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 0]);
-				playbackBuffer[index++] = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 1]);
+				playbackBuffer[index] = mpc::floatToInt16(ctx.frameInfo.buffer[sampleOffset + index]);
+				++index;
 			}
 			count += sizeof(int16_t) * info.channels;
 
