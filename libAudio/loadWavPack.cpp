@@ -27,6 +27,25 @@ struct wavPack_t::decoderContext_t final
 	WavpackContext *decoder;
 	/*!
 	 * @internal
+	 * The internal decoded data buffer
+	 */
+	uint8_t playbackBuffer[8192];
+	/*!
+	 * @internal
+	 * The internal transfer data buffer used due to how WavPack's decoder
+	 * library outputs data
+	 */
+	std::array<int32_t, 2048> decodeBuffer; // This allocates 2 pages for the buffer.
+	/*!
+	 * @internal
+	 * @var int samplesUsed
+	 * The number of samples used so far from the current sample buffer
+	 * @var int sampleCount
+	 * The total number of samples in the current sample buffer
+	 */
+	uint32_t sampleCount, samplesUsed;
+	/*!
+	 * @internal
 	 * The end-of-file flag
 	 */
 	bool eof;
@@ -39,6 +58,7 @@ struct wavPack_t::decoderContext_t final
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 	std::unique_ptr<char []> readTag(const char *const tag) noexcept;
+	void nextFrame(const uint8_t channels) noexcept;
 };
 
 /*!
@@ -57,17 +77,6 @@ typedef struct _WavPack_Intern
 	 * The WavPack Corrections file to decode
 	 */
 	FILE *f_WVPC;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
-	/*!
-	 * @internal
-	 * The internal transfer data buffer used due to how WavPack's decoder
-	 * library outputs data
-	 */
-	int middlebuff[4096];
 	/*!
 	 * @internal
 	 * The error feedback buffer needed for various WavPack call
@@ -166,7 +175,8 @@ int f_fcanseek(void *p_file)
 }
 
 wavPack_t::wavPack_t() noexcept : audioFile_t(audioType_t::wavPack, {}), ctx(makeUnique<decoderContext_t>()) { }
-wavPack_t::decoderContext_t::decoderContext_t() noexcept : decoder{nullptr}, eof{false},
+wavPack_t::decoderContext_t::decoderContext_t() noexcept : decoder{nullptr}, playbackBuffer{}, decodeBuffer{},
+	sampleCount{0}, samplesUsed{0}, eof{false},
 	callbacks{f_fread_wp, f_ftell, f_fseek_abs, f_fseek_rel, f_fungetc, f_flen, f_fcanseek, nullptr} { }
 
 std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const tag) noexcept
@@ -221,7 +231,7 @@ void *WavPack_OpenR(const char *FileName)
 	info.title = ctx.readTag("title");
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret.get(), WavPack_FillBuffer, ret->buffer, 8192, info));
+		ret->inner.player(makeUnique<playback_t>(ret.get(), WavPack_FillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
 }
@@ -265,6 +275,14 @@ int WavPack_CloseFileR(void *p_WVPFile)
 	return ret;
 }
 
+void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
+{
+	sampleCount = WavpackUnpackSamples(decoder, decodeBuffer.data(),
+		decodeBuffer.size() / channels);
+	samplesUsed = 0;
+	eof = sampleCount == 0;
+}
+
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
@@ -287,23 +305,18 @@ long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 		return -2;
 	while (offset < nOutBufferLen && !ctx.eof)
 	{
-		short *out = (short *)p_WF->buffer;
-		int j = WavpackUnpackSamples(ctx.decoder, p_WF->middlebuff,
-			(4096 / info.channels)) * info.channels;
+		if (ctx.samplesUsed == ctx.sampleCount)
+			ctx.nextFrame(info.channels);
 
-		if (j == 0)
-			ctx.eof = true;
-
-		for (int i = 0; i < j; )
+		int16_t *playbackBuffer = reinterpret_cast<int16_t *>(OutBuffer) + offset;
+		uint32_t count = ctx.samplesUsed * info.channels, i = ctx.samplesUsed;
+		for (uint32_t index = 0; i < ctx.sampleCount; ++i)
 		{
-			for (uint8_t k = 0; k < info.channels; k++)
-				out[i + k] = (short)p_WF->middlebuff[i + k];
-
-			i += info.channels;
+			for (uint8_t channel = 0; channel < info.channels; ++channel)
+				playbackBuffer[index++] = int16_t(ctx.decodeBuffer[count++]);
 		}
-
-		memcpy(OutBuffer + offset, out, j * 2);
-		offset += j * 2;
+		ctx.samplesUsed = i;
+		offset += count;
 	}
 
 	return offset;
