@@ -48,6 +48,11 @@ struct mpc_t::decoderContext_t final
 	 * The MPC callbacks/reader information handle
 	 */
 	mpc_reader callbacks;
+	/*!
+	 * @internal
+	 * The decoded MPC buffer filled by \c mpc_demux_decode()
+	 */
+	MPC_SAMPLE_FORMAT buffer[MPC_DECODER_BUFFER_LENGTH];
 
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
@@ -59,12 +64,6 @@ struct mpc_t::decoderContext_t final
  */
 typedef struct _MPC_Intern
 {
-	/*!
-	 * @internal
-	 * The decoded MPC buffer filled by \c mpc_demux_decode()
-	 */
-	MPC_SAMPLE_FORMAT framebuff[MPC_DECODER_BUFFER_LENGTH];
-
 	mpc_t inner;
 
 	_MPC_Intern(const char *const fileName) noexcept : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
@@ -193,7 +192,7 @@ void *MPC_OpenR(const char *FileName)
 
 	ctx.callbacks.data = &ret->inner;
 	ctx.demuxer = mpc_demux_init(&ctx.callbacks);
-	ctx.frameInfo.buffer = ret->framebuff;
+	ctx.frameInfo.buffer = ctx.buffer;
 	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
 
 	info.bitsPerSample = ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate;
