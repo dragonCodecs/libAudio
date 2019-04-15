@@ -37,6 +37,11 @@ struct mpc_t::decoderContext_t final
 {
 	/*!
 	 * @internal
+	 * The MPC demultiplexer handle
+	 */
+	mpc_demux *demuxer;
+	/*!
+	 * @internal
 	 * The MPC callbacks/reader information handle
 	 */
 	mpc_reader callbacks;
@@ -62,11 +67,6 @@ typedef struct _MPC_Intern
 	 * returned by \c mpc_demux_get_info()
 	 */
 	mpc_streaminfo *info;
-	/*!
-	 * @internal
-	 * The MPC demultiplexer handle
-	 */
-	mpc_demux *demuxer;
 	/*!
 	 * @internal
 	 * The \c FileInfo for the MP3 file being decoded
@@ -215,7 +215,7 @@ void *MPC_OpenR(const char *FileName)
 	auto &ctx = *ret->inner.context();
 
 	ctx.callbacks.data = &ret->inner;
-	ret->demuxer = mpc_demux_init(&ctx.callbacks);
+	ctx.demuxer = mpc_demux_init(&ctx.callbacks);
 
 	ret->info = (mpc_streaminfo *)malloc(sizeof(mpc_streaminfo));
 	ret->frame = (mpc_frame_info *)malloc(sizeof(mpc_frame_info));
@@ -235,11 +235,12 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 {
 	FileInfo *ret = NULL;
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
+	auto &ctx = *p_MF->inner.context();
 
 	ret = (FileInfo *)malloc(sizeof(FileInfo));
 	memset(ret, 0x00, sizeof(FileInfo));
 
-	mpc_demux_get_info(p_MF->demuxer, p_MF->info);
+	mpc_demux_get_info(ctx.demuxer, p_MF->info);
 
 	p_MF->p_FI = ret;
 	ret->BitsPerSample = (p_MF->info->bitrate == 0 ? 16 : p_MF->info->bitrate);
@@ -267,6 +268,7 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
+	auto &ctx = *p_MF->inner.context();
 	uint8_t *OBuff = OutBuffer;
 
 	while (OBuff - OutBuffer < nOutBufferLen)
@@ -276,7 +278,7 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 		if (p_MF->PCMUsed == 0)
 		{
-			if (mpc_demux_decode(p_MF->demuxer, p_MF->frame) != 0 || p_MF->frame->bits == -1)
+			if (mpc_demux_decode(ctx.demuxer, p_MF->frame) != 0 || p_MF->frame->bits == -1)
 				return -2;
 		}
 
@@ -319,7 +321,8 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 int64_t mpc_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
-mpc_t::decoderContext_t::~decoderContext_t() noexcept { }
+mpc_t::decoderContext_t::~decoderContext_t() noexcept
+	{ mpc_demux_exit(demuxer); }
 
 /*!
  * Closes an opened audio file
@@ -334,7 +337,6 @@ int MPC_CloseFileR(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
 
-	mpc_demux_exit(p_MF->demuxer);
 	free(p_MF->info);
 	free(p_MF->frame);
 
