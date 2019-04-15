@@ -81,6 +81,8 @@ typedef struct _WavPack_Intern
 	 * The end-of-file flag
 	 */
 	bool eof;
+
+	wavPack_t inner;
 } WavPack_Intern;
 
 /*!
@@ -182,13 +184,11 @@ wavPack_t::decoderContext_t::decoderContext_t() noexcept { }
  */
 void *WavPack_OpenR(const char *FileName)
 {
-	WavPack_Intern *ret = NULL;
 	FILE *f_WVP = NULL, *f_WVPC = NULL;
 
-	ret = (WavPack_Intern *)malloc(sizeof(WavPack_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(WavPack_Intern));
+	std::unique_ptr<WavPack_Intern> ret = makeUnique<WavPack_Intern>();
+	if (!ret)
+		return nullptr;
 
 	f_WVP = fopen(FileName, "rb");
 	if (f_WVP == NULL)
@@ -213,7 +213,7 @@ void *WavPack_OpenR(const char *FileName)
 	ret->callbacks->write_bytes = NULL;
 	ret->p_dec = WavpackOpenFileInputEx(ret->callbacks, f_WVP, f_WVPC, ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -295,7 +295,7 @@ int WavPack_CloseFileR(void *p_WVPFile)
 	ret = fclose(p_WF->f_WVP);
 
 	free(p_WF->callbacks);
-	free(p_WF);
+	delete p_WF;
 
 	return ret;
 }
