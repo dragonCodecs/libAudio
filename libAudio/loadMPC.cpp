@@ -115,81 +115,89 @@ short FloatToShort(MPC_SAMPLE_FORMAT Sample)
 	return (short)s;
 }
 
-/*!
- * @internal
- * \c f_fread() is the internal read callback for MPC file decoding.
- * This prevents nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_MPCFile Structure holding our own internal context pointer which
- *   holds the file to seek through
- * @param p_Buffer The buffer to read into
- * @param size The number of bytes to read into the buffer
- * @return The return result of \c fread()
- */
-int32_t f_fread(mpc_reader *reader, void *buffer, int bufferLen)
+namespace libAudio
 {
-	mpc_t *file = static_cast<mpc_t *>(reader->data);
-	return file->fd().read(buffer, bufferLen, nullptr);
+	namespace mpc
+	{
+		/*!
+		* @internal
+		* \c read() is the internal read callback for MPC file decoding.
+		* This prevents nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_MPCFile Structure holding our own internal context pointer which
+		*   holds the file to seek through
+		* @param p_Buffer The buffer to read into
+		* @param size The number of bytes to read into the buffer
+		* @return The return result of \c fread()
+		*/
+		int32_t read(mpc_reader *reader, void *buffer, int bufferLen)
+		{
+			mpc_t *file = static_cast<mpc_t *>(reader->data);
+			return file->fd().read(buffer, bufferLen, nullptr);
+		}
+
+		/*!
+		* @internal
+		* \c seek() is the internal seek callback for MPC file decoding.
+		* This prevents nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_MPCFile Structure holding our own internal context pointer which
+		*   holds the file to seek through
+		* @param offset The offset through the file to which to seek to
+		* @return A truth value giving if the seek succeeded or not
+		*/
+		uint8_t seek(mpc_reader *reader, int offset)
+		{
+			mpc_t *file = static_cast<mpc_t *>(reader->data);
+			return file->fd().seek(offset, SEEK_SET) == offset;
+		}
+
+		/*!
+		* @internal
+		* \c tell() is the internal read possition callback for MPC file decoding.
+		* This prevents nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_MPCFile Structure holding our own internal context pointer which
+		*   holds the file to seek through
+		* @return An integer giving the read possition of the file in bytes
+		*/
+		int32_t tell(mpc_reader *reader)
+		{
+			mpc_t *file = static_cast<mpc_t *>(reader->data);
+			return file->fd().tell();
+		}
+
+		/*!
+		* @internal
+		* \c length() is the internal file length callback for MPC file decoding.
+		* This prevents nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_MPCFile Structure holding our own internal context pointer which
+		*   holds the file to seek through
+		* @return An integer giving the length of the file in bytes
+		*/
+		int32_t length(mpc_reader *reader)
+		{
+			mpc_t *file = static_cast<mpc_t *>(reader->data);
+			return file->fd().length();
+		}
+
+		/*!
+		* @internal
+		* \c canSeek() is the internal callback for determining if an MPC file being
+		* decoded can be seeked on or not. \n This does two things: \n
+		* - It prevents nasty things from happening on Windows thanks to the run-time mess there
+		* - It uses \c fseek() as a no-operation to determine if we can seek or not.
+		*
+		* @param p_MPCFile Structure holding our own internal context pointer which
+		*   holds the file to seek through
+		* @return A truth value giving if seeking can work or not
+		*/
+		uint8_t canSeek(mpc_reader *reader)
+		{
+			mpc_t *file = static_cast<mpc_t *>(reader->data);
+			return file->fd().tell() != -1;
+		}
+	}
 }
 
-/*!
- * @internal
- * \c f_fseek() is the internal seek callback for MPC file decoding.
- * This prevents nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_MPCFile Structure holding our own internal context pointer which
- *   holds the file to seek through
- * @param offset The offset through the file to which to seek to
- * @return A truth value giving if the seek succeeded or not
- */
-uint8_t f_fseek(mpc_reader *reader, int offset)
-{
-	mpc_t *file = static_cast<mpc_t *>(reader->data);
-	return file->fd().seek(offset, SEEK_SET) == offset;
-}
-
-/*!
- * @internal
- * \c f_ftell() is the internal read possition callback for MPC file decoding.
- * This prevents nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_MPCFile Structure holding our own internal context pointer which
- *   holds the file to seek through
- * @return An integer giving the read possition of the file in bytes
- */
-int32_t f_ftell(mpc_reader *reader)
-{
-	mpc_t *file = static_cast<mpc_t *>(reader->data);
-	return file->fd().tell();
-}
-
-/*!
- * @internal
- * \c f_flen() is the internal file length callback for MPC file decoding.
- * This prevents nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_MPCFile Structure holding our own internal context pointer which
- *   holds the file to seek through
- * @return An integer giving the length of the file in bytes
- */
-int32_t f_flen(mpc_reader *reader)
-{
-	mpc_t *file = static_cast<mpc_t *>(reader->data);
-	return file->fd().length();
-}
-
-/*!
- * @internal
- * \c f_fcanseek() is the internal callback for determining if an MPC file being
- * decoded can be seeked on or not. \n This does two things: \n
- * - It prevents nasty things from happening on Windows thanks to the run-time mess there
- * - It uses \c fseek() as a no-operation to determine if we can seek or not.
- *
- * @param p_MPCFile Structure holding our own internal context pointer which
- *   holds the file to seek through
- * @return A truth value giving if seeking can work or not
- */
-uint8_t f_fcanseek(mpc_reader *reader)
-{
-	mpc_t *file = static_cast<mpc_t *>(reader->data);
-	return file->fd().tell() != -1;
-}
+using namespace libAudio;
 
 mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 mpc_t::decoderContext_t::decoderContext_t() noexcept { }
@@ -207,11 +215,11 @@ void *MPC_OpenR(const char *FileName)
 		return ret;
 
 	ret->callbacks = (mpc_reader *)malloc(sizeof(mpc_reader));
-	ret->callbacks->read = f_fread;
-	ret->callbacks->seek = f_fseek;
-	ret->callbacks->tell = f_ftell;
-	ret->callbacks->get_size = f_flen;
-	ret->callbacks->canseek = f_fcanseek;
+	ret->callbacks->read = mpc::read;
+	ret->callbacks->seek = mpc::seek;
+	ret->callbacks->tell = mpc::tell;
+	ret->callbacks->get_size = mpc::length;
+	ret->callbacks->canseek = mpc::canSeek;
 	ret->callbacks->data = &ret->inner;
 	ret->demuxer = mpc_demux_init(ret->callbacks);
 
