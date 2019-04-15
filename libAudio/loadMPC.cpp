@@ -40,6 +40,11 @@ struct mpc_t::decoderContext_t final
 	uint8_t playbackBuffer[8192];
 	/*!
 	 * @internal
+	 * The count of how much of the current decoded data buffer has been used
+	 */
+	uint32_t samplesUsed;
+	/*!
+	 * @internal
 	 * The MPC callbacks/reader information handle
 	 */
 	mpc_reader callbacks;
@@ -59,11 +64,6 @@ typedef struct _MPC_Intern
 	 * The decoded MPC buffer filled by \c mpc_demux_decode()
 	 */
 	MPC_SAMPLE_FORMAT framebuff[MPC_DECODER_BUFFER_LENGTH];
-	/*!
-	 * @internal
-	 * The count of how much of the current decoded data buffer has been used
-	 */
-	uint32_t PCMUsed;
 
 	mpc_t inner;
 
@@ -174,8 +174,8 @@ namespace libAudio
 using namespace libAudio;
 
 mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{},
-	callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
+mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{}, playbackBuffer{},
+	samplesUsed{0}, callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -202,7 +202,7 @@ void *MPC_OpenR(const char *FileName)
 	info.totalTime = ctx.streamInfo.samples / info.bitRate;
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret.get(), MPC_FillBuffer, ctx.playbackBuffer, 8192, info));
+		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
 }
@@ -226,68 +226,61 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
  * with audio from an opened file.
  * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param countBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
+long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int countBufferLen)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
+	return audioFillBuffer(&p_MF->inner, OutBuffer, countBufferLen);
+}
+
+int64_t mpc_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset = 0;
-	const fileInfo_t &info = p_MF->inner.fileInfo();
-	auto &ctx = *p_MF->inner.context();
+	const fileInfo_t &info = fileInfo();
+	auto &ctx = *context();
 
-	while (offset < nOutBufferLen)
+	while (offset < length)
 	{
-		int16_t *out = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
-		int nOut = 0;
-
-		if (p_MF->PCMUsed == 0)
+		if (ctx.samplesUsed == 0)
 		{
 			if (mpc_demux_decode(ctx.demuxer, &ctx.frameInfo) != 0 || ctx.frameInfo.bits == -1)
 				return -2;
 		}
 
-		for (uint32_t i = p_MF->PCMUsed; i < ctx.frameInfo.samples; i++)
+		int16_t *playbackBuffer = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
+		uint32_t count = 0, sampleOffset = ctx.samplesUsed;
+		for (uint32_t index = 0, i = sampleOffset; i < ctx.frameInfo.samples; ++i)
 		{
-			short Sample = 0;
-
 			if (info.channels == 1)
-			{
-				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[i]);
-				out[(nOut / 2)] = Sample;
-				nOut += 2;
-			}
+				playbackBuffer[index++] = mpc::floatToInt16(ctx.frameInfo.buffer[i]);
 			else if (info.channels == 2)
 			{
-				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 0]);
-				out[(nOut / 2) + 0] = Sample;
-
-				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 1]);
-				out[(nOut / 2) + 1] = Sample;
-				nOut += 4;
+				playbackBuffer[index++] = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 0]);
+				playbackBuffer[index++] = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 1]);
 			}
+			count += sizeof(int16_t) * info.channels;
 
-			if ((offset + nOut) >= nOutBufferLen)
+			if ((offset + count) >= length)
 			{
-				p_MF->PCMUsed = ++i;
+				ctx.samplesUsed = ++i;
 				break;
 			}
 		}
+		if ((offset + count) < length)
+			ctx.samplesUsed = 0;
 
-		if ((offset + nOut) < nOutBufferLen)
-			p_MF->PCMUsed = 0;
-
-		if (OutBuffer != ctx.playbackBuffer)
-			memcpy(OutBuffer + offset, out, nOut);
-		offset += nOut;
+		if (buffer != ctx.playbackBuffer)
+			memcpy(buffer + offset, playbackBuffer, count);
+		offset += count;
 	}
 
 	return offset;
 }
-
-int64_t mpc_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 mpc_t::decoderContext_t::~decoderContext_t() noexcept
 	{ mpc_demux_exit(demuxer); }
