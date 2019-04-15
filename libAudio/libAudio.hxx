@@ -209,4 +209,22 @@ public:
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 
+struct wavPack_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+public:
+	wavPack_t() noexcept;
+	wavPack_t(fd_t &&fd) noexcept;
+	//static wavPack_t *openR(const char *const fileName) noexcept;
+	static bool isWavPack(const char *const fileName) noexcept;
+	static bool isWavPack(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
 #endif /*LIBAUDIO_HXX*/

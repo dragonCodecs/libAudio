@@ -18,6 +18,12 @@
  * @date 2010-2013
  */
 
+struct wavPack_t::decoderContext_t final
+{
+	decoderContext_t() noexcept;
+	~decoderContext_t() noexcept;
+};
+
 /*!
  * @internal
  * Internal structure for holding the decoding context for a given WavPack file
@@ -165,6 +171,9 @@ int f_fcanseek(void *p_file)
 	return (fseek((FILE *)p_file, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
 }
 
+wavPack_t::wavPack_t() noexcept : audioFile_t(audioType_t::wavPack, {}), ctx(makeUnique<decoderContext_t>()) { }
+wavPack_t::decoderContext_t::decoderContext_t() noexcept { }
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by WavPack_* functions
@@ -263,6 +272,8 @@ FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
 	return ret;
 }
 
+wavPack_t::decoderContext_t::~decoderContext_t() noexcept { }
+
 /*!
  * Closes an opened audio file
  * @param p_WVPFile A pointer to a file opened with \c WavPack_OpenR(), or \c NULL for a no-operation
@@ -332,6 +343,8 @@ long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 	return (OBuff - OutBuffer);
 }
+
+int64_t wavPack_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened WavPack file using OpenAL on the default audio device
