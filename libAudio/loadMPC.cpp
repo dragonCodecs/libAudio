@@ -58,11 +58,6 @@ typedef struct _MPC_Intern
 	FILE *f_MPC;
 	/*!
 	 * @internal
-	 * The playback class instance for the MPC file
-	 */
-	playback_t *p_Playback;
-	/*!
-	 * @internal
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
@@ -269,7 +264,7 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 	ret->TotalTime = p_MF->info->samples / ret->BitRate;
 
 	if (ExternalPlayback == 0)
-		p_MF->p_Playback = new playback_t(p_MPCFile, MPC_FillBuffer, p_MF->buffer, 8192, ret);
+		p_MF->inner.player(makeUnique<playback_t>(p_MPCFile, MPC_FillBuffer, p_MF->buffer, 8192, ret));
 
 	return ret;
 }
@@ -356,8 +351,6 @@ int MPC_CloseFileR(void *p_MPCFile)
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
 	int ret;
 
-	delete p_MF->p_Playback;
-
 	mpc_demux_exit(p_MF->demuxer);
 	free(p_MF->info);
 	free(p_MF->frame);
@@ -382,22 +375,19 @@ int MPC_CloseFileR(void *p_MPCFile)
 void MPC_Play(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-
-	p_MF->p_Playback->play();
+	p_MF->inner.play();
 }
 
 void MPC_Pause(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-
-	p_MF->p_Playback->pause();
+	p_MF->inner.pause();
 }
 
 void MPC_Stop(void *p_MPCFile)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-
-	p_MF->p_Playback->stop();
+	p_MF->inner.stop();
 }
 
 /*!
