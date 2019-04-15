@@ -35,6 +35,12 @@
 
 struct mpc_t::decoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The MPC callbacks/reader information handle
+	 */
+	mpc_reader callbacks;
+
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 };
@@ -50,11 +56,6 @@ typedef struct _MPC_Intern
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
-	/*!
-	 * @internal
-	 * The MPC callbacks/reader information handle
-	 */
-	mpc_reader *callbacks;
 	/*!
 	 * @internal
 	 * The MPC stream information handle which holds the metadata
@@ -197,7 +198,8 @@ namespace libAudio
 using namespace libAudio;
 
 mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-mpc_t::decoderContext_t::decoderContext_t() noexcept { }
+mpc_t::decoderContext_t::decoderContext_t() noexcept :
+	callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -207,24 +209,19 @@ mpc_t::decoderContext_t::decoderContext_t() noexcept { }
  */
 void *MPC_OpenR(const char *FileName)
 {
-	MPC_Intern *ret = new (std::nothrow) MPC_Intern(FileName);
-	if (ret == NULL)
-		return ret;
+	std::unique_ptr<MPC_Intern> ret = makeUnique<MPC_Intern>(FileName);
+	if (!ret || !ret->inner.context())
+		return nullptr;
+	auto &ctx = *ret->inner.context();
 
-	ret->callbacks = (mpc_reader *)malloc(sizeof(mpc_reader));
-	ret->callbacks->read = mpc::read;
-	ret->callbacks->seek = mpc::seek;
-	ret->callbacks->tell = mpc::tell;
-	ret->callbacks->get_size = mpc::length;
-	ret->callbacks->canseek = mpc::canSeek;
-	ret->callbacks->data = &ret->inner;
-	ret->demuxer = mpc_demux_init(ret->callbacks);
+	ctx.callbacks.data = &ret->inner;
+	ret->demuxer = mpc_demux_init(&ctx.callbacks);
 
 	ret->info = (mpc_streaminfo *)malloc(sizeof(mpc_streaminfo));
 	ret->frame = (mpc_frame_info *)malloc(sizeof(mpc_frame_info));
 	ret->frame->buffer = ret->framebuff;
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -340,7 +337,6 @@ int MPC_CloseFileR(void *p_MPCFile)
 	mpc_demux_exit(p_MF->demuxer);
 	free(p_MF->info);
 	free(p_MF->frame);
-	free(p_MF->callbacks);
 
 	delete p_MF;
 	return 0;
