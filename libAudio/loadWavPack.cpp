@@ -35,7 +35,7 @@ struct wavPack_t::decoderContext_t final
 	 * The internal transfer data buffer used due to how WavPack's decoder
 	 * library outputs data
 	 */
-	std::array<int32_t, 2048> decodeBuffer; // This allocates 2 pages for the buffer.
+	std::array<int32_t, 1024> decodeBuffer; // This allocates 1 page for the buffer.
 	/*!
 	 * @internal
 	 * @var int samplesUsed
@@ -231,7 +231,7 @@ void *WavPack_OpenR(const char *FileName)
 	info.title = ctx.readTag("title");
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret.get(), WavPack_FillBuffer, ctx.playbackBuffer, 8192, info));
+		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
 }
@@ -278,7 +278,7 @@ int WavPack_CloseFileR(void *p_WVPFile)
 void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
 {
 	sampleCount = WavpackUnpackSamples(decoder, decodeBuffer.data(),
-		decodeBuffer.size() / channels);
+		decodeBuffer.size() / channels) * channels;
 	samplesUsed = 0;
 	eof = sampleCount == 0;
 }
@@ -297,32 +297,36 @@ void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
 long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
+	return audioFillBuffer(&p_WF->inner, OutBuffer, nOutBufferLen);
+}
+
+int64_t wavPack_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset = 0;
-	const fileInfo_t &info = p_WF->inner.fileInfo();
-	auto &ctx = *p_WF->inner.context();
+	const fileInfo_t &info = fileInfo();
+	auto &ctx = *context();
 
 	if (ctx.eof)
 		return -2;
-	while (offset < nOutBufferLen && !ctx.eof)
+	while (offset < length && !ctx.eof)
 	{
 		if (ctx.samplesUsed == ctx.sampleCount)
 			ctx.nextFrame(info.channels);
 
-		int16_t *playbackBuffer = reinterpret_cast<int16_t *>(OutBuffer) + offset;
-		uint32_t count = ctx.samplesUsed * info.channels, i = ctx.samplesUsed;
-		for (uint32_t index = 0; i < ctx.sampleCount; ++i)
+		auto playbackBuffer = reinterpret_cast<int16_t *>(buffer + offset);
+		uint32_t count = ctx.samplesUsed * info.channels, index = 0;
+		for (uint32_t i = ctx.samplesUsed; i < ctx.sampleCount; i += info.channels)
 		{
 			for (uint8_t channel = 0; channel < info.channels; ++channel)
 				playbackBuffer[index++] = int16_t(ctx.decodeBuffer[count++]);
 		}
-		ctx.samplesUsed = i;
-		offset += count;
+		ctx.samplesUsed += index;
+		offset += index * sizeof(int16_t);
 	}
 
 	return offset;
 }
-
-int64_t wavPack_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened WavPack file using OpenAL on the default audio device
