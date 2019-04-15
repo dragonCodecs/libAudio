@@ -194,14 +194,11 @@ void *WavPack_OpenR(const char *FileName)
 	if (f_WVP == NULL)
 		return f_WVP;
 
-	// If there's a correction file, open it.
-	// This is in effect a function, hence it's in it's own code block.
+	f_WVPC = [](std::string fileName) noexcept -> FILE *
 	{
-		std::string fname = std::string(FileName);
-		fname.append("c");
-		f_WVPC = fopen(fname.c_str(), "rb");
-		fname.clear();
-	}
+		fileName += 'c';
+		return fopen(fileName.data(), "rb");
+	}(FileName);
 
 	ret->f_WVP = f_WVP;
 	ret->f_WVPC = f_WVPC;
