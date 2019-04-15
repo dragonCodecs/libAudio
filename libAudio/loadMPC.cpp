@@ -1,7 +1,6 @@
 #ifndef __NO_MPC__
 
-#include <malloc.h>
-
+#include <algorithm>
 #include <mpc/mpcdec.h>
 
 #include "libAudio.h"
@@ -14,24 +13,6 @@
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2013
  */
-
-#include <limits.h>
-
-#ifndef SHRT_MAX
-/*!
- * @internal
- * Backup definition of \c SHORT_MAX, which should be defined in limit.h,
- * but which assumes that short's length is 16 bits
- */
-#define SHORT_MAX 0x7FFF
-#else
-/*!
- * @internal
- * Definition of \c SHORT_MAX, which takes on the value of \c SHRT_MAX
- * from limit.h
- */
-#define SHORT_MAX SHRT_MAX
-#endif
 
 struct mpc_t::decoderContext_t final
 {
