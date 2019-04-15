@@ -54,6 +54,11 @@ struct mpc_t::decoderContext_t final
 	mpc_frame_info frameInfo;
 	/*!
 	 * @internal
+	 * The internal decoded data buffer
+	 */
+	uint8_t playbackBuffer[8192];
+	/*!
+	 * @internal
 	 * The MPC callbacks/reader information handle
 	 */
 	mpc_reader callbacks;
@@ -68,11 +73,6 @@ struct mpc_t::decoderContext_t final
  */
 typedef struct _MPC_Intern
 {
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The \c FileInfo for the MP3 file being decoded
@@ -111,7 +111,7 @@ namespace libAudio
 		{
 			using limits = std::numeric_limits<int16_t>;
 			if (sample <= -1.0F)
-				return -limits::min();
+				return limits::min();
 			else if (sample >= 1.0F)
 				return limits::max();
 			return int16_t(sample * limits::max());
@@ -246,7 +246,7 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 	ret->TotalTime = ctx.streamInfo.samples / ret->BitRate;
 
 	if (ExternalPlayback == 0)
-		p_MF->inner.player(makeUnique<playback_t>(p_MPCFile, MPC_FillBuffer, p_MF->buffer, 8192, ret));
+		p_MF->inner.player(makeUnique<playback_t>(p_MPCFile, MPC_FillBuffer, ctx.playbackBuffer, 8192, ret));
 
 	return ret;
 }
@@ -265,12 +265,12 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
+	uint32_t offset = 0;
 	auto &ctx = *p_MF->inner.context();
-	uint8_t *OBuff = OutBuffer;
 
-	while (OBuff - OutBuffer < nOutBufferLen)
+	while (offset < nOutBufferLen)
 	{
-		short *out = (short *)(p_MF->buffer + (OBuff - OutBuffer));
+		int16_t *out = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
 		int nOut = 0;
 
 		if (p_MF->PCMUsed == 0)
@@ -299,21 +299,21 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 				nOut += 4;
 			}
 
-			if (((OBuff - OutBuffer) + nOut) >= nOutBufferLen)
+			if ((offset + nOut) >= nOutBufferLen)
 			{
 				p_MF->PCMUsed = ++i;
 				break;
 			}
 		}
 
-		if (((OBuff - OutBuffer) + nOut) < nOutBufferLen)
+		if ((offset + nOut) < nOutBufferLen)
 			p_MF->PCMUsed = 0;
 
-		memcpy(OBuff, out, nOut);
-		OBuff += nOut;
+		memcpy(OutBuffer + offset, out, nOut);
+		offset += nOut;
 	}
 
-	return OBuff - OutBuffer;
+	return offset;
 }
 
 int64_t mpc_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
