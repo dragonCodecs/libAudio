@@ -58,17 +58,6 @@ struct mpc_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given MPC file
- */
-typedef struct _MPC_Intern
-{
-	mpc_t inner;
-
-	_MPC_Intern(const char *const fileName) noexcept : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
-} MPC_Intern;
-
 namespace libAudio
 {
 	namespace mpc
@@ -176,21 +165,15 @@ mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(
 mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{}, playbackBuffer{},
 	samplesUsed{0}, callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 
-/*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
- * to the context of the opened file which must be used only by MPC_* functions
- * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
- */
-void *MPC_OpenR(const char *FileName)
+mpc_t *mpc_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<MPC_Intern> ret = makeUnique<MPC_Intern>(FileName);
-	if (!ret || !ret->inner.context())
+	std::unique_ptr<mpc_t> mpcFile(makeUnique<mpc_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!mpcFile || !mpcFile->valid() || !isMPC(mpcFile->_fd))
 		return nullptr;
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
+	auto &ctx = *mpcFile->context();
+	fileInfo_t &info = mpcFile->fileInfo();
 
-	ctx.callbacks.data = &ret->inner;
+	ctx.callbacks.data = mpcFile.get();
 	ctx.demuxer = mpc_demux_init(&ctx.callbacks);
 	ctx.frameInfo.buffer = ctx.buffer;
 	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
@@ -200,10 +183,27 @@ void *MPC_OpenR(const char *FileName)
 	info.channels = ctx.streamInfo.channels;
 	info.totalTime = ctx.streamInfo.samples / info.bitRate;
 
-	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return mpcFile.release();
+}
 
-	return ret.release();
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by MPC_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
+void *MPC_OpenR(const char *FileName)
+{
+	std::unique_ptr<mpc_t> file(mpc_t::openR(FileName));
+	if (!file)
+		return nullptr;
+	auto &ctx = *file->context();
+	const fileInfo_t &info = file->fileInfo();
+
+	if (ExternalPlayback == 0)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+
+	return file.release();
 }
 
 /*!
@@ -213,11 +213,7 @@ void *MPC_OpenR(const char *FileName)
  * @warning This function must be called before using \c MPC_Play() or \c MPC_FillBuffer()
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *MPC_GetFileInfo(void *p_MPCFile)
-{
-	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	return audioFileInfo(&p_MF->inner);
-}
+FileInfo *MPC_GetFileInfo(void *p_MPCFile) { return audioFileInfo(p_MPCFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -231,10 +227,7 @@ FileInfo *MPC_GetFileInfo(void *p_MPCFile)
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int countBufferLen)
-{
-	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	return audioFillBuffer(&p_MF->inner, OutBuffer, countBufferLen);
-}
+	{ return audioFillBuffer(p_MPCFile, OutBuffer, countBufferLen); }
 
 int64_t mpc_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -294,12 +287,7 @@ mpc_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int MPC_CloseFileR(void *p_MPCFile)
-{
-	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	delete p_MF;
-	return 0;
-}
+int MPC_CloseFileR(void *p_MPCFile) { return audioCloseFileR(p_MPCFile); }
 
 /*!
  * Plays an opened MPC file using OpenAL on the default audio device
@@ -312,23 +300,9 @@ int MPC_CloseFileR(void *p_MPCFile)
  * @bug Futher to the \p p_MPCFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void MPC_Play(void *p_MPCFile)
-{
-	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	p_MF->inner.play();
-}
-
-void MPC_Pause(void *p_MPCFile)
-{
-	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	p_MF->inner.pause();
-}
-
-void MPC_Stop(void *p_MPCFile)
-{
-	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	p_MF->inner.stop();
-}
+void MPC_Play(void *p_MPCFile) { audioPlay(p_MPCFile); }
+void MPC_Pause(void *p_MPCFile) { audioPause(p_MPCFile); }
+void MPC_Stop(void *p_MPCFile) { audioStop(p_MPCFile); }
 
 /*!
  * Checks the file given by \p FileName for whether it is an MPC

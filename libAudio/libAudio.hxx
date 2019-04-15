@@ -200,7 +200,7 @@ private:
 
 public:
 	mpc_t(fd_t &&fd) noexcept;
-	//static mpc_t *openR(const char *const fileName) noexcept;
+	static mpc_t *openR(const char *const fileName) noexcept;
 	static bool isMPC(const char *const fileName) noexcept;
 	static bool isMPC(const int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
