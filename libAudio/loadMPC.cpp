@@ -75,11 +75,6 @@ typedef struct _MPC_Intern
 {
 	/*!
 	 * @internal
-	 * The \c FileInfo for the MP3 file being decoded
-	 */
-	FileInfo *p_FI;
-	/*!
-	 * @internal
 	 * The decoded MPC buffer filled by \c mpc_demux_decode()
 	 */
 	MPC_SAMPLE_FORMAT framebuff[MPC_DECODER_BUFFER_LENGTH];
@@ -213,10 +208,20 @@ void *MPC_OpenR(const char *FileName)
 	if (!ret || !ret->inner.context())
 		return nullptr;
 	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
 
 	ctx.callbacks.data = &ret->inner;
 	ctx.demuxer = mpc_demux_init(&ctx.callbacks);
 	ctx.frameInfo.buffer = ret->framebuff;
+	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
+
+	info.bitsPerSample = ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate;
+	info.bitRate = ctx.streamInfo.sample_freq;
+	info.channels = ctx.streamInfo.channels;
+	info.totalTime = ctx.streamInfo.samples / info.bitRate;
+
+	if (ExternalPlayback == 0)
+		ret->inner.player(makeUnique<playback_t>(ret.get(), MPC_FillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
 }
@@ -230,25 +235,8 @@ void *MPC_OpenR(const char *FileName)
  */
 FileInfo *MPC_GetFileInfo(void *p_MPCFile)
 {
-	FileInfo *ret = NULL;
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
-	auto &ctx = *p_MF->inner.context();
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	memset(ret, 0x00, sizeof(FileInfo));
-
-	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
-
-	p_MF->p_FI = ret;
-	ret->BitsPerSample = (ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate);
-	ret->BitRate = ctx.streamInfo.sample_freq;
-	ret->Channels = ctx.streamInfo.channels;
-	ret->TotalTime = ctx.streamInfo.samples / ret->BitRate;
-
-	if (ExternalPlayback == 0)
-		p_MF->inner.player(makeUnique<playback_t>(p_MPCFile, MPC_FillBuffer, ctx.playbackBuffer, 8192, ret));
-
-	return ret;
+	return audioFileInfo(&p_MF->inner);
 }
 
 /*!
@@ -266,6 +254,7 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	MPC_Intern *p_MF = (MPC_Intern *)p_MPCFile;
 	uint32_t offset = 0;
+	const fileInfo_t &info = p_MF->inner.fileInfo();
 	auto &ctx = *p_MF->inner.context();
 
 	while (offset < nOutBufferLen)
@@ -283,13 +272,13 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 		{
 			short Sample = 0;
 
-			if (p_MF->p_FI->Channels == 1)
+			if (info.channels == 1)
 			{
 				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[i]);
 				out[(nOut / 2)] = Sample;
 				nOut += 2;
 			}
-			else if (p_MF->p_FI->Channels == 2)
+			else if (info.channels == 2)
 			{
 				Sample = mpc::floatToInt16(ctx.frameInfo.buffer[(i * 2) + 0]);
 				out[(nOut / 2) + 0] = Sample;
