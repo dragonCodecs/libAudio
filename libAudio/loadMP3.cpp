@@ -66,26 +66,34 @@ struct mp3_t::decoderContext_t final
 	uint32_t parseXingHeader() noexcept WARN_UNUSED;
 };
 
-/*!
- * @internal
- * This function applies a simple conversion algorithm to convert the input
- * fixed-point MAD sample to a short for playback
- * @param value The fixed point sample to convert
- * @return The converted fixed point sample
- * @bug This function applies no noise shaping or dithering
- *   So the output is sub-par to what it could be. FIXME!
- */
-inline int16_t fixedToShort(mad_fixed_t value)
+namespace libAudio
 {
-	using limits = std::numeric_limits<int16_t>;
-	if (value >= MAD_F_ONE)
-		return limits::max();
-	if (value <= -MAD_F_ONE)
-		return limits::min();
+	namespace mp3
+	{
+		/*!
+		* @internal
+		* This function applies a simple conversion algorithm to convert the input
+		* fixed-point MAD sample to a short for playback
+		* @param value The fixed point sample to convert
+		* @return The converted fixed point sample
+		* @bug This function applies no noise shaping or dithering
+		*   So the output is sub-par to what it could be. FIXME!
+		*/
+		inline int16_t fixedToInt16(mad_fixed_t value)
+		{
+			using limits = std::numeric_limits<int16_t>;
+			if (value >= MAD_F_ONE)
+				return limits::max();
+			if (value <= -MAD_F_ONE)
+				return limits::min();
 
-	value = value >> (MAD_F_FRACBITS - 15);
-	return int16_t(value);
+			value = value >> (MAD_F_FRACBITS - 15);
+			return int16_t(value);
+		}
+	}
 }
+
+using namespace libAudio;
 
 mp3_t::mp3_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::mp3, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 mp3_t::decoderContext_t::decoderContext_t() : stream{}, frame{}, synth{}, inputBuffer{}, playbackBuffer{},
@@ -396,9 +404,9 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		// copy the PCM to our output buffer
 		for (uint16_t index = 0, i = ctx.samplesUsed; i < ctx.synth.pcm.length; ++i)
 		{
-			out[index++] = fixedToShort(ctx.synth.pcm.samples[0][i]);
+			out[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[0][i]);
 			if (info.channels == 2)
-				out[index++] = fixedToShort(ctx.synth.pcm.samples[1][i]);
+				out[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[1][i]);
 			nOut += sizeof(int16_t) * info.channels;
 
 			if ((offset + nOut) >= length)
