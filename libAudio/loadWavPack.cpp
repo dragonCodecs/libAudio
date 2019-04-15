@@ -387,21 +387,43 @@ void WavPack_Stop(void *p_WVPFile)
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an WavPack file or not
  */
-bool Is_WavPack(const char *FileName)
+bool Is_WavPack(const char *FileName) { return wavPack_t::isWavPack(FileName); }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a MP3
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP3 file or not
+ */
+bool wavPack_t::isWavPack(const int32_t fd) noexcept
 {
-	FILE *f_WVP = fopen(FileName, "rb");
-	char WavPackSig[4];
-
-	if (f_WVP == NULL)
+	char wavPackSig[4];
+	if (fd == -1 ||
+		read(fd, wavPackSig, 4) != 4 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		strncmp(wavPackSig, "wvpk", 4) != 0)
 		return false;
-
-	fread(WavPackSig, 4, 1, f_WVP);
-	fclose(f_WVP);
-
-	if (strncmp(WavPackSig, "wvpk", 4) != 0)
-		return false;
-
 	return true;
+}
+
+/*!
+ * Checks the file given by \p fileName for whether it is a MP3
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a MP3 file or not
+ */
+bool wavPack_t::isWavPack(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isWavPack(file);
 }
 
 /*!
