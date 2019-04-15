@@ -320,16 +320,16 @@ int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 			if (ctx.currentFrame < ctx.frameCount)
 			{
 				NeAACDecFrameInfo FI;
-				uint8_t *Buff = nullptr;
-				uint32_t nBuff = 0;
+				uint8_t *frame = nullptr;
+				uint32_t frameLen = 0;
 				++ctx.currentFrame;
-				if (!MP4ReadSample(ctx.mp4Stream, ctx.track, ctx.currentFrame, &Buff, &nBuff))
+				if (!MP4ReadSample(ctx.mp4Stream, ctx.track, ctx.currentFrame, &frame, &frameLen))
 				{
 					ctx.eof = true;
 					return -2;
 				}
-				ctx.samples = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, Buff, nBuff);
-				MP4Free(Buff);
+				ctx.samples = (uint8_t *)NeAACDecDecode(ctx.decoder, &FI, frame, frameLen);
+				MP4Free(frame);
 
 				ctx.sampleCount = FI.samples * FI.channels;
 				ctx.samplesUsed = 0;
