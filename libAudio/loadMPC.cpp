@@ -309,7 +309,8 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 		if ((offset + nOut) < nOutBufferLen)
 			p_MF->PCMUsed = 0;
 
-		memcpy(OutBuffer + offset, out, nOut);
+		if (OutBuffer != ctx.playbackBuffer)
+			memcpy(OutBuffer + offset, out, nOut);
 		offset += nOut;
 	}
 
