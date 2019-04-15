@@ -125,10 +125,10 @@ short FloatToShort(MPC_SAMPLE_FORMAT Sample)
  * @param size The number of bytes to read into the buffer
  * @return The return result of \c fread()
  */
-int32_t f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
+int32_t f_fread(mpc_reader *reader, void *buffer, int bufferLen)
 {
-	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return p_MF->inner.fd().read(p_Buffer, size, nullptr);
+	mpc_t *file = static_cast<mpc_t *>(reader->data);
+	return file->fd().read(buffer, bufferLen, nullptr);
 }
 
 /*!
@@ -140,10 +140,10 @@ int32_t f_fread(mpc_reader *p_MPCFile, void *p_Buffer, int size)
  * @param offset The offset through the file to which to seek to
  * @return A truth value giving if the seek succeeded or not
  */
-uint8_t f_fseek(mpc_reader *p_MPCFile, int offset)
+uint8_t f_fseek(mpc_reader *reader, int offset)
 {
-	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return p_MF->inner.fd().seek(offset, SEEK_SET) == offset;
+	mpc_t *file = static_cast<mpc_t *>(reader->data);
+	return file->fd().seek(offset, SEEK_SET) == offset;
 }
 
 /*!
@@ -154,10 +154,10 @@ uint8_t f_fseek(mpc_reader *p_MPCFile, int offset)
  *   holds the file to seek through
  * @return An integer giving the read possition of the file in bytes
  */
-int32_t f_ftell(mpc_reader *p_MPCFile)
+int32_t f_ftell(mpc_reader *reader)
 {
-	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return p_MF->inner.fd().tell();
+	mpc_t *file = static_cast<mpc_t *>(reader->data);
+	return file->fd().tell();
 }
 
 /*!
@@ -168,10 +168,10 @@ int32_t f_ftell(mpc_reader *p_MPCFile)
  *   holds the file to seek through
  * @return An integer giving the length of the file in bytes
  */
-int32_t f_flen(mpc_reader *p_MPCFile)
+int32_t f_flen(mpc_reader *reader)
 {
-	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return p_MF->inner.fd().length();
+	mpc_t *file = static_cast<mpc_t *>(reader->data);
+	return file->fd().length();
 }
 
 /*!
@@ -185,10 +185,10 @@ int32_t f_flen(mpc_reader *p_MPCFile)
  *   holds the file to seek through
  * @return A truth value giving if seeking can work or not
  */
-uint8_t f_fcanseek(mpc_reader *p_MPCFile)
+uint8_t f_fcanseek(mpc_reader *reader)
 {
-	MPC_Intern *p_MF = (MPC_Intern *)(p_MPCFile->data);
-	return p_MF->inner.fd().tell() != -1;
+	mpc_t *file = static_cast<mpc_t *>(reader->data);
+	return file->fd().tell() != -1;
 }
 
 mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
@@ -212,7 +212,7 @@ void *MPC_OpenR(const char *FileName)
 	ret->callbacks->tell = f_ftell;
 	ret->callbacks->get_size = f_flen;
 	ret->callbacks->canseek = f_fcanseek;
-	ret->callbacks->data = ret;
+	ret->callbacks->data = &ret->inner;
 	ret->demuxer = mpc_demux_init(ret->callbacks);
 
 	ret->info = (mpc_streaminfo *)malloc(sizeof(mpc_streaminfo));
