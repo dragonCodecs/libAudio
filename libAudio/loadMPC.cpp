@@ -41,6 +41,8 @@
 
 struct mpc_t::decoderContext_t final
 {
+	decoderContext_t() noexcept;
+	~decoderContext_t() noexcept;
 };
 
 /*!
@@ -101,6 +103,8 @@ typedef struct _MPC_Intern
 	 * The count of how much of the current decoded data buffer has been used
 	 */
 	uint32_t PCMUsed;
+
+	mpc_t inner;
 } MPC_Intern;
 
 /*!
@@ -205,6 +209,9 @@ uint8_t f_fcanseek(mpc_reader *p_MPCFile)
 	return (fseek(p_MF->f_MPC, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
 }
 
+mpc_t::mpc_t() noexcept : audioFile_t(audioType_t::musePack, {}), ctx(makeUnique<decoderContext_t>()) { }
+mpc_t::decoderContext_t::decoderContext_t() noexcept { }
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by MPC_* functions
@@ -213,17 +220,13 @@ uint8_t f_fcanseek(mpc_reader *p_MPCFile)
  */
 void *MPC_OpenR(const char *FileName)
 {
-	MPC_Intern *ret = NULL;
-	FILE *f_MPC = NULL;
-
-	f_MPC = fopen(FileName, "rb");
+	FILE *f_MPC = fopen(FileName, "rb");
 	if (f_MPC == NULL)
-		return ret;
+		return nullptr;
 
-	ret = (MPC_Intern *)malloc(sizeof(MPC_Intern));
+	MPC_Intern *ret = new (std::nothrow) MPC_Intern();
 	if (ret == NULL)
 		return ret;
-	memset(ret, 0x00, sizeof(MPC_Intern));
 
 	ret->f_MPC = f_MPC;
 	ret->callbacks = (mpc_reader *)malloc(sizeof(mpc_reader));
@@ -337,6 +340,8 @@ long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 int64_t mpc_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
+mpc_t::decoderContext_t::~decoderContext_t() noexcept { }
+
 /*!
  * Closes an opened audio file
  * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR(), or \c NULL for a no-operation
@@ -359,7 +364,7 @@ int MPC_CloseFileR(void *p_MPCFile)
 	free(p_MF->callbacks);
 
 	ret = fclose(p_MF->f_MPC);
-	free(p_MF);
+	delete p_MF;
 	return ret;
 }
 
