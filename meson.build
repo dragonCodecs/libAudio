@@ -24,3 +24,4 @@ add_project_arguments(
 
 subdir('libAudio')
 subdir('player')
+subdir('transcoder')
