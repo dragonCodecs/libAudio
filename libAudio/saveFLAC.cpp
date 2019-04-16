@@ -8,6 +8,8 @@
  * @date 2010-2019
  */
 
+mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
+
 typedef struct _FLAC_Encoder_Context
 {
 	/*!
@@ -23,7 +25,7 @@ typedef struct _FLAC_Encoder_Context
 
 	flac_t inner;
 
-	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_RDWR | O_NOCTTY), audioModeWrite_t{}) { }
+	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode), audioModeWrite_t{}) { }
 } FLAC_Encoder_Context;
 
 /*!
