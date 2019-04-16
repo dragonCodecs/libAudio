@@ -6,7 +6,7 @@
  * @file loadAudio.cpp
  * @brief The implementation of the master encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
@@ -27,9 +27,9 @@ FileInfo audioInfo;
  */
 void *Audio_OpenR(const char *FileName)
 {
-	AudioPointer *ret = (AudioPointer *)malloc(sizeof(AudioPointer));
-	if (ret == NULL)
-		return NULL;
+	std::unique_ptr<AudioPointer> ret = makeUnique<AudioPointer>();
+	if (!ret)
+		return nullptr;
 	if (Is_OggVorbis(FileName) == true)
 		ret->API = &OggVorbisDecoder;
 	else if (Is_FLAC(FileName) == true)
@@ -70,13 +70,12 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &WMADecoder;
 #endif
 	else
-	{
-		free(ret);
-		return NULL;
-	}
+		return nullptr;
 
 	ret->p_AudioFile = ret->API->OpenR(FileName);
-	return ret;
+	if (!ret->p_AudioFile)
+		return nullptr;
+	return ret.release();
 }
 
 /*!
@@ -87,7 +86,7 @@ void *Audio_OpenR(const char *FileName)
  */
 FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
 {
-	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
 		return NULL;
 	return p_AP->API->GetFileInfo(p_AP->p_AudioFile);
@@ -95,7 +94,7 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
 
 FileInfo *audioFileInfo(void *audioFile)
 {
-	const audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	const auto file = static_cast<const audioFile_t *>(audioFile);
 	if (!file)
 		return nullptr;
 	const fileInfo_t &fileInfo = file->fileInfo();
@@ -125,7 +124,7 @@ FileInfo *audioFileInfo(void *audioFile)
  */
 long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (p_AP == NULL || OutBuffer == NULL || p_AP->p_AudioFile == NULL)
 		return -3;
 	return p_AP->API->FillBuffer(p_AP->p_AudioFile, OutBuffer, nOutBufferLen);
@@ -133,7 +132,7 @@ long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
 
 long audioFillBuffer(void *audioFile, uint8_t *buffer, int length)
 {
-	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (!file)
 		return 0;
 	return file->fillBuffer(static_cast<void *>(buffer), uint32_t(length));
@@ -149,20 +148,20 @@ long audioFillBuffer(void *audioFile, uint8_t *buffer, int length)
  */
 int Audio_CloseFileR(void *p_AudioPtr)
 {
-	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	API_Functions *API;
 	void *p_AudioFile;
 	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
 		return 0;
 	API = p_AP->API;
 	p_AudioFile = p_AP->p_AudioFile;
-	free(p_AP);
+	delete p_AP;
 	return API->CloseFileR(p_AudioFile);
 }
 
 int audioCloseFileR(void *audioFile)
 {
-	const audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	const auto file = static_cast<const audioFile_t *>(audioFile);
 	delete file;
 	return 0;
 }
@@ -176,14 +175,14 @@ int audioCloseFileR(void *audioFile)
  */
 void Audio_Play(void *p_AudioPtr)
 {
-	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
 		p_AP->API->Play(p_AP->p_AudioFile);
 }
 
 void audioPlay(void *audioFile)
 {
-	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (file)
 		file->play();
 }
@@ -196,14 +195,14 @@ void audioFile_t::play()
 
 void Audio_Pause(void *p_AudioPtr)
 {
-	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
 		p_AP->API->Pause(p_AP->p_AudioFile);
 }
 
 void audioPause(void *audioFile)
 {
-	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (file)
 		file->pause();
 }
@@ -216,14 +215,14 @@ void audioFile_t::pause()
 
 void Audio_Stop(void *p_AudioPtr)
 {
-	AudioPointer *p_AP = (AudioPointer *)p_AudioPtr;
+	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
 		p_AP->API->Stop(p_AP->p_AudioFile);
 }
 
 void audioStop(void *audioFile)
 {
-	audioFile_t *const file = reinterpret_cast<audioFile_t *>(audioFile);
+	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (file)
 		file->stop();
 }
