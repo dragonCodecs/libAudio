@@ -59,6 +59,7 @@ public:
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
 	virtual int64_t writeBuffer(const void *const buffer, const uint32_t length);
+	virtual void fileInfo(const FileInfo *const fileInfo);
 	void play();
 	void pause();
 	void stop();
@@ -92,8 +93,10 @@ public:
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
+	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
+	void fileInfo(const FileInfo *const fileInfo) final override;
 };
 
 struct m4a_t final : public audioFile_t

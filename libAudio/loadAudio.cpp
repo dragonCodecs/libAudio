@@ -112,6 +112,13 @@ FileInfo *audioFileInfo(void *audioFile)
 	return &audioInfo;
 }
 
+void audioFileInfo(void *audioFile, const FileInfo *const fileInfo)
+{
+	const auto file = static_cast<audioFile_t *>(audioFile);
+	if (file)
+		file->fileInfo(fileInfo);
+}
+
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
@@ -287,5 +294,5 @@ bool Is_Audio(const char *FileName)
 	return false;
 }
 
-int64_t audioFile_t::writeBuffer(const void *const buffer, const uint32_t length)
-	{ return 0; }
+int64_t audioFile_t::writeBuffer(const void *const, const uint32_t) { return 0; }
+void audioFile_t::fileInfo(const FileInfo *const) { }

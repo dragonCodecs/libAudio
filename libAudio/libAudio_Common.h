@@ -70,6 +70,7 @@ typedef struct _API_Functions
 } API_Functions;
 
 FileInfo *audioFileInfo(void *audioFile);
+void audioFileInfo(void *audioFile, const FileInfo *const fileInfo);
 long audioFillBuffer(void *audioFile, uint8_t *buffer, int length);
 int audioCloseFileR(void *audioFile);
 void audioPlay(void *audioFile);
