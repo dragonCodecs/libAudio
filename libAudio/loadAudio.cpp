@@ -116,7 +116,7 @@ void audioFileInfo(void *audioFile, const FileInfo *const fileInfo)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (file)
-		file->fileInfo(fileInfo);
+		file->fileInfo(*fileInfo);
 }
 
 /*!
@@ -295,4 +295,4 @@ bool Is_Audio(const char *FileName)
 }
 
 int64_t audioFile_t::writeBuffer(const void *const, const uint32_t) { return 0; }
-void audioFile_t::fileInfo(const FileInfo *const) { }
+void audioFile_t::fileInfo(const FileInfo &) { }
