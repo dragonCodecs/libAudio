@@ -170,7 +170,7 @@ namespace libAudio
 		FLAC__StreamDecoderWriteStatus data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *audioFile)
 		{
 			const flac_t &file = *reinterpret_cast<flac_t *>(audioFile);
-			auto &ctx = *file.context();
+			auto &ctx = *file.decoderContext();
 			short *PCM = reinterpret_cast<short *>(ctx.buffer.get());
 			const uint8_t channels = file.fileInfo().channels;
 			const uint8_t sampleShift = ctx.sampleShift;
@@ -199,7 +199,7 @@ namespace libAudio
 		void metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *audioFile)
 		{
 			flac_t &file = *reinterpret_cast<flac_t *>(audioFile);
-			auto &ctx = *file.context();
+			auto &ctx = *file.decoderContext();
 			fileInfo_t &info = file.fileInfo();
 
 			if (p_metadata->type >= FLAC__METADATA_TYPE_UNDEFINED)
@@ -272,13 +272,13 @@ namespace libAudio
 
 using namespace libAudio;
 
-flac_t::flac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
+flac_t::flac_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), decoderCtx(makeUnique<decoderContext_t>()) { }
 flac_t::decoderContext_t::decoderContext_t() : streamDecoder{FLAC__stream_decoder_new()}, buffer{},
 	bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0} { }
 
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), audioModeRead_t{}));
 	if (!flacFile || !flacFile->valid() || !isFLAC(flacFile->_fd))
 		return nullptr;
 
@@ -300,7 +300,7 @@ void *FLAC_OpenR(const char *FileName)
 	if (!file)
 		return nullptr;
 	const fd_t &fd = file->fd();
-	FLAC__StreamDecoder *const p_dec = file->context()->streamDecoder;
+	FLAC__StreamDecoder *const p_dec = file->decoderContext()->streamDecoder;
 
 	FLAC__stream_decoder_set_metadata_ignore_all(p_dec);
 	FLAC__stream_decoder_set_metadata_respond(p_dec, FLAC__METADATA_TYPE_STREAMINFO);
@@ -375,25 +375,26 @@ int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<char *>(bufferPtr);
 	uint32_t filled = 0;
+	auto &ctx = *decoderContext();
 	while (filled < length)
 	{
-		if (ctx->bytesRemain == 0)
+		if (ctx.bytesRemain == 0)
 		{
-			const FLAC__StreamDecoderState state = ctx->nextFrame();
+			const FLAC__StreamDecoderState state = ctx.nextFrame();
 			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)
 			{
-				ctx->bytesRemain = 0;
+				ctx.bytesRemain = 0;
 				if (filled == 0)
 					return -2;
 				break;
 			}
 		}
-		uint32_t len = ctx->bytesRemain;
+		uint32_t len = ctx.bytesRemain;
 		if (len > (length - filled))
 			len = length - filled;
-		memcpy(buffer + filled, ctx->buffer.get() + (ctx->bytesAvail - ctx->bytesRemain), len);
+		memcpy(buffer + filled, ctx.buffer.get() + (ctx.bytesAvail - ctx.bytesRemain), len);
 		filled += len;
-		ctx->bytesRemain -= len;
+		ctx.bytesRemain -= len;
 	}
 	return filled;
 }

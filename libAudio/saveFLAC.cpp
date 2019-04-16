@@ -1,7 +1,7 @@
 #include <FLAC/all.h>
 
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -215,6 +215,11 @@ long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
 
 	free(IB);
 	return nInBufferLen;
+}
+
+int64_t flac_t::writeBuffer(const void *const buffer, const uint32_t length)
+{
+	return 0;
 }
 
 /*!

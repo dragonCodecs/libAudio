@@ -29,6 +29,9 @@ enum class audioType_t : uint8_t
 	moduleFC1x = 17
 };
 
+struct audioModeRead_t { };
+struct audioModeWrite_t { };
+
 struct audioFile_t
 {
 protected:
@@ -44,6 +47,7 @@ public:
 	virtual ~audioFile_t() noexcept = default;
 	audioFile_t &operator =(audioFile_t &&) = default;
 	static audioFile_t *openR(const char *const fileName) noexcept;
+	static audioFile_t *openW(const char *const fileName) noexcept;
 	static bool isAudio(const char *const fileName) noexcept;
 	static bool isAudio(const int32_t fd) noexcept;
 	const fileInfo_t &fileInfo() const noexcept { return _fileInfo; }
@@ -54,6 +58,7 @@ public:
 	void player(std::unique_ptr<playback_t> &&player) noexcept { _player = std::move(player); }
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
+	virtual int64_t writeBuffer(const void *const buffer, const uint32_t length);
 	void play();
 	void pause();
 	void stop();
@@ -72,17 +77,21 @@ struct flac_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	struct encoderContext_t;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
-	flac_t(fd_t &&fd) noexcept;
+	flac_t(fd_t &&fd, audioModeRead_t) noexcept;
+	flac_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static flac_t *openR(const char *const fileName) noexcept;
+	static flac_t *openW(const char *const fileName) noexcept;
 	static bool isFLAC(const char *const fileName) noexcept;
 	static bool isFLAC(const int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
 };
 
 struct m4a_t final : public audioFile_t

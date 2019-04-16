@@ -286,3 +286,6 @@ bool Is_Audio(const char *FileName)
 
 	return false;
 }
+
+int64_t audioFile_t::writeBuffer(const void *const buffer, const uint32_t length)
+	{ return 0; }
