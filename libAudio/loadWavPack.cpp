@@ -58,7 +58,7 @@ struct wavPack_t::decoderContext_t final
 	 * @internal
 	 * The WavPack callbacks/reader information handle
 	 */
-	WavpackStreamReader callbacks;
+	WavpackStreamReader64 callbacks;
 
 	decoderContext_t(std::string fileName) noexcept;
 	~decoderContext_t() noexcept;
@@ -94,7 +94,7 @@ namespace libAudio
 		* @param p_file \c FILE handle for the WavPack file as a void pointer
 		* @return An integer giving the read possition of the file in bytes
 		*/
-		uint32_t tell(void *filePtr)
+		int64_t tell(void *filePtr)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
 			return file.tell();
@@ -108,7 +108,7 @@ namespace libAudio
 		* @param pos The offset through the file to which to seek to
 		* @return A truth value giving if the seek succeeded or not
 		*/
-		int seekAbs(void *filePtr, uint32_t offset)
+		int seekAbs(void *filePtr, int64_t offset)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
 			return file.seek(offset, SEEK_SET) != offset;
@@ -123,7 +123,7 @@ namespace libAudio
 		* @param loc The location identifier to seek from
 		* @return A truth value giving if the seek succeeded or not
 		*/
-		int seekRel(void *filePtr, int32_t offset, int mode)
+		int seekRel(void *filePtr, int64_t offset, int mode)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
 			return file.seek(offset, mode) == -1;
@@ -142,7 +142,7 @@ namespace libAudio
 		* @param p_file \c FILE handle for the WavPack file as a void pointer
 		* @return An integer giving the length of the file in bytes
 		*/
-		uint32_t length(void *filePtr)
+		int64_t length(void *filePtr)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
 			return file.length();
@@ -172,7 +172,8 @@ wavPack_t::wavPack_t(fd_t &&fd, const char *const fileName) noexcept : audioFile
 	ctx(makeUnique<decoderContext_t>(fileName)) { }
 wavPack_t::decoderContext_t::decoderContext_t(std::string fileName) noexcept : decoder{nullptr}, playbackBuffer{},
 	decodeBuffer{}, sampleCount{0}, samplesUsed{0}, eof{false}, wvcFileFD{wvcFile(fileName)}, callbacks{wavPack::read,
-		wavPack::tell, wavPack::seekAbs, wavPack::seekRel, wavPack::ungetc, wavPack::length, wavPack::canSeek, nullptr} { }
+		nullptr, wavPack::tell, wavPack::seekAbs, wavPack::seekRel, wavPack::ungetc, wavPack::length, wavPack::canSeek,
+		nullptr, nullptr} { }
 
 fd_t wavPack_t::decoderContext_t::wvcFile(std::string &fileName) noexcept
 {
@@ -203,7 +204,7 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 	auto &ctx = *wpFile->context();
 	fileInfo_t &info = wpFile->fileInfo();
 
-	ctx.decoder = WavpackOpenFileInputEx(&ctx.callbacks, &fileDesc,
+	ctx.decoder = WavpackOpenFileInputEx64(&ctx.callbacks, &fileDesc,
 		ctx.wvcFile(), nullptr, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
 	info.channels = WavpackGetNumChannels(ctx.decoder);
