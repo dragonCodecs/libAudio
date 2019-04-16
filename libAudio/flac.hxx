@@ -49,8 +49,15 @@ struct flac_t::decoderContext_t final
  */
 struct flac_t::encoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The encoder context handle
+	 */
+	FLAC__StreamEncoder *streamEncoder;
+
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
+	bool finish() noexcept;
 };
 
 #endif /*FLAC__HXX*/

@@ -12,11 +12,6 @@ typedef struct _FLAC_Encoder_Context
 {
 	/*!
 	 * @internal
-	 * The encoder context itself
-	 */
-	FLAC__StreamEncoder *p_enc;
-	/*!
-	 * @internal
 	 * The metadata context
 	 */
 	FLAC__StreamMetadata *p_meta[2];
@@ -115,7 +110,11 @@ void f_fmetadata(const FLAC__StreamEncoder */*p_enc*/, const FLAC__StreamMetadat
 
 flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
 	encoderCtx{makeUnique<encoderContext_t>()} { }
-flac_t::encoderContext_t::encoderContext_t() noexcept { }
+flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()}
+{
+	FLAC__stream_encoder_set_compression_level(streamEncoder, 4);
+	//FLAC__stream_encoder_set_loose_mid_side_stereo(streamEncoder, true);
+}
 
 /*!
  * This function opens the file given by \c FileName for writing and returns a pointer
@@ -129,14 +128,9 @@ void *FLAC_OpenW(const char *FileName)
 	if (!ret || !ret->inner.decoderContext())
 		return nullptr;
 
-	FILE *f_FLAC = fopen(FileName, "w+b");
-	if (f_FLAC == NULL)
+	ret->f_FLAC = fopen(FileName, "w+b");
+	if (ret->f_FLAC == NULL)
 		return nullptr;
-
-	ret->f_FLAC = f_FLAC;
-	ret->p_enc = FLAC__stream_encoder_new();
-	FLAC__stream_encoder_set_compression_level(ret->p_enc, 4);
-	//FLAC__stream_encoder_set_loose_mid_side_stereo(ret->p_enc, true);
 
 	return ret.release();
 }
@@ -153,11 +147,12 @@ void *FLAC_OpenW(const char *FileName)
 void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
+	auto &ctx = *p_FF->inner.encoderContext();
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 
-	FLAC__stream_encoder_set_channels(p_FF->p_enc, p_FI->Channels);
-	FLAC__stream_encoder_set_bits_per_sample(p_FF->p_enc, p_FI->BitsPerSample);
-	FLAC__stream_encoder_set_sample_rate(p_FF->p_enc, p_FI->BitRate);
+	FLAC__stream_encoder_set_channels(ctx.streamEncoder, p_FI->Channels);
+	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, p_FI->BitsPerSample);
+	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, p_FI->BitRate);
 
 	p_FF->p_meta[1] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING);
 	p_FF->p_meta[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
@@ -184,9 +179,9 @@ void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);
 	}
 
-	FLAC__stream_encoder_set_metadata(p_FF->p_enc, p_FF->p_meta, 2);
+	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, p_FF->p_meta, 2);
 
-	FLAC__stream_encoder_init_stream(p_FF->p_enc, f_fwrite, f_fseek, f_ftell, f_fmetadata, p_FF);
+	FLAC__stream_encoder_init_stream(ctx.streamEncoder, f_fwrite, f_fseek, f_ftell, f_fmetadata, p_FF);
 
 	p_FF->p_FI = (FileInfo *)malloc(sizeof(FileInfo));
 	memcpy(p_FF->p_FI, p_FI, sizeof(FileInfo));
@@ -204,13 +199,14 @@ long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
 	if (nInBufferLen <= 0)
 		return nInBufferLen;
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
+	auto &ctx = *p_FF->inner.encoderContext();
 	uint32_t nIBL = (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)) / p_FF->p_FI->Channels;
 	int *IB = (int *)malloc(sizeof(int) * (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)));
 
 	for (uint32_t i = 0; i < nIBL * p_FF->p_FI->Channels; i++)
 		IB[i] = (int)(((short *)InBuffer)[i]);
 
-	FLAC__stream_encoder_process_interleaved(p_FF->p_enc, IB, nIBL);
+	FLAC__stream_encoder_process_interleaved(ctx.streamEncoder, IB, nIBL);
 
 	free(IB);
 	return nInBufferLen;
@@ -221,7 +217,17 @@ int64_t flac_t::writeBuffer(const void *const buffer, const uint32_t length)
 	return 0;
 }
 
-flac_t::encoderContext_t::~encoderContext_t() noexcept { }
+bool flac_t::encoderContext_t::finish() noexcept
+{
+	if (!streamEncoder)
+		return true;
+	const bool result = !FLAC__stream_encoder_finish(streamEncoder);
+	FLAC__stream_encoder_delete(streamEncoder);
+	streamEncoder = nullptr;
+	return result;
+}
+
+flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
 
 /*!
  * Closes an open FLAC file
@@ -235,9 +241,6 @@ int FLAC_CloseFileW(void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 	int ret = 0;
-
-	FLAC__stream_encoder_finish(p_FF->p_enc);
-	FLAC__stream_encoder_delete(p_FF->p_enc);
 
 	if (p_FF->p_FI != NULL)
 		free(p_FF->p_FI);
