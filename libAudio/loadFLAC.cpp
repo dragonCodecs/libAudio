@@ -8,7 +8,7 @@
  * @file loadFLAC.cpp
  * @brief The implementation of the FLAC decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2013
+ * @date 2009-2019
  */
 
 namespace libAudio
@@ -230,8 +230,8 @@ using namespace libAudio;
 
 flac_t::flac_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::flac, std::move(fd)),
 	decoderCtx{makeUnique<decoderContext_t>()} { }
-flac_t::decoderContext_t::decoderContext_t() : streamDecoder{FLAC__stream_decoder_new()}, buffer{},
-	bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0} { }
+flac_t::decoderContext_t::decoderContext_t() noexcept : streamDecoder{FLAC__stream_decoder_new()},
+	buffer{}, bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0} { }
 
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {

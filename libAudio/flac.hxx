@@ -37,7 +37,7 @@ struct flac_t::decoderContext_t final
 	uint32_t bytesRemain;
 	uint32_t bytesAvail;
 
-	decoderContext_t();
+	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 	bool finish() noexcept;
 	FLAC__StreamDecoderState nextFrame() noexcept;
