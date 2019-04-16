@@ -3,7 +3,7 @@ libOpenAL = dependency('openal')
 libOGG = dependency('ogg')
 libVorbis = [dependency('vorbis'), dependency('vorbisfile'), dependency('vorbisenc')]
 libFLAC = dependency('flac')
-libWavPack = dependency('wavpack')
+libWavPack = dependency('wavpack', version: '>=5.0.0')
 libMPC = cxx.find_library('mpcdec')
 libAAC = [cxx.find_library('faac'), cxx.find_library('faad')]
 libMP4v2 = cxx.find_library('mp4v2')
