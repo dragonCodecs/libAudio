@@ -17,18 +17,13 @@ typedef struct _FLAC_Encoder_Context
 	FLAC__StreamMetadata *p_meta[2];
 	/*!
 	 * @internal
-	 * The file being written to
-	 */
-	FILE *f_FLAC;
-	/*!
-	 * @internal
 	 * The input metadata in the form of a \c FileInfo structure
 	 */
 	FileInfo *p_FI;
 
 	flac_t inner;
 
-	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_WRONLY | O_NOCTTY), audioModeWrite_t{}) { }
+	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_RDWR | O_NOCTTY), audioModeWrite_t{}) { }
 } FLAC_Encoder_Context;
 
 /*!
@@ -44,16 +39,18 @@ typedef struct _FLAC_Encoder_Context
  *   frame being encoded
  * @param p_FLACFile Our own internal context pointer which holds the file to write to
  */
-FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *, const uint8_t *buffer, size_t nBytes, uint32_t /*nSamp*/, uint32_t /*nCurrFrame*/, void *p_FLACFile)
+FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *, const uint8_t *buffer, size_t bytes, uint32_t, uint32_t, void *ctx)
 {
-	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	if (buffer == NULL)
-		return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
-
-	if (nBytes != 0)
-		fwrite(buffer, nBytes, 1, p_FF->f_FLAC);
-
-	return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
+	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+	if (bytes > 0)
+	{
+		const ssize_t result = fd.write(buffer, bytes);
+		if (result == -1)
+			return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+		else if (size_t(result) == bytes)
+			return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
+	}
+	return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 }
 
 /*!
@@ -64,14 +61,13 @@ FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *, const uint8
  * @param offset The offset through the file to which to seek to
  * @param p_FLACFile Our own internal context pointer which holds the file to seek through
  */
-FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *, uint64_t offset, void *p_FLACFile)
+FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *, uint64_t offset, void *ctx)
 {
-	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-
-	if (fseek(p_FF->f_FLAC, (long)offset, SEEK_SET) < 0)
+	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+	const off_t result = fd.seek(offset, SEEK_SET);
+	if (result == -1 || uint64_t(result) != offset)
 		return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
-	else
-		return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
+	return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
 /*!
@@ -83,15 +79,13 @@ FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *, uint64_t offs
  * @param p_FLACFile Our own internal context pointer which holds the file to get
  *   the write pointer position of
  */
-FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *, uint64_t *offset, void *p_FLACFile)
+FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *, uint64_t *offset, void *ctx)
 {
-	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	long off;
-
-	if ((off = ftell(p_FF->f_FLAC)) < 0)
+	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+	const off_t pos = fd.tell();
+	if (pos < 0)
 		return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
-
-	*offset = off;
+	*offset = pos;
 	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
 
@@ -126,10 +120,6 @@ void *FLAC_OpenW(const char *FileName)
 {
 	std::unique_ptr<FLAC_Encoder_Context> ret = makeUnique<FLAC_Encoder_Context>(FileName);
 	if (!ret || !ret->inner.decoderContext())
-		return nullptr;
-
-	ret->f_FLAC = fopen(FileName, "w+b");
-	if (ret->f_FLAC == NULL)
 		return nullptr;
 
 	return ret.release();
@@ -240,12 +230,8 @@ flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
 int FLAC_CloseFileW(void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	int ret = 0;
-
 	if (p_FF->p_FI != NULL)
 		free(p_FF->p_FI);
-
-	ret = fclose(p_FF->f_FLAC);
 	delete p_FF;
-	return ret;
+	return 0;
 }
