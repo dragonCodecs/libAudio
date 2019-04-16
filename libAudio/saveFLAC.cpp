@@ -12,17 +12,6 @@ mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
 
 typedef struct _FLAC_Encoder_Context
 {
-	/*!
-	 * @internal
-	 * The metadata context
-	 */
-	FLAC__StreamMetadata *p_meta[2];
-	/*!
-	 * @internal
-	 * The input metadata in the form of a \c FileInfo structure
-	 */
-	FileInfo *p_FI;
-
 	flac_t inner;
 
 	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode), audioModeWrite_t{}) { }
@@ -106,7 +95,7 @@ void f_fmetadata(const FLAC__StreamEncoder */*p_enc*/, const FLAC__StreamMetadat
 
 flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
 	encoderCtx{makeUnique<encoderContext_t>()} { }
-flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()}
+flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()}, fileInfo{}
 {
 	FLAC__stream_encoder_set_compression_level(streamEncoder, 4);
 	//FLAC__stream_encoder_set_loose_mid_side_stereo(streamEncoder, true);
@@ -123,7 +112,6 @@ void *FLAC_OpenW(const char *FileName)
 	std::unique_ptr<FLAC_Encoder_Context> ret = makeUnique<FLAC_Encoder_Context>(FileName);
 	if (!ret || !ret->inner.encoderContext())
 		return nullptr;
-
 	return ret.release();
 }
 
@@ -139,44 +127,48 @@ void *FLAC_OpenW(const char *FileName)
 void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	auto &ctx = *p_FF->inner.encoderContext();
+	audioFileInfo(&p_FF->inner, p_FI);
+}
+
+void flac_t::fileInfo(const FileInfo &fileInfo)
+{
+	auto &ctx = *encoderContext();
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 
-	FLAC__stream_encoder_set_channels(ctx.streamEncoder, p_FI->Channels);
-	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, p_FI->BitsPerSample);
-	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, p_FI->BitRate);
+	FLAC__stream_encoder_set_channels(ctx.streamEncoder, fileInfo.Channels);
+	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, fileInfo.BitsPerSample);
+	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, fileInfo.BitRate);
 
-	p_FF->p_meta[1] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING);
-	p_FF->p_meta[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
-	for (uint32_t i = 0; i < p_FI->nOtherComments; i++)
+	std::array<FLAC__StreamMetadata *, 2> metadata
 	{
-		entry.entry = (uint8_t *)p_FI->OtherComments[i];
-		entry.length = strlen(p_FI->OtherComments[i]);
-		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, true);
+		FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT),
+		FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)
+	};
+	for (uint32_t i = 0; i < fileInfo.nOtherComments; i++)
+	{
+		entry.entry = (uint8_t *)fileInfo.OtherComments[i];
+		entry.length = strlen(fileInfo.OtherComments[i]);
+		FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, true);
 	}
 
-	if (p_FI->Album)
+	if (fileInfo.Album)
 	{
-		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Album", p_FI->Album);
-		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);
+		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Album", fileInfo.Album);
+		FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, false);
 	}
-	if (p_FI->Artist)
+	if (fileInfo.Artist)
 	{
-		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Artist", p_FI->Artist);
-		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);
+		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Artist", fileInfo.Artist);
+		FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, false);
 	}
-	if (p_FI->Title)
+	if (fileInfo.Title)
 	{
-		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Title", p_FI->Title);
-		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);
+		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Title", fileInfo.Title);
+		FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, false);
 	}
-
-	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, p_FF->p_meta, 2);
-
-	FLAC__stream_encoder_init_stream(ctx.streamEncoder, f_fwrite, f_fseek, f_ftell, f_fmetadata, p_FF);
-
-	p_FF->p_FI = (FileInfo *)malloc(sizeof(FileInfo));
-	memcpy(p_FF->p_FI, p_FI, sizeof(FileInfo));
+	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, metadata.data(), metadata.size());
+	ctx.fileInfo = fileInfo;
+	FLAC__stream_encoder_init_stream(ctx.streamEncoder, f_fwrite, f_fseek, f_ftell, f_fmetadata, this);
 }
 
 /*!
@@ -192,10 +184,10 @@ long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
 		return nInBufferLen;
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
 	auto &ctx = *p_FF->inner.encoderContext();
-	uint32_t nIBL = (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)) / p_FF->p_FI->Channels;
-	int *IB = (int *)malloc(sizeof(int) * (nInBufferLen / (p_FF->p_FI->BitsPerSample / 8)));
+	uint32_t nIBL = (nInBufferLen / (ctx.fileInfo.BitsPerSample / 8)) / ctx.fileInfo.Channels;
+	int *IB = (int *)malloc(sizeof(int) * (nInBufferLen / (ctx.fileInfo.BitsPerSample / 8)));
 
-	for (uint32_t i = 0; i < nIBL * p_FF->p_FI->Channels; i++)
+	for (uint32_t i = 0; i < nIBL * ctx.fileInfo.Channels; i++)
 		IB[i] = (int)(((short *)InBuffer)[i]);
 
 	FLAC__stream_encoder_process_interleaved(ctx.streamEncoder, IB, nIBL);
@@ -232,8 +224,6 @@ flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
 int FLAC_CloseFileW(void *p_FLACFile)
 {
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	if (p_FF->p_FI != NULL)
-		free(p_FF->p_FI);
 	delete p_FF;
 	return 0;
 }

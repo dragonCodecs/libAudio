@@ -54,6 +54,11 @@ struct flac_t::encoderContext_t final
 	 * The encoder context handle
 	 */
 	FLAC__StreamEncoder *streamEncoder;
+	/*!
+	 * @internal
+	 * The input metadata in the form of a \c FileInfo structure
+	 */
+	FileInfo fileInfo;
 
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
