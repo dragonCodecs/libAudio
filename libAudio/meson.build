@@ -12,6 +12,7 @@ libID3Tag = cxx.find_library('id3tag')
 maths = cxx.find_library('m', required: false)
 
 cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
+cxx.has_function('WavpackOpenFileInputEx64', dependencies: libWavPack)
 
 #WMA = loadWMA.o
 srcWMA = []
