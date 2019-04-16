@@ -360,12 +360,12 @@ bool mpc_t::isMPC(const char *const fileName) noexcept
 API_Functions MPCDecoder =
 {
 	MPC_OpenR,
-	MPC_GetFileInfo,
-	MPC_FillBuffer,
-	MPC_CloseFileR,
-	MPC_Play,
-	MPC_Pause,
-	MPC_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };
 
 #endif /* __NO_MPC__ */
