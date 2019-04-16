@@ -1,20 +1,13 @@
-#include <FLAC/all.h>
-
-#include "libAudio.h"
-#include "libAudio.hxx"
+#include "flac.hxx"
 
 /*!
  * @internal
  * @file saveFLAC.cpp
  * @brief The implementation of the FLAC encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
-/*!
- * @internal
- * Internal structure for holding the encoding context for a given FLAC file
- */
 typedef struct _FLAC_Encoder_Context
 {
 	/*!
@@ -37,6 +30,10 @@ typedef struct _FLAC_Encoder_Context
 	 * The input metadata in the form of a \c FileInfo structure
 	 */
 	FileInfo *p_FI;
+
+	flac_t inner;
+
+	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_WRONLY | O_NOCTTY), audioModeWrite_t{}) { }
 } FLAC_Encoder_Context;
 
 /*!
@@ -116,6 +113,10 @@ void f_fmetadata(const FLAC__StreamEncoder */*p_enc*/, const FLAC__StreamMetadat
 {
 }
 
+flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
+	encoderCtx{makeUnique<encoderContext_t>()} { }
+flac_t::encoderContext_t::encoderContext_t() noexcept { }
+
 /*!
  * This function opens the file given by \c FileName for writing and returns a pointer
  * to the context of the opened file which must be used only by FLAC_* functions
@@ -124,22 +125,20 @@ void f_fmetadata(const FLAC__StreamEncoder */*p_enc*/, const FLAC__StreamMetadat
  */
 void *FLAC_OpenW(const char *FileName)
 {
-	FLAC_Encoder_Context *ret = NULL;
+	std::unique_ptr<FLAC_Encoder_Context> ret = makeUnique<FLAC_Encoder_Context>(FileName);
+	if (!ret || !ret->inner.decoderContext())
+		return nullptr;
 
 	FILE *f_FLAC = fopen(FileName, "w+b");
 	if (f_FLAC == NULL)
-		return ret;
-
-	ret = (FLAC_Encoder_Context *)malloc(sizeof(FLAC_Encoder_Context));
-	if (ret == NULL)
-		return ret;
+		return nullptr;
 
 	ret->f_FLAC = f_FLAC;
 	ret->p_enc = FLAC__stream_encoder_new();
 	FLAC__stream_encoder_set_compression_level(ret->p_enc, 4);
 	//FLAC__stream_encoder_set_loose_mid_side_stereo(ret->p_enc, true);
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -222,6 +221,8 @@ int64_t flac_t::writeBuffer(const void *const buffer, const uint32_t length)
 	return 0;
 }
 
+flac_t::encoderContext_t::~encoderContext_t() noexcept { }
+
 /*!
  * Closes an open FLAC file
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenW()
@@ -242,6 +243,6 @@ int FLAC_CloseFileW(void *p_FLACFile)
 		free(p_FF->p_FI);
 
 	ret = fclose(p_FF->f_FLAC);
-	free(p_FF);
+	delete p_FF;
 	return ret;
 }

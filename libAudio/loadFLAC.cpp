@@ -1,13 +1,6 @@
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <malloc.h>
 #include <array>
 
-#include <FLAC/all.h>
-
-#include "libAudio.h"
-#include "libAudio.hxx"
+#include "flac.hxx"
 #include "string.hxx"
 
 /*!
@@ -17,43 +10,6 @@
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2009-2013
  */
-
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given FLAC file
- */
-struct flac_t::decoderContext_t final
-{
-	/*!
-	 * @internal
-	 * The decoder context handle
-	 */
-	FLAC__StreamDecoder *streamDecoder;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	std::unique_ptr<uint8_t []> buffer;
-	uint32_t bufferLen;
-	uint8_t playbackBuffer[16384];
-	/*!
-	 * @internal
-	 * The amount to shift the sample data by to convert it
-	 */
-	uint8_t sampleShift;
-	/*!
-	 * @internal
-	 * The count of the number of bytes left to process
-	 * (also thinkable as the number of bytes left to read)
-	 */
-	uint32_t bytesRemain;
-	uint32_t bytesAvail;
-
-	decoderContext_t();
-	~decoderContext_t() noexcept;
-	bool finish() noexcept;
-	FLAC__StreamDecoderState nextFrame() noexcept;
-};
 
 namespace libAudio
 {
@@ -272,7 +228,8 @@ namespace libAudio
 
 using namespace libAudio;
 
-flac_t::flac_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::flac, std::move(fd)), decoderCtx(makeUnique<decoderContext_t>()) { }
+flac_t::flac_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::flac, std::move(fd)),
+	decoderCtx{makeUnique<decoderContext_t>()} { }
 flac_t::decoderContext_t::decoderContext_t() : streamDecoder{FLAC__stream_decoder_new()}, buffer{},
 	bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0} { }
 

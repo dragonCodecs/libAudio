@@ -79,6 +79,7 @@ private:
 	struct decoderContext_t;
 	struct encoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
+	std::unique_ptr<encoderContext_t> encoderCtx;
 
 public:
 	flac_t(fd_t &&fd, audioModeRead_t) noexcept;
@@ -88,7 +89,8 @@ public:
 	static bool isFLAC(const char *const fileName) noexcept;
 	static bool isFLAC(const int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
-	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
+	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
+	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
