@@ -51,14 +51,21 @@ struct wavPack_t::decoderContext_t final
 	bool eof;
 	/*!
 	 * @internal
+	 * The WavPack Corrections file to decode
+	 */
+	fd_t wvcFileFD;
+	/*!
+	 * @internal
 	 * The WavPack callbacks/reader information handle
 	 */
 	WavpackStreamReader callbacks;
 
-	decoderContext_t() noexcept;
+	decoderContext_t(std::string fileName) noexcept;
 	~decoderContext_t() noexcept;
 	std::unique_ptr<char []> readTag(const char *const tag) noexcept;
 	void nextFrame(const uint8_t channels) noexcept;
+	void *wvcFile() noexcept WARN_UNUSED { return wvcFileFD.valid() ? &wvcFileFD : nullptr; }
+	static fd_t wvcFile(std::string &fileName) noexcept;
 };
 
 /*!
@@ -69,21 +76,13 @@ typedef struct _WavPack_Intern
 {
 	/*!
 	 * @internal
-	 * The WavPack file to decode
-	 */
-	FILE *f_WVP;
-	/*!
-	 * @internal
-	 * The WavPack Corrections file to decode
-	 */
-	FILE *f_WVPC;
-	/*!
-	 * @internal
 	 * The error feedback buffer needed for various WavPack call
 	 */
 	char err[80];
 
 	wavPack_t inner;
+
+	_WavPack_Intern(fd_t &&fd, const char *const fileName) : inner(std::move(fd), fileName) { }
 } WavPack_Intern;
 
 /*!
@@ -95,9 +94,10 @@ typedef struct _WavPack_Intern
  * @param size The number of bytes to read into the buffer
  * @return The return result of \c fread()
  */
-int f_fread_wp(void *p_file, void *data, int size)
+int32_t f_fread_wp(void *filePtr, void *buffer, int32_t length)
 {
-	return fread(data, 1, size, (FILE *)p_file);
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.read(buffer, length, nullptr);
 }
 
 /*!
@@ -107,9 +107,10 @@ int f_fread_wp(void *p_file, void *data, int size)
  * @param p_file \c FILE handle for the WavPack file as a void pointer
  * @return An integer giving the read possition of the file in bytes
  */
-uint32_t f_ftell(void *p_file)
+uint32_t f_ftell(void *filePtr)
 {
-	return ftell((FILE *)p_file);
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.tell();
 }
 
 /*!
@@ -120,9 +121,10 @@ uint32_t f_ftell(void *p_file)
  * @param pos The offset through the file to which to seek to
  * @return A truth value giving if the seek succeeded or not
  */
-int f_fseek_abs(void *p_file, uint32_t pos)
+int f_fseek_abs(void *filePtr, uint32_t offset)
 {
-	return fseek((FILE *)p_file, pos, SEEK_SET);
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.seek(offset, SEEK_SET);
 }
 
 /*!
@@ -134,14 +136,16 @@ int f_fseek_abs(void *p_file, uint32_t pos)
  * @param loc The location identifier to seek from
  * @return A truth value giving if the seek succeeded or not
  */
-int f_fseek_rel(void *p_file, int pos, int loc)
+int f_fseek_rel(void *filePtr, int32_t offset, int mode)
 {
-	return fseek((FILE *)p_file, pos, loc);
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.seek(offset, mode);
 }
 
-int f_fungetc(void *p_file, int c)
+int f_fungetc(void *filePtr, int)
 {
-	return ungetc(c, (FILE *)p_file);
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.seek(-1, SEEK_CUR);
 }
 
 /*!
@@ -151,12 +155,10 @@ int f_fungetc(void *p_file, int c)
  * @param p_file \c FILE handle for the WavPack file as a void pointer
  * @return An integer giving the length of the file in bytes
  */
-uint32_t f_flen(void *p_file)
+uint32_t f_flen(void *filePtr)
 {
-	struct stat stats;
-
-	fstat(fileno((FILE *)p_file), &stats);
-	return stats.st_size;
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.length();
 }
 
 /*!
@@ -169,15 +171,23 @@ uint32_t f_flen(void *p_file)
  * @param p_file \c FILE handle for the WavPack file as a void pointer
  * @return A truth value giving if seeking can work or not
  */
-int f_fcanseek(void *p_file)
+int f_fcanseek(void *filePtr)
 {
-	return (fseek((FILE *)p_file, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
+	const fd_t &file = *static_cast<fd_t *>(filePtr);
+	return file.tell() != -1;
 }
 
-wavPack_t::wavPack_t() noexcept : audioFile_t(audioType_t::wavPack, {}), ctx(makeUnique<decoderContext_t>()) { }
-wavPack_t::decoderContext_t::decoderContext_t() noexcept : decoder{nullptr}, playbackBuffer{}, decodeBuffer{},
-	sampleCount{0}, samplesUsed{0}, eof{false},
+wavPack_t::wavPack_t(fd_t &&fd, const char *const fileName) noexcept : audioFile_t(audioType_t::wavPack, std::move(fd)),
+	ctx(makeUnique<decoderContext_t>(fileName)) { }
+wavPack_t::decoderContext_t::decoderContext_t(std::string fileName) noexcept : decoder{nullptr}, playbackBuffer{},
+	decodeBuffer{}, sampleCount{0}, samplesUsed{0}, eof{false}, wvcFileFD{wvcFile(fileName)},
 	callbacks{f_fread_wp, f_ftell, f_fseek_abs, f_fseek_rel, f_fungetc, f_flen, f_fcanseek, nullptr} { }
+
+fd_t wavPack_t::decoderContext_t::wvcFile(std::string &fileName) noexcept
+{
+	fileName += 'c';
+	return {fileName.data(), O_RDONLY | O_NOCTTY};
+}
 
 std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const tag) noexcept
 {
@@ -201,27 +211,15 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
  */
 void *WavPack_OpenR(const char *FileName)
 {
-	FILE *f_WVP = NULL, *f_WVPC = NULL;
-
-	std::unique_ptr<WavPack_Intern> ret = makeUnique<WavPack_Intern>();
+	std::unique_ptr<WavPack_Intern> ret = makeUnique<WavPack_Intern>(fd_t(FileName, O_RDONLY | O_NOCTTY), FileName);
 	if (!ret || !ret->inner.context())
 		return nullptr;
+	fd_t &fileDesc = const_cast<fd_t &>(ret->inner.fd());
 	auto &ctx = *ret->inner.context();
 	fileInfo_t &info = ret->inner.fileInfo();
 
-	f_WVP = fopen(FileName, "rb");
-	if (f_WVP == NULL)
-		return f_WVP;
-
-	f_WVPC = [](std::string fileName) noexcept -> FILE *
-	{
-		fileName += 'c';
-		return fopen(fileName.data(), "rb");
-	}(FileName);
-
-	ret->f_WVP = f_WVP;
-	ret->f_WVPC = f_WVPC;
-	ctx.decoder = WavpackOpenFileInputEx(&ctx.callbacks, f_WVP, f_WVPC, ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
+	ctx.decoder = WavpackOpenFileInputEx(&ctx.callbacks, &fileDesc,
+		ctx.wvcFile(), ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
 	info.channels = WavpackGetNumChannels(ctx.decoder);
 	info.bitsPerSample = WavpackGetBitsPerSample(ctx.decoder);
@@ -264,15 +262,8 @@ wavPack_t::decoderContext_t::~decoderContext_t() noexcept
 int WavPack_CloseFileR(void *p_WVPFile)
 {
 	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	int ret = 0;
-
-	if (p_WF->f_WVPC != NULL)
-		fclose(p_WF->f_WVPC);
-
-	ret = fclose(p_WF->f_WVP);
-
 	delete p_WF;
-	return ret;
+	return 0;
 }
 
 void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
