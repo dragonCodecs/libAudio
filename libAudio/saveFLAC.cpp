@@ -85,7 +85,7 @@ FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *, uint64_t *off
 {
 	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
 	const off_t pos = fd.tell();
-	if (pos < 0)
+	if (pos == -1)
 		return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
 	*offset = pos;
 	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;

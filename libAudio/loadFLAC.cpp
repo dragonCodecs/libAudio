@@ -75,7 +75,7 @@ namespace libAudio
 		{
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
 			const off_t pos = fd.tell();
-			if (pos < 0)
+			if (pos == -1)
 				return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
 			*offset = uint64_t(pos);
 			return FLAC__STREAM_DECODER_TELL_STATUS_OK;
