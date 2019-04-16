@@ -111,7 +111,7 @@ namespace libAudio
 		int seekAbs(void *filePtr, uint32_t offset)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.seek(offset, SEEK_SET);
+			return file.seek(offset, SEEK_SET) != offset;
 		}
 
 		/*!
@@ -126,7 +126,7 @@ namespace libAudio
 		int seekRel(void *filePtr, int32_t offset, int mode)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.seek(offset, mode);
+			return file.seek(offset, mode) == -1;
 		}
 
 		int ungetc(void *filePtr, int)
