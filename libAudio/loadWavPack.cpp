@@ -68,23 +68,6 @@ struct wavPack_t::decoderContext_t final
 	static fd_t wvcFile(std::string &fileName) noexcept;
 };
 
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given WavPack file
- */
-typedef struct _WavPack_Intern
-{
-	/*!
-	 * @internal
-	 * The error feedback buffer needed for various WavPack call
-	 */
-	char err[80];
-
-	wavPack_t inner;
-
-	_WavPack_Intern(fd_t &&fd, const char *const fileName) : inner(std::move(fd), fileName) { }
-} WavPack_Intern;
-
 namespace libAudio
 {
 	namespace wavPack
@@ -211,23 +194,17 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
 	return nullptr;
 }
 
-/*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
- * to the context of the opened file which must be used only by WavPack_* functions
- * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
- */
-void *WavPack_OpenR(const char *FileName)
+wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<WavPack_Intern> ret = makeUnique<WavPack_Intern>(fd_t(FileName, O_RDONLY | O_NOCTTY), FileName);
-	if (!ret || !ret->inner.context())
+	std::unique_ptr<wavPack_t> wpFile(makeUnique<wavPack_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), fileName));
+	if (!wpFile || !wpFile->valid() || !isWavPack(wpFile->_fd))
 		return nullptr;
-	fd_t &fileDesc = const_cast<fd_t &>(ret->inner.fd());
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
+	fd_t &fileDesc = const_cast<fd_t &>(wpFile->fd());
+	auto &ctx = *wpFile->context();
+	fileInfo_t &info = wpFile->fileInfo();
 
 	ctx.decoder = WavpackOpenFileInputEx(&ctx.callbacks, &fileDesc,
-		ctx.wvcFile(), ret->err, OPEN_NORMALIZE | OPEN_TAGS, 15);
+		ctx.wvcFile(), nullptr, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
 	info.channels = WavpackGetNumChannels(ctx.decoder);
 	info.bitsPerSample = WavpackGetBitsPerSample(ctx.decoder);
@@ -236,10 +213,27 @@ void *WavPack_OpenR(const char *FileName)
 	info.artist = ctx.readTag("artist");
 	info.title = ctx.readTag("title");
 
-	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return wpFile.release();
+}
 
-	return ret.release();
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by WavPack_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
+void *WavPack_OpenR(const char *FileName)
+{
+	std::unique_ptr<wavPack_t> file(wavPack_t::openR(FileName));
+	if (!file)
+		return nullptr;
+	auto &ctx = *file->context();
+	const fileInfo_t &info = file->fileInfo();
+
+	if (ExternalPlayback == 0)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+
+	return file.release();
 }
 
 /*!
@@ -250,10 +244,7 @@ void *WavPack_OpenR(const char *FileName)
  * @bug \p p_WVPFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
-{
-	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	return audioFileInfo(&p_WF->inner);
-}
+	{ return audioFileInfo(p_WVPFile); }
 
 wavPack_t::decoderContext_t::~decoderContext_t() noexcept
 	{ WavpackCloseFile(decoder); }
@@ -267,12 +258,7 @@ wavPack_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_WVPFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int WavPack_CloseFileR(void *p_WVPFile)
-{
-	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	delete p_WF;
-	return 0;
-}
+int WavPack_CloseFileR(void *p_WVPFile) { return audioCloseFileR(p_WVPFile); }
 
 void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
 {
@@ -294,10 +280,7 @@ void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
  * @bug \p p_WVPFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	return audioFillBuffer(&p_WF->inner, OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_WVPFile, OutBuffer, nOutBufferLen); }
 
 int64_t wavPack_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -338,23 +321,9 @@ int64_t wavPack_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @bug Futher to the \p p_WVPFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void WavPack_Play(void *p_WVPFile)
-{
-	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	p_WF->inner.play();
-}
-
-void WavPack_Pause(void *p_WVPFile)
-{
-	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	p_WF->inner.pause();
-}
-
-void WavPack_Stop(void *p_WVPFile)
-{
-	WavPack_Intern *p_WF = (WavPack_Intern *)p_WVPFile;
-	p_WF->inner.stop();
-}
+void WavPack_Play(void *p_WVPFile) { return audioPlay(p_WVPFile); }
+void WavPack_Pause(void *p_WVPFile) { return audioPause(p_WVPFile); }
+void WavPack_Stop(void *p_WVPFile) { return audioStop(p_WVPFile); }
 
 /*!
  * Checks the file given by \p FileName for whether it is an WavPack
@@ -411,10 +380,10 @@ bool wavPack_t::isWavPack(const char *const fileName) noexcept
 API_Functions WavPackDecoder =
 {
 	WavPack_OpenR,
-	WavPack_GetFileInfo,
-	WavPack_FillBuffer,
-	WavPack_CloseFileR,
-	WavPack_Play,
-	WavPack_Pause,
-	WavPack_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFileR,
+	audioPlay,
+	audioPause,
+	audioStop
 };

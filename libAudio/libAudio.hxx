@@ -217,7 +217,7 @@ private:
 
 public:
 	wavPack_t(fd_t &&fd, const char *const fileName) noexcept;
-	//static wavPack_t *openR(const char *const fileName) noexcept;
+	static wavPack_t *openR(const char *const fileName) noexcept;
 	static bool isWavPack(const char *const fileName) noexcept;
 	static bool isWavPack(const int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
