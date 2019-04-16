@@ -155,17 +155,17 @@ void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
 		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, true);
 	}
 
-	if (p_FI->Album != NULL)
+	if (p_FI->Album)
 	{
 		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Album", p_FI->Album);
 		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);
 	}
-	if (p_FI->Artist != NULL)
+	if (p_FI->Artist)
 	{
 		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Artist", p_FI->Artist);
 		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);
 	}
-	if (p_FI->Title != NULL)
+	if (p_FI->Title)
 	{
 		FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, "Title", p_FI->Title);
 		FLAC__metadata_object_vorbiscomment_append_comment(p_FF->p_meta[0], entry, false);

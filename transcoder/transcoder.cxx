@@ -83,12 +83,13 @@ int main(int argc, char **argv)
 		Audio_SetFileInfo(outFile.get(), fileInfo, type);
 
 		uint32_t loops = 0;
-		for (int64_t result = 0; result > 0; ++loops)
+		for (int64_t result = 1; result > 0; ++loops)
 		{
 			result = Audio_FillBuffer(inFile.get(), buffer.data(), buffer.size());
 			Audio_WriteBuffer(outFile.get(), buffer.data(), buffer.size(), type);
 			printStatus(loops + 1, *fileInfo);
 		}
+		printf("Transcode to %s complete\n", argv[i + 1]);
 	}
 	return 0;
 }
