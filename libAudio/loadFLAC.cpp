@@ -25,12 +25,12 @@ namespace libAudio
 		* @param p_FF Pointer to our internal context for the given FLAC file
 		* @return A status indicating if we had success or not
 		*/
-		FLAC__StreamDecoderReadStatus read(const FLAC__StreamDecoder *, uint8_t *Buffer, size_t *bytes, void *ctx)
+		FLAC__StreamDecoderReadStatus read(const FLAC__StreamDecoder *, uint8_t *buffer, size_t *bytes, void *ctx)
 		{
-			const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
 			if (*bytes > 0)
 			{
-				bool result = fd.read(Buffer, *bytes, *bytes);
+				const bool result = fd.read(buffer, *bytes, *bytes);
 				if (!result && !fd.isEOF())
 					return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
 				else if (!result)
@@ -47,15 +47,16 @@ namespace libAudio
 		* \c seek() is the internal seek callback for FLAC file decoding. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
 		* @param p_dec The decoder context to seek for, which must not become modified
-		* @param amount A 64-bit unsigned integer giving the number of bytes from the beginning
+		* @param offset A 64-bit unsigned integer giving the number of bytes from the beginning
 		*   of the file to seek through
 		* @param p_FF Pointer to our internal context for the given FLAC file
 		* @return A status indicating if the seek worked or not
 		*/
-		FLAC__StreamDecoderSeekStatus seek(const FLAC__StreamDecoder *, uint64_t amount, void *ctx)
+		FLAC__StreamDecoderSeekStatus seek(const FLAC__StreamDecoder *, uint64_t offset, void *ctx)
 		{
-			const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
-			if (lseek(fd, amount, SEEK_SET) < 0)
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+			const off_t result = fd.seek(offset, SEEK_SET);
+			if (result == -1 || uint64_t(result) != offset)
 				return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
 			return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 		}
@@ -72,8 +73,8 @@ namespace libAudio
 		*/
 		FLAC__StreamDecoderTellStatus tell(const FLAC__StreamDecoder *, uint64_t *offset, void *ctx)
 		{
-			const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
-			const off_t pos = lseek(fd, 0, SEEK_CUR);
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+			const off_t pos = fd.tell();
 			if (pos < 0)
 				return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
 			*offset = uint64_t(pos);
@@ -91,12 +92,11 @@ namespace libAudio
 		*/
 		FLAC__StreamDecoderLengthStatus length(const FLAC__StreamDecoder *, uint64_t *len, void *ctx)
 		{
-			const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
-			struct stat fileStat;
-			if (fstat(fd, &fileStat) != 0)
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+			const off_t length = fd.length();
+			if (length == -1)
 				return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
-
-			*len = fileStat.st_size;
+			*len = uint64_t(length);
 			return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 		}
 
@@ -110,7 +110,7 @@ namespace libAudio
 		*/
 		int eof(const FLAC__StreamDecoder *, void *ctx)
 		{
-			const fd_t &fd = reinterpret_cast<audioFile_t *>(ctx)->fd();
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
 			return fd.isEOF() ? 1 : 0;
 		}
 
@@ -125,9 +125,9 @@ namespace libAudio
 		*/
 		FLAC__StreamDecoderWriteStatus data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *audioFile)
 		{
-			const flac_t &file = *reinterpret_cast<flac_t *>(audioFile);
+			const flac_t &file = *static_cast<flac_t *>(audioFile);
 			auto &ctx = *file.decoderContext();
-			short *PCM = reinterpret_cast<short *>(ctx.buffer.get());
+			int16_t *PCM = reinterpret_cast<int16_t *>(ctx.buffer.get());
 			const uint8_t channels = file.fileInfo().channels;
 			const uint8_t sampleShift = ctx.sampleShift;
 			uint32_t len = p_frame->header.blocksize;
@@ -137,7 +137,7 @@ namespace libAudio
 			for (uint32_t i = 0; i < len; i++)
 			{
 				for (uint8_t j = 0; j < channels; j++)
-					PCM[(i * channels) + j] = (short)(buffers[j][i] >> sampleShift);
+					PCM[(i * channels) + j] = int16_t(buffers[j][i] >> sampleShift);
 			}
 			ctx.bytesAvail = len * channels * (file.fileInfo().bitsPerSample / 8);
 			ctx.bytesRemain = ctx.bytesAvail;
@@ -154,7 +154,7 @@ namespace libAudio
 		*/
 		void metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *audioFile)
 		{
-			flac_t &file = *reinterpret_cast<flac_t *>(audioFile);
+			flac_t &file = *static_cast<flac_t *>(audioFile);
 			auto &ctx = *file.decoderContext();
 			fileInfo_t &info = file.fileInfo();
 
