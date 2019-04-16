@@ -121,7 +121,7 @@ flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stre
 void *FLAC_OpenW(const char *FileName)
 {
 	std::unique_ptr<FLAC_Encoder_Context> ret = makeUnique<FLAC_Encoder_Context>(FileName);
-	if (!ret || !ret->inner.decoderContext())
+	if (!ret || !ret->inner.encoderContext())
 		return nullptr;
 
 	return ret.release();
