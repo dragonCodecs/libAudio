@@ -80,19 +80,6 @@ FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *, uint64_t *off
 	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
 
-/*!
- * @internal
- * \c f_fmetadata() is the internal metadata callback for FLAC file creation.
- * @param p_enc The encoding context which must not be modified by the function
- * @param p_meta The metadata that is due for processing this callback call
- * @param p_FLACFile Our own internal context pointer
- * @note This is implemented as a no-operation as we are disinterested in processing
- *   the metadata being sent to the file - we just want it written.
- */
-void f_fmetadata(const FLAC__StreamEncoder */*p_enc*/, const FLAC__StreamMetadata */*p_meta*/, void */*p_FLACFile*/)
-{
-}
-
 flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
 	encoderCtx{makeUnique<encoderContext_t>()} { }
 flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()}, fileInfo{}
@@ -168,7 +155,7 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
 	}
 	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, metadata.data(), metadata.size());
 	ctx.fileInfo = fileInfo;
-	FLAC__stream_encoder_init_stream(ctx.streamEncoder, f_fwrite, f_fseek, f_ftell, f_fmetadata, this);
+	FLAC__stream_encoder_init_stream(ctx.streamEncoder, f_fwrite, f_fseek, f_ftell, nullptr, this);
 }
 
 /*!
