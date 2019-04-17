@@ -43,8 +43,8 @@ void *AON_OpenR(const char *FileName)
 
 	if (ToPlayback)
 	{
-		if (ExternalPlayback == 0)
-			ret->inner.player(makeUnique<playback_t>(ret.get(), AON_FillBuffer, ctx.playbackBuffer, 8192, info));
+		if (!ExternalPlayback)
+			ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(AON_GetFileInfo(ret.get()));
 	}
 
@@ -59,20 +59,8 @@ FileInfo *AON_GetFileInfo(void *p_AONFile)
 
 long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int32_t ret = 0, Read;
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	if (p_AF->p_File == NULL)
-		return -1;
-	do
-	{
-		Read = p_AF->p_File->Mix(p_AF->buffer, nOutBufferLen - ret);
-		if (Read >= 0 && OutBuffer != p_AF->buffer)
-			memcpy(OutBuffer + ret, p_AF->buffer, Read);
-		if (Read >= 0)
-			ret += Read;
-	}
-	while (ret < nOutBufferLen && Read >= 0);
-	return (ret == 0 ? Read : ret);
+	return audioFillBuffer(&p_AF->inner, OutBuffer, nOutBufferLen);
 }
 
 int AON_CloseFileR(void *p_AONFile)
