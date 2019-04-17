@@ -103,22 +103,28 @@ void AON_Stop(void *p_AONFile)
 	p_AF->inner.stop();
 }
 
-bool Is_AON(const char *FileName)
+bool Is_AON(const char *FileName) { return modAON_t::isAON(FileName); }
+
+bool modAON_t::isAON(const int32_t fd) noexcept
 {
-	FILE *f_AON = fopen(FileName, "rb");
-	char AONMagic1[4], AONMagic2[42];
-	if (f_AON == NULL)
+	char aonMagic1[4], aonMagic2[42];
+	if (fd == -1 ||
+		read(fd, aonMagic1, 4) != 4 ||
+		read(fd, aonMagic2, 42) != 42 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		strncmp(aonMagic1, "AON", 3) != 0 ||
+		strncmp(aonMagic2, "artofnoise by bastian spiegel (twice/lego)", 42) != 0 ||
+		(aonMagic1[3] != '4' && aonMagic1[3] != '8'))
 		return false;
+	return true;
+}
 
-	fread(AONMagic1, 4, 1, f_AON);
-	fread(AONMagic2, 42, 1, f_AON);
-	fclose(f_AON);
-
-	if (strncmp(AONMagic1, "AON", 3) == 0 && (AONMagic1[3] == '4' || AONMagic1[3] == '8') &&
-		strncmp(AONMagic2, "artofnoise by bastian spiegel (twice/lego)", 42) == 0)
-		return true;
-	else
+bool modAON_t::isAON(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
 		return false;
+	return isAON(file);
 }
 
 API_Functions AONDecoder =
