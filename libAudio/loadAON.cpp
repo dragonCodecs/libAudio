@@ -8,20 +8,15 @@ modAON_t::modAON_t() noexcept : moduleFile_t{audioType_t::moduleAON, {}} { }
 
 void *AON_OpenR(const char *FileName)
 {
-	AON_Intern *ret = NULL;
-	FILE *f_AON = NULL;
+	std::unique_ptr<AON_Intern> ret = makeUnique<AON_Intern>();
+	if (!ret)
+		return nullptr;
 
-	ret = (AON_Intern *)malloc(sizeof(AON_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(AON_Intern));
+	ret->f_Module = fopen(FileName, "rb");
+	if (!ret->f_Module)
+		return nullptr;
 
-	f_AON = fopen(FileName, "rb");
-	if (f_AON == NULL)
-		return f_AON;
-	ret->f_Module = f_AON;
-
-	return ret;
+	return ret.release();
 }
 
 FileInfo *AON_GetFileInfo(void *p_AONFile)
@@ -101,7 +96,7 @@ int AON_CloseFileR(void *p_AONFile)
 	delete p_AF->p_File;
 
 	ret = fclose(p_AF->f_Module);
-	free(p_AF);
+	delete p_AF;
 	return ret;
 }
 

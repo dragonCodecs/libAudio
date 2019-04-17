@@ -33,7 +33,7 @@ template<typename T> struct moduleIntern : T
 	moduleIntern() noexcept : T(), f_Module(nullptr), p_FI(nullptr), p_Playback(nullptr), p_File(nullptr) { }
 };
 
-struct aonIntern { };
+struct aonIntern { modAON_t inner; };
 struct fc1xIntern { modFC1x_t inner; };
 
 typedef moduleIntern<aonIntern> AON_Intern;
