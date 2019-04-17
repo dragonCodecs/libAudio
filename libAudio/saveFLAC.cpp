@@ -10,68 +10,76 @@
 
 mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
 
-/*!
- * @internal
- * \c f_fwrite() is the internal write callback for FLAC file creation. This prevents
- * nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_enc The encoding context which must not be modified by the function
- * @param buffer The buffer to write which also must not become modified
- * @param nBytes A count holding the number of bytes in \p buffer to write
- * @param nSamp A count holding the number of samples encoded in buffer,
- *   or 0 to indicate metadata is being written
- * @param nCurrFrame If \p nSamp is non-zero, this olds the number of the current
- *   frame being encoded
- * @param p_FLACFile Our own internal context pointer which holds the file to write to
- */
-FLAC__StreamEncoderWriteStatus f_fwrite(const FLAC__StreamEncoder *, const uint8_t *buffer, size_t bytes, uint32_t, uint32_t, void *ctx)
+namespace libAudio
 {
-	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-	if (bytes > 0)
+	namespace flac
 	{
-		const ssize_t result = fd.write(buffer, bytes);
-		if (result == -1)
+		/*!
+		* @internal
+		* \c write() is the internal write callback for FLAC file creation. This prevents
+		* nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_enc The encoding context which must not be modified by the function
+		* @param buffer The buffer to write which also must not become modified
+		* @param nBytes A count holding the number of bytes in \p buffer to write
+		* @param nSamp A count holding the number of samples encoded in buffer,
+		*   or 0 to indicate metadata is being written
+		* @param nCurrFrame If \p nSamp is non-zero, this olds the number of the current
+		*   frame being encoded
+		* @param p_FLACFile Our own internal context pointer which holds the file to write to
+		*/
+		FLAC__StreamEncoderWriteStatus write(const FLAC__StreamEncoder *, const uint8_t *buffer, size_t bytes, uint32_t, uint32_t, void *ctx)
+		{
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+			if (bytes > 0)
+			{
+				const ssize_t result = fd.write(buffer, bytes);
+				if (result == -1)
+					return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+				else if (size_t(result) == bytes)
+					return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
+			}
 			return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
-		else if (size_t(result) == bytes)
-			return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
+		}
+
+		/*!
+		* @internal
+		* \c seek() is the internal seek callback for FLAC file creation. This prevents
+		* nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_enc The encoding context which must not be modified by the function
+		* @param offset The offset through the file to which to seek to
+		* @param p_FLACFile Our own internal context pointer which holds the file to seek through
+		*/
+		FLAC__StreamEncoderSeekStatus seek(const FLAC__StreamEncoder *, uint64_t offset, void *ctx)
+		{
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+			const off_t result = fd.seek(offset, SEEK_SET);
+			if (result == -1 || uint64_t(result) != offset)
+				return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
+			return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
+		}
+
+		/*!
+		* @internal
+		* \c tell() is the internal seek callback for FLAC file creation. This prevents
+		* nasty things from happening on Windows thanks to the run-time mess there.
+		* @param p_enc The encoding context which must not be modified by the function
+		* @param offset The returned offset location into the file
+		* @param p_FLACFile Our own internal context pointer which holds the file to get
+		*   the write pointer position of
+		*/
+		FLAC__StreamEncoderTellStatus tell(const FLAC__StreamEncoder *, uint64_t *offset, void *ctx)
+		{
+			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
+			const off_t pos = fd.tell();
+			if (pos == -1)
+				return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
+			*offset = pos;
+			return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
+		}
 	}
-	return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 }
 
-/*!
- * @internal
- * \c f_fseek() is the internal seek callback for FLAC file creation. This prevents
- * nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_enc The encoding context which must not be modified by the function
- * @param offset The offset through the file to which to seek to
- * @param p_FLACFile Our own internal context pointer which holds the file to seek through
- */
-FLAC__StreamEncoderSeekStatus f_fseek(const FLAC__StreamEncoder *, uint64_t offset, void *ctx)
-{
-	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-	const off_t result = fd.seek(offset, SEEK_SET);
-	if (result == -1 || uint64_t(result) != offset)
-		return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
-	return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
-}
-
-/*!
- * @internal
- * \c f_ftell() is the internal seek callback for FLAC file creation. This prevents
- * nasty things from happening on Windows thanks to the run-time mess there.
- * @param p_enc The encoding context which must not be modified by the function
- * @param offset The returned offset location into the file
- * @param p_FLACFile Our own internal context pointer which holds the file to get
- *   the write pointer position of
- */
-FLAC__StreamEncoderTellStatus f_ftell(const FLAC__StreamEncoder *, uint64_t *offset, void *ctx)
-{
-	const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-	const off_t pos = fd.tell();
-	if (pos == -1)
-		return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
-	*offset = pos;
-	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
-}
+using namespace libAudio;
 
 flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
 	encoderCtx{makeUnique<encoderContext_t>()} { }
@@ -147,7 +155,8 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
 	writeComment(metadata[0], "Artist", fileInfo.Artist);
 	writeComment(metadata[0], "Title", fileInfo.Title);
 	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, metadata.data(), metadata.size());
-	FLAC__stream_encoder_init_stream(ctx.streamEncoder, f_fwrite, f_fseek, f_ftell, nullptr, this);
+	FLAC__stream_encoder_init_stream(ctx.streamEncoder, flac::write, flac::seek,
+		flac::tell, nullptr, this);
 
 	info.totalTime = fileInfo.TotalTime;
 	info.bitsPerSample = fileInfo.BitsPerSample;
