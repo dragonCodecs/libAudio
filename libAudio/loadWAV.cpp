@@ -317,32 +317,54 @@ void WAV_Stop(void *p_WAVFile)
 }
 
 /*!
- * Checks the file given by \p FileName for whether it is an WAV
+ * Checks the file given by \p FileName for whether it is a WAV
  * file recognised by this library or not
  * @param FileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
- * the file contents to see if it is an WAV file or not
+ * the file contents to see if it is a WAV file or not
  */
-bool Is_WAV(const char *FileName)
+bool Is_WAV(const char *FileName) { return wav_t::isWAV(FileName); }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a WAV
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a WAV file or not
+ */
+bool wav_t::isWAV(const int32_t fd) noexcept
 {
-	FILE *f_WAV = fopen(FileName, "rb");
-	char RIFFSig[4];
-	char WAVESig[4];
-	if (f_WAV == NULL)
+	char riffSig[4], waveSig[4];
+	if (fd == -1 ||
+		read(fd, riffSig, 4) != 4 ||
+		lseek(fd, 4, SEEK_CUR) != 8 ||
+		read(fd, waveSig, 4) != 4 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		strncmp(riffSig, "RIFF", 4) != 0 ||
+		strncmp(waveSig, "WAVE", 4) != 0)
 		return false;
+	return true;
+}
 
-	fread(RIFFSig, 4, 1, f_WAV);
-	fseek(f_WAV, 4, SEEK_CUR);
-	fread(WAVESig, 4, 1, f_WAV);
-	fclose(f_WAV);
-
-	if (strncmp(RIFFSig, "RIFF", 4) != 0 ||
-		strncmp(WAVESig, "WAVE", 4) != 0)
+/*!
+ * Checks the file given by \p fileName for whether it is a WAV
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a WAV file or not
+ */
+bool wav_t::isWAV(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
 		return false;
-	else
-		return true;
+	return isWAV(file);
 }
 
 /*!
