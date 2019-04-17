@@ -53,7 +53,7 @@ FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
 	if (ToPlayback)
 	{
 		if (ExternalPlayback == 0)
-			p_FF->p_Playback = new playback_t(p_FC1xFile, FC1x_FillBuffer, p_FF->buffer, 8192, ret);
+			p_FF->inner.player(makeUnique<playback_t>(p_FC1xFile, FC1x_FillBuffer, p_FF->buffer, 8192, ret));
 		p_FF->p_File->InitMixer(ret);
 	}
 
@@ -96,22 +96,19 @@ int FC1x_CloseFileR(void *p_FC1xFile)
 void FC1x_Play(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
-
-	p_FF->p_Playback->play();
+	p_FF->inner.play();
 }
 
 void FC1x_Pause(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
-
-	p_FF->p_Playback->pause();
+	p_FF->inner.pause();
 }
 
 void FC1x_Stop(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
-
-	p_FF->p_Playback->stop();
+	p_FF->inner.stop();
 }
 
 bool Is_FC1x(const char *FileName) { return modFC1x_t::isFC1x(FileName); }
