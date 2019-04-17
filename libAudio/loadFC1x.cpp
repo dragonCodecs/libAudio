@@ -40,7 +40,7 @@ void *FC1x_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (ExternalPlayback == 0)
-			ret->inner.player(makeUnique<playback_t>(ret.get(), FC1x_FillBuffer, ret->buffer, 8192, info));
+			ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(FC1x_GetFileInfo(ret.get()));
 	}
 
@@ -55,21 +55,8 @@ FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
 
 long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int32_t ret = 0, Read;
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
-	if (p_FF->p_File == NULL)
-		return -1;
-	auto &ctx = *p_FF->inner.context();
-	do
-	{
-		Read = ctx.mod->Mix(p_FF->buffer, nOutBufferLen - ret);
-		if (Read >= 0 && OutBuffer != p_FF->buffer)
-			memcpy(OutBuffer + ret, p_FF->buffer, Read);
-		if (Read >= 0)
-			ret += Read;
-	}
-	while (ret < nOutBufferLen && Read >= 0);
-	return (ret == 0 ? Read : ret);
+	return audioFillBuffer(&p_FF->inner, OutBuffer, nOutBufferLen);
 }
 
 int FC1x_CloseFileR(void *p_FC1xFile)
@@ -78,9 +65,6 @@ int FC1x_CloseFileR(void *p_FC1xFile)
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
 	if (p_FF == NULL)
 		return 0;
-
-	delete p_FF->p_Playback;
-	delete p_FF->p_File;
 
 	ret = fclose(p_FF->f_Module);
 	delete p_FF;
