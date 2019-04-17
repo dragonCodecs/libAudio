@@ -4,22 +4,22 @@
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
 
+modFC1x_t::modFC1x_t() noexcept : moduleFile_t{audioType_t::moduleFC1x, {}} { }
+
 void *FC1x_OpenR(const char *FileName)
 {
-	FC1x_Intern *ret = NULL;
 	FILE *f_FC1x = NULL;
 
-	ret = (FC1x_Intern *)malloc(sizeof(FC1x_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FC1x_Intern));
+	std::unique_ptr<FC1x_Intern> ret = makeUnique<FC1x_Intern>();
+	if (ret == nullptr)
+		return nullptr;
 
 	f_FC1x = fopen(FileName, "rb");
 	if (f_FC1x == NULL)
 		return f_FC1x;
 	ret->f_Module = f_FC1x;
 
-	return ret;
+	return ret.release();
 }
 
 FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
@@ -89,7 +89,7 @@ int FC1x_CloseFileR(void *p_FC1xFile)
 	delete p_FF->p_File;
 
 	ret = fclose(p_FF->f_Module);
-	free(p_FF);
+	delete p_FF;
 	return ret;
 }
 

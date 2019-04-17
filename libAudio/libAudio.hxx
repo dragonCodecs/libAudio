@@ -217,6 +217,16 @@ public:
 	static bool isIT(const int32_t fd) noexcept;
 };
 
+struct modFC1x_t final : public moduleFile_t
+{
+public:
+	modFC1x_t() noexcept;
+	modFC1x_t(fd_t &&fd) noexcept;
+	static modFC1x_t *openR(const char *const fileName) noexcept;
+	static bool isFC1x(const char *const fileName) noexcept;
+	static bool isFC1x(const int32_t fd) noexcept;
+};
+
 struct mpc_t final : public audioFile_t
 {
 private:

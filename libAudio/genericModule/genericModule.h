@@ -34,7 +34,7 @@ template<typename T> struct moduleIntern : T
 };
 
 struct aonIntern { };
-struct fc1xIntern { };
+struct fc1xIntern { modFC1x_t inner; };
 
 typedef moduleIntern<aonIntern> AON_Intern;
 typedef moduleIntern<fc1xIntern> FC1x_Intern;
