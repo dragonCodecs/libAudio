@@ -35,11 +35,6 @@ typedef struct _OggVorbis_Intern
 	 * The internal decoded data buffer
 	 */
 	uint8_t buffer[8192];
-	/*!
-	 * @internal
-	 * The playback class instance for the Ogg|Vorbis file
-	 */
-	playback_t *p_Playback;
 
 	oggVorbis_t inner;
 } OggVorbis_Intern;
@@ -155,7 +150,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 	}
 
 	if (ExternalPlayback == 0)
-		p_VF->p_Playback = new playback_t(p_VorbisFile, OggVorbis_FillBuffer, p_VF->buffer, 8192, ret);
+		p_VF->inner.player(makeUnique<playback_t>(p_VorbisFile, OggVorbis_FillBuffer, p_VF->buffer, 8192, ret));
 
 	return ret;
 }
@@ -206,8 +201,6 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
 	int ret = 0;
 	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
 
-	delete p_VF->p_Playback;
-
 	ret = ov_clear(&p_VF->ovf);
 	delete p_VF;
 	return ret;
@@ -226,17 +219,20 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
  */
 void OggVorbis_Play(void *p_VorbisFile)
 {
-	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->play();
+	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
+	p_VF->inner.play();
 }
 
 void OggVorbis_Pause(void *p_VorbisFile)
 {
-	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->pause();
+	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
+	p_VF->inner.pause();
 }
 
 void OggVorbis_Stop(void *p_VorbisFile)
 {
-	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->stop();
+	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
+	p_VF->inner.stop();
 }
 
 /*!
