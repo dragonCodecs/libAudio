@@ -44,8 +44,7 @@ void *IT_OpenR(const char *FileName)
 	return ret.release();
 }
 
-FileInfo *IT_GetFileInfo(void *p_ITFile)
-	{ return audioFileInfo(p_ITFile); }
+FileInfo *IT_GetFileInfo(void *p_ITFile) { return audioFileInfo(p_ITFile); }
 long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_ITFile, OutBuffer, nOutBufferLen); }
 int IT_CloseFileR(void *p_ITFile) { return audioCloseFile(p_ITFile); }
