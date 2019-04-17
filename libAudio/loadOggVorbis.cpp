@@ -1,8 +1,13 @@
+#include <string>
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
+#include "string.hxx"
+
+inline std::string operator ""_s(const char *const str, const size_t len) noexcept
+	{ return {str, len}; }
 
 /*!
  * @internal
@@ -76,6 +81,30 @@ oggVorbis_t::oggVorbis_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggVorbi
 	ctx(makeUnique<decoderContext_t>()) { }
 oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
+bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string &tag) noexcept
+{
+	const bool result = !strncasecmp(value, tag.data(), tag.size());
+	if (result)
+		copyComment(dst, value + tag.size());
+	return result;
+}
+
+void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
+{
+	for (int i = 0; i < tags.comments; ++i)
+	{
+		const char *const value = tags.user_comments[i];
+		if (!maybeCopyComment(info.title, value, "title="_s) &&
+			!maybeCopyComment(info.artist, value, "artist="_s) &&
+			!maybeCopyComment(info.album, value, "album="_s))
+		{
+			std::unique_ptr<char []> other;
+			copyComment(other, value);
+			info.other.emplace_back(std::move(other));
+		}
+	}
+}
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggVorbis_* functions
@@ -97,7 +126,14 @@ void *OggVorbis_OpenR(const char *FileName)
 	callbacks.tell_func = oggVorbis::tell;
 	ov_open_callbacks(&ret->inner, &ctx.decoder, NULL, 0, callbacks);
 
+	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
+	info.bitRate = vorbisInfo.rate;
+	info.channels = vorbisInfo.channels;
 	info.bitsPerSample = 16;
+	copyComments(info, *ov_comment(&ctx.decoder, -1));
+
+	if (ExternalPlayback == 0)
+		ret->inner.player(makeUnique<playback_t>(ret.get(), OggVorbis_FillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
 }
@@ -112,82 +148,7 @@ void *OggVorbis_OpenR(const char *FileName)
 FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 {
 	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	FileInfo *ret = NULL;
-	vorbis_comment *comments = NULL;
-	char **p_comments = NULL;
-	int nComment = 0;
-	vorbis_info *info = NULL;
-
-	if (!p_VF)
-		return nullptr;
-	auto &ctx = *p_VF->inner.context();
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-
-	info = ov_info(&ctx.decoder, -1);
-	comments = ov_comment(&ctx.decoder, -1);
-	p_comments = comments->user_comments;
-
-	ret->BitRate = info->rate;
-	ret->Channels = info->channels;
-	ret->BitsPerSample = 16;
-
-	while (p_comments[nComment] && nComment < comments->comments)
-	{
-		if (strncasecmp(p_comments[nComment], "title=", 6) == 0)
-		{
-			if (ret->Title == NULL)
-				ret->Title = strdup(p_comments[nComment] + 6);
-			else
-			{
-				int nOCText = strlen(ret->Title);
-				int nCText = strlen(p_comments[nComment] + 6);
-				ret->Title = (const char *)realloc((char *)ret->Title, nOCText + nCText + 4);
-				memcpy((char *)ret->Title + nOCText, " / ", 3);
-				memcpy((char *)ret->Title + nOCText + 3, p_comments[nComment] + 6, 	nCText + 1);
-			}
-		}
-		else if (strncasecmp(p_comments[nComment], "artist=", 7) == 0)
-		{
-			if (ret->Artist == NULL)
-				ret->Artist = strdup(p_comments[nComment] + 7);
-			else
-			{
-				int nOCText = strlen(ret->Artist);
-				int nCText = strlen(p_comments[nComment] + 7);
-				ret->Artist = (const char *)realloc((char *)ret->Artist, nOCText + nCText + 4);
-				memcpy((char *)ret->Artist + nOCText, " / ", 3);
-				memcpy((char *)ret->Artist + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
-			}
-		}
-		else if (strncasecmp(p_comments[nComment], "album=", 6) == 0)
-		{
-			if (ret->Album == NULL)
-				ret->Album = strdup(p_comments[nComment] + 6);
-			else
-			{
-				int nOCText = strlen(ret->Album);
-				int nCText = strlen(p_comments[nComment] + 6);
-				ret->Album = (const char *)realloc((char *)ret->Album, nOCText + nCText + 4);
-				memcpy((char *)ret->Album + nOCText, " / ", 3);
-				memcpy((char *)ret->Album + nOCText + 3, p_comments[nComment] + 6, nCText + 1);
-			}
-		}
-		else
-		{
-			ret->OtherComments.push_back(strdup(p_comments[nComment]));
-			ret->nOtherComments++;
-		}
-		nComment++;
-	}
-
-	if (ExternalPlayback == 0)
-		p_VF->inner.player(makeUnique<playback_t>(p_VorbisFile, OggVorbis_FillBuffer, ctx.playbackBuffer, 8192, ret));
-
-	return ret;
+	return audioFileInfo(&p_VF->inner);
 }
 
 /*!
