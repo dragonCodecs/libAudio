@@ -18,6 +18,12 @@
  * @internal
  * Internal structure for holding the decoding context for a given WAV file
  */
+struct wav_t::decoderContext_t final
+{
+	decoderContext_t() noexcept;
+	~decoderContext_t() noexcept;
+};
+
 typedef struct _WAV_Intern
 {
 	/*!
@@ -63,7 +69,12 @@ typedef struct _WAV_Intern
 	 * A flag indicating if this WAV's data is floating point
 	 */
 	bool usesFloat;
+
+	wav_t inner;
 } WAV_Intern;
+
+wav_t::wav_t() noexcept : audioFile_t(audioType_t::wave, {}), ctx(makeUnique<decoderContext_t>()) { }
+wav_t::decoderContext_t::decoderContext_t() noexcept { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -169,6 +180,8 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 
 	return ret;
 }
+
+wav_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!
  * Closes an opened audio file
@@ -280,6 +293,8 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 	return ret;
 }
+
+int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened WAV file using OpenAL on the default audio device
