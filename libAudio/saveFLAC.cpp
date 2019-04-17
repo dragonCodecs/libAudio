@@ -10,13 +10,6 @@
 
 mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
 
-typedef struct _FLAC_Encoder_Context
-{
-	flac_t inner;
-
-	_FLAC_Encoder_Context(const char *const fileName) : inner(fd_t(fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode), audioModeWrite_t{}) { }
-} FLAC_Encoder_Context;
-
 /*!
  * @internal
  * \c f_fwrite() is the internal write callback for FLAC file creation. This prevents
@@ -88,19 +81,22 @@ flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stre
 	//FLAC__stream_encoder_set_loose_mid_side_stereo(streamEncoder, true);
 }
 
+flac_t *flac_t::openW(const char *const fileName) noexcept
+{
+	std::unique_ptr<flac_t> flacFile = makeUnique<flac_t>(fd_t(fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode),
+		audioModeWrite_t{});
+	if (!flacFile || !flacFile->valid())
+		return nullptr;
+	return flacFile.release();
+}
+
 /*!
  * This function opens the file given by \c FileName for writing and returns a pointer
  * to the context of the opened file which must be used only by FLAC_* functions
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c NULL if there was an error
  */
-void *FLAC_OpenW(const char *FileName)
-{
-	std::unique_ptr<FLAC_Encoder_Context> ret = makeUnique<FLAC_Encoder_Context>(FileName);
-	if (!ret || !ret->inner.encoderContext())
-		return nullptr;
-	return ret.release();
-}
+void *FLAC_OpenW(const char *FileName) { return flac_t::openW(FileName); }
 
 /*!
  * This function sets the \c FileInfo structure for a FLAC file being encoded
@@ -111,11 +107,7 @@ void *FLAC_OpenW(const char *FileName)
  *
  * @bug \p p_FLACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI)
-{
-	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	audioFileInfo(&p_FF->inner, p_FI);
-}
+void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI) { audioFileInfo(p_FLACFile, p_FI); }
 
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const char *const value)
 {
@@ -171,10 +163,7 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
  * @attention Will not work unless \c FLAC_SetFileInfo() has been called beforehand
  */
 long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
-{
-	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	return audioWriteBuffer(&p_FF->inner, InBuffer, nInBufferLen);
-}
+	{ return audioWriteBuffer(p_FLACFile, InBuffer, nInBufferLen); }
 
 void flac_t::encoderContext_t::fillFrame(const int8_t *const buffer, const uint32_t samples) noexcept
 {
@@ -238,9 +227,4 @@ flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
  */
-int FLAC_CloseFileW(void *p_FLACFile)
-{
-	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	delete p_FF;
-	return 0;
-}
+int FLAC_CloseFileW(void *p_FLACFile) { return audioCloseFile(p_FLACFile); }
