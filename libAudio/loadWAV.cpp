@@ -20,6 +20,12 @@
  */
 struct wav_t::decoderContext_t final
 {
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
+	uint8_t playbackBuffer[8192];
+
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 };
@@ -42,11 +48,6 @@ typedef struct _WAV_Intern
 	 * The compression flags read from the WAV file
 	 */
 	short compression;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
 	/*!
 	 * @internal
 	 * The \c FileInfo for the WAV file being decoded
@@ -126,6 +127,7 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	char tmp[4];
 	int fmtLen;
 	int i;
+	auto &ctx = *p_WF->inner.context();
 
 	fread(tmp, 4, 1, f_WAV);
 	while (strncmp(tmp, "fmt ", 4) != 0)
@@ -171,7 +173,7 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	p_WF->DataEnd += ftell(f_WAV);
 
 	if (ExternalPlayback == 0)
-		p_WF->inner.player(makeUnique<playback_t>(p_WAVFile, WAV_FillBuffer, p_WF->buffer, 8192, ret));
+		p_WF->inner.player(makeUnique<playback_t>(p_WAVFile, WAV_FillBuffer, ctx.playbackBuffer, 8192, ret));
 
 	return ret;
 }
