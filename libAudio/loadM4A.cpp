@@ -310,11 +310,10 @@ int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	auto &ctx = *context();
 	auto buffer = static_cast<uint8_t *>(bufferPtr);
-	auto *OBuf = buffer;
+	uint32_t offset = 0;
 
-	while ((OBuf - buffer) < length && !ctx.eof)
+	while (offset < length && !ctx.eof)
 	{
-		uint32_t nUsed;
 		if (ctx.samplesUsed == ctx.sampleCount)
 		{
 			if (ctx.currentFrame < ctx.frameCount)
@@ -344,13 +343,14 @@ int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 				return -1;
 		}
 
-		nUsed = std::min<uint64_t>(ctx.sampleCount - ctx.samplesUsed, length - (OBuf - buffer));
-		memcpy(OBuf, ctx.samples + ctx.samplesUsed, nUsed);
-		OBuf += nUsed;
-		ctx.samplesUsed += nUsed;
+		const uint32_t sampleCount = std::min(uint32_t(ctx.sampleCount -
+			ctx.samplesUsed), length - offset);
+		memcpy(buffer + offset, ctx.samples + ctx.samplesUsed, sampleCount);
+		offset += sampleCount;
+		ctx.samplesUsed += sampleCount;
 	}
 
-	return OBuf - buffer;
+	return offset;
 }
 
 /*!
