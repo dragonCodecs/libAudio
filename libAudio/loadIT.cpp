@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <malloc.h>
-#include <math.h>
 
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
@@ -12,7 +10,6 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 	auto itFile = makeUnique<modIT_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
 	if (!itFile || !itFile->valid() || !isIT(itFile->_fd))
 		return nullptr;
-	lseek(itFile->_fd, 0, SEEK_SET);
 	return itFile.release();
 }
 
@@ -62,6 +59,7 @@ bool modIT_t::isIT(const int32_t fd) noexcept
 	char itSig[4];
 	if (fd == -1 ||
 		read(fd, itSig, 4) != 4 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
 		memcmp(itSig, "IMPM", 4) != 0)
 		return false;
 	return true;
