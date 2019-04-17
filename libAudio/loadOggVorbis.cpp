@@ -9,7 +9,7 @@
  * @file loadOggVorbis.cpp
  * @brief The implementation of the Ogg|Vorbis decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
@@ -227,13 +227,6 @@ void OggVorbis_Stop(void *p_VorbisFile)
 	((OggVorbis_Intern *)p_VorbisFile)->p_Playback->stop();
 }
 
-#define CHECK_OK(actual, expected) \
-	if (actual != expected) \
-	{ \
-		fclose(f_Ogg); \
-		return false; \
-	}
-
 /*!
  * Checks the file given by \p FileName for whether it is an Ogg|Vorbis
  * file recognised by this library or not
@@ -243,27 +236,48 @@ void OggVorbis_Stop(void *p_VorbisFile)
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an Ogg|Vorbis file or not
  */
-bool Is_OggVorbis(const char *FileName)
+bool Is_OggVorbis(const char *FileName) { return oggVorbis_t::isOggVorbis(FileName); }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a Ogg|Vorbis
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a Ogg|Vorbis file or not
+ */
+bool oggVorbis_t::isOggVorbis(const int32_t fd) noexcept
 {
-	FILE *f_Ogg = fopen(FileName, "rb");
-	char OggSig[4];
-	char VorbisSig[6];
-	if (f_Ogg == NULL)
+	char oggSig[4];
+	char vorbisSig[6];
+	if (fd == -1 ||
+		read(fd, oggSig, 4) != 4 ||
+		lseek(fd, 25, SEEK_CUR) != 29 ||
+		read(fd, vorbisSig, 6) != 6 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		strncmp(oggSig, "OggS", 4) != 0 ||
+		strncmp(vorbisSig, "vorbis", 6) != 0)
 		return false;
-
-	CHECK_OK(fread(OggSig, 1, 4, f_Ogg), 4);
-	CHECK_OK(fseek(f_Ogg, 25, SEEK_CUR), 0);
-	CHECK_OK(fread(VorbisSig, 1, 6, f_Ogg), 6);
-	fclose(f_Ogg);
-
-	if (strncmp(OggSig, "OggS", 4) != 0 ||
-		strncmp(VorbisSig, "vorbis", 6) != 0)
-		return false;
-	else
-		return true;
+	return true;
 }
 
-#undef CHECK_OK
+/*!
+ * Checks the file given by \p fileName for whether it is a Ogg|Vorbis
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a Ogg|Vorbis file or not
+ */
+bool oggVorbis_t::isOggVorbis(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isOggVorbis(file);
+}
 
 /*!
  * @internal

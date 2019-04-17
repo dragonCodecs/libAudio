@@ -70,7 +70,19 @@ public:
 
 struct oggVorbis_t final : public audioFile_t
 {
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
 public:
+	oggVorbis_t() noexcept;
+	oggVorbis_t(fd_t &&fd) noexcept;
+	static oggVorbis_t *openR(const char *const fileName) noexcept;
+	static bool isOggVorbis(const char *const fileName) noexcept;
+	static bool isOggVorbis(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 };
 
