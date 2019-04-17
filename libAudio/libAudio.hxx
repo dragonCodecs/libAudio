@@ -217,6 +217,16 @@ public:
 	static bool isIT(const int32_t fd) noexcept;
 };
 
+struct modAON_t final : public moduleFile_t
+{
+public:
+	modAON_t() noexcept;
+	modAON_t(fd_t &&fd) noexcept;
+	static modAON_t *openR(const char *const fileName) noexcept;
+	static bool isAOC(const char *const fileName) noexcept;
+	static bool isAOC(const int32_t fd) noexcept;
+};
+
 struct modFC1x_t final : public moduleFile_t
 {
 public:

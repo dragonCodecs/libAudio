@@ -4,6 +4,8 @@
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
 
+modAON_t::modAON_t() noexcept : moduleFile_t{audioType_t::moduleAON, {}} { }
+
 void *AON_OpenR(const char *FileName)
 {
 	AON_Intern *ret = NULL;
