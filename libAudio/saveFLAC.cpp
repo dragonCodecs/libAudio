@@ -172,26 +172,50 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
  */
 long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen)
 {
-	if (nInBufferLen <= 0)
-		return nInBufferLen;
 	FLAC_Encoder_Context *p_FF = (FLAC_Encoder_Context *)p_FLACFile;
-	auto &ctx = *p_FF->inner.encoderContext();
-	fileInfo_t &info = p_FF->inner.fileInfo();
-	uint32_t nIBL = (nInBufferLen / (info.bitsPerSample / 8)) / info.channels;
-	int *IB = (int *)malloc(sizeof(int) * (nInBufferLen / (info.bitsPerSample / 8)));
-
-	for (uint32_t i = 0; i < nIBL * info.channels; i++)
-		IB[i] = (int)(((short *)InBuffer)[i]);
-
-	FLAC__stream_encoder_process_interleaved(ctx.streamEncoder, IB, nIBL);
-
-	free(IB);
-	return nInBufferLen;
+	return audioWriteBuffer(&p_FF->inner, InBuffer, nInBufferLen);
 }
 
-int64_t flac_t::writeBuffer(const void *const buffer, const uint32_t length)
+void flac_t::encoderContext_t::fillFrame(const int8_t *const buffer, const uint32_t samples) noexcept
 {
-	return 0;
+	for (uint32_t i = 0; i < samples; ++i)
+		encoderBuffer[i] = buffer[i];
+}
+
+void flac_t::encoderContext_t::fillFrame(const int16_t *const buffer, const uint32_t samples) noexcept
+{
+	for (uint32_t i = 0; i < samples; ++i)
+		encoderBuffer[i] = buffer[i];
+}
+
+int64_t flac_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
+{
+	const auto buffer = static_cast<const char *>(bufferPtr);
+	uint32_t offset = 0;
+	auto &ctx = *encoderContext();
+	const fileInfo_t &info = fileInfo();
+
+	if (FLAC__stream_encoder_get_state(ctx.streamEncoder) != FLAC__STREAM_ENCODER_OK)
+		return -2;
+	while (offset < length)
+	{
+		const uint32_t samplesMax = (length - offset) / sizeof(int16_t);
+		const uint32_t sampleCount = std::min(uint32_t(ctx.encoderBuffer.size()), samplesMax);
+		const auto samples = buffer + offset;
+		const uint8_t bytesPerSample = info.bitsPerSample / 8;
+
+		if (info.bitsPerSample == 8)
+			ctx.fillFrame(reinterpret_cast<const int8_t *>(samples), sampleCount);
+		else
+			ctx.fillFrame(reinterpret_cast<const int16_t *>(samples), sampleCount);
+		offset += sampleCount * bytesPerSample;
+
+		if (!FLAC__stream_encoder_process_interleaved(ctx.streamEncoder,
+			ctx.encoderBuffer.data(), sampleCount / info.channels))
+			break;
+	}
+
+	return offset;
 }
 
 bool flac_t::encoderContext_t::finish() noexcept

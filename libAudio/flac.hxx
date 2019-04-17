@@ -40,7 +40,7 @@ struct flac_t::decoderContext_t final
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 	bool finish() noexcept;
-	FLAC__StreamDecoderState nextFrame() noexcept;
+	FLAC__StreamDecoderState nextFrame() noexcept WARN_UNUSED;
 };
 
 /*!
@@ -54,15 +54,13 @@ struct flac_t::encoderContext_t final
 	 * The encoder context handle
 	 */
 	FLAC__StreamEncoder *streamEncoder;
-	/*!
-	 * @internal
-	 * The input metadata in the form of a \c FileInfo structure
-	 */
-	FileInfo fileInfo;
+	std::array<int32_t, 1024> encoderBuffer;
 
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
 	bool finish() noexcept;
+	void fillFrame(const int8_t *const buffer, const uint32_t samples) noexcept;
+	void fillFrame(const int16_t *const buffer, const uint32_t samples) noexcept;
 };
 
 #endif /*FLAC__HXX*/
