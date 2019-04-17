@@ -50,11 +50,6 @@ typedef struct _WAV_Intern
 	short compression;
 	/*!
 	 * @internal
-	 * The \c FileInfo for the WAV file being decoded
-	 */
-	FileInfo *p_FI;
-	/*!
-	 * @internal
 	 * The byte possition that the final byte of the file should be at in the file,
 	 * calculated fresh from fLen and an \c ftell() call just after reading the data
 	 * for fLen
@@ -112,6 +107,23 @@ void *WAV_OpenR(const char *FileName)
 	return ret.release();
 }
 
+bool read(FILE *file, uint16_t &value) noexcept
+{
+	uint8_t data[2];
+	const size_t result = fread(data, 2, 1, file);
+	value = (uint16_t(data[1]) << 8) | data[0];
+	return result == 2;
+}
+
+bool read(FILE *file, uint32_t &value) noexcept
+{
+	uint8_t data[4];
+	const size_t result = fread(data, 4, 1, file);
+	value = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) |
+		(uint32_t(data[1]) << 8) | data[0];
+	return result == 4;
+}
+
 /*!
  * This function gets the \c FileInfo structure for an opened file
  * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
@@ -122,12 +134,13 @@ void *WAV_OpenR(const char *FileName)
 FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
+	auto &ctx = *p_WF->inner.context();
+	fileInfo_t &info = p_WF->inner.fileInfo();
 	FILE *f_WAV = p_WF->f_WAV;
-	FileInfo *ret = NULL;
 	char tmp[4];
 	int fmtLen;
 	int i;
-	auto &ctx = *p_WF->inner.context();
+	uint16_t channels, bitsPerSample;
 
 	fread(tmp, 4, 1, f_WAV);
 	while (strncmp(tmp, "fmt ", 4) != 0)
@@ -140,19 +153,17 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 
 	fread(&fmtLen, 4, 1, f_WAV);
 	if (fmtLen < 16) // Must be at least 16, probably 18.
-		return ret;
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	memset(ret, 0x00, sizeof(FileInfo));
-	p_WF->p_FI = ret;
+		return nullptr;
 
 	fread(&p_WF->compression, 2, 1, f_WAV);
 	p_WF->compression == 3 ? p_WF->usesFloat = true : p_WF->usesFloat = false;
-	fread(&ret->Channels, 2, 1, f_WAV);
-	fread(&ret->BitRate, 4, 1, f_WAV);
+	read(f_WAV, channels);
+	info.channels = channels;
+	read(f_WAV, info.bitRate);
 	fread(tmp, 4, 1, f_WAV);
 	fread(tmp, 2, 1, f_WAV);
-	fread(&ret->BitsPerSample, 2, 1, f_WAV);
+	read(f_WAV, bitsPerSample);
+	info.bitsPerSample = bitsPerSample;
 	fmtLen -= 16;
 	// Currently we do not care if the file has extra data, we're only looking to work with PCM.
 	for (i = 0; i < fmtLen; i++)
@@ -167,15 +178,15 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 		fread(tmp, 4, 1, f_WAV);
 	}
 	fread(&p_WF->DataEnd, 4, 1, f_WAV);
-	ret->TotalTime = p_WF->DataEnd / ret->Channels;
-	ret->TotalTime /= ret->BitsPerSample / 8;
-	ret->TotalTime /= ret->BitRate;
+	info.totalTime = p_WF->DataEnd / info.channels;
+	info.totalTime /= info.bitsPerSample / 8;
+	info.totalTime /= info.bitRate;
 	p_WF->DataEnd += ftell(f_WAV);
 
 	if (ExternalPlayback == 0)
-		p_WF->inner.player(makeUnique<playback_t>(p_WAVFile, WAV_FillBuffer, ctx.playbackBuffer, 8192, ret));
+		p_WF->inner.player(makeUnique<playback_t>(p_WAVFile, WAV_FillBuffer, ctx.playbackBuffer, 8192, info));
 
-	return ret;
+	return audioFileInfo(&p_WF->inner);
 }
 
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
@@ -214,17 +225,18 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
 	FILE *f_WAV = p_WF->f_WAV;
 	int ret = 0;
+	const fileInfo_t &info = p_WF->inner.fileInfo();
 
 	if (feof(f_WAV) != FALSE || ftell(f_WAV) >= p_WF->DataEnd)
 		return -2;
 	// 16-bit short reader
-	if (p_WF->usesFloat == false && p_WF->p_FI->BitsPerSample == 16)
+	if (p_WF->usesFloat == false && info.bitsPerSample == 16)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 			ret += fread(OutBuffer + ret, 1, 2, f_WAV);
 	}
 	// 8-bit char reader
-	else if (p_WF->usesFloat == false && p_WF->p_FI->BitsPerSample == 8)
+	else if (p_WF->usesFloat == false && info.bitsPerSample == 8)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -236,7 +248,7 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 		}
 	}
 	// 32-bit float reader
-	else if (p_WF->usesFloat == true && p_WF->p_FI->BitsPerSample == 32)
+	else if (p_WF->usesFloat == true && info.bitsPerSample == 32)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -250,7 +262,7 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 		}
 	}
 	// 32-bit int reader
-	else if (p_WF->usesFloat == false && p_WF->p_FI->BitsPerSample == 32)
+	else if (p_WF->usesFloat == false && info.bitsPerSample == 32)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -260,7 +272,7 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 		}
 	}
 	// 24-bit int reader
-	else if (p_WF->usesFloat == false && p_WF->p_FI->BitsPerSample == 24)
+	else if (p_WF->usesFloat == false && info.bitsPerSample == 24)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -271,7 +283,7 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 		}
 	}
 	// 24-bit float reader
-	else if (p_WF->usesFloat == true && p_WF->p_FI->BitsPerSample == 24)
+	else if (p_WF->usesFloat == true && info.bitsPerSample == 24)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
