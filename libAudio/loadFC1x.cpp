@@ -8,16 +8,41 @@ modFC1x_t::modFC1x_t() noexcept : moduleFile_t{audioType_t::moduleFC1x, {}} { }
 
 void *FC1x_OpenR(const char *FileName)
 {
-	FILE *f_FC1x = NULL;
-
 	std::unique_ptr<FC1x_Intern> ret = makeUnique<FC1x_Intern>();
 	if (ret == nullptr)
 		return nullptr;
 
-	f_FC1x = fopen(FileName, "rb");
-	if (f_FC1x == NULL)
+	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
+
+	FILE *f_FC1x = fopen(FileName, "rb");
+	if (f_FC1x == nullptr)
 		return f_FC1x;
 	ret->f_Module = f_FC1x;
+
+	info.bitRate = 44100;
+	info.bitsPerSample = 16;
+	try { ctx.mod = makeUnique<ModuleFile>(ret.get()); }
+	catch (const ModuleLoaderError &e)
+	{
+		printf("%s\n", e.error());
+		return nullptr;
+	}
+	catch (ModuleLoaderError *e)
+	{
+		printf("%s\n", e->error());
+		delete e;
+		return nullptr;
+	}
+	info.title = ctx.mod->title();
+	info.channels = ctx.mod->channels();
+
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			ret->inner.player(makeUnique<playback_t>(ret.get(), FC1x_FillBuffer, ret->buffer, 8192, info));
+		ctx.mod->InitMixer(FC1x_GetFileInfo(ret.get()));
+	}
 
 	return ret.release();
 }
@@ -25,39 +50,7 @@ void *FC1x_OpenR(const char *FileName)
 FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
-	FileInfo *ret = NULL;
-
-	if (p_FF == NULL)
-		return ret;
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-	p_FF->p_FI = ret;
-
-	ret->BitRate = 44100;
-	ret->BitsPerSample = 16;
-	try
-	{
-		p_FF->p_File = new ModuleFile(p_FF);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		return NULL;
-	}
-	ret->Title = p_FF->p_File->title().release();
-	ret->Channels = p_FF->p_File->channels();
-
-	if (ToPlayback)
-	{
-		if (ExternalPlayback == 0)
-			p_FF->inner.player(makeUnique<playback_t>(p_FC1xFile, FC1x_FillBuffer, p_FF->buffer, 8192, ret));
-		p_FF->p_File->InitMixer(ret);
-	}
-
-	return ret;
+	return audioFileInfo(&p_FF->inner);
 }
 
 long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen)
@@ -66,9 +59,10 @@ long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen)
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
 	if (p_FF->p_File == NULL)
 		return -1;
+	auto &ctx = *p_FF->inner.context();
 	do
 	{
-		Read = p_FF->p_File->Mix(p_FF->buffer, nOutBufferLen - ret);
+		Read = ctx.mod->Mix(p_FF->buffer, nOutBufferLen - ret);
 		if (Read >= 0 && OutBuffer != p_FF->buffer)
 			memcpy(OutBuffer + ret, p_FF->buffer, Read);
 		if (Read >= 0)
