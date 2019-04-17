@@ -24,6 +24,12 @@ struct oggVorbis_t::decoderContext_t final
 	 * file being decoded
 	 */
 	OggVorbis_File decoder;
+	/*!
+	 * @internal
+	 * The internal decoded data buffer
+	 */
+	uint8_t playbackBuffer[8192];
+	bool eof;
 
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
@@ -31,17 +37,11 @@ struct oggVorbis_t::decoderContext_t final
 
 typedef struct _OggVorbis_Intern
 {
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t buffer[8192];
-
 	oggVorbis_t inner;
 } OggVorbis_Intern;
 
 oggVorbis_t::oggVorbis_t() noexcept : audioFile_t(audioType_t::oggVorbis, {}), ctx(makeUnique<decoderContext_t>()) { }
-oggVorbis_t::decoderContext_t::decoderContext_t() noexcept { }
+oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -59,6 +59,7 @@ void *OggVorbis_OpenR(const char *FileName)
 	if (!ret || !ret->inner.context())
 		return nullptr;
 	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
 
 	ov_callbacks callbacks;
 	callbacks.close_func = (int (__CDECL__ *)(void *))fclose;
@@ -66,6 +67,8 @@ void *OggVorbis_OpenR(const char *FileName)
 	callbacks.seek_func = fseek_wrapper;
 	callbacks.tell_func = (long (__CDECL__ *)(void *))ftell;
 	ov_open_callbacks(f_Ogg, &ctx.decoder, NULL, 0, callbacks);
+
+	info.bitsPerSample = 16;
 
 	return ret.release();
 }
@@ -153,7 +156,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
 	}
 
 	if (ExternalPlayback == 0)
-		p_VF->inner.player(makeUnique<playback_t>(p_VorbisFile, OggVorbis_FillBuffer, p_VF->buffer, 8192, ret));
+		p_VF->inner.player(makeUnique<playback_t>(p_VorbisFile, OggVorbis_FillBuffer, ctx.playbackBuffer, 8192, ret));
 
 	return ret;
 }
@@ -171,23 +174,32 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
  */
 long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	int bitstream = 0;
 	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	auto &ctx = *p_VF->inner.context();
-	long ret = 0;
-	long readtot = 1;
-
-	while (readtot != OV_HOLE && readtot != OV_EBADLINK && ret < nOutBufferLen && readtot != 0)
-	{
-		readtot = ov_read(&ctx.decoder, (char *)OutBuffer + ret, nOutBufferLen - ret, 0, 2, 1, &bitstream);
-		if (0 < readtot)
-			ret += readtot;
-	}
-
-	return ret;
+	return audioFillBuffer(&p_VF->inner, OutBuffer, nOutBufferLen);
 }
 
-int64_t oggVorbis_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
+int64_t oggVorbis_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	auto buffer = static_cast<char *>(bufferPtr);
+	uint32_t offset = 0;
+	const fileInfo_t &info = fileInfo();
+	auto &ctx = *context();
+
+	if (ctx.eof)
+		return -2;
+	while (offset < length && !ctx.eof)
+	{
+		const long result = ov_read(&ctx.decoder, buffer + offset, length - offset,
+			0, info.bitsPerSample / 8, 1, nullptr);
+		if (result > 0)
+			offset += uint32_t(result);
+		else if (result == OV_HOLE || result == OV_EBADLINK)
+			return -1;
+		else if (result == 0)
+			ctx.eof = true;
+	}
+	return offset;
+}
 
 oggVorbis_t::decoderContext_t::~decoderContext_t() noexcept
 	{ ov_clear(&decoder); }
