@@ -49,11 +49,6 @@ typedef struct _WAV_Intern
 	uint8_t buffer[8192];
 	/*!
 	 * @internal
-	 * The playback class instance for the WAV file
-	 */
-	playback_t *p_Playback;
-	/*!
-	 * @internal
 	 * The \c FileInfo for the WAV file being decoded
 	 */
 	FileInfo *p_FI;
@@ -176,7 +171,7 @@ FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 	p_WF->DataEnd += ftell(f_WAV);
 
 	if (ExternalPlayback == 0)
-		p_WF->p_Playback = new playback_t(p_WAVFile, WAV_FillBuffer, p_WF->buffer, 8192, ret);
+		p_WF->inner.player(makeUnique<playback_t>(p_WAVFile, WAV_FillBuffer, p_WF->buffer, 8192, ret));
 
 	return ret;
 }
@@ -196,11 +191,7 @@ int WAV_CloseFileR(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
 	FILE *f_WAV = p_WF->f_WAV;
-	int ret;
-
-	delete p_WF->p_Playback;
-
-	ret = fclose(f_WAV);
+	int ret = fclose(f_WAV);
 	delete p_WF;
 	return ret;
 }
@@ -310,22 +301,19 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length) { return -1
 void WAV_Play(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-
-	p_WF->p_Playback->play();
+	p_WF->inner.play();
 }
 
 void WAV_Pause(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-
-	p_WF->p_Playback->pause();
+	p_WF->inner.pause();
 }
 
 void WAV_Stop(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-
-	p_WF->p_Playback->stop();
+	p_WF->inner.stop();
 }
 
 /*!
