@@ -145,75 +145,83 @@ aac_t::decoderContext_t::~decoderContext_t() noexcept
  */
 int AAC_CloseFileR(void *p_AACFile) { return audioCloseFile(p_AACFile); }
 
-/*!
- * @internal
- * Internal structure used to read the AAC bitstream so that packets
- * of data can be sent into FAAD2 correctly as packets so to ease the
- * job of decoding
- */
-struct bitStream_t final
+namespace libAudio
 {
-private:
-	/*!
-	 * @internal
-	 * The data buffer being used as a bitstream
-	 */
-	uint8_t *data;
-	/*!
-	 * @internal
-	 * The total number of bits available in the buffer
-	 */
-	uint64_t bitTotal;
-	/*!
-	 * @internal
-	 * The index of the current bit relative to the total
-	 *   number of bits available in the buffer
-	 */
-	uint64_t currentBit;
-
-public:
-	/*!
-	* @internal
-	* Internal function used to open a buffer as a bitstream
-	* @param bufferLen The length of the buffer to be used
-	* @param buffer The buffer to be used
-	*/
-	bitStream_t(uint8_t *const buffer, const uint32_t bufferLen) noexcept :
-		data{buffer}, bitTotal{bufferLen * 8}, currentBit{0} { }
-
-	template<typename T, size_t N> bitStream_t(std::array<T, N> &buffer) noexcept :
-		bitStream_t(reinterpret_cast<uint8_t *>(buffer.data()), buffer.size()) { }
-
-	/*!
-	* @internal
-	* Internal function used to get the next \p NumBits bits sequentially from the bitstream
-	* @param bitCount The number of bits to get
-	*/
-	uint64_t value(const uint32_t bitCount) noexcept
+	namespace aac
 	{
-		uint64_t result = 0;
-		for (uint32_t num = 0; num < bitCount; ++num)
+		/*!
+		* @internal
+		* Internal structure used to read the AAC bitstream so that packets
+		* of data can be sent into FAAD2 correctly as packets so to ease the
+		* job of decoding
+		*/
+		struct bitStream_t final
 		{
-			const uint32_t byte = currentBit / 8;
-			const uint32_t bit = 7 - (currentBit % 8);
-			result <<= 1;
-			const uint8_t value = data[byte] & (1 << bit);
-			result += value >> bit;
-			++currentBit;
-			if (currentBit == bitTotal)
-				break;
-		}
-		return result;
-	}
+		private:
+			/*!
+			* @internal
+			* The data buffer being used as a bitstream
+			*/
+			uint8_t *data;
+			/*!
+			* @internal
+			* The total number of bits available in the buffer
+			*/
+			uint64_t bitTotal;
+			/*!
+			* @internal
+			* The index of the current bit relative to the total
+			*   number of bits available in the buffer
+			*/
+			uint64_t currentBit;
 
-	/*!
-	* @internal
-	* Internal function used to skip a number of bits in the bitstream
-	* @param bitCount The number of bits to skip
-	*/
-	void skip(const uint32_t bitCount) noexcept
-		{ currentBit += bitCount; }
-};
+		public:
+			/*!
+			* @internal
+			* Internal function used to open a buffer as a bitstream
+			* @param bufferLen The length of the buffer to be used
+			* @param buffer The buffer to be used
+			*/
+			bitStream_t(uint8_t *const buffer, const uint32_t bufferLen) noexcept :
+				data{buffer}, bitTotal{bufferLen * 8}, currentBit{0} { }
+
+			template<typename T, size_t N> bitStream_t(std::array<T, N> &buffer) noexcept :
+				bitStream_t(reinterpret_cast<uint8_t *>(buffer.data()), buffer.size()) { }
+
+			/*!
+			* @internal
+			* Internal function used to get the next \p NumBits bits sequentially from the bitstream
+			* @param bitCount The number of bits to get
+			*/
+			uint64_t value(const uint32_t bitCount) noexcept
+			{
+				uint64_t result = 0;
+				for (uint32_t num = 0; num < bitCount; ++num)
+				{
+					const uint32_t byte = currentBit / 8;
+					const uint32_t bit = 7 - (currentBit % 8);
+					result <<= 1;
+					const uint8_t value = data[byte] & (1 << bit);
+					result += value >> bit;
+					++currentBit;
+					if (currentBit == bitTotal)
+						break;
+				}
+				return result;
+			}
+
+			/*!
+			* @internal
+			* Internal function used to skip a number of bits in the bitstream
+			* @param bitCount The number of bits to skip
+			*/
+			void skip(const uint32_t bitCount) noexcept
+				{ currentBit += bitCount; }
+		};
+	}
+}
+
+using namespace libAudio;
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -240,7 +248,7 @@ uint8_t *aac_t::nextFrame() noexcept
 		ctx.eof = file.isEOF();
 		return nullptr;
 	}
-	bitStream_t stream{frameHeader};
+	aac::bitStream_t stream{frameHeader};
 	const uint16_t read = uint16_t(stream.value(12));
 	if (read != 0xFFF)
 	{
