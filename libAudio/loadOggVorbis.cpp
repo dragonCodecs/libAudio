@@ -38,9 +38,42 @@ struct oggVorbis_t::decoderContext_t final
 typedef struct _OggVorbis_Intern
 {
 	oggVorbis_t inner;
+
+	_OggVorbis_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
 } OggVorbis_Intern;
 
-oggVorbis_t::oggVorbis_t() noexcept : audioFile_t(audioType_t::oggVorbis, {}), ctx(makeUnique<decoderContext_t>()) { }
+namespace libAudio
+{
+	namespace oggVorbis
+	{
+		size_t read(void *buffer, size_t size, size_t count, void *filePtr)
+		{
+			const auto file = static_cast<const oggVorbis_t *>(filePtr);
+			size_t bytes = 0;
+			const bool result = file->fd().read(buffer, size * count, bytes);
+			if (result)
+				return bytes;
+			return 0;
+		}
+
+		int seek(void *filePtr, int64_t offset, int whence)
+		{
+			const auto file = static_cast<const oggVorbis_t *>(filePtr);
+			return file->fd().seek(offset, whence);
+		}
+
+		long tell(void *filePtr)
+		{
+			const auto file = static_cast<const oggVorbis_t *>(filePtr);
+			return file->fd().tell();
+		}
+	}
+}
+
+using namespace libAudio;
+
+oggVorbis_t::oggVorbis_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggVorbis, std::move(fd)),
+	ctx(makeUnique<decoderContext_t>()) { }
 oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
 /*!
@@ -51,22 +84,18 @@ oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playback
  */
 void *OggVorbis_OpenR(const char *FileName)
 {
-	FILE *f_Ogg = fopen(FileName, "rb");
-	if (f_Ogg == NULL)
-		return nullptr;
-
-	auto ret = makeUnique<OggVorbis_Intern>();
+	auto ret = makeUnique<OggVorbis_Intern>(FileName);
 	if (!ret || !ret->inner.context())
 		return nullptr;
 	auto &ctx = *ret->inner.context();
 	fileInfo_t &info = ret->inner.fileInfo();
 
 	ov_callbacks callbacks;
-	callbacks.close_func = (int (__CDECL__ *)(void *))fclose;
-	callbacks.read_func = (size_t (__CDECL__ *)(void *, size_t, size_t, void *))fread;
-	callbacks.seek_func = fseek_wrapper;
-	callbacks.tell_func = (long (__CDECL__ *)(void *))ftell;
-	ov_open_callbacks(f_Ogg, &ctx.decoder, NULL, 0, callbacks);
+	callbacks.close_func = nullptr;
+	callbacks.read_func = oggVorbis::read;
+	callbacks.seek_func = oggVorbis::seek;
+	callbacks.tell_func = oggVorbis::tell;
+	ov_open_callbacks(&ret->inner, &ctx.decoder, NULL, 0, callbacks);
 
 	info.bitsPerSample = 16;
 

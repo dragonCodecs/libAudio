@@ -75,7 +75,6 @@ private:
 	std::unique_ptr<decoderContext_t> ctx;
 
 public:
-	oggVorbis_t() noexcept;
 	oggVorbis_t(fd_t &&fd) noexcept;
 	static oggVorbis_t *openR(const char *const fileName) noexcept;
 	static bool isOggVorbis(const char *const fileName) noexcept;
