@@ -16,6 +16,12 @@
  * @internal
  * Internal structure for holding the decoding context for a given Ogg|Vorbis file
  */
+struct oggVorbis_t::decoderContext_t final
+{
+	decoderContext_t() noexcept;
+	~decoderContext_t() noexcept;
+};
+
 typedef struct _OggVorbis_Intern
 {
 	/*!
@@ -34,7 +40,12 @@ typedef struct _OggVorbis_Intern
 	 * The playback class instance for the Ogg|Vorbis file
 	 */
 	playback_t *p_Playback;
+
+	oggVorbis_t inner;
 } OggVorbis_Intern;
+
+oggVorbis_t::oggVorbis_t() noexcept : audioFile_t(audioType_t::oggVorbis, {}), ctx(makeUnique<decoderContext_t>()) { }
+oggVorbis_t::decoderContext_t::decoderContext_t() noexcept { }
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -179,6 +190,10 @@ long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBuffer
 
 	return ret;
 }
+
+int64_t oggVorbis_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
+
+oggVorbis_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!
  * Closes an opened audio file
