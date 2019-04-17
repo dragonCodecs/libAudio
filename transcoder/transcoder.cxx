@@ -32,7 +32,7 @@ const std::map<std::string, uint8_t> typeMap
 
 uint8_t mapType(std::string typeName)
 {
-	std::transform(typeName.begin(), typeName.end(), typeName.begin(), ::tolower);
+	std::transform(typeName.begin(), typeName.end(), typeName.begin(), ::toupper);
 	const auto entry = typeMap.find(typeName);
 	if (entry == typeMap.end())
 		return AUDIO_OGG_VORBIS;
