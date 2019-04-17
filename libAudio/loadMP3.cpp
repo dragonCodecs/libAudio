@@ -296,7 +296,7 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
-int MP3_CloseFileR(void *p_MP3File) { return audioCloseFileR(p_MP3File); }
+int MP3_CloseFileR(void *p_MP3File) { return audioCloseFile(p_MP3File); }
 
 /*!
  * @internal
@@ -506,7 +506,7 @@ API_Functions MP3Decoder =
 	MP3_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

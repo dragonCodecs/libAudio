@@ -302,7 +302,7 @@ flac_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int FLAC_CloseFileR(void *p_FLACFile) { return audioCloseFileR(p_FLACFile); }
+int FLAC_CloseFileR(void *p_FLACFile) { return audioCloseFile(p_FLACFile); }
 
 FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
 {
@@ -421,7 +421,7 @@ API_Functions FLACDecoder =
 	FLAC_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

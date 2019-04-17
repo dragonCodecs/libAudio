@@ -1,5 +1,5 @@
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 /*!
  * @internal
@@ -49,6 +49,8 @@ libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type)
 		M4A_SetFileInfo(p_AudioPtr, p_FI);
 }
 
+void audioFile_t::fileInfo(const FileInfo &) { }
+
 /*!
  * This function writes a buffer of audio to an opened file
  * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenW()
@@ -69,6 +71,16 @@ libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nIn
 	else
 		return -2;
 }
+
+long audioWriteBuffer(void *audioFile, uint8_t *buffer, int length)
+{
+	const auto file = static_cast<audioFile_t *>(audioFile);
+	if (!file)
+		return 0;
+	return file->writeBuffer(static_cast<void *>(buffer), uint32_t(length));
+}
+
+int64_t audioFile_t::writeBuffer(const void *const, const uint32_t) { return 0; }
 
 /*!
  * Closes an opened audio file

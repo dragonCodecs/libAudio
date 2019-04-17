@@ -51,7 +51,7 @@ FileInfo *IT_GetFileInfo(void *p_ITFile)
 	{ return audioFileInfo(p_ITFile); }
 long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_ITFile, OutBuffer, nOutBufferLen); }
-int IT_CloseFileR(void *p_ITFile) { return audioCloseFileR(p_ITFile); }
+int IT_CloseFileR(void *p_ITFile) { return audioCloseFile(p_ITFile); }
 void IT_Play(void *p_ITFile) { audioPlay(p_ITFile); }
 void IT_Pause(void *p_ITFile) { audioPause(p_ITFile); }
 void IT_Stop(void *p_ITFile) { audioStop(p_ITFile); }
@@ -80,7 +80,7 @@ API_Functions ITDecoder =
 	IT_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

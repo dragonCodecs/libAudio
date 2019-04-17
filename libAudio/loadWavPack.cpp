@@ -257,7 +257,7 @@ wavPack_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_WVPFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int WavPack_CloseFileR(void *p_WVPFile) { return audioCloseFileR(p_WVPFile); }
+int WavPack_CloseFileR(void *p_WVPFile) { return audioCloseFile(p_WVPFile); }
 
 void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
 {
@@ -381,7 +381,7 @@ API_Functions WavPackDecoder =
 	WavPack_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

@@ -287,7 +287,7 @@ mpc_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int MPC_CloseFileR(void *p_MPCFile) { return audioCloseFileR(p_MPCFile); }
+int MPC_CloseFileR(void *p_MPCFile) { return audioCloseFile(p_MPCFile); }
 
 /*!
  * Plays an opened MPC file using OpenAL on the default audio device
@@ -362,7 +362,7 @@ API_Functions MPCDecoder =
 	MPC_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

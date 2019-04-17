@@ -49,7 +49,7 @@ FileInfo *S3M_GetFileInfo(void *p_S3MFile)
 	{ return audioFileInfo(p_S3MFile); }
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_S3MFile, OutBuffer, nOutBufferLen); }
-int S3M_CloseFileR(void *p_S3MFile) { return audioCloseFileR(p_S3MFile); }
+int S3M_CloseFileR(void *p_S3MFile) { return audioCloseFile(p_S3MFile); }
 void S3M_Play(void *p_S3MFile) { audioPlay(p_S3MFile); }
 void S3M_Pause(void *p_S3MFile) { audioPause(p_S3MFile); }
 void S3M_Stop(void *p_S3MFile) { audioStop(p_S3MFile); }
@@ -85,7 +85,7 @@ API_Functions S3MDecoder =
 	S3M_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

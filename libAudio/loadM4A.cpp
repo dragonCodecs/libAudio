@@ -290,7 +290,7 @@ m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  * to destroy it via scope
  * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
-int M4A_CloseFileR(void *p_M4AFile) { return audioCloseFileR(p_M4AFile); }
+int M4A_CloseFileR(void *p_M4AFile) { return audioCloseFile(p_M4AFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -432,7 +432,7 @@ API_Functions M4ADecoder =
 	M4A_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

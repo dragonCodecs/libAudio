@@ -50,7 +50,7 @@ FileInfo *MOD_GetFileInfo(void *p_MODFile)
 	{ return audioFileInfo(p_MODFile); }
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_MODFile, OutBuffer, nOutBufferLen); }
-int MOD_CloseFileR(void *p_MODFile) { return audioCloseFileR(p_MODFile); }
+int MOD_CloseFileR(void *p_MODFile) { return audioCloseFile(p_MODFile); }
 void MOD_Play(void *p_MODFile) { audioPlay(p_MODFile); }
 void MOD_Pause(void *p_MODFile) { audioPause(p_MODFile); }
 void MOD_Stop(void *p_MODFile) { audioStop(p_MODFile); }
@@ -99,7 +99,7 @@ API_Functions MODDecoder =
 	MOD_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

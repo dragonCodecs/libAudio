@@ -143,7 +143,7 @@ aac_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int AAC_CloseFileR(void *p_AACFile) { return audioCloseFileR(p_AACFile); }
+int AAC_CloseFileR(void *p_AACFile) { return audioCloseFile(p_AACFile); }
 
 /*!
  * @internal
@@ -379,7 +379,7 @@ API_Functions AACDecoder =
 	AAC_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop

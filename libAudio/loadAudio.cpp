@@ -166,7 +166,7 @@ int Audio_CloseFileR(void *p_AudioPtr)
 	return API->CloseFileR(p_AudioFile);
 }
 
-int audioCloseFileR(void *audioFile)
+int audioCloseFile(void *audioFile)
 {
 	const auto file = static_cast<const audioFile_t *>(audioFile);
 	delete file;
@@ -293,6 +293,3 @@ bool Is_Audio(const char *FileName)
 
 	return false;
 }
-
-int64_t audioFile_t::writeBuffer(const void *const, const uint32_t) { return 0; }
-void audioFile_t::fileInfo(const FileInfo &) { }

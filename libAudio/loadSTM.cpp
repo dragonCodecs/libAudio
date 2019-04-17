@@ -50,7 +50,7 @@ FileInfo *STM_GetFileInfo(void *p_STMFile)
 	{ return audioFileInfo(p_STMFile); }
 long STM_FillBuffer(void *p_STMFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_STMFile, OutBuffer, nOutBufferLen); }
-int STM_CloseFileR(void *p_STMFile) { return audioCloseFileR(p_STMFile); }
+int STM_CloseFileR(void *p_STMFile) { return audioCloseFile(p_STMFile); }
 void STM_Play(void *p_STMFile) { audioPlay(p_STMFile); }
 void STM_Pause(void *p_STMFile) { audioPause(p_STMFile); }
 void STM_Stop(void *p_STMFile) { audioStop(p_STMFile); }
@@ -82,7 +82,7 @@ API_Functions STMDecoder =
 	STM_OpenR,
 	audioFileInfo,
 	audioFillBuffer,
-	audioCloseFileR,
+	audioCloseFile,
 	audioPlay,
 	audioPause,
 	audioStop
