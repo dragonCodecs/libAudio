@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <malloc.h>
 
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
@@ -15,10 +14,9 @@ void *FC1x_OpenR(const char *FileName)
 	auto &ctx = *ret->inner.context();
 	fileInfo_t &info = ret->inner.fileInfo();
 
-	FILE *f_FC1x = fopen(FileName, "rb");
-	if (f_FC1x == nullptr)
-		return f_FC1x;
-	ret->f_Module = f_FC1x;
+	ret->f_Module = fopen(FileName, "rb");
+	if (!ret->f_Module)
+		return nullptr;
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
@@ -61,12 +59,10 @@ long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 int FC1x_CloseFileR(void *p_FC1xFile)
 {
-	int ret = 0;
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
-	if (p_FF == NULL)
+	if (!p_FF)
 		return 0;
-
-	ret = fclose(p_FF->f_Module);
+	const int ret = fclose(p_FF->f_Module);
 	delete p_FF;
 	return ret;
 }
