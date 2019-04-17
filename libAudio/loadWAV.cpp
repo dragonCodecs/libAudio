@@ -73,17 +73,15 @@ typedef struct _WAV_Intern
  */
 void *WAV_OpenR(const char *FileName)
 {
-	WAV_Intern *ret = NULL;
 	char tmp[4];
+
+	std::unique_ptr<WAV_Intern> ret = makeUnique<WAV_Intern>();
+	if (!ret)
+		return nullptr;
 
 	FILE *f_WAV = fopen(FileName, "rb");
 	if (f_WAV == NULL)
-		return ret;
-
-	ret = (WAV_Intern *)malloc(sizeof(WAV_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(WAV_Intern));
+		return nullptr;
 	ret->f_WAV = f_WAV;
 
 	fread(tmp, 4, 1, f_WAV);
@@ -104,7 +102,7 @@ void *WAV_OpenR(const char *FileName)
 	if (strncmp(tmp, "WAVE", 4) != 0)
 		return NULL;
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -190,7 +188,7 @@ int WAV_CloseFileR(void *p_WAVFile)
 	delete p_WF->p_Playback;
 
 	ret = fclose(f_WAV);
-	free(p_WF);
+	delete p_WF;
 	return ret;
 }
 
