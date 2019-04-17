@@ -40,13 +40,6 @@ struct oggVorbis_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
-typedef struct _OggVorbis_Intern
-{
-	oggVorbis_t inner;
-
-	_OggVorbis_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
-} OggVorbis_Intern;
-
 namespace libAudio
 {
 	namespace oggVorbis
@@ -105,6 +98,30 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
 	}
 }
 
+oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
+{
+	std::unique_ptr<oggVorbis_t> ovFile = makeUnique<oggVorbis_t>(fd_t(fileName, O_RDONLY | O_NOCTTY));
+	if (!ovFile || !ovFile->valid() || !isOggVorbis(ovFile->_fd))
+		return nullptr;
+	auto &ctx = *ovFile->context();
+	fileInfo_t &info = ovFile->fileInfo();
+
+	ov_callbacks callbacks;
+	callbacks.close_func = nullptr;
+	callbacks.read_func = oggVorbis::read;
+	callbacks.seek_func = oggVorbis::seek;
+	callbacks.tell_func = oggVorbis::tell;
+	ov_open_callbacks(ovFile.get(), &ctx.decoder, NULL, 0, callbacks);
+
+	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
+	info.bitRate = vorbisInfo.rate;
+	info.channels = vorbisInfo.channels;
+	info.bitsPerSample = 16;
+	copyComments(info, *ov_comment(&ctx.decoder, -1));
+
+	return ovFile.release();
+}
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggVorbis_* functions
@@ -113,29 +130,16 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
  */
 void *OggVorbis_OpenR(const char *FileName)
 {
-	auto ret = makeUnique<OggVorbis_Intern>(FileName);
-	if (!ret || !ret->inner.context())
+	std::unique_ptr<oggVorbis_t> file(oggVorbis_t::openR(FileName));
+	if (!file)
 		return nullptr;
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
-
-	ov_callbacks callbacks;
-	callbacks.close_func = nullptr;
-	callbacks.read_func = oggVorbis::read;
-	callbacks.seek_func = oggVorbis::seek;
-	callbacks.tell_func = oggVorbis::tell;
-	ov_open_callbacks(&ret->inner, &ctx.decoder, NULL, 0, callbacks);
-
-	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
-	info.bitRate = vorbisInfo.rate;
-	info.channels = vorbisInfo.channels;
-	info.bitsPerSample = 16;
-	copyComments(info, *ov_comment(&ctx.decoder, -1));
+	auto &ctx = *file->context();
+	const fileInfo_t &info = file->fileInfo();
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret.get(), OggVorbis_FillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
-	return ret.release();
+	return file.release();
 }
 
 /*!
@@ -145,11 +149,7 @@ void *OggVorbis_OpenR(const char *FileName)
  * @warning This function must be called before using \c OggVorbis_Play() or \c OggVorbis_FillBuffer()
  * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
-{
-	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	return audioFileInfo(&p_VF->inner);
-}
+FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileInfo(p_VorbisFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -163,10 +163,7 @@ FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile)
  * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	return audioFillBuffer(&p_VF->inner, OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_VorbisFile, OutBuffer, nOutBufferLen); }
 
 int64_t oggVorbis_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -203,12 +200,7 @@ oggVorbis_t::decoderContext_t::~decoderContext_t() noexcept
  * to destroy it via scope
  * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int OggVorbis_CloseFileR(void *p_VorbisFile)
-{
-	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	delete p_VF;
-	return 0;
-}
+int OggVorbis_CloseFileR(void *p_VorbisFile) { return audioCloseFile(p_VorbisFile); }
 
 /*!
  * Plays an opened Ogg|Vorbis file using OpenAL on the default audio device
@@ -221,23 +213,9 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
  * @bug Futher to the \p p_VorbisFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void OggVorbis_Play(void *p_VorbisFile)
-{
-	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	p_VF->inner.play();
-}
-
-void OggVorbis_Pause(void *p_VorbisFile)
-{
-	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	p_VF->inner.pause();
-}
-
-void OggVorbis_Stop(void *p_VorbisFile)
-{
-	OggVorbis_Intern *p_VF = (OggVorbis_Intern *)p_VorbisFile;
-	p_VF->inner.stop();
-}
+void OggVorbis_Play(void *p_VorbisFile) { return audioPlay(p_VorbisFile); }
+void OggVorbis_Pause(void *p_VorbisFile) { return audioPause(p_VorbisFile); }
+void OggVorbis_Stop(void *p_VorbisFile) { return audioStop(p_VorbisFile); }
 
 /*!
  * Checks the file given by \p FileName for whether it is an Ogg|Vorbis
