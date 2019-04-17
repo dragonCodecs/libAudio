@@ -8,7 +8,7 @@ modFC1x_t::modFC1x_t() noexcept : moduleFile_t{audioType_t::moduleFC1x, {}} { }
 void *FC1x_OpenR(const char *FileName)
 {
 	std::unique_ptr<FC1x_Intern> ret = makeUnique<FC1x_Intern>();
-	if (ret == nullptr)
+	if (!ret)
 		return nullptr;
 
 	auto &ctx = *ret->inner.context();
