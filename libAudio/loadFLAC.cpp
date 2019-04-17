@@ -188,7 +188,7 @@ namespace libAudio
 					const FLAC__StreamMetadata_VorbisComment &comments = p_metadata->data.vorbis_comment;
 					for (uint32_t i = 0; i < comments.num_comments; ++i)
 					{
-						auto comment = reinterpret_cast<const char *const>(comments.comments[i].entry);
+						const auto comment = reinterpret_cast<const char *>(comments.comments[i].entry);
 						if (strncasecmp(comment, "title=", 6) == 0)
 							copyComment(info.title, comment + 6);
 						else if (strncasecmp(comment, "artist=", 7) == 0)
