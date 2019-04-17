@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <array>
+#include <algorithm>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
@@ -29,8 +30,9 @@ const std::map<std::string, uint8_t> typeMap
 	{"WMA", AUDIO_WMA}
 };
 
-uint8_t mapType(const std::string typeName)
+uint8_t mapType(std::string typeName)
 {
+	std::transform(typeName.begin(), typeName.end(), typeName.begin(), ::tolower);
 	const auto entry = typeMap.find(typeName);
 	if (entry == typeMap.end())
 		return AUDIO_OGG_VORBIS;
