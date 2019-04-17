@@ -12,9 +12,41 @@ void *AON_OpenR(const char *FileName)
 	if (!ret)
 		return nullptr;
 
+	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
+
 	ret->f_Module = fopen(FileName, "rb");
 	if (!ret->f_Module)
 		return nullptr;
+
+	info.bitRate = 44100;
+	info.bitsPerSample = 16;
+	info.channels = 2;
+	try { ctx.mod = makeUnique<ModuleFile>(ret.get()); }
+	catch (const ModuleLoaderError &e)
+	{
+		printf("%s\n", e.error());
+		return nullptr;
+	}
+	catch (ModuleLoaderError *e)
+	{
+		printf("%s\n", e->error());
+		delete e;
+		return nullptr;
+	}
+	info.title = ctx.mod->title();
+	info.artist = ctx.mod->author();
+	auto remark = ctx.mod->remark();
+	if (remark)
+		info.other.emplace_back(std::move(remark));
+	//info.channels = ctx.mod->channels();
+
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			ret->inner.player(makeUnique<playback_t>(ret.get(), AON_FillBuffer, ctx.playbackBuffer, 8192, info));
+		ctx.mod->InitMixer(AON_GetFileInfo(ret.get()));
+	}
 
 	return ret.release();
 }
@@ -22,49 +54,7 @@ void *AON_OpenR(const char *FileName)
 FileInfo *AON_GetFileInfo(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	FileInfo *ret = NULL;
-
-	if (p_AF == NULL)
-		return ret;
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-	p_AF->p_FI = ret;
-
-	ret->BitRate = 44100;
-	ret->BitsPerSample = 16;
-	ret->Channels = 2;
-	try
-	{
-		p_AF->p_File = new ModuleFile(p_AF);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		return NULL;
-	}
-	ret->Title = p_AF->p_File->title().release();
-	ret->Artist = p_AF->p_File->author().release();
-	{
-		const char *Remark = p_AF->p_File->remark().release();
-		if (Remark != NULL)
-		{
-			ret->OtherComments.push_back(Remark);
-			ret->nOtherComments++;
-		}
-	}
-	//ret->Channels = p_AF->p_File->GetChannels();
-
-	if (ToPlayback)
-	{
-		if (ExternalPlayback == 0)
-			p_AF->p_Playback = new playback_t(p_AONFile, AON_FillBuffer, p_AF->buffer, 8192, ret);
-		p_AF->p_File->InitMixer(ret);
-	}
-
-	return ret;
+	return audioFileInfo(&p_AF->inner);
 }
 
 long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen)
@@ -87,15 +77,10 @@ long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 int AON_CloseFileR(void *p_AONFile)
 {
-	int ret = 0;
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 	if (p_AF == NULL)
 		return 0;
-
-	delete p_AF->p_Playback;
-	delete p_AF->p_File;
-
-	ret = fclose(p_AF->f_Module);
+	const int ret = fclose(p_AF->f_Module);
 	delete p_AF;
 	return ret;
 }
@@ -103,22 +88,19 @@ int AON_CloseFileR(void *p_AONFile)
 void AON_Play(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-
-	p_AF->p_Playback->play();
+	p_AF->inner.play();
 }
 
 void AON_Pause(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-
-	p_AF->p_Playback->pause();
+	p_AF->inner.pause();
 }
 
 void AON_Stop(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-
-	p_AF->p_Playback->stop();
+	p_AF->inner.stop();
 }
 
 bool Is_AON(const char *FileName)
