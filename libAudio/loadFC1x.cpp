@@ -114,21 +114,26 @@ void FC1x_Stop(void *p_FC1xFile)
 	p_FF->p_Playback->stop();
 }
 
-bool Is_FC1x(const char *FileName)
+bool Is_FC1x(const char *FileName) { return modFC1x_t::isFC1x(FileName); }
+
+bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 {
-	FILE *f_FC1x = fopen(FileName, "rb");
-	char FC1xMagic[4];
-	if (f_FC1x == NULL)
+	char fc1xMagic[4];
+	if (fd == -1 ||
+		read(fd, fc1xMagic, 4) != 4 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
+		(strncmp(fc1xMagic, "SMOD", 4) != 0 &&
+		strncmp(fc1xMagic, "FC14", 4) != 0))
 		return false;
+	return true;
+}
 
-	// TODO: Improve this test!
-	fread(FC1xMagic, 4, 1, f_FC1x);
-	fclose(f_FC1x);
-
-	if (strncmp(FC1xMagic, "SMOD", 4) == 0 || strncmp(FC1xMagic, "FC14", 4) == 0)
-		return true;
-	else
+bool modFC1x_t::isFC1x(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
 		return false;
+	return isFC1x(file);
 }
 
 API_Functions FC1xDecoder =
