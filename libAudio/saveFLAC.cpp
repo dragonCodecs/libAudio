@@ -83,7 +83,8 @@ using namespace libAudio;
 
 flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
 	encoderCtx{makeUnique<encoderContext_t>()} { }
-flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()}
+flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()},
+	encoderBuffer{}, metadata{}
 {
 	FLAC__stream_encoder_set_compression_level(streamEncoder, 4);
 	//FLAC__stream_encoder_set_loose_mid_side_stereo(streamEncoder, true);
@@ -139,8 +140,7 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
 	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, fileInfo.BitsPerSample);
 	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, fileInfo.BitRate);
 
-	std::array<FLAC__StreamMetadata *, 2> metadata
-	{
+	ctx.metadata = {
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT),
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)
 	};
@@ -148,13 +148,13 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
 	{
 		entry.entry = (uint8_t *)fileInfo.OtherComments[i];
 		entry.length = strlen(fileInfo.OtherComments[i]);
-		FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, true);
+		FLAC__metadata_object_vorbiscomment_append_comment(ctx.metadata[0], entry, true);
 	}
 
-	writeComment(metadata[0], "Album", fileInfo.Album);
-	writeComment(metadata[0], "Artist", fileInfo.Artist);
-	writeComment(metadata[0], "Title", fileInfo.Title);
-	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, metadata.data(), metadata.size());
+	writeComment(ctx.metadata[0], "Album", fileInfo.Album);
+	writeComment(ctx.metadata[0], "Artist", fileInfo.Artist);
+	writeComment(ctx.metadata[0], "Title", fileInfo.Title);
+	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, ctx.metadata.data(), ctx.metadata.size());
 	FLAC__stream_encoder_init_stream(ctx.streamEncoder, flac::write, flac::seek,
 		flac::tell, nullptr, this);
 
@@ -222,6 +222,8 @@ bool flac_t::encoderContext_t::finish() noexcept
 		return true;
 	const bool result = !FLAC__stream_encoder_finish(streamEncoder);
 	FLAC__stream_encoder_delete(streamEncoder);
+	for (auto data : metadata)
+		FLAC__metadata_object_delete(data);
 	streamEncoder = nullptr;
 	return result;
 }

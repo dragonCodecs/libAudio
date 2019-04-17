@@ -55,6 +55,7 @@ struct flac_t::encoderContext_t final
 	 */
 	FLAC__StreamEncoder *streamEncoder;
 	std::array<int32_t, 1024> encoderBuffer;
+	std::array<FLAC__StreamMetadata *, 2> metadata;
 
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
