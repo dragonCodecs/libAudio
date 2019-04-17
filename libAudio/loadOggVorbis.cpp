@@ -55,25 +55,22 @@ oggVorbis_t::decoderContext_t::decoderContext_t() noexcept { }
  */
 void *OggVorbis_OpenR(const char *FileName)
 {
-	OggVorbis_Intern *ret = NULL;
-	ov_callbacks callbacks;
-
 	FILE *f_Ogg = fopen(FileName, "rb");
 	if (f_Ogg == NULL)
-		return ret;
+		return nullptr;
 
-	ret = (OggVorbis_Intern *)malloc(sizeof(OggVorbis_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(OggVorbis_Intern));
+	auto ret = makeUnique<OggVorbis_Intern>();
+	if (!ret)
+		return nullptr;
 
+	ov_callbacks callbacks;
 	callbacks.close_func = (int (__CDECL__ *)(void *))fclose;
 	callbacks.read_func = (size_t (__CDECL__ *)(void *, size_t, size_t, void *))fread;
 	callbacks.seek_func = fseek_wrapper;
 	callbacks.tell_func = (long (__CDECL__ *)(void *))ftell;
 	ov_open_callbacks(f_Ogg, &ret->ovf, NULL, 0, callbacks);
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -212,7 +209,7 @@ int OggVorbis_CloseFileR(void *p_VorbisFile)
 	delete p_VF->p_Playback;
 
 	ret = ov_clear(&p_VF->ovf);
-	free(p_VorbisFile);
+	delete p_VF;
 	return ret;
 }
 
