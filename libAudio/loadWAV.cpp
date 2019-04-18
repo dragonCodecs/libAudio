@@ -35,6 +35,7 @@ struct wav_t::decoderContext_t final
 	 * The compression flags read from the WAV file
 	 */
 	uint16_t compression;
+	uint16_t bitsPerSample;
 	/*!
 	 * @internal
 	 * A flag indicating if this WAV's data is floating point
@@ -93,26 +94,33 @@ bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 	return chunkTag == chunkName;
 }
 
+uint32_t mapBPS(const uint16_t bitsPerSample)
+{
+	if (bitsPerSample == 8)
+		return bitsPerSample;
+	return 16;
+}
+
 bool wav_t::readFormat() noexcept
 {
 	auto &ctx = *context();
 	fileInfo_t &info = fileInfo();
 	const fd_t &file = fd();
 	std::array<char, 6> unused;
-	uint16_t channels, bitsPerSample;
+	uint16_t channels;
 
 	if (!read(file, ctx.compression) ||
 		!read(file, channels) ||
 		!read(file, info.bitRate) ||
 		!file.read(unused) ||
-		!read(file, bitsPerSample) ||
+		!read(file, ctx.bitsPerSample) ||
 		!channels ||
 		!info.bitRate ||
-		!bitsPerSample ||
-		(bitsPerSample % 8))
+		!ctx.bitsPerSample ||
+		(ctx.bitsPerSample % 8))
 		return false;
 	info.channels = channels;
-	info.bitsPerSample = bitsPerSample;
+	info.bitsPerSample = mapBPS(ctx.bitsPerSample);
 	ctx.floatData = ctx.compression == 3;
 	return true;
 }
@@ -213,7 +221,7 @@ int16_t dataToSample(const std::array<uint8_t, 3> &data) noexcept
 int16_t dataToSample(const std::array<uint8_t, 4> &data) noexcept
 	{ return int16_t((uint16_t(data[3]) << 8) | data[2]); }
 
-template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffer,
+template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
 	const uint32_t length, const uint32_t sampleByteCount)
 {
 	const auto playbackBuffer = static_cast<T *>(buffer);
@@ -225,7 +233,7 @@ template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffe
 		if (!file.read(data))
 			break;
 		playbackBuffer[index] = dataToSample(data);
-		offset += N;
+		offset += sizeof(T);
 	}
 	return offset;
 }
@@ -247,7 +255,6 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 {
 	uint32_t offset = 0;
-	const fileInfo_t &info = fileInfo();
 	const fd_t &file = fd();
 	auto &ctx = *context();
 
@@ -256,17 +263,17 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 		return -2;
 	const uint32_t sampleByteCount = ctx.offsetDataLength - fileOffset;
 	// 8-bit char reader
-	if (!ctx.floatData && info.bitsPerSample == 8)
-		return readSamples<int8_t, 1>(*this, buffer, length, sampleByteCount);
+	if (!ctx.floatData && ctx.bitsPerSample == 8)
+		return readIntSamples<int8_t, 1>(*this, buffer, length, sampleByteCount);
 	// 16-bit short reader
-	else if (!ctx.floatData && info.bitsPerSample == 16)
-		return readSamples<int16_t, 2>(*this, buffer, length, sampleByteCount);
+	else if (!ctx.floatData && ctx.bitsPerSample == 16)
+		return readIntSamples<int16_t, 2>(*this, buffer, length, sampleByteCount);
 	// 24-bit int reader
-	else if (!ctx.floatData && info.bitsPerSample == 24)
-		return readSamples<int16_t, 3>(*this, buffer, length, sampleByteCount);
+	else if (!ctx.floatData && ctx.bitsPerSample == 24)
+		return readIntSamples<int16_t, 3>(*this, buffer, length, sampleByteCount);
 	// 32-bit int reader
-	else if (!ctx.floatData && info.bitsPerSample == 32)
-		return readSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
+	else if (!ctx.floatData && ctx.bitsPerSample == 32)
+		return readIntSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
 	// 32-bit float reader
 	/*else if (ctx.floatData && info.bitsPerSample == 32)
 	{
