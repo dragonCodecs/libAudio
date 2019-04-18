@@ -33,6 +33,8 @@ struct oggVorbis_t::decoderContext_t final
 
 struct oggVorbis_t::encoderContext_t final
 {
+	vorbis_info vorbisInfo;
+
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
 };
