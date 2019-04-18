@@ -145,6 +145,8 @@ bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	return true;
 }
 
+bool oggVorbis_t::fileInfo(const FileInfo &fileInfo) { return true; }
+
 /*!
  * This function writes a buffer of audio to a Ogg/Vorbis file opened being encoded
  * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenW()
