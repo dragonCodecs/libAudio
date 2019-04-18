@@ -25,6 +25,16 @@ struct wav_t::decoderContext_t final
 	 * The internal decoded data buffer
 	 */
 	uint8_t playbackBuffer[8192];
+	/*!
+	 * @internal
+	 * The byte possition where the final byte of the data chunk should be in the file
+	 */
+	uint32_t offsetDataLength;
+	/*!
+	 * @internal
+	 * A flag indicating if this WAV's data is floating point
+	 */
+	bool floatData;
 
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
@@ -37,18 +47,6 @@ typedef struct _WAV_Intern
 	 * The compression flags read from the WAV file
 	 */
 	uint16_t compression;
-	/*!
-	 * @internal
-	 * The byte possition that the final byte of the file should be at in the file,
-	 * calculated fresh from fLen and an \c ftell() call just after reading the data
-	 * for fLen
-	 */
-	uint32_t DataEnd;
-	/*!
-	 * @internal
-	 * A flag indicating if this WAV's data is floating point
-	 */
-	bool usesFloat;
 
 	wav_t inner;
 
@@ -109,6 +107,7 @@ bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 bool wav_t::readFormat(void *intern) noexcept
 {
 	auto p_WF = static_cast<WAV_Intern *>(intern);
+	auto &ctx = *context();
 	fileInfo_t &info = fileInfo();
 	const fd_t &file = fd();
 	std::array<char, 6> unused;
@@ -126,7 +125,7 @@ bool wav_t::readFormat(void *intern) noexcept
 		return false;
 	info.channels = channels;
 	info.bitsPerSample = bitsPerSample;
-	p_WF->usesFloat = p_WF->compression == 3;
+	ctx.floatData = p_WF->compression == 3;
 	return true;
 }
 
@@ -179,7 +178,7 @@ void *WAV_OpenR(const char *FileName)
 	info.totalTime = chunkLength / info.channels;
 	info.totalTime /= info.bitsPerSample / 8;
 	info.totalTime /= info.bitRate;
-	ret->DataEnd = chunkLength + file.tell();
+	ctx.offsetDataLength = chunkLength + file.tell();
 
 	if (ExternalPlayback == 0)
 		ret->inner.player(makeUnique<playback_t>(ret.get(), WAV_FillBuffer, ctx.playbackBuffer, 8192, info));
@@ -233,8 +232,6 @@ template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffe
 	const auto playbackBuffer = static_cast<T *>(buffer);
 	uint32_t offset = 0;
 	const fd_t &file = wavFile.fd();
-	printf("Reading up to %u sample bytes with max %u available ", length, sampleByteCount);
-	printf("Using %u sample size ", N);
 	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
 	{
 		std::array<uint8_t, N> data{};
@@ -243,7 +240,6 @@ template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffe
 		playbackBuffer[index] = dataToSample(data);
 		offset += N;
 	}
-	printf("Read %u samples\n", offset);
 	return offset;
 }
 
@@ -261,28 +257,34 @@ template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffe
 long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
+	return audioFillBuffer(&p_WF->inner, OutBuffer, nOutBufferLen);
+}
+
+int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
+{
 	uint32_t offset = 0;
-	const fileInfo_t &info = p_WF->inner.fileInfo();
-	const fd_t &file = p_WF->inner.fd();
+	const fileInfo_t &info = fileInfo();
+	const fd_t &file = fd();
+	auto &ctx = *context();
 
 	const off_t fileOffset = file.tell();
-	if (file.isEOF() || fileOffset == -1 || fileOffset >= p_WF->DataEnd)
+	if (file.isEOF() || fileOffset == -1 || fileOffset >= ctx.offsetDataLength)
 		return -2;
-	const uint32_t sampleByteCount = p_WF->DataEnd - fileOffset;
+	const uint32_t sampleByteCount = ctx.offsetDataLength - fileOffset;
 	// 8-bit char reader
-	if (p_WF->usesFloat == false && info.bitsPerSample == 8)
-		return readSamples<int8_t, 1>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	if (!ctx.floatData && info.bitsPerSample == 8)
+		return readSamples<int8_t, 1>(*this, buffer, length, sampleByteCount);
 	// 16-bit short reader
-	else if (p_WF->usesFloat == false && info.bitsPerSample == 16)
-		return readSamples<int16_t, 2>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	else if (!ctx.floatData && info.bitsPerSample == 16)
+		return readSamples<int16_t, 2>(*this, buffer, length, sampleByteCount);
 	// 24-bit int reader
-	else if (p_WF->usesFloat == false && info.bitsPerSample == 24)
-		return readSamples<int16_t, 3>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	else if (!ctx.floatData && info.bitsPerSample == 24)
+		return readSamples<int16_t, 3>(*this, buffer, length, sampleByteCount);
 	// 32-bit int reader
-	else if (p_WF->usesFloat == false && info.bitsPerSample == 32)
-		return readSamples<int16_t, 4>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	else if (!ctx.floatData && info.bitsPerSample == 32)
+		return readSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
 	// 32-bit float reader
-	/*else if (p_WF->usesFloat == true && info.bitsPerSample == 32)
+	/*else if (ctx.floatData && info.bitsPerSample == 32)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -296,7 +298,7 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 		}
 	}
 	// 24-bit float reader
-	else if (p_WF->usesFloat == true && info.bitsPerSample == 24)
+	else if (ctx.floatData && info.bitsPerSample == 24)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -311,8 +313,6 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 
 	return offset;
 }
-
-int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
 
 /*!
  * Plays an opened WAV file using OpenAL on the default audio device
