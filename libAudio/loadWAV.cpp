@@ -217,12 +217,12 @@ int16_t dataToSample(const std::array<uint8_t, 3> &data) noexcept
 	{ return int16_t((uint16_t(data[2]) << 8) | data[1]); }
 int16_t dataToSample(const std::array<uint8_t, 4> &data) noexcept
 	{ return int16_t((uint16_t(data[3]) << 8) | data[2]); }
-
+const float *asFloat(const void *value) noexcept { return reinterpret_cast<const float *>(value); }
 float dataToFloat(const std::array<uint8_t, 4> &data) noexcept
 {
 	const uint32_t value = (uint32_t(data[3]) << 24) |
 		(uint32_t(data[2]) << 16) | (uint32_t(data[1]) << 8) | data[0];
-	return *reinterpret_cast<const float *>(&value);
+	return *asFloat(&value);
 }
 
 template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
