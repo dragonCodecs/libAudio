@@ -8,11 +8,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libAudio_TestApp", "libAudi
 		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F} = {DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libAudio_ReEncode_Ogg", "libAudio_ReEncode_Ogg\libAudio_ReEncode_Ogg.vcproj", "{3C0C8A09-DCB1-4CC1-B759-AA027A051D19}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F} = {DEEC9109-4F5E-47FB-86F3-A5A1AB4DEE3F}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WMADemux", "WMADemux\WMADemux.vcproj", "{2F669329-A908-4D81-8C2C-ABE52459DF1E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WMADecode", "WMADecode\WMADecode.vcproj", "{D81D3F40-5D02-4192-B592-97A0F2F16CE9}"
