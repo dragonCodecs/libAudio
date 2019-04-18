@@ -83,9 +83,13 @@ bool modS3M_t::isS3M(const char *const fileName) noexcept
 API_Functions S3MDecoder =
 {
 	S3M_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop

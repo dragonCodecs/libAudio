@@ -110,9 +110,13 @@ bool modFC1x_t::isFC1x(const char *const fileName) noexcept
 API_Functions FC1xDecoder =
 {
 	FC1x_OpenR,
+	nullptr,
 	FC1x_GetFileInfo,
+	nullptr,
 	FC1x_FillBuffer,
+	nullptr,
 	FC1x_CloseFileR,
+	nullptr,
 	FC1x_Play,
 	FC1x_Pause,
 	FC1x_Stop

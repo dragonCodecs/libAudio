@@ -75,9 +75,13 @@ bool modIT_t::isIT(const char *const fileName) noexcept
 API_Functions ITDecoder =
 {
 	IT_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop

@@ -430,9 +430,13 @@ bool m4a_t::isM4A(const char *const fileName) noexcept
 API_Functions M4ADecoder =
 {
 	M4A_OpenR,
+	M4A_OpenW,
 	audioFileInfo,
+	M4A_SetFileInfo,
 	audioFillBuffer,
+	M4A_WriteBuffer,
 	audioCloseFile,
+	M4A_CloseFileW,
 	audioPlay,
 	audioPause,
 	audioStop

@@ -2351,9 +2351,13 @@ bool Is_WMA(char *FileName)
 API_Functions WMADecoder =
 {
 	WMA_OpenR,
+	nullptr,
 	WMA_GetFileInfo,
+	nullptr,
 	WMA_FillBuffer,
+	nullptr,
 	WMA_CloseFileR,
+	nullptr,
 	WMA_Play,
 	WMA_Pause,
 	WMA_Stop

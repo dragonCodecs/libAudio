@@ -218,6 +218,7 @@ int16_t dataToSample(const std::array<uint8_t, 3> &data) noexcept
 int16_t dataToSample(const std::array<uint8_t, 4> &data) noexcept
 	{ return int16_t((uint16_t(data[3]) << 8) | data[2]); }
 const float *asFloat(const void *value) noexcept { return reinterpret_cast<const float *>(value); }
+
 float dataToFloat(const std::array<uint8_t, 4> &data) noexcept
 {
 	const uint32_t value = (uint32_t(data[3]) << 24) |
@@ -390,9 +391,13 @@ bool wav_t::isWAV(const char *const fileName) noexcept
 API_Functions WAVDecoder =
 {
 	WAV_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop

@@ -118,9 +118,13 @@ bool modAON_t::isAON(const char *const fileName) noexcept
 API_Functions AONDecoder =
 {
 	AON_OpenR,
+	nullptr,
 	AON_GetFileInfo,
+	nullptr,
 	AON_FillBuffer,
+	nullptr,
 	AON_CloseFileR,
+	nullptr,
 	AON_Play,
 	AON_Pause,
 	AON_Stop

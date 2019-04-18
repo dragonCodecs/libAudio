@@ -504,9 +504,13 @@ bool mp3_t::isMP3(const char *const fileName) noexcept
 API_Functions MP3Decoder =
 {
 	MP3_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop

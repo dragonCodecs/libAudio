@@ -354,9 +354,13 @@ bool Is_OptimFROG(const char *FileName)
 API_Functions OptimFROGDecoder =
 {
 	OptimFROG_OpenR,
+	nullptr,
 	OptimFROG_GetFileInfo,
+	nullptr,
 	OptimFROG_FillBuffer,
+	nullptr,
 	OptimFROG_CloseFileR,
+	nullptr,
 	OptimFROG_Play,
 	OptimFROG_Pause,
 	OptimFROG_Stop

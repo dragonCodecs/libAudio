@@ -49,6 +49,14 @@ libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type)
 		M4A_SetFileInfo(p_AudioPtr, p_FI);
 }
 
+//void audioFileInfo(void *audioFile, const FileInfo *const fileInfo)
+void audioFileInfo(void *audioFile, FileInfo *fileInfo)
+{
+	const auto file = static_cast<audioFile_t *>(audioFile);
+	if (file)
+		file->fileInfo(*fileInfo);
+}
+
 void audioFile_t::fileInfo(const FileInfo &) { }
 
 /*!

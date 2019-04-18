@@ -385,9 +385,13 @@ bool aac_t::isAAC(const char *const fileName) noexcept
 API_Functions AACDecoder =
 {
 	AAC_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop

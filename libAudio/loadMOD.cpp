@@ -97,9 +97,13 @@ bool modMOD_t::isMOD(const char *const fileName) noexcept
 API_Functions MODDecoder =
 {
 	MOD_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop

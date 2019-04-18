@@ -379,9 +379,13 @@ bool wavPack_t::isWavPack(const char *const fileName) noexcept
 API_Functions WavPackDecoder =
 {
 	WavPack_OpenR,
+	nullptr,
 	audioFileInfo,
+	nullptr,
 	audioFillBuffer,
+	nullptr,
 	audioCloseFile,
+	nullptr,
 	audioPlay,
 	audioPause,
 	audioStop
