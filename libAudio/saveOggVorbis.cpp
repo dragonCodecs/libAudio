@@ -1,6 +1,4 @@
-#include <stdlib.h>
-#include <time.h>
-
+#include <random>
 #include "oggVorbis.hxx"
 
 /*!
@@ -23,21 +21,6 @@ typedef struct _OV_Intern
 	 * The Vorbis encoding context
 	 */
 	vorbis_block *vb;
-	/*!
-	 * @internal
-	 * The Ogg Packet context
-	 */
-	ogg_packet *opt;
-	/*!
-	 * @internal
-	 * The Ogg Page context
-	 */
-	ogg_page *ope;
-	/*!
-	 * @internal
-	 * The Ogg Stream state
-	 */
-	ogg_stream_state *oss;
 
 	oggVorbis_t inner;
 
@@ -47,9 +30,11 @@ typedef struct _OV_Intern
 
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept :
 	audioFile_t(audioType_t::oggVorbis, std::move(fd)), encoderCtx(makeUnique<encoderContext_t>()) { }
-oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : vorbisInfo{}
+oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : vorbisInfo{}, streamState{}, eos{false}
 {
+	std::random_device randomDev;
 	vorbis_info_init(&vorbisInfo);
+	ogg_stream_init(&streamState, randomDev());
 }
 
 /*!
@@ -66,12 +51,26 @@ void *OggVorbis_OpenW(const char *FileName)
 
 	ret->vds = (vorbis_dsp_state *)malloc(sizeof(vorbis_dsp_state));
 	ret->vb = (vorbis_block *)malloc(sizeof(vorbis_block));
-	ret->opt = (ogg_packet *)malloc(sizeof(ogg_packet));
-	ret->ope = (ogg_page *)malloc(sizeof(ogg_page));
-	ret->oss = (ogg_stream_state *)malloc(sizeof(ogg_stream_state));
-
 
 	return ret.release();
+}
+
+bool oggVorbis_t::encoderContext_t::writePage(const fd_t &fd, const bool force) noexcept
+{
+	do
+	{
+		ogg_page page{};
+		const auto result = force ? ogg_stream_flush(&streamState, &page) :
+			ogg_stream_pageout(&streamState, &page);
+		if (result == 0)
+			return true;
+		else if (fd.write(page.header, page.header_len) != page.header_len ||
+			fd.write(page.body, page.body_len) != page.body_len)
+			return false;
+		eos = ogg_page_eos(&page);
+	}
+	while (!eos);
+	return true;
 }
 
 vorbis_comment copyComments(const FileInfo &info) noexcept
@@ -107,33 +106,23 @@ bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	vorbis_info &vorbisInfo = ctx.vorbisInfo;
 	ogg_packet hdr, hdr_comm, hdr_code;
 
+	//vorbis_encode_init_vbr(&vorbisInfo, p_FI->Channels, p_FI->BitRate, 0.75F);
 	vorbis_encode_init(&vorbisInfo, p_FI->Channels, p_FI->BitRate, -1, 160000, -1);
-	vorbis_encode_ctl(&vorbisInfo, OV_ECTL_RATEMANAGE2_SET, NULL);
+	vorbis_encode_ctl(&vorbisInfo, OV_ECTL_RATEMANAGE2_SET, nullptr);
 	vorbis_encode_setup_init(&vorbisInfo);
 
 	vorbis_analysis_init(p_VF->vds, &vorbisInfo);
 	vorbis_block_init(p_VF->vds, p_VF->vb);
 
-	srand((uint32_t)time(NULL));
-	ogg_stream_init(p_VF->oss, rand());
-
 	vorbis_comment tags = copyComments(*p_FI);
 	vorbis_analysis_headerout(p_VF->vds, &tags, &hdr, &hdr_comm, &hdr_code);
 	vorbis_comment_clear(&tags);
-	ogg_stream_packetin(p_VF->oss, &hdr);
-	ogg_stream_packetin(p_VF->oss, &hdr_comm);
-	ogg_stream_packetin(p_VF->oss, &hdr_code);
+	ogg_stream_packetin(&ctx.streamState, &hdr);
+	ogg_stream_packetin(&ctx.streamState, &hdr_comm);
+	ogg_stream_packetin(&ctx.streamState, &hdr_code);
 
-	while (1)
-	{
-		int res = ogg_stream_flush(p_VF->oss, p_VF->ope);
-		if (res == 0)
-			break;
-		else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
-			fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
-			return false;
-	}
-
+	if (!ctx.writePage(fd, true))
+		return false;
 	info.totalTime = p_FI->TotalTime;
 	info.bitsPerSample = p_FI->BitsPerSample;
 	info.bitRate = p_FI->BitRate;
@@ -155,7 +144,7 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
 	fileInfo_t &info = p_VF->inner.fileInfo();
 	const fd_t &fd = p_VF->inner.fd();
-	bool eos = false;
+	auto &ctx = *p_VF->inner.encoderContext();
 
 	if (nInBufferLen <= 0)
 	{
@@ -179,46 +168,26 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 
 	while (vorbis_analysis_blockout(p_VF->vds, p_VF->vb) == 1)
 	{
-		vorbis_analysis(p_VF->vb, NULL);
+		ogg_packet packet{};
+		vorbis_analysis(p_VF->vb, &packet);
+		ogg_stream_packetin(&ctx.streamState, &packet);
 		vorbis_bitrate_addblock(p_VF->vb);
 
-		while (vorbis_bitrate_flushpacket(p_VF->vds, p_VF->opt) == 1)
+		while (vorbis_bitrate_flushpacket(p_VF->vds, &packet) == 1)
 		{
-			ogg_stream_packetin(p_VF->oss, p_VF->opt);
-			if (p_VF->opt->bytes == 1)
+			ogg_stream_packetin(&ctx.streamState, &packet);
+			if (packet.bytes == 1)
 				continue; // Let's do this for speed, quicker than running the next while loop to find out!
-
-			while (eos == false)
-			{
-				int res = ogg_stream_pageout(p_VF->oss, p_VF->ope);
-				if (res == 0)
-					break; // Nothing to write?
-				else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
-					fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
-					return -2;
-
-				if (ogg_page_eos(p_VF->ope) == 1)
-					eos = true; // Handle End Of Stream.
-			}
-		}
-	}
-
-	if (eos == false)
-		return nInBufferLen;
-	else
-	{
-		// Empty out buffers so that all the file has been writen.
-		while (1)
-		{
-			int res = ogg_stream_flush(p_VF->oss, p_VF->ope);
-			if (res == 0)
-				break;
-			else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
-				fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
+			else if (!ctx.writePage(fd, false))
 				return -2;
 		}
-		return -2;
 	}
+
+	if (!ctx.eos)
+		return nInBufferLen;
+	else if (!ctx.writePage(fd, true))
+		return -2;
+	return nInBufferLen;
 }
 
 int64_t oggVorbis_t::writeBuffer(const void *const buffer, const uint32_t length) { return -1; }
@@ -226,6 +195,7 @@ int64_t oggVorbis_t::writeBuffer(const void *const buffer, const uint32_t length
 oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept
 {
 	vorbis_info_clear(&vorbisInfo);
+	ogg_stream_clear(&streamState);
 }
 
 /*!
@@ -248,18 +218,6 @@ int OggVorbis_CloseFileW(void *p_VorbisFile)
 	{
 		vorbis_dsp_clear(p_VF->vds);
 		free(p_VF->vds);
-	}
-	if (p_VF->opt != NULL)
-	{
-		ogg_packet_clear(p_VF->opt);
-		free(p_VF->opt);
-	}
-	if (p_VF->ope != NULL)
-		free(p_VF->ope);
-	if (p_VF->oss != NULL)
-	{
-		ogg_stream_clear(p_VF->oss);
-		free(p_VF->oss);
 	}
 	delete p_VF;
 	return 0;

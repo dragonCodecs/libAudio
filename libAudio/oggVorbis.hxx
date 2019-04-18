@@ -42,9 +42,16 @@ struct oggVorbis_t::encoderContext_t final
 	 * Sturcture describing info about the Vorbis stream being encoded
 	 */
 	vorbis_info vorbisInfo;
+	/*!
+	 * @internal
+	 * The Ogg Stream state
+	 */
+	ogg_stream_state streamState;
+	bool eos;
 
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
+	bool writePage(const fd_t &fd, const bool force) noexcept;
 };
 
 #endif /*OGG_VORBIS__HXX*/
