@@ -106,9 +106,7 @@ bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	vorbis_info &vorbisInfo = ctx.vorbisInfo;
 	ogg_packet hdr, hdr_comm, hdr_code;
 
-	//vorbis_encode_init_vbr(&vorbisInfo, p_FI->Channels, p_FI->BitRate, 0.75F);
-	vorbis_encode_init(&vorbisInfo, p_FI->Channels, p_FI->BitRate, -1, 160000, -1);
-	vorbis_encode_ctl(&vorbisInfo, OV_ECTL_RATEMANAGE2_SET, nullptr);
+	vorbis_encode_init_vbr(&vorbisInfo, p_FI->Channels, p_FI->BitRate, 0.75F);
 	vorbis_encode_setup_init(&vorbisInfo);
 
 	vorbis_analysis_init(p_VF->vds, &vorbisInfo);
@@ -160,7 +158,7 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 		for (uint32_t i = 0; i < bufflen; i++)
 		{
 			for (uint8_t j = 0; j < info.channels; j++)
-				buff[j][i] = ((float)IB[i * info.channels + j]) / 32768.0F;
+				buff[j][i] = float(IB[i * info.channels + j]) / 32768.0F;
 		}
 
 		vorbis_analysis_wrote(p_VF->vds, bufflen);
@@ -168,11 +166,10 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 
 	while (vorbis_analysis_blockout(p_VF->vds, p_VF->vb) == 1)
 	{
-		ogg_packet packet{};
-		vorbis_analysis(p_VF->vb, &packet);
-		ogg_stream_packetin(&ctx.streamState, &packet);
+		vorbis_analysis(p_VF->vb, nullptr);
 		vorbis_bitrate_addblock(p_VF->vb);
 
+		ogg_packet packet{};
 		while (vorbis_bitrate_flushpacket(p_VF->vds, &packet) == 1)
 		{
 			ogg_stream_packetin(&ctx.streamState, &packet);
