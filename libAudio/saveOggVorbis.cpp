@@ -94,7 +94,7 @@ void *OggVorbis_OpenW(const char *FileName)
  *
  * @bug \p p_VorbisFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
+bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
 	auto &ctx = *p_VF->inner.encoderContext();
@@ -135,13 +135,14 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 			break;
 		else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
 			fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
-			break;
+			return false;
 	}
 
 	info.totalTime = p_FI->TotalTime;
 	info.bitsPerSample = p_FI->BitsPerSample;
 	info.bitRate = p_FI->BitRate;
 	info.channels = p_FI->Channels;
+	return true;
 }
 
 /*!

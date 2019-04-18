@@ -75,7 +75,7 @@ libAUDIO_API bool Is_OggVorbis(const char *FileName);
 
 // Write/Encode
 libAUDIO_API void *OggVorbis_OpenW(const char *FileName);
-libAUDIO_API void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI);
+libAUDIO_API bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI);
 libAUDIO_API long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen);
 libAUDIO_API int OggVorbis_CloseFileW(void *p_VorbisFile);
 
@@ -93,7 +93,7 @@ libAUDIO_API bool Is_FLAC(const char *FileName);
 
 // Write/Encode
 libAUDIO_API void *FLAC_OpenW(const char *FileName);
-libAUDIO_API void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI);
+libAUDIO_API bool FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI);
 libAUDIO_API long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen);
 libAUDIO_API int FLAC_CloseFileW(void *p_FLACFile);
 
@@ -122,7 +122,7 @@ libAUDIO_API bool Is_M4A(const char *FileName);
 
 // Write/Encode
 libAUDIO_API void *M4A_OpenW(const char *FileName);
-libAUDIO_API void M4A_SetFileInfo(void *p_M4AFile, FileInfo *p_FI);
+libAUDIO_API bool M4A_SetFileInfo(void *p_M4AFile, FileInfo *p_FI);
 libAUDIO_API long M4A_WriteBuffer(void *p_M4AFile, uint8_t *InBuffer, int nInBufferLen);
 libAUDIO_API int M4A_CloseFileW(void *p_M4AFile);
 
@@ -277,11 +277,11 @@ libAUDIO_API bool Is_Audio(const char *FileName);
 
 // Write/Encode
 libAUDIO_API void *Audio_OpenW(const char *FileName, int Type);
-libAUDIO_API void Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI, int Type);
-libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nInBufferLen, int Type);
-libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr, int Type);
+libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI);
+libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nInBufferLen);
+libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr);
 
-// Set this to a non-zero value if using your own payback routines. This must be set by a call to *_GetFileInfo().
+// Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 libAUDIO_API uint8_t ExternalPlayback;
 
 // Set this to zero if you do not want the genericModule/moduleMixer

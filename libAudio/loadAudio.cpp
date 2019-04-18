@@ -30,7 +30,7 @@ void *Audio_OpenR(const char *FileName)
 	std::unique_ptr<AudioPointer> ret = makeUnique<AudioPointer>();
 	if (!ret)
 		return nullptr;
-	if (Is_OggVorbis(FileName) == true)
+	else if (Is_OggVorbis(FileName) == true)
 		ret->API = &OggVorbisDecoder;
 	else if (Is_FLAC(FileName) == true)
 		ret->API = &FLACDecoder;
@@ -87,8 +87,8 @@ void *Audio_OpenR(const char *FileName)
 FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
 {
 	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
-		return NULL;
+	if (!p_AP || !p_AP->p_AudioFile)
+		return nullptr;
 	return p_AP->API->GetFileInfo(p_AP->p_AudioFile);
 }
 
@@ -149,14 +149,11 @@ long audioFillBuffer(void *audioFile, uint8_t *buffer, int length)
 int Audio_CloseFileR(void *p_AudioPtr)
 {
 	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	API_Functions *API;
-	void *p_AudioFile;
 	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
 		return 0;
-	API = p_AP->API;
-	p_AudioFile = p_AP->p_AudioFile;
+	const int result = p_AP->API->CloseFileR(p_AP->p_AudioFile);
 	delete p_AP;
-	return API->CloseFileR(p_AudioFile);
+	return result;
 }
 
 int audioCloseFile(void *audioFile)

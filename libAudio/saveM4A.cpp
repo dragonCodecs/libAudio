@@ -13,7 +13,7 @@
  * @file saveM4A.cpp
  * @brief The implementation of the M4A/MP4 encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
@@ -186,7 +186,7 @@ void *M4A_OpenW(const char *FileName)
  *
  * @bug \p p_AACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
+bool M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 {
 	const MP4Tags *p_Tags;
 	faacEncConfigurationPtr p_conf;
@@ -200,7 +200,7 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	if (p_AF->p_enc == NULL)
 	{
 		p_AF->err = true;
-		return;
+		return false;
 	}
 	MP4SetTimeScale(p_AF->p_mp4, p_FI->BitRate);
 	p_AF->track = MP4AddAudioTrack(p_AF->p_mp4, p_FI->BitRate, 1024);//p_AF->MaxInSamp / p_FI->Channels, MP4_MPEG4_AUDIO_TYPE);
@@ -221,7 +221,7 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	if (p_conf == NULL)
 	{
 		p_AF->err = true;
-		return;
+		return false;
 	}
 	p_conf->inputFormat = FAAC_INPUT_16BIT;
 	p_conf->mpegVersion = MPEG4;
@@ -235,17 +235,18 @@ void M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	if (faacEncSetConfiguration(p_AF->p_enc, p_conf) == 0)
 	{
 		p_AF->err = true;
-		return;
+		return false;
 	}
 	if (faacEncGetDecoderSpecificInfo(p_AF->p_enc, &ASC, &lenASC) != 0)
 	{
-		return;
 		p_AF->err = true;
+		return false;
 	}
 
 	MP4SetTrackESConfiguration(p_AF->p_mp4, p_AF->track, ASC, lenASC);
 
 	free(ASC);
+	return true;
 }
 
 /*!

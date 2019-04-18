@@ -114,7 +114,7 @@ void *FLAC_OpenW(const char *FileName) { return flac_t::openW(FileName); }
  *
  * @bug \p p_FLACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-void FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI) { audioFileInfo(p_FLACFile, p_FI); }
+bool FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI) { return audioFileInfo(p_FLACFile, p_FI); }
 
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const char *const value)
 {
@@ -128,7 +128,7 @@ void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const 
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const std::unique_ptr<char []> &value)
 	{ writeComment(metadata, name, value.get()); }
 
-void flac_t::fileInfo(const FileInfo &fileInfo)
+bool flac_t::fileInfo(const FileInfo &fileInfo)
 {
 	auto &ctx = *encoderContext();
 	fileInfo_t &info = this->fileInfo();
@@ -160,6 +160,7 @@ void flac_t::fileInfo(const FileInfo &fileInfo)
 	info.bitsPerSample = fileInfo.BitsPerSample;
 	info.bitRate = fileInfo.BitRate;
 	info.channels = fileInfo.Channels;
+	return true;
 }
 
 /*!

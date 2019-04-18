@@ -8,11 +8,10 @@
 #include "libAudio.h"
 #include "libAudio.hxx"
 
-uint8_t type = AUDIO_OGG_VORBIS;
 std::array<uint8_t, 8192> buffer;
 
 struct audioCloseR_t final { void operator ()(void *ptr) noexcept { Audio_CloseFileR(ptr); } };
-struct audioCloseW_t final { void operator ()(void *ptr) noexcept { Audio_CloseFileW(ptr, type); } };
+struct audioCloseW_t final { void operator ()(void *ptr) noexcept { Audio_CloseFileW(ptr); } };
 
 const std::map<std::string, uint8_t> typeMap
 {
@@ -65,7 +64,7 @@ int main(int argc, char **argv)
 {
 	if (argc < 2)
 		return usage(argv[0]);
-	type = mapType(argv[1]);
+	const uint8_t type = mapType(argv[1]);
 	argc -= argc % 2;
 	for (uint32_t i = 2; i < uint32_t(argc); i += 2)
 	{
@@ -82,13 +81,17 @@ int main(int argc, char **argv)
 		}
 		FileInfo *fileInfo{Audio_GetFileInfo(inFile.get())};
 		printInfo(argv[i], *fileInfo);
-		Audio_SetFileInfo(outFile.get(), fileInfo, type);
+		if (!Audio_SetFileInfo(outFile.get(), fileInfo))
+		{
+			printf("Failed to set file information for %s\n", argv[i + 1]);
+			continue;
+		}
 
 		uint32_t loops = 0;
 		for (int64_t result = 1; result > 0; ++loops)
 		{
 			result = Audio_FillBuffer(inFile.get(), buffer.data(), buffer.size());
-			Audio_WriteBuffer(outFile.get(), buffer.data(), buffer.size(), type);
+			Audio_WriteBuffer(outFile.get(), buffer.data(), buffer.size());
 			printStatus(loops + 1, *fileInfo);
 		}
 		printf("Transcode to %s complete\n", argv[i + 1]);
