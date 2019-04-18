@@ -8,8 +8,6 @@
  * @date 2010-2019
  */
 
-mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
-
 namespace libAudio
 {
 	namespace flac

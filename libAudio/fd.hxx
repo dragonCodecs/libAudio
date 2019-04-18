@@ -34,7 +34,7 @@ private:
 	mutable bool eof;
 
 	template<typename T, typename U = T> inline T exchange(T &obj, U &&newVal)
-    {
+	{
 		T oldVal = std::move(obj);
 		obj = std::forward<U>(newVal);
 		return oldVal;
@@ -124,5 +124,7 @@ public:
 	fd_t(const fd_t &) = delete;
 	fd_t &operator =(const fd_t &) = delete;
 };
+
+mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
 
 #endif /*FD__HXX*/
