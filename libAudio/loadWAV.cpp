@@ -371,10 +371,10 @@ bool wav_t::isWAV(const char *const fileName) noexcept
 API_Functions WAVDecoder =
 {
 	WAV_OpenR,
-	WAV_GetFileInfo,
-	WAV_FillBuffer,
-	WAV_CloseFileR,
-	WAV_Play,
-	WAV_Pause,
-	WAV_Stop
+	audioFileInfo,
+	audioFillBuffer,
+	audioCloseFile,
+	audioPlay,
+	audioPause,
+	audioStop
 };
