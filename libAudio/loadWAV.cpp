@@ -32,6 +32,11 @@ struct wav_t::decoderContext_t final
 	uint32_t offsetDataLength;
 	/*!
 	 * @internal
+	 * The compression flags read from the WAV file
+	 */
+	uint16_t compression;
+	/*!
+	 * @internal
 	 * A flag indicating if this WAV's data is floating point
 	 */
 	bool floatData;
@@ -42,12 +47,6 @@ struct wav_t::decoderContext_t final
 
 typedef struct _WAV_Intern
 {
-	/*!
-	 * @internal
-	 * The compression flags read from the WAV file
-	 */
-	uint16_t compression;
-
 	wav_t inner;
 
 	_WAV_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
@@ -113,7 +112,7 @@ bool wav_t::readFormat(void *intern) noexcept
 	std::array<char, 6> unused;
 	uint16_t channels, bitsPerSample;
 
-	if (!read(file, p_WF->compression) ||
+	if (!read(file, ctx.compression) ||
 		!read(file, channels) ||
 		!read(file, info.bitRate) ||
 		!file.read(unused) ||
@@ -125,7 +124,7 @@ bool wav_t::readFormat(void *intern) noexcept
 		return false;
 	info.channels = channels;
 	info.bitsPerSample = bitsPerSample;
-	ctx.floatData = p_WF->compression == 3;
+	ctx.floatData = ctx.compression == 3;
 	return true;
 }
 
