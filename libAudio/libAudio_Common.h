@@ -16,13 +16,6 @@
  * multiple calling conventions which is a dumb microsoft-ism
  */
 #define __CDECL__ __cdecl
-/*!
- * @internal
- * Definition of \c __fastcall which is compatible with the keyword
- * not existing on non-Windows platforms due to them not having
- * multiple calling conventions which is a dumb microsoft-ism
- */
-#define __FASTCALL__ __fastcall
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
 #define snprintf _snprintf
@@ -35,21 +28,9 @@
  * not existing on non-Windows platforms
  */
 #define __CDECL__
-/*!
- * @internal
- * Definition which is compatible with the \c __cdecl keyword
- * not existing on non-Windows platforms. This ensures that
- * calls that are meant to be "fastcall" on Windows are instead
- * hopefully inlined on Linux, making them even faster still by
- * eliminating the call completely
- */
-#define __FASTCALL__ inline
 #endif
 
 #include "fileInfo.hxx"
-
-extern int fseek_wrapper(void *p_file, int64_t offset, int origin);
-//extern int64_t ftell_wrapper(void *p_file);
 
 /*!
  * @internal
