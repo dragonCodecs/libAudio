@@ -62,8 +62,14 @@ typedef struct _OV_Intern
 	 * The input metadata in the form of a \c FileInfo structure
 	 */
 	FileInfo *p_FI;
+
+	oggVorbis_t inner;
+
+	_OV_Intern() noexcept : inner(audioModeWrite_t{}) { }
 } OV_Intern;
 
+oggVorbis_t::oggVorbis_t(audioModeWrite_t) noexcept :
+	audioFile_t(audioType_t::oggVorbis, {}), encoderCtx(makeUnique<encoderContext_t>()) { }
 oggVorbis_t::encoderContext_t::encoderContext_t() noexcept { }
 
 /*!
@@ -74,16 +80,13 @@ oggVorbis_t::encoderContext_t::encoderContext_t() noexcept { }
  */
 void *OggVorbis_OpenW(const char *FileName)
 {
-	OV_Intern *ret = NULL;
+	std::unique_ptr<OV_Intern> ret = makeUnique<OV_Intern>();
+	if (!ret || !ret->inner.encoderContext())
+		return nullptr;
 
 	FILE *f_Ogg = fopen(FileName, "wb");
 	if (f_Ogg == NULL)
-		return ret;
-
-	ret = (OV_Intern *)malloc(sizeof(OV_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(OV_Intern));
+		return nullptr;
 
 	ret->vi = (vorbis_info *)malloc(sizeof(vorbis_info));
 	ret->vds = (vorbis_dsp_state *)malloc(sizeof(vorbis_dsp_state));
@@ -99,7 +102,7 @@ void *OggVorbis_OpenW(const char *FileName)
 
 	ogg_packet_clear(ret->opt);
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -281,6 +284,6 @@ int OggVorbis_CloseFileW(void *p_VorbisFile)
 
 	ret = fclose(p_VF->f_Ogg);
 	free(p_VF->p_FI);
-	free(p_VF);
+	delete p_VF;
 	return ret;
 }

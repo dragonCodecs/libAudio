@@ -45,8 +45,7 @@ namespace libAudio
 using namespace libAudio;
 
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept :
-	audioFile_t(audioType_t::oggVorbis, std::move(fd)),
-	decoderCtx(makeUnique<decoderContext_t>()) { }
+	audioFile_t(audioType_t::oggVorbis, std::move(fd)), decoderCtx(makeUnique<decoderContext_t>()) { }
 oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
 bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string &tag) noexcept

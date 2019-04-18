@@ -78,6 +78,7 @@ private:
 
 public:
 	oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept;
+	oggVorbis_t(audioModeWrite_t) noexcept;
 	oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static oggVorbis_t *openR(const char *const fileName) noexcept;
 	static oggVorbis_t *openW(const char *const fileName) noexcept;
