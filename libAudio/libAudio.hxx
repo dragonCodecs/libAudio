@@ -72,17 +72,23 @@ struct oggVorbis_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	struct encoderContext_t;
+	std::unique_ptr<decoderContext_t> decoderCtx;
+	std::unique_ptr<encoderContext_t> encoderCtx;
 
 public:
-	oggVorbis_t(fd_t &&fd) noexcept;
+	oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept;
+	oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static oggVorbis_t *openR(const char *const fileName) noexcept;
+	static oggVorbis_t *openW(const char *const fileName) noexcept;
 	static bool isOggVorbis(const char *const fileName) noexcept;
 	static bool isOggVorbis(const int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
+	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
+	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
 };
 
 struct flac_t final : public audioFile_t

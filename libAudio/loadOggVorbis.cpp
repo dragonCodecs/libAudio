@@ -1,9 +1,6 @@
 #include <string>
-#include <ogg/ogg.h>
-#include <vorbis/vorbisfile.h>
 
-#include "libAudio.h"
-#include "libAudio.hxx"
+#include "oggVorbis.hxx"
 #include "string.hxx"
 
 inline std::string operator ""_s(const char *const str, const size_t len) noexcept
@@ -16,29 +13,6 @@ inline std::string operator ""_s(const char *const str, const size_t len) noexce
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2019
  */
-
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given Ogg|Vorbis file
- */
-struct oggVorbis_t::decoderContext_t final
-{
-	/*!
-	 * @internal
-	 * The decoder context handle and handle to the Ogg|Vorbis
-	 * file being decoded
-	 */
-	OggVorbis_File decoder;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t playbackBuffer[8192];
-	bool eof;
-
-	decoderContext_t() noexcept;
-	~decoderContext_t() noexcept;
-};
 
 namespace libAudio
 {
@@ -70,8 +44,9 @@ namespace libAudio
 
 using namespace libAudio;
 
-oggVorbis_t::oggVorbis_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggVorbis, std::move(fd)),
-	ctx(makeUnique<decoderContext_t>()) { }
+oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept :
+	audioFile_t(audioType_t::oggVorbis, std::move(fd)),
+	decoderCtx(makeUnique<decoderContext_t>()) { }
 oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
 bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string &tag) noexcept
@@ -100,10 +75,10 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
 
 oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<oggVorbis_t> ovFile = makeUnique<oggVorbis_t>(fd_t(fileName, O_RDONLY | O_NOCTTY));
+	auto ovFile = makeUnique<oggVorbis_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), audioModeRead_t{});
 	if (!ovFile || !ovFile->valid() || !isOggVorbis(ovFile->_fd))
 		return nullptr;
-	auto &ctx = *ovFile->context();
+	auto &ctx = *ovFile->decoderContext();
 	fileInfo_t &info = ovFile->fileInfo();
 
 	ov_callbacks callbacks;
@@ -133,7 +108,7 @@ void *OggVorbis_OpenR(const char *FileName)
 	std::unique_ptr<oggVorbis_t> file(oggVorbis_t::openR(FileName));
 	if (!file)
 		return nullptr;
-	auto &ctx = *file->context();
+	auto &ctx = *file->decoderContext();
 	const fileInfo_t &info = file->fileInfo();
 
 	if (ExternalPlayback == 0)
@@ -170,7 +145,7 @@ int64_t oggVorbis_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	auto buffer = static_cast<char *>(bufferPtr);
 	uint32_t offset = 0;
 	const fileInfo_t &info = fileInfo();
-	auto &ctx = *context();
+	auto &ctx = *decoderContext();
 
 	if (ctx.eof)
 		return -2;

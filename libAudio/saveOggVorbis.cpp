@@ -1,18 +1,14 @@
-#include <ogg/ogg.h>
-#include <vorbis/vorbisenc.h>
-
-#include "libAudio.h"
-#include "libAudio_Common.h"
-
 #include <stdlib.h>
 #include <time.h>
+
+#include "oggVorbis.hxx"
 
 /*!
  * @internal
  * @file saveOggVorbis.cpp
  * @brief The implementation of the Ogg/Vorbis encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
@@ -67,6 +63,8 @@ typedef struct _OV_Intern
 	 */
 	FileInfo *p_FI;
 } OV_Intern;
+
+oggVorbis_t::encoderContext_t::encoderContext_t() noexcept { }
 
 /*!
  * This function opens the file given by \c FileName for writing and returns a pointer
@@ -229,6 +227,10 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 		return -2;
 	}
 }
+
+int64_t oggVorbis_t::writeBuffer(const void *const buffer, const uint32_t length) { return -1; }
+
+oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept { }
 
 /*!
  * Closes an open Ogg/Vorbis file
