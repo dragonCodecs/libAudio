@@ -39,7 +39,7 @@ void *FC1x_OpenR(const char *FileName)
 	{
 		if (!ExternalPlayback)
 			ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
-		ctx.mod->InitMixer(FC1x_GetFileInfo(ret.get()));
+		ctx.mod->InitMixer(info);
 	}
 
 	return ret.release();

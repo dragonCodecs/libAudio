@@ -629,7 +629,7 @@ public:
 	stringPtr_t author() const noexcept;
 	stringPtr_t remark() const noexcept;
 	uint8_t channels() const noexcept;
-	void InitMixer(FileInfo *p_FI);
+	void InitMixer(fileInfo_t &info);
 	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 };
 

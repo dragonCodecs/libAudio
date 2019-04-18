@@ -34,11 +34,11 @@ int64_t moduleFile_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	return ctx->mod->Mix(buffer, length);
 }
 
-void ModuleFile::InitMixer(FileInfo *p_FI)
+void ModuleFile::InitMixer(fileInfo_t &info)
 {
-	MixSampleRate = p_FI->BitRate;
-	MixChannels = p_FI->Channels;
-	MixBitsPerSample = p_FI->BitsPerSample;
+	MixSampleRate = info.bitRate;
+	MixChannels = info.channels;
+	MixBitsPerSample = info.bitsPerSample;
 	MusicSpeed = p_Header->InitialSpeed;
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;

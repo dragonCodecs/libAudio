@@ -39,7 +39,7 @@ void *S3M_OpenR(const char *FileName)
 	{
 		if (!ExternalPlayback)
 			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-		ctx.mod->InitMixer(audioFileInfo(ret.get()));
+		ctx.mod->InitMixer(info);
 	}
 
 	return ret.release();
