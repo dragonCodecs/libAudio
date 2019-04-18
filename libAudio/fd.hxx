@@ -125,6 +125,6 @@ public:
 	fd_t &operator =(const fd_t &) = delete;
 };
 
-mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
+constexpr mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
 
 #endif /*FD__HXX*/
