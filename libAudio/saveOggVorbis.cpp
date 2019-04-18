@@ -11,10 +11,6 @@
  * @date 2010-2019
  */
 
-/*!
- * @internal
- * Internal structure for holding the encoding context for a given Ogg/Vorbis file
- */
 typedef struct _OV_Intern
 {
 	/*!
@@ -27,11 +23,6 @@ typedef struct _OV_Intern
 	 * The Vorbis encoding context
 	 */
 	vorbis_block *vb;
-	/*!
-	 * @internal
-	 * Structure describing the Vorbis Comments present
-	 */
-	vorbis_comment *vc;
 	/*!
 	 * @internal
 	 * The Ogg Packet context
@@ -75,14 +66,27 @@ void *OggVorbis_OpenW(const char *FileName)
 
 	ret->vds = (vorbis_dsp_state *)malloc(sizeof(vorbis_dsp_state));
 	ret->vb = (vorbis_block *)malloc(sizeof(vorbis_block));
-	ret->vc = (vorbis_comment *)malloc(sizeof(vorbis_comment));
 	ret->opt = (ogg_packet *)malloc(sizeof(ogg_packet));
 	ret->ope = (ogg_page *)malloc(sizeof(ogg_page));
 	ret->oss = (ogg_stream_state *)malloc(sizeof(ogg_stream_state));
 
-	vorbis_comment_init(ret->vc);
 
 	return ret.release();
+}
+
+vorbis_comment copyComments(const FileInfo &info) noexcept
+{
+	vorbis_comment tags;
+	vorbis_comment_init(&tags);
+	if (info.Title)
+		vorbis_comment_add_tag(&tags, "Title", info.Title);
+	if (info.Artist)
+		vorbis_comment_add_tag(&tags, "Artist", info.Artist);
+	if (info.Album)
+		vorbis_comment_add_tag(&tags, "Album", info.Album);
+	for (const auto other : info.OtherComments)
+		vorbis_comment_add(&tags, other);
+	return tags;
 }
 
 /*!
@@ -113,17 +117,9 @@ bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	srand((uint32_t)time(NULL));
 	ogg_stream_init(p_VF->oss, rand());
 
-	if (p_FI->Title != NULL)
-		vorbis_comment_add_tag(p_VF->vc, "Title", p_FI->Title);
-	if (p_FI->Album != NULL)
-		vorbis_comment_add_tag(p_VF->vc, "Album", p_FI->Album);
-	if (p_FI->Artist != NULL)
-		vorbis_comment_add_tag(p_VF->vc, "Artist", p_FI->Artist);
-
-	for (uint32_t i = 0; i < p_FI->nOtherComments; i++)
-		vorbis_comment_add(p_VF->vc, p_FI->OtherComments[i]);
-
-	vorbis_analysis_headerout(p_VF->vds, p_VF->vc, &hdr, &hdr_comm, &hdr_code);
+	vorbis_comment tags = copyComments(*p_FI);
+	vorbis_analysis_headerout(p_VF->vds, &tags, &hdr, &hdr_comm, &hdr_code);
+	vorbis_comment_clear(&tags);
 	ogg_stream_packetin(p_VF->oss, &hdr);
 	ogg_stream_packetin(p_VF->oss, &hdr_comm);
 	ogg_stream_packetin(p_VF->oss, &hdr_code);
@@ -243,11 +239,6 @@ oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept
 int OggVorbis_CloseFileW(void *p_VorbisFile)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
-	if (p_VF->vc != NULL)
-	{
-		vorbis_comment_clear(p_VF->vc);
-		free(p_VF->vc);
-	}
 	if (p_VF->vb != NULL)
 	{
 		vorbis_block_clear(p_VF->vb);

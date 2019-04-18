@@ -31,8 +31,16 @@ struct oggVorbis_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
+/*!
+ * @internal
+ * Internal structure for holding the encoding context for a given Ogg/Vorbis file
+ */
 struct oggVorbis_t::encoderContext_t final
 {
+	/*!
+	 * @internal
+	 * Sturcture describing info about the Vorbis stream being encoded
+	 */
 	vorbis_info vorbisInfo;
 
 	encoderContext_t() noexcept;
