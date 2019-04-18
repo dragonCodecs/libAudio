@@ -56,10 +56,10 @@ typedef struct FileInfo
 #include <inttypes.h>
 #endif
 
-#define libAudioVersion "0.1.43"
+#define libAudioVersion "0.3"
 #define libAudioVersion_Major 0
-#define libAudioVersion_Minor 1
-#define libAudioVersion_Rev 43
+#define libAudioVersion_Minor 3
+#define libAudioVersion_Rev 0
 
 // OggVorbis API
 
