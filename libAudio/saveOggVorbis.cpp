@@ -52,19 +52,15 @@ typedef struct _OV_Intern
 	 * The Ogg Stream state
 	 */
 	ogg_stream_state *oss;
-	/*!
-	 * @internal
-	 * The Ogg file being written to
-	 */
-	FILE *f_Ogg;
 
 	oggVorbis_t inner;
 
-	_OV_Intern() noexcept : inner(audioModeWrite_t{}) { }
+	_OV_Intern(const char *const fileName) noexcept :
+		inner(fd_t(fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode), audioModeWrite_t{}) { }
 } OV_Intern;
 
-oggVorbis_t::oggVorbis_t(audioModeWrite_t) noexcept :
-	audioFile_t(audioType_t::oggVorbis, {}), encoderCtx(makeUnique<encoderContext_t>()) { }
+oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept :
+	audioFile_t(audioType_t::oggVorbis, std::move(fd)), encoderCtx(makeUnique<encoderContext_t>()) { }
 oggVorbis_t::encoderContext_t::encoderContext_t() noexcept { }
 
 /*!
@@ -75,12 +71,8 @@ oggVorbis_t::encoderContext_t::encoderContext_t() noexcept { }
  */
 void *OggVorbis_OpenW(const char *FileName)
 {
-	std::unique_ptr<OV_Intern> ret = makeUnique<OV_Intern>();
+	std::unique_ptr<OV_Intern> ret = makeUnique<OV_Intern>(FileName);
 	if (!ret || !ret->inner.encoderContext())
-		return nullptr;
-
-	FILE *f_Ogg = fopen(FileName, "wb");
-	if (f_Ogg == NULL)
 		return nullptr;
 
 	ret->vi = (vorbis_info *)malloc(sizeof(vorbis_info));
@@ -90,7 +82,6 @@ void *OggVorbis_OpenW(const char *FileName)
 	ret->opt = (ogg_packet *)malloc(sizeof(ogg_packet));
 	ret->ope = (ogg_page *)malloc(sizeof(ogg_page));
 	ret->oss = (ogg_stream_state *)malloc(sizeof(ogg_stream_state));
-	ret->f_Ogg = f_Ogg;
 
 	vorbis_info_init(ret->vi);
 	vorbis_comment_init(ret->vc);
@@ -113,6 +104,7 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
 	fileInfo_t &info = p_VF->inner.fileInfo();
+	const fd_t &fd = p_VF->inner.fd();
 	ogg_packet hdr, hdr_comm, hdr_code;
 
 	vorbis_encode_init(p_VF->vi, p_FI->Channels, p_FI->BitRate, -1, 160000, -1);
@@ -145,8 +137,9 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 		int res = ogg_stream_flush(p_VF->oss, p_VF->ope);
 		if (res == 0)
 			break;
-		fwrite(p_VF->ope->header, p_VF->ope->header_len, 1, p_VF->f_Ogg);
-		fwrite(p_VF->ope->body, p_VF->ope->body_len, 1, p_VF->f_Ogg);
+		else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
+			fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
+			break;
 	}
 
 	info.totalTime = p_FI->TotalTime;
@@ -166,6 +159,7 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
 	fileInfo_t &info = p_VF->inner.fileInfo();
+	const fd_t &fd = p_VF->inner.fd();
 	bool eos = false;
 
 	if (nInBufferLen <= 0)
@@ -204,8 +198,9 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 				int res = ogg_stream_pageout(p_VF->oss, p_VF->ope);
 				if (res == 0)
 					break; // Nothing to write?
-				fwrite(p_VF->ope->header, p_VF->ope->header_len, 1, p_VF->f_Ogg);
-				fwrite(p_VF->ope->body, p_VF->ope->body_len, 1, p_VF->f_Ogg);
+				else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
+					fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
+					return -2;
 
 				if (ogg_page_eos(p_VF->ope) == 1)
 					eos = true; // Handle End Of Stream.
@@ -223,8 +218,9 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 			int res = ogg_stream_flush(p_VF->oss, p_VF->ope);
 			if (res == 0)
 				break;
-			fwrite(p_VF->ope->header, p_VF->ope->header_len, 1, p_VF->f_Ogg);
-			fwrite(p_VF->ope->body, p_VF->ope->body_len, 1, p_VF->f_Ogg);
+			else if (fd.write(p_VF->ope->header, p_VF->ope->header_len) != p_VF->ope->header_len ||
+				fd.write(p_VF->ope->body, p_VF->ope->body_len) != p_VF->ope->body_len)
+				return -2;
 		}
 		return -2;
 	}
@@ -245,8 +241,6 @@ oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept { }
 int OggVorbis_CloseFileW(void *p_VorbisFile)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
-	int ret = 0;
-
 	if (p_VF->vc != NULL)
 	{
 		vorbis_comment_clear(p_VF->vc);
@@ -280,8 +274,6 @@ int OggVorbis_CloseFileW(void *p_VorbisFile)
 		ogg_stream_clear(p_VF->oss);
 		free(p_VF->oss);
 	}
-
-	ret = fclose(p_VF->f_Ogg);
 	delete p_VF;
-	return ret;
+	return 0;
 }
