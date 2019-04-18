@@ -1,7 +1,4 @@
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <malloc.h>
+#include <limits>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
@@ -221,6 +218,13 @@ int16_t dataToSample(const std::array<uint8_t, 3> &data) noexcept
 int16_t dataToSample(const std::array<uint8_t, 4> &data) noexcept
 	{ return int16_t((uint16_t(data[3]) << 8) | data[2]); }
 
+float dataToFloat(const std::array<uint8_t, 4> &data) noexcept
+{
+	const uint32_t value = (uint32_t(data[3]) << 24) |
+		(uint32_t(data[2]) << 16) | (uint32_t(data[1]) << 8) | data[0];
+	return *reinterpret_cast<const float *>(&value);
+}
+
 template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
 	const uint32_t length, const uint32_t sampleByteCount)
 {
@@ -233,6 +237,25 @@ template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *bu
 		if (!file.read(data))
 			break;
 		playbackBuffer[index] = dataToSample(data);
+		offset += sizeof(T);
+	}
+	return offset;
+}
+
+template<typename T, uint8_t N> uint32_t readFloatSamples(wav_t &wavFile, void *buffer,
+	const uint32_t length, const uint32_t sampleByteCount)
+{
+	using limits = std::numeric_limits<T>;
+	const auto playbackBuffer = static_cast<T *>(buffer);
+	uint32_t offset = 0;
+	const fd_t &file = wavFile.fd();
+	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
+	{
+		std::array<uint8_t, N> data{};
+		if (!file.read(data))
+			break;
+		const float sample = dataToFloat(data);
+		playbackBuffer[index] = T(sample * limits::max());
 		offset += sizeof(T);
 	}
 	return offset;
@@ -275,6 +298,8 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 	else if (!ctx.floatData && ctx.bitsPerSample == 32)
 		return readIntSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
 	// 32-bit float reader
+	else if (ctx.floatData && ctx.bitsPerSample == 32)
+		return readFloatSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
 	/*else if (ctx.floatData && info.bitsPerSample == 32)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
