@@ -34,27 +34,16 @@ typedef struct _WAV_Intern
 {
 	/*!
 	 * @internal
-	 * The WAV file to decode
-	 */
-	FILE *f_WAV;
-	/*!
-	 * @internal
-	 * The internal count of how long the file is in bytes
-	 * as read from the data chunk
-	 */
-	int fLen;
-	/*!
-	 * @internal
 	 * The compression flags read from the WAV file
 	 */
-	short compression;
+	uint16_t compression;
 	/*!
 	 * @internal
 	 * The byte possition that the final byte of the file should be at in the file,
 	 * calculated fresh from fLen and an \c ftell() call just after reading the data
 	 * for fLen
 	 */
-	int DataEnd;
+	uint32_t DataEnd;
 	/*!
 	 * @internal
 	 * A flag indicating if this WAV's data is floating point
@@ -62,10 +51,84 @@ typedef struct _WAV_Intern
 	bool usesFloat;
 
 	wav_t inner;
+
+	_WAV_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
 } WAV_Intern;
 
-wav_t::wav_t() noexcept : audioFile_t(audioType_t::wave, {}), ctx(makeUnique<decoderContext_t>()) { }
+wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd)),
+	ctx(makeUnique<decoderContext_t>()) { }
 wav_t::decoderContext_t::decoderContext_t() noexcept { }
+
+bool read(const fd_t &fd, uint8_t &value) noexcept
+	{ return fd.read(value); }
+
+bool read(const fd_t &fd, uint16_t &value) noexcept
+{
+	std::array<uint8_t, 2> data{};
+	const bool result = fd.read(data);
+	value = (uint16_t(data[1]) << 8) | data[0];
+	return result;
+}
+
+bool read(const fd_t &fd, uint32_t &value) noexcept
+{
+	std::array<uint8_t, 4> data{};
+	const bool result = fd.read(data);
+	value = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) |
+		(uint32_t(data[1]) << 8) | data[0];
+	return result;
+}
+
+constexpr std::array<char, 4> waveFormatChunk{'f', 'm', 't', ' '};
+constexpr std::array<char, 4> waveDataChunk{'d', 'a', 't', 'a'};
+
+bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
+{
+	std::array<char, 4> chunkTag;
+	const fd_t &file = fd();
+	if (!file.read(chunkTag))
+		return false;
+
+	const off_t fileSize = file.length();
+	off_t offset = file.tell();
+	if (fileSize == -1 || offset == -1)
+		return false;
+	while (chunkTag != chunkName && offset < fileSize)
+	{
+		uint32_t chunkLength = 0;
+		if (!read(file, chunkLength) ||
+			chunkLength > (fileSize - offset) ||
+			file.seek(chunkLength, SEEK_CUR) != (offset + chunkLength + 4) ||
+			!file.read(chunkTag))
+			return false;
+		offset += chunkLength + 8;
+	}
+	return chunkTag == chunkName;
+}
+
+bool wav_t::readFormat(void *intern) noexcept
+{
+	auto p_WF = static_cast<WAV_Intern *>(intern);
+	fileInfo_t &info = fileInfo();
+	const fd_t &file = fd();
+	std::array<char, 6> unused;
+	uint16_t channels, bitsPerSample;
+
+	if (!read(file, p_WF->compression) ||
+		!read(file, channels) ||
+		!read(file, info.bitRate) ||
+		!file.read(unused) ||
+		!read(file, bitsPerSample) ||
+		!channels ||
+		!info.bitRate ||
+		!bitsPerSample ||
+		(bitsPerSample % 8))
+		return false;
+	info.channels = channels;
+	info.bitsPerSample = bitsPerSample;
+	p_WF->usesFloat = p_WF->compression == 3;
+	return true;
+}
 
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
@@ -75,53 +138,53 @@ wav_t::decoderContext_t::decoderContext_t() noexcept { }
  */
 void *WAV_OpenR(const char *FileName)
 {
-	char tmp[4];
+	std::unique_ptr<WAV_Intern> ret = makeUnique<WAV_Intern>(FileName);
+	if (!ret || !wav_t::isWAV(ret->inner.fd()))
+		return nullptr;
+	auto &ctx = *ret->inner.context();
+	fileInfo_t &info = ret->inner.fileInfo();
+	const fd_t &file = ret->inner.fd();
+	const off_t fileSize = file.length();
+	uint32_t chunkLength = 0;
 
-	std::unique_ptr<WAV_Intern> ret = makeUnique<WAV_Intern>();
-	if (!ret)
+	if (fileSize == -1 ||
+		file.seek(4, SEEK_SET) != 4 ||
+		!read(file, chunkLength) ||
+		chunkLength > (fileSize - 8) ||
+		file.seek(4, SEEK_CUR) != 12 ||
+		!ret->inner.skipToChunk(waveFormatChunk))
+		return nullptr;
+	off_t offset = file.tell();
+	if (offset == -1 ||
+		!read(file, chunkLength) ||
+		chunkLength > (fileSize - offset - 4) ||
+		chunkLength < 16 ||
+		!ret->inner.readFormat(ret.get()))
 		return nullptr;
 
-	FILE *f_WAV = fopen(FileName, "rb");
-	if (f_WAV == NULL)
+	// Currently we do not care if the file has extra data, we're only looking to work with PCM.
+	for (uint32_t i = 16; i < chunkLength; ++i)
+	{
+		char value = 0;
+		if (!file.read(value))
+			return nullptr;
+	}
+
+	if (!ret->inner.skipToChunk(waveDataChunk) ||
+		!read(file, chunkLength) ||
+		(offset = file.tell()) == -1 ||
+		chunkLength > (fileSize - offset) ||
+		file.isEOF())
 		return nullptr;
-	ret->f_WAV = f_WAV;
+	info.totalTime = chunkLength / info.channels;
+	info.totalTime /= info.bitsPerSample / 8;
+	info.totalTime /= info.bitRate;
+	ret->DataEnd = chunkLength + file.tell();
 
-	fread(tmp, 4, 1, f_WAV);
-	if (strncmp(tmp, "RIFF", 4) != 0)
-		return NULL;
-
-	/*{
-		int fLen;
-		struct stat Stats;
-		fstat(fileno(f_WAV), &Stats);
-		fLen = Stats.st_size;
-		fread(&ret->fLen, 4, 1, f_WAV);
-		if (ret->fLen != fLen - 8)
-			return NULL;
-	}*/
-	fread(&ret->fLen, 4, 1, f_WAV);
-	fread(tmp, 4, 1, f_WAV);
-	if (strncmp(tmp, "WAVE", 4) != 0)
-		return NULL;
+	if (ExternalPlayback == 0)
+		ret->inner.player(makeUnique<playback_t>(ret.get(), WAV_FillBuffer, ctx.playbackBuffer, 8192, info));
 
 	return ret.release();
-}
-
-bool read(FILE *file, uint16_t &value) noexcept
-{
-	uint8_t data[2];
-	const size_t result = fread(data, 2, 1, file);
-	value = (uint16_t(data[1]) << 8) | data[0];
-	return result == 2;
-}
-
-bool read(FILE *file, uint32_t &value) noexcept
-{
-	uint8_t data[4];
-	const size_t result = fread(data, 4, 1, file);
-	value = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) |
-		(uint32_t(data[1]) << 8) | data[0];
-	return result == 4;
 }
 
 /*!
@@ -134,58 +197,6 @@ bool read(FILE *file, uint32_t &value) noexcept
 FileInfo *WAV_GetFileInfo(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	auto &ctx = *p_WF->inner.context();
-	fileInfo_t &info = p_WF->inner.fileInfo();
-	FILE *f_WAV = p_WF->f_WAV;
-	char tmp[4];
-	int fmtLen;
-	int i;
-	uint16_t channels, bitsPerSample;
-
-	fread(tmp, 4, 1, f_WAV);
-	while (strncmp(tmp, "fmt ", 4) != 0)
-	{
-		int len;
-		fread(&len, 4, 1, f_WAV);
-		fseek(f_WAV, len, SEEK_CUR);
-		fread(tmp, 4, 1, f_WAV);
-	}
-
-	fread(&fmtLen, 4, 1, f_WAV);
-	if (fmtLen < 16) // Must be at least 16, probably 18.
-		return nullptr;
-
-	fread(&p_WF->compression, 2, 1, f_WAV);
-	p_WF->compression == 3 ? p_WF->usesFloat = true : p_WF->usesFloat = false;
-	read(f_WAV, channels);
-	info.channels = channels;
-	read(f_WAV, info.bitRate);
-	fread(tmp, 4, 1, f_WAV);
-	fread(tmp, 2, 1, f_WAV);
-	read(f_WAV, bitsPerSample);
-	info.bitsPerSample = bitsPerSample;
-	fmtLen -= 16;
-	// Currently we do not care if the file has extra data, we're only looking to work with PCM.
-	for (i = 0; i < fmtLen; i++)
-		fread(tmp, 1, 1, f_WAV);
-
-	fread(tmp, 4, 1, f_WAV);
-	while (strncmp(tmp, "data", 4) != 0)
-	{
-		int len;
-		fread(&len, 4, 1, f_WAV);
-		fseek(f_WAV, len, SEEK_CUR);
-		fread(tmp, 4, 1, f_WAV);
-	}
-	fread(&p_WF->DataEnd, 4, 1, f_WAV);
-	info.totalTime = p_WF->DataEnd / info.channels;
-	info.totalTime /= info.bitsPerSample / 8;
-	info.totalTime /= info.bitRate;
-	p_WF->DataEnd += ftell(f_WAV);
-
-	if (ExternalPlayback == 0)
-		p_WF->inner.player(makeUnique<playback_t>(p_WAVFile, WAV_FillBuffer, ctx.playbackBuffer, 8192, info));
-
 	return audioFileInfo(&p_WF->inner);
 }
 
@@ -203,10 +214,37 @@ wav_t::decoderContext_t::~decoderContext_t() noexcept { }
 int WAV_CloseFileR(void *p_WAVFile)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	FILE *f_WAV = p_WF->f_WAV;
-	int ret = fclose(f_WAV);
 	delete p_WF;
-	return ret;
+	return 0;
+}
+
+int8_t dataToSample(const std::array<uint8_t, 1> &data) noexcept
+	{ return int8_t(data[0]) ^ 0x80; }
+int16_t dataToSample(const std::array<uint8_t, 2> &data) noexcept
+	{ return int16_t((uint16_t(data[1]) << 8) | data[0]); }
+int16_t dataToSample(const std::array<uint8_t, 3> &data) noexcept
+	{ return int16_t((uint16_t(data[2]) << 8) | data[1]); }
+int16_t dataToSample(const std::array<uint8_t, 4> &data) noexcept
+	{ return int16_t((uint16_t(data[3]) << 8) | data[2]); }
+
+template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffer,
+	const uint32_t length, const uint32_t sampleByteCount)
+{
+	const auto playbackBuffer = static_cast<T *>(buffer);
+	uint32_t offset = 0;
+	const fd_t &file = wavFile.fd();
+	printf("Reading up to %u sample bytes with max %u available ", length, sampleByteCount);
+	printf("Using %u sample size ", N);
+	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
+	{
+		std::array<uint8_t, N> data{};
+		if (!file.read(data))
+			break;
+		playbackBuffer[index] = dataToSample(data);
+		offset += N;
+	}
+	printf("Read %u samples\n", offset);
+	return offset;
 }
 
 /*!
@@ -223,32 +261,28 @@ int WAV_CloseFileR(void *p_WAVFile)
 long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	FILE *f_WAV = p_WF->f_WAV;
-	int ret = 0;
+	uint32_t offset = 0;
 	const fileInfo_t &info = p_WF->inner.fileInfo();
+	const fd_t &file = p_WF->inner.fd();
 
-	if (feof(f_WAV) != FALSE || ftell(f_WAV) >= p_WF->DataEnd)
+	const off_t fileOffset = file.tell();
+	if (file.isEOF() || fileOffset == -1 || fileOffset >= p_WF->DataEnd)
 		return -2;
-	// 16-bit short reader
-	if (p_WF->usesFloat == false && info.bitsPerSample == 16)
-	{
-		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
-			ret += fread(OutBuffer + ret, 1, 2, f_WAV);
-	}
+	const uint32_t sampleByteCount = p_WF->DataEnd - fileOffset;
 	// 8-bit char reader
-	else if (p_WF->usesFloat == false && info.bitsPerSample == 8)
-	{
-		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
-		{
-			short in;
-			fread(&in, 1, 1, f_WAV);
-			// scale the values up to 16-bit
-			*((short *)(OutBuffer + ret)) = in * 257;
-			ret += 2;
-		}
-	}
+	if (p_WF->usesFloat == false && info.bitsPerSample == 8)
+		return readSamples<int8_t, 1>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	// 16-bit short reader
+	else if (p_WF->usesFloat == false && info.bitsPerSample == 16)
+		return readSamples<int16_t, 2>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	// 24-bit int reader
+	else if (p_WF->usesFloat == false && info.bitsPerSample == 24)
+		return readSamples<int16_t, 3>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
+	// 32-bit int reader
+	else if (p_WF->usesFloat == false && info.bitsPerSample == 32)
+		return readSamples<int16_t, 4>(p_WF->inner, OutBuffer, nOutBufferLen, sampleByteCount);
 	// 32-bit float reader
-	else if (p_WF->usesFloat == true && info.bitsPerSample == 32)
+	/*else if (p_WF->usesFloat == true && info.bitsPerSample == 32)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
 		{
@@ -258,27 +292,6 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 				*((short *)(OutBuffer + ret)) = (short)(in * 32767.5F);
 			else
 				*((short *)(OutBuffer + ret)) = (short)((in / ((float)((int)in))) * 65535.0F);
-			ret += 2;
-		}
-	}
-	// 32-bit int reader
-	else if (p_WF->usesFloat == false && info.bitsPerSample == 32)
-	{
-		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
-		{
-			int in;
-			fread(&in, 4, 1, f_WAV);
-			*((short *)(OutBuffer + ret)) = (short)(in / 65535);
-		}
-	}
-	// 24-bit int reader
-	else if (p_WF->usesFloat == false && info.bitsPerSample == 24)
-	{
-		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
-		{
-			int in;
-			fread(&in, 3, 1, f_WAV);
-			*((short *)(OutBuffer + ret)) = (short)(((float)in / 65536.0F) * 256.0F);
 			ret += 2;
 		}
 	}
@@ -292,11 +305,11 @@ long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
 			*((short *)(OutBuffer + ret)) = (short)(in * 65535.0F);
 			ret += 2;
 		}
-	}
+	}*/
 	else
 		return -1;
 
-	return ret;
+	return offset;
 }
 
 int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length) { return -1; }
