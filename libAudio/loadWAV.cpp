@@ -297,23 +297,7 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 	// 32-bit int reader
 	else if (!ctx.floatData && ctx.bitsPerSample == 32)
 		return readIntSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
-	// 32-bit float reader
-	else if (ctx.floatData && ctx.bitsPerSample == 32)
-		return readFloatSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
-	/*else if (ctx.floatData && info.bitsPerSample == 32)
-	{
-		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
-		{
-			float in;
-			fread(&in, 4, 1, f_WAV);
-			if (in > -2.0F && in < 2.0F)
-				*((short *)(OutBuffer + ret)) = (short)(in * 32767.5F);
-			else
-				*((short *)(OutBuffer + ret)) = (short)((in / ((float)((int)in))) * 65535.0F);
-			ret += 2;
-		}
-	}
-	// 24-bit float reader
+	/*// 24-bit float reader
 	else if (ctx.floatData && info.bitsPerSample == 24)
 	{
 		for (int i = 0; i < nOutBufferLen && ftell(f_WAV) < p_WF->DataEnd; i += 2)
@@ -324,6 +308,9 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 			ret += 2;
 		}
 	}*/
+	// 32-bit float reader
+	else if (ctx.floatData && ctx.bitsPerSample == 32)
+		return readFloatSamples<int16_t, 4>(*this, buffer, length, sampleByteCount);
 	else
 		return -1;
 
