@@ -45,19 +45,9 @@ struct wav_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
-typedef struct _WAV_Intern
-{
-	wav_t inner;
-
-	_WAV_Intern(const char *const fileName) : inner(fd_t(fileName, O_RDONLY | O_NOCTTY)) { }
-} WAV_Intern;
-
 wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd)),
 	ctx(makeUnique<decoderContext_t>()) { }
 wav_t::decoderContext_t::decoderContext_t() noexcept { }
-
-bool read(const fd_t &fd, uint8_t &value) noexcept
-	{ return fd.read(value); }
 
 bool read(const fd_t &fd, uint16_t &value) noexcept
 {
@@ -103,9 +93,8 @@ bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 	return chunkTag == chunkName;
 }
 
-bool wav_t::readFormat(void *intern) noexcept
+bool wav_t::readFormat() noexcept
 {
-	auto p_WF = static_cast<WAV_Intern *>(intern);
 	auto &ctx = *context();
 	fileInfo_t &info = fileInfo();
 	const fd_t &file = fd();
@@ -128,20 +117,14 @@ bool wav_t::readFormat(void *intern) noexcept
 	return true;
 }
 
-/*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
- * to the context of the opened file which must be used only by WAV_* functions
- * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
- */
-void *WAV_OpenR(const char *FileName)
+wav_t *wav_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<WAV_Intern> ret = makeUnique<WAV_Intern>(FileName);
-	if (!ret || !wav_t::isWAV(ret->inner.fd()))
+	std::unique_ptr<wav_t> wavFile(makeUnique<wav_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!wavFile || !wavFile->valid() || !isWAV(wavFile->_fd))
 		return nullptr;
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
-	const fd_t &file = ret->inner.fd();
+	auto &ctx = *wavFile->context();
+	fileInfo_t &info = wavFile->fileInfo();
+	const fd_t &file = wavFile->fd();
 	const off_t fileSize = file.length();
 	uint32_t chunkLength = 0;
 
@@ -150,14 +133,14 @@ void *WAV_OpenR(const char *FileName)
 		!read(file, chunkLength) ||
 		chunkLength > (fileSize - 8) ||
 		file.seek(4, SEEK_CUR) != 12 ||
-		!ret->inner.skipToChunk(waveFormatChunk))
+		!wavFile->skipToChunk(waveFormatChunk))
 		return nullptr;
 	off_t offset = file.tell();
 	if (offset == -1 ||
 		!read(file, chunkLength) ||
 		chunkLength > (fileSize - offset - 4) ||
 		chunkLength < 16 ||
-		!ret->inner.readFormat(ret.get()))
+		!wavFile->readFormat())
 		return nullptr;
 
 	// Currently we do not care if the file has extra data, we're only looking to work with PCM.
@@ -168,7 +151,7 @@ void *WAV_OpenR(const char *FileName)
 			return nullptr;
 	}
 
-	if (!ret->inner.skipToChunk(waveDataChunk) ||
+	if (!wavFile->skipToChunk(waveDataChunk) ||
 		!read(file, chunkLength) ||
 		(offset = file.tell()) == -1 ||
 		chunkLength > (fileSize - offset) ||
@@ -178,11 +161,27 @@ void *WAV_OpenR(const char *FileName)
 	info.totalTime /= info.bitsPerSample / 8;
 	info.totalTime /= info.bitRate;
 	ctx.offsetDataLength = chunkLength + file.tell();
+	return wavFile.release();
+}
+
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by WAV_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
+void *WAV_OpenR(const char *FileName)
+{
+	std::unique_ptr<wav_t> file(wav_t::openR(FileName));
+	if (!file)
+		return nullptr;
+	auto &ctx = *file->context();
+	const fileInfo_t &info = file->fileInfo();
 
 	if (ExternalPlayback == 0)
-		ret->inner.player(makeUnique<playback_t>(ret.get(), WAV_FillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 
-	return ret.release();
+	return file.release();
 }
 
 /*!
@@ -192,12 +191,7 @@ void *WAV_OpenR(const char *FileName)
  * @warning This function must be called before using \c WAV_Play() or \c WAV_FillBuffer()
  * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *WAV_GetFileInfo(void *p_WAVFile)
-{
-	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	return audioFileInfo(&p_WF->inner);
-}
-
+FileInfo *WAV_GetFileInfo(void *p_WAVFile) { return audioFileInfo(p_WAVFile); }
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!
@@ -209,13 +203,7 @@ wav_t::decoderContext_t::~decoderContext_t() noexcept { }
  * to destroy it via scope
  * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int WAV_CloseFileR(void *p_WAVFile)
-{
-	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	delete p_WF;
-	return 0;
-}
-
+int WAV_CloseFileR(void *p_WAVFile) { return audioCloseFile(p_WAVFile); }
 int8_t dataToSample(const std::array<uint8_t, 1> &data) noexcept
 	{ return int8_t(data[0]) ^ 0x80; }
 int16_t dataToSample(const std::array<uint8_t, 2> &data) noexcept
@@ -254,10 +242,7 @@ template<typename T, uint8_t N> uint32_t readSamples(wav_t &wavFile, void *buffe
  * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	return audioFillBuffer(&p_WF->inner, OutBuffer, nOutBufferLen);
-}
+	{ return audioFillBuffer(p_WAVFile, OutBuffer, nOutBufferLen); }
 
 int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 {
@@ -324,23 +309,9 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
  * @bug Futher to the \p p_WAVFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void WAV_Play(void *p_WAVFile)
-{
-	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	p_WF->inner.play();
-}
-
-void WAV_Pause(void *p_WAVFile)
-{
-	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	p_WF->inner.pause();
-}
-
-void WAV_Stop(void *p_WAVFile)
-{
-	WAV_Intern *p_WF = (WAV_Intern *)p_WAVFile;
-	p_WF->inner.stop();
-}
+void WAV_Play(void *p_WAVFile) { audioPlay(p_WAVFile); }
+void WAV_Pause(void *p_WAVFile) { audioPause(p_WAVFile); }
+void WAV_Stop(void *p_WAVFile) { audioStop(p_WAVFile); }
 
 /*!
  * Checks the file given by \p FileName for whether it is a WAV
