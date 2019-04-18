@@ -57,11 +57,6 @@ typedef struct _OV_Intern
 	 * The Ogg file being written to
 	 */
 	FILE *f_Ogg;
-	/*!
-	 * @internal
-	 * The input metadata in the form of a \c FileInfo structure
-	 */
-	FileInfo *p_FI;
 
 	oggVorbis_t inner;
 
@@ -117,6 +112,7 @@ void *OggVorbis_OpenW(const char *FileName)
 void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
+	fileInfo_t &info = p_VF->inner.fileInfo();
 	ogg_packet hdr, hdr_comm, hdr_code;
 
 	vorbis_encode_init(p_VF->vi, p_FI->Channels, p_FI->BitRate, -1, 160000, -1);
@@ -153,8 +149,10 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 		fwrite(p_VF->ope->body, p_VF->ope->body_len, 1, p_VF->f_Ogg);
 	}
 
-	p_VF->p_FI = (FileInfo *)malloc(sizeof(FileInfo));
-	memcpy(p_VF->p_FI, p_FI, sizeof(FileInfo));
+	info.totalTime = p_FI->TotalTime;
+	info.bitsPerSample = p_FI->BitsPerSample;
+	info.bitRate = p_FI->BitRate;
+	info.channels = p_FI->Channels;
 }
 
 /*!
@@ -167,6 +165,7 @@ void OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
+	fileInfo_t &info = p_VF->inner.fileInfo();
 	bool eos = false;
 
 	if (nInBufferLen <= 0)
@@ -176,14 +175,14 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 	}
 	else
 	{
-		uint32_t bufflen = (nInBufferLen / 2) / p_VF->p_FI->Channels;
+		uint32_t bufflen = (nInBufferLen / 2) / info.channels;
 		float **buff = vorbis_analysis_buffer(p_VF->vds, bufflen);
 		short *IB = (short *)InBuffer;
 
 		for (uint32_t i = 0; i < bufflen; i++)
 		{
-			for (uint32_t j = 0; j < p_VF->p_FI->Channels; j++)
-				buff[j][i] = ((float)IB[i * p_VF->p_FI->Channels + j]) / 32768.0F;
+			for (uint8_t j = 0; j < info.channels; j++)
+				buff[j][i] = ((float)IB[i * info.channels + j]) / 32768.0F;
 		}
 
 		vorbis_analysis_wrote(p_VF->vds, bufflen);
@@ -283,7 +282,6 @@ int OggVorbis_CloseFileW(void *p_VorbisFile)
 	}
 
 	ret = fclose(p_VF->f_Ogg);
-	free(p_VF->p_FI);
 	delete p_VF;
 	return ret;
 }
