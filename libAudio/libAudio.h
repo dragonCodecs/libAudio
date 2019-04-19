@@ -3,21 +3,6 @@
 
 #include <stdint.h>
 #include "fileInfo.hxx"
-#include <vector>
-
-typedef struct FileInfo
-{
-	uint64_t TotalTime; // in seconds? - probably a good resolution for this.
-	uint32_t BitsPerSample;
-	uint32_t BitRate;
-	uint32_t Channels;
-	//int BitStream;
-	const char *Title;
-	const char *Artist;
-	const char *Album;
-	std::vector<const char *> OtherComments;
-	uint32_t nOtherComments;
-} FileInfo;
 
 #ifdef _WINDOWS
 	#ifdef libAUDIO
