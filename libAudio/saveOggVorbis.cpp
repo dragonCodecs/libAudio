@@ -11,17 +11,6 @@
 
 typedef struct _OV_Intern
 {
-	/*!
-	 * @internal
-	 * The Vorbis Digital Signal Processing state
-	 */
-	vorbis_dsp_state *vds;
-	/*!
-	 * @internal
-	 * The Vorbis encoding context
-	 */
-	vorbis_block *vb;
-
 	oggVorbis_t inner;
 
 	_OV_Intern(const char *const fileName) noexcept :
@@ -30,7 +19,8 @@ typedef struct _OV_Intern
 
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept :
 	audioFile_t(audioType_t::oggVorbis, std::move(fd)), encoderCtx(makeUnique<encoderContext_t>()) { }
-oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : vorbisInfo{}, streamState{}, eos{false}
+oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : encoderState{}, blockState{},
+	streamState{}, vorbisInfo{}, eos{false}
 {
 	std::random_device randomDev;
 	vorbis_info_init(&vorbisInfo);
@@ -48,10 +38,6 @@ void *OggVorbis_OpenW(const char *FileName)
 	std::unique_ptr<OV_Intern> ret = makeUnique<OV_Intern>(FileName);
 	if (!ret || !ret->inner.encoderContext())
 		return nullptr;
-
-	ret->vds = (vorbis_dsp_state *)malloc(sizeof(vorbis_dsp_state));
-	ret->vb = (vorbis_block *)malloc(sizeof(vorbis_block));
-
 	return ret.release();
 }
 
@@ -103,21 +89,23 @@ bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
 	auto &ctx = *p_VF->inner.encoderContext();
 	fileInfo_t &info = p_VF->inner.fileInfo();
 	const fd_t &fd = p_VF->inner.fd();
-	vorbis_info &vorbisInfo = ctx.vorbisInfo;
-	ogg_packet hdr, hdr_comm, hdr_code;
+	ogg_packet packetHeader, packetComments, packetMode;
 
-	vorbis_encode_init_vbr(&vorbisInfo, p_FI->Channels, p_FI->BitRate, 0.75F);
-	vorbis_encode_setup_init(&vorbisInfo);
+	vorbis_encode_init_vbr(&ctx.vorbisInfo, p_FI->Channels, p_FI->BitRate, 0.75F);
+	vorbis_encode_setup_init(&ctx.vorbisInfo);
 
-	vorbis_analysis_init(p_VF->vds, &vorbisInfo);
-	vorbis_block_init(p_VF->vds, p_VF->vb);
+	vorbis_analysis_init(&ctx.encoderState, &ctx.vorbisInfo);
+	vorbis_block_init(&ctx.encoderState, &ctx.blockState);
 
 	vorbis_comment tags = copyComments(*p_FI);
-	vorbis_analysis_headerout(p_VF->vds, &tags, &hdr, &hdr_comm, &hdr_code);
+	vorbis_analysis_headerout(&ctx.encoderState, &tags, &packetHeader, &packetComments, &packetMode);
 	vorbis_comment_clear(&tags);
-	ogg_stream_packetin(&ctx.streamState, &hdr);
-	ogg_stream_packetin(&ctx.streamState, &hdr_comm);
-	ogg_stream_packetin(&ctx.streamState, &hdr_code);
+	ogg_stream_packetin(&ctx.streamState, &packetHeader);
+	ogg_stream_packetin(&ctx.streamState, &packetComments);
+	ogg_stream_packetin(&ctx.streamState, &packetMode);
+	//ogg_packet_clear(&packetHeader);
+	//ogg_packet_clear(&packetComments);
+	//ogg_packet_clear(&packetMode);
 
 	if (!ctx.writePage(fd, true))
 		return false;
@@ -146,13 +134,13 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 
 	if (nInBufferLen <= 0)
 	{
-		vorbis_analysis_buffer(p_VF->vds, 0);
-		vorbis_analysis_wrote(p_VF->vds, 0);
+		vorbis_analysis_buffer(&ctx.encoderState, 0);
+		vorbis_analysis_wrote(&ctx.encoderState, 0);
 	}
 	else
 	{
 		uint32_t bufflen = (nInBufferLen / 2) / info.channels;
-		float **buff = vorbis_analysis_buffer(p_VF->vds, bufflen);
+		float **buff = vorbis_analysis_buffer(&ctx.encoderState, bufflen);
 		short *IB = (short *)InBuffer;
 
 		for (uint32_t i = 0; i < bufflen; i++)
@@ -161,16 +149,16 @@ long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferL
 				buff[j][i] = float(IB[i * info.channels + j]) / 32768.0F;
 		}
 
-		vorbis_analysis_wrote(p_VF->vds, bufflen);
+		vorbis_analysis_wrote(&ctx.encoderState, bufflen);
 	}
 
-	while (vorbis_analysis_blockout(p_VF->vds, p_VF->vb) == 1)
+	while (vorbis_analysis_blockout(&ctx.encoderState, &ctx.blockState) == 1)
 	{
-		vorbis_analysis(p_VF->vb, nullptr);
-		vorbis_bitrate_addblock(p_VF->vb);
+		vorbis_analysis(&ctx.blockState, nullptr);
+		vorbis_bitrate_addblock(&ctx.blockState);
 
 		ogg_packet packet{};
-		while (vorbis_bitrate_flushpacket(p_VF->vds, &packet) == 1)
+		while (vorbis_bitrate_flushpacket(&ctx.encoderState, &packet) == 1)
 		{
 			ogg_stream_packetin(&ctx.streamState, &packet);
 			if (packet.bytes == 1)
@@ -191,8 +179,10 @@ int64_t oggVorbis_t::writeBuffer(const void *const buffer, const uint32_t length
 
 oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept
 {
-	vorbis_info_clear(&vorbisInfo);
+	vorbis_dsp_clear(&encoderState);
+	vorbis_block_clear(&blockState);
 	ogg_stream_clear(&streamState);
+	vorbis_info_clear(&vorbisInfo);
 }
 
 /*!
@@ -206,16 +196,6 @@ oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept
 int OggVorbis_CloseFileW(void *p_VorbisFile)
 {
 	OV_Intern *p_VF = (OV_Intern *)p_VorbisFile;
-	if (p_VF->vb != NULL)
-	{
-		vorbis_block_clear(p_VF->vb);
-		free(p_VF->vb);
-	}
-	if (p_VF->vds != NULL)
-	{
-		vorbis_dsp_clear(p_VF->vds);
-		free(p_VF->vds);
-	}
 	delete p_VF;
 	return 0;
 }

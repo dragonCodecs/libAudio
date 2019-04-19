@@ -39,14 +39,24 @@ struct oggVorbis_t::encoderContext_t final
 {
 	/*!
 	 * @internal
-	 * Sturcture describing info about the Vorbis stream being encoded
+	 * The Vorbis Digital Signal Processing state
 	 */
-	vorbis_info vorbisInfo;
+	vorbis_dsp_state encoderState;
+	/*!
+	 * @internal
+	 * The Vorbis encoding context
+	 */
+	vorbis_block blockState;
 	/*!
 	 * @internal
 	 * The Ogg Stream state
 	 */
 	ogg_stream_state streamState;
+	/*!
+	 * @internal
+	 * Sturcture describing info about the Vorbis stream being encoded
+	 */
+	vorbis_info vorbisInfo;
 	bool eos;
 
 	encoderContext_t() noexcept;
