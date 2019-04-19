@@ -206,24 +206,31 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 
 ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 {
-	char Magic1[4], Magic2[42];
+	std::array<char, 4> magic1, blockName;
+	std::array<char, 42> magic2;
 	char StrMagic[4];
 	uint32_t BlockLen;
 	uint8_t Const, i;
+	const fd_t &fd = p_AF->inner.fd();
 	FILE *f_AON = p_AF->f_Module;
 
-	fread(Magic1, 4, 1, f_AON);
-	fread(Magic2, 42, 1, f_AON);
-	fread(StrMagic, 4, 1, f_AON);
+	if (!fd.read(magic1) ||
+		!fd.read(magic2) ||
+		memcmp(magic1.data(), "AON", 3) != 0 ||
+		(magic1[3] != '4' && magic1[3] != '8') ||
+		memcmp(magic2.data(), "artofnoise by bastian spiegel (twice/lego)", 42) != 0 ||
+		!fd.read(blockName) ||
+		memcmp(blockName.data(), "NAME", 4) != 0)
+		throw ModuleLoaderError(E_BAD_AON);
+
+	fseek(f_AON, fd.tell(), SEEK_SET);
 	fread(&BlockLen, 4, 1, f_AON);
 	BlockLen = Swap32(BlockLen);
 
-	if (strncmp(Magic1, "AON4", 4) != 0 && strncmp(Magic1, "AON8", 4) != 0 &&
-		strncmp(Magic2, "artofnoise by bastian spiegel (twice/lego)", 42) != 0 &&
-		strncmp(StrMagic, "NAME", 4) != 0)
+	if (strncmp(StrMagic, "NAME", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_AON);
 
-	nChannels = Magic1[3] - '0';
+	nChannels = magic1[3] - '0';
 
 	Name = makeUnique<char []>(BlockLen + 1);
 	if (!Name)
