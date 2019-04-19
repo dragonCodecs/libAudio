@@ -17,8 +17,6 @@
 uint8_t ExternalPlayback = 0;
 uint8_t ToPlayback = 1;
 
-FileInfo audioInfo;
-
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by Audio_* functions
