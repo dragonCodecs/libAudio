@@ -1,4 +1,5 @@
 #include <random>
+#include <limits>
 #include "oggVorbis.hxx"
 
 /*!
@@ -119,31 +120,34 @@ bool oggVorbis_t::fileInfo(const FileInfo &fileInfo)
 long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen)
 	{ return audioWriteBuffer(p_VorbisFile, InBuffer, nInBufferLen); }
 
-int64_t oggVorbis_t::writeBuffer(const void *const buffer, const uint32_t length)
+template<typename T> uint32_t fillFrame(oggVorbis_t &file, const void *const bufferPtr,
+	const uint32_t length)
 {
-	fileInfo_t &info = fileInfo();
+	const fileInfo_t &info = file.fileInfo();
+	auto &ctx = *file.encoderContext();
+	const uint32_t sampleCount = length / (sizeof(T) * info.channels);
+	const auto encoderBuffer = vorbis_analysis_buffer(&ctx.encoderState, sampleCount);
+	const auto buffer = static_cast<const T *>(bufferPtr);
+	using limits = std::numeric_limits<T>;
+	for (uint32_t index = 0, i = 0; i < sampleCount; ++i)
+	{
+		for (uint8_t channel = 0; channel < info.channels; ++channel)
+			encoderBuffer[channel][i] = float(buffer[index++]) / limits::max();
+	}
+	return sampleCount;
+}
+
+int64_t oggVorbis_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
+{
+	const fileInfo_t &info = fileInfo();
 	auto &ctx = *encoderContext();
+	uint32_t sampleCount = 0;
+	if (info.bitsPerSample == 8)
+		sampleCount = fillFrame<int8_t>(*this, bufferPtr, length);
+	else if (info.bitsPerSample == 16)
+		sampleCount = fillFrame<int16_t>(*this, bufferPtr, length);
 
-	if (length <= 0)
-	{
-		vorbis_analysis_buffer(&ctx.encoderState, 0);
-		vorbis_analysis_wrote(&ctx.encoderState, 0);
-	}
-	else
-	{
-		uint32_t bufflen = (length / 2) / info.channels;
-		float **buff = vorbis_analysis_buffer(&ctx.encoderState, bufflen);
-		const auto IB = static_cast<const int16_t *>(buffer);
-
-		for (uint32_t i = 0; i < bufflen; i++)
-		{
-			for (uint8_t j = 0; j < info.channels; j++)
-				buff[j][i] = float(IB[i * info.channels + j]) / 32768.0F;
-		}
-
-		vorbis_analysis_wrote(&ctx.encoderState, bufflen);
-	}
-
+	vorbis_analysis_wrote(&ctx.encoderState, sampleCount);
 	while (vorbis_analysis_blockout(&ctx.encoderState, &ctx.blockState) == 1)
 	{
 		vorbis_analysis(&ctx.blockState, nullptr);
