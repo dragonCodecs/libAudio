@@ -170,6 +170,7 @@ libAUDIO_API void AON_Pause(void *p_AONFile);
 libAUDIO_API void AON_Stop(void *p_AONFile);
 libAUDIO_API bool Is_AON(const char *FileName);
 
+#ifdef ENABLE_FC1x
 // FC1x API
 
 libAUDIO_API void *FC1x_OpenR(const char *FileName);
@@ -180,6 +181,7 @@ libAUDIO_API void FC1x_Play(void *p_FC1xFile);
 libAUDIO_API void FC1x_Pause(void *p_FC1xFile);
 libAUDIO_API void FC1x_Stop(void *p_FC1xFile);
 libAUDIO_API bool Is_FC1x(const char *FileName);
+#endif
 
 // MPC API
 

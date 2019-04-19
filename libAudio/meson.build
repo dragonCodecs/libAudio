@@ -29,11 +29,16 @@ srcOptimFROG = []
 #O_SNDH = loadSNDH.o
 srcSNDH = []
 srcSID = 'loadSID.cpp'
+fc1x = {
+	'src': 'loadFC1x.cpp',
+	'args': '-DENABLE_FC1x'
+}
+srcFC1x = []
 
 genericModuleSrcs = [
 	'genericModule/ModuleFile.cpp', 'genericModule/ModuleHeader.cpp', 'genericModule/ModuleInstrument.cpp', 'genericModule/ModuleSample.cpp',
 	'genericModule/ModulePattern.cpp', 'genericModule/ModuleEffects.cpp', 'moduleMixer/moduleMixer.cpp',
-	'loadMOD.cpp', 'loadS3M.cpp', 'loadSTM.cpp', 'loadAON.cpp', 'loadFC1x.cpp', 'loadIT.cpp'
+	'loadMOD.cpp', 'loadS3M.cpp', 'loadSTM.cpp', 'loadAON.cpp', srcFC1x, 'loadIT.cpp'
 ]
 
 libAudioSrcs = [
@@ -49,7 +54,7 @@ libAudio = declare_dependency(
 		'libAudio',
 		libAudioSrcs,
 		dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
-		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', '-DENABLE_FC1x'],
+		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
 		name_prefix: '',
 		install: true,
 		version: meson.project_version()
