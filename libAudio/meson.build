@@ -14,38 +14,53 @@ maths = cxx.find_library('m', required: false)
 cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
 cxx.has_function('WavpackOpenFileInputEx64', dependencies: libWavPack)
 
-wma = {
-	'srcs': ['loadWMA.cpp'],
-	'args': '-DENABLE_WMA'
-}
-srcWMA = []
-#SHORTEN = loadShorten.o
-srcShorten = []
-optimFROG = {
-	'srcs': ['loadOptimFROG.cpp'],
-	'args': '-DENABLE_OptimFROG'
-}
-srcOptimFROG = []
-#O_SNDH = loadSNDH.o
-srcSNDH = []
-srcSID = 'loadSID.cpp'
-fc1x = {
-	'src': 'loadFC1x.cpp',
-	'args': '-DENABLE_FC1x'
-}
-srcFC1x = []
+extraFormats = get_option('extra_formats')
+extraSrcs = []
+extraArgs = []
+extraDeps = []
+
+if extraFormats.contains('wma')
+	extraSrcs += 'loadWMA.cpp'
+	extraArgs += '-DENABLE_WMA'
+endif
+if extraFormats.contains('shorten')
+	extraSrcs += 'loadShorten.cpp'
+	extraArgs += '-DENABLE_SHORTEN'
+endif
+if extraFormats.contains('optimFROG')
+	extraSrcs += 'loadOptimFROG.cpp'
+	extraArgs += '-DENABLE_OptimFROG'
+	extraDeps += cxx.find_library('OptimFROG')
+endif
+if extraFormats.contains('sndh')
+	extraSrcs += 'loadSNDH.cpp'
+	extraArgs += '-DENABLE_SNDH'
+endif
+if extraFormats.contains('sid')
+	extraSrcs += 'loadSID.cpp'
+	extraArgs += '-DENABLE_SID'
+endif
+if extraFormats.contains('aon')
+	extraSrcs += 'loadAON.cpp'
+	extraArgs += '-DENABLE_AON'
+endif
+if extraFormats.contains('fc1x')
+	extraSrcs += 'loadFC1x.cpp'
+	extraArgs += '-DENABLE_FC1x'
+endif
 
 genericModuleSrcs = [
 	'genericModule/ModuleFile.cpp', 'genericModule/ModuleHeader.cpp', 'genericModule/ModuleInstrument.cpp', 'genericModule/ModuleSample.cpp',
 	'genericModule/ModulePattern.cpp', 'genericModule/ModuleEffects.cpp', 'moduleMixer/moduleMixer.cpp',
-	'loadMOD.cpp', 'loadS3M.cpp', 'loadSTM.cpp', 'loadAON.cpp', srcFC1x, 'loadIT.cpp'
+	'loadMOD.cpp', 'loadS3M.cpp', 'loadSTM.cpp', 'loadAON.cpp', 'loadIT.cpp'
 ]
 
 libAudioSrcs = [
 	'loadAudio.cpp', 'libAudio_Common.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
-	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'fixedPoint/fixedPoint.cpp', genericModuleSrcs, srcSNDH, srcSID,
-	'loadWavPack.cpp', srcOptimFROG, srcShorten, 'loadRealAudio.cpp', srcWMA,
-	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp', 'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx'
+	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp', genericModuleSrcs,
+	'loadRealAudio.cpp',
+	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp', 'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx',
+	extraSrcs
 ]
 
 libAudio = declare_dependency(
@@ -53,8 +68,8 @@ libAudio = declare_dependency(
 	link_with: shared_library(
 		'libAudio',
 		libAudioSrcs,
-		dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
-		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
+		dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, extraDeps, maths],
+		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
 		name_prefix: '',
 		install: true,
 		version: meson.project_version()
