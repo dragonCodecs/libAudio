@@ -94,22 +94,20 @@ extern API_Functions WAVDecoder;
 extern API_Functions M4ADecoder;
 extern API_Functions AACDecoder;
 extern API_Functions MP3Decoder;
-#ifndef __NO_IT__
 extern API_Functions ITDecoder;
-#endif
 extern API_Functions MODDecoder;
 extern API_Functions S3MDecoder;
 extern API_Functions STMDecoder;
 extern API_Functions AONDecoder;
+#ifdef ENABLE_FC1x
 extern API_Functions FC1xDecoder;
-#ifndef __NO_MPC__
-extern API_Functions MPCDecoder;
 #endif
+extern API_Functions MPCDecoder;
 extern API_Functions WavPackDecoder;
-#ifndef __NO_OptimFROG__
+#ifdef ENABLE_OptimFROG
 extern API_Functions OptimFROGDecoder;
 #endif
-#ifdef _WINDOWS
+#ifdef ENABLE_WMA
 extern API_Functions WMADecoder;
 #endif
 

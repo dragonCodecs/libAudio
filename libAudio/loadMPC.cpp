@@ -1,5 +1,3 @@
-#ifndef __NO_MPC__
-
 #include <algorithm>
 #include <mpc/mpcdec.h>
 
@@ -371,5 +369,3 @@ API_Functions MPCDecoder =
 	audioPause,
 	audioStop
 };
-
-#endif /* __NO_MPC__ */

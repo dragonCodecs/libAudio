@@ -14,11 +14,17 @@ maths = cxx.find_library('m', required: false)
 cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
 cxx.has_function('WavpackOpenFileInputEx64', dependencies: libWavPack)
 
-#WMA = loadWMA.o
+wma = {
+	'srcs': ['loadWMA.cpp'],
+	'args': '-DENABLE_WMA'
+}
 srcWMA = []
 #SHORTEN = loadShorten.o
 srcShorten = []
-#OPTIMFROG = loadOptimFROG.o
+optimFROG = {
+	'srcs': ['loadOptimFROG.cpp'],
+	'args': '-DENABLE_OptimFROG'
+}
 srcOptimFROG = []
 #O_SNDH = loadSNDH.o
 srcSNDH = []
@@ -43,7 +49,7 @@ libAudio = declare_dependency(
 		'libAudio',
 		libAudioSrcs,
 		dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
-		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
+		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', '-DENABLE_FC1x'],
 		name_prefix: '',
 		install: true,
 		version: meson.project_version()

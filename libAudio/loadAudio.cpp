@@ -50,7 +50,7 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &STMDecoder;
 	else if (Is_AON(FileName) == true)
 		ret->API = &AONDecoder;
-#ifdef FC1x_EXPERIMENTAL
+#ifdef ENABLE_FC1x
 	else if (Is_FC1x(FileName) == true)
 		ret->API = &FC1xDecoder;
 #endif
@@ -249,12 +249,12 @@ bool Is_Audio(const char *FileName)
 		return true;
 	else if (Is_AON(FileName) == true)
 		return true;
+#ifdef ENABLE_FC1x
 	else if (Is_FC1x(FileName) == true)
 		return true;
-#ifndef __NO_MPC__
+#endif
 	else if (Is_MPC(FileName) == true)
 		return true;
-#endif
 	else if (Is_WavPack(FileName) == true)
 		return true;
 #ifdef ENABLE_OptimFROG
