@@ -624,7 +624,7 @@ public:
 	ModuleFile(const modSTM_t &file);
 	ModuleFile(AON_Intern *p_AF);
 #ifdef ENABLE_FC1x
-	ModuleFile(FC1x_Intern *p_FF);
+	ModuleFile(const modFC1x_t &file);
 #endif
 	ModuleFile(const modIT_t &file);
 	virtual ~ModuleFile();

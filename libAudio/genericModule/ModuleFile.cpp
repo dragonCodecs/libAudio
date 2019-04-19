@@ -208,15 +208,15 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 }
 
 #ifdef ENABLE_FC1x
-ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modFC1x_t &file) : ModuleType(MODULE_FC1x), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
-//	FILE *f_FC1x = p_FF->f_Module;
+//	const fd_t &fd = file.fd();
 
-	p_Header = new ModuleHeader(p_FF->inner);
+	p_Header = new ModuleHeader(file);
 }
 #endif
 
-ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instruments(), Channels(), MixerChannels()
+ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	const fd_t &fd = file.fd();
 	uint16_t i;
