@@ -25,12 +25,9 @@ using stringPtr_t = std::unique_ptr<char []>;
 template<typename T> struct moduleIntern : T
 {
 	FILE *f_Module;
-	FileInfo *p_FI;
-	playback_t *p_Playback;
 	uint8_t buffer[8192];
-	ModuleFile *p_File;
 
-	moduleIntern() noexcept : T(), f_Module(nullptr), p_FI(nullptr), p_Playback(nullptr), p_File(nullptr) { }
+	moduleIntern() noexcept : T(), f_Module(nullptr) { }
 };
 
 struct aonIntern { modAON_t inner; };
