@@ -1,4 +1,4 @@
-playerSrcs = ['main.cpp']
+playerSrcs = ['player.cxx']
 
 executable(
 	'libAudio',
