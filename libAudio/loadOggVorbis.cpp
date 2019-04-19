@@ -251,13 +251,13 @@ API_Functions OggVorbisDecoder =
 {
 	OggVorbis_OpenR,
 	OggVorbis_OpenW,
-	OggVorbis_GetFileInfo,
-	OggVorbis_SetFileInfo,
-	OggVorbis_FillBuffer,
-	OggVorbis_WriteBuffer,
-	OggVorbis_CloseFileR,
-	OggVorbis_CloseFileW,
-	OggVorbis_Play,
-	OggVorbis_Pause,
-	OggVorbis_Stop
+	audioFileInfo,
+	audioFileInfo,
+	audioFillBuffer,
+	audioWriteBuffer,
+	audioCloseFile,
+	audioCloseFile,
+	audioPlay,
+	audioPause,
+	audioStop
 };
