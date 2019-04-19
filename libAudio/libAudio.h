@@ -1,11 +1,9 @@
 #ifndef LIB_AUDIO__HXX
 #define LIB_AUDIO__HXX
 
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
+#include <stdint.h>
+#include "fileInfo.hxx"
 #include <vector>
-#include <inttypes.h>
 
 typedef struct FileInfo
 {
@@ -39,21 +37,6 @@ typedef struct FileInfo
 	#else
 		#define libAUDIO_API extern DEFAULT_VISIBILITY
 	#endif
-#endif
-
-#ifndef _WINDOWS
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
-#ifndef ULONG
-#define ULONG unsigned long
-#endif
-#ifndef BOOL
-#define BOOL uint8_t
-#endif
-#else
-#include <inttypes.h>
 #endif
 
 #define libAudioVersion "0.3"

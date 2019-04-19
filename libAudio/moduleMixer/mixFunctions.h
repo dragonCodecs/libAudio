@@ -102,7 +102,7 @@ short *KaiserSinc = NULL;
 short *DownSample13x = NULL;
 short *DownSample2x = NULL;
 signed short *WFIRlutTab;
-BOOL InitTables = FALSE;
+bool InitTables = false;
 double WFIRCutoff = 0.99;
 uint8_t WFIRType = WFIR_KAISER4T;
 
