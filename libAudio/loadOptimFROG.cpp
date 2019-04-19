@@ -28,12 +28,12 @@ typedef struct _OFROG_Intern
 	 * @internal
 	 * The OptimFROG callbacks information handle
 	 */
-	ReadInterface *callbacks;
+	ReadInterface callbacks;
 	/*!
 	 * @internal
 	 * The \c FileInfo for the OptimFROG file being decoded
 	 */
-	FileInfo *p_FI;
+	fileInfo_t info;
 	/*!
 	 * @internal
 	 * The decoder context handle
@@ -48,7 +48,7 @@ typedef struct _OFROG_Intern
 	 * @internal
 	 * The internal decoded data buffer
 	 */
-	BYTE buffer[8192];
+	uint8_t buffer[8192];
 } OFROG_Intern;
 
 /*!
@@ -60,7 +60,7 @@ typedef struct _OFROG_Intern
  */
 uint8_t __fclose(void *Inst)
 {
-	return (fclose((FILE *)Inst) == 0 ? TRUE : FALSE);
+	return (fclose((FILE *)Inst) == 0 ? 1 : 0);
 }
 
 /*!
@@ -72,7 +72,7 @@ uint8_t __fclose(void *Inst)
  * @param count The number of bytes to read into the buffer
  * @return The return result of \c fread()
  */
-int __fread(void *Inst, void *dest, UINT count)
+int __fread(void *Inst, void *dest, uint32_t count)
 {
 	int ret = fread(dest, 1, count, (FILE *)Inst);
 	int err = ferror((FILE *)Inst);
@@ -92,7 +92,7 @@ int __fread(void *Inst, void *dest, UINT count)
  */
 uint8_t __feof(void *Inst)
 {
-	return (feof((FILE *)Inst) == 0 ? FALSE : TRUE);
+	return (feof((FILE *)Inst) == 0 ? 1 : 0);
 }
 
 /*!
@@ -107,7 +107,7 @@ uint8_t __feof(void *Inst)
  */
 uint8_t __fseekable(void *Inst)
 {
-	return (fseek((FILE *)Inst, 0, SEEK_CUR) == 0 ? TRUE : FALSE);
+	return (fseek((FILE *)Inst, 0, SEEK_CUR) == 0 ? 1 : 0);
 }
 
 /*!
@@ -117,7 +117,7 @@ uint8_t __fseekable(void *Inst)
  * @param Inst \c FILE handle for the OptimFROG file as a void pointer
  * @return A 64-bit integer giving the length of the file in bytes
  */
-__int64 __flen(void *Inst)
+int64_t __flen(void *Inst)
 {
 	struct stat stats;
 
@@ -132,7 +132,7 @@ __int64 __flen(void *Inst)
  * @param Inst \c FILE handle for the OptimFROG file as a void pointer
  * @return A 64-bit integerAn integer giving the read possition of the file in bytes
  */
-__int64 __ftell(void *Inst)
+int64_t __ftell(void *Inst)
 {
 	return ftell((FILE *)Inst);
 }
@@ -145,9 +145,9 @@ __int64 __ftell(void *Inst)
  * @param pos The offset through the file to which to seek to
  * @return A truth value giving if the seek succeeded or not
  */
-uint8_t __fseek(void *Inst, __int64 pos)
+uint8_t __fseek(void *Inst, int64_t pos)
 {
-	return (fseek((FILE *)Inst, (long)pos, SEEK_SET) == 0 ? TRUE : FALSE);
+	return (fseek((FILE *)Inst, (long)pos, SEEK_SET) == 0 ? 1 : 0);
 }
 
 /*!
@@ -158,32 +158,34 @@ uint8_t __fseek(void *Inst, __int64 pos)
  */
 void *OptimFROG_OpenR(const char *FileName)
 {
-	OFROG_Intern *ret;
-	FILE *f_OFG;
+	std::unique_ptr<OFROG_Intern> ret = makeUnique<OFROG_Intern>();
+	if (!ret)
+		return nullptr;
+	fileInfo_t &info = ret->info;
 
-	ret = (OFROG_Intern *)malloc(sizeof(OFROG_Intern));
-	if (ret == NULL)
-		return ret;
-
-	f_OFG = fopen(FileName, "rb");
-	if (f_OFG == NULL)
-		return f_OFG;
-
-	ret->f_OFG = f_OFG;
+	ret->f_OFG = fopen(FileName, "rb");
+	if (!ret->f_OFG)
+		return nullptr;
 	ret->p_dec = OptimFROG_createInstance();
 
-	ret->callbacks = (ReadInterface *)malloc(sizeof(ReadInterface));
-	ret->callbacks->close = __fclose;
-	ret->callbacks->read = __fread;
-	ret->callbacks->eof = __feof;
-	ret->callbacks->seekable = __fseekable;
-	ret->callbacks->length = __flen;
-	ret->callbacks->getPos = __ftell;
-	ret->callbacks->seek = __fseek;
+	ret->callbacks = {};
+	ret->callbacks.close = __fclose;
+	ret->callbacks.read = __fread;
+	ret->callbacks.eof = __feof;
+	ret->callbacks.seekable = __fseekable;
+	ret->callbacks.length = __flen;
+	ret->callbacks.getPos = __ftell;
+	ret->callbacks.seek = __fseek;
+	OptimFROG_openExt(ret->p_dec, &ret->callbacks, ret->f_OFG, true);
 
-	OptimFROG_openExt(ret->p_dec, ret->callbacks, ret->f_OFG, TRUE);
+	OptimFROG_Info ofgInfo;
+	OptimFROG_getInfo(ret->p_dec, &ofgInfo);
+	info.channels = ofgInfo.channels;
+	info.bitRate = ofgInfo.samplerate;
+	info.bitsPerSample = ofgInfo.bitspersample;
+	info.totalTime = ofgInfo.length_ms / 1000;
 
-	return ret;
+	return ret.release();
 }
 
 /*!
@@ -193,24 +195,12 @@ void *OptimFROG_OpenR(const char *FileName)
  * @warning This function must be called before using \c OptimFROG_Play() or \c OptimFROG_FillBuffer()
  * @bug \p p_OFGFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *OptimFROG_GetFileInfo(void *p_OFGFile)
+const fileInfo_t *OptimFROG_GetFileInfo(void *p_OFGFile)
 {
-	FileInfo *ret = NULL;
 	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
-	OptimFROG_Info *p_OFI = (OptimFROG_Info *)malloc(sizeof(OptimFROG_Info));
+	const fileInfo_t &info = p_OF->info;
+#if 0
 	OptimFROG_Tags *p_OFT = (OptimFROG_Tags *)malloc(sizeof(OptimFROG_Tags));
-
-	ret = (FileInfo *)malloc(sizeof(FileInfo));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(FileInfo));
-
-	OptimFROG_getInfo(p_OF->p_dec, p_OFI);
-	ret->Channels = p_OFI->channels;
-	ret->BitRate = p_OFI->samplerate;
-	ret->BitsPerSample = p_OFI->bitspersample;
-	ret->TotalTime = p_OFI->length_ms / 1000;
-	p_OF->p_FI = ret;
 
 	/*OptimFROG_getTags(p_OF->p_dec, p_OFT);
 	for (UINT i = 0; i < p_OFT->keyCount; i++)
@@ -222,13 +212,13 @@ FileInfo *OptimFROG_GetFileInfo(void *p_OFGFile)
 	}
 	OptimFROG_freeTags(p_OFT);*/
 
-	free(p_OFI);
 	free(p_OFT);
+#endif
 
 	if (ExternalPlayback == 0)
-		p_OF->p_Playback = new playback_t(p_OFGFile, OptimFROG_FillBuffer, p_OF->buffer, 8192, ret);
+		p_OF->p_Playback = new playback_t(p_OFGFile, OptimFROG_FillBuffer, p_OF->buffer, 8192, info);
 
-	return ret;
+	return &p_OF->info;
 }
 
 /*!
@@ -250,8 +240,7 @@ int OptimFROG_CloseFileR(void *p_OFGFile)
 	OptimFROG_close(p_OF->p_dec);
 	ret = fclose(p_OF->f_OFG);
 
-	free(p_OF->callbacks);
-
+	delete p_OF;
 	return ret;
 }
 
@@ -266,10 +255,10 @@ int OptimFROG_CloseFileR(void *p_OFGFile)
  * or the number of bytes written to the buffer
  * @bug \p p_OFGFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long OptimFROG_FillBuffer(void *p_OFGFile, BYTE *OutBuffer, int nOutBufferLen)
+long OptimFROG_FillBuffer(void *p_OFGFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
 	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
-	BYTE *OBuff = OutBuffer;
+	uint8_t *OBuff = OutBuffer;
 	static bool eof = false;
 	if (eof == true)
 		return -2;
@@ -277,8 +266,8 @@ long OptimFROG_FillBuffer(void *p_OFGFile, BYTE *OutBuffer, int nOutBufferLen)
 	while (OBuff - OutBuffer < nOutBufferLen && eof == false)
 	{
 		short *out = (short *)p_OF->buffer;
-		int nSamples = (8192 / p_OF->p_FI->Channels) / (p_OF->p_FI->BitsPerSample / 8);
-		int ret = OptimFROG_read(p_OF->p_dec, OBuff, nSamples, TRUE);
+		int nSamples = (8192 / p_OF->info.channels) / (p_OF->info.bitsPerSample / 8);
+		int ret = OptimFROG_read(p_OF->p_dec, OBuff, nSamples, true);
 		if (ret < nSamples)
 			eof = true;
 
