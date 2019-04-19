@@ -50,7 +50,7 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &STMDecoder;
 	else if (Is_AON(FileName) == true)
 		ret->API = &AONDecoder;
-#ifdef __FC1x_EXPERIMENTAL__
+#ifdef FC1x_EXPERIMENTAL
 	else if (Is_FC1x(FileName) == true)
 		ret->API = &FC1xDecoder;
 #endif
@@ -58,7 +58,7 @@ void *Audio_OpenR(const char *FileName)
 		ret->API = &MPCDecoder;
 	else if (Is_WavPack(FileName) == true)
 		ret->API = &WavPackDecoder;
-#ifndef __NO_OptimFROG__
+#ifdef ENABLE_OptimFROG
 	else if (Is_OptimFROG(FileName) == true)
 		ret->API = &OptimFROGDecoder;
 #endif
@@ -257,7 +257,7 @@ bool Is_Audio(const char *FileName)
 #endif
 	else if (Is_WavPack(FileName) == true)
 		return true;
-#ifndef __NO_OptimFROG__
+#ifdef ENABLE_OptimFROG
 	else if (Is_OptimFROG(FileName) == true)
 		return true;
 #endif

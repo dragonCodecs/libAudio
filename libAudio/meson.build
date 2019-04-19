@@ -43,7 +43,7 @@ libAudio = declare_dependency(
 		'libAudio',
 		libAudioSrcs,
 		dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, maths],
-		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', '-D__NO_OptimFROG__'],
+		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
 		name_prefix: '',
 		install: true,
 		version: meson.project_version()

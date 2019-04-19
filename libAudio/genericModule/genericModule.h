@@ -128,7 +128,7 @@ private:
 	char *Author;
 	char ArpTable[16][4];
 
-#ifdef __FC1x_EXPERIMENTAL__
+#ifdef FC1x_EXPERIMENTAL
 	// FC1x
 	uint32_t SeqLength;
 	uint32_t PatternOffs;
@@ -153,7 +153,7 @@ public:
 	ModuleHeader(const modS3M_t &file);
 	ModuleHeader(const modSTM_t &file);
 	ModuleHeader(AON_Intern *p_AF);
-#ifdef __FC1x_EXPERIMENTAL__
+#ifdef FC1x_EXPERIMENTAL
 	ModuleHeader(FC1x_Intern *p_FF);
 #endif
 	ModuleHeader(const modIT_t &file);
@@ -618,7 +618,9 @@ public:
 	ModuleFile(const modS3M_t &file);
 	ModuleFile(const modSTM_t &file);
 	ModuleFile(AON_Intern *p_AF);
+#ifdef FC1x_EXPERIMENTAL
 	ModuleFile(FC1x_Intern *p_FF);
+#endif
 	ModuleFile(const modIT_t &file);
 	virtual ~ModuleFile();
 

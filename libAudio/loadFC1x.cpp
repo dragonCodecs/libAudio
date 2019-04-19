@@ -20,18 +20,16 @@ void *FC1x_OpenR(const char *FileName)
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
+#ifdef FC1x_EXPERIMENTAL
 	try { ctx.mod = makeUnique<ModuleFile>(ret.get()); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
 		return nullptr;
 	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->error());
-		delete e;
-		return nullptr;
-	}
+#else
+	return nullptr;
+#endif
 	info.title = ctx.mod->title();
 	info.channels = ctx.mod->channels();
 

@@ -314,7 +314,7 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	nInstruments = 0;
 }
 
-#ifdef __FC1x_EXPERIMENTAL__
+#ifdef FC1x_EXPERIMENTAL
 ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 {
 	char Magic[4];
@@ -334,7 +334,7 @@ ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 	fread(&Special, 4, 1, f_FC1x);
 
 	if (strncmp(Magic, "SMOD", 4) != 0 && strncmp(Magic, "FC14", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_FC1x);
+		throw ModuleLoaderError(E_BAD_FC1x);
 
 	//
 
