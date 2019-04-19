@@ -321,29 +321,25 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	nInstruments = 0;
 }
 
-#ifdef FC1x_EXPERIMENTAL
+#ifdef ENABLE_FC1x
 ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
 {
-	char Magic[4];
-	uint32_t IDK1, IDK2;
-	uint32_t Special;
-	FILE *f_FC1x = p_FF->f_Module;
+	std::array<char, 4> fc1xMagic;
+	const fd_t &fd = p_FF->inner.fd();
 
-	fread(Magic, 4, 1, f_FC1x);
-	fread(&SeqLength, 4, 1, f_FC1x);
-	fread(&PatternOffs, 4, 1, f_FC1x);
-	fread(&PatLength, 4, 1, f_FC1x);
-	fread(&IDK1, 4, 1, f_FC1x);
-	fread(&IDK2, 4, 1, f_FC1x);
-	fread(&IDK1, 4, 1, f_FC1x);
-	fread(&IDK2, 4, 1, f_FC1x);
-	fread(&SampleOffs, 4, 1, f_FC1x);
-	fread(&Special, 4, 1, f_FC1x);
-
-	if (strncmp(Magic, "SMOD", 4) != 0 && strncmp(Magic, "FC14", 4) != 0)
+	if (!fd.read(fc1xMagic) ||
+		(memcmp(fc1xMagic.data(), "SMOD", 4) != 0 &&
+		memcmp(fc1xMagic.data(), "FC14", 4) != 0) ||
+		!fd.read(SeqLength) ||
+		!fd.read(PatternOffs) ||
+		!fd.read(PatLength) ||
+		!fd.read(FrequenciesOffs) ||
+		!fd.read(FrequenciesLength) ||
+		!fd.read(VolumeOffs) ||
+		!fd.read(VolumeLength) ||
+		!fd.read(SampleOffs) ||
+		!fd.read(SampleLength))
 		throw ModuleLoaderError(E_BAD_FC1x);
-
-	//
 
 	/********************************************\
 	|* The following block just initialises the *|

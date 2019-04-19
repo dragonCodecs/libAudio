@@ -207,7 +207,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	MaxPeriod = 7040;
 }
 
-#ifdef FC1x_EXPERIMENTAL
+#ifdef ENABLE_FC1x
 ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 //	FILE *f_FC1x = p_FF->f_Module;

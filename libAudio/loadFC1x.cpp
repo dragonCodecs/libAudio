@@ -20,7 +20,7 @@ void *FC1x_OpenR(const char *FileName)
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
-#ifdef FC1x_EXPERIMENTAL
+#ifdef ENABLE_FC1x
 	try { ctx.mod = makeUnique<ModuleFile>(ret.get()); }
 	catch (const ModuleLoaderError &e)
 	{
