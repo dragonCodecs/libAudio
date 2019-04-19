@@ -43,8 +43,8 @@ typedef struct _API_Functions
 {
 	void *(__CDECL__ *OpenR)(const char *FileName);
 	void *(__CDECL__ *OpenW)(const char *FileName);
-	FileInfo *(__CDECL__ *GetFileInfo)(void *p_File);
-	bool (__CDECL__ *SetFileInfo)(void *p_File, FileInfo *p_FI);
+	const fileInfo_t *(__CDECL__ *GetFileInfo)(void *p_File);
+	bool (__CDECL__ *SetFileInfo)(void *p_File, const fileInfo_t *const p_FI);
 	long (__CDECL__ *FillBuffer)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 	long (__CDECL__ *WriteBuffer)(void *p_File, uint8_t *InBuffer, int nInBufferLen);
 	int (__CDECL__ *CloseFileR)(void *p_File);
@@ -54,9 +54,9 @@ typedef struct _API_Functions
 	void (__CDECL__ *Stop)(void *p_File);
 } API_Functions;
 
-FileInfo *audioFileInfo(void *audioFile);
-//bool audioFileInfo(void *audioFile, const FileInfo *const fileInfo);
-bool audioFileInfo(void *audioFile, FileInfo *fileInfo);
+const fileInfo_t *audioFileInfo(void *audioFile);
+//bool audioFileInfo(void *audioFile, const fileInfo_t &const fileInfo);
+bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
 long audioFillBuffer(void *audioFile, uint8_t *buffer, int length);
 long audioWriteBuffer(void *audioFile, uint8_t *buffer, int length);
 int audioCloseFile(void *audioFile);

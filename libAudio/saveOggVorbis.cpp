@@ -55,18 +55,18 @@ bool oggVorbis_t::encoderContext_t::writePage(const fd_t &fd, const bool force) 
 	return true;
 }
 
-vorbis_comment copyComments(const FileInfo &info) noexcept
+vorbis_comment copyComments(const fileInfo_t &info) noexcept
 {
 	vorbis_comment tags;
 	vorbis_comment_init(&tags);
-	if (info.Title)
-		vorbis_comment_add_tag(&tags, "Title", info.Title);
-	if (info.Artist)
-		vorbis_comment_add_tag(&tags, "Artist", info.Artist);
-	if (info.Album)
-		vorbis_comment_add_tag(&tags, "Album", info.Album);
-	for (const auto other : info.OtherComments)
-		vorbis_comment_add(&tags, other);
+	if (info.title)
+		vorbis_comment_add_tag(&tags, "Title", info.title.get());
+	if (info.artist)
+		vorbis_comment_add_tag(&tags, "Artist", info.artist.get());
+	if (info.album)
+		vorbis_comment_add_tag(&tags, "Album", info.album.get());
+	for (const auto &other : info.other)
+		vorbis_comment_add(&tags, other.get());
 	return tags;
 }
 
@@ -79,22 +79,21 @@ vorbis_comment copyComments(const FileInfo &info) noexcept
  *
  * @bug \p p_VorbisFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-bool OggVorbis_SetFileInfo(void *p_VorbisFile, FileInfo *p_FI)
+bool OggVorbis_SetFileInfo(void *p_VorbisFile, const fileInfo_t *const p_FI)
 	{ return audioFileInfo(p_VorbisFile, p_FI); }
 
-bool oggVorbis_t::fileInfo(const FileInfo &fileInfo)
+bool oggVorbis_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
-	fileInfo_t &info = this->fileInfo();
 	ogg_packet packetHeader, packetComments, packetMode;
 
-	vorbis_encode_init_vbr(&ctx.vorbisInfo, fileInfo.Channels, fileInfo.BitRate, 0.75F);
+	vorbis_encode_init_vbr(&ctx.vorbisInfo, info.channels, info.bitRate, 0.75F);
 	vorbis_encode_setup_init(&ctx.vorbisInfo);
 
 	vorbis_analysis_init(&ctx.encoderState, &ctx.vorbisInfo);
 	vorbis_block_init(&ctx.encoderState, &ctx.blockState);
 
-	vorbis_comment tags = copyComments(fileInfo);
+	vorbis_comment tags = copyComments(info);
 	vorbis_analysis_headerout(&ctx.encoderState, &tags, &packetHeader, &packetComments, &packetMode);
 	vorbis_comment_clear(&tags);
 	ogg_stream_packetin(&ctx.streamState, &packetHeader);
@@ -103,10 +102,7 @@ bool oggVorbis_t::fileInfo(const FileInfo &fileInfo)
 
 	if (!ctx.writePage(fd(), true))
 		return false;
-	info.totalTime = fileInfo.TotalTime;
-	info.bitsPerSample = fileInfo.BitsPerSample;
-	info.bitRate = fileInfo.BitRate;
-	info.channels = fileInfo.Channels;
+	fileInfo() = info;
 	return true;
 }
 

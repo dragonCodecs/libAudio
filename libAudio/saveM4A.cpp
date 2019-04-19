@@ -186,7 +186,7 @@ void *M4A_OpenW(const char *FileName)
  *
  * @bug \p p_AACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-bool M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
+bool M4A_SetFileInfo(void *p_AACFile, const fileInfo_t *const info)
 {
 	const MP4Tags *p_Tags;
 	faacEncConfigurationPtr p_conf;
@@ -195,25 +195,25 @@ bool M4A_SetFileInfo(void *p_AACFile, FileInfo *p_FI)
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
 
 	p_Tags = MP4TagsAlloc();
-	p_AF->Channels = p_FI->Channels;
-	p_AF->p_enc = faacEncOpen(p_FI->BitRate, p_FI->Channels, &p_AF->MaxInSamp, &p_AF->MaxOutByte);
+	p_AF->Channels = info->channels;
+	p_AF->p_enc = faacEncOpen(info->bitRate, info->channels, &p_AF->MaxInSamp, &p_AF->MaxOutByte);
 	if (p_AF->p_enc == NULL)
 	{
 		p_AF->err = true;
 		return false;
 	}
-	MP4SetTimeScale(p_AF->p_mp4, p_FI->BitRate);
-	p_AF->track = MP4AddAudioTrack(p_AF->p_mp4, p_FI->BitRate, 1024);//p_AF->MaxInSamp / p_FI->Channels, MP4_MPEG4_AUDIO_TYPE);
+	MP4SetTimeScale(p_AF->p_mp4, info->bitRate);
+	p_AF->track = MP4AddAudioTrack(p_AF->p_mp4, info->bitRate, 1024);//p_AF->MaxInSamp / info->channels, MP4_MPEG4_AUDIO_TYPE);
 	MP4SetAudioProfileLevel(p_AF->p_mp4, 0x0F);
 
-	if (p_FI->Album != NULL)
-		MP4TagsSetAlbum(p_Tags, p_FI->Album);
-	if (p_FI->Artist != NULL)
-		MP4TagsSetArtist(p_Tags, p_FI->Artist);
-	if (p_FI->Title != NULL)
-		MP4TagsSetName(p_Tags, p_FI->Title);
+	if (info->album)
+		MP4TagsSetAlbum(p_Tags, info->album.get());
+	if (info->artist)
+		MP4TagsSetArtist(p_Tags, info->artist.get());
+	if (info->title)
+		MP4TagsSetName(p_Tags, info->title.get());
 
-	MP4TagsSetEncodingTool(p_Tags, "libAudio 0.1.44");
+	MP4TagsSetEncodingTool(p_Tags, "libAudio " libAudioVersion);
 	MP4TagsStore(p_Tags, p_AF->p_mp4);
 	MP4TagsFree(p_Tags);
 

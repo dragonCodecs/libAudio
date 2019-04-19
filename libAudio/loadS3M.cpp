@@ -45,8 +45,7 @@ void *S3M_OpenR(const char *FileName)
 	return ret.release();
 }
 
-FileInfo *S3M_GetFileInfo(void *p_S3MFile)
-	{ return audioFileInfo(p_S3MFile); }
+const fileInfo_t *S3M_GetFileInfo(void *p_S3MFile) { return audioFileInfo(p_S3MFile); }
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_S3MFile, OutBuffer, nOutBufferLen); }
 int S3M_CloseFileR(void *p_S3MFile) { return audioCloseFile(p_S3MFile); }

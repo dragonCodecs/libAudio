@@ -51,7 +51,7 @@ void *AON_OpenR(const char *FileName)
 	return ret.release();
 }
 
-FileInfo *AON_GetFileInfo(void *p_AONFile)
+const fileInfo_t *AON_GetFileInfo(void *p_AONFile)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
 	return audioFileInfo(&p_AF->inner);

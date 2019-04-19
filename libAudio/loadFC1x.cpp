@@ -45,7 +45,7 @@ void *FC1x_OpenR(const char *FileName)
 	return ret.release();
 }
 
-FileInfo *FC1x_GetFileInfo(void *p_FC1xFile)
+const fileInfo_t *FC1x_GetFileInfo(void *p_FC1xFile)
 {
 	FC1x_Intern *p_FF = (FC1x_Intern *)p_FC1xFile;
 	return audioFileInfo(&p_FF->inner);

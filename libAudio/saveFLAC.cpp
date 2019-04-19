@@ -114,7 +114,7 @@ void *FLAC_OpenW(const char *FileName) { return flac_t::openW(FileName); }
  *
  * @bug \p p_FLACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-bool FLAC_SetFileInfo(void *p_FLACFile, FileInfo *p_FI) { return audioFileInfo(p_FLACFile, p_FI); }
+bool FLAC_SetFileInfo(void *p_FLACFile, const fileInfo_t *const p_FI) { return audioFileInfo(p_FLACFile, p_FI); }
 
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const char *const value)
 {
@@ -128,38 +128,33 @@ void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const 
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const std::unique_ptr<char []> &value)
 	{ writeComment(metadata, name, value.get()); }
 
-bool flac_t::fileInfo(const FileInfo &fileInfo)
+bool flac_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
-	fileInfo_t &info = this->fileInfo();
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 
-	FLAC__stream_encoder_set_channels(ctx.streamEncoder, fileInfo.Channels);
-	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, fileInfo.BitsPerSample);
-	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, fileInfo.BitRate);
+	FLAC__stream_encoder_set_channels(ctx.streamEncoder, info.channels);
+	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, info.bitsPerSample);
+	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, info.bitRate);
 
 	ctx.metadata = {
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT),
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)
 	};
-	for (uint32_t i = 0; i < fileInfo.nOtherComments; i++)
+	for (const auto &comment : info.other)
 	{
-		entry.entry = (uint8_t *)fileInfo.OtherComments[i];
-		entry.length = strlen(fileInfo.OtherComments[i]);
+		entry.entry = reinterpret_cast<uint8_t *>(comment.get());
+		entry.length = strlen(comment.get());
 		FLAC__metadata_object_vorbiscomment_append_comment(ctx.metadata[0], entry, true);
 	}
 
-	writeComment(ctx.metadata[0], "Album", fileInfo.Album);
-	writeComment(ctx.metadata[0], "Artist", fileInfo.Artist);
-	writeComment(ctx.metadata[0], "Title", fileInfo.Title);
+	writeComment(ctx.metadata[0], "Album", info.album);
+	writeComment(ctx.metadata[0], "Artist", info.artist);
+	writeComment(ctx.metadata[0], "Title", info.title);
 	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, ctx.metadata.data(), ctx.metadata.size());
 	FLAC__stream_encoder_init_stream(ctx.streamEncoder, flac::write, flac::seek,
 		flac::tell, nullptr, this);
-
-	info.totalTime = fileInfo.TotalTime;
-	info.bitsPerSample = fileInfo.BitsPerSample;
-	info.bitRate = fileInfo.BitRate;
-	info.channels = fileInfo.Channels;
+	fileInfo() = info;
 	return true;
 }
 

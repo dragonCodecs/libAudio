@@ -84,7 +84,7 @@ void *Audio_OpenR(const char *FileName)
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
  * @warning This function must be called before using \c Audio_Play() or \c Audio_FillBuffer()
  */
-FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
+const fileInfo_t *Audio_GetFileInfo(void *p_AudioPtr)
 {
 	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (!p_AP || !p_AP->p_AudioFile)
@@ -92,24 +92,12 @@ FileInfo *Audio_GetFileInfo(void *p_AudioPtr)
 	return p_AP->API->GetFileInfo(p_AP->p_AudioFile);
 }
 
-FileInfo *audioFileInfo(void *audioFile)
+const fileInfo_t *audioFileInfo(void *audioFile)
 {
 	const auto file = static_cast<const audioFile_t *>(audioFile);
 	if (!file)
 		return nullptr;
-	const fileInfo_t &fileInfo = file->fileInfo();
-
-	audioInfo.TotalTime = fileInfo.totalTime;
-	audioInfo.BitsPerSample = fileInfo.bitsPerSample;
-	audioInfo.BitRate = fileInfo.bitRate;
-	audioInfo.Channels = fileInfo.channels;
-	audioInfo.Title = fileInfo.title.get();
-	audioInfo.Artist = fileInfo.artist.get();
-	audioInfo.Album = fileInfo.album.get();
-	audioInfo.OtherComments.clear();
-	audioInfo.nOtherComments = 0;
-
-	return &audioInfo;
+	return &file->fileInfo();
 }
 
 /*!

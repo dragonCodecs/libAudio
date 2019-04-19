@@ -278,8 +278,7 @@ void *FLAC_OpenR(const char *FileName)
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  */
-FileInfo *FLAC_GetFileInfo(void *p_FLACFile)
-	{ return audioFileInfo(p_FLACFile); }
+const fileInfo_t *FLAC_GetFileInfo(void *p_FLACFile) { return audioFileInfo(p_FLACFile); }
 
 bool flac_t::decoderContext_t::finish() noexcept
 {

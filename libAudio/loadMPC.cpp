@@ -213,7 +213,7 @@ void *MPC_OpenR(const char *FileName)
  * @warning This function must be called before using \c MPC_Play() or \c MPC_FillBuffer()
  * @bug \p p_MPCFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *MPC_GetFileInfo(void *p_MPCFile) { return audioFileInfo(p_MPCFile); }
+const fileInfo_t *MPC_GetFileInfo(void *p_MPCFile) { return audioFileInfo(p_MPCFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting

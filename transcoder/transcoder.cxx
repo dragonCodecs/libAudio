@@ -46,17 +46,17 @@ int usage(const char *const program) noexcept
 	return -2;
 }
 
-void printInfo(const char *const fileName, FileInfo &info) noexcept
+void printInfo(const char *const fileName, const fileInfo_t &info) noexcept
 {
 	printf("Input file %s, Sample Rate: %u, Title: %s, Artist: %s, Album: %s, Channels: %u\n",
-		fileName, info.BitRate, info.Title, info.Artist, info.Album, info.Channels);
+		fileName, info.bitRate, info.title.get(), info.artist.get(), info.album.get(), info.channels);
 }
 
-void printStatus(const uint32_t loops, FileInfo &info) noexcept
+void printStatus(const uint32_t loops, const fileInfo_t &info) noexcept
 {
-	const uint8_t bytesPerSample = info.Channels * (info.BitsPerSample / 8);
+	const uint8_t bytesPerSample = info.channels * (info.bitsPerSample / 8);
 	const uint64_t samples = (buffer.size() / bytesPerSample) * loops;
-	printf("%" PRIu64 "s done\r", samples / info.BitRate);
+	printf("%" PRIu64 "s done\r", samples / info.bitRate);
 	fflush(stdout);
 }
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 				printf("Failed to open output file %s\n", argv[i + 1]);
 			continue;
 		}
-		FileInfo *fileInfo{Audio_GetFileInfo(inFile.get())};
+		const fileInfo_t *fileInfo{Audio_GetFileInfo(inFile.get())};
 		printInfo(argv[i], *fileInfo);
 		if (!Audio_SetFileInfo(outFile.get(), fileInfo))
 		{

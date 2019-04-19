@@ -13,7 +13,7 @@
  * @file loadWavPack.cpp
  * @brief The implementation of the WavPack decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 struct wavPack_t::decoderContext_t final
@@ -242,8 +242,7 @@ void *WavPack_OpenR(const char *FileName)
  * @warning This function must be called before using \c WavPack_Play() or \c WavPack_FillBuffer()
  * @bug \p p_WVPFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *WavPack_GetFileInfo(void *p_WVPFile)
-	{ return audioFileInfo(p_WVPFile); }
+const fileInfo_t *WavPack_GetFileInfo(void *p_WVPFile) { return audioFileInfo(p_WVPFile); }
 
 wavPack_t::decoderContext_t::~decoderContext_t() noexcept
 	{ WavpackCloseFile(decoder); }

@@ -46,7 +46,7 @@ libAUDIO_API void *Audio_OpenW(const char *FileName, int Type)
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c Audio_WriteBuffer()
  */
-libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI)
+libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, const fileInfo_t *const p_FI)
 {
 	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
 	if (!p_AP || !p_AP || !p_FI || !p_AP->API->SetFileInfo)
@@ -54,8 +54,7 @@ libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, FileInfo *p_FI)
 	return p_AP->API->SetFileInfo(p_AP->p_AudioFile, p_FI);
 }
 
-//void audioFileInfo(void *audioFile, const FileInfo *const fileInfo)
-bool audioFileInfo(void *audioFile, FileInfo *fileInfo)
+bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (file)
@@ -63,7 +62,7 @@ bool audioFileInfo(void *audioFile, FileInfo *fileInfo)
 	return false;
 }
 
-bool audioFile_t::fileInfo(const FileInfo &) { return false; }
+bool audioFile_t::fileInfo(const fileInfo_t &) { return false; }
 
 /*!
  * This function writes a buffer of audio to an opened file

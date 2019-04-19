@@ -46,8 +46,7 @@ void *STM_OpenR(const char *FileName)
 	return ret.release();
 }
 
-FileInfo *STM_GetFileInfo(void *p_STMFile)
-	{ return audioFileInfo(p_STMFile); }
+const fileInfo_t *STM_GetFileInfo(void *p_STMFile) { return audioFileInfo(p_STMFile); }
 long STM_FillBuffer(void *p_STMFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_STMFile, OutBuffer, nOutBufferLen); }
 int STM_CloseFileR(void *p_STMFile) { return audioCloseFile(p_STMFile); }

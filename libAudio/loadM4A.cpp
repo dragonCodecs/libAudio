@@ -268,7 +268,7 @@ void *M4A_OpenR(const char *FileName)
  * @warning This function must be called before using \c M4A_Play() or \c M4A_FillBuffer()
  * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
-FileInfo *M4A_GetFileInfo(void *p_M4AFile)
+const fileInfo_t *M4A_GetFileInfo(void *p_M4AFile)
 	{ return audioFileInfo(p_M4AFile); }
 
 void m4a_t::decoderContext_t::finish() noexcept

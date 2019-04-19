@@ -129,7 +129,7 @@ void *AAC_OpenR(const char *FileName)
  * @warning This function must be called before using \c AAC_Play() or \c AAC_FillBuffer()
  * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *AAC_GetFileInfo(void *p_AACFile) { return audioFileInfo(p_AACFile); }
+const fileInfo_t *AAC_GetFileInfo(void *p_AACFile) { return audioFileInfo(p_AACFile); }
 
 aac_t::decoderContext_t::~decoderContext_t() noexcept
 	{ NeAACDecClose(decoder); }

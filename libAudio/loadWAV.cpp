@@ -8,7 +8,7 @@
  * @file loadWAV.cpp
  * @brief The implementation of the WAV decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
@@ -196,7 +196,7 @@ void *WAV_OpenR(const char *FileName)
  * @warning This function must be called before using \c WAV_Play() or \c WAV_FillBuffer()
  * @bug \p p_WAVFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *WAV_GetFileInfo(void *p_WAVFile) { return audioFileInfo(p_WAVFile); }
+const fileInfo_t *WAV_GetFileInfo(void *p_WAVFile) { return audioFileInfo(p_WAVFile); }
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!

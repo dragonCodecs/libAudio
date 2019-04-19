@@ -123,7 +123,7 @@ void *OggVorbis_OpenR(const char *FileName)
  * @warning This function must be called before using \c OggVorbis_Play() or \c OggVorbis_FillBuffer()
  * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-FileInfo *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileInfo(p_VorbisFile); }
+const fileInfo_t *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileInfo(p_VorbisFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
