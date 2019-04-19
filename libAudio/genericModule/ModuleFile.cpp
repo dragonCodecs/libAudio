@@ -212,7 +212,7 @@ ModuleFile::ModuleFile(FC1x_Intern *p_FF) : ModuleType(MODULE_FC1x), p_Instrumen
 {
 //	FILE *f_FC1x = p_FF->f_Module;
 
-	p_Header = new ModuleHeader(p_FF);
+	p_Header = new ModuleHeader(p_FF->inner);
 }
 #endif
 

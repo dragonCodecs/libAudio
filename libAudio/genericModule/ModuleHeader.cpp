@@ -322,10 +322,10 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 }
 
 #ifdef ENABLE_FC1x
-ModuleHeader::ModuleHeader(FC1x_Intern *p_FF) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> fc1xMagic;
-	const fd_t &fd = p_FF->inner.fd();
+	const fd_t &fd = file.fd();
 
 	if (!fd.read(fc1xMagic) ||
 		(memcmp(fc1xMagic.data(), "SMOD", 4) != 0 &&
