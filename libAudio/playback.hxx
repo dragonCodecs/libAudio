@@ -6,9 +6,8 @@
 #include <chrono>
 #include "libAudio.h"
 #include "fileInfo.hxx"
+#include "libAudio_Common.h"
 #include "uniquePtr.hxx"
-
-using bufferFillFunc_t = long (*)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
 
 enum class playState_t : uint8_t
 {
@@ -55,7 +54,7 @@ struct playback_t final
 {
 private:
 	void *audioFile;
-	bufferFillFunc_t fillBuffer;
+	fileFillBuffer_t fillBuffer;
 	uint8_t *buffer;
 	uint32_t bufferLength;
 	uint8_t bitsPerSample;
@@ -70,7 +69,7 @@ protected:
 	friend struct audioPlayer_t;
 
 public:
-	playback_t(void *const audioFile, const bufferFillFunc_t fillBuffer, uint8_t *const buffer,
+	playback_t(void *const audioFile, const fileFillBuffer_t fillBuffer, uint8_t *const buffer,
 		const uint32_t bufferLength, const fileInfo_t &fileInfo);
 	void mode(playbackMode_t mode) noexcept;
 	void play();

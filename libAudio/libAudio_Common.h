@@ -2,7 +2,6 @@
 #define __libAudio_Common_H__
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -30,8 +29,6 @@
 #define __CDECL__
 #endif
 
-#include "fileInfo.hxx"
-
 /*!
  * @internal
  * This structure holds what all low-level APIs must expose
@@ -45,7 +42,7 @@ typedef struct _API_Functions
 	void *(__CDECL__ *OpenW)(const char *FileName);
 	const fileInfo_t *(__CDECL__ *GetFileInfo)(void *p_File);
 	bool (__CDECL__ *SetFileInfo)(void *p_File, const fileInfo_t *const p_FI);
-	long (__CDECL__ *FillBuffer)(void *p_File, uint8_t *OutBuffer, int nOutBufferLen);
+	int64_t (__CDECL__ *FillBuffer)(void *p_File, void *const buffer, const uint32_t length);
 	long (__CDECL__ *WriteBuffer)(void *p_File, uint8_t *InBuffer, int nInBufferLen);
 	int (__CDECL__ *CloseFileR)(void *p_File);
 	int (__CDECL__ *CloseFileW)(void *p_File);
@@ -54,15 +51,14 @@ typedef struct _API_Functions
 	void (__CDECL__ *Stop)(void *p_File);
 } API_Functions;
 
+using fileIs_t = bool (*)(const char *);
+using fileOpenR_t = void *(*)(const char *);
+using fileFillBuffer_t = int64_t (*)(void *audioFile, void *const buffer, const uint32_t length);
+
 const fileInfo_t *audioFileInfo(void *audioFile);
-//bool audioFileInfo(void *audioFile, const fileInfo_t &const fileInfo);
 bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
-long audioFillBuffer(void *audioFile, uint8_t *buffer, int length);
 long audioWriteBuffer(void *audioFile, uint8_t *buffer, int length);
 int audioCloseFile(void *audioFile);
-void audioPlay(void *audioFile);
-void audioPause(void *audioFile);
-void audioStop(void *audioFile);
 
 /*!
  * @internal

@@ -24,10 +24,10 @@
 	#endif
 #endif
 
-#define libAudioVersion "0.3.1"
+#define libAudioVersion "0.4.0"
 #define libAudioVersion_Major 0
-#define libAudioVersion_Minor 3
-#define libAudioVersion_Rev 1
+#define libAudioVersion_Minor 4
+#define libAudioVersion_Rev 0
 
 // OggVorbis API
 
@@ -235,17 +235,21 @@ libAUDIO_API bool Is_WMA(const char *FileName);
 
 // Master Audio API
 
-// Read/Playback
-libAUDIO_API void *Audio_OpenR(const char *FileName);
-libAUDIO_API const fileInfo_t *Audio_GetFileInfo(void *p_AudioPtr);
-libAUDIO_API long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int Audio_CloseFileR(void *p_AudioPtr);
-libAUDIO_API void Audio_Play(void *p_AudioPtr);
-libAUDIO_API void Audio_Pause(void *p_AudioPtr);
-libAUDIO_API void Audio_Stop(void *p_AudioPtr);
+// General
+libAUDIO_API int audioCloseFile(void *p_AudioPtr);
+
+// Read (Decode)
+libAUDIO_API void *audioOpenR(const char *const fileName);
+libAUDIO_API const fileInfo_t *audioGetFileInfo(void *audioFile);
+libAUDIO_API int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t length);
+
+// Playback
+libAUDIO_API void audioPlay(void *audioFile);
+libAUDIO_API void audioPause(void *audioFile);
+libAUDIO_API void audioStop(void *audioFile);
 libAUDIO_API bool Is_Audio(const char *FileName);
 
-// Write/Encode
+// Write (Encode)
 libAUDIO_API void *Audio_OpenW(const char *FileName, int Type);
 libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, const fileInfo_t *const p_FI);
 libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nInBufferLen);

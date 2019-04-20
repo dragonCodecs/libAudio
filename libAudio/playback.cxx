@@ -3,7 +3,7 @@
 
 using player_t = openALPlayback_t;
 
-playback_t::playback_t(void *const audioFile_, const bufferFillFunc_t fillBuffer_, uint8_t *const buffer_,
+playback_t::playback_t(void *const audioFile_, const fileFillBuffer_t fillBuffer_, uint8_t *const buffer_,
 	const uint32_t bufferLength_, const fileInfo_t &fileInfo) : audioFile{audioFile_}, fillBuffer{fillBuffer_},
 	buffer{buffer_}, bufferLength{bufferLength_}, bitsPerSample(fileInfo.bitsPerSample), bitRate{fileInfo.bitRate},
 	channels{fileInfo.channels}, sleepTime{}, playbackMode{playbackMode_t::wait}, player{makeUniqueT<player_t>(*this)}

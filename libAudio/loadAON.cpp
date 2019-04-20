@@ -57,10 +57,10 @@ const fileInfo_t *AON_GetFileInfo(void *p_AONFile)
 	return audioFileInfo(&p_AF->inner);
 }
 
-long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen)
+long AON_FillBuffer(void *p_AONFile, void *const buffer, const uint32_t length)
 {
 	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	return audioFillBuffer(&p_AF->inner, OutBuffer, nOutBufferLen);
+	return audioFillBuffer(&p_AF->inner, buffer, length);
 }
 
 int AON_CloseFileR(void *p_AONFile)

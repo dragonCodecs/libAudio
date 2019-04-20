@@ -10,7 +10,7 @@
 
 std::array<uint8_t, 8192> buffer;
 
-struct audioCloseR_t final { void operator ()(void *ptr) noexcept { Audio_CloseFileR(ptr); } };
+struct audioClose_t final { void operator ()(void *ptr) noexcept { audioCloseFile(ptr); } };
 struct audioCloseW_t final { void operator ()(void *ptr) noexcept { Audio_CloseFileW(ptr); } };
 
 const std::map<std::string, uint8_t> typeMap
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 	argc -= argc % 2;
 	for (uint32_t i = 2; i < uint32_t(argc); i += 2)
 	{
-		std::unique_ptr<void, audioCloseR_t> inFile{Audio_OpenR(argv[i])};
+		std::unique_ptr<void, audioClose_t> inFile{audioOpenR(argv[i])};
 		std::unique_ptr<void, audioCloseW_t> outFile{Audio_OpenW(argv[i + 1], type)};
 
 		if (!inFile || !outFile)
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 				printf("Failed to open output file %s\n", argv[i + 1]);
 			continue;
 		}
-		const fileInfo_t *fileInfo{Audio_GetFileInfo(inFile.get())};
+		const fileInfo_t *fileInfo{audioGetFileInfo(inFile.get())};
 		printInfo(argv[i], *fileInfo);
 		if (!Audio_SetFileInfo(outFile.get(), fileInfo))
 		{
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 		uint32_t loops = 0;
 		for (int64_t result = 1; result > 0; ++loops)
 		{
-			result = Audio_FillBuffer(inFile.get(), buffer.data(), buffer.size());
+			result = audioFillBuffer(inFile.get(), buffer.data(), buffer.size());
 			Audio_WriteBuffer(outFile.get(), buffer.data(), buffer.size());
 			printStatus(loops + 1, *fileInfo);
 		}

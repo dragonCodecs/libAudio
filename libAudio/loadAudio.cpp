@@ -1,3 +1,4 @@
+#include <map>
 #include "libAudio.h"
 #include "libAudio.hxx"
 
@@ -8,6 +9,34 @@
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2019
  */
+
+const std::map<fileIs_t, fileOpenR_t> loaders
+{
+	{Is_OggVorbis, OggVorbis_OpenR},
+	{Is_FLAC, FLAC_OpenR},
+	{Is_WAV, WAV_OpenR},
+	{Is_M4A, M4A_OpenR},
+	{Is_AAC, AAC_OpenR},
+	{Is_MP3, MP3_OpenR},
+	{Is_IT, IT_OpenR},
+	{Is_MOD, MOD_OpenR},
+	{Is_S3M, S3M_OpenR},
+	{Is_STM, STM_OpenR},
+#ifdef ENABLE_AON
+	{Is_AON, AON_OpenR},
+#endif
+#ifdef ENABLE_FC1x
+	{Is_FC1x, FC1x_OpenR},
+#endif
+#ifdef ENABLE_OptimFROG
+	{Is_OptimFROG, OptimFROG_OpenR},
+#endif
+#ifdef ENABLE_WMA
+	{Is_WMA, WMA_OpenR},
+#endif
+	{Is_MPC, MPC_OpenR},
+	{Is_WavPack, WavPack_OpenR}
+};
 
 /*!
  * \c ExternalPlayback defaults on library initialisation to 0 and holds whether or not
@@ -23,57 +52,14 @@ uint8_t ToPlayback = 1;
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c NULL if there was an error
  */
-void *Audio_OpenR(const char *FileName)
+void *audioOpenR(const char *const fileName)
 {
-	std::unique_ptr<AudioPointer> ret = makeUnique<AudioPointer>();
-	if (!ret)
-		return nullptr;
-	else if (Is_OggVorbis(FileName) == true)
-		ret->API = &OggVorbisDecoder;
-	else if (Is_FLAC(FileName) == true)
-		ret->API = &FLACDecoder;
-	else if (Is_WAV(FileName) == true)
-		ret->API = &WAVDecoder;
-	else if (Is_M4A(FileName) == true)
-		ret->API = &M4ADecoder;
-	else if (Is_AAC(FileName) == true)
-		ret->API = &AACDecoder;
-	else if (Is_MP3(FileName) == true)
-		ret->API = &MP3Decoder;
-	else if (Is_IT(FileName) == true)
-		ret->API = &ITDecoder;
-	else if (Is_MOD(FileName) == true)
-		ret->API = &MODDecoder;
-	else if (Is_S3M(FileName) == true)
-		ret->API = &S3MDecoder;
-	else if (Is_STM(FileName) == true)
-		ret->API = &STMDecoder;
-	else if (Is_AON(FileName) == true)
-		ret->API = &AONDecoder;
-#ifdef ENABLE_FC1x
-	else if (Is_FC1x(FileName) == true)
-		ret->API = &FC1xDecoder;
-#endif
-	else if (Is_MPC(FileName) == true)
-		ret->API = &MPCDecoder;
-	else if (Is_WavPack(FileName) == true)
-		ret->API = &WavPackDecoder;
-#ifdef ENABLE_OptimFROG
-	else if (Is_OptimFROG(FileName) == true)
-		ret->API = &OptimFROGDecoder;
-#endif
-	// Add RealAudio call here once decoder is complete
-#ifdef __WMA__
-	else if (Is_WMA(FileName) == true)
-		ret->API = &WMADecoder;
-#endif
-	else
-		return nullptr;
-
-	ret->p_AudioFile = ret->API->OpenR(FileName);
-	if (!ret->p_AudioFile)
-		return nullptr;
-	return ret.release();
+	for (const auto &loader : loaders)
+	{
+		if (loader.first(fileName))
+			return loader.second(fileName);
+	}
+	return nullptr;
 }
 
 /*!
@@ -82,14 +68,6 @@ void *Audio_OpenR(const char *FileName)
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
  * @warning This function must be called before using \c Audio_Play() or \c Audio_FillBuffer()
  */
-const fileInfo_t *Audio_GetFileInfo(void *p_AudioPtr)
-{
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (!p_AP || !p_AP->p_AudioFile)
-		return nullptr;
-	return p_AP->API->GetFileInfo(p_AP->p_AudioFile);
-}
-
 const fileInfo_t *audioFileInfo(void *audioFile)
 {
 	const auto file = static_cast<const audioFile_t *>(audioFile);
@@ -97,6 +75,8 @@ const fileInfo_t *audioFileInfo(void *audioFile)
 		return nullptr;
 	return &file->fileInfo();
 }
+
+const fileInfo_t *audioGetFileInfo(void *audioFile) { return audioFileInfo(audioFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
@@ -108,15 +88,7 @@ const fileInfo_t *audioFileInfo(void *audioFile)
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long Audio_FillBuffer(void *p_AudioPtr, uint8_t *OutBuffer, int nOutBufferLen)
-{
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (p_AP == NULL || OutBuffer == NULL || p_AP->p_AudioFile == NULL)
-		return -3;
-	return p_AP->API->FillBuffer(p_AP->p_AudioFile, OutBuffer, nOutBufferLen);
-}
-
-long audioFillBuffer(void *audioFile, uint8_t *buffer, int length)
+int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t length)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (!file)
@@ -132,16 +104,6 @@ long audioFillBuffer(void *audioFile, uint8_t *buffer, int length)
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
  */
-int Audio_CloseFileR(void *p_AudioPtr)
-{
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (p_AP == NULL || p_AP->p_AudioFile == NULL)
-		return 0;
-	const int result = p_AP->API->CloseFileR(p_AP->p_AudioFile);
-	delete p_AP;
-	return result;
-}
-
 int audioCloseFile(void *audioFile)
 {
 	const auto file = static_cast<const audioFile_t *>(audioFile);
@@ -156,13 +118,6 @@ int audioCloseFile(void *audioFile)
  * the call to \c Audio_OpenR() used to open the file at \p p_AudioPtr,
  * this function will do nothing.
  */
-void Audio_Play(void *p_AudioPtr)
-{
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
-		p_AP->API->Play(p_AP->p_AudioFile);
-}
-
 void audioPlay(void *audioFile)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
@@ -176,13 +131,6 @@ void audioFile_t::play()
 		_player->play();
 }
 
-void Audio_Pause(void *p_AudioPtr)
-{
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
-		p_AP->API->Pause(p_AP->p_AudioFile);
-}
-
 void audioPause(void *audioFile)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
@@ -194,13 +142,6 @@ void audioFile_t::pause()
 {
 	if (_player)
 		_player->pause();
-}
-
-void Audio_Stop(void *p_AudioPtr)
-{
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
-	if (p_AP != NULL && p_AP->p_AudioFile != NULL)
-		p_AP->API->Stop(p_AP->p_AudioFile);
 }
 
 void audioStop(void *audioFile)
