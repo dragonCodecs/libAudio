@@ -6,7 +6,7 @@ project(
 		'warning_level=3',
 		'buildtype=release'
 	],
-	version: '0.3.1'
+	version: '0.4.0'
 )
 
 if meson.version() < '0.47.0'
