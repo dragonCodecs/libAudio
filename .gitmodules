@@ -1,0 +1,3 @@
+[submodule "deps/WavPack"]
+	path = deps/WavPack
+	url = https://github.com/dbry/WavPack
