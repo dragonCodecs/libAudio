@@ -16,3 +16,9 @@
 [submodule "deps/vorbis"]
 	path = deps/vorbis
 	url = https://github.com/xiph/vorbis
+[submodule "deps/libid3tag"]
+	path = deps/libid3tag
+	url = https://github.com/markjeee/libid3tag
+[submodule "deps/libmad"]
+	path = deps/libmad
+	url = https://github.com/markjeee/libmad
