@@ -22,3 +22,12 @@
 [submodule "deps/libmad"]
 	path = deps/libmad
 	url = https://github.com/markjeee/libmad
+[submodule "deps/libmpc"]
+	path = deps/libmpc
+	url = https://github.com/DX-MON/libmpc
+[submodule "deps/libreplaygain"]
+	path = deps/libreplaygain
+	url = https://github.com/DX-MON/libreplaygain
+[submodule "deps/libcuefile"]
+	path = deps/libcuefile
+	url = https://github.com/DX-MON/libcuefile
