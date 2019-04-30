@@ -13,3 +13,6 @@
 [submodule "deps/flac"]
 	path = deps/flac
 	url = https://github.com/xiph/flac
+[submodule "deps/vorbis"]
+	path = deps/vorbis
+	url = https://github.com/xiph/vorbis
