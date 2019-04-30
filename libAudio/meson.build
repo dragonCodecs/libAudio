@@ -23,10 +23,6 @@ if extraFormats.contains('wma')
 	extraSrcs += 'loadWMA.cpp'
 	extraArgs += '-DENABLE_WMA'
 endif
-if extraFormats.contains('shorten')
-	extraSrcs += 'loadShorten.cpp'
-	extraArgs += '-DENABLE_SHORTEN'
-endif
 if extraFormats.contains('optimFROG')
 	extraSrcs += 'loadOptimFROG.cpp'
 	extraArgs += '-DENABLE_OptimFROG'
