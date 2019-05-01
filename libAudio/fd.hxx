@@ -53,36 +53,45 @@ public:
 		std::swap(eof, desc.eof);
 	}
 
-	bool read(void *const value, const size_t valueLen) const noexcept WARN_UNUSED
+	bool read(void *const value, const size_t valueLen, size_t &resultLen) const noexcept WARN_UNUSED
 	{
-		size_t actualLen;
-		return read(value, valueLen, actualLen);
-	}
-
-	bool read(void *const value, const size_t valueLen, size_t &actualLen) const noexcept WARN_UNUSED
-	{
-		actualLen = 0;
 		if (eof)
 			return false;
 		const ssize_t result = ::read(fd, value, valueLen);
-		if (result == 0 && valueLen != 0)
+		if (!result && valueLen)
 			eof = true;
-		else if (result > 0)
-			actualLen = size_t(result);
-		return actualLen == valueLen;
+		else if (result < 0)
+			return false;
+		resultLen = size_t(result);
+		return resultLen == valueLen;
+	}
+
+	bool read(void *const value, const size_t valueLen) const noexcept WARN_UNUSED
+	{
+		size_t resultLen = 0;
+		return read(value, valueLen, resultLen);
 	}
 
 	ssize_t read(void *const bufferPtr, const size_t len, std::nullptr_t) const noexcept WARN_UNUSED
 		{ return ::read(fd, bufferPtr, len); }
-	ssize_t write(const void *const bufferPtr, const size_t len) const noexcept WARN_UNUSED
-		{ return ::write(fd, bufferPtr, len); }
-	off_t seek(off_t offset, int32_t whence) const noexcept WARN_UNUSED { return ::lseek(fd, offset, whence); }
+	ssize_t write(const void *const bufferPtr, const size_t valueLen) const noexcept WARN_UNUSED
+		{ return ::write(fd, bufferPtr, valueLen); }
+	off_t seek(const off_t offset, const int32_t whence) const noexcept WARN_UNUSED
+		{ return ::lseek(fd, offset, whence); }
 	off_t tell() const noexcept WARN_UNUSED { return seek(0, SEEK_CUR); }
 	fd_t dup() const noexcept WARN_UNUSED { return ::dup(fd); }
 
+	stat_t stat() const noexcept WARN_UNUSED
+	{
+		stat_t fileStat{};
+		if (!::fstat(fd, &fileStat))
+			return fileStat;
+		return {};
+	}
+
 	off_t length() const noexcept WARN_UNUSED
 	{
-		struct stat fileStat;
+		stat_t fileStat{};
 		const int result = fstat(fd, &fileStat);
 		return result ? -1 : fileStat.st_size;
 	}
