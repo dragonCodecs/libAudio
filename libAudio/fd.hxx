@@ -33,35 +33,13 @@ private:
 	int32_t fd;
 	mutable bool eof;
 
-	template<typename T, typename U = T> inline T exchange(T &obj, U &&newVal)
-	{
-		T oldVal = std::move(obj);
-		obj = std::forward<U>(newVal);
-		return oldVal;
-	}
-
-	int32_t release() noexcept { return exchange(fd, -1); }
-
-	void reset(const int32_t desc = -1) noexcept
-	{
-		if (fd != -1)
-			close(fd);
-		fd = desc;
-	}
-
 public:
 	constexpr fd_t() noexcept : fd(-1), eof(false) { }
 	constexpr fd_t(const int32_t s) noexcept : fd(s), eof(false) { }
 	fd_t(const char *const file, int flags, mode_t mode = 0) noexcept : fd(::open(file, flags, mode)), eof(false) { }
-	fd_t(fd_t &&s) noexcept : fd(s.release()), eof(s.eof) { }
-	~fd_t() noexcept { reset(); }
-
-	fd_t &operator =(fd_t &&s) noexcept
-	{
-		swap(s);
-		return *this;
-	}
-
+	fd_t(fd_t &&fd_) : fd_t() { swap(fd_); }
+	~fd_t() noexcept { if (fd != -1) close(fd); }
+	void operator =(fd_t &&s) noexcept { swap(s); }
 	operator int32_t() const noexcept WARN_UNUSED { return fd; }
 	bool operator ==(const int32_t desc) const noexcept WARN_UNUSED { return fd == desc; }
 	bool valid() const noexcept WARN_UNUSED { return fd != -1; }
@@ -125,6 +103,7 @@ public:
 	fd_t &operator =(const fd_t &) = delete;
 };
 
+inline void swap(fd_t &a, fd_t &b) noexcept { a.swap(b); }
 constexpr mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
 
 #endif /*FD__HXX*/
