@@ -12,5 +12,5 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	make
 	sudo make install
 	popd
-else
+#else
 fi
