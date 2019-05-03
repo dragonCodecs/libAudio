@@ -4,7 +4,7 @@ set -x
 
 if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo apt-get install libopenal-dev libogg-dev libvorbis-dev \
-		libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev \
+		libflac-dev libmpcdec-dev libfaac-dev libfaad-dev \
 		libmad0-dev libid3tag0-dev
 
 	pushd deps/mp4v2
@@ -14,6 +14,16 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	autoheader
 	autoconf
 	CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
+	make
+	sudo make install
+	popd
+
+	pushd deps/WavPack
+	aclocal -I .
+	libtoolize -icf
+	automake -ac
+	autoconf
+	CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu
 	make
 	sudo make install
 	popd
