@@ -8,7 +8,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 		libmad0-dev libid3tag0-dev
 
 	pushd deps/mp4v2
-	aclocal -I .
+	aclocal -I . -I project
 	libtoolize -icf
 	automake -ac
 	autoheader
