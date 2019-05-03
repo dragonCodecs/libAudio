@@ -3,6 +3,7 @@ sudo: required
 os: linux
 dist: xenial
 
+before_install: .travis-ci/beforeInstall.sh
 install: .travis-ci/install.sh
 script: .travis-ci/script.sh
 
