@@ -8,6 +8,11 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 		libmad0-dev libid3tag0-dev
 
 	pushd deps/mp4v2
+	aclocal -I .
+	libtoolize -icf
+	automake -ac
+	autoheader
+	autoconf
 	CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
 	make
 	sudo make install
