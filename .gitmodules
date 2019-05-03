@@ -33,4 +33,4 @@
 	url = https://github.com/DX-MON/libcuefile
 [submodule "deps/mp4v2"]
 	path = deps/mp4v2
-	url = git@github.com:DX-MON/mp4v2.git
+	url = https://github.com/DX-MON/mp4v2
