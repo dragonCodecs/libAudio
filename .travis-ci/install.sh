@@ -31,7 +31,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	popd
 else
 	echo "    bin"
-	ls /c/tools/msys64
+	ls /c/tools/msys64/usr/bin
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
