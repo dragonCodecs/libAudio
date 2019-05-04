@@ -30,14 +30,9 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
-	echo "    chocolatey"
-	ls /c/ProgramData/chocolatey
+	choco install msys2
 	echo "    bin"
 	ls /c/ProgramData/chocolatey/bin
-	echo "    mingw64"
-	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64
-	echo "    bin"
-	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
