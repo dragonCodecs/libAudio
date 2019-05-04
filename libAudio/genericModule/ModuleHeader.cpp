@@ -197,13 +197,11 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 
 ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 {
-	std::array<char, 4> magic1, blockName;
-	std::array<char, 42> magic2;
-	char StrMagic[4];
-	uint32_t blockLen;
-	uint8_t Const, i;
+	std::array<char, 4> magic1{}, blockName{};
+	std::array<char, 42> magic2{};
+	uint32_t blockLen = 0;
+	uint8_t Const;
 	const fd_t &fd = p_AF->inner.fd();
-	FILE *f_AON = p_AF->f_Module;
 
 	if (!fd.read(magic1) ||
 		!fd.read(magic2) ||
@@ -245,51 +243,56 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	}
 	else
 		Remark = nullptr;
-
-	fseek(f_AON, fd.tell(), SEEK_SET);
-
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	fread(&Const, 1, 1, f_AON);
-	if (strncmp(StrMagic, "INFO", 4) != 0 || blockLen != Swap32(4) ||
-		Const != 0x34)
-		throw new ModuleLoaderError(E_BAD_AON);
-	fread(&Const, 1, 1, f_AON);
+	if (!fd.read(blockName) ||
+		memcmp(blockName.data(), "INFO", 4) != 0 ||
+		!fd.readBE(blockLen) ||
+		!fd.read(Const) ||
+		blockLen != 4 ||
+		Const != 0x34 ||
+		!fd.read(Const))
+		throw ModuleLoaderError(E_BAD_AON);
 	nOrders = Const;
-	fread(&Const, 1, 1, f_AON);
+	if (!fd.read(Const))
+		throw ModuleLoaderError(E_BAD_AON);
 	RestartPos = Const;
-	fread(&Const, 1, 1, f_AON);
-
-	// Skip over the arpeggio table..
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	if (strncmp(StrMagic, "ARPG", 4) != 0 || blockLen != Swap32(64))
-		throw new ModuleLoaderError(E_BAD_AON);
-	for (i = 0; i < 16; i++)
+	if (!fd.read(Const) ||
+		// Skip over the arpeggio table..
+		!fd.read(blockName) ||
+		memcmp(blockName.data(), "ARPG", 4) != 0 ||
+		!fd.readBE(blockLen) ||
+		blockLen != 64)
+		throw ModuleLoaderError(E_BAD_AON);
+	for (uint8_t i = 0; i < 16; ++i)
 	{
-		for (int j = 0; j < 4; j++)
-			fread(&ArpTable[i][j], 1, 1, f_AON);
+		for (uint8_t j = 0; j < 4; ++j)
+		{
+			if (!fd.read(ArpTable[i][j]))
+				throw ModuleLoaderError(E_BAD_AON);
+		}
 	}
 	if (ArpTable[0][0] != 0 || ArpTable[0][1] != 0 ||
 		ArpTable[0][2] != 0 || ArpTable[0][3] != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
-
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	blockLen = Swap32(blockLen);
+		throw ModuleLoaderError(E_BAD_AON);
+	else if (!fd.read(blockName) ||
+		memcmp(blockName.data(), "PLST", 4) != 0 ||
+		!fd.readBE(blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
 	// If odd number of orders
 	if ((nOrders & 1) != 0)
-		// Get rid of fill byte from count
+		// Get rid of the fill byte from the count
 		blockLen--;
-	if (strncmp(StrMagic, "PLST", 4) != 0 || blockLen != nOrders)
-		throw new ModuleLoaderError(E_BAD_AON);
 	Orders = makeUnique<uint8_t []>(nOrders);
-	for (i = 0; i < nOrders; i++)
-		fread(&Orders[i], 1, 1, f_AON);
-	// If odd read length
-	if ((blockLen & 1) != 0)
-		// Read the fill-byte
-		fread(&Const, 1, 1, f_AON);
+	if (blockLen != nOrders || !Orders)
+		throw ModuleLoaderError(E_BAD_AON);
+	for (uint16_t i = 0; i < nOrders; i++)
+	{
+		if (!fd.read(Orders[i]))
+			throw ModuleLoaderError(E_BAD_AON);
+	}
+	// If odd read length, read the fill byte
+	if ((blockLen & 1) != 0 &&
+		!fd.read(Const))
+		throw ModuleLoaderError(E_BAD_AON);
 
 	/********************************************\
 	|* The following block just initialises the *|
@@ -408,9 +411,4 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 			throw ModuleLoaderError(E_BAD_IT);
 		Remark[msgLength] = 0;
 	}
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
 }

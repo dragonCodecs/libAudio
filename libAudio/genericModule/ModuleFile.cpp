@@ -139,9 +139,11 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	char StrMagic[4];
 	uint32_t BlockLen, i, SampleLengths, InstrPos, PCMPos;
 	uint8_t ChannelMul;
+	const fd_t &fd = p_AF->inner.fd();
 	FILE *f_AON = p_AF->f_Module;
 
 	p_Header = new ModuleHeader(p_AF);
+	fseek(f_AON, fd.tell(), SEEK_SET);
 
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&BlockLen, 4, 1, f_AON);
