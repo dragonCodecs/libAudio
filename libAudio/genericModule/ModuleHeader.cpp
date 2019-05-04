@@ -4,7 +4,7 @@
 
 // Default initalise key fields
 ModuleHeader::ModuleHeader() : Name{}, RestartPos{255}, GlobalVolume{64}, InitialSpeed{6},
-	InitialTempo{125}, MasterVolume{64}, Separation{128}, Author{}, Volumes{} { Volumes.fill(64); }
+	InitialTempo{125}, MasterVolume{64}, Author{}, Separation{128}, Volumes{} { Volumes.fill(64); }
 
 ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 {

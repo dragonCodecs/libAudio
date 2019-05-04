@@ -86,7 +86,7 @@ public:
 	void *operator new[](const size_t s, const std::nothrow_t &);
 };
 
-class ModuleHeader : public ModuleAllocator
+class ModuleHeader final : public ModuleAllocator
 {
 private:
 	// Common fields
@@ -122,7 +122,7 @@ private:
 	uint8_t ChannelSettings[32];
 
 	// AON
-	char *Author;
+	std::unique_ptr<char []> Author;
 	char ArpTable[16][4];
 
 #ifdef ENABLE_FC1x
@@ -159,7 +159,7 @@ public:
 	ModuleHeader(const modFC1x_t &file);
 #endif
 	ModuleHeader(const modIT_t &file);
-	virtual ~ModuleHeader();
+	~ModuleHeader();
 };
 
 class ModuleSample : public ModuleAllocator
