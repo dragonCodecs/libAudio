@@ -346,8 +346,8 @@ ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}
 ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> magic;
-	char DontCare[4];
-	uint16_t MsgLength, SongFlags;
+	std::array<char, 4> dontCare;
+	uint16_t msgLength, SongFlags;
 	uint8_t Const;
 	const fd_t &fd = file.fd();
 
@@ -360,25 +360,25 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 
 	if (!Name || !Panning ||
 		!fd.read(Name, 26) ||
-		!fd.read(DontCare, 2) ||
-		!fd.read(&nOrders, 2) ||
-		!fd.read(&nInstruments, 2) ||
-		!fd.read(&nSamples, 2) ||
-		!fd.read(&nPatterns, 2) ||
-		!fd.read(&CreationVersion, 2) ||
-		!fd.read(&FormatVersion, 2) ||
-		!fd.read(&SongFlags, 2) ||
+		!fd.read<2>(dontCare) ||
+		!fd.readLE(nOrders) ||
+		!fd.readLE(nInstruments) ||
+		!fd.readLE(nSamples) ||
+		!fd.readLE(nPatterns) ||
+		!fd.readLE(CreationVersion) ||
+		!fd.readLE(FormatVersion) ||
+		!fd.readLE(SongFlags) ||
 		// TODO: Handle special.
-		!fd.read(DontCare, 2) ||
-		!fd.read(&GlobalVolume, 1) ||
-		!fd.read(&MasterVolume, 1) ||
-		!fd.read(&InitialSpeed, 1) ||
-		!fd.read(&InitialTempo, 1) ||
-		!fd.read(&Separation, 1) ||
-		!fd.read(&Const, 1) ||
-		!fd.read(&MsgLength, 2) ||
-		!fd.read(&MessageOffs, 4) ||
-		!fd.read(&DontCare, 4))
+		!fd.read<2>(dontCare) ||
+		!fd.read(GlobalVolume) ||
+		!fd.read(MasterVolume) ||
+		!fd.read(InitialSpeed) ||
+		!fd.read(InitialTempo) ||
+		!fd.read(Separation) ||
+		!fd.read(Const) ||
+		!fd.read(msgLength) ||
+		!fd.readLE(MessageOffs) ||
+		!fd.read(dontCare))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	if (Name[25] != 0)
@@ -416,11 +416,11 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 
 	if (MessageOffs != 0)
 	{
-		Remark = new char[MsgLength + 1];
+		Remark = new char[msgLength + 1];
 		if (fd.seek(MessageOffs, SEEK_SET) != MessageOffs ||
-			!fd.read(Remark, MsgLength))
+			!fd.read(Remark, msgLength))
 			throw ModuleLoaderError(E_BAD_IT);
-		Remark[MsgLength] = 0;
+		Remark[msgLength] = 0;
 	}
 
 	/********************************************\
