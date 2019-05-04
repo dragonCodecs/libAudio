@@ -46,8 +46,7 @@ void *MOD_OpenR(const char *FileName)
 	return ret.release();
 }
 
-const fileInfo_t *MOD_GetFileInfo(void *p_MODFile)
-	{ return audioFileInfo(p_MODFile); }
+const fileInfo_t *MOD_GetFileInfo(void *p_MODFile) { return audioFileInfo(p_MODFile); }
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_MODFile, OutBuffer, nOutBufferLen); }
 int MOD_CloseFileR(void *p_MODFile) { return audioCloseFile(p_MODFile); }
