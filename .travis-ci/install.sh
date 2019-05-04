@@ -30,6 +30,8 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
+	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin
+
 	pushd deps/mp4v2
 	aclocal -I . -I project
 	libtoolize -icf
