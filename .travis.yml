@@ -42,17 +42,17 @@ matrix:
 #          packages:
 #            - clang-5.0
 #            - python3.6
-#    - compiler: clang-6.0
-#      env: CC_=clang-6.0 CXX_=clang++-6.0 COVERAGE=0
-#      addons:
-#        apt:
-#          sources:
-#            - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main'
-#              key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
-#            - deadsnakes
-#          packages:
-#            - clang-6.0
-#            - python3.6
+    - compiler: clang-6.0
+      env: CC_=clang-6.0 CXX_=clang++-6.0 COVERAGE=0
+      addons:
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main'
+              key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
+            - deadsnakes
+          packages:
+            - clang-6.0
+            - python3.6
 #    - compiler: gcc-5
 #      env: CC_=gcc-5 CXX_=g++-5 COVERAGE=0
 #      addons:
@@ -86,17 +86,17 @@ matrix:
 #            - gcc-7
 #            - g++-7
 #            - python3.6
-#    - compiler: gcc-8
-#      env: CC_=gcc-8 CXX_=g++-8 COVERAGE=0
-#      addons:
-#        apt:
-#          sources:
-#            - ubuntu-toolchain-r-test
-#            - deadsnakes
-#          packages:
-#            - gcc-8
-#            - g++-8
-#            - python3.6
+    - compiler: gcc-8
+      env: CC_=gcc-8 CXX_=g++-8 COVERAGE=0
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - deadsnakes
+          packages:
+            - gcc-8
+            - g++-8
+            - python3.6
     - env: ARCH=amd64 COVERAGE=0 PATH=/c/tools/ninja-build:/c/Python36/Scripts:/c/Python36:$PATH:/c/tools/msys64/usr/bin
       os: windows
     - env: ARCH=x86 COVERAGE=0 PATH=/c/tools/ninja-build:/c/Python36/Scripts:/c/Python36:$PATH:/c/tools/msys64/usr/bin
