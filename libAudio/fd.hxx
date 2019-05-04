@@ -115,7 +115,7 @@ public:
 		return read(value.data(), sizeof(T) * length);
 	}
 
-	bool readLE(uint16_t &value) const noexcept
+	bool readLE(uint16_t &value) const noexcept WARN_UNUSED
 	{
 		std::array<uint8_t, 2> data{};
 		const bool result = read(data);
@@ -123,7 +123,7 @@ public:
 		return result;
 	}
 
-	bool readLE(uint32_t &value) const noexcept
+	bool readLE(uint32_t &value) const noexcept WARN_UNUSED
 	{
 		std::array<uint8_t, 4> data{};
 		const bool result = read(data);
@@ -132,7 +132,7 @@ public:
 		return result;
 	}
 
-	bool readBE(uint16_t &value) const noexcept
+	bool readBE(uint16_t &value) const noexcept WARN_UNUSED
 	{
 		std::array<uint8_t, 2> data{};
 		const bool result = read(data);
@@ -140,7 +140,7 @@ public:
 		return result;
 	}
 
-	bool readBE(uint32_t &value) const noexcept
+	bool readBE(uint32_t &value) const noexcept WARN_UNUSED
 	{
 		std::array<uint8_t, 4> data{};
 		const bool result = read(data);
