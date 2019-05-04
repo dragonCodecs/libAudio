@@ -115,6 +115,40 @@ public:
 		return read(value.data(), sizeof(T) * length);
 	}
 
+	bool readLE(uint16_t &value) const noexcept
+	{
+		std::array<uint8_t, 2> data{};
+		const bool result = read(data);
+		value = (uint16_t(data[1]) << 8) | data[0];
+		return result;
+	}
+
+	bool readLE(uint32_t &value) const noexcept
+	{
+		std::array<uint8_t, 4> data{};
+		const bool result = read(data);
+		value = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) |
+			(uint32_t(data[1]) << 8) | data[0];
+		return result;
+	}
+
+	bool readBE(uint16_t &value) const noexcept
+	{
+		std::array<uint8_t, 2> data{};
+		const bool result = read(data);
+		value = (uint16_t(data[0]) << 8) | data[1];
+		return result;
+	}
+
+	bool readBE(uint32_t &value) const noexcept
+	{
+		std::array<uint8_t, 4> data{};
+		const bool result = read(data);
+		value = (uint32_t(data[0]) << 24) | (uint32_t(data[1]) << 16) |
+			(uint32_t(data[2]) << 8) | data[3];
+		return result;
+	}
+
 	fd_t(const fd_t &) = delete;
 	fd_t &operator =(const fd_t &) = delete;
 };

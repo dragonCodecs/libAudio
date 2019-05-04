@@ -47,23 +47,6 @@ wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd))
 	ctx(makeUnique<decoderContext_t>()) { }
 wav_t::decoderContext_t::decoderContext_t() noexcept { }
 
-bool read(const fd_t &fd, uint16_t &value) noexcept
-{
-	std::array<uint8_t, 2> data{};
-	const bool result = fd.read(data);
-	value = (uint16_t(data[1]) << 8) | data[0];
-	return result;
-}
-
-bool read(const fd_t &fd, uint32_t &value) noexcept
-{
-	std::array<uint8_t, 4> data{};
-	const bool result = fd.read(data);
-	value = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) |
-		(uint32_t(data[1]) << 8) | data[0];
-	return result;
-}
-
 constexpr std::array<char, 4> waveFormatChunk{'f', 'm', 't', ' '};
 constexpr std::array<char, 4> waveDataChunk{'d', 'a', 't', 'a'};
 
@@ -81,7 +64,7 @@ bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 	while (chunkTag != chunkName && offset < fileSize)
 	{
 		uint32_t chunkLength = 0;
-		if (!read(file, chunkLength) ||
+		if (!file.readLE(chunkLength) ||
 			chunkLength > (fileSize - offset) ||
 			file.seek(chunkLength, SEEK_CUR) != (offset + chunkLength + 4) ||
 			!file.read(chunkTag))
@@ -106,11 +89,11 @@ bool wav_t::readFormat() noexcept
 	std::array<char, 6> unused;
 	uint16_t channels;
 
-	if (!read(file, ctx.compression) ||
-		!read(file, channels) ||
-		!read(file, info.bitRate) ||
+	if (!file.readLE(ctx.compression) ||
+		!file.readLE(channels) ||
+		!file.readLE(info.bitRate) ||
 		!file.read(unused) ||
-		!read(file, ctx.bitsPerSample) ||
+		!file.readLE(ctx.bitsPerSample) ||
 		!channels ||
 		!info.bitRate ||
 		!ctx.bitsPerSample ||
@@ -135,14 +118,14 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 
 	if (fileSize == -1 ||
 		file.seek(4, SEEK_SET) != 4 ||
-		!read(file, chunkLength) ||
+		!file.readLE(chunkLength) ||
 		chunkLength > (fileSize - 8) ||
 		file.seek(4, SEEK_CUR) != 12 ||
 		!wavFile->skipToChunk(waveFormatChunk))
 		return nullptr;
 	off_t offset = file.tell();
 	if (offset == -1 ||
-		!read(file, chunkLength) ||
+		!file.readLE(chunkLength) ||
 		chunkLength > (fileSize - offset - 4) ||
 		chunkLength < 16 ||
 		!wavFile->readFormat())
@@ -157,7 +140,7 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 	}
 
 	if (!wavFile->skipToChunk(waveDataChunk) ||
-		!read(file, chunkLength) ||
+		!file.readLE(chunkLength) ||
 		(offset = file.tell()) == -1 ||
 		chunkLength > (fileSize - offset) ||
 		file.isEOF())
