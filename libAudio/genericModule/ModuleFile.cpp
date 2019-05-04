@@ -63,7 +63,7 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 
-	modLoadPCM(file);
+	modLoadPCM(fd);
 	MinPeriod = 56;
 	MaxPeriod = 7040;
 }
@@ -104,7 +104,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 	}
 
-	s3mLoadPCM(file);
+	s3mLoadPCM(fd);
 	MinPeriod = 64;
 	MaxPeriod = 32767;
 }
@@ -126,7 +126,7 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instrum
 	if (fd.seek(pcmOffset, SEEK_SET) != pcmOffset)
 		throw ModuleLoaderError(E_BAD_STM);
 
-	stmLoadPCM(file);
+	stmLoadPCM(fd);
 	MinPeriod = 64;
 	MaxPeriod = 32767;
 }
@@ -208,7 +208,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 		blockLen != SampleLengths)
 		throw ModuleLoaderError(E_BAD_AON);
 
-	aonLoadPCM(p_AF->inner);
+	aonLoadPCM(fd);
 	MinPeriod = 56;
 	MaxPeriod = 7040;
 }
@@ -280,7 +280,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instrumen
 		}
 	}
 
-	itLoadPCM(file);
+	itLoadPCM(fd);
 	MinPeriod = 8;
 	MaxPeriod = 61440;//32767;
 }
@@ -324,9 +324,8 @@ uint8_t ModuleFile::channels() const noexcept
 	return (p_Header->MasterVolume & 0x80) ? 2 : 1;
 }
 
-void ModuleFile::modLoadPCM(const modMOD_t &file)
+void ModuleFile::modLoadPCM(const fd_t &fd)
 {
-	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
@@ -368,9 +367,8 @@ void ModuleFile::modLoadPCM(const modMOD_t &file)
 	}
 }
 
-void ModuleFile::s3mLoadPCM(const modS3M_t &file)
+void ModuleFile::s3mLoadPCM(const fd_t &fd)
 {
-	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
@@ -404,9 +402,8 @@ void ModuleFile::s3mLoadPCM(const modS3M_t &file)
 	}
 }
 
-void ModuleFile::stmLoadPCM(const modSTM_t &file)
+void ModuleFile::stmLoadPCM(const fd_t &fd)
 {
-	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 	{
@@ -423,9 +420,8 @@ void ModuleFile::stmLoadPCM(const modSTM_t &file)
 	}
 }
 
-void ModuleFile::aonLoadPCM(const modAON_t &file)
+void ModuleFile::aonLoadPCM(const fd_t &fd)
 {
-	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[nPCM];
 	for (uint32_t i = 0; i < nPCM; i++)
 	{
@@ -641,9 +637,8 @@ void stereoInterleave(T *pcmIn, T *pcmOut, uint32_t Length)
 	}
 }
 
-void ModuleFile::itLoadPCM(const modIT_t &file)
+void ModuleFile::itLoadPCM(const fd_t &fd)
 {
-	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{

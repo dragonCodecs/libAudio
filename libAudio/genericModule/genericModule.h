@@ -608,11 +608,11 @@ private:
 	inline void MonoFromStereo(uint32_t count);
 
 private:
-	void modLoadPCM(const modMOD_t &file);
-	void s3mLoadPCM(const modS3M_t &file);
-	void stmLoadPCM(const modSTM_t &file);
-	void aonLoadPCM(const modAON_t &file);
-	void itLoadPCM(const modIT_t &file);
+	void modLoadPCM(const fd_t &fd);
+	void s3mLoadPCM(const fd_t &fd);
+	void stmLoadPCM(const fd_t &fd);
+	void aonLoadPCM(const fd_t &fd);
+	void itLoadPCM(const fd_t &fd);
 	void DeinitMixer();
 
 public:
