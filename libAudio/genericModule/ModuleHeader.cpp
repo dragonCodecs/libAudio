@@ -233,11 +233,11 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	Author[blockLen] = 0;
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "DATE", 4) != 0 ||
-		!fd.readBE(blockLen))
+		!fd.readBE(blockLen) ||
+		!fd.seekRel(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
 
 	fseek(f_AON, fd.tell(), SEEK_SET);
-	fseek(f_AON, blockLen, SEEK_CUR);
 
 	fread(StrMagic, 4, 1, f_AON);
 	if (strncmp(StrMagic, "RMRK", 4) != 0)

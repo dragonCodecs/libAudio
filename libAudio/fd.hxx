@@ -149,6 +149,14 @@ public:
 		return result;
 	}
 
+	bool seekRel(const off_t offset) const noexcept WARN_UNUSED
+	{
+		const off_t currentPos = tell();
+		if (currentPos == -1 || currentPos + offset < 0)
+			return false;
+		return seek(offset, SEEK_CUR) == currentPos + offset;
+	}
+
 	fd_t(const fd_t &) = delete;
 	fd_t &operator =(const fd_t &) = delete;
 };
