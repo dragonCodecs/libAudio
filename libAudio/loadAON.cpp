@@ -4,34 +4,34 @@
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
 
-modAON_t::modAON_t() noexcept : moduleFile_t{audioType_t::moduleAON, {}} { }
+modAON_t::modAON_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleAON, std::move(fd)} { }
+
+modAON_t *modAON_t::openR(const char *const fileName) noexcept
+{
+	auto aonFile = makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!aonFile || !aonFile->valid() || !isAON(aonFile->_fd))
+		return nullptr;
+	if (!aonFile->_fd.seek(0, SEEK_SET) != 0)
+		return nullptr;
+	return aonFile.release();
+}
 
 void *AON_OpenR(const char *FileName)
 {
-	std::unique_ptr<AON_Intern> ret = makeUnique<AON_Intern>();
+	std::unique_ptr<modAON_t> ret{modAON_t::openR(FileName)};
 	if (!ret)
 		return nullptr;
 
-	auto &ctx = *ret->inner.context();
-	fileInfo_t &info = ret->inner.fileInfo();
-
-	ret->f_Module = fopen(FileName, "rb");
-	if (!ret->f_Module)
-		return nullptr;
+	auto &ctx = *ret->context();
+	fileInfo_t &info = ret->fileInfo();
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ctx.mod = makeUnique<ModuleFile>(ret->inner); }
+	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
-		return nullptr;
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->error());
-		delete e;
 		return nullptr;
 	}
 	info.title = ctx.mod->title();
@@ -44,53 +44,20 @@ void *AON_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			ret->inner.player(makeUnique<playback_t>(&ret->inner, audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
 
 	return ret.release();
 }
 
-const fileInfo_t *AON_GetFileInfo(void *p_AONFile)
-{
-	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	return audioFileInfo(&p_AF->inner);
-}
-
+const fileInfo_t *AON_GetFileInfo(void *p_AONFile) { return audioFileInfo(p_AONFile); }
 long AON_FillBuffer(void *p_AONFile, void *const buffer, const uint32_t length)
-{
-	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	return audioFillBuffer(&p_AF->inner, buffer, length);
-}
-
-int AON_CloseFileR(void *p_AONFile)
-{
-	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	if (p_AF == NULL)
-		return 0;
-	const int ret = fclose(p_AF->f_Module);
-	delete p_AF;
-	return ret;
-}
-
-void AON_Play(void *p_AONFile)
-{
-	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	p_AF->inner.play();
-}
-
-void AON_Pause(void *p_AONFile)
-{
-	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	p_AF->inner.pause();
-}
-
-void AON_Stop(void *p_AONFile)
-{
-	AON_Intern *p_AF = (AON_Intern *)p_AONFile;
-	p_AF->inner.stop();
-}
-
+	{ return audioFillBuffer(p_AONFile, buffer, length); }
+int AON_CloseFileR(void *p_AONFile) { return audioCloseFile(p_AONFile); }
+void AON_Play(void *p_AONFile) { audioPlay(p_AONFile); }
+void AON_Pause(void *p_AONFile) { audioPause(p_AONFile); }
+void AON_Stop(void *p_AONFile) { audioStop(p_AONFile); }
 bool Is_AON(const char *FileName) { return modAON_t::isAON(FileName); }
 
 bool modAON_t::isAON(const int32_t fd) noexcept
@@ -119,13 +86,13 @@ API_Functions AONDecoder =
 {
 	AON_OpenR,
 	nullptr,
-	AON_GetFileInfo,
+	audioFileInfo,
 	nullptr,
-	AON_FillBuffer,
+	audioFillBuffer,
 	nullptr,
-	AON_CloseFileR,
+	audioCloseFile,
 	nullptr,
-	AON_Play,
-	AON_Pause,
-	AON_Stop
+	audioPlay,
+	audioPause,
+	audioStop
 };

@@ -22,17 +22,6 @@ class ModulePattern;
 
 using stringPtr_t = std::unique_ptr<char []>;
 
-template<typename T> struct moduleIntern : T
-{
-	FILE *f_Module;
-	uint8_t buffer[8192];
-
-	moduleIntern() noexcept : T(), f_Module(nullptr) { }
-};
-
-struct aonIntern { modAON_t inner; };
-typedef moduleIntern<aonIntern> AON_Intern;
-
 #include "effects.h"
 
 #define MIXBUFFERSIZE		512
