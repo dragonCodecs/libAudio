@@ -1,7 +1,8 @@
+#include <stdlib.h>
+#include <algorithm>
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
 #include "genericModule.h"
-#include <stdlib.h>
 
 ModuleSample *ModuleSample::LoadSample(const modMOD_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
@@ -221,6 +222,7 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 	else if (Type == 1)
 	{
 		uint8_t LoopLen, Const;
+		std::array<uint8_t, 9> reserved;
 		/*
 		; Wavetable 8 bit
 		synth8_partwaveDmaLen	rs.b	1	; in words (--> up to 512 bytes)
@@ -247,10 +249,11 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 		instr_Asub			rs.b	1	; Zeit bis endlevel
 		*/
 
+		if (!fd.read(LoopLen) ||
+			!fd.read(reserved) ||
+			!std::all_of(reserved.begin(), reserved.end(), [](const uint8_t value) { return value == 0; }))
+			throw ModuleLoaderError(E_BAD_AON);
 		fseek(f_AON, fd.tell(), SEEK_SET);
-		fread(&LoopLen, 1, 1, f_AON);
-		for (uint8_t i = 0; i < 9; ++i)
-			fread(&Const, 1, 1, f_AON);
 		fread(&VibratoDepth, 1, 1, f_AON);
 		fread(&VibratoSpeed, 1, 1, f_AON);
 		fread(&VibratoType, 1, 1, f_AON);
