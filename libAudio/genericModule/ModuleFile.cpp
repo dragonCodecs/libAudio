@@ -136,50 +136,53 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instrum
 // ftp://ftp.modland.com/pub/documents/format_documentation/Art%20Of%20Noise%20(.aon).txt
 ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
+	std::array<char, 4> blockName{};
+	uint32_t blockLen = 0;
 	char StrMagic[4];
-	uint32_t BlockLen, i, SampleLengths, InstrPos, PCMPos;
+	uint32_t i, SampleLengths, InstrPos, PCMPos;
 	uint8_t ChannelMul;
 	const fd_t &fd = p_AF->inner.fd();
 	FILE *f_AON = p_AF->f_Module;
 
 	p_Header = new ModuleHeader(p_AF->inner);
-	fseek(f_AON, fd.tell(), SEEK_SET);
 
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
+	if (!fd.read(blockName) ||
+		memcmp(blockName.data(), "PATT", 4) != 0 ||
+		!fd.readBE(blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
 	// 2 if 8 voices, 1 otherwise
 	ChannelMul = p_Header->nChannels >> 2;
 	// Transform that into a shift value to get the number of patterns
 	ChannelMul += 9;
-	if (strncmp(StrMagic, "PATT", 4) != 0 || (BlockLen % (1 << ChannelMul)) != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
-	p_Header->nPatterns = BlockLen >> ChannelMul;
+	if ((blockLen % (1 << ChannelMul)) != 0)
+		throw ModuleLoaderError(E_BAD_AON);
+	p_Header->nPatterns = blockLen >> ChannelMul;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	fseek(f_AON, fd.tell(), SEEK_SET);
 	for (i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(p_AF, p_Header->nChannels);
 
 	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
-	if (strncmp(StrMagic, "INST", 4) != 0 || (BlockLen % 32) != 0)
+	fread(&blockLen, 4, 1, f_AON);
+	blockLen = Swap32(blockLen);
+	if (strncmp(StrMagic, "INST", 4) != 0 || (blockLen % 32) != 0)
 		throw new ModuleLoaderError(E_BAD_AON);
-	p_Header->nSamples = BlockLen >> 5;
+	p_Header->nSamples = blockLen >> 5;
 	InstrPos = ftell(f_AON);
-	fseek(f_AON, BlockLen, SEEK_CUR);
+	fseek(f_AON, blockLen, SEEK_CUR);
 
 	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
+	fread(&blockLen, 4, 1, f_AON);
+	blockLen = Swap32(blockLen);
 	if (strncmp(StrMagic, "INAM", 4) == 0)
 	{
 		// We don't care about the instrument names, so skip over them.
-		fseek(f_AON, BlockLen, SEEK_CUR);
+		fseek(f_AON, blockLen, SEEK_CUR);
 		fread(StrMagic, 4, 1, f_AON);
-		fread(&BlockLen, 4, 1, f_AON);
-		BlockLen = Swap32(BlockLen);
+		fread(&blockLen, 4, 1, f_AON);
+		blockLen = Swap32(blockLen);
 	}
-	if (strncmp(StrMagic, "WLEN", 4) != 0 || BlockLen != 0x0100)
+	if (strncmp(StrMagic, "WLEN", 4) != 0 || blockLen != 0x0100)
 		throw new ModuleLoaderError(E_BAD_AON);
 	LengthPCM = new uint32_t[64];
 	for (i = 0, SampleLengths = 0; i < 64; i++)
@@ -201,9 +204,9 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 
 	fseek(f_AON, PCMPos, SEEK_SET);
 	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
-	if (strncmp(StrMagic, "WAVE", 4) != 0 || BlockLen != SampleLengths)
+	fread(&blockLen, 4, 1, f_AON);
+	blockLen = Swap32(blockLen);
+	if (strncmp(StrMagic, "WAVE", 4) != 0 || blockLen != SampleLengths)
 		throw new ModuleLoaderError(E_BAD_AON);
 
 	AONLoadPCM(f_AON);
