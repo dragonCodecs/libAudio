@@ -7,6 +7,8 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 		libflac-dev libmpcdec-dev libfaac-dev libfaad-dev \
 		libmad0-dev libid3tag0-dev
 
+	CPU_COUNT=`grep -c '^processor' /proc/cpuinfo`
+
 	pushd deps/mp4v2
 	aclocal -I . -I project
 	libtoolize -icf
@@ -14,7 +16,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	autoheader
 	autoconf
 	CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
-	make
+	make -j $CPU_COUNT
 	sudo make install
 	popd
 
@@ -24,7 +26,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	automake -ac
 	autoconf
 	CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu
-	make
+	make -j $CPU_COUNT
 	sudo make install
 	popd
 #else
