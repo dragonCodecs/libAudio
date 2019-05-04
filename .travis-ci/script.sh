@@ -11,9 +11,15 @@ codecov()
 	fi
 }
 
-CC="$CC_" CXX="$CXX_" meson build --prefix=$HOME/.local -D b_coverage=`codecov`
-cd build
-ninja
+if [ "$TRAVIS_OS_NAME" != "windows" ]; then
+	CC="$CC_" CXX="$CXX_" meson build --prefix=$HOME/.local -D b_coverage=`codecov`
+	cd build
+	ninja
+else
+	unset CC CXX CC_FOR_BUILD CXX_FOR_BUILD
+	.travis-ci/build.bat $ARCH `codecov`
+	cd build
+fi
 #if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 #	ninja test
 #else

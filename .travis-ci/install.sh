@@ -29,5 +29,19 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	make -j $CPU_COUNT
 	sudo make install
 	popd
-#else
+else
+	pushd deps/mp4v2
+	aclocal -I . -I project
+	libtoolize -icf
+	automake -ac
+	autoheader
+	autoconf
+	popd
+
+	pushd deps/WavPack
+	aclocal -I .
+	libtoolize -icf
+	automake -ac
+	autoconf
+	popd
 fi
