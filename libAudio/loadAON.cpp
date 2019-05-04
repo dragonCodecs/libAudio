@@ -11,7 +11,7 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 	auto aonFile = makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
 	if (!aonFile || !aonFile->valid() || !isAON(aonFile->_fd))
 		return nullptr;
-	if (!aonFile->_fd.seek(0, SEEK_SET) != 0)
+	if (aonFile->_fd.seek(0, SEEK_SET))
 		return nullptr;
 	return aonFile.release();
 }
