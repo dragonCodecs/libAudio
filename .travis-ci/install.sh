@@ -30,7 +30,18 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
-	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin
+	echo "chocolatey"
+	ls /c/ProgramData/chocolatey
+	echo "lib"
+	ls /c/ProgramData/chocolatey/lib
+	echo "mingw"
+	ls /c/ProgramData/chocolatey/lib/mingw
+	echo "tools"
+	ls /c/ProgramData/chocolatey/lib/mingw/tools
+	echo "install"
+	ls /c/ProgramData/chocolatey/lib/mingw/tools/install
+	echo "mingw64"
+	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
