@@ -209,7 +209,7 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	std::array<char, 4> magic1, blockName;
 	std::array<char, 42> magic2;
 	char StrMagic[4];
-	uint32_t BlockLen;
+	uint32_t blockLen;
 	uint8_t Const, i;
 	const fd_t &fd = p_AF->inner.fd();
 	FILE *f_AON = p_AF->f_Module;
@@ -220,58 +220,50 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 		(magic1[3] != '4' && magic1[3] != '8') ||
 		memcmp(magic2.data(), "artofnoise by bastian spiegel (twice/lego)", 42) != 0 ||
 		!fd.read(blockName) ||
-		memcmp(blockName.data(), "NAME", 4) != 0)
+		memcmp(blockName.data(), "NAME", 4) != 0 ||
+		!fd.readBE(blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
+	nChannels = magic1[3] - '0';
+	Name = makeUnique<char []>(blockLen + 1);
+	if (!Name ||
+		!fd.read(Name, blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
+	Name[blockLen] = 0;
+	if (!fd.read(blockName) ||
+		memcmp(blockName.data(), "AUTH", 4) != 0 ||
+		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
 
 	fseek(f_AON, fd.tell(), SEEK_SET);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
-
-	if (strncmp(StrMagic, "NAME", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
-
-	nChannels = magic1[3] - '0';
-
-	Name = makeUnique<char []>(BlockLen + 1);
-	if (!Name)
-		throw new ModuleLoaderError(E_BAD_AON);
-	fread(Name.get(), BlockLen, 1, f_AON);
-	Name[BlockLen] = 0;
-
-	fread(StrMagic, 4, 1, f_AON);
-	if (strncmp(StrMagic, "AUTH", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
-	Author = new char [BlockLen + 1];
-	fread(Author, BlockLen, 1, f_AON);
-	Author[BlockLen] = 0;
+	Author = new char [blockLen + 1];
+	fread(Author, blockLen, 1, f_AON);
+	Author[blockLen] = 0;
 
 	fread(StrMagic, 4, 1, f_AON);
 	if (strncmp(StrMagic, "DATE", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
-	fseek(f_AON, BlockLen, SEEK_CUR);
+	fread(&blockLen, 4, 1, f_AON);
+	blockLen = Swap32(blockLen);
+	fseek(f_AON, blockLen, SEEK_CUR);
 
 	fread(StrMagic, 4, 1, f_AON);
 	if (strncmp(StrMagic, "RMRK", 4) != 0)
 		throw new ModuleLoaderError(E_BAD_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	if (BlockLen != 0)
+	fread(&blockLen, 4, 1, f_AON);
+	if (blockLen != 0)
 	{
-		BlockLen = Swap32(BlockLen);
-		Remark = new char[BlockLen + 1];
-		fread(Remark, BlockLen, 1, f_AON);
-		Remark[BlockLen] = 0;
+		blockLen = Swap32(blockLen);
+		Remark = new char[blockLen + 1];
+		fread(Remark, blockLen, 1, f_AON);
+		Remark[blockLen] = 0;
 	}
 	else
 		Remark = nullptr;
 
 	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
+	fread(&blockLen, 4, 1, f_AON);
 	fread(&Const, 1, 1, f_AON);
-	if (strncmp(StrMagic, "INFO", 4) != 0 || BlockLen != Swap32(4) ||
+	if (strncmp(StrMagic, "INFO", 4) != 0 || blockLen != Swap32(4) ||
 		Const != 0x34)
 		throw new ModuleLoaderError(E_BAD_AON);
 	fread(&Const, 1, 1, f_AON);
@@ -282,8 +274,8 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 
 	// Skip over the arpeggio table..
 	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	if (strncmp(StrMagic, "ARPG", 4) != 0 || BlockLen != Swap32(64))
+	fread(&blockLen, 4, 1, f_AON);
+	if (strncmp(StrMagic, "ARPG", 4) != 0 || blockLen != Swap32(64))
 		throw new ModuleLoaderError(E_BAD_AON);
 	for (i = 0; i < 16; i++)
 	{
@@ -295,19 +287,19 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 		throw new ModuleLoaderError(E_BAD_AON);
 
 	fread(StrMagic, 4, 1, f_AON);
-	fread(&BlockLen, 4, 1, f_AON);
-	BlockLen = Swap32(BlockLen);
+	fread(&blockLen, 4, 1, f_AON);
+	blockLen = Swap32(blockLen);
 	// If odd number of orders
 	if ((nOrders & 1) != 0)
 		// Get rid of fill byte from count
-		BlockLen--;
-	if (strncmp(StrMagic, "PLST", 4) != 0 || BlockLen != nOrders)
+		blockLen--;
+	if (strncmp(StrMagic, "PLST", 4) != 0 || blockLen != nOrders)
 		throw new ModuleLoaderError(E_BAD_AON);
 	Orders = makeUnique<uint8_t []>(nOrders);
 	for (i = 0; i < nOrders; i++)
 		fread(&Orders[i], 1, 1, f_AON);
 	// If odd read length
-	if ((BlockLen & 1) != 0)
+	if ((blockLen & 1) != 0)
 		// Read the fill-byte
 		fread(&Const, 1, 1, f_AON);
 
