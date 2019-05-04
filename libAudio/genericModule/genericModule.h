@@ -172,7 +172,7 @@ private:
 
 protected:
 	ModuleSample(const uint32_t id, const uint8_t type) noexcept : _type(type), _id(id) { }
-	void ResetID(const uint32_t id) noexcept { _id = id; }
+	void resetID(const uint32_t id) noexcept { _id = id; }
 
 public:
 	static ModuleSample *LoadSample(const modMOD_t &file, const uint32_t i);

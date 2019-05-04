@@ -192,8 +192,7 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 		!fd.read(FineTune) ||
 		!fd.read(ID))
 		throw ModuleLoaderError(E_BAD_AON);
-	fseek(f_AON, fd.tell(), SEEK_SET);
-	ResetID(ID);
+	resetID(ID);
 	Length = pcmLengths[ID];
 	SampleFlags = 0;
 
@@ -203,16 +202,18 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 		uint32_t SampleStart, SampleLen;
 		VibratoSpeed = VibratoDepth = VibratoType = 0;
 
-		fread(&SampleStart, 4, 1, f_AON);
-		SampleStart = Swap32(SampleStart) << 1;
-		fread(&SampleLen, 4, 1, f_AON);
-		Length = Swap32(SampleLen) << 1;
-		fread(&LoopStart, 4, 1, f_AON);
-		LoopStart = Swap32(LoopStart) << 1;
-		fread(&LoopEnd, 4, 1, f_AON);
-		LoopEnd = (Swap32(LoopEnd) << 1) + LoopStart;
+		if (!fd.readBE(SampleStart) ||
+			!fd.readBE(SampleLen) ||
+			!fd.readBE(LoopStart) ||
+			!fd.readBE(LoopEnd))
+			throw ModuleLoaderError(E_BAD_AON);
+		SampleStart <<= 1;
+		Length <<= 1;
+		LoopStart <<= 1;
+		LoopEnd <<= 1;
 		if (LoopEnd == 2)
 			LoopEnd = LoopStart = 0;
+		LoopEnd += LoopStart;
 		if (LoopEnd != LoopStart)
 			SampleFlags |= SAMPLE_FLAGS_LOOP;
 		printf("%u, %u, %u, %u(%u)", SampleStart, Length, LoopStart, LoopEnd, LoopEnd - LoopStart);
@@ -246,6 +247,7 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 		instr_Asub			rs.b	1	; Zeit bis endlevel
 		*/
 
+		fseek(f_AON, fd.tell(), SEEK_SET);
 		fread(&LoopLen, 1, 1, f_AON);
 		for (uint8_t i = 0; i < 9; ++i)
 			fread(&Const, 1, 1, f_AON);
