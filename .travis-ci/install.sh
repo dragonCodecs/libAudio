@@ -30,17 +30,17 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
-	echo "chocolatey"
+	echo "    chocolatey"
 	ls /c/ProgramData/chocolatey
-	echo "lib"
+	echo "    lib"
 	ls /c/ProgramData/chocolatey/lib
-	echo "mingw"
+	echo "    mingw"
 	ls /c/ProgramData/chocolatey/lib/mingw
-	echo "tools"
+	echo "    tools"
 	ls /c/ProgramData/chocolatey/lib/mingw/tools
-	echo "install"
+	echo "    install"
 	ls /c/ProgramData/chocolatey/lib/mingw/tools/install
-	echo "mingw64"
+	echo "    mingw64"
 	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64
 
 	pushd deps/mp4v2
