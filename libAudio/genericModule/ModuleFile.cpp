@@ -138,7 +138,6 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 {
 	std::array<char, 4> blockName{};
 	uint32_t blockLen = 0;
-	char StrMagic[4];
 	uint32_t i, SampleLengths, InstrPos, PCMPos;
 	uint8_t ChannelMul;
 	const fd_t &fd = p_AF->inner.fd();
@@ -183,32 +182,31 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	if (memcmp(blockName.data(), "WLEN", 4) != 0 ||
 		blockLen != 0x0100)
 		throw ModuleLoaderError(E_BAD_AON);
-	fseek(f_AON, fd.tell(), SEEK_SET);
 
-	LengthPCM = new uint32_t[64];
+	lengthPCM = makeUnique<uint32_t []>(64);
 	for (i = 0, SampleLengths = 0; i < 64; i++)
 	{
-		fread(LengthPCM + i, 4, 1, f_AON);
-		LengthPCM[i] = Swap32(LengthPCM[i]);
-		SampleLengths += LengthPCM[i];
-		if (LengthPCM[i] != 0)
+		if (!fd.readBE(lengthPCM[i]))
+			throw ModuleLoaderError(E_BAD_AON);
+		SampleLengths += lengthPCM[i];
+		if (lengthPCM[i] != 0)
 			nPCM = i + 1;
 	}
-	PCMPos = ftell(f_AON);
+	PCMPos = fd.tell();
 
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
 		fseek(f_AON, InstrPos + (i << 5), SEEK_SET);
-		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, nullptr, LengthPCM);
+		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, nullptr, lengthPCM.get());
 	}
 
-	fseek(f_AON, PCMPos, SEEK_SET);
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	blockLen = Swap32(blockLen);
-	if (strncmp(StrMagic, "WAVE", 4) != 0 || blockLen != SampleLengths)
-		throw new ModuleLoaderError(E_BAD_AON);
+	if (fd.seek(PCMPos, SEEK_SET) != PCMPos ||
+		!fd.read(blockName) ||
+		memcmp(blockName.data(), "WAVE", 4) != 0 ||
+		!fd.readBE(blockLen) ||
+		blockLen != SampleLengths)
+		throw ModuleLoaderError(E_BAD_AON);
 
 	AONLoadPCM(f_AON);
 	MinPeriod = 56;
@@ -293,7 +291,6 @@ ModuleFile::~ModuleFile()
 
 	DeinitMixer();
 
-	delete [] LengthPCM;
 	if (ModuleType != MODULE_AON)
 		nPCM = p_Header->nSamples;
 	for (i = 0; i < nPCM; i++)
@@ -432,7 +429,7 @@ void ModuleFile::AONLoadPCM(FILE *f_AON)
 	p_PCM = new uint8_t *[nPCM];
 	for (i = 0; i < nPCM; i++)
 	{
-		uint32_t Length = LengthPCM[i];
+		uint32_t Length = lengthPCM[i];
 		if (Length != 0)
 		{
 			p_PCM[i] = new uint8_t[Length];

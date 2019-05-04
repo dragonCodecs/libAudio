@@ -552,7 +552,7 @@ private:
 	ModulePattern **p_Patterns;
 	ModuleInstrument **p_Instruments;
 	uint8_t **p_PCM;
-	uint32_t *LengthPCM;
+	std::unique_ptr<uint32_t []> lengthPCM;
 	uint32_t nPCM;
 
 	// Mixer info
