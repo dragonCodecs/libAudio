@@ -3,7 +3,7 @@
 #include "genericModule.h"
 
 // Default initalise key fields
-ModuleHeader::ModuleHeader() : Name{}, RestartPos{255}, GlobalVolume{64}, InitialSpeed{6},
+ModuleHeader::ModuleHeader() : Name{}, Remark{}, RestartPos{255}, GlobalVolume{64}, InitialSpeed{6},
 	InitialTempo{125}, MasterVolume{64}, Author{}, Separation{128}, Volumes{} { Volumes.fill(64); }
 
 ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
@@ -69,7 +69,6 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 	Flags = 0;
 	nInstruments = 0;
 	CreationVersion = FormatVersion = 0;
-	Remark = nullptr;
 }
 
 ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
@@ -148,7 +147,6 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	nInstruments = 0;
-	Remark = nullptr;
 }
 
 ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
@@ -195,7 +193,6 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	\********************************************/
 	Flags = 0;
 	nInstruments = 0;
-	Remark = nullptr;
 }
 
 ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
@@ -239,17 +236,17 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 		memcmp(blockName.data(), "RMRK", 4) != 0 ||
 		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
-
-	fseek(f_AON, fd.tell(), SEEK_SET);
-
-	if (blockLen != 0)
+	else if (blockLen)
 	{
-		Remark = new char[blockLen + 1];
-		fread(Remark, blockLen, 1, f_AON);
+		Remark = makeUnique<char []>(blockLen + 1);
+		if (!fd.read(Remark, blockLen))
+			throw ModuleLoaderError(E_BAD_AON);
 		Remark[blockLen] = 0;
 	}
 	else
 		Remark = nullptr;
+
+	fseek(f_AON, fd.tell(), SEEK_SET);
 
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&blockLen, 4, 1, f_AON);
@@ -329,7 +326,6 @@ ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	nInstruments = 0;
-	Remark = nullptr;
 }
 #endif
 
@@ -406,7 +402,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 
 	if (MessageOffs != 0)
 	{
-		Remark = new char[msgLength + 1];
+		Remark = makeUnique<char []>(msgLength + 1);
 		if (fd.seek(MessageOffs, SEEK_SET) != MessageOffs ||
 			!fd.read(Remark, msgLength))
 			throw ModuleLoaderError(E_BAD_IT);
@@ -417,10 +413,4 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Remark = nullptr;
-}
-
-ModuleHeader::~ModuleHeader()
-{
-	delete [] Remark;
 }

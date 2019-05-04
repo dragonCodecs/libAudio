@@ -91,7 +91,7 @@ class ModuleHeader final : public ModuleAllocator
 private:
 	// Common fields
 	std::unique_ptr<char []> Name;
-	char *Remark;
+	std::unique_ptr<char []> Remark;
 	uint16_t nOrders;
 	uint16_t nSamples;
 	uint16_t nInstruments;
@@ -159,7 +159,7 @@ public:
 	ModuleHeader(const modFC1x_t &file);
 #endif
 	ModuleHeader(const modIT_t &file);
-	~ModuleHeader();
+	~ModuleHeader() noexcept = default;
 };
 
 class ModuleSample : public ModuleAllocator
