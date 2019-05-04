@@ -32,7 +32,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 else
 	choco install msys2
 	echo "    bin"
-	ls /c/ProgramData/chocolatey/bin
+	ls /c/tools/msys64/bin
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
