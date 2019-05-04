@@ -234,18 +234,16 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "DATE", 4) != 0 ||
 		!fd.readBE(blockLen) ||
-		!fd.seekRel(blockLen))
+		!fd.seekRel(blockLen) ||
+		!fd.read(blockName) ||
+		memcmp(blockName.data(), "RMRK", 4) != 0 ||
+		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
 
 	fseek(f_AON, fd.tell(), SEEK_SET);
 
-	fread(StrMagic, 4, 1, f_AON);
-	if (strncmp(StrMagic, "RMRK", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
-	fread(&blockLen, 4, 1, f_AON);
 	if (blockLen != 0)
 	{
-		blockLen = Swap32(blockLen);
 		Remark = new char[blockLen + 1];
 		fread(Remark, blockLen, 1, f_AON);
 		Remark[blockLen] = 0;
