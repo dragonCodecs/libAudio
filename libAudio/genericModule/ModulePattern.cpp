@@ -145,35 +145,33 @@ ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_
 	}
 }
 
-ModulePattern::ModulePattern(AON_Intern *p_AF, uint32_t nChannels) : ModulePattern(nChannels, 64, E_BAD_AON)
+ModulePattern::ModulePattern(const modAON_t &file, const uint32_t channels) : ModulePattern(channels, 64, E_BAD_AON)
 {
 	uint8_t row, channel;
-	FILE *f_AON = p_AF->f_Module;
+	const fd_t &fd = file.fd();
 
 	for (row = 0; row < _rows; row++)
 	{
-		for (channel = 0; channel < nChannels; channel++)
+		for (channel = 0; channel < channels; channel++)
 		{
-			uint8_t Note, Samp;
-			uint8_t Effect, Param;
-			uint8_t ArpIndex = 0;
-
 			if (row == 0)
 			{
 				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError(E_BAD_AON);
 			}
-			fread(&Note, 1, 1, f_AON);
-			_commands[channel][row].SetAONNote(Note);
-			fread(&Samp, 1, 1, f_AON);
-			ArpIndex |= (Samp >> 6) & 0x03;
-			_commands[channel][row].SetSample(Samp & 0x3F);
-			fread(&Effect, 1, 1, f_AON);
-			ArpIndex |= (Effect >> 4) & 0x0C;
-			_commands[channel][row].SetAONArpIndex(ArpIndex);
-			fread(&Param, 1, 1, f_AON);
-			_commands[channel][row].SetAONEffect(Effect & 0x3F, Param);
+			uint8_t note, sample;
+			uint8_t effect, param;
+			if (!fd.read(note) ||
+				!fd.read(sample) ||
+				!fd.read(effect) ||
+				!fd.read(param))
+				throw ModuleLoaderError(E_BAD_AON);
+			const uint8_t arpIndex = ((sample >> 6) & 0x03) | ((effect >> 4) & 0x0C);
+			_commands[channel][row].SetAONNote(note);
+			_commands[channel][row].SetSample(sample & 0x3F);
+			_commands[channel][row].SetAONArpIndex(arpIndex);
+			_commands[channel][row].SetAONEffect(effect & 0x3F, param);
 		}
 	}
 }
