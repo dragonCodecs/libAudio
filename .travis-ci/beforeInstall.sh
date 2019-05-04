@@ -20,4 +20,7 @@ else
 	mkdir /c/tools/ninja-build
 	7z x -oC:\\tools\\ninja-build ninja-win.zip
 	rm get-pip.py ninja-win.zip
+
+	pacman -Sy
+	pacman -S m4 automake autoconf libtool
 fi
