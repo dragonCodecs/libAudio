@@ -160,16 +160,17 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(p_AF->inner, p_Header->nChannels);
-	fseek(f_AON, fd.tell(), SEEK_SET);
 
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	blockLen = Swap32(blockLen);
-	if (strncmp(StrMagic, "INST", 4) != 0 || (blockLen % 32) != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
+	if (!fd.read(blockName) ||
+		memcmp(blockName.data(), "INST", 4) != 0 ||
+		!fd.readBE(blockLen) ||
+		(blockLen % 32) != 0)
+		throw ModuleLoaderError(E_BAD_AON);
 	p_Header->nSamples = blockLen >> 5;
-	InstrPos = ftell(f_AON);
-	fseek(f_AON, blockLen, SEEK_CUR);
+	InstrPos = fd.tell();
+	if (!fd.seekRel(blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
+	fseek(f_AON, fd.tell(), SEEK_SET);
 
 	fread(StrMagic, 4, 1, f_AON);
 	fread(&blockLen, 4, 1, f_AON);
