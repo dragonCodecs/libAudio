@@ -611,7 +611,7 @@ private:
 	void modLoadPCM(const modMOD_t &file);
 	void s3mLoadPCM(const modS3M_t &file);
 	void stmLoadPCM(const modSTM_t &file);
-	void AONLoadPCM(FILE *f_AON);
+	void aonLoadPCM(const modAON_t &file);
 	void itLoadPCM(const modIT_t &file);
 	void DeinitMixer();
 

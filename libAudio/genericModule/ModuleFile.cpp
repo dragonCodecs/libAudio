@@ -208,7 +208,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 		blockLen != SampleLengths)
 		throw ModuleLoaderError(E_BAD_AON);
 
-	AONLoadPCM(f_AON);
+	aonLoadPCM(p_AF->inner);
 	MinPeriod = 56;
 	MaxPeriod = 7040;
 }
@@ -423,17 +423,18 @@ void ModuleFile::stmLoadPCM(const modSTM_t &file)
 	}
 }
 
-void ModuleFile::AONLoadPCM(FILE *f_AON)
+void ModuleFile::aonLoadPCM(const modAON_t &file)
 {
-	uint32_t i;
+	const fd_t &fd = file.fd();
 	p_PCM = new uint8_t *[nPCM];
-	for (i = 0; i < nPCM; i++)
+	for (uint32_t i = 0; i < nPCM; i++)
 	{
 		uint32_t Length = lengthPCM[i];
 		if (Length != 0)
 		{
 			p_PCM[i] = new uint8_t[Length];
-			fread(p_PCM[i], Length, 1, f_AON);
+			if (fd.read(p_PCM[i], Length))
+				throw ModuleLoaderError(E_BAD_AON);
 		}
 		else
 			p_PCM[i] = nullptr;
