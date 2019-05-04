@@ -22,7 +22,7 @@ void *AON_OpenR(const char *FileName)
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ctx.mod = makeUnique<ModuleFile>(ret.get()); }
+	try { ctx.mod = makeUnique<ModuleFile>(ret->inner); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());

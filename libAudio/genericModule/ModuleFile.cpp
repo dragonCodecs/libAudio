@@ -134,15 +134,15 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instrum
 // http://www.tigernt.com/onlineDoc/68000.pdf
 // http://eab.abime.net/showthread.php?t=21516
 // ftp://ftp.modland.com/pub/documents/format_documentation/Art%20Of%20Noise%20(.aon).txt
-ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modAON_t &file) : ModuleType(MODULE_AON), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	std::array<char, 4> blockName{};
 	uint32_t blockLen = 0;
 	uint32_t i, SampleLengths, InstrPos, PCMPos;
 	uint8_t ChannelMul;
-	const fd_t &fd = p_AF->inner.fd();
+	const fd_t &fd = file.fd();
 
-	p_Header = new ModuleHeader(p_AF->inner);
+	p_Header = new ModuleHeader(file);
 
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "PATT", 4) != 0 ||
@@ -157,7 +157,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	p_Header->nPatterns = blockLen >> ChannelMul;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(p_AF->inner, p_Header->nChannels);
+		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "INST", 4) != 0 ||
@@ -199,7 +199,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 		const uint32_t offset = InstrPos + (i << 5);
 		if (fd.seek(offset, SEEK_SET) != offset)
 			throw ModuleLoaderError(E_BAD_AON);
-		p_Samples[i] = ModuleSample::LoadSample(p_AF->inner, i, nullptr, lengthPCM.get());
+		p_Samples[i] = ModuleSample::LoadSample(file, i, nullptr, lengthPCM.get());
 	}
 
 	if (fd.seek(PCMPos, SEEK_SET) != PCMPos ||

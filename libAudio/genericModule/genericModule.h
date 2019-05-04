@@ -619,7 +619,7 @@ public:
 	ModuleFile(const modMOD_t &file);
 	ModuleFile(const modS3M_t &file);
 	ModuleFile(const modSTM_t &file);
-	ModuleFile(AON_Intern *p_AF);
+	ModuleFile(const modAON_t &file);
 #ifdef ENABLE_FC1x
 	ModuleFile(const modFC1x_t &file);
 #endif
