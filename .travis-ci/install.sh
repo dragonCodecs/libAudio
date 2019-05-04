@@ -32,16 +32,12 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 else
 	echo "    chocolatey"
 	ls /c/ProgramData/chocolatey
-	echo "    lib"
-	ls /c/ProgramData/chocolatey/lib
-	echo "    mingw"
-	ls /c/ProgramData/chocolatey/lib/mingw
-	echo "    tools"
-	ls /c/ProgramData/chocolatey/lib/mingw/tools
-	echo "    install"
-	ls /c/ProgramData/chocolatey/lib/mingw/tools/install
+	echo "    bin"
+	ls /c/ProgramData/chocolatey/bin
 	echo "    mingw64"
 	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64
+	echo "    bin"
+	ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
