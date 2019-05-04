@@ -472,11 +472,11 @@ private:
 	ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type);
 
 public:
-	ModulePattern(const modMOD_t &file, const uint32_t nChannels);
-	ModulePattern(const modS3M_t &file, const uint32_t nChannels);
+	ModulePattern(const modMOD_t &file, const uint32_t channels);
+	ModulePattern(const modS3M_t &file, const uint32_t channels);
 	ModulePattern(const modSTM_t &file);
 	ModulePattern(const modAON_t &file, const uint32_t channels);
-	ModulePattern(const modIT_t &file, const uint32_t nChannels);
+	ModulePattern(const modIT_t &file, const uint32_t channels);
 
 	const fixedVector_t<commandPtr_t> &commands() const { return _commands; }
 	uint16_t rows() const noexcept { return _rows; }
