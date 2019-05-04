@@ -2,7 +2,7 @@
 #include "../libAudio_Common.h"
 #include "genericModule.h"
 
-void ModuleCommand::TranslateMODEffect(uint8_t cmd, uint8_t param)
+void ModuleCommand::TranslateMODEffect(const uint8_t cmd, const uint8_t param) noexcept
 {
 	switch (cmd)
 	{

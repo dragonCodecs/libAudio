@@ -27,15 +27,15 @@ ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t nChannels) : M
 		for (uint32_t channel = 0; channel < nChannels; channel++)
 		{
 			// Read 4 bytes of data and unpack it into the structure.
-			std::array<uint8_t, 4> Data;
+			std::array<uint8_t, 4> data;
 			if (row == 0)
 			{
 				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError(E_BAD_MOD);
 			}
-			fd.read(Data);
-			_commands[channel][row].SetMODData(Data.data());
+			fd.read(data);
+			_commands[channel][row].SetMODData(data);
 		}
 	}
 }
@@ -281,7 +281,7 @@ void ModuleCommand::SetVolume(const uint8_t volume) noexcept
 	VolParam = volume;
 }
 
-uint8_t ModuleCommand::MODPeriodToNoteIndex(uint16_t Period)
+uint8_t ModuleCommand::MODPeriodToNoteIndex(const uint16_t Period) noexcept
 {
 	uint8_t i, min = 0, max = 59;
 	if (Period == 0)
@@ -321,11 +321,11 @@ uint8_t ModuleCommand::MODPeriodToNoteIndex(uint16_t Period)
 		return 0;
 }
 
-void ModuleCommand::SetMODData(uint8_t Data[4])
+void ModuleCommand::SetMODData(const std::array<uint8_t, 4> &data) noexcept
 {
-	Sample = (Data[0] & 0xF0) | (Data[2] >> 4);
-	Note = MODPeriodToNoteIndex((((uint16_t)(Data[0] & 0x0F)) << 8) | Data[1]);
-	TranslateMODEffect(Data[2] & 0x0F, Data[3]);
+	Sample = (data[0] & 0xF0) | (data[2] >> 4);
+	Note = MODPeriodToNoteIndex((((uint16_t)(data[0] & 0x0F)) << 8) | data[1]);
+	TranslateMODEffect(data[2] & 0x0F, data[3]);
 }
 
 void ModuleCommand::SetS3MNote(uint8_t note, uint8_t sample)

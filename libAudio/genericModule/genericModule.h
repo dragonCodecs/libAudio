@@ -436,15 +436,15 @@ private:
 	uint8_t Param;
 	uint8_t ArpIndex;
 
-	inline uint8_t MODPeriodToNoteIndex(uint16_t Period);
-	void TranslateMODEffect(uint8_t Effect, uint8_t Param);
+	inline uint8_t MODPeriodToNoteIndex(const uint16_t Period) noexcept;
+	void TranslateMODEffect(const uint8_t Effect, const uint8_t Param) noexcept;
 	friend class ModuleFile;
 	friend class Channel;
 
 public:
 	void SetSample(const uint8_t _sample) noexcept { Sample = _sample; }
 	void SetVolume(const uint8_t Volume) noexcept;
-	void SetMODData(uint8_t Data[4]);
+	void SetMODData(const std::array<uint8_t, 4> &Data) noexcept;
 	void SetS3MNote(uint8_t Note, uint8_t Sample);
 	void SetS3MVolume(uint8_t Volume);
 	void SetS3MEffect(uint8_t Effect, uint8_t Param);
