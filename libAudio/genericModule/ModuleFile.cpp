@@ -199,7 +199,7 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 		const uint32_t offset = InstrPos + (i << 5);
 		if (fd.seek(offset, SEEK_SET) != offset)
 			throw ModuleLoaderError(E_BAD_AON);
-		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, nullptr, lengthPCM.get());
+		p_Samples[i] = ModuleSample::LoadSample(p_AF->inner, i, nullptr, lengthPCM.get());
 	}
 
 	if (fd.seek(PCMPos, SEEK_SET) != PCMPos ||

@@ -178,7 +178,7 @@ public:
 	static ModuleSample *LoadSample(const modMOD_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(const modS3M_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(const modSTM_t &file, const uint32_t i);
-	static ModuleSample *LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
+	static ModuleSample *LoadSample(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths);
 	static ModuleSample *LoadSample(const modIT_t &file, const uint32_t i);
 
 	virtual ~ModuleSample() noexcept = default;
@@ -230,7 +230,7 @@ public:
 	ModuleSampleNative(const modMOD_t &file, const uint32_t i);
 	ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t Type);
 	ModuleSampleNative(const modSTM_t &file, const uint32_t i);
-	ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths);
+	ModuleSampleNative(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths);
 	ModuleSampleNative(const modIT_t &file, const uint32_t i);
 	~ModuleSampleNative() = default;
 

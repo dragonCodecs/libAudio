@@ -23,8 +23,8 @@ ModuleSample *ModuleSample::LoadSample(const modS3M_t &file, const uint32_t i)
 ModuleSample *ModuleSample::LoadSample(const modSTM_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
-ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths)
-	{ return new ModuleSampleNative(p_AF, i, Name, pcmLengths); }
+ModuleSample *ModuleSample::LoadSample(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths)
+	{ return new ModuleSampleNative(file, i, Name, pcmLengths); }
 
 ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
@@ -182,10 +182,10 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 }
 
-ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name, uint32_t *pcmLengths) : ModuleSample(i, 1), Name(name)
+ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, char *name, const uint32_t *const pcmLengths) : ModuleSample(i, 1), Name(name)
 {
 	uint8_t Type, ID;
-	const fd_t &fd = p_AF->inner.fd();
+	const fd_t &fd = file.fd();
 
 	if (!fd.read(Type) ||
 		!fd.read(Volume) ||
