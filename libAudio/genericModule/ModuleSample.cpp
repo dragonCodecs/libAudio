@@ -251,19 +251,21 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 
 		if (!fd.read(LoopLen) ||
 			!fd.read(reserved) ||
-			!std::all_of(reserved.begin(), reserved.end(), [](const uint8_t value) { return value == 0; }))
+			!std::all_of(reserved.begin(), reserved.end(), [](const uint8_t value) { return value == 0; }) ||
+			!fd.read(VibratoDepth) ||
+			!fd.read(VibratoSpeed) ||
+			!fd.read(VibratoType))
 			throw ModuleLoaderError(E_BAD_AON);
 		fseek(f_AON, fd.tell(), SEEK_SET);
-		fread(&VibratoDepth, 1, 1, f_AON);
-		fread(&VibratoSpeed, 1, 1, f_AON);
-		fread(&VibratoType, 1, 1, f_AON);
 		for (uint8_t i = 0; i < 4; ++i)
 		{
-			fread(&Const, 1, 1, f_AON);
+			if (!fd.read(Const))
+				throw ModuleLoaderError(E_BAD_AON);
 			printf("%u, ", Const);
 		}
-		fread(&Const, 0, 0, f_AON);
-		if (Const == 1)
+		if (!fd.read(Const))
+			throw ModuleLoaderError(E_BAD_AON);
+		else if (Const == 1)
 			SampleFlags |= SAMPLE_FLAGS_LREVERSE;
 		else if (Const == 2)
 			SampleFlags |= SAMPLE_FLAGS_LPINGPONG;
