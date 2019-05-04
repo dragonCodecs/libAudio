@@ -48,7 +48,8 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
-	fd.seek(130 + (p_Header->nSamples != 15 ? 4 : 0), SEEK_CUR);
+	if (!fd.seekRel(130 + (p_Header->nSamples != 15 ? 4 : 0)))
+		throw ModuleLoaderError(E_BAD_MOD);
 
 	// Count the number of patterns present
 	uint32_t maxPattern{};
@@ -116,7 +117,8 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instrum
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
-	fd.seek(128, SEEK_CUR);
+	if (!fd.seekRel(128))
+		throw ModuleLoaderError(E_BAD_STM);
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new ModulePattern(file);
@@ -409,9 +411,9 @@ void ModuleFile::stmLoadPCM(const modSTM_t &file)
 		if (length != 0)
 		{
 			p_PCM[i] = new uint8_t[length];
-			if (!fd.read(p_PCM[i], length))
+			if (!fd.read(p_PCM[i], length) ||
+				!fd.seekRel(length % 16))
 				throw ModuleLoaderError(E_BAD_STM);
-			fd.seek(length % 16, SEEK_CUR);
 		}
 		else
 			p_PCM[i] = nullptr;
