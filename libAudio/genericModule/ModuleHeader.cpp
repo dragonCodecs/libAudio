@@ -195,13 +195,13 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	nInstruments = 0;
 }
 
-ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader()
 {
 	std::array<char, 4> magic1{}, blockName{};
 	std::array<char, 42> magic2{};
 	uint32_t blockLen = 0;
 	uint8_t Const;
-	const fd_t &fd = p_AF->inner.fd();
+	const fd_t &fd = file.fd();
 
 	if (!fd.read(magic1) ||
 		!fd.read(magic2) ||

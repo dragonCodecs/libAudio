@@ -154,7 +154,7 @@ public:
 	ModuleHeader(const modMOD_t &file);
 	ModuleHeader(const modS3M_t &file);
 	ModuleHeader(const modSTM_t &file);
-	ModuleHeader(AON_Intern *p_AF);
+	ModuleHeader(const modAON_t &file);
 #ifdef ENABLE_FC1x
 	ModuleHeader(const modFC1x_t &file);
 #endif
