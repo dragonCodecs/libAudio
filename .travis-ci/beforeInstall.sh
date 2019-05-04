@@ -13,7 +13,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 else
 	wget --progress=dot:mega https://bootstrap.pypa.io/get-pip.py
 	wget --progress=dot:mega https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip
-	choco install msys2 /NoUpdate
+	choco install msys2 --params="/NoUpdate"
 	choco install python --version 3.6.8
 	python get-pip.py
 	pip3 install meson
