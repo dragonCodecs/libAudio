@@ -23,9 +23,7 @@ ModuleSample *ModuleSample::LoadSample(const modSTM_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
 ModuleSample *ModuleSample::LoadSample(AON_Intern *p_AF, uint32_t i, char *Name, uint32_t *pcmLengths)
-{
-	return new ModuleSampleNative(p_AF, i, Name, pcmLengths);
-}
+	{ return new ModuleSampleNative(p_AF, i, Name, pcmLengths); }
 
 ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
@@ -187,11 +185,14 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 {
 	uint8_t Type, ID;
 	FILE *f_AON = p_AF->f_Module;
+	const fd_t &fd = p_AF->inner.fd();
 
-	fread(&Type, 1, 1, f_AON);
-	fread(&Volume, 1, 1, f_AON);
-	fread(&FineTune, 1, 1, f_AON);
-	fread(&ID, 1, 1, f_AON);
+	if (!fd.read(Type) ||
+		!fd.read(Volume) ||
+		!fd.read(FineTune) ||
+		!fd.read(ID))
+		throw ModuleLoaderError(E_BAD_AON);
+	fseek(f_AON, fd.tell(), SEEK_SET);
 	ResetID(ID);
 	Length = pcmLengths[ID];
 	SampleFlags = 0;

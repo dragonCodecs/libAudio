@@ -141,7 +141,6 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	uint32_t i, SampleLengths, InstrPos, PCMPos;
 	uint8_t ChannelMul;
 	const fd_t &fd = p_AF->inner.fd();
-	FILE *f_AON = p_AF->f_Module;
 
 	p_Header = new ModuleHeader(p_AF->inner);
 
@@ -197,7 +196,9 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
-		fseek(f_AON, InstrPos + (i << 5), SEEK_SET);
+		const uint32_t offset = InstrPos + (i << 5);
+		if (fd.seek(offset, SEEK_SET) != offset)
+			throw ModuleLoaderError(E_BAD_AON);
 		p_Samples[i] = ModuleSample::LoadSample(p_AF, i, nullptr, lengthPCM.get());
 	}
 
