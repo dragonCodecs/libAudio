@@ -185,7 +185,6 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name, uint32_t *pcmLengths) : ModuleSample(i, 1), Name(name)
 {
 	uint8_t Type, ID;
-	FILE *f_AON = p_AF->f_Module;
 	const fd_t &fd = p_AF->inner.fd();
 
 	if (!fd.read(Type) ||
@@ -256,7 +255,6 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 			!fd.read(VibratoSpeed) ||
 			!fd.read(VibratoType))
 			throw ModuleLoaderError(E_BAD_AON);
-		fseek(f_AON, fd.tell(), SEEK_SET);
 		for (uint8_t i = 0; i < 4; ++i)
 		{
 			if (!fd.read(Const))
@@ -270,11 +268,15 @@ ModuleSampleNative::ModuleSampleNative(AON_Intern *p_AF, uint32_t i, char *name,
 		else if (Const == 2)
 			SampleFlags |= SAMPLE_FLAGS_LPINGPONG;
 		for (uint8_t i = 0; i < 11; ++i)
-			fread(&Const, 1, 1, f_AON);
-		fread(&Const, 1, 1, f_AON);
-		fread(&Const, 1, 1, f_AON);
-		fread(&Const, 1, 1, f_AON);
-		fread(&Const, 1, 1, f_AON);
+		{
+			if (!fd.read(Const))
+				throw ModuleLoaderError(E_BAD_AON);
+		}
+		if (!fd.read(Const) ||
+			!fd.read(Const) ||
+			!fd.read(Const) ||
+			!fd.read(Const))
+			throw ModuleLoaderError(E_BAD_AON);
 
 		printf("%u, %u", FineTune, LoopLen);
 		if (LoopEnd != LoopStart)
