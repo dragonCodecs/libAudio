@@ -30,9 +30,8 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
-	choco install msys2
 	echo "    bin"
-	ls /c/tools/msys64/bin
+	ls /c/tools/msys64
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
