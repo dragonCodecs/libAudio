@@ -3,8 +3,8 @@
 #include "genericModule.h"
 
 // Default initalise key fields
-ModuleHeader::ModuleHeader() : RestartPos{255}, GlobalVolume{64}, InitialSpeed{6}, InitialTempo{125},
-	MasterVolume{64}, Separation{128}, Volumes{} { Volumes.fill(64); }
+ModuleHeader::ModuleHeader() : Name{}, RestartPos{255}, GlobalVolume{64}, InitialSpeed{6},
+	InitialTempo{125}, MasterVolume{64}, Separation{128}, Author{}, Volumes{} { Volumes.fill(64); }
 
 ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 {
@@ -69,7 +69,6 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 	Flags = 0;
 	nInstruments = 0;
 	CreationVersion = FormatVersion = 0;
-	Author = nullptr;
 	Remark = nullptr;
 }
 
@@ -149,7 +148,6 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	nInstruments = 0;
-	Author = nullptr;
 	Remark = nullptr;
 }
 
@@ -197,7 +195,6 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	\********************************************/
 	Flags = 0;
 	nInstruments = 0;
-	Author = nullptr;
 	Remark = nullptr;
 }
 
@@ -230,17 +227,16 @@ ModuleHeader::ModuleHeader(AON_Intern *p_AF) : ModuleHeader()
 		memcmp(blockName.data(), "AUTH", 4) != 0 ||
 		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
+	Author = makeUnique<char []>(blockLen + 1);
+	if (!Author ||
+		!fd.read(Author, blockLen))
+	Author[blockLen] = 0;
+	if (!fd.read(blockName) ||
+		memcmp(blockName.data(), "DATE", 4) != 0 ||
+		!fd.readBE(blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
 
 	fseek(f_AON, fd.tell(), SEEK_SET);
-	Author = new char [blockLen + 1];
-	fread(Author, blockLen, 1, f_AON);
-	Author[blockLen] = 0;
-
-	fread(StrMagic, 4, 1, f_AON);
-	if (strncmp(StrMagic, "DATE", 4) != 0)
-		throw new ModuleLoaderError(E_BAD_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	blockLen = Swap32(blockLen);
 	fseek(f_AON, blockLen, SEEK_CUR);
 
 	fread(StrMagic, 4, 1, f_AON);
@@ -335,7 +331,6 @@ ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	nInstruments = 0;
-	Author = nullptr;
 	Remark = nullptr;
 }
 #endif
@@ -424,12 +419,10 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
-	Author = nullptr;
 	Remark = nullptr;
 }
 
 ModuleHeader::~ModuleHeader()
 {
-	delete [] Author;
 	delete [] Remark;
 }
