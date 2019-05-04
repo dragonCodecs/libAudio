@@ -30,6 +30,10 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
+	echo "    msys64"
+	ls /c/tools/msys64
+	echo "    usr"
+	ls /c/tools/msys64/usr
 	echo "    bin"
 	ls /c/tools/msys64/usr/bin
 
