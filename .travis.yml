@@ -97,9 +97,9 @@ matrix:
 #            - gcc-8
 #            - g++-8
 #            - python3.6
-    - env: ARCH=amd64 COVERAGE=0 PATH=/c/tools/ninja-build:/c/Python36/Scripts:/c/Python36:/c/tools/msys64/usr/bin:$PATH
+    - env: ARCH=amd64 COVERAGE=0 PATH=/c/tools/ninja-build:/c/Python36/Scripts:/c/Python36:$PATH:/c/tools/msys64/usr/bin
       os: windows
-    - env: ARCH=x86 COVERAGE=0 PATH=/c/tools/ninja-build:/c/Python36/Scripts:/c/Python36:/c/tools/msys64/usr/bin:$PATH
+    - env: ARCH=x86 COVERAGE=0 PATH=/c/tools/ninja-build:/c/Python36/Scripts:/c/Python36:$PATH:/c/tools/msys64/usr/bin
       os: windows
 
 notifications:
