@@ -168,23 +168,23 @@ ModuleFile::ModuleFile(AON_Intern *p_AF) : ModuleType(MODULE_AON), p_Instruments
 		throw ModuleLoaderError(E_BAD_AON);
 	p_Header->nSamples = blockLen >> 5;
 	InstrPos = fd.tell();
-	if (!fd.seekRel(blockLen))
+	if (!fd.seekRel(blockLen) ||
+		!fd.read(blockName) ||
+		!fd.readBE(blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
+	// We don't care about the instrument names, so skip over them.
+	else if (memcmp(blockName.data(), "INAM", 4) != 0)
+	{
+		if (!fd.seekRel(blockLen) ||
+			!fd.read(blockName) ||
+			!fd.readBE(blockLen))
+			throw ModuleLoaderError(E_BAD_AON);
+	}
+	if (memcmp(blockName.data(), "WLEN", 4) != 0 ||
+		blockLen != 0x0100)
 		throw ModuleLoaderError(E_BAD_AON);
 	fseek(f_AON, fd.tell(), SEEK_SET);
 
-	fread(StrMagic, 4, 1, f_AON);
-	fread(&blockLen, 4, 1, f_AON);
-	blockLen = Swap32(blockLen);
-	if (strncmp(StrMagic, "INAM", 4) == 0)
-	{
-		// We don't care about the instrument names, so skip over them.
-		fseek(f_AON, blockLen, SEEK_CUR);
-		fread(StrMagic, 4, 1, f_AON);
-		fread(&blockLen, 4, 1, f_AON);
-		blockLen = Swap32(blockLen);
-	}
-	if (strncmp(StrMagic, "WLEN", 4) != 0 || blockLen != 0x0100)
-		throw new ModuleLoaderError(E_BAD_AON);
 	LengthPCM = new uint32_t[64];
 	for (i = 0, SampleLengths = 0; i < 64; i++)
 	{
