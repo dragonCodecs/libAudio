@@ -3,6 +3,7 @@
 
 #ifdef _WINDOWS
 #include <stringapiset.h>
+#include <uniquePtr.hxx>
 #endif
 #include "file.hxx"
 
@@ -33,7 +34,12 @@ public:
 	bool write(const void *const value, const size_t valueLen) noexcept final override WARN_UNUSED
 	{
 #ifdef _WINDOWS
-		MultiByteToWideChar();
+		const size_t stringLen = MultiByteToWideChar(CP_UTF8, 0, value, valueLen, nullptr, 0);
+		auto string = makeUnique<wchar_t>(stringLen);
+		if (!string)
+			return false;
+		MultiByteToWideChar(CP_UTF8, 0, value, valueLen, string.get(), stringLen);
+		return stream.write(string.get(), sizeof(wchar_t) * stringLen);
 #else
 		return stream.write(value, valueLen);
 #endif
@@ -42,6 +48,12 @@ public:
 	size_t write(const void *const value, const size_t valueLen, std::nullptr_t) noexcept final override WARN_UNUSED
 	{
 #ifdef _WINDOWS
+		const size_t stringLen = MultiByteToWideChar(CP_UTF8, 0, value, valueLen, nullptr, 0);
+		auto string = makeUnique<wchar_t>(stringLen);
+		if (!string)
+			return 0;
+		MultiByteToWideChar(CP_UTF8, 0, value, valueLen, string.get(), stringLen);
+		return stream.write(string.get(), sizeof(wchar_t) * stringLen, nullptr);
 #else
 		return stream.write(value, valueLen, nullptr);
 #endif
