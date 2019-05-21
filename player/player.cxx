@@ -5,8 +5,9 @@
 #endif
 #include <inttypes.h>
 #include "streamFormatter.hxx"
+#include "stdStream.hxx"
 
-file_t stdoutStream{stdout};
+stdStream_t stdoutStream{stdout};
 streamFormatter_t out{stdoutStream};
 
 int main(int argc, char **argv)
