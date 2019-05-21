@@ -30,12 +30,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
 	sudo make install
 	popd
 else
-	echo "    msys64"
-	ls /c/tools/msys64
-	echo "    usr"
-	ls /c/tools/msys64/usr
-	echo "    bin"
-	ls /c/tools/msys64/usr/bin
+	export CONFIG_SHELL=/usr/bin/bash.exe
 
 	pushd deps/mp4v2
 	aclocal -I . -I project
