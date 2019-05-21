@@ -22,8 +22,8 @@ else
 	7z x -oC:\\tools\\ninja-build ninja-win.zip
 	rm get-pip.py ninja-win.zip
 
-	powershell -executionpolicy bypass "pacman -Sy"
-	powershell -executionpolicy bypass "pacman -S m4 automake autoconf libtool make autoconf-archive pkg-config"
+	powershell -executionpolicy bypass "pacman -Sy --noconfirm"
+	powershell -executionpolicy bypass "pacman -S --noconfirm m4 automake autoconf libtool make autoconf-archive pkg-config"
 
 	ln -sv /c/tools/msys64/usr/share/{autoconf,automake,aclocal,libtool,pkgconfig}* /usr/share
 	ln -sv /c/tools/msys64/usr/bin/{autom4te,autoconf,automake,autoheader,aclocal,libtool{,ize},m4} /usr/bin
