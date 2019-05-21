@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 #include "stream.hxx"
-#include "file.hxx"
 
 std::string operator ""_s(const char *const value, const size_t length) noexcept { return {value, length}; }
 struct printable_t { };
@@ -32,7 +32,7 @@ public:
 		msbShift(4 * (maxDigits - 1)), number(value) { }
 
 	[[gnu::noinline]]
-	void operator ()(stream_t &stream)
+	void operator ()(stream_t &stream) const noexcept
 	{
 		uint8_t i;
 		uint32_t value(number);
@@ -78,7 +78,7 @@ private:
 	typedef typename std::make_unsigned<N>::type uint_t;
 	const N number;
 
-	[[gnu::noinline]] uint_t print(const uint_t number, stream_t &stream) noexcept
+	[[gnu::noinline]] uint_t print(const uint_t number, stream_t &stream) const noexcept
 	{
 		if (number < 10)
 			stream.write(number + '0');
@@ -91,12 +91,12 @@ private:
 	}
 
 	template<typename T> typename std::enable_if<std::is_same<T, N>::value && std::is_integral<T>::value &&
-		!isBoolean<T>::value && std::is_unsigned<T>::value>::type format(stream_t &stream)
+		!isBoolean<T>::value && std::is_unsigned<T>::value>::type format(stream_t &stream) const noexcept
 		{ print(number, stream); }
 
 	template<typename T> [[gnu::noinline]] typename std::enable_if<std::is_same<T, N>::value &&
 		std::is_integral<T>::value && !isBoolean<T>::value && std::is_signed<T>::value>::type
-		format(stream_t &stream)
+		format(stream_t &stream) const noexcept
 	{
 		if (number < 0)
 		{
@@ -109,7 +109,7 @@ private:
 
 public:
 	constexpr asInt_t(const N value) noexcept : number(value) { }
-	void operator ()(stream_t &stream) noexcept { format<N>(stream); }
+	void operator ()(stream_t &stream) const noexcept { format<N>(stream); }
 };
 
 struct asTime_t final : public printable_t
@@ -120,7 +120,7 @@ private:
 public:
 	constexpr asTime_t(const uint64_t _value) noexcept : value{_value} { }
 
-	void operator ()(stream_t &stream) noexcept
+	void operator ()(stream_t &stream) const noexcept
 	{
 		asInt_t<uint64_t>{value / 60}(stream);
 		stream.write("m "_s);
@@ -135,16 +135,22 @@ private:
 	stream_t &stream;
 	using charTraits = std::char_traits<char>;
 
-	void print(const char *value) noexcept { stream.write(value, charTraits::length(value)); }
+	void print(const char *value) noexcept
+	{
+		if (value)
+			stream.write(value, charTraits::length(value));
+		else
+			stream.write("(null)"_s);
+	}
 	void print(const char value) noexcept { stream.write(value); }
 
 	template<typename T> void print(const std::unique_ptr<T []> &value) { print(value.get()); }
 	template<typename T> typename std::enable_if<std::is_base_of<printable_t, T>::value>::type
-		print(T &printable) noexcept { printable(stream); }
+		print(const T &printable) noexcept { printable(stream); }
 	template<typename T> typename std::enable_if<isScalar<T>::value>::type
-		print(T &num) noexcept { write(asInt_t<T>(num)); }
+		print(const T &num) noexcept { write(asInt_t<T>{num}); }
 	template<typename T> typename std::enable_if<!isChar<T>::value>::type
-		print(T *ptr) noexcept { write("0x", asHex_t<8, '0'>(reinterpret_cast<intptr_t>(ptr))); }
+		print(const T *ptr) noexcept { write("0x", asHex_t<8, '0'>{reinterpret_cast<intptr_t>(ptr)}); }
 
 	void print(const bool value) noexcept
 	{
@@ -154,7 +160,7 @@ private:
 			stream.write("false"_s);
 	}
 
-	template<typename T, size_t N> void print(std::array<T, N> &arr) noexcept
+	template<typename T, size_t N> void print(const std::array<T, N> &arr) noexcept
 	{
 		for (auto &elem : arr)
 			write(asHex_t<sizeof(T) * 2, '0'>(elem));
@@ -167,7 +173,7 @@ public:
 	template<typename T, typename... U> streamFormatter_t &write(T &&value, U &&... values) noexcept
 	{
 		print(value);
-		return write(values...);
+		return write(std::forward<U>(values)...);
 	}
 
 	streamFormatter_t() = delete;
