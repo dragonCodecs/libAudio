@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <utility>
 #include <memory>
+#include <array>
 #include "managedPtr.hxx"
 
 #ifdef _MSVC
