@@ -25,6 +25,18 @@ else
 	powershell -executionpolicy bypass "pacman -Sy --noconfirm"
 	powershell -executionpolicy bypass "pacman -S --noconfirm m4 autoconf autoconf2.13 autoconf-archive automake-wrapper autogen libtool make pkg-config"
 
+	echo /usr/share
+	ls /usr/share
+
+	echo /c/tools/msys64/usr/share
+	ls /c/tools/msys64/usr/share
+
+	echo /usr/bin
+	ls /usr/bin
+
+	echo /c/tools/msys64/usr/bin
+	ls /c/tools/msys64/usr/bin
+
 	ln -sv /c/tools/msys64/usr/share/{autoconf,automake,aclocal,libtool,pkgconfig}* /usr/share
 	ln -sv /c/tools/msys64/usr/bin/{autom4te,autoconf,automake,autoheader,aclocal,libtool{,ize},m4} /usr/bin
 fi
