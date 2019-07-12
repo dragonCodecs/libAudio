@@ -19,6 +19,8 @@ struct fileInfo_t final
 
 	fileInfo_t() noexcept : totalTime{0}, bitsPerSample{0}, bitRate{0},
 		channels{0}, title{}, artist{}, album{}, other{} { }
+	fileInfo_t(fileInfo_t &&) = default;
+	fileInfo_t &operator =(fileInfo_t &&) = default;
 
 	void operator =(const fileInfo_t &info) noexcept
 	{
@@ -27,6 +29,8 @@ struct fileInfo_t final
 		bitRate = info.bitRate;
 		channels = info.channels;
 	}
+
+	fileInfo_t(const fileInfo_t &) = delete;
 };
 
 #endif /*FILE_INFO__HXX*/
