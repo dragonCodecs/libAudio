@@ -1,5 +1,0 @@
-======================
-Post-Checkout actions:
-======================
-
-After a successfull checkout, one must ensure that "symlink" is run (symlink.bat for Windows) as this puts in place the files that should be versioned but can't be due to M$'s screwing up over SymLinks on their file systems. This will enable clean building on Windows but is non-essential on Linux/Mac OS(X). It does, however, enable non-Windows users to see what Windows users do.
