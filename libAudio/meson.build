@@ -59,16 +59,19 @@ libAudioSrcs = [
 	extraSrcs
 ]
 
+libAudioLibrary = shared_library(
+	'libAudio',
+	libAudioSrcs,
+	dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, extraDeps, maths],
+	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
+	name_prefix: '',
+	install: true,
+	version: meson.project_version()
+)
+libAudioInclude = meson.current_source_dir()
+
 libAudio = declare_dependency(
 	include_directories: include_directories('.'),
-	link_with: shared_library(
-		'libAudio',
-		libAudioSrcs,
-		dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, extraDeps, maths],
-		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
-		name_prefix: '',
-		install: true,
-		version: meson.project_version()
-	),
+	link_with: libAudioLibrary,
 	version: meson.project_version()
 )
