@@ -1,6 +1,8 @@
 fixedPointTests = [
 	'testFineLinearSlideUp',
-	'testFineLinearSlideDown'
+	'testFineLinearSlideDown',
+	'testLinearSlideUp',
+	'testLinearSlideDown'
 ]
 
 fixedPointObj = libAudioLibrary.extract_objects('fixedPoint/fixedPoint.cpp')

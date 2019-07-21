@@ -21,7 +21,7 @@ private:
 
 	void testComputation()
 	{
-		for (uint8_t i{0}; i < 16; ++i)
+		for (size_t i{0}; i < 16; ++i)
 		{
 			const uint32_t slide = linearSlideUp(i);
 			if (slide != linearSlideUpTable[i])
