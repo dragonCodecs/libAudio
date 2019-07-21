@@ -14,7 +14,7 @@ private:
 	uint8_t ulog2(uint64_t n) const noexcept;
 
 public:
-	fixed64_t(uint32_t a, uint32_t b = 0, int8_t sign = 1);
+	constexpr fixed64_t(uint32_t a, uint32_t b = 0, int8_t _sign = 1) noexcept : i{a}, d{b}, sign{_sign} { }
 
 	fixed64_t exp();
 	//fixed64_t ln();

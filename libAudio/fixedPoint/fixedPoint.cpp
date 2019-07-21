@@ -9,8 +9,6 @@
 #define unlikely(x) x
 #endif
 
-fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c) { }
-
 fixed64_t fixed64_t::exp()
 {
 	fixed64_t ret{1}, x{1};
@@ -27,7 +25,7 @@ fixed64_t fixed64_t::exp()
 
 fixed64_t fixed64_t::pow2()
 {
-	const fixed64_t ln2(0, 2977044472U); // ln(2) to 9dp
+	constexpr fixed64_t ln2(0, 2977044472U); // ln(2) to 9dp
 	return (*this * ln2).exp();
 }
 
