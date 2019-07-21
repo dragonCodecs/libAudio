@@ -9,9 +9,7 @@
 #define unlikely(x) x
 #endif
 
-fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c)
-{
-}
+fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c) { }
 
 fixed64_t fixed64_t::exp()
 {
@@ -205,15 +203,8 @@ uint8_t fixed64_t::ulog2(uint64_t value) const noexcept
 #endif
 }
 
-fixed64_t::operator int() const
-{
-	return sign * (i + (d >> 31));
-}
-
-fixed64_t::operator uint32_t() const
-{
-	return i + (d >> 31);
-}
+fixed64_t::operator int() const { return sign * (i + (d >> 31)); }
+fixed64_t::operator uint32_t() const { return i + (d >> 31); }
 
 fixed64_t::operator double() const
 {
