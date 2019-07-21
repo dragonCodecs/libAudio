@@ -74,7 +74,6 @@ int main(int argc, char **argv)
 		else
 			PRINT_PASS();
 	}
-
 	printf("Results:\n"
 		"\t" COLOUR_SUCCESS "PASS" COLOUR_NORMAL ": " COLOUR_BRACKET "%u" NEWLINE
 		"\t" COLOUR_WARNING "WARN" COLOUR_NORMAL ": " COLOUR_BRACKET "%u" NEWLINE
