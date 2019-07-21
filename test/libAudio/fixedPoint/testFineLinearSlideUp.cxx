@@ -12,10 +12,10 @@ class fineLinearSlideUp_t final : public testsuit
 private:
 	uint32_t linearSlideUp(uint8_t slide) const noexcept
 	{
-		const fixed64_t c4(4);
-		const fixed64_t c192(192);
-		const fixed64_t c65536(65536);
-		fixed64_t result = ((fixed64_t{slide} / c4) / c192).pow2() * c65536;
+		constexpr fixed64_t c4{4};
+		constexpr fixed64_t c192{192};
+		constexpr fixed64_t c65536{65536};
+		const fixed64_t result = ((fixed64_t{slide} / c4) / c192).pow2() * c65536;
 		return int{result};
 	}
 
