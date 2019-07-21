@@ -13,9 +13,9 @@ fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c) { }
 
 fixed64_t fixed64_t::exp()
 {
-	fixed64_t ret(1), x(1);
-	uint8_t i;
-	uint64_t j;
+	fixed64_t ret{1}, x{1};
+	uint8_t i{1};
+	uint64_t j{1};
 	for (i = 1, j = 1; i <= 32; i++)
 	{
 		j *= i;
@@ -33,10 +33,10 @@ fixed64_t fixed64_t::pow2()
 
 fixed64_t fixed64_t::operator *(const fixed64_t &b) const
 {
-	uint64_t e = ((uint64_t)b.i) * ((uint64_t)d);
-	uint64_t f = ((uint64_t)i) * ((uint64_t)b.d);
-	uint32_t g = (((uint64_t)d) * ((uint64_t)b.d)) >> 32;
-	uint32_t h = ((uint64_t)i) * ((uint64_t)b.i) + (e >> 32) + (f >> 32);
+	uint64_t e = uint64_t(b.i) * uint64_t(d);
+	uint64_t f = uint64_t(i) * uint64_t(b.d);
+	uint32_t g = (uint64_t(d) * uint64_t(b.d)) >> 32;
+	uint32_t h = uint64_t(i) * uint64_t(b.i) + (e >> 32) + (f >> 32);
 	g += (e & 0xFFFFFFFF) + (f & 0xFFFFFFFF);
 //	printf("% 2.9f * % 2.9f ?= % 2.9f\n", operator double(), b.operator double(), fixed64_t(h, g, sign * b.sign).operator double());
 	return fixed64_t(h, g, sign * b.sign);
@@ -44,9 +44,9 @@ fixed64_t fixed64_t::operator *(const fixed64_t &b) const
 
 fixed64_t &fixed64_t::operator *=(const fixed64_t &b)
 {
-	uint64_t e = ((uint64_t)b.i) * ((uint64_t)d);
-	uint64_t f = ((uint64_t)i) * ((uint64_t)b.d);
-	uint32_t g = (((uint64_t)d) * ((uint64_t)b.d)) >> 32;
+	uint64_t e = uint64_t(b.i) * uint64_t(d);
+	uint64_t f = uint64_t(i) * uint64_t(b.d);
+	uint32_t g = (uint64_t(d) * uint64_t(b.d)) >> 32;
 	sign *= b.sign;
 	i = i * b.i + (e >> 32) + (f >> 32);
 	d = (e & 0xFFFFFFFF) + (f & 0xFFFFFFFF) + g;
@@ -58,8 +58,8 @@ fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 {
 	uint8_t g;
 	uint32_t q_i, q_d = 0;
-	uint64_t e = (((uint64_t)i) << 32) | ((uint64_t)d);
-	uint64_t f = (((uint64_t)b.i) << 32) | ((uint64_t)b.d);
+	uint64_t e = (uint64_t(i) << 32) | uint64_t(d);
+	uint64_t f = (uint64_t(b.i) << 32) | uint64_t(b.d);
 
 	if (e == 0)
 		return fixed64_t(0);
@@ -88,8 +88,8 @@ fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 fixed64_t &fixed64_t::operator /=(const fixed64_t &b)
 {
 	uint8_t g;
-	uint64_t e = (((uint64_t)i) << 32) | ((uint64_t)d);
-	uint64_t f = (((uint64_t)b.i) << 32) | ((uint64_t)b.d);
+	uint64_t e = (uint64_t(i) << 32) | uint64_t(d);
+	uint64_t f = (uint64_t(b.i) << 32) | uint64_t(b.d);
 
 	if (e == 0)
 	{
@@ -122,8 +122,8 @@ fixed64_t fixed64_t::operator +(const fixed64_t &b) const
 	if (sign != b.sign)
 	{
 		bool overflow = false;
-		int64_t decimal = ((int64_t)d) - ((int64_t)b.d);
-		int64_t integer = ((int64_t)i) - ((int64_t)b.i);
+		int64_t decimal = int64_t(d) - int64_t(b.d);
+		int64_t integer = int64_t(i) - int64_t(b.i);
 		if (sign < 0)
 		{
 			decimal = -decimal;
@@ -149,8 +149,8 @@ fixed64_t &fixed64_t::operator +=(const fixed64_t &b)
 	if (sign != b.sign)
 	{
 		bool overflow = false;
-		int64_t decimal = ((int64_t)d) - ((int64_t)b.d);
-		int64_t integer = ((int64_t)i) - ((int64_t)b.i);
+		int64_t decimal = int64_t(d) - int64_t(b.d);
+		int64_t integer = int64_t(i) - int64_t(b.i);
 		if (sign < 0)
 		{
 			decimal = -decimal;
@@ -205,9 +205,6 @@ uint8_t fixed64_t::ulog2(uint64_t value) const noexcept
 
 fixed64_t::operator int() const { return sign * (i + (d >> 31)); }
 fixed64_t::operator uint32_t() const { return i + (d >> 31); }
-
 fixed64_t::operator double() const
-{
-	return sign * (double)((((uint64_t)i) << 32) | (int64_t)((uint64_t)d)) / 4294967296.0;
-}
+	{ return sign * double((uint64_t(i) << 32) | int64_t(uint64_t(d))) / 4294967296.0; }
 
