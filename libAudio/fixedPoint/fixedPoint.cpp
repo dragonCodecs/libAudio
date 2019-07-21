@@ -119,7 +119,6 @@ fixed64_t fixed64_t::operator +(const fixed64_t &b) const
 {
 	if (sign != b.sign)
 	{
-		bool overflow = false;
 		int64_t decimal = int64_t{d} - int64_t{b.d};
 		int64_t integer = int64_t{i} - int64_t{b.i};
 		if (sign < 0)
@@ -127,17 +126,15 @@ fixed64_t fixed64_t::operator +(const fixed64_t &b) const
 			decimal = -decimal;
 			integer = -integer;
 		}
-		if (decimal < 0)
-		{
-			overflow = true;
+		const bool overflow = decimal < 0;
+		if (overflow)
 			decimal = (1LL << 32) + decimal;
-		}
 		return fixed64_t((integer < 0 ? -integer : integer) - (overflow ? 1 : 0),
 			decimal, (integer < 0 ? -1 : 1));
 	}
 	else
 	{
-		uint32_t decimal = d + b.d;
+		const uint32_t decimal = d + b.d;
 		return {i + b.i + (decimal < d ? 1 : 0), decimal, sign};
 	}
 }
@@ -146,7 +143,6 @@ fixed64_t &fixed64_t::operator +=(const fixed64_t &b)
 {
 	if (sign != b.sign)
 	{
-		bool overflow = false;
 		int64_t decimal = int64_t{d} - int64_t{b.d};
 		int64_t integer = int64_t{i} - int64_t{b.i};
 		if (sign < 0)
@@ -154,19 +150,17 @@ fixed64_t &fixed64_t::operator +=(const fixed64_t &b)
 			decimal = -decimal;
 			integer = -integer;
 		}
-		if (decimal < 0)
-		{
-			overflow = true;
+		const bool overflow = decimal < 0;
+		if (overflow)
 			decimal = (1LL << 32) + decimal;
-		}
 		sign = (integer < 0 ? -1 : 1);
 		i = (integer < 0 ? -integer : integer) - (overflow == true ? 1 : 0);
 		d = decimal;
 	}
 	else
 	{
-		uint32_t decimal = d + b.d;
-		bool overflow = decimal < (d | b.d);
+		const uint32_t decimal = d + b.d;
+		const bool overflow = decimal < d;
 		i += b.i + (overflow ? 1 : 0);
 		d = decimal;
 	}
