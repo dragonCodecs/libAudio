@@ -31,20 +31,20 @@ fixed64_t fixed64_t::pow2()
 
 fixed64_t fixed64_t::operator *(const fixed64_t &b) const
 {
-	uint64_t e = uint64_t(b.i) * uint64_t(d);
-	uint64_t f = uint64_t(i) * uint64_t(b.d);
-	uint32_t g = (uint64_t(d) * uint64_t(b.d)) >> 32;
-	uint32_t h = uint64_t(i) * uint64_t(b.i) + (e >> 32) + (f >> 32);
+	uint64_t e = uint64_t{b.i} * uint64_t{d};
+	uint64_t f = uint64_t{i} * uint64_t{b.d};
+	uint32_t g = (uint64_t{d} * uint64_t{b.d}) >> 32;
+	uint32_t h = uint64_t{i} * uint64_t{b.i} + (e >> 32) + (f >> 32);
 	g += (e & 0xFFFFFFFF) + (f & 0xFFFFFFFF);
 //	printf("% 2.9f * % 2.9f ?= % 2.9f\n", operator double(), b.operator double(), fixed64_t(h, g, sign * b.sign).operator double());
-	return fixed64_t(h, g, sign * b.sign);
+	return {h, g, int8_t(sign * b.sign)};
 }
 
 fixed64_t &fixed64_t::operator *=(const fixed64_t &b)
 {
-	uint64_t e = uint64_t(b.i) * uint64_t(d);
-	uint64_t f = uint64_t(i) * uint64_t(b.d);
-	uint32_t g = (uint64_t(d) * uint64_t(b.d)) >> 32;
+	uint64_t e = uint64_t{b.i} * uint64_t{d};
+	uint64_t f = uint64_t{i} * uint64_t{b.d};
+	uint32_t g = (uint64_t{d} * uint64_t{b.d}) >> 32;
 	sign *= b.sign;
 	i = i * b.i + (e >> 32) + (f >> 32);
 	d = (e & 0xFFFFFFFF) + (f & 0xFFFFFFFF) + g;
@@ -56,11 +56,11 @@ fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 {
 	uint8_t g;
 	uint32_t q_i, q_d = 0;
-	uint64_t e = (uint64_t(i) << 32) | uint64_t(d);
-	uint64_t f = (uint64_t(b.i) << 32) | uint64_t(b.d);
+	uint64_t e = (uint64_t{i} << 32) | uint64_t{d};
+	uint64_t f = (uint64_t{b.i} << 32) | uint64_t{b.d};
 
 	if (e == 0)
-		return fixed64_t(0);
+		return {0};
 
 	q_i = e / f;
 //	printf("%llu %d\t", e, q_i);
@@ -79,7 +79,7 @@ fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 		g++;
 	}
 //	printf("\t% 2.9f\n", fixed64_t(q_i, q_d << (33 - g), sign * b.sign).operator double());
-	return fixed64_t(q_i, q_d << (33 - g), sign * b.sign);
+	return fixed64_t{q_i, q_d << (33 - g), int8_t(sign * b.sign)};
 }
 
 // Quick and dirty code, it makes mistakes on occasion, but pumps the right sequence out for it's use
