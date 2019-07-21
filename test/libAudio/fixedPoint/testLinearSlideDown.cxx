@@ -61,6 +61,7 @@ private:
 					assertEqual(slide, linearSlideDownTable[i]);
 			}
 		}
+		displayWarningCount();
 	}
 
 public:
