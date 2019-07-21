@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <math.h>
+#include <limits>
 #include "fixedPoint.h"
+
+#ifdef __GNUC__
+#define unlikely(x) __builtin_expect(x, 0)
+#else
+#define unlikely(x) x
+#endif
 
 fixed64_t::fixed64_t(uint32_t a, uint32_t b, int8_t c) : i(a), d(b), sign(c)
 {
@@ -170,12 +177,32 @@ fixed64_t &fixed64_t::operator +=(const fixed64_t &b)
 	return *this;
 }
 
-uint8_t fixed64_t::ulog2(uint64_t n) const
+uint8_t fixed64_t::ulog2(uint64_t value) const noexcept
 {
-	uint8_t r = 0;
-	while ((n >>= 1) != 0)
-		r++;
-	return r;
+		if (unlikely(!value))
+				return std::numeric_limits<uint8_t>::max();
+#if defined(__ICC)
+		return (sizeof(uint8_t) * 8) - _lzcnt_u64(value);
+#elif defined(__GNUC__)
+		return (sizeof(uint8_t) * 8) - __builtin_clzl(value);
+#elif defined(_MSC_VER)
+		return (sizeof(uint8_t) * 8) - __lzcnt64(value);
+#else
+		uint8_t result = 0;
+		if (value <= UINT64_C(0x00000000FFFFFFFF))
+				result += 32, value <<= 32;
+		if (value <= UINT64_C(0x0000FFFFFFFFFFFF))
+				result += 16, value <<= 16;
+		if (value <= UINT64_C(0x00FFFFFFFFFFFFFF))
+				result += 8, value <<= 8;
+		if (value <= UINT64_C(0x0FFFFFFFFFFFFFFF))
+				result += 4, value <<= 4;
+		if (value <= UINT64_C(0x3FFFFFFFFFFFFFFF))
+				result += 2, value <<= 2;
+		if (value <= UINT64_C(0x7FFFFFFFFFFFFFFF))
+				++result;
+		return (sizeof(uint8_t) * 8) - result;
+#endif
 }
 
 fixed64_t::operator int() const

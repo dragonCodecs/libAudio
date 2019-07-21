@@ -11,7 +11,7 @@ private:
 	int8_t sign;
 
 private:
-	uint8_t ulog2(uint64_t n) const;
+	uint8_t ulog2(uint64_t n) const noexcept;
 
 public:
 	fixed64_t(uint32_t a, uint32_t b = 0, int8_t sign = 1);
