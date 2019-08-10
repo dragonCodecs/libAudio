@@ -328,8 +328,8 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		!fd.read(&SamplePos, 4) ||
 		!fd.read(&VibratoSpeed, 1) ||
 		!fd.read(&VibratoDepth, 1) ||
-		!fd.read(&VibratoType, 1) ||
-		!fd.read(&VibratoRate, 1))
+		!fd.read(&VibratoRate, 1) ||
+		!fd.read(&VibratoType, 1))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	if (FileName[11] != 0)
@@ -340,7 +340,7 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		Name[26] = 0;
 
 	if (Const != 0 || Packing > 63 || VibratoSpeed > 64 || VibratoDepth > 64 ||
-		/*VibratoType > 4  ||*/ (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
+		VibratoType > 4  || (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
 		throw ModuleLoaderError(E_BAD_IT);
 
 	if (C4Speed == 0)
@@ -349,6 +349,7 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		C4Speed = 256;
 	/*else
 		C4Speed /= 2;*/
+	VibratoRate <<= 1;
 
 	// If looping not enabled, zero the Loop fields
 	if ((Flags & 0x10) == 0)
