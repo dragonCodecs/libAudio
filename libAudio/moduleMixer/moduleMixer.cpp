@@ -7,7 +7,6 @@
 #include "../libAudio.h"
 #include "../libAudio_Common.h"
 #include "../genericModule/genericModule.h"
-#include "../fixedPoint/fixedPoint.h"
 
 #include "waveTables.h"
 #include "moduleMixer.h"
@@ -842,46 +841,6 @@ inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 	}
 }
 
-// Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
-inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
-{
-	const fixed64_t c192(192);
-	const fixed64_t c32768(32768);
-	const fixed64_t c65536(65536);
-	return ((fixed64_t(period) * (fixed64_t(slide) / c192).pow2() * c65536) + c32768) / c65536;
-}
-
-// Returns ((period * 65535 * 2^(-slide / 192)) + 32768) / 65536 using fixed-point maths
-inline uint32_t LinearSlideDown(uint32_t period, uint8_t slide)
-{
-	const fixed64_t c192(192);
-	const fixed64_t c32768(32768);
-	const fixed64_t c65535(65535);
-	const fixed64_t c65536(65536);
-	return ((fixed64_t(period) * (fixed64_t(slide, 0, -1) / c192).pow2() * c65535) + c32768) / c65536;
-}
-
-// Returns ((period * 65536 * 2^((slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
-inline uint32_t FineLinearSlideUp(uint32_t period, uint8_t slide)
-{
-	const fixed64_t c4(4);
-	const fixed64_t c192(192);
-	const fixed64_t c32768(32768);
-	const fixed64_t c65536(65536);
-	return ((fixed64_t(period) * ((fixed64_t(slide) / c4) / c192).pow2() * c65536) + c32768) / c65536;
-}
-
-// Returns ((period * 65535 * 2^((-slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
-inline uint32_t FineLinearSlideDown(uint32_t period, uint8_t slide)
-{
-	const fixed64_t c4(4);
-	const fixed64_t c192(192);
-	const fixed64_t c32768(32768);
-	const fixed64_t c65535(65535);
-	const fixed64_t c65536(65536);
-	return ((fixed64_t(period) * ((fixed64_t(slide, 0, -1) / c4) / c192).pow2() * c65535) + c32768) / c65536;
-}
-
 inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 {
 	if (param != 0)
@@ -1682,44 +1641,9 @@ bool ModuleFile::AdvanceTick()
 						channel->EnvPitchPos = env->GetLastTick();
 				}
 			}
-			if ((channel->Flags & CHN_VIBRATO) != 0)
-			{
-				int16_t Delta;
-				uint8_t VibratoPos = channel->VibratoPos;
-				uint8_t VibratoType = channel->VibratoType & 0x03;
-				if (VibratoType == 1)
-					Delta = RampDownTable[VibratoPos];
-				else if (VibratoType == 2)
-					Delta = SquareTable[VibratoPos];
-				else if (VibratoType == 3)
-					Delta = RandomTable[VibratoPos];
-				else
-					Delta = SinusTable[VibratoPos];
-				const uint8_t depthShift = ModuleType == MODULE_IT ? 7 : 6;
-				Delta = (Delta * channel->VibratoDepth) >> depthShift;
-				if (ModuleType == MODULE_IT && p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
-				{
-					if (Delta < 0)
-					{
-						const int16_t value = -Delta;
-						Delta = LinearSlideDown(period, value >> 2) - period;
-						if (value & 0x03)
-							Delta += FineLinearSlideDown(period, value & 0x03) - period;
-					}
-					else
-					{
-						const int16_t value = Delta;
-						Delta = LinearSlideUp(period, value >> 2) - period;
-						if (value & 0x03)
-							Delta += FineLinearSlideUp(period, value & 0x03) - period;
-					}
-				}
-				period += Delta;
-				if (TickCount || ModuleType == MODULE_IT)
-					channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
-			}
-			period += channel->applyVibrato();
+			period += channel->applyVibrato(*this, period);
 			channel->applyPanbrello();
+			period += channel->applyAutoVibrato();
 			if ((period < MinPeriod || (period & 0x80000000) != 0) && ModuleType == MODULE_S3M)
 				channel->Length = 0;
 			clipInt<uint32_t>(period, MinPeriod, MaxPeriod);

@@ -1,6 +1,8 @@
 #ifndef __moduleMixer_H__
 #define __moduleMixer_H__
 
+#include "../fixedPoint/fixedPoint.h"
+
 #define CHN_LOOP			0x0001
 #define CHN_TREMOLO			0x0002
 #define CHN_ARPEGGIO		0x0004
@@ -62,6 +64,46 @@ inline int32_t muldiv(int32_t a, int32_t b, int32_t c)
 	if (d < 0)
 		result = -result;
 	return result;
+}
+
+// Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
+inline uint32_t LinearSlideUp(uint32_t period, uint8_t slide)
+{
+	const fixed64_t c192(192);
+	const fixed64_t c32768(32768);
+	const fixed64_t c65536(65536);
+	return ((fixed64_t(period) * (fixed64_t(slide) / c192).pow2() * c65536) + c32768) / c65536;
+}
+
+// Returns ((period * 65535 * 2^(-slide / 192)) + 32768) / 65536 using fixed-point maths
+inline uint32_t LinearSlideDown(uint32_t period, uint8_t slide)
+{
+	const fixed64_t c192(192);
+	const fixed64_t c32768(32768);
+	const fixed64_t c65535(65535);
+	const fixed64_t c65536(65536);
+	return ((fixed64_t(period) * (fixed64_t(slide, 0, -1) / c192).pow2() * c65535) + c32768) / c65536;
+}
+
+// Returns ((period * 65536 * 2^((slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
+inline uint32_t FineLinearSlideUp(uint32_t period, uint8_t slide)
+{
+	const fixed64_t c4(4);
+	const fixed64_t c192(192);
+	const fixed64_t c32768(32768);
+	const fixed64_t c65536(65536);
+	return ((fixed64_t(period) * ((fixed64_t(slide) / c4) / c192).pow2() * c65536) + c32768) / c65536;
+}
+
+// Returns ((period * 65535 * 2^((-slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
+inline uint32_t FineLinearSlideDown(uint32_t period, uint8_t slide)
+{
+	const fixed64_t c4(4);
+	const fixed64_t c192(192);
+	const fixed64_t c32768(32768);
+	const fixed64_t c65535(65535);
+	const fixed64_t c65536(65536);
+	return ((fixed64_t(period) * ((fixed64_t(slide, 0, -1) / c4) / c192).pow2() * c65535) + c32768) / c65536;
 }
 
 #endif /*__moduleMixer_H__*/
