@@ -340,8 +340,10 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		Name[26] = 0;
 
 	if (Const != 0 || Packing > 63 || VibratoSpeed > 64 || VibratoDepth > 64 ||
-		VibratoType > 4  || (VibratoType < 4 && VibratoRate > 64) || InstrVol > 64)
+		VibratoType > 4 || /*(VibratoType < 4 && VibratoRate > 64) ||*/ InstrVol > 64)
 		throw ModuleLoaderError(E_BAD_IT);
+	else if (VibratoRate > 64)
+		VibratoRate = 64;
 
 	if (C4Speed == 0)
 		C4Speed = 8363;
