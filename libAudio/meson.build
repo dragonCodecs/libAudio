@@ -52,7 +52,7 @@ genericModuleSrcs = [
 ]
 
 libAudioSrcs = [
-	'loadAudio.cpp', 'libAudio_Common.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
+	'loadAudio.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
 	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp', genericModuleSrcs,
 	'loadRealAudio.cpp',
 	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp', 'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx',
