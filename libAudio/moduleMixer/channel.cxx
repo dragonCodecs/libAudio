@@ -17,9 +17,9 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 			delta = RandomTable[VibratoPos];
 		else
 			delta = SinusTable[VibratoPos];
-		const uint8_t depthShift = module.ModuleType == MODULE_IT ? 7 : 6;
+		const uint8_t depthShift = module.checkTypeAndNotFlags(MODULE_IT, FILE_FLAGS_OLD_IT_EFFECTS) ? 7 : 6;
 		delta = (delta * VibratoDepth) >> depthShift;
-		if (module.ModuleType == MODULE_IT && module.p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
+		if (module.checkTypeAndFlags(MODULE_IT, FILE_FLAGS_LINEAR_SLIDES))
 		{
 			if (delta < 0)
 			{
@@ -36,7 +36,7 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 					delta += FineLinearSlideUp(period, value & 0x03) - period;
 			}
 		}
-		if (module.TickCount || module.ModuleType == MODULE_IT)
+		if (module.TickCount || module.checkTypeAndNotFlags(MODULE_IT, FILE_FLAGS_OLD_IT_EFFECTS))
 			VibratoPos = (VibratoPos + VibratoSpeed) & 0x3F;
 		return delta;
 	}
@@ -73,7 +73,6 @@ void Channel::applyPanbrello() noexcept
 		int8_t delta{0};
 		const uint8_t PanPos = ((uint16_t(PanbrelloPos) + 16) >> 2) & 0x3F;
 		const uint8_t PanType = PanbrelloType & 0x03;
-		uint16_t Pan = Panning;
 		if (PanType == 1)
 			delta = RampDownTable[PanPos];
 		else if (PanType == 2)
@@ -82,7 +81,7 @@ void Channel::applyPanbrello() noexcept
 			delta = RandomTable[PanPos];
 		else
 			delta = SinusTable[PanPos];
-		Pan += (delta * PanbrelloDepth) >> 4;
+		uint16_t Pan = Panning + ((delta * PanbrelloDepth + 2) >> 3);
 		clipInt<uint16_t>(Pan, 0, 256);
 		Panning = Pan;
 		PanbrelloPos += PanbrelloSpeed;

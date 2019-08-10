@@ -44,6 +44,7 @@ using stringPtr_t = std::unique_ptr<char []>;
 #define FILE_FLAGS_AMIGA_LIMITS		0x02
 #define FILE_FLAGS_FAST_SLIDES		0x04
 #define FILE_FLAGS_LINEAR_SLIDES	0x08
+#define FILE_FLAGS_OLD_IT_EFFECTS	0x10
 
 #define SAMPLE_FLAGS_LOOP		0x01
 #define SAMPLE_FLAGS_STEREO		0x02
@@ -608,6 +609,11 @@ private:
 	void itLoadPCM(const fd_t &fd);
 	void DeinitMixer();
 	friend class Channel;
+
+	bool checkTypeAndFlags(const uint8_t type, const uint16_t flags) const noexcept
+		{ return ModuleType == type && p_Header->Flags & flags; }
+	bool checkTypeAndNotFlags(const uint8_t type, const uint16_t flags) const noexcept
+		{ return ModuleType == type && !(p_Header->Flags & flags); }
 
 public:
 	ModuleFile(const modMOD_t &file);
