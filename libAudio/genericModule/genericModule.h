@@ -528,6 +528,10 @@ public:
 	void Panbrello(uint8_t param);
 	void ChannelEffect(uint8_t param);
 
+	int16_t applyVibrato(const ModuleFile &module, const uint32_t period) noexcept;
+	int16_t applyAutoVibrato() noexcept;
+	void applyPanbrello() noexcept;
+
 	// Channel mixing processing
 	uint32_t GetSampleCount(uint32_t Samples);
 };
@@ -603,6 +607,7 @@ private:
 	void aonLoadPCM(const fd_t &fd);
 	void itLoadPCM(const fd_t &fd);
 	void DeinitMixer();
+	friend class Channel;
 
 public:
 	ModuleFile(const modMOD_t &file);
