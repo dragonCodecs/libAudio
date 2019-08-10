@@ -76,7 +76,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 	std::array<char, 4> magic;
 	std::array<uint8_t, 10> dontCare;
 	uint8_t Const;
-	uint16_t Special, RawFlags;
+	uint16_t Special, rawFlags;
 	const fd_t &fd = file.fd();
 
 	Name = makeUnique<char []>(29);
@@ -88,7 +88,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 		!fd.read(nOrders) ||
 		!fd.read(nSamples) ||
 		!fd.read(nPatterns) ||
-		!fd.read(RawFlags) ||
+		!fd.read(rawFlags) ||
 		!fd.read(CreationVersion) ||
 		!fd.read(FormatVersion) ||
 		!fd.read(magic) ||
@@ -103,11 +103,11 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 
 	if (Name[27] != 0)
 		Name[28] = 0;
-	if ((RawFlags & 0x04) != 0)
+	if ((rawFlags & 0x04) != 0)
 		Flags |= FILE_FLAGS_AMIGA_SLIDES;
-	if ((RawFlags & 0x10) != 0)
+	if ((rawFlags & 0x10) != 0)
 		Flags |= FILE_FLAGS_AMIGA_LIMITS;
-	if (CreationVersion < 0x1320 && (RawFlags & 0x40) != 0)
+	if (CreationVersion < 0x1320 && (rawFlags & 0x40) != 0)
 		Flags |= FILE_FLAGS_FAST_SLIDES;
 
 	if (Const != 0x1A || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
@@ -336,7 +336,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> magic;
 	std::array<char, 4> dontCare;
-	uint16_t msgLength, SongFlags;
+	uint16_t msgLength, songFlags;
 	uint8_t Const;
 	const fd_t &fd = file.fd();
 
@@ -356,7 +356,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		!fd.readLE(nPatterns) ||
 		!fd.readLE(CreationVersion) ||
 		!fd.readLE(FormatVersion) ||
-		!fd.readLE(SongFlags) ||
+		!fd.readLE(songFlags) ||
 		// TODO: Handle special.
 		!fd.read<2>(dontCare) ||
 		!fd.read(GlobalVolume) ||
@@ -399,8 +399,13 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		throw ModuleLoaderError(E_BAD_IT);
 
 	Flags = 0;
-	Flags |= (SongFlags & 0x0010) == 0 ? FILE_FLAGS_AMIGA_SLIDES : FILE_FLAGS_LINEAR_SLIDES;
-	if ((SongFlags & 0x0004) == 0)
+	if (songFlags & 0x0008)
+		Flags |= FILE_FLAGS_LINEAR_SLIDES;
+	if (songFlags & 0x0010)
+		Flags |= FILE_FLAGS_OLD_IT_EFFECTS;
+	else
+		Flags |= FILE_FLAGS_AMIGA_SLIDES;
+	if (!(songFlags & 0x0004))
 		nInstruments = 0;
 
 	if (MessageOffs != 0)
