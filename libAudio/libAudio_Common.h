@@ -6,8 +6,6 @@
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <al.h>
-#include <alc.h>
 /*!
  * @internal
  * Definition of \c __cdecl which is compatible with the keyword
@@ -19,8 +17,6 @@
 #define strncasecmp strnicmp
 #define snprintf _snprintf
 #else
-#include <AL/al.h>
-#include <AL/alc.h>
 /*!
  * @internal
  * Null definition which is compatible with the \c __cdecl keyword

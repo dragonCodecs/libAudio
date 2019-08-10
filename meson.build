@@ -6,12 +6,9 @@ project(
 		'warning_level=3',
 		'buildtype=release'
 	],
-	version: '0.4.0'
+	version: '0.4.1',
+	meson_version: '>= 0.50.1'
 )
-
-if meson.version() < '0.47.0'
-	error('Meson is too old for this library')
-endif
 
 cxx = meson.get_compiler('cpp')
 
