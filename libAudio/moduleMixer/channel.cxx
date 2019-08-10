@@ -43,25 +43,62 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 	return 0;
 }
 
-int16_t Channel::applyAutoVibrato() noexcept
+int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t period, int8_t &fractionalPeriod) noexcept
 {
 	if (Sample != nullptr && Sample->GetVibratoDepth() != 0)
 	{
-		int8_t delta{0};
 		ModuleSample &sample = *Sample;
-		const uint8_t vibratoType = sample.GetVibratoType();
-		//channel->AutoVibratoRate = sample->GetVibratoRate();
-		const uint8_t vibratoPos = (AutoVibratoPos + sample.GetVibratoSpeed()) & 0x03;
-		if (vibratoType == 1)
-			delta = RampDownTable[vibratoPos];
-		else if (vibratoType == 2)
-			delta = SquareTable[vibratoPos];
-		else if (vibratoType == 3)
-			delta = RandomTable[vibratoPos];
+		if (!sample.GetVibratoRate())
+			AutoVibratoDepth = sample.GetVibratoDepth() << 8;
 		else
-			delta = SinusTable[vibratoPos];
-		AutoVibratoPos = vibratoPos;
-		return int16_t((delta * sample.GetVibratoDepth()) >> 7);
+		{
+			if (module.ModuleType == MODULE_IT)
+				AutoVibratoDepth += sample.GetVibratoRate();
+			else if (!(Flags & CHN_NOTEOFF))
+				AutoVibratoDepth += (sample.GetVibratoDepth() << 8) / (sample.GetVibratoRate() / 2);
+			if ((AutoVibratoDepth >> 8) > VibratoDepth)
+				AutoVibratoDepth = VibratoDepth << 8;
+		}
+		AutoVibratoPos += sample.GetVibratoRate();
+		int8_t delta{0};
+		const uint8_t vibratoType = sample.GetVibratoType();
+		if (vibratoType == 1) // Square
+			delta = (AutoVibratoPos & 0x80) ? 64 : -64;
+		else if (vibratoType == 2) // Ramp up
+			delta = ((0x40 + (AutoVibratoPos >> 1)) & 0x7F) - 0x40;
+		else if (vibratoType == 3) // Ramp down
+			delta = ((0x40 - (AutoVibratoPos >> 1)) & 0x7F) - 0x40;
+		else if (vibratoType == 4) // Random
+		{
+			delta = RandomTable[AutoVibratoPos & 0x3F];
+			++AutoVibratoPos;
+		}
+		else
+			delta = FT2VibratoTable[AutoVibratoPos & 0xFF];
+		int16_t vibrato = (delta * AutoVibratoDepth) >> 8;
+		if (module.ModuleType == MODULE_IT)
+		{
+			uint32_t a{0}, b{0};
+			int16_t value{0};
+			if (vibrato < 0)
+			{
+				value = (-vibrato) >> 8;
+				a = linearSlideUp(value);
+				b = linearSlideUp(value + 1);
+			}
+			else
+			{
+				value = vibrato >> 8;
+				a = linearSlideDown(value);
+				b = linearSlideDown(value + 1);
+			}
+			value >>= 2;
+			const int32_t result = muldiv(period, a + (((a - b) * (value & 0x3F)) >> 6), 256);
+			fractionalPeriod = result & 0xFF;
+			return period - (result >> 8);
+		}
+		else
+			return vibrato >> 6;
 	}
 	return 0;
 }

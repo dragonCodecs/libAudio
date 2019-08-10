@@ -1643,12 +1643,27 @@ bool ModuleFile::AdvanceTick()
 			}
 			period += channel->applyVibrato(*this, period);
 			channel->applyPanbrello();
-			period += channel->applyAutoVibrato();
-			if ((period < MinPeriod || (period & 0x80000000) != 0) && ModuleType == MODULE_S3M)
-				channel->Length = 0;
-			clipInt<uint32_t>(period, MinPeriod, MaxPeriod);
+			int8_t fractionalPeriod{0};
+			period += channel->applyAutoVibrato(*this, period, fractionalPeriod);
+			if (period <= MinPeriod || period & 0x80000000)
+			{
+				if (ModuleType == MODULE_S3M)
+					channel->Length = 0;
+				period = MinPeriod;
+			}
+			else if (period > MaxPeriod)
+			{
+				if (ModuleType == MODULE_IT || period >= 0x100000)
+				{
+					channel->FadeOutVol = 0;
+					channel->Volume = 0;
+					channel->Flags |= CHN_NOTEFADE;
+				}
+				period = MaxPeriod;
+				fractionalPeriod = 0;
+			}
 			// Calculate the increment from the frequency from the period
-			freq = GetFreqFromPeriod(period, channel->C4Speed, 0);
+			freq = GetFreqFromPeriod(period, channel->C4Speed, fractionalPeriod);
 			// Silence impulse tracker notes that fall off the bottom of the reproduction spectrum
 			if (ModuleType == MODULE_IT && freq < 256)
 			{

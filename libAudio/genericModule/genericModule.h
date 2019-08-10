@@ -493,7 +493,8 @@ public:
 	uint32_t LoopStart, LoopEnd, Length;
 	uint8_t RawVolume, Volume, VolumeSlide, FineVolumeSlide;
 	uint8_t ChannelVolume, ChannelVolumeSlide;
-	uint8_t AutoVibratoPos, reserved;
+	uint16_t AutoVibratoDepth;
+	uint8_t AutoVibratoPos;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
 	uint8_t FineTune, PanningSlide;
@@ -530,7 +531,7 @@ public:
 	void ChannelEffect(uint8_t param);
 
 	int16_t applyVibrato(const ModuleFile &module, const uint32_t period) noexcept;
-	int16_t applyAutoVibrato() noexcept;
+	int16_t applyAutoVibrato(const ModuleFile &module, const uint32_t period, int8_t &fractionalPeriod) noexcept;
 	void applyPanbrello() noexcept;
 
 	// Channel mixing processing
