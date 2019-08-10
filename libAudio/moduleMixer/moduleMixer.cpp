@@ -1718,44 +1718,8 @@ bool ModuleFile::AdvanceTick()
 				if (TickCount || ModuleType == MODULE_IT)
 					channel->VibratoPos = (VibratoPos + channel->VibratoSpeed) & 0x3F;
 			}
-			if ((channel->Flags & CHN_PANBRELLO) != 0)
-			{
-				int8_t Delta;
-				uint8_t PanPos = (((uint16_t)channel->PanbrelloPos + 16) >> 2) & 0x3F;
-				uint8_t PanType = channel->PanbrelloType & 0x03;
-				uint16_t Pan = channel->Panning;
-				if (PanType == 1)
-					Delta = RampDownTable[PanPos];
-				else if (PanType == 2)
-					Delta = SquareTable[PanPos];
-				else if (PanType == 3)
-					Delta = RandomTable[PanPos];
-				else
-					Delta = SinusTable[PanPos];
-				Pan += (Delta * channel->PanbrelloDepth) >> 4;
-				clipInt<uint16_t>(Pan, 0, 256);
-				channel->Panning = Pan;
-				channel->PanbrelloPos += channel->PanbrelloSpeed;
-			}
-			if (channel->Sample != nullptr && channel->Sample->GetVibratoDepth() != 0)
-			{
-				int8_t Delta;
-				uint8_t VibratoPos;
-				ModuleSample *sample = channel->Sample;
-				uint8_t VibratoType = sample->GetVibratoType();
-				//channel->AutoVibratoRate = sample->GetVibratoRate();
-				VibratoPos = (channel->AutoVibratoPos + sample->GetVibratoSpeed()) & 0x03;
-				if (VibratoType == 1)
-					Delta = RampDownTable[VibratoPos];
-				else if (VibratoType == 2)
-					Delta = SquareTable[VibratoPos];
-				else if (VibratoType == 3)
-					Delta = RandomTable[VibratoPos];
-				else
-					Delta = SinusTable[VibratoPos];
-				period += (short)((Delta * sample->GetVibratoDepth()) >> 7);
-				channel->AutoVibratoPos = VibratoPos;
-			}
+			period += channel->applyVibrato();
+			channel->applyPanbrello();
 			if ((period < MinPeriod || (period & 0x80000000) != 0) && ModuleType == MODULE_S3M)
 				channel->Length = 0;
 			clipInt<uint32_t>(period, MinPeriod, MaxPeriod);
