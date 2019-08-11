@@ -157,7 +157,7 @@ void ModuleFile::ReloadSample(Channel &channel)
 void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
 {
 	uint32_t sample = nSample - 1;
-	if (p_Instruments != nullptr)
+	if (p_Instruments)
 	{
 		ModuleInstrument *instr = p_Instruments[sample];
 		sample = instr->Map(channel.Note - 1);
@@ -176,7 +176,7 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
 	}
 	channel.Sample = p_Samples[sample];
 	ReloadSample(channel);
-	if (p_Instruments != nullptr)
+	if (p_Instruments)
 	{
 		ModuleInstrument *instr = channel.Instrument;
 		if (instr->HasVolume())
@@ -188,12 +188,12 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
 
 uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed)
 {
-	if (Note == 0 || Note > 0xF0)
+	if (!Note || Note > 0xF0)
 		return 0;
 	Note--;
 	if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT || ModuleType == MODULE_STM)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if (p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
 			return (S3MPeriods[Note % 12] << 5) >> (Note / 12);
 		else
 		{
@@ -204,24 +204,25 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 	}
 	else
 	{
-		if (FineTune != 0 || Note < 36 || Note >= 108)
+		const uint8_t fineTune = (FineTune >> 4) & 0x0F;
+		if (FineTune || Note < 36 || Note >= 108)
 			return (MODTunedPeriods[(FineTune * 12) + (Note % 12)] << 5) >> (Note / 12);
 		else
 			return MODPeriods[Note - 36] << 2;
 	}
 }
 
-uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int32_t PeriodFrac)
+uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t PeriodFrac)
 {
 	if (Period == 0)
 		return 0;
 	if (ModuleType == MODULE_MOD)
 		return 14187580UL / Period;
-	else// if (ModuleType == MODULE_S3M)
+	else
 	{
-		if ((p_Header->Flags & FILE_FLAGS_AMIGA_SLIDES) == 0)
+		if (p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
 		{
-			if (C4Speed == 0)
+			if (!C4Speed)
 				C4Speed = 8363;
 			return muldiv(C4Speed, 438272UL, (Period << 8) + PeriodFrac);
 		}
@@ -230,12 +231,10 @@ uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int32_
 	}
 }
 
-void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
+void ModuleFile::NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, bool handlePorta)
 {
 	uint32_t period;
 	ModuleSample *sample = channel->Sample;
-	bool cmdPortamento = (channel->RowEffect == CMD_TONEPORTAMENTO) ||
-		(channel->RowEffect == CMD_TONEPORTAVOL) || (channel->RowVolEffect == VOLCMD_PORTAMENTO);
 
 	if (note < 1)
 		return;
@@ -255,6 +254,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 			channel->NoteCut(true);
 		return;
 	}
+	//clipInt<uint8_t>(note, 1, 132);
 	channel->Note = note;
 	if (channel->Instrument != nullptr)
 	{
@@ -266,6 +266,8 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		channel->EnvVolumePos = 0;
 		channel->EnvPanningPos = 0;
 		channel->EnvPitchPos = 0;
+		channel->AutoVibratoDepth = 0;
+		channel->AutoVibratoPos = 0;
 		channel->Sample = sample;
 		if (sample != nullptr)
 			ReloadSample(*channel);
@@ -274,7 +276,7 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 	}
 	channel->NewSample = 0;
 	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
-	if (sample == nullptr)
+	if (!sample)
 		return;
 	if (period != 0)
 	{
@@ -314,13 +316,15 @@ void ModuleFile::NoteChange(Channel * const channel, uint8_t note, uint8_t cmd)
 		if (channel->Pos > channel->Length)
 			channel->Pos = channel->Length;
 	}
-	if (!cmdPortamento || period == 0 || ModuleType != MODULE_IT || ((channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0))
+	if (!handlePorta || !period || ModuleType != MODULE_IT || (channel->Flags & CHN_NOTEFADE && !channel->FadeOutVol))
 	{
-		if (ModuleType == MODULE_IT && (channel->Flags & CHN_NOTEFADE) != 0 && channel->FadeOutVol == 0)
+		if (ModuleType == MODULE_IT && channel->Flags & CHN_NOTEFADE && !channel->FadeOutVol)
 		{
 			channel->EnvVolumePos = 0;
 			channel->EnvPanningPos = 0;
 			channel->EnvPitchPos = 0;
+			channel->AutoVibratoDepth = 0;
+			channel->AutoVibratoPos = 0;
 			channel->Flags &= ~CHN_NOTEFADE;
 			channel->FadeOutVol = 0xFFFF;
 		}
@@ -370,7 +374,11 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 	ModuleInstrument *instr = channel->Instrument;
 	if (note > 0x80 || note < 1)
 		return;
-	// TODO: Handle force cut.. maybe..
+	if (ModuleType != MODULE_IT || !p_Instruments)
+	{
+		// TODO: Handle force cut.. maybe..
+		return;
+	}
 	if (nSample != 0)
 	{
 		instr = p_Instruments[nSample - 1];
@@ -1102,6 +1110,8 @@ bool ModuleFile::ProcessEffects()
 		uint8_t sample = channel->RowSample;
 		uint8_t cmd = channel->RowEffect;
 		uint8_t param = channel->RowParam;
+		bool doPortamento = cmd == CMD_TONEPORTAMENTO || cmd == CMD_TONEPORTAVOL ||
+			channel->RowVolEffect == VOLCMD_PORTAMENTO;
 
 		channel->Flags &= ~CHN_FASTVOLRAMP;
 		if (cmd == CMD_MOD_EXTENDED || cmd == CMD_S3M_EXTENDED)
@@ -1147,22 +1157,27 @@ bool ModuleFile::ProcessEffects()
 			if (note && note <= 128)
 			{
 				channel->NewNote = note;
-				if (p_Instruments != nullptr)
+				if (!doPortamento)
 					HandleNNA(channel, sample, note);
 			}
 			if (sample)
-			//{
+			{
+				const auto currentSample = channel->Sample;
 				SampleChange(*channel, sample);
-			//	channel->NewSample = 0;
-			//}
+				//channel->NewSample = 0;
+				// Special case - if IT or S3M song tries to change note and do a portamento, ignore the portamento.
+				if ((ModuleType == MODULE_S3M || ModuleType == MODULE_IT) && currentSample != channel->Sample &&
+					note && note < 128)
+					doPortamento = false;
+			}
 			if (note)
 			{
-				if (!sample && channel->NewSample && note <= 0x80)
+				if (!sample && channel->NewSample && note < 0x80)
 				{
-					SampleChange(*channel, channel->NewSample);
+					SampleChange(*channel, channel->NewSample); // XXX: I need to take the doPortamento value.
 					channel->NewSample = 0;
 				}
-				NoteChange(channel, note, cmd);
+				NoteChange(channel, note, cmd, doPortamento);
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
 			{

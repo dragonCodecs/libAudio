@@ -55,11 +55,11 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 			if (module.ModuleType == MODULE_IT)
 				AutoVibratoDepth += sample.GetVibratoRate();
 			else if (!(Flags & CHN_NOTEOFF))
-				AutoVibratoDepth += (sample.GetVibratoDepth() << 8) / (sample.GetVibratoRate() / 2);
+				AutoVibratoDepth += (sample.GetVibratoDepth() << 8) / (sample.GetVibratoRate() >> 3);
 			if ((AutoVibratoDepth >> 8) > VibratoDepth)
 				AutoVibratoDepth = VibratoDepth << 8;
 		}
-		AutoVibratoPos += sample.GetVibratoRate();
+		AutoVibratoPos += sample.GetVibratoSpeed();
 		int8_t delta{0};
 		const uint8_t vibratoType = sample.GetVibratoType();
 		if (vibratoType == 1) // Square
@@ -93,8 +93,8 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 				b = linearSlideDown(value + 1);
 			}
 			value >>= 2;
-			const int32_t result = muldiv(period, a + (((a - b) * (value & 0x3F)) >> 6), 256);
-			fractionalPeriod = result & 0xFF;
+			const int32_t result = muldiv(period, a + (((b - a) * (value & 0x3F)) >> 6), 256);
+			fractionalPeriod = uint32_t(result) & 0xFF;
 			return period - (result >> 8);
 		}
 		else
