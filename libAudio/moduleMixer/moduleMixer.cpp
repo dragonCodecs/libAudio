@@ -374,9 +374,27 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 	ModuleInstrument *instr = channel->Instrument;
 	if (note > 0x80 || note < 1)
 		return;
+	// If not Impulse Tracker, or we have no actual instruments, always cut on NNA
 	if (ModuleType != MODULE_IT || !p_Instruments)
 	{
-		// TODO: Handle force cut.. maybe..
+		if (!channel->Length || !channel->LeftVol || !channel->RightVol)
+			return;
+		const uint8_t newChannel = FindFreeNNAChannel();
+		if (!newChannel)
+			return;
+		Channel &nnaChannel = Channels[newChannel];
+		nnaChannel = *channel;
+		nnaChannel.Flags &= ~(CHN_VIBRATO | CHN_TREMOLO | CHN_PANBRELLO | CHN_PORTAMENTO);
+		nnaChannel.RowEffect = CMD_NONE;
+		nnaChannel.FadeOutVol = 0;
+		nnaChannel.Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
+		channel->Length = 0;
+		channel->Pos = 0;
+		channel->PosLo = 0;
+		channel->DCOffsL = 0;
+		channel->DCOffsR = 0;
+		channel->LeftVol = 0;
+		channel->RightVol = 0;
 		return;
 	}
 	if (nSample != 0)
@@ -440,32 +458,32 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 
 	if (channel->RawVolume != 0 && channel->Length != 0 && channel->FadeOutVol != 0)
 	{
-		uint8_t newChannel = FindFreeNNAChannel();
+		const uint8_t newChannel = FindFreeNNAChannel();
 		if (newChannel != 0)
 		{
 			// With the new channel, duplicate it and clear certain effects
-			Channel *nnaChannel = &Channels[newChannel];
-			*nnaChannel = *channel;
-			nnaChannel->Flags &= ~(CHN_VIBRATO | CHN_TREMOLO | CHN_PANBRELLO | CHN_PORTAMENTO);
-			nnaChannel->RowEffect = CMD_NONE;
+			Channel &nnaChannel = Channels[newChannel];
+			nnaChannel = *channel;
+			nnaChannel.Flags &= ~(CHN_VIBRATO | CHN_TREMOLO | CHN_PANBRELLO | CHN_PORTAMENTO);
+			nnaChannel.RowEffect = CMD_NONE;
 			// Then check what the NNA is supposed to be
 			switch (instr->GetNNA())
 			{
 				case NNA_NOTEOFF:
-					nnaChannel->NoteOff();
+					nnaChannel.NoteOff();
 					break;
 				case NNA_NOTECUT:
-					nnaChannel->FadeOutVol = 0;
+					nnaChannel.FadeOutVol = 0;
 					[[clang::fallthrough]]; // Falls through
 				case NNA_NOTEFADE:
-					nnaChannel->Flags |= CHN_NOTEFADE;
+					nnaChannel.Flags |= CHN_NOTEFADE;
 					break;
 			}
 			// NNA_CONTINUE is done implicitly in just duplicating the channel here, so only cull already silent samples.
-			if (nnaChannel->Volume == 0)
+			if (nnaChannel.Volume == 0)
 			{
-				nnaChannel->FadeOutVol = 0;
-				nnaChannel->Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
+				nnaChannel.FadeOutVol = 0;
+				nnaChannel.Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
 			}
 			// And clean up on the original channel so it can be used in the main effects processing.
 			channel->Length = 0;
