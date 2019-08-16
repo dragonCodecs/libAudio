@@ -91,6 +91,8 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 	info.bitRate = vorbisInfo.rate;
 	info.channels = vorbisInfo.channels;
 	info.bitsPerSample = 16;
+	if (ov_seekable(&ctx.decoder))
+		info.totalTime = ov_time_total(&ctx.decoder, -1);
 	copyComments(info, *ov_comment(&ctx.decoder, -1));
 
 	return ovFile.release();
