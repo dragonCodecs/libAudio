@@ -146,7 +146,7 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 		file.isEOF())
 		return nullptr;
 	info.totalTime = chunkLength / info.channels;
-	info.totalTime /= info.bitsPerSample / 8;
+	info.totalTime /= ctx.bitsPerSample / 8;
 	info.totalTime /= info.bitRate;
 	ctx.offsetDataLength = chunkLength + file.tell();
 	return wavFile.release();
