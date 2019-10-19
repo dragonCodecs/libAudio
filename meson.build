@@ -7,7 +7,7 @@ project(
 		'buildtype=release'
 	],
 	version: '0.4.1',
-	meson_version: '>= 0.50.1'
+	meson_version: '>= 0.52'
 )
 
 cxx = meson.get_compiler('cpp')
@@ -29,3 +29,4 @@ endif
 subdir('libAudio')
 subdir('player')
 subdir('transcoder')
+subdir('test')
