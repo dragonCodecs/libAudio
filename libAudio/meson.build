@@ -2,6 +2,7 @@ threading = dependency('threads')
 libOpenAL = dependency('openal')
 libOGG = dependency('ogg')
 libVorbis = [dependency('vorbis'), dependency('vorbisfile'), dependency('vorbisenc')]
+libOpus = [dependency('opus')]
 libFLAC = dependency('flac')
 libWavPack = dependency('wavpack', version: '>=5.0.0')
 libMPC = cxx.find_library('mpcdec')
@@ -46,23 +47,27 @@ if extraFormats.contains('fc1x')
 endif
 
 genericModuleSrcs = [
-	'genericModule/ModuleFile.cpp', 'genericModule/ModuleHeader.cpp', 'genericModule/ModuleInstrument.cpp', 'genericModule/ModuleSample.cpp',
-	'genericModule/ModulePattern.cpp', 'genericModule/ModuleEffects.cpp', 'moduleMixer/moduleMixer.cpp', 'moduleMixer/channel.cxx',
+	'genericModule/ModuleFile.cpp', 'genericModule/ModuleHeader.cpp', 'genericModule/ModuleInstrument.cpp',
+	'genericModule/ModuleSample.cpp', 'genericModule/ModulePattern.cpp', 'genericModule/ModuleEffects.cpp',
+	'moduleMixer/moduleMixer.cpp', 'moduleMixer/channel.cxx',
 	'loadMOD.cpp', 'loadS3M.cpp', 'loadSTM.cpp', 'loadAON.cpp', 'loadIT.cpp'
 ]
 
 libAudioSrcs = [
 	'loadAudio.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
 	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp', genericModuleSrcs,
-	'loadRealAudio.cpp',
-	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp', 'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx',
-	extraSrcs
+	'loadRealAudio.cpp', 'loadOggOpus.cxx'
+	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp',
+	'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx', extraSrcs
 ]
 
 libAudioLibrary = shared_library(
 	'libAudio',
 	libAudioSrcs,
-	dependencies: [threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC, libAAC, libMP4v2, libMAD, libID3Tag, extraDeps, maths],
+	dependencies: [
+		threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC,
+		libAAC, libMP4v2, libMAD, libID3Tag, extraDeps, maths
+	],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
 	name_prefix: '',
 	install: true,
