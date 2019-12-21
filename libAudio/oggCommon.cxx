@@ -2,25 +2,66 @@
 #include <string.h>
 
 #include "fd.hxx"
+#include "uniquePtr.hxx"
 #include "oggCommon.hxx"
+
+inline bool clonePacketData(ogg_packet &packet) noexcept try
+{
+	unsigned char *data = packet.packet;
+	packet.packet = makeUniqueT<unsigned char []>(packet.bytes).release();
+	memcpy(packet.packet, data, packet.bytes);
+	return packet.packet;
+}
+catch (std::bad_alloc &)
+	{ return false; }
+
+inline void freePacketData(ogg_packet &packet) noexcept
+	{ delete [] packet.packet; }
 
 bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 {
-	std::array<char, 58> header{};
+	std::array<unsigned char, 58> header{};
 	if (fd == -1 ||
 		read(fd, header.data(), header.size()) != header.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		memcmp(header.data(), "Oggs", 4) != 0)
 		return false;
+	// The following rash of call puke pulls apart the first Ogg page we
+	// just read from the file and populates headerPacket with the resulting
+	// decoder-specific data. This is the only way to get a clean check for
+	// each of the supported codec encapsulations.
+	ogg_sync_state syncState{};
+	ogg_stream_state streamState{};
+	ogg_sync_init(&syncState);
+	ogg_stream_init(&streamState, -1);
+	syncState.data = header.data();
+	syncState.storage = header.size();
+	ogg_sync_wrote(&syncState, header.size());
+	ogg_page page{};
+	ogg_sync_pageout(&syncState, &page);
+	ogg_stream_reset_serialno(&streamState, ogg_page_serialno(&page));
+	ogg_stream_pagein(&streamState, &page);
+	ogg_stream_packetout(&streamState, &headerPacket);
+	clonePacketData(headerPacket);
+	ogg_stream_clear(&streamState);
+	syncState.data = nullptr;
+	ogg_sync_clear(&syncState);
 	return true;
 }
 
-bool isVorbis(const ogg_packet &headerPacket) noexcept
+bool isVorbis(ogg_packet &headerPacket) noexcept
 {
-	return false;
+	const bool result = headerPacket.bytes < 7 ||
+		headerPacket.packet[0] != 1 ||
+		memcmp(headerPacket.packet + 1, "vorbis", 6) != 0;
+	freePacketData(headerPacket);
+	return !result;
 }
 
-bool isOpus(const ogg_packet &headerPacket) noexcept
+bool isOpus(ogg_packet &headerPacket) noexcept
 {
-	return false;
+	const bool result = headerPacket.bytes < 9 ||
+		memcmp(headerPacket.packet, "OpusHead", 8) != 0;
+	freePacketData(headerPacket);
+	return !result;
 }
