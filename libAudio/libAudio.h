@@ -29,7 +29,7 @@
 #define libAudioVersion_Minor 4
 #define libAudioVersion_Rev 0
 
-// OggVorbis API
+// Ogg|Vorbis API
 
 // Read/Playback
 libAUDIO_API void *OggVorbis_OpenR(const char *FileName);
@@ -46,6 +46,16 @@ libAUDIO_API void *OggVorbis_OpenW(const char *FileName);
 libAUDIO_API bool OggVorbis_SetFileInfo(void *p_VorbisFile, const fileInfo_t *const p_FI);
 libAUDIO_API long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen);
 libAUDIO_API int OggVorbis_CloseFileW(void *p_VorbisFile);
+
+// Ogg|Opus API
+libAUDIO_API void *OggOpus_OpenR(const char *FileName);
+libAUDIO_API const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile);
+libAUDIO_API long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int OggOpus_CloseFileR(void *p_OpusFile);
+libAUDIO_API void OggOpus_Play(void *p_OpusFile);
+libAUDIO_API void OggOpus_Pause(void *p_OpusFile);
+libAUDIO_API void OggOpus_Stop(void *p_OpusFile);
+libAUDIO_API bool Is_OggOpus(const char *FileName);
 
 // FLAC API
 
@@ -282,5 +292,6 @@ libAUDIO_API uint8_t ToPlayback;
 #define AUDIO_STM			15
 #define AUDIO_AON			16
 #define AUDIO_FC1x			17
+#define AUDIO_OGG_OPUS		18
 
 #endif /*LIB_AUDIO__HXX*/

@@ -81,6 +81,7 @@ typedef struct _AudioPointer
 } AudioPointer;
 
 extern API_Functions OggVorbisDecoder;
+extern API_Functions OggOpusDecoder;
 extern API_Functions FLACDecoder;
 extern API_Functions WAVDecoder;
 extern API_Functions M4ADecoder;

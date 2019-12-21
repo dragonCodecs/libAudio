@@ -34,3 +34,125 @@ struct oggOpus_t::decoderContext_t final
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 };
+
+/*!
+ * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * to the context of the opened file which must be used only by OggOpus_* functions
+ * @param FileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ */
+void *OggOpus_OpenR(const char *FileName)
+{
+	return nullptr;
+}
+
+/*!
+ * This function gets the \c FileInfo structure for an opened file
+ * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @warning This function must be called before using \c OggOpus_Play() or \c OggOpus_FillBuffer()
+ * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
+const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p_OpusFile); }
+
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
+ * @param OutBuffer A pointer to the buffer to be filled
+ * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
+long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(p_OpusFile, OutBuffer, nOutBufferLen); }
+
+/*!
+ * Closes an opened audio file
+ * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR(), or \c NULL for a no-operation
+ * @return an integer indicating success or failure with the same values as \c fclose()
+ * @warning Do not use the pointer given by \p p_OpusFile after using
+ * this function - please either set it to \c NULL or be extra carefull
+ * to destroy it via scope
+ * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
+ */
+int OggOpus_CloseFileR(void *p_OpusFile) { return audioCloseFile(p_OpusFile); }
+
+/*!
+ * Plays an opened Ogg|Opus file using OpenAL on the default audio device
+ * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c OggOpus_OpenR() used to open the file at \p p_OpusFile,
+ * this function will do nothing.
+ * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
+ *
+ * @bug Futher to the \p p_OpusFile check bug on this function, if this function is
+ *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
+ */
+void OggOpus_Play(void *p_OpusFile) { return audioPlay(p_OpusFile); }
+void OggOpus_Pause(void *p_OpusFile) { return audioPause(p_OpusFile); }
+void OggOpus_Stop(void *p_OpusFile) { return audioStop(p_OpusFile); }
+
+/*!
+ * Checks the file given by \p FileName for whether it is an Ogg|Opus
+ * file recognised by this library or not
+ * @param FileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is an Ogg|Opus file or not
+ */
+bool Is_OggOpus(const char *FileName) { return oggOpus_t::isOggOpus(FileName); }
+
+/*!
+ * Checks the file descriptor given by \p fd for whether it represents a Ogg|Opus
+ * file recognised by this library or not
+ * @param fd The descriptor of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a Ogg|Opus file or not
+ */
+bool oggOpus_t::isOggOpus(const int32_t fd) noexcept
+{
+	ogg_packet header;
+	return isOgg(fd, header) && isOpus(header);
+}
+
+/*!
+ * Checks the file given by \p fileName for whether it is a Ogg|Opus
+ * file recognised by this library or not
+ * @param fileName The name of the file to check
+ * @return \c true if the file can be utilised by the library,
+ * otherwise \c false
+ * @note This function does not check the file extension, but rather
+ * the file contents to see if it is a Ogg|Opus file or not
+ */
+bool oggOpus_t::isOggOpus(const char *const fileName) noexcept
+{
+	fd_t file(fileName, O_RDONLY | O_NOCTTY);
+	if (!file.valid())
+		return false;
+	return isOggOpus(file);
+}
+
+/*!
+ * @internal
+ * This structure controls decoding Ogg|Opus files when using the high-level API on them
+ */
+API_Functions OggOpusDecoder =
+{
+	OggOpus_OpenR,
+	nullptr,
+	audioFileInfo,
+	nullptr,
+	audioFillBuffer,
+	nullptr,
+	audioCloseFile,
+	nullptr,
+	audioPlay,
+	audioPause,
+	audioStop
+};
