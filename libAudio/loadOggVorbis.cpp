@@ -215,17 +215,8 @@ bool Is_OggVorbis(const char *FileName) { return oggVorbis_t::isOggVorbis(FileNa
  */
 bool oggVorbis_t::isOggVorbis(const int32_t fd) noexcept
 {
-	char oggSig[4];
-	char vorbisSig[6];
-	if (fd == -1 ||
-		read(fd, oggSig, 4) != 4 ||
-		lseek(fd, 25, SEEK_CUR) != 29 ||
-		read(fd, vorbisSig, 6) != 6 ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		strncmp(oggSig, "OggS", 4) != 0 ||
-		strncmp(vorbisSig, "vorbis", 6) != 0)
-		return false;
-	return true;
+	ogg_packet header;
+	return isOgg(fd, header) && isVorbis(header);
 }
 
 /*!
