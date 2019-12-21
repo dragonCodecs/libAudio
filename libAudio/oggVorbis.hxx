@@ -1,12 +1,12 @@
 #ifndef OGG_VORBIS__HXX
 #define OGG_VORBIS__HXX
 
-#include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
 #include <vorbis/vorbisenc.h>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
+#include "oggCommon.hxx"
 
 /*!
  * @internal
