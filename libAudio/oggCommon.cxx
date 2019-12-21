@@ -20,11 +20,11 @@ inline void freePacketData(ogg_packet &packet) noexcept
 
 bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 {
-	std::array<unsigned char, 58> header{};
+	std::array<unsigned char, 79> header{};
 	if (fd == -1 ||
 		read(fd, header.data(), header.size()) != header.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(header.data(), "Oggs", 4) != 0)
+		memcmp(header.data(), "OggS", 4) != 0)
 		return false;
 	// The following rash of call puke pulls apart the first Ogg page we
 	// just read from the file and populates headerPacket with the resulting
@@ -54,6 +54,16 @@ bool isVorbis(ogg_packet &headerPacket) noexcept
 	const bool result = headerPacket.bytes < 7 ||
 		headerPacket.packet[0] != 1 ||
 		memcmp(headerPacket.packet + 1, "vorbis", 6) != 0;
+	freePacketData(headerPacket);
+	return !result;
+}
+
+bool isFLAC(ogg_packet &headerPacket) noexcept
+{
+	const bool result = headerPacket.bytes < 13 ||
+		headerPacket.packet[0] != 0x7F ||
+		memcmp(headerPacket.packet + 1, "FLAC", 4) != 0 ||
+		memcmp(headerPacket.packet + 9, "fLaC", 4) != 0;
 	freePacketData(headerPacket);
 	return !result;
 }

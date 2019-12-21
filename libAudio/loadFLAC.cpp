@@ -2,6 +2,7 @@
 
 #include "flac.hxx"
 #include "string.hxx"
+#include "oggCommon.hxx"
 
 /*!
  * @internal
@@ -388,9 +389,14 @@ bool flac_t::isFLAC(const int32_t fd) noexcept
 	if (fd == -1 ||
 		read(fd, flacSig, 4) != 4 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		(strncmp(flacSig, "fLaC", 4) != 0 &&
-		strncmp(flacSig, "OggS", 4) != 0))
+		(memcmp(flacSig, "fLaC", 4) != 0 &&
+		memcmp(flacSig, "OggS", 4) != 0))
 		return false;
+	else if (memcmp(flacSig, "OggS", 4) == 0)
+	{
+		ogg_packet header;
+		return isOgg(fd, header) && ::isFLAC(header);
+	}
 	return true;
 }
 
