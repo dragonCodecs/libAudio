@@ -94,6 +94,24 @@ public:
 	bool fileInfo(const fileInfo_t &fileInfo) final override;
 };
 
+struct oggOpus_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> decoderCtx;
+
+public:
+	oggOpus_t() noexcept;
+	oggOpus_t(fd_t &&fd) noexcept;
+	static oggOpus_t *openR(const char *const fileName) noexcept;
+	static bool isOggOpus(const char *const fileName) noexcept;
+	static bool isOggOpus(const int32_t fd) noexcept;
+	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
 struct flac_t final : public audioFile_t
 {
 private:
