@@ -7,24 +7,15 @@ modFC1x_t::modFC1x_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleFC1x,
 
 modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 {
-	auto fc1xFile = makeUnique<modFC1x_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
-	if (!fc1xFile || !fc1xFile->valid() || !isFC1x(fc1xFile->_fd))
+	auto file = makeUnique<modFC1x_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!file || !file->valid() || !isFC1x(file->_fd))
 		return nullptr;
-	return fc1xFile.release();
-}
-
-void *FC1x_OpenR(const char *FileName)
-{
-	std::unique_ptr<modFC1x_t> ret{modFC1x_t::openR(FileName)};
-	if (!ret)
-		return nullptr;
-
-	auto &ctx = *ret->context();
-	fileInfo_t &info = ret->fileInfo();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
-	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
+	try { ctx.mod = makeUnique<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
@@ -36,13 +27,13 @@ void *FC1x_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
-
-	return ret.release();
+	return file.release();
 }
 
+void *FC1x_OpenR(const char *FileName) { return modFC1x_t::openR(FileName); }
 const fileInfo_t *FC1x_GetFileInfo(void *p_FC1xFile) { return audioFileInfo(p_FC1xFile); }
 long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(&p_FC1xFile, OutBuffer, nOutBufferLen); }

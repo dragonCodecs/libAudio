@@ -8,25 +8,15 @@ modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, st
 
 modS3M_t *modS3M_t::openR(const char *const fileName) noexcept
 {
-	auto s3mFile = makeUnique<modS3M_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
-	if (!s3mFile || !s3mFile->valid() || !isS3M(s3mFile->_fd))
+	auto file = makeUnique<modS3M_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!file || !file->valid() || !isS3M(file->_fd))
 		return nullptr;
-	lseek(s3mFile->_fd, 0, SEEK_SET);
-	return s3mFile.release();
-}
-
-void *S3M_OpenR(const char *FileName)
-{
-	std::unique_ptr<modS3M_t> ret{modS3M_t::openR(FileName)};
-	if (!ret)
-		return nullptr;
-
-	auto &ctx = *ret->context();
-	fileInfo_t &info = ret->fileInfo();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
-	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
+	try { ctx.mod = makeUnique<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.GetError());
@@ -38,13 +28,13 @@ void *S3M_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
-
-	return ret.release();
+	return file.release();
 }
 
+void *S3M_OpenR(const char *FileName) { return modS3M_t::openR(FileName); }
 const fileInfo_t *S3M_GetFileInfo(void *p_S3MFile) { return audioFileInfo(p_S3MFile); }
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_S3MFile, OutBuffer, nOutBufferLen); }
@@ -64,6 +54,7 @@ bool modS3M_t::isS3M(const int32_t fd) noexcept
 		read(fd, &S3MMagic1, 1) != 1 ||
 		lseek(fd, seekOffset2, SEEK_SET) != seekOffset2 ||
 		read(fd, S3MMagic2, 4) != 4 ||
+		lseek(fd, 0, SEEK_SET) != 0 ||
 		S3MMagic1 != 0x1A ||
 		strncmp(S3MMagic2, "SCRM", 4) != 0)
 		return false;

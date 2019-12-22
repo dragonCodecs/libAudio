@@ -8,27 +8,16 @@ modAON_t::modAON_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleAON, st
 
 modAON_t *modAON_t::openR(const char *const fileName) noexcept
 {
-	auto aonFile = makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
-	if (!aonFile || !aonFile->valid() || !isAON(aonFile->_fd))
+	auto file = makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!file || !file->valid() || !isAON(file->_fd))
 		return nullptr;
-	if (aonFile->_fd.seek(0, SEEK_SET))
-		return nullptr;
-	return aonFile.release();
-}
-
-void *AON_OpenR(const char *FileName)
-{
-	std::unique_ptr<modAON_t> ret{modAON_t::openR(FileName)};
-	if (!ret)
-		return nullptr;
-
-	auto &ctx = *ret->context();
-	fileInfo_t &info = ret->fileInfo();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
+	try { ctx.mod = makeUnique<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
@@ -44,13 +33,13 @@ void *AON_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
-
-	return ret.release();
+	return file.release();
 }
 
+void *AON_OpenR(const char *FileName) { return modAON_t::openR(FileName); }
 const fileInfo_t *AON_GetFileInfo(void *p_AONFile) { return audioFileInfo(p_AONFile); }
 long AON_FillBuffer(void *p_AONFile, void *const buffer, const uint32_t length)
 	{ return audioFillBuffer(p_AONFile, buffer, length); }

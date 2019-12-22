@@ -9,26 +9,16 @@ modMOD_t::modMOD_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std
 
 modMOD_t *modMOD_t::openR(const char *const fileName) noexcept
 {
-	auto modFile = makeUnique<modMOD_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
-	if (!modFile || !modFile->valid() || !isMOD(modFile->_fd))
+	auto file = makeUnique<modMOD_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!file || !file->valid() || !isMOD(file->_fd) || file->_fd.seek(0, SEEK_SET))
 		return nullptr;
-	lseek(modFile->_fd, 0, SEEK_SET);
-	return modFile.release();
-}
-
-void *MOD_OpenR(const char *FileName)
-{
-	std::unique_ptr<modMOD_t> ret{modMOD_t::openR(FileName)};
-	if (!ret)
-		return nullptr;
-
-	auto &ctx = *ret->context();
-	fileInfo_t &info = ret->fileInfo();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ctx.mod = makeUnique<ModuleFile>(*ret); }
+	try { ctx.mod = makeUnique<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
 		printf("%s\n", e.error());
@@ -39,13 +29,13 @@ void *MOD_OpenR(const char *FileName)
 	if (ToPlayback)
 	{
 		if (ExternalPlayback == 0)
-			ret->player(makeUnique<playback_t>(ret.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
-
-	return ret.release();
+	return file.release();
 }
 
+void *MOD_OpenR(const char *FileName) { return modMOD_t::openR(FileName); }
 const fileInfo_t *MOD_GetFileInfo(void *p_MODFile) { return audioFileInfo(p_MODFile); }
 long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_MODFile, OutBuffer, nOutBufferLen); }
