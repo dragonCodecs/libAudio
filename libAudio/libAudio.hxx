@@ -26,7 +26,8 @@ enum class audioType_t : uint8_t
 	moduleS3M = 14,
 	moduleSTM = 15,
 	moduleAON = 16,
-	moduleFC1x = 17
+	moduleFC1x = 17,
+	oggOpus = 18
 };
 
 struct audioModeRead_t { };

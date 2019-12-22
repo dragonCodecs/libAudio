@@ -35,8 +35,15 @@ struct oggOpus_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
+oggOpus_t::oggOpus_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggOpus, std::move(fd)),
+	decoderCtx{makeUnique<decoderContext_t>()} { }
+oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
+
 oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 {
+	auto file = makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	if (!file || !file->valid() || !isOggOpus(file->_fd))
+		return nullptr;
 	return nullptr;
 }
 
@@ -85,6 +92,8 @@ int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	return -2;
 }
+
+oggOpus_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!
  * Closes an opened audio file
