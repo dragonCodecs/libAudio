@@ -44,7 +44,7 @@ protected:
 	bool isPlaying() const noexcept;
 
 public:
-	virtual ~audioPlayer_t() { }
+	virtual ~audioPlayer_t() = default;
 	virtual void play() = 0;
 	virtual void pause() = 0;
 	virtual void stop() = 0;
@@ -71,6 +71,7 @@ protected:
 public:
 	playback_t(void *const audioFile, const fileFillBuffer_t fillBuffer, uint8_t *const buffer,
 		const uint32_t bufferLength, const fileInfo_t &fileInfo);
+	~playback_t() noexcept = default;
 	void mode(playbackMode_t mode) noexcept;
 	void play();
 	void pause();
