@@ -1,1 +1,36 @@
+html { box-sizing: border-box; }
+
+body, table, div, p, dl, p.reference, p.definition
+{
+	font-size: 1rem;
+	line-height: 1.5;
+	font-weight: normal;
+	font-family: "DejaVu Sans", "Bitstream Vera Sans", "Bitstream Vera Sans", "Segoe UI", Candara, "Trebuchet MS", Verdana, "Verdana Ref", sans-serif;
+}
+
+#projectbrief { margin-top: -6px; margin-bottom: 3px; }
+
 .memtitle { font-size: 125%; background: none; }
+.arrow { font-size: 100%; }
+
+table.directory
+{
+	font-size: 1rem;
+	line-height: 1.25;
+	font-family: "DejaVu Sans", "Bitstream Vera Sans", "Bitstream Vera Sans", "Segoe UI", Candara, "Trebuchet MS", Verdana, "Verdana Ref", sans-serif;
+}
+
+.directory td.entry { padding: 2px 6px 2px 0; }
+.directory td.entry a { vertical-align: middle; }
+.icona { height: 20px; }
+
+.icon
+{
+	font-size: 1rem;
+	line-height: 1;
+	font-family: "DejaVu Sans", "Bitstream Vera Sans", "Bitstream Vera Sans", "Segoe UI", Candara, "Trebuchet MS", Verdana, "Verdana Ref", sans-serif;
+	vertical-align: middle;
+}
+
+#nav-tree .item { padding-left: 5px; padding-right: 5px; }
+#nav-tree li { display: table; width: 100%; }
