@@ -26,6 +26,11 @@ protected:
 public:
 	static alContext_t *ensure() noexcept;
 	~alContext_t() noexcept;
+
+	alContext_t(const alContext_t &) noexcept = delete;
+	alContext_t(alContext_t &&) noexcept = delete;
+	alContext_t &operator =(const alContext_t &) noexcept = delete;
+	alContext_t &operator =(alContext_t &&) noexcept = delete;
 };
 
 struct alBuffer_t;
