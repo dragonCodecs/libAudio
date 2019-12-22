@@ -255,7 +255,7 @@ mp3_t *mp3_t::openR(const char *const fileName) noexcept
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by MP3_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *MP3_OpenR(const char *FileName)
 {
@@ -274,9 +274,8 @@ void *MP3_OpenR(const char *FileName)
 /*!
  * This function gets the \c FileInfo structure for an opened file
  * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c MP3_Play() or \c MP3_FillBuffer()
- * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
 const fileInfo_t *MP3_GetFileInfo(void *p_MP3File) { return audioFileInfo(p_MP3File); }
 
@@ -289,23 +288,18 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept
 
 /*!
  * Closes an opened audio file
- * @param p_MP3File A pointer to a file opened with \c MP3_OpenR(), or \c NULL for a no-operation
+ * @param p_MP3File A pointer to a file opened with \c MP3_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_MP3File after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
- * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
 int MP3_CloseFileR(void *p_MP3File) { return audioCloseFile(p_MP3File); }
 
 /*!
  * @internal
  * Gets the next buffer of MP3 data from the MP3 file
- * @param p_MF Our internal MP3 context
- * @param eof The pointer to the internal eof member
- *   passed to help speed this function up slightly by not having
- *   to re-dereference the pointers and memory needed to locate
- *   the member
+ * @param fd The file to read data from
  */
 bool mp3_t::decoderContext_t::readData(const fd_t &fd) noexcept
 {
@@ -329,9 +323,7 @@ bool mp3_t::decoderContext_t::readData(const fd_t &fd) noexcept
 /*!
  * @internal
  * Loads the next frame of audio from the MP3 file
- * @param p_MF Our internal MP3 context
- * @param eof A pointer to the internal eof member
- *   for passing to \c GetData()
+ * @param fd The file to decode a frame from
  */
 int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
 {
@@ -364,7 +356,6 @@ int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
  */
 long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_MP3File, OutBuffer, nOutBufferLen); }
@@ -433,10 +424,6 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @warning If \c ExternalPlayback was a non-zero value for
  * the call to \c MP3_OpenR() used to open the file at \p p_MP3File,
  * this function will do nothing.
- * @bug \p p_MP3File must not be NULL as no checking on the parameter is done. FIXME!
- *
- * @bug Futher to the \p p_MP3File check bug on this function, if this function is
- *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
 void MP3_Play(void *p_MP3File) { audioPlay(p_MP3File); }
 void MP3_Pause(void *p_MP3File) { audioPause(p_MP3File); }

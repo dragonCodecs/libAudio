@@ -171,8 +171,7 @@ m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream
 /*!
  * @internal
  * Internal function used to determine the first usable audio track and initialise decoding on it
- * @param ret Our internal decoder structure's pointer named the same as in the only function
- *   which calls this so as to keep name changing and confusion down
+ * @param fileInfo The \c fileInfo_t structure to fill with the tracks's metadata
  * @return The MP4v2 track ID located for the decoder or -1 on error
  */
 void m4a_t::decoderContext_t::aacTrack(fileInfo_t &fileInfo) noexcept

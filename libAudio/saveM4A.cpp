@@ -180,7 +180,7 @@ void *M4A_OpenW(const char *FileName)
 /*!
  * This function sets the \c FileInfo structure for a M4A/MP4 file being encoded
  * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
- * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
+ * @param info A \c fileInfo_t pointer containing various metadata about an opened file
  * @warning This function must be called before using \c M4A_WriteBuffer()
  * @bug \p p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
  *

@@ -10,7 +10,7 @@
  * @brief The implementation of the AAC decoder API
  * @note Not to be confused with the M4A/MP4 decoder
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
@@ -19,8 +19,8 @@
  * @note This was taken from FAAD2's aacinfo.c
  */
 /* Following 2 definitions are taken from aacinfo.c from faad2: */
-#define ADIF_MAX_SIZE 30 /* Should be enough */
-//#define ADTS_MAX_SIZE 10 /* Should be enough */
+#define ADIF_MAX_SIZE 30
+//#define ADTS_MAX_SIZE 10
 
 /*!
  * @internal
@@ -28,7 +28,6 @@
  * @note This was taken from ffmpeg's aac_parser.c, but there was another,
  *   conflicting, definition in FAAD2's aacinfo.c which is 10 rather than 7
  */
-/* ffmpeg's aac_parser.c specifies the following for ADTS_MAX_SIZE: */
 #define ADTS_MAX_SIZE 7
 
 /*!
@@ -106,7 +105,7 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by AAC_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *AAC_OpenR(const char *FileName)
 {
@@ -125,9 +124,8 @@ void *AAC_OpenR(const char *FileName)
 /*!
  * This function gets the \c FileInfo structure for an opened file
  * @param p_AACFile A pointer to a file opened with \c AAC_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c AAC_Play() or \c AAC_FillBuffer()
- * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 const fileInfo_t *AAC_GetFileInfo(void *p_AACFile) { return audioFileInfo(p_AACFile); }
 
@@ -136,12 +134,11 @@ aac_t::decoderContext_t::~decoderContext_t() noexcept
 
 /*!
  * Closes an opened audio file
- * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c NULL for a no-operation
+ * @param p_AACFile A pointer to a file opened with \c AAC_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_AACFile after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
- * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 int AAC_CloseFileR(void *p_AACFile) { return audioCloseFile(p_AACFile); }
 
@@ -232,7 +229,6 @@ using namespace libAudio;
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_AACFile, OutBuffer, nOutBufferLen); }
@@ -317,10 +313,6 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @warning If \c ExternalPlayback was a non-zero value for
  * the call to \c AAC_OpenR() used to open the file at \p p_AACFile,
  * this function will do nothing.
- * @bug \p p_AACFile must not be NULL as no checking on the parameter is done. FIXME!
- *
- * @bug Futher to the \p p_AACFile check bug on this function, if this function is
- *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
 void AAC_Play(void *p_AACFile) { return audioPlay(p_AACFile); }
 void AAC_Pause(void *p_AACFile) { return audioPause(p_AACFile); }
@@ -338,13 +330,13 @@ void AAC_Stop(void *p_AACFile) { return audioStop(p_AACFile); }
 bool Is_AAC(const char *FileName) { return aac_t::isAAC(FileName); }
 
 /*!
- * Checks the file descriptor given by \p fd for whether it represents a MP3
+ * Checks the file descriptor given by \p fd for whether it represents a AAC
  * file recognised by this library or not
  * @param fd The descriptor of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
- * the file contents to see if it is a MP3 file or not
+ * the file contents to see if it is a AAC file or not
  */
 bool aac_t::isAAC(const int32_t fd) noexcept
 {
@@ -362,13 +354,13 @@ bool aac_t::isAAC(const int32_t fd) noexcept
 }
 
 /*!
- * Checks the file given by \p fileName for whether it is a MP3
+ * Checks the file given by \p fileName for whether it is a AAC
  * file recognised by this library or not
  * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
- * the file contents to see if it is a MP3 file or not
+ * the file contents to see if it is a AAC file or not
  */
 bool aac_t::isAAC(const char *const fileName) noexcept
 {

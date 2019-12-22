@@ -6,7 +6,7 @@
  * @file saveAudio.cpp
  * @brief The implementation of the master encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2013
+ * @date 2010-2019
  */
 
 /*!
