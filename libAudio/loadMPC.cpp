@@ -165,13 +165,13 @@ mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamI
 
 mpc_t *mpc_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<mpc_t> mpcFile(makeUnique<mpc_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!mpcFile || !mpcFile->valid() || !isMPC(mpcFile->_fd))
+	std::unique_ptr<mpc_t> file(makeUnique<mpc_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!file || !file->valid() || !isMPC(file->_fd))
 		return nullptr;
-	auto &ctx = *mpcFile->context();
-	fileInfo_t &info = mpcFile->fileInfo();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
-	ctx.callbacks.data = mpcFile.get();
+	ctx.callbacks.data = file.get();
 	ctx.demuxer = mpc_demux_init(&ctx.callbacks);
 	ctx.frameInfo.buffer = ctx.buffer;
 	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
@@ -181,7 +181,9 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
 	info.channels = ctx.streamInfo.channels;
 	info.totalTime = ctx.streamInfo.samples / info.bitRate;
 
-	return mpcFile.release();
+	if (!ExternalPlayback)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return file.release();
 }
 
 /*!
@@ -190,19 +192,7 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *MPC_OpenR(const char *FileName)
-{
-	std::unique_ptr<mpc_t> file(mpc_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->context();
-	const fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *MPC_OpenR(const char *FileName) { return mpc_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
