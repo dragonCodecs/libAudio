@@ -83,11 +83,20 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 		return nullptr;
 	auto &ctx = *file->decoderContext();
 	fileInfo_t &info = file->fileInfo();
+	int error = 0;
 
-	ctx.decoder = op_open_callbacks(file.get(), &oggOpus::callbacks, nullptr, 0, nullptr);
+	ctx.decoder = op_open_callbacks(file.get(), &oggOpus::callbacks, nullptr, 0, &error);
 	if (!ctx.decoder)
 		return nullptr;
 
+	info.channels = op_channel_count(ctx.decoder, -1);
+	info.bitRate = 48000;
+	info.bitsPerSample = 16;
+	if (op_seekable(ctx.decoder))
+		info.totalTime = op_pcm_total(ctx.decoder, -1);
+
+	if (ExternalPlayback == 0)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return nullptr;
 }
 
@@ -97,19 +106,7 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggOpus_OpenR(const char *FileName)
-{
-	std::unique_ptr<oggOpus_t> file(oggOpus_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->decoderContext();
-	const fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *OggOpus_OpenR(const char *FileName) { return oggOpus_t::openR(FileName); }
 
 /*!
  * This function gets the \c fileInfo_t structure for an opened file
@@ -137,7 +134,7 @@ int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	return -2;
 }
 
-oggOpus_t::decoderContext_t::~decoderContext_t() noexcept { }
+oggOpus_t::decoderContext_t::~decoderContext_t() noexcept { op_free(decoder); }
 
 /*!
  * Closes an opened audio file
