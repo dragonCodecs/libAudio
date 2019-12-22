@@ -35,6 +35,11 @@ struct oggOpus_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
+oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
+{
+	return nullptr;
+}
+
 /*!
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggOpus_* functions
@@ -43,7 +48,16 @@ struct oggOpus_t::decoderContext_t final
  */
 void *OggOpus_OpenR(const char *FileName)
 {
-	return nullptr;
+	std::unique_ptr<oggOpus_t> file(oggOpus_t::openR(FileName));
+	if (!file)
+		return nullptr;
+	auto &ctx = *file->decoderContext();
+	const fileInfo_t &info = file->fileInfo();
+
+	if (ExternalPlayback == 0)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+
+	return file.release();
 }
 
 /*!
