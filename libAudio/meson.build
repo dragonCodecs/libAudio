@@ -12,8 +12,11 @@ libMAD = cxx.find_library('mad')
 libID3Tag = cxx.find_library('id3tag')
 maths = cxx.find_library('m', required: false)
 
-cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
-cxx.has_function('WavpackOpenFileInputEx64', dependencies: libWavPack)
+if not cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
+	error('Could not find the required function MP4CreateProvider() from libmp4v2')
+elif not cxx.has_function('WavpackOpenFileInputEx64', dependencies: libWavPack)
+	error('Could not find the required function WavpackOpenFileInputEx64() from libwavpack')
+endif
 
 extraFormats = get_option('extra_formats')
 extraSrcs = []
