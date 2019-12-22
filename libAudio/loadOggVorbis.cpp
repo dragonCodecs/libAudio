@@ -135,7 +135,7 @@ long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBuffer
 
 int64_t oggVorbis_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	auto buffer = static_cast<char *>(bufferPtr);
+	const auto buffer = static_cast<char *>(bufferPtr);
 	uint32_t offset = 0;
 	const fileInfo_t &info = fileInfo();
 	auto &ctx = *decoderContext();
