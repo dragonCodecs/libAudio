@@ -124,14 +124,14 @@ namespace libAudio
 		* @param p_FLACFile Pointer to our internal context for the given FLAC file
 		* @return A constant status indicating that it's safe to continue reading the file
 		*/
-		FLAC__StreamDecoderWriteStatus data(const FLAC__StreamDecoder *, const FLAC__Frame *p_frame, const int * const buffers[], void *audioFile)
+		FLAC__StreamDecoderWriteStatus data(const FLAC__StreamDecoder *, const FLAC__Frame *frame, const int * const buffers[], void *audioFile)
 		{
 			const flac_t &file = *static_cast<flac_t *>(audioFile);
 			auto &ctx = *file.decoderContext();
 			int16_t *PCM = reinterpret_cast<int16_t *>(ctx.buffer.get());
 			const uint8_t channels = file.fileInfo().channels;
 			const uint8_t sampleShift = ctx.sampleShift;
-			uint32_t len = p_frame->header.blocksize;
+			uint32_t len = frame->header.blocksize;
 			if (len > (ctx.bufferLen / channels))
 				len = ctx.bufferLen / channels;
 
@@ -149,24 +149,23 @@ namespace libAudio
 		/*!
 		* @internal
 		* \c metadata() is the internal metadata callback for FLAC file decoding.
-		* @param p_dec The decoder context to process metadata for, which must not become modified
-		* @param p_metadata The item of metadata to process
-		* @param p_FLACFile Pointer to our internal context for the given FLAC file
+		* @param metadata The item of metadata to process
+		* @param audioFile Pointer to our internal context for the given FLAC file
 		*/
-		void metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *p_metadata, void *audioFile)
+		void metadata(const FLAC__StreamDecoder *, const FLAC__StreamMetadata *metadata, void *audioFile)
 		{
 			flac_t &file = *static_cast<flac_t *>(audioFile);
 			auto &ctx = *file.decoderContext();
 			fileInfo_t &info = file.fileInfo();
 
-			if (p_metadata->type >= FLAC__METADATA_TYPE_UNDEFINED)
+			if (metadata->type >= FLAC__METADATA_TYPE_UNDEFINED)
 				return;
 
-			switch (p_metadata->type)
+			switch (metadata->type)
 			{
 				case FLAC__METADATA_TYPE_STREAMINFO:
 				{
-					const FLAC__StreamMetadata_StreamInfo &streamInfo = p_metadata->data.stream_info;
+					const FLAC__StreamMetadata_StreamInfo &streamInfo = metadata->data.stream_info;
 					info.channels = streamInfo.channels;
 					info.bitRate = streamInfo.sample_rate;
 					info.bitsPerSample = streamInfo.bits_per_sample;
@@ -186,7 +185,7 @@ namespace libAudio
 				}
 				case FLAC__METADATA_TYPE_VORBIS_COMMENT:
 				{
-					const FLAC__StreamMetadata_VorbisComment &comments = p_metadata->data.vorbis_comment;
+					const FLAC__StreamMetadata_VorbisComment &comments = metadata->data.vorbis_comment;
 					for (uint32_t i = 0; i < comments.num_comments; ++i)
 					{
 						const auto comment = reinterpret_cast<const char *>(comments.comments[i].entry);
