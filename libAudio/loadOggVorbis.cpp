@@ -95,6 +95,8 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 		info.totalTime = ov_time_total(&ctx.decoder, -1);
 	copyComments(info, *ov_comment(&ctx.decoder, -1));
 
+	if (!ExternalPlayback)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 
@@ -109,12 +111,6 @@ void *OggVorbis_OpenR(const char *FileName)
 	std::unique_ptr<oggVorbis_t> file(oggVorbis_t::openR(FileName));
 	if (!file)
 		return nullptr;
-	auto &ctx = *file->decoderContext();
-	const fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
 	return file.release();
 }
 
