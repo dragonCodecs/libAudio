@@ -1,4 +1,4 @@
-#include <opus/opus.h>
+#include <opusfile.h>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
@@ -23,7 +23,7 @@ struct oggOpus_t::decoderContext_t final
 	 * The decoder context handle and handle to the Ogg|Opus
 	 * file being decoded
 	 */
-	OpusDecoder *decoder;
+	OggOpusFile *decoder;
 	/*!
 	 * @internal
 	 * The internal decoded data buffer
@@ -35,6 +35,43 @@ struct oggOpus_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
+namespace libAudio
+{
+	namespace oggOpus
+	{
+		int read(void *filePtr, unsigned char *buffer, int bufferLen)
+		{
+			const auto file = static_cast<const oggOpus_t *>(filePtr);
+			size_t bytes = 0;
+			if (file->fd().read(buffer, bufferLen, bytes))
+				return bytes;
+			return -1;
+		}
+
+		int seek(void *filePtr, int64_t offset, int whence)
+		{
+			const auto file = static_cast<const oggOpus_t *>(filePtr);
+			return file->fd().seek(offset, whence) >= 0 ? 0 : -1;
+		}
+
+		int64_t tell(void *filePtr)
+		{
+			const auto file = static_cast<const oggOpus_t *>(filePtr);
+			return file->fd().tell();
+		}
+
+		constexpr static OpusFileCallbacks callbacks
+		{
+			read,
+			seek,
+			tell,
+			nullptr // We intentionally don't allow opusfile to close the file on us.
+		};
+	}
+}
+
+using namespace libAudio;
+
 oggOpus_t::oggOpus_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggOpus, std::move(fd)),
 	decoderCtx{makeUnique<decoderContext_t>()} { }
 oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
@@ -44,6 +81,13 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 	auto file = makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
 	if (!file || !file->valid() || !isOggOpus(file->_fd))
 		return nullptr;
+	auto &ctx = *file->decoderContext();
+	fileInfo_t &info = file->fileInfo();
+
+	ctx.decoder = op_open_callbacks(file.get(), &oggOpus::callbacks, nullptr, 0, nullptr);
+	if (!ctx.decoder)
+		return nullptr;
+
 	return nullptr;
 }
 
