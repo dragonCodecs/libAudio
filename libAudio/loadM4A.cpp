@@ -76,8 +76,8 @@ namespace libAudio
 		/*!
 		* @internal
 		* Internal function used to open the MP4 file for reading
-		* @param FileName The name of the file to open
-		* @param Mode The \c MP4FileMode in which to open the file. We ensure this has
+		* @param fileName The name of the file to open
+		* @param mode The \c MP4FileMode in which to open the file. We ensure this has
 		*    to be FILEMODE_CREATE for our purposes
 		*/
 		void *open(const char *fileName, MP4FileMode mode)
@@ -90,7 +90,7 @@ namespace libAudio
 		/*!
 		* @internal
 		* Internal function used to seek in the MP4 file
-		* @param MP4File \c FILE handle for the MP4 file as a void pointer
+		* @param file \c FILE handle for the MP4 file as a void pointer
 		* @param pos Possition into the file to which to seek to
 		*/
 		int seek(void *file, int64_t pos)
@@ -107,10 +107,10 @@ namespace libAudio
 		/*!
 		* @internal
 		* Internal function used to read from the MP4 file
-		* @param MP4File \c FILE handle for the MP4 file as a void pointer
-		* @param DataOut A typeless buffer to which the read data should be written
-		* @param DataOutLen A 64-bit integer giving how much data should be read from the file
-		* @param Read A 64-bit integer count returning how much data was actually read
+		* @param file \c FILE handle for the MP4 file as a void pointer
+		* @param buffer A typeless buffer to which the read data should be written
+		* @param bufferLen A 64-bit integer giving how much data should be read from the file
+		* @param read A 64-bit integer count returning how much data was actually read
 		*/
 		int read(void *file, void *buffer, int64_t bufferLen, int64_t *read, int64_t)
 		{
@@ -124,10 +124,10 @@ namespace libAudio
 		/*!
 		* @internal
 		* Internal function used to write data to the MP4 file
-		* @param MP4File \c FILE handle for the MP4 file as a void pointer
-		* @param DataIn A typeless buffer holding the data to be written, which must also not become modified
-		* @param DataInLen A 64-bit integer giving how much data is to be written to the file
-		* @param Written A 64-bit integer count returning how much data was actually written
+		* @param file \c FILE handle for the MP4 file as a void pointer
+		* @param buffer A typeless buffer holding the data to be written, which must also not become modified
+		* @param bufferLen A 64-bit integer giving how much data is to be written to the file
+		* @param written A 64-bit integer count returning how much data was actually written
 		*/
 		int write(void *file, const void *buffer, int64_t bufferLen, int64_t *written, int64_t)
 		{
@@ -140,7 +140,7 @@ namespace libAudio
 		/*!
 		* @internal
 		* Internal function used to close the MP4 file after I/O is complete
-		* @param MP4File \c FILE handle for the MP4 file as a void pointer
+		* @param file \c FILE handle for the MP4 file as a void pointer
 		*/
 		int close(void *file) { return fclose((FILE *)file) != 0; }
 
@@ -150,7 +150,7 @@ namespace libAudio
 		* Used in the initialising of the MP4v2 file reader as a set of callbacks so
 		* as to prevent run-time issues on Windows.
 		*/
-		MP4FileProvider ioFunctions =
+		constexpr static MP4FileProvider ioFunctions =
 		{
 			open,
 			seek,
@@ -266,7 +266,6 @@ void *M4A_OpenR(const char *FileName)
  * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c M4A_Play() or \c M4A_FillBuffer()
- * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 const fileInfo_t *M4A_GetFileInfo(void *p_M4AFile)
 	{ return audioFileInfo(p_M4AFile); }
@@ -288,7 +287,6 @@ m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  * @warning Do not use the pointer given by \p p_M4AFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
- * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 int M4A_CloseFileR(void *p_M4AFile) { return audioCloseFile(p_M4AFile); }
 
@@ -301,7 +299,6 @@ int M4A_CloseFileR(void *p_M4AFile) { return audioCloseFile(p_M4AFile); }
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_M4AFile, OutBuffer, nOutBufferLen); }
@@ -359,10 +356,6 @@ int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  * @warning If \c ExternalPlayback was a non-zero value for
  *   the call to \c M4A_OpenR() used to open the file at \p p_M4AFile,
  *   this function will do nothing.
- * @bug \p p_M4AFile must not be nullptr as no checking on the parameter is done. FIXME!
- *
- * @bug Futher to the \p p_M4AFile check bug on this function, if this function is
- *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
 void M4A_Play(void *p_M4AFile) { audioPlay(p_M4AFile); }
 void M4A_Pause(void *p_M4AFile) { audioPause(p_M4AFile); }
