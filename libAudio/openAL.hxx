@@ -1,7 +1,7 @@
 #ifndef OPEN_AL__HXX
 #define OPEN_AL__HXX
 
-#include <stdint.h>
+#include <cstdint>
 #ifdef _WINDOWS
 #include <al.h>
 #include <alc.h>
@@ -37,8 +37,9 @@ private:
 
 public:
 	alSource_t() noexcept;
-	alSource_t(alSource_t &&_source) noexcept;
+	alSource_t(alSource_t &&_source) noexcept = default;
 	~alSource_t() noexcept;
+	alSource_t &operator =(alSource_t &&_source) noexcept = default;
 	void queue(alBuffer_t &buffer) const noexcept;
 	ALuint dequeueOne() const noexcept;
 	void play() const noexcept;

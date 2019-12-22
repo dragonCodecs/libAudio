@@ -2,7 +2,7 @@
 #define UNIQUE_PTR__HXX
 
 #include <memory>
-#include <string.h>
+#include <cstring>
 
 template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>; };
 template<typename T> struct makeUnique_<T []> { using arrayType = std::unique_ptr<T []>; };

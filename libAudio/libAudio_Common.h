@@ -1,8 +1,8 @@
 #ifndef __libAudio_Common_H__
 #define __libAudio_Common_H__
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

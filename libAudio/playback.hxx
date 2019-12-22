@@ -1,7 +1,7 @@
 #ifndef PLAYBACK__HXX
 #define PLAYBACK__HXX
 
-#include <stdint.h>
+#include <cstdint>
 #include <mutex>
 #include <chrono>
 #include "libAudio.h"
