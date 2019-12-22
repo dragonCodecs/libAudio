@@ -130,9 +130,26 @@ const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p
 long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_OpusFile, OutBuffer, nOutBufferLen); }
 
-int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 {
-	return -2;
+	const auto buffer = static_cast<int16_t *>(bufferPtr);
+	const uint32_t length = bufferLen >> 1;
+	uint32_t offset = 0;
+	auto &ctx = *decoderContext();
+
+	if (ctx.eof)
+		return -2;
+	while (offset < length && !ctx.eof)
+	{
+		const int result = op_read_stereo(ctx.decoder, buffer + offset, length - offset);
+		if (result > 0)
+			offset += uint32_t(result) << 1;
+		else if (result == OP_HOLE || result == OP_EBADLINK)
+			return -1;
+		else if (result == 0)
+			ctx.eof = true;
+	}
+	return offset << 1;
 }
 
 oggOpus_t::decoderContext_t::~decoderContext_t() noexcept { op_free(decoder); }
