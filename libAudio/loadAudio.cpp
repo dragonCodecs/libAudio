@@ -168,45 +168,29 @@ void audioFile_t::stop()
  */
 bool Is_Audio(const char *FileName)
 {
-	if (Is_OggVorbis(FileName))
-		return true;
-	else if (Is_FLAC(FileName))
-		return true;
-	else if (Is_WAV(FileName))
-		return true;
-	else if (Is_M4A(FileName))
-		return true;
-	else if (Is_AAC(FileName))
-		return true;
-	else if (Is_MP3(FileName))
-		return true;
-	else if (Is_IT(FileName))
-		return true;
-	else if (Is_MOD(FileName))
-		return true;
-	else if (Is_S3M(FileName))
-		return true;
-	else if (Is_STM(FileName))
-		return true;
-	else if (Is_AON(FileName))
-		return true;
+	return
+		Is_OggVorbis(FileName) ||
+		Is_FLAC(FileName) ||
+		Is_WAV(FileName) ||
+		Is_M4A(FileName) ||
+		Is_AAC(FileName) ||
+		Is_MP3(FileName) ||
+		Is_IT(FileName) ||
+		Is_MOD(FileName) ||
+		Is_S3M(FileName) ||
+		Is_STM(FileName) ||
+		Is_AON(FileName) ||
 #ifdef ENABLE_FC1x
-	else if (Is_FC1x(FileName))
-		return true;
+	Is_FC1x(FileName) ||
 #endif
-	else if (Is_MPC(FileName))
-		return true;
-	else if (Is_WavPack(FileName))
-		return true;
+		Is_MPC(FileName) ||
+		Is_WavPack(FileName) ||
 #ifdef ENABLE_OptimFROG
-	else if (Is_OptimFROG(FileName))
-		return true;
+		Is_OptimFROG(FileName) ||
 #endif
-#ifdef __WMA__
 	// Add RealAudio call here when decoder is complete
-	else if (Is_WMA(FileName))
-		return true;
+#ifdef __WMA__
+		Is_WMA(FileName) ||
 #endif
-
-	return false;
+		false;
 }
