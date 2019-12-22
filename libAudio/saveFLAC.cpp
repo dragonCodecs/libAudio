@@ -16,14 +16,9 @@ namespace libAudio
 		* @internal
 		* \c write() is the internal write callback for FLAC file creation. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_enc The encoding context which must not be modified by the function
 		* @param buffer The buffer to write which also must not become modified
-		* @param nBytes A count holding the number of bytes in \p buffer to write
-		* @param nSamp A count holding the number of samples encoded in buffer,
-		*   or 0 to indicate metadata is being written
-		* @param nCurrFrame If \p nSamp is non-zero, this olds the number of the current
-		*   frame being encoded
-		* @param p_FLACFile Our own internal context pointer which holds the file to write to
+		* @param bytes A count holding the number of bytes in \p buffer to write
+		* @param ctx Our own internal context pointer which holds the file to write to
 		*/
 		FLAC__StreamEncoderWriteStatus write(const FLAC__StreamEncoder *, const uint8_t *buffer, size_t bytes, uint32_t, uint32_t, void *ctx)
 		{
@@ -43,9 +38,8 @@ namespace libAudio
 		* @internal
 		* \c seek() is the internal seek callback for FLAC file creation. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_enc The encoding context which must not be modified by the function
 		* @param offset The offset through the file to which to seek to
-		* @param p_FLACFile Our own internal context pointer which holds the file to seek through
+		* @param ctx Our own internal context pointer which holds the file to seek through
 		*/
 		FLAC__StreamEncoderSeekStatus seek(const FLAC__StreamEncoder *, uint64_t offset, void *ctx)
 		{
@@ -60,9 +54,8 @@ namespace libAudio
 		* @internal
 		* \c tell() is the internal seek callback for FLAC file creation. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_enc The encoding context which must not be modified by the function
 		* @param offset The returned offset location into the file
-		* @param p_FLACFile Our own internal context pointer which holds the file to get
+		* @param ctx Our own internal context pointer which holds the file to get
 		*   the write pointer position of
 		*/
 		FLAC__StreamEncoderTellStatus tell(const FLAC__StreamEncoder *, uint64_t *offset, void *ctx)
@@ -101,7 +94,7 @@ flac_t *flac_t::openW(const char *const fileName) noexcept
  * This function opens the file given by \c FileName for writing and returns a pointer
  * to the context of the opened file which must be used only by FLAC_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *FLAC_OpenW(const char *FileName) { return flac_t::openW(FileName); }
 
@@ -110,9 +103,6 @@ void *FLAC_OpenW(const char *FileName) { return flac_t::openW(FileName); }
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenW()
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c FLAC_WriteBuffer()
- * @bug p_FI must not be NULL as no checking on the parameter is done. FIXME!
- *
- * @bug \p p_FLACFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
 bool FLAC_SetFileInfo(void *p_FLACFile, const fileInfo_t *const p_FI) { return audioFileInfo(p_FLACFile, p_FI); }
 
@@ -229,7 +219,7 @@ flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
  * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_FLACFile after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
 int FLAC_CloseFileW(void *p_FLACFile) { return audioCloseFile(p_FLACFile); }
