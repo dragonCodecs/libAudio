@@ -54,7 +54,6 @@ using fileFillBuffer_t = int64_t (*)(void *audioFile, void *const buffer, const 
 const fileInfo_t *audioFileInfo(void *audioFile);
 bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
 long audioWriteBuffer(void *audioFile, uint8_t *buffer, int length);
-int audioCloseFile(void *audioFile);
 
 /*!
  * @internal

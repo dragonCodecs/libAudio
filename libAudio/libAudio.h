@@ -246,7 +246,7 @@ libAUDIO_API bool Is_WMA(const char *FileName);
 // Master Audio API
 
 // General
-libAUDIO_API int audioCloseFile(void *p_AudioPtr);
+libAUDIO_API int audioCloseFile(void *audioFile);
 
 // Read (Decode)
 libAUDIO_API void *audioOpenR(const char *const fileName);
