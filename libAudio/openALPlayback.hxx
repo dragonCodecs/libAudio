@@ -26,15 +26,15 @@ private:
 
 public:
 	openALPlayback_t(playback_t &_player);
-	openALPlayback_t(openALPlayback_t &&) noexcept = default;
-	openALPlayback_t &operator =(openALPlayback_t &&) noexcept = default;
 	~openALPlayback_t() final override { stop(); }
 	void play() final override;
 	void pause() final override;
 	void stop() final override;
 
 	openALPlayback_t(const openALPlayback_t &) noexcept = delete;
+	openALPlayback_t(openALPlayback_t &&) noexcept = delete;
 	openALPlayback_t &operator =(const openALPlayback_t &) noexcept = delete;
+	openALPlayback_t &operator =(openALPlayback_t &&) noexcept = delete;
 };
 
 #endif /*OPEN_AL_PLAYBACK__HXX*/
