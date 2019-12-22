@@ -236,7 +236,7 @@ flac_t::decoderContext_t::decoderContext_t() noexcept : streamDecoder{FLAC__stre
 
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), audioModeRead_t{}));
+	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{}));
 	if (!flacFile || !flacFile->valid() || !isFLAC(flacFile->_fd))
 		return nullptr;
 	const fd_t &fd = flacFile->fd();
@@ -268,11 +268,7 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *FLAC_OpenR(const char *FileName)
-{
-	std::unique_ptr<flac_t> file(flac_t::openR(FileName));
-	return file.release();
-}
+void *FLAC_OpenR(const char *FileName) { return flac_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
@@ -319,7 +315,6 @@ FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_FLACFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_FLACFile, OutBuffer, nOutBufferLen); }

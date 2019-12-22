@@ -74,7 +74,7 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
 
 oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<oggVorbis_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), audioModeRead_t{});
+	auto file = makeUnique<oggVorbis_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{});
 	if (!file || !file->valid() || !isOggVorbis(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();
@@ -106,13 +106,7 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggVorbis_OpenR(const char *FileName)
-{
-	std::unique_ptr<oggVorbis_t> file(oggVorbis_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	return file.release();
-}
+void *OggVorbis_OpenR(const char *FileName) { return oggVorbis_t::openR(FileName); }
 
 /*!
  * This function gets the \c fileInfo_t structure for an opened file
