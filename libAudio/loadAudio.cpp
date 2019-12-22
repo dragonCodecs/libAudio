@@ -191,31 +191,12 @@ void audioFile_t::stop()
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is audio or not
  */
-bool Is_Audio(const char *FileName)
+bool Is_Audio(const char *fileName)
 {
-	return
-		Is_OggVorbis(FileName) ||
-		Is_FLAC(FileName) ||
-		Is_WAV(FileName) ||
-		Is_M4A(FileName) ||
-		Is_AAC(FileName) ||
-		Is_MP3(FileName) ||
-		Is_IT(FileName) ||
-		Is_MOD(FileName) ||
-		Is_S3M(FileName) ||
-		Is_STM(FileName) ||
-		Is_AON(FileName) ||
-#ifdef ENABLE_FC1x
-	Is_FC1x(FileName) ||
-#endif
-		Is_MPC(FileName) ||
-		Is_WavPack(FileName) ||
-#ifdef ENABLE_OptimFROG
-		Is_OptimFROG(FileName) ||
-#endif
-	// Add RealAudio call here when decoder is complete
-#ifdef __WMA__
-		Is_WMA(FileName) ||
-#endif
-		Is_OggOpus(FileName);
+	for (const auto &loader : loaders)
+	{
+		if (loader.first(fileName))
+			return true;
+	}
+	return false;
 }
