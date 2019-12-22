@@ -210,7 +210,7 @@ namespace libAudio
 
 		/*!
 		* @internal
-		* \c metadata() is the internal error callback for FLAC file decoding.
+		* \c error() is the internal error callback for FLAC file decoding.
 		* @note Implemented as a no-operation due to how the rest of the decoder is structured
 		*/
 		void error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *) noexcept { }
