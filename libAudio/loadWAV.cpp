@@ -168,7 +168,6 @@ void *WAV_OpenR(const char *FileName) { return wav_t::openR(FileName); }
  * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c WAV_Play() or \c WAV_FillBuffer()
- * @bug \p p_WAVFile must not be nullptr as no checking on the parameter is done. FIXME!
  */
 const fileInfo_t *WAV_GetFileInfo(void *p_WAVFile) { return audioFileInfo(p_WAVFile); }
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
