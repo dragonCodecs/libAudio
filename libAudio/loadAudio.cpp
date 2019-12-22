@@ -48,10 +48,10 @@ uint8_t ExternalPlayback = 0;
 uint8_t ToPlayback = 1;
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by Audio_* functions
- * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *audioOpenR(const char *const fileName)
 {
@@ -64,10 +64,9 @@ void *audioOpenR(const char *const fileName)
 }
 
 /*!
- * This function gets the \c FileInfo structure for an opened file
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenR(), or \c NULL for a no-operation
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
- * @warning This function must be called before using \c Audio_Play() or \c Audio_FillBuffer()
+ * This function gets the \c fileInfo_t structure for an opened file
+ * @param audioFile A pointer to a file opened with \c audioOpenR(), or \c nullptr for a no-operation
+ * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
  */
 const fileInfo_t *audioFileInfo(void *audioFile)
 {
@@ -83,9 +82,9 @@ const fileInfo_t *audioGetFileInfo(void *audioFile) { return audioFileInfo(audio
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenR(), or \c NULL for a no-operation
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param audioFile A pointer to a file opened with \c audioOpenR(), or \c nullptr for a no-operation
+ * @param buffer A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
@@ -99,10 +98,10 @@ int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t leng
 
 /*!
  * Closes an opened audio file
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenR(), or \c NULL for a no-operation
+ * @param audioFile A pointer to a file opened with \c audioOpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_AudioPtr after using
- * this function - please either set it to \c NULL or be extra carefull
+ * @warning Do not use the pointer given by \p audioFile after using
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
 int audioCloseFile(void *audioFile)
@@ -114,9 +113,9 @@ int audioCloseFile(void *audioFile)
 
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenR()
+ * @param audioFile A pointer to a file opened with \c audioOpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c Audio_OpenR() used to open the file at \p p_AudioPtr,
+ * the call to \c audioOpenR() used to open the file at \p audioFile,
  * this function will do nothing.
  */
 void audioPlay(void *audioFile)
