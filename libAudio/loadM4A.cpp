@@ -229,10 +229,21 @@ void m4a_t::fetchTags() noexcept
 
 m4a_t *m4a_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<m4a_t> m4aFile(makeUnique<m4a_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!m4aFile || !m4aFile->valid() || !isM4A(m4aFile->_fd))
+	std::unique_ptr<m4a_t> file(makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}));
+	if (!file || !file->valid() || !isM4A(file->_fd))
 		return nullptr;
-	return m4aFile.release();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
+
+	ctx.mp4Stream = MP4ReadProvider(fileName, 0, &m4a::ioFunctions);
+	ctx.aacTrack(info);
+	if (!ctx.decoder)
+		return nullptr;
+	file->fetchTags();
+
+	if (!ExternalPlayback)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return file.release();
 }
 
 /*!
@@ -241,25 +252,7 @@ m4a_t *m4a_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *M4A_OpenR(const char *FileName)
-{
-	std::unique_ptr<m4a_t> file(m4a_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->context();
-	fileInfo_t &info = file->fileInfo();
-
-	ctx.mp4Stream = MP4ReadProvider(FileName, 0, &m4a::ioFunctions);
-	ctx.aacTrack(info);
-	if (!ctx.decoder)
-		return nullptr;
-	file->fetchTags();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *M4A_OpenR(const char *FileName) { return m4a_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
