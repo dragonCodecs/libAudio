@@ -49,8 +49,8 @@ bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 	if (fd == -1 ||
 		read(fd, fc1xMagic, 4) != 4 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		(strncmp(fc1xMagic, "SMOD", 4) != 0 &&
-		strncmp(fc1xMagic, "FC14", 4) != 0))
+		(memcmp(fc1xMagic, "SMOD", 4) != 0 &&
+		memcmp(fc1xMagic, "FC14", 4) != 0))
 		return false;
 	return true;
 }

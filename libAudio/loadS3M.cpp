@@ -56,7 +56,7 @@ bool modS3M_t::isS3M(const int32_t fd) noexcept
 		read(fd, S3MMagic2, 4) != 4 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		S3MMagic1 != 0x1A ||
-		strncmp(S3MMagic2, "SCRM", 4) != 0)
+		memcmp(S3MMagic2, "SCRM", 4) != 0)
 		return false;
 	else
 		return true;

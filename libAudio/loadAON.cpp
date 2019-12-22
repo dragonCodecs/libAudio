@@ -56,8 +56,8 @@ bool modAON_t::isAON(const int32_t fd) noexcept
 		read(fd, aonMagic1, 4) != 4 ||
 		read(fd, aonMagic2, 42) != 42 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		strncmp(aonMagic1, "AON", 3) != 0 ||
-		strncmp(aonMagic2, "artofnoise by bastian spiegel (twice/lego)", 42) != 0 ||
+		memcmp(aonMagic1, "AON", 3) != 0 ||
+		memcmp(aonMagic2, "artofnoise by bastian spiegel (twice/lego)", 42) != 0 ||
 		(aonMagic1[3] != '4' && aonMagic1[3] != '8'))
 		return false;
 	return true;
