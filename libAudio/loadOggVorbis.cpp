@@ -122,8 +122,6 @@ void *OggVorbis_OpenR(const char *FileName)
  * This function gets the \c FileInfo structure for an opened file
  * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
- * @warning This function must be called before using \c OggVorbis_Play() or \c OggVorbis_FillBuffer()
- * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 const fileInfo_t *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileInfo(p_VorbisFile); }
 

@@ -39,7 +39,7 @@ struct oggOpus_t::decoderContext_t final
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggOpus_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *OggOpus_OpenR(const char *FileName)
 {
@@ -47,11 +47,9 @@ void *OggOpus_OpenR(const char *FileName)
 }
 
 /*!
- * This function gets the \c FileInfo structure for an opened file
+ * This function gets the \c fileInfo_t structure for an opened file
  * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
- * @warning This function must be called before using \c OggOpus_Play() or \c OggOpus_FillBuffer()
- * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  */
 const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p_OpusFile); }
 
@@ -69,14 +67,18 @@ const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p
 long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_OpusFile, OutBuffer, nOutBufferLen); }
 
+int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+{
+	return -2;
+}
+
 /*!
  * Closes an opened audio file
- * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR(), or \c NULL for a no-operation
+ * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_OpusFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
- * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 int OggOpus_CloseFileR(void *p_OpusFile) { return audioCloseFile(p_OpusFile); }
 
@@ -86,10 +88,6 @@ int OggOpus_CloseFileR(void *p_OpusFile) { return audioCloseFile(p_OpusFile); }
  * @warning If \c ExternalPlayback was a non-zero value for
  * the call to \c OggOpus_OpenR() used to open the file at \p p_OpusFile,
  * this function will do nothing.
- * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
- *
- * @bug Futher to the \p p_OpusFile check bug on this function, if this function is
- *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
 void OggOpus_Play(void *p_OpusFile) { return audioPlay(p_OpusFile); }
 void OggOpus_Pause(void *p_OpusFile) { return audioPause(p_OpusFile); }
