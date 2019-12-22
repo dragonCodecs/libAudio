@@ -74,18 +74,18 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
 
 oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 {
-	auto ovFile = makeUnique<oggVorbis_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), audioModeRead_t{});
-	if (!ovFile || !ovFile->valid() || !isOggVorbis(ovFile->_fd))
+	auto file = makeUnique<oggVorbis_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), audioModeRead_t{});
+	if (!file || !file->valid() || !isOggVorbis(file->_fd))
 		return nullptr;
-	auto &ctx = *ovFile->decoderContext();
-	fileInfo_t &info = ovFile->fileInfo();
+	auto &ctx = *file->decoderContext();
+	fileInfo_t &info = file->fileInfo();
 
 	ov_callbacks callbacks;
 	callbacks.close_func = nullptr;
 	callbacks.read_func = oggVorbis::read;
 	callbacks.seek_func = oggVorbis::seek;
 	callbacks.tell_func = oggVorbis::tell;
-	ov_open_callbacks(ovFile.get(), &ctx.decoder, NULL, 0, callbacks);
+	ov_open_callbacks(file.get(), &ctx.decoder, NULL, 0, callbacks);
 
 	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
 	info.bitRate = vorbisInfo.rate;
@@ -95,7 +95,7 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 		info.totalTime = ov_time_total(&ctx.decoder, -1);
 	copyComments(info, *ov_comment(&ctx.decoder, -1));
 
-	return ovFile.release();
+	return file.release();
 }
 
 /*!
