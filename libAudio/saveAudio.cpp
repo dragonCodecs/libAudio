@@ -57,7 +57,7 @@ libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, const fileInfo_t *const p_
 bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
-	if (file)
+	if (file && fileInfo)
 		return file->fileInfo(*fileInfo);
 	return false;
 }
