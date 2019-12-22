@@ -80,7 +80,7 @@ namespace libAudio
 		* @param mode The \c MP4FileMode in which to open the file. We ensure this has
 		*    to be FILEMODE_CREATE for our purposes
 		*/
-		void *open(const char *fileName, MP4FileMode mode)
+		void *openR(const char *fileName, MP4FileMode mode)
 		{
 			if (mode != FILEMODE_READ)
 				return nullptr;
@@ -152,7 +152,7 @@ namespace libAudio
 		*/
 		constexpr static MP4FileProvider ioFunctions =
 		{
-			open,
+			openR,
 			seek,
 			read,
 			write,
