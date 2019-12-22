@@ -76,6 +76,11 @@ const fileInfo_t *audioFileInfo(void *audioFile)
 	return &file->fileInfo();
 }
 
+/*!
+ * This function is a synonym for \c audioFileInfo()
+ * @param audioFile A pointer to a file opened with \c audioOpenR(), or \c nullptr for a no-operation
+ * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
+ */
 const fileInfo_t *audioGetFileInfo(void *audioFile) { return audioFileInfo(audioFile); }
 
 /*!
@@ -131,6 +136,16 @@ void audioFile_t::play()
 		_player->play();
 }
 
+/*!
+ * Pauses playback on an audio file
+ * @param audioFile A pointer to a file opened with \c audioOpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c audioOpenR() used to open the file at \p audioFile,
+ * this function will do nothing.
+ * @warning If \c audioPlay() has not been called, or either of
+ * \c audioPause() and \c audioStop() have previously been called
+ * with no interviening \c audioPlay() call, this function will do nothing.
+ */
 void audioPause(void *audioFile)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
@@ -144,6 +159,16 @@ void audioFile_t::pause()
 		_player->pause();
 }
 
+/*!
+ * Stops playback on an audio file
+ * @param audioFile A pointer to a file opened with \c audioOpenR()
+ * @warning If \c ExternalPlayback was a non-zero value for
+ * the call to \c audioOpenR() used to open the file at \p audioFile,
+ * this function will do nothing.
+ * @warning If \c audioPlay() has not been called, or either of
+ * \c audioPause() and \c audioStop() have previously been called
+ * with no interviening \c audioPlay() call, this function will do nothing.
+ */
 void audioStop(void *audioFile)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
