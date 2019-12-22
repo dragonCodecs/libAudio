@@ -125,7 +125,6 @@ const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_OpusFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_OpusFile, OutBuffer, nOutBufferLen); }
