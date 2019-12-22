@@ -98,6 +98,8 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 	info.channels = channels;
 	info.bitsPerSample = 16;
 
+	if (!ExternalPlayback)
+		aacFile->player(makeUnique<playback_t>(aacFile.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return aacFile.release();
 }
 
@@ -107,19 +109,7 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *AAC_OpenR(const char *FileName)
-{
-	std::unique_ptr<aac_t> file(aac_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->context();
-	fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *AAC_OpenR(const char *FileName) { return aac_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file

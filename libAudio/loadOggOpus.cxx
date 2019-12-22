@@ -96,7 +96,7 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 		info.totalTime = op_pcm_total(ctx.decoder, -1) / 48000;
 	//OpusTags *tags = op_tags(ctx.decoder, -1);
 
-	if (ExternalPlayback == 0)
+	if (!ExternalPlayback)
 		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }

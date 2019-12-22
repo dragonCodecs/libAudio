@@ -245,10 +245,15 @@ bool mp3_t::readMetadata() noexcept
 
 mp3_t *mp3_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<mp3_t> mp3File(makeUnique<mp3_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!mp3File || !mp3File->valid() || !isMP3(mp3File->_fd) || !mp3File->readMetadata())
+	std::unique_ptr<mp3_t> file(makeUnique<mp3_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	if (!file || !file->valid() || !isMP3(file->_fd) || !file->readMetadata())
 		return nullptr;
-	return mp3File.release();
+	auto &ctx = *file->context();
+	const fileInfo_t &info = file->fileInfo();
+
+	if (!ExternalPlayback)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return file.release();
 }
 
 /*!
@@ -257,19 +262,7 @@ mp3_t *mp3_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *MP3_OpenR(const char *FileName)
-{
-	std::unique_ptr<mp3_t> file(mp3_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->context();
-	const fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *MP3_OpenR(const char *FileName) { return mp3_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file

@@ -149,6 +149,9 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 	info.totalTime /= ctx.bitsPerSample / 8;
 	info.totalTime /= info.bitRate;
 	ctx.offsetDataLength = chunkLength + file.tell();
+
+	if (!ExternalPlayback)
+		wavFile->player(makeUnique<playback_t>(wavFile.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return wavFile.release();
 }
 
@@ -158,19 +161,7 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *WAV_OpenR(const char *FileName)
-{
-	std::unique_ptr<wav_t> file(wav_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->context();
-	const fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *WAV_OpenR(const char *FileName) { return wav_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
