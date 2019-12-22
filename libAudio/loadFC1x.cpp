@@ -76,13 +76,13 @@ API_Functions FC1xDecoder =
 {
 	FC1x_OpenR,
 	nullptr,
-	FC1x_GetFileInfo,
+	audioFileInfo,
 	nullptr,
-	FC1x_FillBuffer,
+	audioFillBuffer,
 	nullptr,
-	FC1x_CloseFileR,
+	audioCloseFile,
 	nullptr,
-	FC1x_Play,
-	FC1x_Pause,
-	FC1x_Stop
+	audioPlay,
+	audioPause,
+	audioStop
 };
