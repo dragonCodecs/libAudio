@@ -33,7 +33,7 @@ oggVorbis_t *oggVorbis_t::openW(const char *const fileName) noexcept
  * This function opens the file given by \c FileName for writing and returns a pointer
  * to the context of the opened file which must be used only by OggVorbis_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *OggVorbis_OpenW(const char *FileName) { return oggVorbis_t::openW(FileName); }
 
@@ -75,9 +75,6 @@ vorbis_comment copyComments(const fileInfo_t &info) noexcept
  * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenW()
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c OggVorbis_WriteBuffer()
- * @bug p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
- *
- * @bug \p p_VorbisFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
 bool OggVorbis_SetFileInfo(void *p_VorbisFile, const fileInfo_t *const p_FI)
 	{ return audioFileInfo(p_VorbisFile, p_FI); }
@@ -180,7 +177,7 @@ oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept
  * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_VorbisFile after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
 int OggVorbis_CloseFileW(void *p_VorbisFile) { return audioCloseFile(p_VorbisFile); }
