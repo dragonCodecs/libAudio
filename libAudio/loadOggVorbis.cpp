@@ -102,7 +102,7 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
  * This function opens the file given by \c FileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggVorbis_* functions
  * @param FileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
 void *OggVorbis_OpenR(const char *FileName)
 {
@@ -119,9 +119,9 @@ void *OggVorbis_OpenR(const char *FileName)
 }
 
 /*!
- * This function gets the \c FileInfo structure for an opened file
+ * This function gets the \c fileInfo_t structure for an opened file
  * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
+ * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
  */
 const fileInfo_t *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileInfo(p_VorbisFile); }
 
@@ -134,7 +134,6 @@ const fileInfo_t *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileIn
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_VorbisFile, OutBuffer, nOutBufferLen); }
@@ -167,12 +166,11 @@ oggVorbis_t::decoderContext_t::~decoderContext_t() noexcept
 
 /*!
  * Closes an opened audio file
- * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR(), or \c NULL for a no-operation
+ * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_VorbisFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
- * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
  */
 int OggVorbis_CloseFileR(void *p_VorbisFile) { return audioCloseFile(p_VorbisFile); }
 
@@ -182,10 +180,6 @@ int OggVorbis_CloseFileR(void *p_VorbisFile) { return audioCloseFile(p_VorbisFil
  * @warning If \c ExternalPlayback was a non-zero value for
  * the call to \c OggVorbis_OpenR() used to open the file at \p p_VorbisFile,
  * this function will do nothing.
- * @bug \p p_VorbisFile must not be NULL as no checking on the parameter is done. FIXME!
- *
- * @bug Futher to the \p p_VorbisFile check bug on this function, if this function is
- *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
 void OggVorbis_Play(void *p_VorbisFile) { return audioPlay(p_VorbisFile); }
 void OggVorbis_Pause(void *p_VorbisFile) { return audioPause(p_VorbisFile); }

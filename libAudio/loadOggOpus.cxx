@@ -49,7 +49,7 @@ void *OggOpus_OpenR(const char *FileName)
 /*!
  * This function gets the \c fileInfo_t structure for an opened file
  * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
+ * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
  */
 const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p_OpusFile); }
 
