@@ -1,7 +1,7 @@
 #ifndef FILE_INFO__HXX
 #define FILE_INFO__HXX
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -21,6 +21,7 @@ struct fileInfo_t final
 		channels{0}, title{}, artist{}, album{}, other{} { }
 	fileInfo_t(fileInfo_t &&) = default;
 	fileInfo_t &operator =(fileInfo_t &&) = default;
+	~fileInfo_t() noexcept = default;
 
 	void operator =(const fileInfo_t &info) noexcept
 	{
