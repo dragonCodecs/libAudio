@@ -18,6 +18,14 @@ catch (std::bad_alloc &)
 inline void freePacketData(ogg_packet &packet) noexcept
 	{ delete [] packet.packet; }
 
+inline bool oggCleanup(ogg_sync_state &syncState, ogg_stream_state &streamState) noexcept
+{
+	ogg_stream_clear(&streamState);
+	syncState.data = nullptr;
+	ogg_sync_clear(&syncState);
+	return false;
+}
+
 bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 {
 	std::array<unsigned char, 79> header{};
@@ -36,16 +44,16 @@ bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 	ogg_stream_init(&streamState, -1);
 	syncState.data = header.data();
 	syncState.storage = header.size();
-	ogg_sync_wrote(&syncState, header.size());
+	if (ogg_sync_wrote(&syncState, header.size()))
+		return oggCleanup(syncState, streamState);
 	ogg_page page{};
-	ogg_sync_pageout(&syncState, &page);
-	ogg_stream_reset_serialno(&streamState, ogg_page_serialno(&page));
-	ogg_stream_pagein(&streamState, &page);
-	ogg_stream_packetout(&streamState, &headerPacket);
+	if (ogg_sync_pageout(&syncState, &page) != 1 ||
+		ogg_stream_reset_serialno(&streamState, ogg_page_serialno(&page)) ||
+		ogg_stream_pagein(&streamState, &page) ||
+		ogg_stream_packetout(&streamState, &headerPacket) != 1)
+		return oggCleanup(syncState, streamState);
 	clonePacketData(headerPacket);
-	ogg_stream_clear(&streamState);
-	syncState.data = nullptr;
-	ogg_sync_clear(&syncState);
+	oggCleanup(syncState, streamState);
 	return true;
 }
 
