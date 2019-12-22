@@ -1,7 +1,7 @@
 /*!
  * @mainpage libAudio - a powerful, but simplistic, audio file manipulation library
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2013
+ * @date 2009-2019
  *
  * @section introduction Introduction
  *
@@ -21,11 +21,11 @@
  */
 
 /*!
- * @page low-levelAPI low-level API
+ * @page low-levelAPI Low-level API
  */
 
 /*!
- * @page high-levelAPI high-level API
+ * @page high-levelAPI High-level API
  *
  * @section loading Loading Audio
  * @sa loadAudio.cpp
