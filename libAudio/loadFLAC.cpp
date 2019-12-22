@@ -20,10 +20,9 @@ namespace libAudio
 		* @internal
 		* \c read() is the internal read callback for FLAC file decoding. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_dec The decoder context to read for, which must not become modified
-		* @param Buffer The buffer to read into
+		* @param buffer The buffer to read into
 		* @param bytes The number of bytes to read into the buffer, given as a pointer
-		* @param p_FF Pointer to our internal context for the given FLAC file
+		* @param ctx Pointer to our internal context for the given FLAC file
 		* @return A status indicating if we had success or not
 		*/
 		FLAC__StreamDecoderReadStatus read(const FLAC__StreamDecoder *, uint8_t *buffer, size_t *bytes, void *ctx)
@@ -47,10 +46,9 @@ namespace libAudio
 		* @internal
 		* \c seek() is the internal seek callback for FLAC file decoding. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_dec The decoder context to seek for, which must not become modified
 		* @param offset A 64-bit unsigned integer giving the number of bytes from the beginning
 		*   of the file to seek through
-		* @param p_FF Pointer to our internal context for the given FLAC file
+		* @param ctx Pointer to our internal context for the given FLAC file
 		* @return A status indicating if the seek worked or not
 		*/
 		FLAC__StreamDecoderSeekStatus seek(const FLAC__StreamDecoder *, uint64_t offset, void *ctx)
@@ -66,10 +64,9 @@ namespace libAudio
 		* @internal
 		* \c tell() is the internal read possition callback for FLAC file decoding. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_dec The decoder context to get the read position for, which must not become modified
 		* @param offset A 64-bit unsigned integer returning the number of bytes from the beginning
 		*   of the file at which the read possition is currently at
-		* @param p_FF Pointer to our internal context for the given FLAC file
+		* @param ctx Pointer to our internal context for the given FLAC file
 		* @return A status indicating if we were able to determine the position or not
 		*/
 		FLAC__StreamDecoderTellStatus tell(const FLAC__StreamDecoder *, uint64_t *offset, void *ctx)
@@ -86,9 +83,8 @@ namespace libAudio
 		* @internal
 		* \c length() is the internal file length callback for FLAC file decoding. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_dec The decoder context to get the file length for, which must not become modified
 		* @param len A 64-bit unsigned integer returning the length of the file in bytes
-		* @param p_FF Pointer to our internal context for the given FLAC file
+		* @param ctx Pointer to our internal context for the given FLAC file
 		* @return A status indicating if we were able to determine the length or not
 		*/
 		FLAC__StreamDecoderLengthStatus length(const FLAC__StreamDecoder *, uint64_t *len, void *ctx)
@@ -105,8 +101,7 @@ namespace libAudio
 		* @internal
 		* \c eof() is the internal end-of-file callback for FLAC file decoding. This prevents
 		* nasty things from happening on Windows thanks to the run-time mess there.
-		* @param p_dec The decoder context to get the EOF flag for, which must not become modified
-		* @param p_FF Pointer to our internal context for the given FLAC file
+		* @param ctx Pointer to our internal context for the given FLAC file
 		* @return A status indicating whether we have reached the end of the file or not
 		*/
 		int eof(const FLAC__StreamDecoder *, void *ctx)
@@ -118,10 +113,9 @@ namespace libAudio
 		/*!
 		* @internal
 		* \c data() is the internal data callback for FLAC file decoding.
-		* @param p_dec The decoder context to process data for, which must not become modified
-		* @param p_frame The headers for the current frame of decoded FLAC audio
-		* @param buffers The 32-bit audio buffers decoded for the current \p p_frame
-		* @param p_FLACFile Pointer to our internal context for the given FLAC file
+		* @param frame The headers for the current frame of decoded FLAC audio
+		* @param buffers The 32-bit audio buffers decoded for the current \p frame
+		* @param audioFile Pointer to our internal context for the given FLAC file
 		* @return A constant status indicating that it's safe to continue reading the file
 		*/
 		FLAC__StreamDecoderWriteStatus data(const FLAC__StreamDecoder *, const FLAC__Frame *frame, const int * const buffers[], void *audioFile)
@@ -217,9 +211,6 @@ namespace libAudio
 		/*!
 		* @internal
 		* \c metadata() is the internal error callback for FLAC file decoding.
-		* @param p_dec The decoder context to process an error for, which must not become modified
-		* @param errStat The error that has occured
-		* @param p_FLACFile Pointer to our internal context for the given FLAC file
 		* @note Implemented as a no-operation due to how the rest of the decoder is structured
 		*/
 		void error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *) noexcept { }
