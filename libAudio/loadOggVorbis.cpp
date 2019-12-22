@@ -39,6 +39,14 @@ namespace libAudio
 			const auto file = static_cast<const oggVorbis_t *>(filePtr);
 			return file->fd().tell();
 		}
+
+		constexpr static ov_callbacks callbacks
+		{
+			read,
+			seek,
+			nullptr, // We intentionally don't allow vorbisfile to close the file on us.
+			tell
+		};
 	}
 }
 
@@ -80,12 +88,9 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 	auto &ctx = *file->decoderContext();
 	fileInfo_t &info = file->fileInfo();
 
-	ov_callbacks callbacks;
-	callbacks.close_func = nullptr;
-	callbacks.read_func = oggVorbis::read;
-	callbacks.seek_func = oggVorbis::seek;
-	callbacks.tell_func = oggVorbis::tell;
-	ov_open_callbacks(file.get(), &ctx.decoder, NULL, 0, callbacks);
+	// If this fails, then vorbisfile figured out this is not really an Ogg|Vorbis file.
+	if (ov_open_callbacks(file.get(), &ctx.decoder, NULL, 0, oggVorbis::callbacks))
+		return nullptr;
 
 	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
 	info.bitRate = vorbisInfo.rate;
