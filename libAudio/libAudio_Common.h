@@ -32,7 +32,7 @@
  * by removing the need to if-check what format we're using
  * on each call - the pointers in this structure say it all
  */
-typedef struct _API_Functions
+struct API_Functions
 {
 	void *(__CDECL__ *OpenR)(const char *FileName);
 	void *(__CDECL__ *OpenW)(const char *FileName);
@@ -45,7 +45,7 @@ typedef struct _API_Functions
 	void (__CDECL__ *Play)(void *p_File);
 	void (__CDECL__ *Pause)(void *p_File);
 	void (__CDECL__ *Stop)(void *p_File);
-} API_Functions;
+};
 
 using fileIs_t = bool (*)(const char *);
 using fileOpenR_t = void *(*)(const char *);
@@ -64,7 +64,7 @@ int audioCloseFile(void *audioFile);
  * flexible, and faster library by removing a lot of if-checks
  * from the high-level API.
  */
-typedef struct _AudioPointer
+struct AudioPointer
 {
 	/*!
 	 * @internal
@@ -78,7 +78,7 @@ typedef struct _AudioPointer
 	 * decoder
 	 */
 	API_Functions *API;
-} AudioPointer;
+};
 
 extern API_Functions OggVorbisDecoder;
 extern API_Functions OggOpusDecoder;
