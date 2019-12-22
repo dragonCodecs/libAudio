@@ -328,8 +328,8 @@ bool wav_t::isWAV(const int32_t fd) noexcept
 		lseek(fd, 4, SEEK_CUR) != 8 ||
 		read(fd, waveSig, 4) != 4 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		strncmp(riffSig, "RIFF", 4) != 0 ||
-		strncmp(waveSig, "WAVE", 4) != 0)
+		memcmp(riffSig, "RIFF", 4) != 0 ||
+		memcmp(waveSig, "WAVE", 4) != 0)
 		return false;
 	return true;
 }

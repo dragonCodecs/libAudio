@@ -240,7 +240,7 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
 	if (!fd.read(sig) ||
 		fd.seek(0, SEEK_SET) != 0)
 		return nullptr;
-	else if (strncmp(sig.data(), "OggS", sig.size()) == 0)
+	else if (memcmp(sig.data(), "OggS", sig.size()) == 0)
 		FLAC__stream_decoder_init_ogg_stream(ctx.streamDecoder, flac::read, flac::seek,
 			flac::tell, flac::length, flac::eof, flac::data, flac::metadata, flac::error,
 			flacFile.get());

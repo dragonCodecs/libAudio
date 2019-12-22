@@ -330,7 +330,7 @@ bool Is_OptimFROG(const char *FileName)
 	fread(OFGSig, 4, 1, f_OFG);
 	fclose(f_OFG);
 
-	if (strncmp(OFGSig, "OFR ", 4) != 0)
+	if (memcmp(OFGSig, "OFR ", 4) != 0)
 		return false;
 
 	return true;

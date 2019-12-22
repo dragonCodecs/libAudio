@@ -311,8 +311,8 @@ bool mpc_t::isMPC(const int32_t fd) noexcept
 	if (fd == -1 ||
 		read(fd, mpcSig, 3) != 3 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		(strncmp(mpcSig, "MP+", 3) != 0 &&
-		strncmp(mpcSig, "MPC", 3) != 0))
+		(memcmp(mpcSig, "MP+", 3) != 0 &&
+		memcmp(mpcSig, "MPC", 3) != 0))
 		return false;
 	return true;
 }

@@ -384,9 +384,9 @@ bool m4a_t::isM4A(const int32_t fd) noexcept
 		read(fd, length, 4) != 4 ||
 		read(fd, typeSig, 4) != 4 ||
 		read(fd, fileType, 4) != 4 ||
-		strncmp(typeSig, "ftyp", 4) != 0 ||
-		(strncmp(fileType, "M4A ", 4) != 0 &&
-		strncmp(fileType, "mp42", 4) != 0))
+		memcmp(typeSig, "ftyp", 4) != 0 ||
+		(memcmp(fileType, "M4A ", 4) != 0 &&
+		memcmp(fileType, "mp42", 4) != 0))
 		return false;
 	return true;
 }

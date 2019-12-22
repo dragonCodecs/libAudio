@@ -332,7 +332,7 @@ bool wavPack_t::isWavPack(const int32_t fd) noexcept
 	if (fd == -1 ||
 		read(fd, wavPackSig, 4) != 4 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		strncmp(wavPackSig, "wvpk", 4) != 0)
+		memcmp(wavPackSig, "wvpk", 4) != 0)
 		return false;
 	return true;
 }
