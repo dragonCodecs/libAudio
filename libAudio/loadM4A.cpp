@@ -71,7 +71,7 @@ struct m4a_t::decoderContext_t final
 
 namespace libAudio
 {
-	namespace m4a
+	namespace loadM4A
 	{
 		/*!
 		* @internal
@@ -235,7 +235,7 @@ m4a_t *m4a_t::openR(const char *const fileName) noexcept
 	auto &ctx = *file->context();
 	fileInfo_t &info = file->fileInfo();
 
-	ctx.mp4Stream = MP4ReadProvider(fileName, 0, &m4a::ioFunctions);
+	ctx.mp4Stream = MP4ReadProvider(fileName, 0, &loadM4A::ioFunctions);
 	ctx.aacTrack(info);
 	if (!ctx.decoder)
 		return nullptr;

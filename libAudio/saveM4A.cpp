@@ -63,100 +63,102 @@ typedef struct _M4A_Enc_Intern
 	int Channels;
 } M4A_Enc_Intern;
 
-void *MP4EncOpen(const char *FileName, MP4FileMode Mode);
-int MP4EncSeek(void *MP4File, int64_t pos);
-int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t);
-int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t);
-int MP4EncClose(void *MP4File);
-
-/*!
- * @internal
- * Structure holding pointers to the \c MP4Enc* functions given in this file.
- * Used in the initialising of the MP4v2 file writer as a set of callbacks so
- * as to prevent run-time issues on Windows.
- */
-MP4FileProvider MP4EncFunctions =
+namespace libAudio
 {
-	MP4EncOpen,
-	MP4EncSeek,
-	MP4EncRead,
-	MP4EncWrite,
-	MP4EncClose
-};
+	namespace saveM4A
+	{
+		/*!
+		* @internal
+		* Internal function used to open the MP4 file for output and potential readback
+		* @param FileName The name of the file to open
+		* @param Mode The \c MP4FileMode in which to open the file. We ensure this has
+		*    to be FILEMODE_CREATE for our purposes
+		*/
+		void *open(const char *FileName, MP4FileMode Mode)
+		{
+			if (Mode != FILEMODE_CREATE)
+				return NULL;
+			return fopen(FileName, "wb+");
+		}
 
-/*!
- * @internal
- * Internal function used to open the MP4 file for output and potential readback
- * @param FileName The name of the file to open
- * @param Mode The \c MP4FileMode in which to open the file. We ensure this has
- *    to be FILEMODE_CREATE for our purposes
- */
-void *MP4EncOpen(const char *FileName, MP4FileMode Mode)
-{
-	if (Mode != FILEMODE_CREATE)
-		return NULL;
-	return fopen(FileName, "wb+");
+		/*!
+		* @internal
+		* Internal function used to seek in the MP4 file
+		* @param MP4File \c FILE handle for the MP4 file as a void pointer
+		* @param pos Possition into the file to which to seek to
+		*/
+		int seek(void *MP4File, int64_t pos)
+		{
+		#ifdef _WINDOWS
+			return (_fseeki64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+		#elif defined(__arm__) || defined(__aarch64__)
+			return fseeko((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE;
+		#else
+			return (fseeko64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+		#endif
+		}
+
+		/*!
+		* @internal
+		* Internal function used to read from the MP4 file
+		* @param MP4File \c FILE handle for the MP4 file as a void pointer
+		* @param DataOut A typeless buffer to which the read data should be written
+		* @param DataOutLen A 64-bit integer giving how much data should be read from the file
+		* @param Read A 64-bit integer count returning how much data was actually read
+		*/
+		int read(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t)
+		{
+			int ret = fread(DataOut, 1, (size_t)DataOutLen, (FILE *)MP4File);
+			if (ret <= 0 && DataOutLen != 0)
+				return TRUE;
+			*Read = ret;
+			return FALSE;
+		}
+
+		/*!
+		* @internal
+		* Internal function used to write data to the MP4 file
+		* @param MP4File \c FILE handle for the MP4 file as a void pointer
+		* @param DataIn A typeless buffer holding the data to be written, which must also not become modified
+		* @param DataInLen A 64-bit integer giving how much data is to be written to the file
+		* @param Written A 64-bit integer count returning how much data was actually written
+		*/
+		int write(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
+		{
+			if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != (size_t)DataInLen)
+				return TRUE;
+			*Written = DataInLen;
+			return FALSE;
+		}
+
+		/*!
+		* @internal
+		* Internal function used to close the MP4 file after I/O is complete
+		* @param MP4File \c FILE handle for the MP4 file as a void pointer
+		*/
+		int close(void *MP4File)
+		{
+			return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
+		}
+
+		/*!
+		* @internal
+		* Structure holding pointers to the \c MP4Enc* functions given in this file.
+		* Used in the initialising of the MP4v2 file writer as a set of callbacks so
+		* as to prevent run-time issues on Windows.
+		*/
+		constexpr static MP4FileProvider ioFunctions =
+		{
+			open,
+			seek,
+			read,
+			write,
+			close
+		};
+	}
 }
 
-/*!
- * @internal
- * Internal function used to seek in the MP4 file
- * @param MP4File \c FILE handle for the MP4 file as a void pointer
- * @param pos Possition into the file to which to seek to
- */
-int MP4EncSeek(void *MP4File, int64_t pos)
-{
-#ifdef _WINDOWS
-	return (_fseeki64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-#elif defined(__arm__) || defined(__aarch64__)
-	return fseeko((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE;
-#else
-	return (fseeko64((FILE *)MP4File, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-#endif
-}
-
-/*!
- * @internal
- * Internal function used to read from the MP4 file
- * @param MP4File \c FILE handle for the MP4 file as a void pointer
- * @param DataOut A typeless buffer to which the read data should be written
- * @param DataOutLen A 64-bit integer giving how much data should be read from the file
- * @param Read A 64-bit integer count returning how much data was actually read
- */
-int MP4EncRead(void *MP4File, void *DataOut, int64_t DataOutLen, int64_t *Read, int64_t)
-{
-	int ret = fread(DataOut, 1, (size_t)DataOutLen, (FILE *)MP4File);
-	if (ret <= 0 && DataOutLen != 0)
-		return TRUE;
-	*Read = ret;
-	return FALSE;
-}
-
-/*!
- * @internal
- * Internal function used to write data to the MP4 file
- * @param MP4File \c FILE handle for the MP4 file as a void pointer
- * @param DataIn A typeless buffer holding the data to be written, which must also not become modified
- * @param DataInLen A 64-bit integer giving how much data is to be written to the file
- * @param Written A 64-bit integer count returning how much data was actually written
- */
-int MP4EncWrite(void *MP4File, const void *DataIn, int64_t DataInLen, int64_t *Written, int64_t)
-{
-	if (fwrite(DataIn, 1, (size_t)DataInLen, (FILE *)MP4File) != (size_t)DataInLen)
-		return TRUE;
-	*Written = DataInLen;
-	return FALSE;
-}
-
-/*!
- * @internal
- * Internal function used to close the MP4 file after I/O is complete
- * @param MP4File \c FILE handle for the MP4 file as a void pointer
- */
-int MP4EncClose(void *MP4File)
-{
-	return (fclose((FILE *)MP4File) == 0 ? FALSE : TRUE);
-}
+using namespace libAudio;
 
 /*!
  * This function opens the file given by \c FileName for writing and returns a pointer
@@ -173,7 +175,7 @@ void *M4A_OpenW(const char *FileName)
 		return ret;
 
 	ret->err = false;
-	ret->p_mp4 = MP4CreateProvider(FileName, &MP4EncFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
+	ret->p_mp4 = MP4CreateProvider(FileName, &saveM4A::ioFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
 
 	return ret;
 }
