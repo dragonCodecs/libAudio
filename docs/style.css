@@ -1,32 +1,27 @@
 /* The standard CSS for doxygen */
 
+html { height: 100%; box-sizing: border-box; }
+body { height: calc(100vh - (34px + 0.5em)); }
+
 body, table, div, p, dl
 {
 	font-family: Lucida Grande, Verdana, Geneva, Arial, sans-serif;
 	font-size: 12px;
 }
 
+div.side-nav-resizable, div#doc-content
+{
+	height: calc(100vh - (95px + 34px + 0.5em));
+	overflow-y: auto;
+}
+div.side-nav-resizable > div#nav-tree { height: 100%; }
+
 /* @group Heading Levels */
 
-h1
-{
-	font-size: 150%;
-}
-
-h2
-{
-	font-size: 120%;
-}
-
-h3
-{
-	font-size: 100%;
-}
-
-dt
-{
-	font-weight: bold;
-}
+h1 { font-size: 150%; }
+h2 { font-size: 120%; }
+h3 { font-size: 100%; }
+dt { font-weight: bold; }
 
 div.multicol
 {
@@ -36,32 +31,14 @@ div.multicol
 	-webkit-column-count: 3;
 }
 
-p.startli, p.startdd, p.starttd
-{
-	margin-top: 2px;
-}
-
-p.endli
-{
-	margin-bottom: 0px;
-}
-
-p.enddd
-{
-	margin-bottom: 4px;
-}
-
-p.endtd
-{
-	margin-bottom: 2px;
-}
+p.startli, p.startdd, p.starttd { margin-top: 2px; }
+p.endli { margin-bottom: 0px; }
+p.enddd { margin-bottom: 4px; }
+p.endtd { margin-bottom: 2px; }
 
 /* @end */
 
-caption
-{
-	font-weight: bold;
-}
+caption { font-weight: bold; }
 
 span.legend
 {
@@ -75,7 +52,8 @@ h3.version
 	text-align: center;
 }
 
-div.qindex, div.navtab{
+div.qindex, div.navtab
+{
 	background-color: #EBEFF6;
 	border: 1px solid #A3B4D7;
 	text-align: center;
@@ -89,10 +67,7 @@ div.qindex, div.navpath
 	line-height: 140%;
 }
 
-div.navtab
-{
-	margin-right: 15px;
-}
+div.navtab { margin-right: 15px; }
 
 /* @group Link Styling */
 
@@ -103,20 +78,9 @@ a
 	text-decoration: none;
 }
 
-.contents a:visited
-{
-	color: #4665A2;
-}
-
-a:hover
-{
-	text-decoration: underline;
-}
-
-a.qindex
-{
-	font-weight: bold;
-}
+.contents a:visited { color: #4665A2; }
+a:hover { text-decoration: underline; }
+a.qindex { font-weight: bold; }
 
 a.qindexHL
 {
@@ -126,36 +90,15 @@ a.qindexHL
 	border: 1px double #869DCA;
 }
 
-.contents a.qindexHL:visited
-{
-	color: #ffffff;
-}
+.contents a.qindexHL:visited { color: #ffffff; }
 
-a.el
-{
-	font-weight: bold;
-}
-
-a.elRef
-{
-}
-
-a.code
-{
-	color: #4665A2;
-}
-
-a.codeRef
-{
-	color: #4665A2;
-}
+a.el { font-weight: bold; }
+a.code { color: #4665A2; }
+a.codeRef { color: #4665A2; }
 
 /* @end */
 
-dl.el
-{
-	margin-left: -1cm;
-}
+dl.el { margin-left: -1cm; }
 
 .fragment
 {
@@ -238,25 +181,9 @@ td.indexvalue
 	margin: 2px 0px;
 }
 
-tr.memlist
-{
-	background-color: #EEF1F7;
-}
-
-p.formulaDsp
-{
-	text-align: center;
-}
-
-img.formulaDsp
-{
-	
-}
-
-img.formulaInl
-{
-	vertical-align: middle;
-}
+tr.memlist { background-color: #EEF1F7; }
+p.formulaDsp { text-align: center; }
+img.formulaInl { vertical-align: middle; }
 
 div.center
 {
@@ -266,13 +193,15 @@ div.center
 	padding: 0px;
 }
 
-div.center img
-{
-	border: 0px;
-}
+div.center img { border: 0px; }
 
 address.footer
 {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 32px;
 	text-align: right;
 	padding-right: 12px;
 }
@@ -285,60 +214,17 @@ img.footer
 
 /* @group Code Colorization */
 
-span.keyword
-{
-	color: #008000
-}
-
-span.keywordtype
-{
-	color: #604020
-}
-
-span.keywordflow
-{
-	color: #e08000
-}
-
-span.comment
-{
-	color: #800000
-}
-
-span.preprocessor
-{
-	color: #806020
-}
-
-span.stringliteral
-{
-	color: #002080
-}
-
-span.charliteral
-{
-	color: #008080
-}
-
-span.vhdldigit
-{ 
-	color: #ff00ff 
-}
-
-span.vhdlchar
-{ 
-	color: #000000 
-}
-
-span.vhdlkeyword
-{ 
-	color: #700070 
-}
-
-span.vhdllogic
-{ 
-	color: #ff0000 
-}
+span.keyword { color: #008000; }
+span.keywordtype { color: #604020; }
+span.keywordflow { color: #e08000; }
+span.comment { color: #800000; }
+span.preprocessor { color: #806020; }
+span.stringliteral { color: #002080; }
+span.charliteral { color: #008080; }
+span.vhdldigit { color: #ff00ff; }
+span.vhdlchar { color: #000000; }
+span.vhdlkeyword { color: #700070; }
+span.vhdllogic { color: #ff0000; }
 
 /* @end */
 
@@ -364,10 +250,7 @@ input.search
 }
 */
 
-td.tiny
-{
-	font-size: 75%;
-}
+td.tiny { font-size: 75%; }
 
 .dirtab
 {
@@ -391,7 +274,10 @@ hr
 
 hr.footer
 {
+	position: fixed;
+	bottom: 32px;
 	height: 1px;
+	width: 100%;
 }
 
 /* @group Member Descriptions */
@@ -419,14 +305,8 @@ table.memberdecls
 }
 
 .memItemLeft, .memItemRight, .memTemplParams
-{
-	border-top: 1px solid #C4CFE5;
-}
-
-.memItemLeft, .memTemplItemLeft
-{
-	white-space: nowrap;
-}
+	{ border-top: 1px solid #C4CFE5; }
+.memItemLeft, .memTemplItemLeft { white-space: nowrap; }
 
 .memTemplParams
 {
@@ -521,30 +401,18 @@ table.memberdecls
 	background-image: -webkit-gradient(linear,center top,center bottom,from(#FFFFFF), color-stop(0.6,#FFFFFF), color-stop(0.60,#FFFFFF), color-stop(0.95,#F7F8FB), to(#EEF1F7));
 }
 
-.paramkey
-{
-	text-align: right;
-}
-
-.paramtype
-{
-	white-space: nowrap;
-}
+.paramkey { text-align: right; }
+.paramtype { white-space: nowrap; }
 
 .paramname
 {
 	color: #602020;
 	white-space: nowrap;
 }
-.paramname em
-{
-	font-style: normal;
-}
 
+.paramname em { font-style: normal; }
 .params, .retval, .exception, .tparams
-{
-	border-spacing: 6px 2px;
-}       
+	{ border-spacing: 6px 2px; }       
 
 .params .paramname, .retval .paramname
 {
@@ -563,9 +431,6 @@ table.memberdecls
 	font-family: "courier new",courier,monospace;
 	vertical-align: top;
 }
-
-
-
 
 /* @end */
 
@@ -615,10 +480,7 @@ proper pixel height of your image.
 }
 */
 
-.directory > h3
-{
-	margin-top: 0;
-}
+.directory > h3 { margin-top: 0; }
 
 .directory p
 {
@@ -632,10 +494,7 @@ proper pixel height of your image.
 	margin: 0px;
 }
 
-.directory img
-{
-	vertical-align: -30%;
-}
+.directory img { vertical-align: -30%; }
 
 /* these are for tree view when not used as main index */
 
@@ -652,10 +511,7 @@ proper pixel height of your image.
 	font-size: 11pt;
 }
 
-.directory-alt > h3
-{
-	margin-top: 0;
-}
+.directory-alt > h3 { margin-top: 0; }
 
 .directory-alt p
 {
@@ -669,17 +525,11 @@ proper pixel height of your image.
 	margin: 0px;
 }
 
-.directory-alt img
-{
-	vertical-align: -30%;
-}
+.directory-alt img { vertical-align: -30%; }
 
 /* @end */
 
-div.dynheader
-{
-	margin-top: 8px;
-}
+div.dynheader { margin-top: 8px; }
 
 address
 {
@@ -687,10 +537,7 @@ address
 	color: #2A3D61;
 }
 
-table.doxtable
-{
-	border-collapse:collapse;
-}
+table.doxtable { border-collapse: collapse; }
 
 table.doxtable td, table.doxtable th
 {
@@ -753,10 +600,7 @@ table.doxtable th
 	outline: none;
 }
 
-.navpath li.navelem a:hover
-{
-	color:#6884BD;
-}
+.navpath li.navelem a:hover { color:#6884BD; }
 
 .navpath li.footer
 {
@@ -771,7 +615,6 @@ table.doxtable th
 	font-size: 8pt;
 }
 
-
 div.summary
 {
 	float: right;
@@ -781,10 +624,7 @@ div.summary
 	text-align: right;
 }       
 
-div.summary a
-{
-	white-space: nowrap;
-}
+div.summary a { white-space: nowrap; }
 
 div.ingroups
 {
@@ -794,10 +634,7 @@ div.ingroups
 	text-align: left;
 }
 
-div.ingroups a
-{
-	white-space: nowrap;
-}
+div.ingroups a { white-space: nowrap; }
 
 div.header
 {
@@ -813,10 +650,7 @@ div.headertitle
 	padding: 5px 5px 5px 10px;
 }
 
-dl
-{
-	padding: 0 0 0 10px;
-}
+dl { padding: 0 0 0 10px; }
 
 dl.note, dl.warning, dl.attention, dl.pre, dl.post, dl.invariant, dl.deprecated, dl.todo, dl.test, dl.bug
 {
@@ -824,40 +658,13 @@ dl.note, dl.warning, dl.attention, dl.pre, dl.post, dl.invariant, dl.deprecated,
 	padding: 0 0 0 6px;
 }
 
-dl.note
-{
-	border-color: #D0D000;
-}
-
-dl.warning, dl.attention
-{
-	border-color: #FF0000;
-}
-
-dl.pre, dl.post, dl.invariant
-{
-	border-color: #00D000;
-}
-
-dl.deprecated
-{
-	border-color: #505050;
-}
-
-dl.todo
-{
-	border-color: #00C0E0;
-}
-
-dl.test
-{
-	border-color: #3030E0;
-}
-
-dl.bug
-{
-	border-color: #C08050;
-}
+dl.note { border-color: #D0D000; }
+dl.warning, dl.attention { border-color: #FF0000; }
+dl.pre, dl.post, dl.invariant { border-color: #00D000; }
+dl.deprecated { border-color: #505050; }
+dl.todo { border-color: #00C0E0; }
+dl.test { border-color: #3030E0; }
+dl.bug { border-color: #C08050; }
 
 #projectlogo
 {
@@ -866,10 +673,7 @@ dl.bug
 	border-collapse: separate;
 }
  
-#projectlogo img
-{ 
-	border: 0px none;
-}
+#projectlogo img { border: 0px none; }
  
 #projectname
 {
@@ -900,3 +704,9 @@ dl.bug
 	border-bottom: 1px solid #5373B4;
 }
 
+div#nav-tree > div#nav-tree-contents > ul > li > ul.children_ul > li > div.item > span.arrow
+	{ width: 0 !important; padding-left: 25px; }
+div#nav-tree > div#nav-tree-contents > ul > li > ul.children_ul > li > div.item > a > span.arrow
+	{ width: 12px !important; }
+div#nav-tree > div#nav-tree-contents > ul > li > ul.children_ul > li > ul.children_ul > li > div.item > span.arrow
+	{ width: 0 !important; padding-left: 41px; }
