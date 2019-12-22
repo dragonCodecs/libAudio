@@ -35,7 +35,8 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{Is_WMA, WMA_OpenR},
 #endif
 	{Is_MPC, MPC_OpenR},
-	{Is_WavPack, WavPack_OpenR}
+	{Is_WavPack, WavPack_OpenR},
+	{Is_OggOpus, OggOpus_OpenR}
 };
 
 /*!
@@ -192,5 +193,5 @@ bool Is_Audio(const char *FileName)
 #ifdef __WMA__
 		Is_WMA(FileName) ||
 #endif
-		false;
+		Is_OggOpus(FileName);
 }
