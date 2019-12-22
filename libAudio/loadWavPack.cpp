@@ -195,12 +195,12 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
 
 wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<wavPack_t> wpFile(makeUnique<wavPack_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), fileName));
-	if (!wpFile || !wpFile->valid() || !isWavPack(wpFile->_fd))
+	std::unique_ptr<wavPack_t> file(makeUnique<wavPack_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), fileName));
+	if (!file || !file->valid() || !isWavPack(file->_fd))
 		return nullptr;
-	fd_t &fileDesc = const_cast<fd_t &>(wpFile->fd());
-	auto &ctx = *wpFile->context();
-	fileInfo_t &info = wpFile->fileInfo();
+	fd_t &fileDesc = const_cast<fd_t &>(file->fd());
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 
 	ctx.decoder = WavpackOpenFileInputEx64(&ctx.callbacks, &fileDesc,
 		ctx.wvcFile(), nullptr, OPEN_NORMALIZE | OPEN_TAGS, 15);
@@ -212,7 +212,9 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 	info.artist = ctx.readTag("artist");
 	info.title = ctx.readTag("title");
 
-	return wpFile.release();
+	if (!ExternalPlayback)
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return file.release();
 }
 
 /*!
@@ -221,19 +223,7 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
  * @param FileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *WavPack_OpenR(const char *FileName)
-{
-	std::unique_ptr<wavPack_t> file(wavPack_t::openR(FileName));
-	if (!file)
-		return nullptr;
-	auto &ctx = *file->context();
-	const fileInfo_t &info = file->fileInfo();
-
-	if (ExternalPlayback == 0)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-
-	return file.release();
-}
+void *WavPack_OpenR(const char *FileName) { return wavPack_t::openR(FileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened WavPack file
