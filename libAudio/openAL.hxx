@@ -37,9 +37,9 @@ private:
 
 public:
 	alSource_t() noexcept;
-	alSource_t(alSource_t &&_source) noexcept = default;
+	alSource_t(alSource_t &&) noexcept = default;
+	alSource_t &operator =(alSource_t &&) noexcept = default;
 	~alSource_t() noexcept;
-	alSource_t &operator =(alSource_t &&_source) noexcept = default;
 	void queue(alBuffer_t &buffer) const noexcept;
 	ALuint dequeueOne() const noexcept;
 	void play() const noexcept;
@@ -65,7 +65,8 @@ protected:
 
 public:
 	alBuffer_t() noexcept;
-	alBuffer_t(alBuffer_t &&_buffer) noexcept;
+	alBuffer_t(alBuffer_t &&) noexcept = default;
+	alBuffer_t &operator =(alBuffer_t &&) noexcept = default;
 	~alBuffer_t() noexcept;
 	bool operator ==(const ALuint value) const noexcept;
 	void fill(const void *const data, const uint32_t dataLength, const ALenum format,

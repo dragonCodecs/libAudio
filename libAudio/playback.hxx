@@ -48,6 +48,11 @@ public:
 	virtual void play() = 0;
 	virtual void pause() = 0;
 	virtual void stop() = 0;
+
+	audioPlayer_t(const audioPlayer_t &) noexcept = delete;
+	audioPlayer_t(audioPlayer_t &&) noexcept = delete;
+	audioPlayer_t &operator =(const audioPlayer_t &) noexcept = delete;
+	audioPlayer_t &operator =(audioPlayer_t &&) noexcept = delete;
 };
 
 struct playback_t final
@@ -71,11 +76,16 @@ protected:
 public:
 	playback_t(void *const audioFile, const fileFillBuffer_t fillBuffer, uint8_t *const buffer,
 		const uint32_t bufferLength, const fileInfo_t &fileInfo);
+	playback_t(playback_t &&) noexcept = default;
+	playback_t &operator =(playback_t &&) noexcept = default;
 	~playback_t() noexcept = default;
 	void mode(playbackMode_t mode) noexcept;
 	void play();
 	void pause();
 	void stop();
+
+	playback_t(const playback_t &) noexcept = delete;
+	playback_t &operator =(const playback_t &) noexcept = delete;
 };
 
 #endif /*PLAYBACK__HXX*/
