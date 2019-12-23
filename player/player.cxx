@@ -17,13 +17,13 @@ int main(int argc, char **argv)
 
 	for (int i = 1; i < argc; i++)
 	{
-		void *AudioFile = audioOpenR(argv[i]);
-		if (AudioFile == NULL)
+		void *audioFile = audioOpenR(argv[i]);
+		if (!audioFile)
 			continue;
-		const auto info = audioGetFileInfo(AudioFile);
-		if (info == NULL)
+		const auto info = audioGetFileInfo(audioFile);
+		if (!info)
 		{
-			audioCloseFile(AudioFile);
+			audioCloseFile(audioFile);
 			continue;
 		}
 
@@ -41,8 +41,8 @@ int main(int argc, char **argv)
 			delete [] Title;
 		}*/
 
-		audioPlay(AudioFile);
-		audioCloseFile(AudioFile);
+		audioPlay(audioFile);
+		audioCloseFile(audioFile);
 	}
 	return 0;
 }
