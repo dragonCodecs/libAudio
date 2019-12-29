@@ -22,6 +22,7 @@ jobs:
           - 'gcc-8'
           - 'gcc-9'
         coverage: [false]
+      fast-fail: false
     steps:
  #     - name: Setup Python
  #       uses: actions/setup-python@v1
