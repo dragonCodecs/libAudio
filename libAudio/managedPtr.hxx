@@ -96,7 +96,7 @@ namespace managedPtr
 		managedPtr_t &operator =(const managedPtr_t &) = delete;
 		managedPtr_t &operator =(const std::nullptr_t &) = delete;
 	};
-}
+} // namespace managedPtr
 
 //template<typename T> using managedPtr_t = managedPtr::managedPtr_t<T>;
 //using managedPtr::managedPtr_t<void>;
