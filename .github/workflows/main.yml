@@ -38,7 +38,7 @@ jobs:
         if: startsWith(matrix.compiler, 'clang')
         shell: bash
         run: |
-          sudo apt-add-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/}"
+          sudo apt-add-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/} main"
           sudo apt-get update
           sudo apt-get install ${{ matrix.compiler }}
           echo "::set-env name=CXX::${CC/#clang/clang++}"
