@@ -52,12 +52,10 @@ jobs:
         if: startsWith(matrix.compiler, 'clang')
         shell: bash
         run: |
-          sudo apt-add-repository ppa:ubuntu-toolchain-r/test
           sudo apt-add-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/} main"
           sudo apt-get update
           CC=${CC%.0}.0
           CXX=${CC/#clang/clang++}
-          echo "Installing $CC $CXX"
           sudo apt-get install $CC $CXX
           echo ::set-env name=CC::$CC
           echo ::set-env name=CXX::$CXX
