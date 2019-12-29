@@ -31,16 +31,16 @@ jobs:
         shell: bash
         run: |
           sudo apt-add-repository ppa:ubuntu-toolchain-r/test
-          sudo apt update
-          sudo apt install ${{ matrix.compiler }}
+          sudo apt-get update
+          sudo apt-get install ${{ matrix.compiler }}
           echo "::set-env name=CXX::${CC/#gcc/g++}"
       - name: Setup Clang
         if: startsWith(matrix.compiler, 'clang')
         shell: bash
         run: |
           sudo apt-add-repository deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/}
-          sudo apt update
-          sudo apt install ${{ matrix.compiler }}
+          sudo apt-get update
+          sudo apt-get install ${{ matrix.compiler }}
           echo "::set-env name=CXX::${CC/#clang/clang++}"
       - name: Checkout project
         uses: actions/checkout@v2
