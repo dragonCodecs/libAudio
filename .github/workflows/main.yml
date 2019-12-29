@@ -106,7 +106,7 @@ jobs:
           automake -ac
           autoheader
           autoconf
-          CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
+          ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
           make -j 2
           sudo make install
         working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/mp4v2
