@@ -29,7 +29,7 @@ jobs:
  #         python-version: 3.6.9
       - name: Runtime environment
         shell: bash
-        run: "echo ::set-env name=PATH::$HOME/.local/bin:$PATH"
+        run: echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
       - name: Coverage environment
         env:
           COVERAGE: 0
@@ -43,7 +43,8 @@ jobs:
           sudo apt-get update
           echo "Installing $CC $CXX"
           sudo apt-get install $CC $CXX
-          echo "::set-env name=CXX::$CXX"
+          echo ::set-env name=CC::$CC
+          echo ::set-env name=CXX::$CXX
         env:
           CC: ${{ matrix.compiler }}
       - name: Setup Clang
@@ -80,6 +81,7 @@ jobs:
       - name: Version tools
         shell: bash
         run: |
+          echo $CC $CXX $PATH
           $CC --version
           $CXX --version
           [ $COVERAGE -ne 0 ] && $GCOV --version || true
