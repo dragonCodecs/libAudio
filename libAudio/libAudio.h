@@ -1,7 +1,7 @@
 #ifndef LIB_AUDIO__HXX
 #define LIB_AUDIO__HXX
 
-#include <stdint.h>
+#include <stdint.h> // NOLINT:modernize-deprecated-headers
 #include "fileInfo.hxx"
 
 #ifdef _WINDOWS
