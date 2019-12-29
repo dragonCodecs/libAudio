@@ -61,14 +61,14 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v2
         with:
-          path: libAudio
+          path: .
           lfs: true
-#      - name: Checkout submodules
-#        shell: bash
-#        run: |
-#          authHeader="$(git config --local --get http.https://github.com/.extraheader)"
-#          git submodule sync --recursive
-#          git -c "http.extraheader="$authHeader" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          authHeader="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader="$authHeader" -c protocol.version=2 submodule update --init --force --recursive --depth=1
       - name: Setup Meson + Ninja
         shell: bash
         run: |
@@ -91,13 +91,13 @@ jobs:
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
         run: ninja
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/libAudio/build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
       - name: Test
         run: ninja test
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/libAudio/build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
       - name: Install
         run: ninja install
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/libAudio/build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
 
 #  build-windows:
 #    runs-on: ${{matrix.os}}
