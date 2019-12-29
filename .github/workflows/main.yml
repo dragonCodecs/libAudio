@@ -52,6 +52,7 @@ jobs:
         if: startsWith(matrix.compiler, 'clang')
         shell: bash
         run: |
+          sudo apt-add-repository ppa:ubuntu-toolchain-r/test
           sudo apt-add-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/} main"
           sudo apt-get update
           CC=${CC%.0}.0
@@ -61,6 +62,8 @@ jobs:
           echo ::set-env name=CC::$CC
           echo ::set-env name=CXX::$CXX
           [ $COVERAGE -ne 0 ] && echo ::set-env name=GCOV::'llvm-cov gcov' || true
+        env:
+          CC: ${{ matrix.compiler }}
       - name: Checkout libAudio
         uses: actions/checkout@v2
         with:
