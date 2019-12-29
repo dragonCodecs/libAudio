@@ -1,0 +1,83 @@
+name: C++ CI
+
+on:
+  push
+  schedule:
+    - cron: "0 0 1 * *"
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        compiler: ['clang-5.0', 'clang-6.0', 'clang-7', 'clang-8', 'clang-9', 'gcc-5', 'gcc-6', 'gcc-7', 'gcc-8', 'gcc-9']
+        coverage: [false]
+    steps:
+ #     - name: Setup Python
+ #       uses: actions/setup-python
+ #       with:
+ #         python-version: 3.6.9
+      - name: Compiler environment
+        env:
+          CC: ${{ matrix.compiler }}
+          PATH: $HOME/.local/bin:$PATH
+      - name: Coverage environment
+        env:
+          COVERAGE=0
+      - name: Setup GCC
+        if: startsWith(matrix.compiler, 'gcc')
+        shell: bash
+        run: |
+          sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+          sudo apt update
+          sudo apt install ${{ matrix.compiler }}
+        env:
+          CXX: ${CC/#gcc/g++}
+      - name: Setup Clang
+        if: startsWith(matrix.compiler, 'clang')
+        shell: bash
+        run: |
+          sudo apt-add-repository deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/}
+          sudo apt update
+          sudo apt install ${{ matrix.compiler }}
+        env:
+          CXX: ${CC/#clang/clang++}
+      - name: Checkout project
+        uses: actions/checkout@v2
+        with:
+          path: libAudio
+          lfs: true
+#      - name: Checkout submodules
+#        shell: bash
+#        run: |
+#          authHeader="$(git config --local --get http.https://github.com/.extraheader)"
+#          git submodule sync --recursive
+#          git -c "http.extraheader="$authHeader" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Setup Meson + Ninja
+        shell: bash
+        run: |
+          echo $PATH
+          cd ${{ temp }}
+#          wget https://bootstrap.pypa.io/get-pip.py
+          wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
+#          python3 get-pip.py --user
+          pip3 install --user meson
+          unzip ninja-linux.zip -d ~/.local/bin
+          rm -f get-pip.py ninja-linux.zip
+          cd "$GITHUB_WORKSPACE/libAudio"
+      - name: Configure
+        run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
+      - name: Build
+        run: |
+          cd build
+          ninja
+      - name: Test
+        run: ninja test
+      - name: Install
+        run: ninja install
+
+#  build-windows:
+#    runs-on: ${{matrix.os}}
+#    strategy:
+#      matrix:
+#        os: [windows-2019, windows-2016]
