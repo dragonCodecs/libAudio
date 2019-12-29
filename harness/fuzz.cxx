@@ -10,6 +10,7 @@ int main(int32_t argc, char **argv)
 {
 	if (argc < 2)
 		return -1;
+	ExternalPlayback = 1;
 
 	for (int32_t i = 1; i < argc; ++i)
 	{
