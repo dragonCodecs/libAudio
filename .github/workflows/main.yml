@@ -93,7 +93,6 @@ jobs:
           [ $COVERAGE -ne 0 ] && $GCOV --version || true
           meson --version
           ninja --version
-          dpkg-query -L automake autoconf | grep bin
       - name: Install dependencies
         shell: bash
         run: >
@@ -102,7 +101,6 @@ jobs:
       - name: Install libmp4v2
         shell: bash
         run: |
-          sudo update-alternatives --auto automake
           aclocal -I . -I project
           libtoolize -icf
           automake -ac
