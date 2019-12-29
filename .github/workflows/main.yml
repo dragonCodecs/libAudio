@@ -14,7 +14,7 @@ jobs:
         coverage: [false]
     steps:
  #     - name: Setup Python
- #       uses: actions/setup-python
+ #       uses: actions/setup-python@v1
  #       with:
  #         python-version: 3.6.9
       - name: Compiler environment
@@ -57,22 +57,22 @@ jobs:
         shell: bash
         run: |
           echo $PATH
-          cd ${{ runner.temp }}
           wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
           pip3 install --user meson
           unzip ninja-linux.zip -d ~/.local/bin
           rm -f get-pip.py ninja-linux.zip
-          cd "$GITHUB_WORKSPACE/libAudio"
+        working-directory: ${{ runner.temp }}
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
-        run: |
-          cd build
-          ninja
+        run: ninja
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/libAudio/build
       - name: Test
         run: ninja test
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/libAudio/build
       - name: Install
         run: ninja install
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/libAudio/build
 
 #  build-windows:
 #    runs-on: ${{matrix.os}}
