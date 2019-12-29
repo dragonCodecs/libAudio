@@ -27,11 +27,9 @@ jobs:
  #       uses: actions/setup-python@v1
  #       with:
  #         python-version: 3.6.9
-      - name: Compiler environment
+      - name: Runtime environment
         shell: bash
         run: "echo ::set-env name=PATH::$HOME/.local/bin:$PATH"
-        env:
-          CC: ${{ matrix.compiler }}
       - name: Coverage environment
         env:
           COVERAGE: 0
@@ -43,8 +41,11 @@ jobs:
           CXX=${CC/#gcc/g++}
           sudo apt-add-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
+          echo "Installing $CC $CXX"
           sudo apt-get install $CC $CXX
           echo "::set-env name=CXX::$CXX"
+        env:
+          CC: ${{ matrix.compiler }}
       - name: Setup Clang
         if: startsWith(matrix.compiler, 'clang')
         shell: bash
