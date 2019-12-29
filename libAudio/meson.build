@@ -48,6 +48,10 @@ if extraFormats.contains('fc1x')
 	extraSrcs += 'loadFC1x.cpp'
 	extraArgs += '-DENABLE_FC1x'
 endif
+if extraFormats.contains('ra')
+	extraSrcs += 'loadRealAudio.cpp'
+	extraArgs += '-DENABLE_RA'
+endif
 
 genericModuleSrcs = [
 	'genericModule/ModuleFile.cpp', 'genericModule/ModuleHeader.cpp', 'genericModule/ModuleInstrument.cpp',
@@ -58,8 +62,8 @@ genericModuleSrcs = [
 
 libAudioSrcs = [
 	'loadAudio.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
-	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp', genericModuleSrcs,
-	'loadRealAudio.cpp', 'loadOggOpus.cxx', 'oggCommon.cxx',
+	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp',
+	genericModuleSrcs, 'loadOggOpus.cxx', 'oggCommon.cxx',
 	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveFLAC.cpp', 'saveM4A.cpp',
 	'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx', extraSrcs
 ]

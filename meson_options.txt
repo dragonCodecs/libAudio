@@ -1,4 +1,4 @@
 option('extra_formats', type: 'array', choices: [
 	'wma', 'optimFROG', 'sndh',
-	'sid', 'aon', 'fc1x'
+	'sid', 'aon', 'fc1x', 'ra'
 ], value: [])
