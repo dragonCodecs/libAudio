@@ -61,16 +61,16 @@ jobs:
           sudo apt-get install $CC $CXX
           echo ::set-env name=CC::$CC
           echo ::set-env name=CXX::$CXX
-      - name: Checkout project
+      - name: Checkout libAudio
         uses: actions/checkout@v2
         with:
           lfs: true
-      - name: Checkout submodules
+      - name: Checkout mp4v2
         shell: bash
         run: |
           authHeader="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$authHeader" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+          git -c "http.https://github.com/.extraheader=$authHeader" -c protocol.version=2 submodule update \
+            --init --recursive --depth=1 deps/mp4v2
       - name: Setup Meson + Ninja
         shell: bash
         run: |
