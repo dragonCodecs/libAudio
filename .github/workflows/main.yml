@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: |
           echo $PATH
-          cd ${{ temp }}
+          cd ${{ runner.temp }}
           wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
           pip3 install --user meson
           unzip ninja-linux.zip -d ~/.local/bin
