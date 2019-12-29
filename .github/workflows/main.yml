@@ -24,10 +24,6 @@ jobs:
         coverage: [false]
       fail-fast: false
     steps:
- #     - name: Setup Python
- #       uses: actions/setup-python@v1
- #       with:
- #         python-version: 3.6.9
       - name: Runtime environment
         shell: bash
         run: echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
