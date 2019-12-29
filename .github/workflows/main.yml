@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-add-repository ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
+          sudo apt-get update || true
           sudo apt-get install $CC ${CC/#gcc/g++}
           echo "::set-env name=CXX::${CC/#gcc/g++}"
       - name: Setup Clang
@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-add-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/} main"
-          sudo apt-get update
+          sudo apt-get update || true
           export CC=${CC%.0}.0
           sudo apt-get install $CC ${CC/#clang/clang++}
           echo "::set-env name=CC::$CC"
