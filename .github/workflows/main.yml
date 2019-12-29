@@ -67,7 +67,7 @@ jobs:
         with:
           lfs: true
       - name: Submodule commit IDs
-        run: git submoudle status
+        run: git submodule status
       - name: Checkout libmp4v2
         uses: actions/checkout@v2
         with:
