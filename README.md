@@ -2,6 +2,8 @@
 libAudio
 ========
 
+![](https://github.com/DX-MON/libAudio/workflows/.github/workflows/main.yml/badge.svg)
+
 ## Getting started
 
 After cloning the repository, you will need to run `git submodule init --update` to pull all dependencies for a build.
