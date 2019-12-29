@@ -121,8 +121,32 @@ jobs:
         run: ninja install
         working-directory: ${{ env.GITHUB_WORKSPACE }}/build
 
-#  build-windows:
-#    runs-on: ${{matrix.os}}
-#    strategy:
-#      matrix:
-#        os: [windows-2019, windows-2016]
+  build-windows:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [windows-2019]
+      fail-fast: false
+    steps:
+      - name: Runtime environment
+        shell: bash
+        run: |
+          echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
+          echo ::set-env name=GITHUB_WORKSPACE::"`pwd`"
+      - name: Check environment
+        shell: cmd
+        run: |
+          dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Auxiliary\Build"
+          set
+      - name: Configure
+        run: |
+          meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
+      - name: Build
+        run: ninja
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+      - name: Test
+        run: ninja test
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+      - name: Install
+        run: ninja install
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
