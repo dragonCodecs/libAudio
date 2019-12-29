@@ -54,7 +54,7 @@ namespace libAudio
 			return file->fd().seek(offset, whence) >= 0 ? 0 : -1;
 		}
 
-		int64_t tell(void *filePtr)
+		opus_int64 tell(void *filePtr)
 		{
 			const auto file = static_cast<const oggOpus_t *>(filePtr);
 			return file->fd().tell();
