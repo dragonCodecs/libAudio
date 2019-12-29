@@ -100,6 +100,7 @@ jobs:
         run: >
           sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libopusfile-dev
           libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
+          automake autoconf
       - name: Install libmp4v2
         shell: bash
         run: |
