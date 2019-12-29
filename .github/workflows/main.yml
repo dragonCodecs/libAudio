@@ -26,7 +26,9 @@ jobs:
     steps:
       - name: Runtime environment
         shell: bash
-        run: echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
+        run: |
+          echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
+          echo ::set-env name=GITHUB_WORKSPACE::"`pwd`"
       - name: Coverage environment
         env:
           COVERAGE: ${{ matrix.coverage }}
@@ -100,7 +102,6 @@ jobs:
       - name: Install libmp4v2
         shell: bash
         run: |
-          cd deps/mp4v2
           sudo update-alternatives --auto automake
           aclocal -I . -I project
           libtoolize -icf
@@ -110,6 +111,7 @@ jobs:
           CC=$CC_ CXX=$CXX_ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
           make -j 2
           sudo make install
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/mp4v2
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
