@@ -91,15 +91,16 @@ jobs:
           [ $COVERAGE -ne 0 ] && $GCOV --version || true
           meson --version
           ninja --version
+          dpkg-query -L automake autoconf | grep bin
       - name: Install dependencies
         shell: bash
         run: >
           sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libopusfile-dev
           libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
-          automake autoconf
       - name: Install libmp4v2
         shell: bash
         run: |
+          sudo update-alternatives --auto automake
           aclocal -I . -I project
           libtoolize -icf
           automake -ac
