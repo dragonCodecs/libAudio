@@ -54,7 +54,6 @@ jobs:
         run: |
           sudo apt-add-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/} main"
           sudo apt-get update
-          CC=${CC%.0}.0
           CXX=${CC/#clang/clang++}
           sudo apt-get install $CC $CXX
           echo ::set-env name=CC::$CC
