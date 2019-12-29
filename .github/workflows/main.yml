@@ -71,6 +71,7 @@ jobs:
         run: |
           echo $PATH
           wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
+          pip3 install --user --upgrade pip setuptools wheel
           pip3 install --user meson
           unzip ninja-linux.zip -d ~/.local/bin
           rm -f get-pip.py ninja-linux.zip
