@@ -46,6 +46,7 @@ jobs:
           sudo apt-get install $CC $CXX
           echo ::set-env name=CC::$CC
           echo ::set-env name=CXX::$CXX
+          [ $COVERAGE -ne 0 ] && echo ::set-env name=GCOV::${CC/#gcc/gcov} || true
         env:
           CC: ${{ matrix.compiler }}
       - name: Setup Clang
@@ -61,7 +62,6 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v2
         with:
-          path: .
           lfs: true
       - name: Checkout submodules
         shell: bash
