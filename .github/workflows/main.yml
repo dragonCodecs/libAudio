@@ -63,12 +63,12 @@ jobs:
         with:
           path: .
           lfs: true
-#      - name: Checkout submodules
-#        shell: bash
-#        run: |
-#          authHeader="$(git config --local --get http.https://github.com/.extraheader)"
-#          git submodule sync --recursive
-#          git -c "http.extraheader="$authHeader" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          authHeader=$(git config --local --get http.https://github.com/.extraheader)
+          git submodule sync --recursive
+          git -c "http.extraheader=$authHeader" -c protocol.version=2 submodule update --init --force --recursive --depth=1
       - name: Setup Meson + Ninja
         shell: bash
         run: |
