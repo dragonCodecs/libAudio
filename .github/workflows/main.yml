@@ -87,6 +87,11 @@ jobs:
           [ $COVERAGE -ne 0 ] && $GCOV --version || true
           meson --version
           ninja --version
+      - name: Install dependencies
+        shell: bash
+        run: >
+          sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libflac-dev libwavpack-dev
+          libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
