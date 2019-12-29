@@ -12,14 +12,16 @@ jobs:
       matrix:
         compiler: ['clang-5.0', 'clang-6.0', 'clang-7', 'clang-8', 'clang-9', 'gcc-5', 'gcc-6', 'gcc-7', 'gcc-8', 'gcc-9']
         coverage: [false]
-    env:
-      CC: ${{ matrix.compiler }}
-      PATH: $HOME/.local/bin:$PATH
     steps:
  #     - name: Setup Python
  #       uses: actions/setup-python
  #       with:
  #         python-version: 3.6.9
+      - name: Compiler environment
+        shell: bash
+        run: "echo ::set-env name=PATH::$HOME/.local/bin:$PATH"
+        env:
+          CC: ${{ matrix.compiler }}
       - name: Coverage environment
         env:
           COVERAGE: 0
@@ -31,8 +33,7 @@ jobs:
           sudo apt-add-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
           sudo apt install ${{ matrix.compiler }}
-        env:
-          CXX: ${CC/#gcc/g++}
+          echo "::set-env name=CXX::${CC/#gcc/g++}"
       - name: Setup Clang
         if: startsWith(matrix.compiler, 'clang')
         shell: bash
@@ -40,8 +41,7 @@ jobs:
           sudo apt-add-repository deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic${CC/#clang/}
           sudo apt update
           sudo apt install ${{ matrix.compiler }}
-        env:
-          CXX: ${CC/#clang/clang++}
+          echo "::set-env name=CXX::${CC/#clang/clang++}"
       - name: Checkout project
         uses: actions/checkout@v2
         with:
