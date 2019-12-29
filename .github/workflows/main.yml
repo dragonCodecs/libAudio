@@ -64,7 +64,7 @@ jobs:
         with:
           lfs: true
       - name: Compute libmp4v2 ref
-        run: echo ::set-env name=MP4V2_REF=$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )
+        run: echo ::set-env name=MP4V2_REF::$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )
       - name: Checkout libmp4v2
         uses: actions/checkout@v2
         with:
