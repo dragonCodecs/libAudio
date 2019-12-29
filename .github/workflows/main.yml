@@ -65,12 +65,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
-      - name: Checkout mp4v2
-        shell: bash
-        run: |
-          authHeader="$(git config --local --get http.https://github.com/.extraheader)"
-          git -c "http.https://github.com/.extraheader=$authHeader" -c protocol.version=2 submodule update \
-            --init --recursive --depth=1 deps/mp4v2
+      - name: Submodule commit IDs
+        run: git submoudle status
+      - name: Checkout libmp4v2
+        uses: actions/checkout@v2
+        with:
+          repository: DX-MON/mp4v2
+          token: ${{ secrets.MP4V2_TOKEN }}
+          path: deps/mp4v2
+          lfs: true
       - name: Setup Meson + Ninja
         shell: bash
         run: |
@@ -94,7 +97,7 @@ jobs:
         run: >
           sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libopusfile-dev
           libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
-      - name: Install mp4v2
+      - name: Install libmp4v2
         shell: bash
         run: |
           CPU_COUNT=`grep -c '^processor' /proc/cpuinfo`
