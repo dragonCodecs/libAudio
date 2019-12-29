@@ -48,7 +48,7 @@ namespace libAudio
 			return -1;
 		}
 
-		int seek(void *filePtr, int64_t offset, int whence)
+		int seek(void *filePtr, opus_int64 offset, int whence)
 		{
 			const auto file = static_cast<const oggOpus_t *>(filePtr);
 			return file->fd().seek(offset, whence) >= 0 ? 0 : -1;
