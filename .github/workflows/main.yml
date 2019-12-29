@@ -74,6 +74,14 @@ jobs:
           unzip ninja-linux.zip -d ~/.local/bin
           rm -f get-pip.py ninja-linux.zip
         working-directory: ${{ runner.temp }}
+      - name: Version tools
+        shell: bash
+        run: |
+          $CC --version
+          $CXX --version
+          [ $COVERAGE -ne 0 ] && $GCOV --version || true
+          meson --version
+          ninja --version
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
