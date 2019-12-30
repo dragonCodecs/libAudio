@@ -96,9 +96,9 @@ jobs:
           ninja --version
       - name: Install dependencies
         shell: bash
-        run: >
-          sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libopusfile-dev
-          libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
+        run: |
+          sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libopusfile-dev \
+            libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
       - name: Install libmp4v2
         shell: bash
         run: |
@@ -138,11 +138,6 @@ jobs:
           set HOME=%HOMEDRIVE%%HOMEPATH%
           echo %HOME%\.local\bin;%PATH%
 #          echo ::set-env name=PATH::"%HOME%\.local\bin;%PATH%"
-      - name: Check environment
-        shell: bash
-        run: |
-          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build" || true
-
       - name: Coverage environment
         env:
           COVERAGE: ${{ matrix.coverage }}
@@ -150,7 +145,6 @@ jobs:
         run: |
           echo "Coverage enabled for build? ${{ matrix.coverage }}"
           echo ::set-env name=COVERAGE::$([ $COVERAGE == "true" ] && echo -n 1 || echo -n 0)
-
       - name: Checkout libAudio
         uses: actions/checkout@v2
         with:
