@@ -179,8 +179,6 @@ jobs:
       - name: Version tools
         shell: bash
         run: |
-          $CC --version
-          $CXX --version
           [ $COVERAGE -ne 0 ] && $GCOV --version || true
           meson --version
           ninja --version
@@ -191,6 +189,7 @@ jobs:
         shell: cmd
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
+          cl
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
         run: ninja
