@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Runtime environment
         shell: bash
+        env:
+          WORKSPACE: ${{ github.workspace }}
         run: |
           echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
           echo ::set-env name=GITHUB_WORKSPACE::"`pwd`"
@@ -129,24 +131,24 @@ jobs:
       fail-fast: false
     steps:
       - name: Runtime environment
-        shell: bash
+        shell: cmd
         run: |
-          echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
-          echo ::set-env name=GITHUB_WORKSPACE::"`pwd`"
+          HOME=%HOMEDRIVE%%HOMEPATH%
+          echo ::set-env name=PATH::"%HOME%\.local\bin:%PATH%"
       - name: Check environment
         shell: cmd
         run: |
-          dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Auxiliary\Build"
-          set
+          echo %PATH%
+          dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Auxiliary"
       - name: Configure
         run: |
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
         run: ninja
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+        working-directory: ${{ github.workspace }}/build
       - name: Test
         run: ninja test
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+        working-directory: ${{ github.workspace }}/build
       - name: Install
         run: ninja install
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+        working-directory: ${{ github.workspace }}/build
