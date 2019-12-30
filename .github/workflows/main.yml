@@ -128,6 +128,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-2019]
+        arch: ['amd64', 'x86']
         coverage: [false]
       fail-fast: false
     steps:
@@ -140,7 +141,7 @@ jobs:
       - name: Check environment
         shell: bash
         run: |
-          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/{Apps,Common7,VC}" || true
+          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build || true
 
       - name: Coverage environment
         env:
@@ -185,7 +186,11 @@ jobs:
           ninja --version
 
       - name: Configure
+        env:
+          ARCH: ${{ matrix.arch }}
+        shell: cmd
         run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
         run: ninja
