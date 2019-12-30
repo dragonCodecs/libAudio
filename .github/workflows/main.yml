@@ -133,7 +133,7 @@ jobs:
       - name: Runtime environment
         shell: cmd
         run: |
-          HOME=%HOMEDRIVE%%HOMEPATH%
+          set HOME=%HOMEDRIVE%%HOMEPATH%
           echo ::set-env name=PATH::"%HOME%\.local\bin:%PATH%"
       - name: Check environment
         shell: cmd
