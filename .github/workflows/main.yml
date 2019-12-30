@@ -172,8 +172,7 @@ jobs:
           wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip
           pip3 install --upgrade pip setuptools wheel
           pip3 install meson
-          mkdir /c/tools/ninja-build
-          7z x -oC:\\tools\\ninja-build ninja-win.zip
+          7z x -oC:\\ProgramData\\Chocolatey\\bin ninja-win.zip
           rm -f get-pip.py ninja-win.zip
         working-directory: ${{ runner.temp }}
       - name: Version tools
