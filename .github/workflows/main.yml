@@ -141,6 +141,34 @@ jobs:
         run: |
           dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019"
           set
+
+      - name: Coverage environment
+        env:
+          COVERAGE: ${{ matrix.coverage }}
+        shell: bash
+        run: |
+          echo "Coverage enabled for build? ${{ matrix.coverage }}"
+          echo ::set-env name=COVERAGE::$([ $COVERAGE == "true" ] && echo -n 1 || echo -n 0)
+
+      - name: Setup Meson + Ninja
+        shell: bash
+        run: |
+          wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip
+          pip3 install --upgrade pip setuptools wheel
+          pip3 install meson
+          mkdir /c/tools/ninja-build
+          7z x -oC:\\tools\\ninja-build ninja-win.zip
+          rm -f get-pip.py ninja-win.zip
+        working-directory: ${{ runner.temp }}
+      - name: Version tools
+        shell: bash
+        run: |
+          $CC --version
+          $CXX --version
+          [ $COVERAGE -ne 0 ] && $GCOV --version || true
+          meson --version
+          ninja --version
+
       - name: Configure
         run: |
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
