@@ -131,14 +131,14 @@ jobs:
       fail-fast: false
     steps:
       - name: Runtime environment
-        shell: cmd
+        shell: powershell
         run: |
-          set HOME=%HOMEDRIVE%%HOMEPATH%
-          echo ::set-env name=PATH::"%HOME%\.local\bin:%PATH%"
+          $env:HOME = "$env:HOMEDRIVE + $env:HOMEPATH"
+          echo $env:HOME + "\.local\bin:" + $env:PATH
+#          echo '::set-env name=PATH::"' + $env:HOME + "\.local\bin:" + $env:PATH
       - name: Check environment
         shell: cmd
         run: |
-          echo %PATH%
           dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Auxiliary"
       - name: Configure
         run: |
