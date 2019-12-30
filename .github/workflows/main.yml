@@ -131,15 +131,16 @@ jobs:
       fail-fast: false
     steps:
       - name: Runtime environment
-        shell: powershell
+        shell: cmd
         run: |
-          $env:HOME = "$env:HOMEDRIVE + $env:HOMEPATH"
-          echo $env:HOME + "\.local\bin:" + $env:PATH
-#          echo '::set-env name=PATH::"' + $env:HOME + "\.local\bin:" + $env:PATH
+          set HOME=%HOMEDRIVE%%HOMEPATH%
+          echo %HOME%\.local\bin;%PATH%
+#          echo ::set-env name=PATH::"%HOME%\.local\bin;%PATH%"
       - name: Check environment
         shell: cmd
         run: |
-          dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Auxiliary"
+          dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019"
+          set
       - name: Configure
         run: |
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
