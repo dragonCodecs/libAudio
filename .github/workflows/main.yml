@@ -141,7 +141,7 @@ jobs:
       - name: Check environment
         shell: bash
         run: |
-          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build || true
+          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build" || true
 
       - name: Coverage environment
         env:
