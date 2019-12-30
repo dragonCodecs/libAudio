@@ -84,7 +84,7 @@ jobs:
           sudo pip3 install --upgrade pip setuptools wheel
           pip3 install --user meson
           unzip ninja-linux.zip -d ~/.local/bin
-          rm -f get-pip.py ninja-linux.zip
+          rm ninja-linux.zip
         working-directory: ${{ runner.temp }}
       - name: Version tools
         shell: bash
@@ -168,7 +168,7 @@ jobs:
           pip3 install --upgrade pip setuptools wheel
           pip3 install meson
           7z x -oC:\\ProgramData\\Chocolatey\\bin ninja-win.zip
-          rm -f get-pip.py ninja-win.zip
+          rm ninja-win.zip
         working-directory: ${{ runner.temp }}
       - name: Version tools
         shell: bash
