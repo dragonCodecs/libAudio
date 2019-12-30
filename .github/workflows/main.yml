@@ -140,7 +140,7 @@ jobs:
       - name: Check environment
         shell: bash
         run: |
-          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/*"
+          ls -C "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/{Apps,Common7,VC}" || true
 
       - name: Coverage environment
         env:
