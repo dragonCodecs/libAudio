@@ -128,6 +128,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-2019]
+        coverage: [false]
       fail-fast: false
     steps:
       - name: Runtime environment
@@ -137,10 +138,9 @@ jobs:
           echo %HOME%\.local\bin;%PATH%
 #          echo ::set-env name=PATH::"%HOME%\.local\bin;%PATH%"
       - name: Check environment
-        shell: cmd
+        shell: bash
         run: |
-          dir /w "C:\Program Files (x86)\Microsoft Visual Studio\2019"
-          set
+          ls "/C/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise"
 
       - name: Coverage environment
         env:
