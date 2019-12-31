@@ -131,6 +131,10 @@ jobs:
         arch: ['amd64', 'x86']
         coverage: [false]
       fail-fast: false
+    env:
+      CC: cl.exe
+      CXX: cl.exe
+      LD: link.exe
     steps:
       - name: Runtime environment
         env:
@@ -198,6 +202,8 @@ jobs:
       - name: Version tools
         shell: bash
         run: |
+          $CC || true
+          $LD || true
           [ $COVERAGE -ne 0 ] && $GCOV --version || true
           meson --version
           ninja --version
