@@ -141,9 +141,6 @@ jobs:
           ARCH: ${{ matrix.arch }}
         shell: cmd
         run: |
-          set HOME=%HOMEDRIVE%%HOMEPATH%
-          echo %HOME%\.local\bin;%PATH%
-#          echo ::set-env name=PATH::"%HOME%\.local\bin;%PATH%"
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
           echo ::set-env name=CommandPromptType::%CommandPromptType%
           echo ::set-env name=DevEnvDir::"%DevEnvDir%"
