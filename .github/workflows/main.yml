@@ -169,6 +169,7 @@ jobs:
           echo ::set-env name=WindowsSDK_ExecutablePath_x64::"%WindowsSDK_ExecutablePath_x64%"
           echo ::set-env name=WindowsSDK_ExecutablePath_x86::"%WindowsSDK_ExecutablePath_x86%"
           bash --version
+          echo ::set-env name=CPU_COUNT::%NUMBER_OF_PROCESSORS%
       - name: Coverage environment
         env:
           COVERAGE: ${{ matrix.coverage }}
@@ -226,7 +227,7 @@ jobs:
           autoheader
           autoconf
           ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
-          make -j 2
+          make -j $CPU_COUNT
           sudo make install
         working-directory: ${{ github.workspace }}/deps/mp4v2
       - name: Configure
