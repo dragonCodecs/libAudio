@@ -214,6 +214,10 @@ jobs:
           cp -a usr/bin/pac* usr/bin/aclocal* usr/bin/auto* usr/bin/libtool* usr/bin/msys-ltdl* \
             usr/bin/make usr/bin/m4.exe /usr/bin
           cp -a usr/share/auto* usr/share/aclocal* usr/share/libtool usr/share/pac* /usr/share
+          cp -a usr/bin/as.exe usr/bin/g{cc,++,cc-*}.exe usr/bin/ld{,.bfd}.exe usr/bin/x86_64-pc-msys-* \
+            usr/bin/msys-mpc-*.dll usr/bin/msys-isl-*.dll /usr/bin
+          cp -a usr/lib/gcc usr/lib/{crt0.o,libmsys-2.0.a} usr/lib/w32api /usr/lib
+          cp -a usr/include /usr
         working-directory: ${{ runner.temp }}
       - name: Install libmp4v2
         shell: bash
@@ -223,7 +227,7 @@ jobs:
           automake -ac
           autoheader
           autoconf
-          ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
+          CC=gcc CXX=g++ LD=ld ./configure --prefix=/c/Program\ Files/Git/usr --disable-gch
           make -j $CPU_COUNT
           sudo make install
         working-directory: ${{ github.workspace }}/deps/mp4v2
