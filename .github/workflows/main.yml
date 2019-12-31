@@ -175,12 +175,20 @@ jobs:
           meson --version
           ninja --version
       - name: Install dependencies
-        shell: powershell
+        shell: bash
         run: |
-          choco install -r --no-progress msys2
-          refreshenv
-          C:\tools\msys64\usr\bin\pacman.exe -S --noconfirm m4 autoconf autoconf-archive automake-wrapper \
-            autogen libtool make pkg-config
+          curl -L1O https://downloads.sourceforge.net/project/gnuwin32/autoconf/2.63/autoconf-2.63-bin.zip
+          curl -L1O https://downloads.sourceforge.net/project/gnuwin32/automake/1.9.4/automake-1.9.4-bin.zip
+          curl -L1O https://downloads.sourceforge.net/project/gnuwin32/libtool/1.5.28/libtool-1.5.26-bin.zip
+          curl -L1O https://downloads.sourceforge.net/project/gnuwin32/make/3.81/make-3.81-bin.zip
+          curl -L1O https://downloads.sourceforge.net/project/gnuwin32/make/3.81/make-3.81-dep.zip
+          unzip autoconf-2.63-bin.zip -d /usr
+          unzip automake-1.9.4-bin.zip -d /usr
+          unzip libtool-1.5.26-bin.zip -d /usr
+          unzip make-3.81-bin.zip -d /usr
+          unzip make-3.81-dep.zip -d /usr
+          rm autoconf-2.63-bin.zip automake-1.9.4-bin.zip libtool-1.5.26-bin.zip make-3.81-bin.zip make-3.81-dep.zip
+        working-directory: ${{ runner.temp }}
       - name: Install libmp4v2
         shell: bash
         run: |
