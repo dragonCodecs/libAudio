@@ -133,11 +133,38 @@ jobs:
       fail-fast: false
     steps:
       - name: Runtime environment
+        env:
+          ARCH: ${{ matrix.arch }}
         shell: cmd
         run: |
           set HOME=%HOMEDRIVE%%HOMEPATH%
           echo %HOME%\.local\bin;%PATH%
 #          echo ::set-env name=PATH::"%HOME%\.local\bin;%PATH%"
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
+          echo ::set-env name=CommandPromptType::%CommandPromptType%
+          echo ::set-env name=DevEnvDir::"%DevEnvDir%"
+          echo ::set-env name=ExtensionSdkDir::"%ExtensionSdkDir%"
+          echo ::set-env name=INCLUDE::"%INCLUDE%"
+          echo ::set-env name=LIB::"%LIB%"
+          echo ::set-env name=LIBPATH::"%LIBPATH%"
+          echo ::set-env name=Platform::"%Platform%"
+          echo ::set-env name=UCRTVersion::"%UCRTVersion%"
+          echo ::set-env name=UniversalCRTSdkDir::"%UniversalCRTSdkDir%"
+          echo ::set-env name=VCINSTALLDIR::"%VCINSTALLDIR%"
+          echo ::set-env name=VCToolsInstallDir::"%VCToolsInstallDir%"
+          echo ::set-env name=VCToolsRedistDir::"%VCToolsRedistDir%"
+          echo ::set-env name=VCToolsVersion::"%VCToolsVersion%"
+          echo ::set-env name=VisualStudioVersion::"%VisualStudioVersion%"
+          echo ::set-env name=VSINSTALLDIR::"%VSINSTALLDIR%"
+          echo ::set-env name=WindowsLibPath::"%WindowsLibPath%"
+          echo ::set-env name=WindowsSdkBinPath::"%WindowsSdkBinPath%"
+          echo ::set-env name=WindowsSdkDir::"%WindowsSdkDir%"
+          echo ::set-env name=WindowsSDKLibVersion::"%WindowsSDKLibVersion%"
+          echo ::set-env name=WindowsSdkVerBinPath::"%WindowsSdkVerBinPath%"
+          echo ::set-env name=WindowsSDKVersion::"%WindowsSDKVersion%"
+          echo ::set-env name=WindowsSDK_ExecutablePath_x64::"%WindowsSDK_ExecutablePath_x64%"
+          echo ::set-env name=WindowsSDK_ExecutablePath_x86::"%WindowsSDK_ExecutablePath_x86%"
+          bash --version
       - name: Coverage environment
         env:
           COVERAGE: ${{ matrix.coverage }}
@@ -197,11 +224,8 @@ jobs:
           sudo make install
         working-directory: ${{ github.workspace }}/deps/mp4v2
       - name: Configure
-        env:
-          ARCH: ${{ matrix.arch }}
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
           cl
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
