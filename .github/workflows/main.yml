@@ -181,7 +181,7 @@ jobs:
         run: |
           choco install -r --no-progress msys2
           refreshenv
-          C:\tools\msys64\usr\bin\pacman -S --noconfirm m4 autoconf autoconf-archive automake-wrapper \
+          C:\tools\msys64\usr\bin\pacman.exe -S --noconfirm m4 autoconf autoconf-archive automake-wrapper \
             autogen libtool make pkg-config
       - name: Install libmp4v2
         shell: bash
