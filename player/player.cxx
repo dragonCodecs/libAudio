@@ -1,9 +1,11 @@
+#include <stdint.h>
 #include <libAudio.h>
+// XXX: This header actually needs installing and the current header mess figured out + fixed.
+#include "../libAudio/console.hxx"
 #ifdef _WINDOWS
 //#include <process.h>
 //#include <windows.h>
 #endif
-#include <inttypes.h>
 #include "streamFormatter.hxx"
 #include "stdStream.hxx"
 
@@ -14,6 +16,7 @@ int main(int argc, char **argv)
 {
 	if (argc < 2)
 		return -1;
+	console = {stdout, stderr};
 
 	for (int i = 1; i < argc; i++)
 	{
