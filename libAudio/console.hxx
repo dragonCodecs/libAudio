@@ -211,6 +211,23 @@ namespace libAudio
 			for (const auto &elem : value)
 				write(asHex_t<sizeof(T) * 2, '0'>{elem});
 		}
+
+		struct asTime_t final : public printable_t
+		{
+		private:
+			uint64_t value;
+
+		public:
+			constexpr asTime_t(const uint64_t _value) noexcept : value{_value} { }
+
+			void operator ()(const consoleStream_t &stream) const noexcept final
+			{
+				asInt_t<uint64_t>{value / 60}(stream);
+				stream.write("m "_s);
+				asInt_t<uint64_t>{value % 60}(stream);
+				stream.write("s"_s);
+			}
+		};
 	}
 
 	using console::printable_t;
