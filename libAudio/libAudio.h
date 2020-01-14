@@ -6,11 +6,14 @@
 
 #ifdef _WINDOWS
 	#ifdef libAUDIO
-		#define libAUDIO_API extern
+		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllexport)
 		#pragma warning (disable : 4996)
 	#else
-		#define libAUDIO_API __declspec(dllimport)
+		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllimport)
 	#endif
+	#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
+	#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
+	#define libAUDIO_CXX_API extern
 #else
 	#if __GNUC__ >= 4
 		#define libAUDIO_DEFAULT_VISIBILITY __attribute__ ((visibility("default")))
