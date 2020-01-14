@@ -34,6 +34,8 @@ namespace libAudio
 			virtual ~printable_t() noexcept = default;
 		};
 
+		template<typename> struct asInt_t;
+
 		struct consoleStream_t final
 		{
 		private:
@@ -65,6 +67,47 @@ namespace libAudio
 		public:
 			constexpr console_t() noexcept : outputStream{}, errorStream{}, valid{false} { }
 			console_t(FILE *const outStream, FILE *const errStream) noexcept;
+		};
+
+		template<typename int_t> struct asInt_t : public printable_t
+		{
+		private:
+			using uint_t = typename std::make_unsigned<int_t>::type;
+			int_t _value;
+
+			[[gnu::noinline]] uint_t format(const consoleStream_t &stream, const uint_t number) const noexcept
+			{
+				if (number < 10)
+					stream.write(char(number + '0'));
+				else
+				{
+					const char value = number - format(stream, number / 10) * 10 + '0';
+					stream.write(value);
+				}
+				return number;
+			}
+
+			template<typename T> enableIf<std::is_same<T, int_t>::value &&
+				isIntegral<T>::value && !isBoolean<T>::value && std::is_unsigned<T>::value>
+				printTo(const consoleStream_t &stream) const noexcept { format(stream, _value); }
+
+			template<typename T> [[gnu::noinline]] enableIf<std::is_same<T, int_t>::value &&
+				isIntegral<T>::value && !isBoolean<T>::value && std::is_signed<T>::value>
+				printTo(const consoleStream_t &stream) const noexcept
+			{
+				if (_value < 0)
+				{
+					stream.write('-');
+					format(stream, ~uint_t(_value) - 1);
+				}
+				else
+					format(stream, uint_t(_value));
+			}
+
+		public:
+			constexpr asInt_t(const int_t value) noexcept : _value{value} { }
+			void operator()(const consoleStream_t &stream) const noexcept final
+				{ printTo<int_t>(stream); }
 		};
 	}
 }
