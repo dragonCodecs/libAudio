@@ -2,7 +2,9 @@
 #ifndef _WINDOWS
 #include <unistd.h>
 #else
+#include <stringapiset.h>
 #include <io.h>
+#include "uniquePtr.hxx"
 #endif
 #include "console.hxx"
 
@@ -20,10 +22,26 @@ void consoleStream_t::write(const void *const buffer, const size_t bufferLen) co
 	errno = 0; // extra insurance.
 }
 
+// WARNING: This assumes you're giving it a TEXT stream so no non-printable stuff you want to preserve.
+// It will (if necessary) automatically UTF-8 => 16 convert whatever passes through for the sake of windows
 void consoleStream_t::write(const char *const value) const noexcept
 {
 	if (value)
+	{
+#ifdef _WINDOWS
+		const size_t valueLen = charTraits::length(value);
+		const size_t stringLen = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS,
+			value, valueLen, nullptr, 0);
+		auto string = makeUnique<wchar_t>(stringLen);
+		if (!string)
+			return;
+		MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS, value, valueLen,
+			string.get(), stringLen);
+		write(string.get(), sizeof(wchar_t) * stringLen);
+#else
 		write(value, charTraits::length(value));
+#endif
+	}
 	else
 		write("(null)"_s);
 }
