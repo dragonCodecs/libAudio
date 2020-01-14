@@ -54,6 +54,7 @@ namespace libAudio
 
 			void write(const void *const buffer, const size_t bufferLen) const noexcept;
 			void write(const char *const value) const noexcept;
+			void write(const char value) const noexcept { write(&value, 1); }
 			template<typename T> void write(const std::unique_ptr<T> &value) const noexcept
 				{ value ? write(*value) : write("(null)"_s); }
 			template<typename T> void write(const std::unique_ptr<T []> &value) const noexcept { write(value.get()); }
