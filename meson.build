@@ -6,7 +6,7 @@ project(
 		'warning_level=3',
 		'buildtype=release'
 	],
-	version: '0.4.1',
+	version: '0.5.0',
 	meson_version: '>= 0.52'
 )
 
