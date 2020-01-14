@@ -19,6 +19,14 @@ void consoleStream_t::write(const void *const buffer, const size_t bufferLen) co
 	errno = 0; // extra insurance.
 }
 
+void consoleStream_t::write(const bool value) const noexcept
+{
+	if (value)
+		write("true"_s);
+	else
+		write("false"_s);
+}
+
 console_t::console_t(FILE *const outStream, FILE *const errStream) noexcept :
 	outputStream{fileno(outStream)}, errorStream{fileno(errStream)},
 	valid{outputStream.valid() && errorStream.valid()} { }

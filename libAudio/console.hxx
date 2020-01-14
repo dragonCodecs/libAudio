@@ -37,7 +37,6 @@ namespace libAudio
 			virtual ~printable_t() noexcept = default;
 		};
 
-		template<uint8_t padding, char paddingChar> struct asHex_t;
 		template<typename int_t> struct asInt_t;
 
 		struct consoleStream_t final
@@ -53,20 +52,18 @@ namespace libAudio
 			consoleStream_t(const int32_t desc) noexcept : fd{desc} { checkTTY(); }
 			bool valid() const noexcept { return fd != -1; }
 			bool isTTY() const noexcept { return _tty; }
+
 			void write(const void *const buffer, const size_t bufferLen) const noexcept;
 			void write(const char *const value) const noexcept { write(value, value ? strlen(value) : 0); }
-
-			template<typename T> enableIf<isBaseOf<printable_t, T>::value> write(T &&printable) const noexcept
-				{ printable(*this); }
-			template<typename T> enableIf<isScalar<T>::value> write(const T value) const noexcept
-				{ write(asInt_t<T>{value}); }
-			template<typename T> void write(const T &value) const noexcept
-				{ write(&value, sizeof(T)); }
-			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept
-				{ write(value.data(), sizeof(T) * N); }
 			void write(const std::string &value) const noexcept
 				{ write(value.data(), value.length()); }
+			template<typename T> enableIf<isBaseOf<printable_t, T>::value> write(T &&printable) const noexcept
+				{ printable(*this); }
+			template<typename T> enableIf<isScalar<T>::value> write(const T value) const noexcept;
 			template<typename T> void write(const T *const ptr) const noexcept;
+			void write(const bool value) const noexcept;
+			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept
+				{ write(value.data(), sizeof(T) * N); }
 		};
 
 		struct libAUDIO_CLS_API console_t final
@@ -192,6 +189,9 @@ namespace libAudio
 				}
 			}
 		};
+
+		template<typename T> enableIf<isScalar<T>::value> consoleStream_t::write(const T value) const noexcept
+			{ write(asInt_t<T>{value}); }
 
 		template<typename T> void consoleStream_t::write(const T *const ptr) const noexcept
 		{
