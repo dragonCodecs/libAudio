@@ -62,8 +62,7 @@ namespace libAudio
 			template<typename T> enableIf<isScalar<T>::value> write(const T value) const noexcept;
 			template<typename T> void write(const T *const ptr) const noexcept;
 			void write(const bool value) const noexcept;
-			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept
-				{ write(value.data(), sizeof(T) * N); }
+			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept;
 		};
 
 		struct libAUDIO_CLS_API console_t final
@@ -199,6 +198,12 @@ namespace libAudio
 			write(asHex_t<8, '0'>{
 				reinterpret_cast<uintptr_t>(ptr) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) lgtm[cpp/reinterpret-cast]
 			});
+		}
+
+		template<typename T, size_t N> void consoleStream_t::write(const std::array<T, N> &value) const noexcept
+		{
+			for (const auto &elem : value)
+				write(asHex_t<sizeof(T) * 2, '0'>{elem});
 		}
 	}
 
