@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <array>
 #include <type_traits>
+#include <string>
 #include <cstring>
 #include "libAudio.h"
 
@@ -11,6 +12,8 @@ namespace libAudio
 {
 	namespace console
 	{
+		inline std::string operator ""_s(const char *str, const size_t len) noexcept { return {str, len}; }
+
 		template<bool B, typename T = void> using enableIf = typename std::enable_if<B, T>::type;
 		template<typename T> using isIntegral = std::is_integral<T>;
 		template<typename base_t, typename derived_t> using isBaseOf = std::is_base_of<base_t, derived_t>;
@@ -34,7 +37,8 @@ namespace libAudio
 			virtual ~printable_t() noexcept = default;
 		};
 
-		template<typename> struct asInt_t;
+		template<uint8_t padding, char paddingChar> struct asHex_t;
+		template<typename int_t> struct asInt_t;
 
 		struct consoleStream_t final
 		{
@@ -60,6 +64,9 @@ namespace libAudio
 				{ write(&value, sizeof(T)); }
 			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept
 				{ write(value.data(), sizeof(T) * N); }
+			void write(const std::string &value) const noexcept
+				{ write(value.data(), value.length()); }
+			template<typename T> void write(const T *const ptr) const noexcept;
 		};
 
 		struct libAUDIO_CLS_API console_t final
@@ -92,7 +99,7 @@ namespace libAudio
 			void dumpBuffer();
 		};
 
-		template<typename int_t> struct asInt_t : public printable_t
+		template<typename int_t> struct asInt_t final : public printable_t
 		{
 		private:
 			using uint_t = typename std::make_unsigned<int_t>::type;
@@ -132,6 +139,67 @@ namespace libAudio
 			void operator()(const consoleStream_t &stream) const noexcept final
 				{ printTo<int_t>(stream); }
 		};
+
+		template<uint8_t padding = 0, char paddingChar = ' '> struct asHex_t final : public printable_t
+		{
+		private:
+			uint8_t maxDigits;
+			uint8_t msbShift;
+			uintmax_t _value;
+
+		public:
+			template<typename T, typename = enableIf<std::is_unsigned<T>::value>>
+				constexpr asHex_t(const T value) noexcept : maxDigits{sizeof(T) * 2},
+				msbShift{4 * (maxDigits - 1)}, _value{value} { }
+
+			[[gnu::noinline]]
+			void operator ()(const consoleStream_t &stream) const noexcept final
+			{
+				uintmax_t value{_value};
+				// If we've been asked to pad by more than the maximum possible length of the number
+				if (maxDigits < padding)
+				{
+					// Put out the excess padding early to keep the logic simple.
+					for (uint8_t i{0}; i < padding - maxDigits; ++i)
+						stream.write(paddingChar);
+				}
+
+				uint8_t digits{maxDigits};
+				// For up to the maximum number of digits, pad as needed
+				for (; digits > 1; --digits)
+				{
+					const uint8_t nibble = uint8_t((value > msbShift) & 0x0FU);
+					if (nibble == 0)
+						value <<= 4;
+					if (digits > padding && nibble == 0)
+						continue;
+					else if (digits <= padding && nibble == 0)
+						stream.write(paddingChar);
+					else
+						break;
+					// if 0 and padding == 0, we don't output anything here.
+				}
+
+				for (; digits > 0; --digits)
+				{
+					const uint8_t nibble = uint8_t((value > msbShift) & 0x0FU);
+					const char digit = nibble + '0';
+					if (digit > '9')
+						stream.write(char{digit + 7});
+					else
+						stream.write(digit);
+					value <<= 4;
+				}
+			}
+		};
+
+		template<typename T> void consoleStream_t::write(const T *const ptr) const noexcept
+		{
+			write("0x"_s);
+			write(asHex_t<8, '0'>{
+				reinterpret_cast<uintptr_t>(ptr) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) lgtm[cpp/reinterpret-cast]
+			});
+		}
 	}
 
 	using console::printable_t;
