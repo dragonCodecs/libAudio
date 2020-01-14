@@ -13,14 +13,16 @@
 	#endif
 #else
 	#if __GNUC__ >= 4
-		#define DEFAULT_VISIBILITY __attribute__ ((visibility("default")))
+		#define libAUDIO_DEFAULT_VISIBILITY __attribute__ ((visibility("default")))
 	#else
-		#define DEFAULT_VISIBILITY
+		#define libAUDIO_DEFAULT_VISIBILITY
 	#endif
 	#ifdef __cplusplus
-		#define libAUDIO_API extern "C" DEFAULT_VISIBILITY
+		#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
+		#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
+		#define libAUDIO_CXX_API extern libAUDIO_CLS_API
 	#else
-		#define libAUDIO_API extern DEFAULT_VISIBILITY
+		#define libAUDIO_API extern libAUDIO_DEFAULT_VISIBILITY
 	#endif
 #endif
 
