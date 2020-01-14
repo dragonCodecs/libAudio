@@ -1,14 +1,39 @@
 #ifndef CONSOLE__HXX
 #define CONSOLE__HXX
 
-#include <stdio.h>
+#include <cstdio>
 #include <array>
+#include <type_traits>
+#include <cstring>
 #include "libAudio.h"
 
 namespace libAudio
 {
 	namespace console
 	{
+		template<bool B, typename T = void> using enableIf = typename std::enable_if<B, T>::type;
+		template<typename T> using isIntegral = std::is_integral<T>;
+		template<typename base_t, typename derived_t> using isBaseOf = std::is_base_of<base_t, derived_t>;
+
+		template<typename> struct isChar : std::false_type { };
+		template<> struct isChar<char> : std::true_type { };
+
+		template<typename> struct __isBoolean : public std::false_type { };
+		template<> struct __isBoolean<bool> : public std::true_type { };
+		template<typename T> struct isBoolean : public std::integral_constant<bool,
+			__isBoolean<typename std::remove_cv<T>::type>::value> { };
+
+		template<typename T> struct isScalar : public std::integral_constant<bool,
+			isIntegral<T>::value && !isBoolean<T>::value && !isChar<T>::value> { };
+
+		struct consoleStream_t;
+
+		struct printable_t
+		{
+			virtual void operator()(const consoleStream_t &) const noexcept;
+			virtual ~printable_t() noexcept = default;
+		};
+
 		struct consoleStream_t final
 		{
 		private:
