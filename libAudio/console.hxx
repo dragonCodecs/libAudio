@@ -72,6 +72,7 @@ namespace libAudio
 			consoleStream_t errorStream;
 			bool valid;
 
+			void write(const consoleStream_t &stream) const noexcept { stream.write('\n'); }
 			template<typename T, typename... U> void write(const consoleStream_t &stream,
 				T &&value, U &&...values) const noexcept
 			{
