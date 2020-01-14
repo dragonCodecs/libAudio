@@ -81,7 +81,7 @@ namespace libAudio
 			template<typename T, typename... U> void write(const consoleStream_t &stream,
 				T &&value, U &&...values) const noexcept
 			{
-				stream.write(value);
+				stream.write(std::forward<T>(value));
 				write(stream, std::forward<U>(values)...);
 			}
 
