@@ -32,15 +32,13 @@ namespace libAudio
 
 		struct consoleStream_t;
 
-		struct printable_t
+		struct libAUDIO_CLS_API printable_t
 		{
-			virtual void operator()(const consoleStream_t &) const noexcept;
+			virtual void operator()(const consoleStream_t &) const noexcept = 0;
 			virtual ~printable_t() noexcept = default;
 		};
 
-		template<typename int_t> struct asInt_t;
-
-		struct consoleStream_t final
+		struct libAUDIO_CLS_API consoleStream_t final
 		{
 		private:
 			int32_t fd;
@@ -87,21 +85,21 @@ namespace libAudio
 
 		public:
 			constexpr console_t() noexcept : outputStream{}, errorStream{}, valid{false} { }
-			console_t(FILE *const outStream, FILE *const errStream) noexcept;
+			libAUDIO_CLS_API console_t(FILE *const outStream, FILE *const errStream) noexcept;
 
-			template<typename... T> void error(T &&...values) const noexcept
+			template<typename... T> libAUDIO_CLS_API void error(T &&...values) const noexcept
 				{ write(errorStream, std::forward<T>(values)...); }
 
-			template<typename... T> void info(T &&...values) const noexcept
+			template<typename... T> libAUDIO_CLS_API void info(T &&...values) const noexcept
 				{ write(outputStream, std::forward<T>(values)...); }
 
-			template<typename... T> void debug(T &&...values) const noexcept
+			template<typename... T> libAUDIO_CLS_API void debug(T &&...values) const noexcept
 				{ write(outputStream, std::forward<T>(values)...); }
 
 			void dumpBuffer();
 		};
 
-		template<typename int_t> struct asInt_t final : public printable_t
+		template<typename int_t> libAUDIO_CLS_API struct asInt_t final : public printable_t
 		{
 		private:
 			using uint_t = typename std::make_unsigned<int_t>::type;
@@ -142,7 +140,8 @@ namespace libAudio
 				{ printTo<int_t>(stream); }
 		};
 
-		template<uint8_t padding = 0, char paddingChar = ' '> struct asHex_t final : public printable_t
+		template<uint8_t padding = 0, char paddingChar = ' '>
+			libAUDIO_CLS_API struct asHex_t final : public printable_t
 		{
 		private:
 			uint8_t maxDigits;
@@ -212,7 +211,7 @@ namespace libAudio
 				write(asHex_t<sizeof(T) * 2, '0'>{elem});
 		}
 
-		struct asTime_t final : public printable_t
+		struct libAUDIO_CLS_API asTime_t final : public printable_t
 		{
 		private:
 			uint64_t value;
