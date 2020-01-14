@@ -5,6 +5,7 @@
 #include <array>
 #include <type_traits>
 #include <string>
+#include <memory>
 #include <cstring>
 #include "libAudio.h"
 
@@ -54,7 +55,9 @@ namespace libAudio
 			bool isTTY() const noexcept { return _tty; }
 
 			void write(const void *const buffer, const size_t bufferLen) const noexcept;
-			void write(const char *const value) const noexcept { write(value, value ? strlen(value) : 0); }
+			void write(const char *const value) const noexcept;
+			template<typename T> void write(const std::unique_ptr<T> &value) const noexcept { write(*value); }
+			template<typename T> void write(const std::unique_ptr<T []> &value) const noexcept { write(value.get()); }
 			void write(const std::string &value) const noexcept
 				{ write(value.data(), value.length()); }
 			template<typename T> enableIf<isBaseOf<printable_t, T>::value> write(T &&printable) const noexcept
