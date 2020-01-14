@@ -50,7 +50,12 @@ namespace libAudio
 			bool valid() const noexcept { return fd != -1; }
 			bool isTTY() const noexcept { return _tty; }
 			void write(const void *const buffer, const size_t bufferLen) const noexcept;
+			void write(const char *const value) const noexcept { write(value, value ? strlen(value) : 0); }
 
+			template<typename T> enableIf<isBaseOf<printable_t, T>::value> write(T &&printable) const noexcept
+				{ printable(*this); }
+			template<typename T> enableIf<isScalar<T>::value> write(const T value) const noexcept
+				{ write(asInt_t<T>{value}); }
 			template<typename T> void write(const T &value) const noexcept
 				{ write(&value, sizeof(T)); }
 			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept
@@ -64,9 +69,27 @@ namespace libAudio
 			consoleStream_t errorStream;
 			bool valid;
 
+			template<typename T, typename... U> void write(const consoleStream_t &stream,
+				T &&value, U &&...values) const noexcept
+			{
+				stream.write(value);
+				write(stream, std::forward<U>(values)...);
+			}
+
 		public:
 			constexpr console_t() noexcept : outputStream{}, errorStream{}, valid{false} { }
 			console_t(FILE *const outStream, FILE *const errStream) noexcept;
+
+			template<typename... T> void error(T &&...values) const noexcept
+				{ write(errorStream, std::forward<T>(values)...); }
+
+			template<typename... T> void info(T &&...values) const noexcept
+				{ write(outputStream, std::forward<T>(values)...); }
+
+			template<typename... T> void debug(T &&...values) const noexcept
+				{ write(outputStream, std::forward<T>(values)...); }
+
+			void dumpBuffer();
 		};
 
 		template<typename int_t> struct asInt_t : public printable_t
@@ -110,6 +133,8 @@ namespace libAudio
 				{ printTo<int_t>(stream); }
 		};
 	}
+
+	using console::printable_t;
 }
 
 libAUDIO_CXX_API libAudio::console::console_t console;
