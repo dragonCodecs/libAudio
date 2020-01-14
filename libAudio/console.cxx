@@ -10,7 +10,9 @@ using namespace libAudio::console;
 
 console_t console;
 
-void consoleStream_t::write(void *const buffer, const size_t bufferLen) const noexcept
+void consoleStream_t::checkTTY() noexcept { _tty = isatty(fd); }
+
+void consoleStream_t::write(const void *const buffer, const size_t bufferLen) const noexcept
 {
 	// We don't actually care if this succeeds. We just try if at all possible.
 	(void)::write(fd, buffer, bufferLen);
