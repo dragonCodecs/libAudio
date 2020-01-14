@@ -12,6 +12,9 @@ using namespace libAudio::console;
 using charTraits = std::char_traits<char>;
 
 console_t console;
+static const std::string errorPrefix = "[ERR]"_s;
+static const std::string infoPrefix = "[INF]"_s;
+static const std::string debugPrefix = "[DBG]"_s;
 
 void consoleStream_t::checkTTY() noexcept { _tty = isatty(fd); }
 
@@ -57,3 +60,48 @@ void consoleStream_t::write(const bool value) const noexcept
 console_t::console_t(FILE *const outStream, FILE *const errStream) noexcept :
 	outputStream{fileno(outStream)}, errorStream{fileno(errStream)},
 	valid{outputStream.valid() && errorStream.valid()} { }
+
+void console_t::_error() const noexcept
+{
+#ifndef _WINDOWS
+	const bool tty = errorStream.isTTY();
+	errorStream.write(' ');
+	if (tty)
+		errorStream.write("\033[1;31m"_s);
+	errorStream.write(errorPrefix);
+	if (tty)
+		errorStream.write("\033[0m"_s);
+	errorStream.write(' ');
+#else
+#endif
+}
+
+void console_t::_info() const noexcept
+{
+#ifndef _WINDOWS
+	const bool tty = outputStream.isTTY();
+	outputStream.write(' ');
+	if (tty)
+		outputStream.write("\033[36m"_s);
+	outputStream.write(infoPrefix);
+	if (tty)
+		outputStream.write("\033[0m"_s);
+	outputStream.write(' ');
+#else
+#endif
+}
+
+void console_t::_debug() const noexcept
+{
+#ifndef _WINDOWS
+	const bool tty = outputStream.isTTY();
+	outputStream.write(' ');
+	if (tty)
+		outputStream.write("\033[1;34m"_s);
+	outputStream.write(debugPrefix);
+	if (tty)
+		outputStream.write("\033[0m"_s);
+	outputStream.write(' ');
+#else
+#endif
+}

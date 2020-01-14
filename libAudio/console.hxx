@@ -84,18 +84,22 @@ namespace libAudio
 				write(stream, std::forward<U>(values)...);
 			}
 
+			void _error() const noexcept;
+			void _info() const noexcept;
+			void _debug() const noexcept;
+
 		public:
 			constexpr console_t() noexcept : outputStream{}, errorStream{}, valid{false} { }
 			libAUDIO_CLS_API console_t(FILE *const outStream, FILE *const errStream) noexcept;
 
 			template<typename... T> libAUDIO_CLS_API void error(T &&...values) const noexcept
-				{ write(errorStream, std::forward<T>(values)...); }
+				{ _error(); write(errorStream, std::forward<T>(values)...); }
 
 			template<typename... T> libAUDIO_CLS_API void info(T &&...values) const noexcept
-				{ write(outputStream, std::forward<T>(values)...); }
+				{ _info(); write(outputStream, std::forward<T>(values)...); }
 
 			template<typename... T> libAUDIO_CLS_API void debug(T &&...values) const noexcept
-				{ write(outputStream, std::forward<T>(values)...); }
+				{ _debug(); write(outputStream, std::forward<T>(values)...); }
 
 			void dumpBuffer();
 		};
