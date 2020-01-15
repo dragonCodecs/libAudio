@@ -196,24 +196,24 @@ void *MPC_OpenR(const char *fileName) { return mpc_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR()
+ * @param mpcFile A pointer to a file opened with \c MPC_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c MPC_Play() or \c MPC_FillBuffer()
  */
-const fileInfo_t *MPC_GetFileInfo(void *p_MPCFile) { return audioFileInfo(p_MPCFile); }
+const fileInfo_t *MPC_GetFileInfo(void *mpcFile) { return audioFileInfo(mpcFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR()
+ * @param mpcFile A pointer to a file opened with \c MPC_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param countBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int countBufferLen)
-	{ return audioFillBuffer(p_MPCFile, OutBuffer, countBufferLen); }
+long MPC_FillBuffer(void *mpcFile, uint8_t *OutBuffer, int countBufferLen)
+	{ return audioFillBuffer(mpcFile, OutBuffer, countBufferLen); }
 
 int64_t mpc_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -266,24 +266,24 @@ mpc_t::decoderContext_t::~decoderContext_t() noexcept
 
 /*!
  * Closes an opened audio file
- * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR(), or \c nullptr for a no-operation
+ * @param mpcFile A pointer to a file opened with \c MPC_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_MPCFile after using
+ * @warning Do not use the pointer given by \p mpcFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int MPC_CloseFileR(void *p_MPCFile) { return audioCloseFile(p_MPCFile); }
+int MPC_CloseFileR(void *mpcFile) { return audioCloseFile(mpcFile); }
 
 /*!
  * Plays an opened MPC file using OpenAL on the default audio device
- * @param p_MPCFile A pointer to a file opened with \c MPC_OpenR()
+ * @param mpcFile A pointer to a file opened with \c MPC_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c MPC_OpenR() used to open the file at \p p_MPCFile,
+ * the call to \c MPC_OpenR() used to open the file at \p mpcFile,
  * this function will do nothing.
  */
-void MPC_Play(void *p_MPCFile) { audioPlay(p_MPCFile); }
-void MPC_Pause(void *p_MPCFile) { audioPause(p_MPCFile); }
-void MPC_Stop(void *p_MPCFile) { audioStop(p_MPCFile); }
+void MPC_Play(void *mpcFile) { audioPlay(mpcFile); }
+void MPC_Pause(void *mpcFile) { audioPause(mpcFile); }
+void MPC_Stop(void *mpcFile) { audioStop(mpcFile); }
 
 /*!
  * Checks the file given by \p fileName for whether it is an MPC

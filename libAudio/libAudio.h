@@ -201,12 +201,12 @@ libAUDIO_API bool Is_FC1x(const char *fileName);
 // MPC API
 
 libAUDIO_API void *MPC_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *MPC_GetFileInfo(void *p_MPCFile);
-libAUDIO_API long MPC_FillBuffer(void *p_MPCFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int MPC_CloseFileR(void *p_MPCFile);
-libAUDIO_API void MPC_Play(void *p_MPCFile);
-libAUDIO_API void MPC_Pause(void *p_MPCFile);
-libAUDIO_API void MPC_Stop(void *p_MPCFile);
+libAUDIO_API const fileInfo_t *MPC_GetFileInfo(void *mpcFile);
+libAUDIO_API long MPC_FillBuffer(void *mpcFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int MPC_CloseFileR(void *mpcFile);
+libAUDIO_API void MPC_Play(void *mpcFile);
+libAUDIO_API void MPC_Pause(void *mpcFile);
+libAUDIO_API void MPC_Stop(void *mpcFile);
 libAUDIO_API bool Is_MPC(const char *fileName);
 
 // WavPack API
