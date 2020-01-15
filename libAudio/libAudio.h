@@ -83,12 +83,12 @@ libAUDIO_API int FLAC_CloseFileW(void *flacFile);
 // WAV(E) API
 
 libAUDIO_API void *WAV_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *WAV_GetFileInfo(void *p_WAVFile);
-libAUDIO_API long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int WAV_CloseFileR(void *p_WAVFile);
-libAUDIO_API void WAV_Play(void *p_WAVFile);
-libAUDIO_API void WAV_Pause(void *p_WAVFile);
-libAUDIO_API void WAV_Stop(void *p_WAVFile);
+libAUDIO_API const fileInfo_t *WAV_GetFileInfo(void *wavFile);
+libAUDIO_API long WAV_FillBuffer(void *wavFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int WAV_CloseFileR(void *wavFile);
+libAUDIO_API void WAV_Play(void *wavFile);
+libAUDIO_API void WAV_Pause(void *wavFile);
+libAUDIO_API void WAV_Stop(void *wavFile);
 libAUDIO_API bool Is_WAV(const char *fileName);
 
 // M4A API

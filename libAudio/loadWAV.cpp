@@ -165,22 +165,22 @@ void *WAV_OpenR(const char *fileName) { return wav_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
+ * @param wavFile A pointer to a file opened with \c WAV_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c WAV_Play() or \c WAV_FillBuffer()
  */
-const fileInfo_t *WAV_GetFileInfo(void *p_WAVFile) { return audioFileInfo(p_WAVFile); }
+const fileInfo_t *WAV_GetFileInfo(void *wavFile) { return audioFileInfo(wavFile); }
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
 
 /*!
  * Closes an opened audio file
- * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR(), or \c nullptr for a no-operation
+ * @param wavFile A pointer to a file opened with \c WAV_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_WAVFile after using
+ * @warning Do not use the pointer given by \p wavFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int WAV_CloseFileR(void *p_WAVFile) { return audioCloseFile(p_WAVFile); }
+int WAV_CloseFileR(void *wavFile) { return audioCloseFile(wavFile); }
 int8_t dataToSample(const std::array<uint8_t, 1> &data) noexcept
 	{ return int8_t(data[0]) ^ 0x80; }
 int16_t dataToSample(const std::array<uint8_t, 2> &data) noexcept
@@ -238,14 +238,14 @@ template<typename T, uint8_t N> uint32_t readFloatSamples(wav_t &wavFile, void *
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
+ * @param wavFile A pointer to a file opened with \c WAV_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long WAV_FillBuffer(void *p_WAVFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_WAVFile, OutBuffer, nOutBufferLen); }
+long WAV_FillBuffer(void *wavFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(wavFile, OutBuffer, nOutBufferLen); }
 
 int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 {
@@ -291,14 +291,14 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 
 /*!
  * Plays an opened WAV file using OpenAL on the default audio device
- * @param p_WAVFile A pointer to a file opened with \c WAV_OpenR()
+ * @param wavFile A pointer to a file opened with \c WAV_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c WAV_OpenR() used to open the file at \p p_WAVFile,
+ * the call to \c WAV_OpenR() used to open the file at \p wavFile,
  * this function will do nothing.
  */
-void WAV_Play(void *p_WAVFile) { audioPlay(p_WAVFile); }
-void WAV_Pause(void *p_WAVFile) { audioPause(p_WAVFile); }
-void WAV_Stop(void *p_WAVFile) { audioStop(p_WAVFile); }
+void WAV_Play(void *wavFile) { audioPlay(wavFile); }
+void WAV_Pause(void *wavFile) { audioPause(wavFile); }
+void WAV_Stop(void *wavFile) { audioStop(wavFile); }
 
 /*!
  * Checks the file given by \p fileName for whether it is a WAV
