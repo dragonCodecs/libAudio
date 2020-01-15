@@ -70,15 +70,15 @@ namespace libAudio
 		/*!
 		* @internal
 		* Internal function used to open the MP4 file for output and potential readback
-		* @param FileName The name of the file to open
+		* @param fileName The name of the file to open
 		* @param Mode The \c MP4FileMode in which to open the file. We ensure this has
 		*    to be FILEMODE_CREATE for our purposes
 		*/
-		void *openW(const char *FileName, MP4FileMode Mode)
+		void *openW(const char *fileName, MP4FileMode Mode)
 		{
 			if (Mode != FILEMODE_CREATE)
 				return NULL;
-			return fopen(FileName, "wb+");
+			return fopen(fileName, "wb+");
 		}
 
 		/*!
@@ -158,12 +158,12 @@ namespace libAudio
 using namespace libAudio;
 
 /*!
- * This function opens the file given by \c FileName for writing and returns a pointer
+ * This function opens the file given by \c fileName for writing and returns a pointer
  * to the context of the opened file which must be used only by M4A_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c NULL if there was an error
  */
-void *M4A_OpenW(const char *FileName)
+void *M4A_OpenW(const char *fileName)
 {
 	M4A_Enc_Intern *ret = NULL;
 
@@ -172,7 +172,7 @@ void *M4A_OpenW(const char *FileName)
 		return ret;
 
 	ret->err = false;
-	ret->p_mp4 = MP4CreateProvider(FileName, &saveM4A::ioFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
+	ret->p_mp4 = MP4CreateProvider(fileName, &saveM4A::ioFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
 
 	return ret;
 }

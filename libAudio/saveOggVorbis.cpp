@@ -30,12 +30,12 @@ oggVorbis_t *oggVorbis_t::openW(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for writing and returns a pointer
+ * This function opens the file given by \c fileName for writing and returns a pointer
  * to the context of the opened file which must be used only by OggVorbis_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggVorbis_OpenW(const char *FileName) { return oggVorbis_t::openW(FileName); }
+void *OggVorbis_OpenW(const char *fileName) { return oggVorbis_t::openW(fileName); }
 
 bool oggVorbis_t::encoderContext_t::writePage(const fd_t &fd, const bool force) noexcept
 {

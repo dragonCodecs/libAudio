@@ -246,12 +246,12 @@ m4a_t *m4a_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by M4A_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *M4A_OpenR(const char *FileName) { return m4a_t::openR(FileName); }
+void *M4A_OpenR(const char *fileName) { return m4a_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
@@ -358,15 +358,15 @@ void M4A_Stop(void *p_M4AFile) { audioStop(p_M4AFile); }
 // .  .  .     f  t  y  p  M  4  A
 
 /*!
- * Checks the file given by \p FileName for whether it is an MP4/M4A
+ * Checks the file given by \p fileName for whether it is an MP4/M4A
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MP4/M4A file or not
  */
-bool Is_M4A(const char *FileName) { return m4a_t::isM4A(FileName); }
+bool Is_M4A(const char *fileName) { return m4a_t::isM4A(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a MP4/M4A

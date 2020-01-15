@@ -34,8 +34,8 @@
  */
 struct API_Functions
 {
-	void *(__CDECL__ *OpenR)(const char *FileName);
-	void *(__CDECL__ *OpenW)(const char *FileName);
+	void *(__CDECL__ *OpenR)(const char *fileName);
+	void *(__CDECL__ *OpenW)(const char *fileName);
 	const fileInfo_t *(__CDECL__ *GetFileInfo)(void *p_File);
 	bool (__CDECL__ *SetFileInfo)(void *p_File, const fileInfo_t *const p_FI);
 	int64_t (__CDECL__ *FillBuffer)(void *p_File, void *const buffer, const uint32_t length);

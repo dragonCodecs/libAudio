@@ -106,12 +106,12 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggVorbis_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggVorbis_OpenR(const char *FileName) { return oggVorbis_t::openR(FileName); }
+void *OggVorbis_OpenR(const char *fileName) { return oggVorbis_t::openR(fileName); }
 
 /*!
  * This function gets the \c fileInfo_t structure for an opened file
@@ -181,15 +181,15 @@ void OggVorbis_Pause(void *p_VorbisFile) { return audioPause(p_VorbisFile); }
 void OggVorbis_Stop(void *p_VorbisFile) { return audioStop(p_VorbisFile); }
 
 /*!
- * Checks the file given by \p FileName for whether it is an Ogg|Vorbis
+ * Checks the file given by \p fileName for whether it is an Ogg|Vorbis
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an Ogg|Vorbis file or not
  */
-bool Is_OggVorbis(const char *FileName) { return oggVorbis_t::isOggVorbis(FileName); }
+bool Is_OggVorbis(const char *fileName) { return oggVorbis_t::isOggVorbis(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a Ogg|Vorbis

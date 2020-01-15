@@ -156,12 +156,12 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by WAV_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *WAV_OpenR(const char *FileName) { return wav_t::openR(FileName); }
+void *WAV_OpenR(const char *fileName) { return wav_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
@@ -301,15 +301,15 @@ void WAV_Pause(void *p_WAVFile) { audioPause(p_WAVFile); }
 void WAV_Stop(void *p_WAVFile) { audioStop(p_WAVFile); }
 
 /*!
- * Checks the file given by \p FileName for whether it is a WAV
+ * Checks the file given by \p fileName for whether it is a WAV
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is a WAV file or not
  */
-bool Is_WAV(const char *FileName) { return wav_t::isWAV(FileName); }
+bool Is_WAV(const char *fileName) { return wav_t::isWAV(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a WAV

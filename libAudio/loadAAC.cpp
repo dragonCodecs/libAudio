@@ -104,12 +104,12 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by AAC_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *AAC_OpenR(const char *FileName) { return aac_t::openR(FileName); }
+void *AAC_OpenR(const char *fileName) { return aac_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
@@ -309,15 +309,15 @@ void AAC_Pause(void *p_AACFile) { return audioPause(p_AACFile); }
 void AAC_Stop(void *p_AACFile) { return audioStop(p_AACFile); }
 
 /*!
- * Checks the file given by \p FileName for whether it is an AAC
+ * Checks the file given by \p fileName for whether it is an AAC
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an AAC file or not
  */
-bool Is_AAC(const char *FileName) { return aac_t::isAAC(FileName); }
+bool Is_AAC(const char *fileName) { return aac_t::isAAC(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a AAC

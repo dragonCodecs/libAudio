@@ -257,12 +257,12 @@ mp3_t *mp3_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by MP3_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *MP3_OpenR(const char *FileName) { return mp3_t::openR(FileName); }
+void *MP3_OpenR(const char *fileName) { return mp3_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
@@ -423,15 +423,15 @@ void MP3_Pause(void *p_MP3File) { audioPause(p_MP3File); }
 void MP3_Stop(void *p_MP3File) { audioStop(p_MP3File); }
 
 /*!
- * Checks the file given by \p FileName for whether it is an MP3
+ * Checks the file given by \p fileName for whether it is an MP3
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MP3 file or not
  */
-bool Is_MP3(const char *FileName) { return mp3_t::isMP3(FileName); }
+bool Is_MP3(const char *fileName) { return mp3_t::isMP3(fileName); }
 
 inline uint16_t asUint16(uint8_t *value) noexcept
 	{ return (uint16_t{value[0]} << 8) | value[1]; }

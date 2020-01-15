@@ -34,7 +34,7 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *IT_OpenR(const char *FileName) { return modIT_t::openR(FileName); }
+void *IT_OpenR(const char *fileName) { return modIT_t::openR(fileName); }
 const fileInfo_t *IT_GetFileInfo(void *p_ITFile) { return audioFileInfo(p_ITFile); }
 long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_ITFile, OutBuffer, nOutBufferLen); }
@@ -42,7 +42,7 @@ int IT_CloseFileR(void *p_ITFile) { return audioCloseFile(p_ITFile); }
 void IT_Play(void *p_ITFile) { audioPlay(p_ITFile); }
 void IT_Pause(void *p_ITFile) { audioPause(p_ITFile); }
 void IT_Stop(void *p_ITFile) { audioStop(p_ITFile); }
-bool Is_IT(const char *FileName) { return modIT_t::isIT(FileName); }
+bool Is_IT(const char *fileName) { return modIT_t::isIT(fileName); }
 
 bool modIT_t::isIT(const int32_t fd) noexcept
 {

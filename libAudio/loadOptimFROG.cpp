@@ -151,19 +151,19 @@ uint8_t __fseek(void *Inst, int64_t pos)
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OptimFROG_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c NULL if there was an error
  */
-void *OptimFROG_OpenR(const char *FileName)
+void *OptimFROG_OpenR(const char *fileName)
 {
 	std::unique_ptr<OFROG_Intern> ret = makeUnique<OFROG_Intern>();
 	if (!ret)
 		return nullptr;
 	fileInfo_t &info = ret->info;
 
-	ret->f_OFG = fopen(FileName, "rb");
+	ret->f_OFG = fopen(fileName, "rb");
 	if (!ret->f_OFG)
 		return nullptr;
 	ret->p_dec = OptimFROG_createInstance();
@@ -311,17 +311,17 @@ void OptimFROG_Stop(void *p_OFGFile)
 }
 
 /*!
- * Checks the file given by \p FileName for whether it is an OptimFROG
+ * Checks the file given by \p fileName for whether it is an OptimFROG
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an OptimFROG file or not
  */
-bool Is_OptimFROG(const char *FileName)
+bool Is_OptimFROG(const char *fileName)
 {
-	FILE *f_OFG = fopen(FileName, "rb");
+	FILE *f_OFG = fopen(fileName, "rb");
 	char OFGSig[4];
 
 	if (f_OFG == NULL)

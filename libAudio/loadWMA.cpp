@@ -625,7 +625,7 @@ int total_gain_to_bits(int total_gain)
 		return  9;
 }
 
-void *WMA_OpenR(char *FileName)
+void *WMA_OpenR(char *fileName)
 {
 	WMA_Intern *ret = NULL;
 	FILE *f_WMA = NULL;
@@ -636,7 +636,7 @@ void *WMA_OpenR(char *FileName)
 	memset(ret, 0x00, sizeof(WMA_Intern));
 	ret->packets_read = -1;
 
-	f_WMA = fopen(FileName, "rb");
+	f_WMA = fopen(fileName, "rb");
 	if (f_WMA == NULL)
 		return f_WMA;
 
@@ -2229,7 +2229,7 @@ long WMA_FillBuffer(void *p_WMAFile, BYTE *OutBuffer, int nOutBufferLen)
 	//if (dataleft == 0)
 	dataleft = nData = DecodeFrame(p_WF, data);*/
 
-	//buf += 
+	//buf +=
 	init_bitstream_reader(p_WF, buf, bufsize);
 
 	// Uses a bit reservoir?
@@ -2326,9 +2326,9 @@ void WMA_Stop(void *p_WMAFile)
 	p_WF->p_Playback->stop();
 }
 
-bool Is_WMA(char *FileName)
+bool Is_WMA(char *fileName)
 {
-	FILE *f_WMA = fopen(FileName, "rb");
+	FILE *f_WMA = fopen(fileName, "rb");
 	char WMA_Sig[16];
 	static const char Sig[] = { 0x30, 0x26, 0xB2, 0x75,
 		0x8E, 0x66, 0xCF, 0x11,

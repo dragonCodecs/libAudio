@@ -91,12 +91,12 @@ flac_t *flac_t::openW(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for writing and returns a pointer
+ * This function opens the file given by \c fileName for writing and returns a pointer
  * to the context of the opened file which must be used only by FLAC_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *FLAC_OpenW(const char *FileName) { return flac_t::openW(FileName); }
+void *FLAC_OpenW(const char *fileName) { return flac_t::openW(fileName); }
 
 /*!
  * This function sets the \c FileInfo structure for a FLAC file being encoded

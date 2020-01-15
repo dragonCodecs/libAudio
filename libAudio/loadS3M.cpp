@@ -34,7 +34,7 @@ modS3M_t *modS3M_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *S3M_OpenR(const char *FileName) { return modS3M_t::openR(FileName); }
+void *S3M_OpenR(const char *fileName) { return modS3M_t::openR(fileName); }
 const fileInfo_t *S3M_GetFileInfo(void *p_S3MFile) { return audioFileInfo(p_S3MFile); }
 long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen)
 	{ return audioFillBuffer(p_S3MFile, OutBuffer, nOutBufferLen); }
@@ -42,7 +42,7 @@ int S3M_CloseFileR(void *p_S3MFile) { return audioCloseFile(p_S3MFile); }
 void S3M_Play(void *p_S3MFile) { audioPlay(p_S3MFile); }
 void S3M_Pause(void *p_S3MFile) { audioPause(p_S3MFile); }
 void S3M_Stop(void *p_S3MFile) { audioStop(p_S3MFile); }
-bool Is_S3M(const char *FileName) { return modS3M_t::isS3M(FileName); }
+bool Is_S3M(const char *fileName) { return modS3M_t::isS3M(fileName); }
 
 bool modS3M_t::isS3M(const int32_t fd) noexcept
 {

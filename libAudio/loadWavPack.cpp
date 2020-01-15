@@ -218,12 +218,12 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by WavPack_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *WavPack_OpenR(const char *FileName) { return wavPack_t::openR(FileName); }
+void *WavPack_OpenR(const char *fileName) { return wavPack_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened WavPack file
@@ -307,15 +307,15 @@ void WavPack_Pause(void *p_WVPFile) { return audioPause(p_WVPFile); }
 void WavPack_Stop(void *p_WVPFile) { return audioStop(p_WVPFile); }
 
 /*!
- * Checks the file given by \p FileName for whether it is an WavPack
+ * Checks the file given by \p fileName for whether it is an WavPack
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an WavPack file or not
  */
-bool Is_WavPack(const char *FileName) { return wavPack_t::isWavPack(FileName); }
+bool Is_WavPack(const char *fileName) { return wavPack_t::isWavPack(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a WavPack

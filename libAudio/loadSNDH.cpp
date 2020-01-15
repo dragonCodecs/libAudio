@@ -24,7 +24,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *SNDH_OpenR(const char *FileName) { return sndh_t::openR(FileName); }
+void *SNDH_OpenR(const char *fileName) { return sndh_t::openR(fileName); }
 const fileInfo_t *SNDH_GetFileInfo(void *p_SNDHFile) { return audioFileInfo(p_SNDHFile); }
 long SNDH_FillBuffer(void *p_SNDHFile, uint8_t *OutBuffer, int countBufferLen)
 	{ return audioFillBuffer(p_SNDHFile, OutBuffer, countBufferLen); }
@@ -39,7 +39,7 @@ void SNDH_Play(void *p_SNDHFile) { audioPlay(p_SNDHFile); }
 void SNDH_Pause(void *p_SNDHFile) { audioPause(p_SNDHFile); }
 void SNDH_Stop(void *p_SNDHFile) { audioStop(p_SNDHFile); }
 
-bool Is_SNDH(const char *FileName) { return sndh_t::isSNDH(FileName); }
+bool Is_SNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
 
 bool sndh_t::isSNDH(const int32_t fd) noexcept
 {

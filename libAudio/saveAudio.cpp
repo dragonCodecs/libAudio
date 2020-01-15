@@ -10,15 +10,15 @@
  */
 
 /*!
- * This function opens the file given by \c FileName for writing and returns a pointer
+ * This function opens the file given by \c fileName for writing and returns a pointer
  * to the context of the opened file which must be used only by Audio_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @param Type One of the AUDIO_* constants describing what codec to use for the file
  * @return A void pointer to the context of the opened file, or \c NULL if there was an error
  * @note Currently only Ogg/Vorbis, FLAC and MP4 are supported. Other formats will be added
  * in following releases of the library.
  */
-libAUDIO_API void *Audio_OpenW(const char *FileName, int Type)
+libAUDIO_API void *Audio_OpenW(const char *fileName, int Type)
 {
 	std::unique_ptr<AudioPointer> ret = makeUnique<AudioPointer>();
 	if (!ret)
@@ -34,7 +34,7 @@ libAUDIO_API void *Audio_OpenW(const char *FileName, int Type)
 
 	if (!ret->API->OpenW)
 		return nullptr;
-	ret->p_AudioFile = ret->API->OpenW(FileName);
+	ret->p_AudioFile = ret->API->OpenW(fileName);
 	if (!ret->p_AudioFile)
 		return nullptr;
 	return ret.release();

@@ -187,9 +187,9 @@ void audioFile_t::stop()
 }
 
 /*!
- * Checks the file given by \p FileName for whether it is an audio
+ * Checks the file given by \p fileName for whether it is an audio
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather

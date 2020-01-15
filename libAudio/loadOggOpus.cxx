@@ -102,12 +102,12 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 }
 
 /*!
- * This function opens the file given by \c FileName for reading and playback and returns a pointer
+ * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by OggOpus_* functions
- * @param FileName The name of the file to open
+ * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggOpus_OpenR(const char *FileName) { return oggOpus_t::openR(FileName); }
+void *OggOpus_OpenR(const char *fileName) { return oggOpus_t::openR(fileName); }
 
 /*!
  * This function gets the \c fileInfo_t structure for an opened file
@@ -175,15 +175,15 @@ void OggOpus_Pause(void *p_OpusFile) { return audioPause(p_OpusFile); }
 void OggOpus_Stop(void *p_OpusFile) { return audioStop(p_OpusFile); }
 
 /*!
- * Checks the file given by \p FileName for whether it is an Ogg|Opus
+ * Checks the file given by \p fileName for whether it is an Ogg|Opus
  * file recognised by this library or not
- * @param FileName The name of the file to check
+ * @param fileName The name of the file to check
  * @return \c true if the file can be utilised by the library,
  * otherwise \c false
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an Ogg|Opus file or not
  */
-bool Is_OggOpus(const char *FileName) { return oggOpus_t::isOggOpus(FileName); }
+bool Is_OggOpus(const char *fileName) { return oggOpus_t::isOggOpus(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a Ogg|Opus
