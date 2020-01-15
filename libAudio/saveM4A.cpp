@@ -179,20 +179,20 @@ void *M4A_OpenW(const char *fileName)
 
 /*!
  * This function sets the \c FileInfo structure for a M4A/MP4 file being encoded
- * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
+ * @param aacFile A pointer to a file opened with \c M4A_OpenW()
  * @param info A \c fileInfo_t pointer containing various metadata about an opened file
  * @warning This function must be called before using \c M4A_WriteBuffer()
  * @bug \p p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
  *
- * @bug \p p_AACFile must not be \c NULL as no checking on the parameter is done. FIXME!
+ * @bug \p aacFile must not be \c NULL as no checking on the parameter is done. FIXME!
  */
-bool M4A_SetFileInfo(void *p_AACFile, const fileInfo_t *const info)
+bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
 {
 	const MP4Tags *p_Tags;
 	faacEncConfigurationPtr p_conf;
 	uint8_t *ASC;
 	unsigned long lenASC;
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
 
 	p_Tags = MP4TagsAlloc();
 	p_AF->Channels = info->channels;
@@ -251,14 +251,14 @@ bool M4A_SetFileInfo(void *p_AACFile, const fileInfo_t *const info)
 
 /*!
  * This function writes a buffer of audio to a M4A/MP4 file opened being encoded
- * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
+ * @param aacFile A pointer to a file opened with \c M4A_OpenW()
  * @param InBuffer The buffer of audio to write
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c M4A_SetFileInfo() has been called beforehand
  */
-long M4A_WriteBuffer(void *p_AACFile, uint8_t *InBuffer, int nInBufferLen)
+long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
 {
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
 	int nOB, j = 0;
 	uint8_t *OB = NULL;
 
@@ -316,15 +316,15 @@ long M4A_WriteBuffer(void *p_AACFile, uint8_t *InBuffer, int nInBufferLen)
 
 /*!
  * Closes an open M4A/MP4 file
- * @param p_AACFile A pointer to a file opened with \c M4A_OpenW()
+ * @param aacFile A pointer to a file opened with \c M4A_OpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_AACFile after using
+ * @warning Do not use the pointer given by \p aacFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
  */
-int M4A_CloseFileW(void *p_AACFile)
+int M4A_CloseFileW(void *aacFile)
 {
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)p_AACFile;
+	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
 
 	if (p_AF == NULL)
 		return 0;

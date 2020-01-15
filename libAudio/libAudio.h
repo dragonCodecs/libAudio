@@ -111,12 +111,12 @@ libAUDIO_API int M4A_CloseFileW(void *m4aFile);
 
 // AAC API
 libAUDIO_API void *AAC_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *AAC_GetFileInfo(void *p_AACFile);
-libAUDIO_API long AAC_FillBuffer(void *p_AACFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int AAC_CloseFileR(void *p_AACFile);
-libAUDIO_API void AAC_Play(void *p_AACFile);
-libAUDIO_API void AAC_Pause(void *p_AACFile);
-libAUDIO_API void AAC_Stop(void *p_AACFile);
+libAUDIO_API const fileInfo_t *AAC_GetFileInfo(void *aacFile);
+libAUDIO_API long AAC_FillBuffer(void *aacFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int AAC_CloseFileR(void *aacFile);
+libAUDIO_API void AAC_Play(void *aacFile);
+libAUDIO_API void AAC_Pause(void *aacFile);
+libAUDIO_API void AAC_Stop(void *aacFile);
 libAUDIO_API bool Is_AAC(const char *fileName);
 
 // MP3 API
