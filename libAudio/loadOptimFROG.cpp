@@ -190,14 +190,14 @@ void *OptimFROG_OpenR(const char *fileName)
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_OFGFile A pointer to a file opened with \c OptimFROG_OpenR()
+ * @param ofrgFile A pointer to a file opened with \c OptimFROG_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c NULL
  * @warning This function must be called before using \c OptimFROG_Play() or \c OptimFROG_FillBuffer()
- * @bug \p p_OFGFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p ofrgFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-const fileInfo_t *OptimFROG_GetFileInfo(void *p_OFGFile)
+const fileInfo_t *OptimFROG_GetFileInfo(void *ofrgFile)
 {
-	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+	OFROG_Intern *p_OF = (OFROG_Intern *)ofrgFile;
 	const fileInfo_t &info = p_OF->info;
 #if 0
 	OptimFROG_Tags *p_OFT = (OptimFROG_Tags *)malloc(sizeof(OptimFROG_Tags));
@@ -216,23 +216,23 @@ const fileInfo_t *OptimFROG_GetFileInfo(void *p_OFGFile)
 #endif
 
 	if (ExternalPlayback == 0)
-		p_OF->p_Playback = new playback_t(p_OFGFile, OptimFROG_FillBuffer, p_OF->buffer, 8192, info);
+		p_OF->p_Playback = new playback_t(ofrgFile, OptimFROG_FillBuffer, p_OF->buffer, 8192, info);
 
 	return &p_OF->info;
 }
 
 /*!
  * Closes an opened audio file
- * @param p_OFGFile A pointer to a file opened with \c OptimFROG_OpenR(), or \c NULL for a no-operation
+ * @param ofrgFile A pointer to a file opened with \c OptimFROG_OpenR(), or \c NULL for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p p_MPCFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
- * @bug \p p_OFGFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p ofrgFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-int OptimFROG_CloseFileR(void *p_OFGFile)
+int OptimFROG_CloseFileR(void *ofrgFile)
 {
-	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+	OFROG_Intern *p_OF = (OFROG_Intern *)ofrgFile;
 	int ret = 0;
 
 	delete p_OF->p_Playback;
@@ -248,16 +248,16 @@ int OptimFROG_CloseFileR(void *p_OFGFile)
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_OFGFile A pointer to a file opened with \c OptimFROG_OpenR()
+ * @param ofrgFile A pointer to a file opened with \c OptimFROG_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
- * @bug \p p_OFGFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p ofrgFile must not be NULL as no checking on the parameter is done. FIXME!
  */
-long OptimFROG_FillBuffer(void *p_OFGFile, uint8_t *OutBuffer, int nOutBufferLen)
+long OptimFROG_FillBuffer(void *ofrgFile, uint8_t *OutBuffer, int nOutBufferLen)
 {
-	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+	OFROG_Intern *p_OF = (OFROG_Intern *)ofrgFile;
 	uint8_t *OBuff = OutBuffer;
 	static bool eof = false;
 	if (eof == true)
@@ -280,32 +280,32 @@ long OptimFROG_FillBuffer(void *p_OFGFile, uint8_t *OutBuffer, int nOutBufferLen
 
 /*!
  * Plays an opened OptimFROG file using OpenAL on the default audio device
- * @param p_OFGFile A pointer to a file opened with \c OptimFROG_OpenR()
+ * @param ofrgFile A pointer to a file opened with \c OptimFROG_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c OptimFROG_OpenR() used to open the file at \p p_OFGFile,
+ * the call to \c OptimFROG_OpenR() used to open the file at \p ofrgFile,
  * this function will do nothing.
- * @bug \p p_OFGFile must not be NULL as no checking on the parameter is done. FIXME!
+ * @bug \p ofrgFile must not be NULL as no checking on the parameter is done. FIXME!
  *
- * @bug Futher to the \p p_OFGFile check bug on this function, if this function is
+ * @bug Futher to the \p ofrgFile check bug on this function, if this function is
  *   called as a no-op as given by the warning, then it will also cause the same problem. FIXME!
  */
-void OptimFROG_Play(void *p_OFGFile)
+void OptimFROG_Play(void *ofrgFile)
 {
-	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+	OFROG_Intern *p_OF = (OFROG_Intern *)ofrgFile;
 
 	p_OF->p_Playback->play();
 }
 
-void OptimFROG_Pause(void *p_OFGFile)
+void OptimFROG_Pause(void *ofrgFile)
 {
-	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+	OFROG_Intern *p_OF = (OFROG_Intern *)ofrgFile;
 
 	p_OF->p_Playback->pause();
 }
 
-void OptimFROG_Stop(void *p_OFGFile)
+void OptimFROG_Stop(void *ofrgFile)
 {
-	OFROG_Intern *p_OF = (OFROG_Intern *)p_OFGFile;
+	OFROG_Intern *p_OF = (OFROG_Intern *)ofrgFile;
 
 	p_OF->p_Playback->stop();
 }

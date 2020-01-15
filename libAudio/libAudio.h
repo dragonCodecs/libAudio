@@ -234,12 +234,12 @@ libAUDIO_API bool Is_SNDH(const char *fileName);
 // OptimFROG API
 
 libAUDIO_API void *OptimFROG_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *OptimFROG_GetFileInfo(void *p_OFGFile);
-libAUDIO_API long OptimFROG_FillBuffer(void *p_OFGFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int OptimFROG_CloseFileR(void *p_OFGFile);
-libAUDIO_API void OptimFROG_Play(void *p_OFGFile);
-libAUDIO_API void OptimFROG_Pause(void *p_OFGFile);
-libAUDIO_API void OptimFROG_Stop(void *p_OFGFile);
+libAUDIO_API const fileInfo_t *OptimFROG_GetFileInfo(void *ofrgFile);
+libAUDIO_API long OptimFROG_FillBuffer(void *ofrgFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int OptimFROG_CloseFileR(void *ofrgFile);
+libAUDIO_API void OptimFROG_Play(void *ofrgFile);
+libAUDIO_API void OptimFROG_Pause(void *ofrgFile);
+libAUDIO_API void OptimFROG_Stop(void *ofrgFile);
 libAUDIO_API bool Is_OptimFROG(const char *fileName);
 
 // RealAudio API
