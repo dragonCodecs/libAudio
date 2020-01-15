@@ -255,12 +255,12 @@ void *M4A_OpenR(const char *fileName) { return m4a_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c M4A_Play() or \c M4A_FillBuffer()
  */
-const fileInfo_t *M4A_GetFileInfo(void *p_M4AFile)
-	{ return audioFileInfo(p_M4AFile); }
+const fileInfo_t *M4A_GetFileInfo(void *m4aFile)
+	{ return audioFileInfo(m4aFile); }
 
 void m4a_t::decoderContext_t::finish() noexcept
 {
@@ -274,26 +274,26 @@ m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
 
 /*!
  * Closes an opened audio file
- * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_M4AFile after using
+ * @warning Do not use the pointer given by \p m4aFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int M4A_CloseFileR(void *p_M4AFile) { return audioCloseFile(p_M4AFile); }
+int M4A_CloseFileR(void *m4aFile) { return audioCloseFile(m4aFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_M4AFile, OutBuffer, nOutBufferLen); }
+long M4A_FillBuffer(void *m4aFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(m4aFile, OutBuffer, nOutBufferLen); }
 
 int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -344,14 +344,14 @@ int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
- * @param p_M4AFile A pointer to a file opened with \c M4A_OpenR()
+ * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- *   the call to \c M4A_OpenR() used to open the file at \p p_M4AFile,
+ *   the call to \c M4A_OpenR() used to open the file at \p m4aFile,
  *   this function will do nothing.
  */
-void M4A_Play(void *p_M4AFile) { audioPlay(p_M4AFile); }
-void M4A_Pause(void *p_M4AFile) { audioPause(p_M4AFile); }
-void M4A_Stop(void *p_M4AFile) { audioStop(p_M4AFile); }
+void M4A_Play(void *m4aFile) { audioPlay(m4aFile); }
+void M4A_Pause(void *m4aFile) { audioPause(m4aFile); }
+void M4A_Stop(void *m4aFile) { audioStop(m4aFile); }
 
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
 // 00 00 00 20 66 74 79 70 4D 34 41 20

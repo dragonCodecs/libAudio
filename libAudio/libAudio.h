@@ -95,19 +95,19 @@ libAUDIO_API bool Is_WAV(const char *fileName);
 
 // Read/Playback
 libAUDIO_API void *M4A_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *M4A_GetFileInfo(void *p_M4AFile);
-libAUDIO_API long M4A_FillBuffer(void *p_M4AFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int M4A_CloseFileR(void *p_M4AFile);
-libAUDIO_API void M4A_Play(void *p_M4AFile);
-libAUDIO_API void M4A_Pause(void *p_M4AFile);
-libAUDIO_API void M4A_Stop(void *p_M4AFile);
+libAUDIO_API const fileInfo_t *M4A_GetFileInfo(void *m4aFile);
+libAUDIO_API long M4A_FillBuffer(void *m4aFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int M4A_CloseFileR(void *m4aFile);
+libAUDIO_API void M4A_Play(void *m4aFile);
+libAUDIO_API void M4A_Pause(void *m4aFile);
+libAUDIO_API void M4A_Stop(void *m4aFile);
 libAUDIO_API bool Is_M4A(const char *fileName);
 
 // Write/Encode
 libAUDIO_API void *M4A_OpenW(const char *fileName);
-libAUDIO_API bool M4A_SetFileInfo(void *p_M4AFile, const fileInfo_t *const p_FI);
-libAUDIO_API long M4A_WriteBuffer(void *p_M4AFile, uint8_t *InBuffer, int nInBufferLen);
-libAUDIO_API int M4A_CloseFileW(void *p_M4AFile);
+libAUDIO_API bool M4A_SetFileInfo(void *m4aFile, const fileInfo_t *const p_FI);
+libAUDIO_API long M4A_WriteBuffer(void *m4aFile, uint8_t *InBuffer, int nInBufferLen);
+libAUDIO_API int M4A_CloseFileW(void *m4aFile);
 
 // AAC API
 libAUDIO_API void *AAC_OpenR(const char *fileName);
