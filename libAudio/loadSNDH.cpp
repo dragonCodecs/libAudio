@@ -1,5 +1,6 @@
 #include "libAudio.h"
 #include "libAudio.hxx"
+#include "sndh/loader.hxx"
 
 /*!
  * @internal
@@ -21,6 +22,8 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept
 	std::unique_ptr<sndh_t> file{makeUnique<sndh_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isSNDH(file->_fd))
 		return nullptr;
+	sndhLoader_t loader{};
+	//sndhLoader_t loader{*file};
 	return file.release();
 }
 
@@ -31,6 +34,8 @@ long SNDH_FillBuffer(void *sndhFile, uint8_t *OutBuffer, int countBufferLen)
 
 int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
+	(void)bufferPtr;
+	(void)length;
 	return -2;
 }
 

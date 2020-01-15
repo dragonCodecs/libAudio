@@ -33,7 +33,7 @@ if extraFormats.contains('optimFROG')
 	extraDeps += cxx.find_library('OptimFROG')
 endif
 if extraFormats.contains('sndh')
-	extraSrcs += 'loadSNDH.cpp'
+	extraSrcs += ['loadSNDH.cpp', 'sndh/loader.cxx']
 	extraArgs += '-DENABLE_SNDH'
 endif
 if extraFormats.contains('sid')
