@@ -111,23 +111,23 @@ void *OggOpus_OpenR(const char *fileName) { return oggOpus_t::openR(fileName); }
 
 /*!
  * This function gets the \c fileInfo_t structure for an opened file
- * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
+ * @param opusFile A pointer to a file opened with \c OggOpus_OpenR()
  * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
  */
-const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile) { return audioFileInfo(p_OpusFile); }
+const fileInfo_t *OggOpus_GetFileInfo(void *opusFile) { return audioFileInfo(opusFile); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
+ * @param opusFile A pointer to a file opened with \c OggOpus_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_OpusFile, OutBuffer, nOutBufferLen); }
+long OggOpus_FillBuffer(void *opusFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(opusFile, OutBuffer, nOutBufferLen); }
 
 int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 {
@@ -155,24 +155,24 @@ oggOpus_t::decoderContext_t::~decoderContext_t() noexcept { op_free(decoder); }
 
 /*!
  * Closes an opened audio file
- * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR(), or \c nullptr for a no-operation
+ * @param opusFile A pointer to a file opened with \c OggOpus_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_OpusFile after using
+ * @warning Do not use the pointer given by \p opusFile after using
  * this function - please either set it to \c NULL or be extra carefull
  * to destroy it via scope
  */
-int OggOpus_CloseFileR(void *p_OpusFile) { return audioCloseFile(p_OpusFile); }
+int OggOpus_CloseFileR(void *opusFile) { return audioCloseFile(opusFile); }
 
 /*!
  * Plays an opened Ogg|Opus file using OpenAL on the default audio device
- * @param p_OpusFile A pointer to a file opened with \c OggOpus_OpenR()
+ * @param opusFile A pointer to a file opened with \c OggOpus_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c OggOpus_OpenR() used to open the file at \p p_OpusFile,
+ * the call to \c OggOpus_OpenR() used to open the file at \p opusFile,
  * this function will do nothing.
  */
-void OggOpus_Play(void *p_OpusFile) { return audioPlay(p_OpusFile); }
-void OggOpus_Pause(void *p_OpusFile) { return audioPause(p_OpusFile); }
-void OggOpus_Stop(void *p_OpusFile) { return audioStop(p_OpusFile); }
+void OggOpus_Play(void *opusFile) { return audioPlay(opusFile); }
+void OggOpus_Pause(void *opusFile) { return audioPause(opusFile); }
+void OggOpus_Stop(void *opusFile) { return audioStop(opusFile); }
 
 /*!
  * Checks the file given by \p fileName for whether it is an Ogg|Opus

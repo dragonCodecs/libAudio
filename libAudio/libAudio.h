@@ -54,12 +54,12 @@ libAUDIO_API int OggVorbis_CloseFileW(void *p_VorbisFile);
 
 // Ogg|Opus API
 libAUDIO_API void *OggOpus_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *OggOpus_GetFileInfo(void *p_OpusFile);
-libAUDIO_API long OggOpus_FillBuffer(void *p_OpusFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int OggOpus_CloseFileR(void *p_OpusFile);
-libAUDIO_API void OggOpus_Play(void *p_OpusFile);
-libAUDIO_API void OggOpus_Pause(void *p_OpusFile);
-libAUDIO_API void OggOpus_Stop(void *p_OpusFile);
+libAUDIO_API const fileInfo_t *OggOpus_GetFileInfo(void *opusFile);
+libAUDIO_API long OggOpus_FillBuffer(void *opusFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int OggOpus_CloseFileR(void *opusFile);
+libAUDIO_API void OggOpus_Play(void *opusFile);
+libAUDIO_API void OggOpus_Pause(void *opusFile);
+libAUDIO_API void OggOpus_Stop(void *opusFile);
 libAUDIO_API bool Is_OggOpus(const char *fileName);
 
 // FLAC API
