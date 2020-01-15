@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include <inttypes.h>
+#include <cstdint>
 #include <map>
 #include <string>
 #include <array>
@@ -7,6 +6,11 @@
 
 #include "libAudio.h"
 #include "libAudio.hxx"
+// XXX: This header actually needs installing and the current header mess figured out + fixed.
+#include "console.hxx"
+
+using libAudio::console::operator ""_s;
+using libAudio::console::asTime_t;
 
 std::array<uint8_t, 8192> buffer;
 
@@ -40,28 +44,28 @@ uint8_t mapType(std::string typeName)
 
 int usage(const char *const program) noexcept
 {
-	printf("Usage: \n"
-		"%s <type> [fileIn fileOut] ... [fileIn fileOut]\n",
-		program);
+	console.info("Usage:"_s);
+	console.info(program, " <type> [fileIn fileOut] ... [fileIn fileOut]"_s);
 	return -2;
 }
 
 void printInfo(const char *const fileName, const fileInfo_t &info) noexcept
 {
-	printf("Input file %s, Sample Rate: %u, Title: %s, Artist: %s, Album: %s, Channels: %u\n",
-		fileName, info.bitRate, info.title.get(), info.artist.get(), info.album.get(), info.channels);
+	console.info("Input file '", fileName, "', TotalTime: ", asTime_t{info.totalTime},
+		", Sample Rate: ", info.bitRate, "Hz, Title: ", info.title, ", Artist: ", info.artist,
+		", Album: ", info.album, ", Channels: ", info.channels);
 }
 
 void printStatus(const uint32_t loops, const fileInfo_t &info) noexcept
 {
 	const uint8_t bytesPerSample = info.channels * (info.bitsPerSample / 8);
 	const uint64_t samples = (buffer.size() / bytesPerSample) * loops;
-	printf("%" PRIu64 "s done\r", samples / info.bitRate);
-	fflush(stdout);
+	console.info(samples / info.bitRate, "s done\r"_s, nullptr);
 }
 
 int main(int argc, char **argv)
 {
+	console = {stdout, stderr};
 	if (argc < 2)
 		return usage(argv[0]);
 	ExternalPlayback = 1;
@@ -75,16 +79,16 @@ int main(int argc, char **argv)
 		if (!inFile || !outFile)
 		{
 			if (!inFile)
-				printf("Failed to open input file %s\n", argv[i]);
+				console.error("Failed to open input file "_s, argv[i]);
 			if (!outFile)
-				printf("Failed to open output file %s\n", argv[i + 1]);
+				console.error("Failed to open output file "_s, argv[i + 1]);
 			continue;
 		}
 		const fileInfo_t *fileInfo{audioGetFileInfo(inFile.get())};
 		printInfo(argv[i], *fileInfo);
 		if (!Audio_SetFileInfo(outFile.get(), fileInfo))
 		{
-			printf("Failed to set file information for %s\n", argv[i + 1]);
+			console.error("Failed to set file information for "_s, argv[i + 1]);
 			continue;
 		}
 
@@ -95,7 +99,7 @@ int main(int argc, char **argv)
 			Audio_WriteBuffer(outFile.get(), buffer.data(), buffer.size());
 			printStatus(loops + 1, *fileInfo);
 		}
-		printf("Transcode to %s complete\n", argv[i + 1]);
+		console.info("Transcode to "_s, argv[i + 1], " complete"_s);
 	}
 	return 0;
 }
