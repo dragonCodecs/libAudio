@@ -37,6 +37,10 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{Is_MPC, MPC_OpenR},
 	{Is_WavPack, WavPack_OpenR},
 	{Is_OggOpus, OggOpus_OpenR}
+#ifdef ENABLE_SNDH
+	,
+	{Is_SNDH, SNDH_OpenR}
+#endif
 };
 
 /*!

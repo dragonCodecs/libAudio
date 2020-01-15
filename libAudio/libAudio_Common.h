@@ -96,6 +96,9 @@ extern API_Functions FC1xDecoder;
 #endif
 extern API_Functions MPCDecoder;
 extern API_Functions WavPackDecoder;
+#ifdef ENABLE_SNDH
+extern API_Functions SNDHDecoder;
+#endif
 #ifdef ENABLE_OptimFROG
 extern API_Functions OptimFROGDecoder;
 #endif

@@ -27,7 +27,8 @@ enum class audioType_t : uint8_t
 	moduleSTM = 15,
 	moduleAON = 16,
 	moduleFC1x = 17,
-	oggOpus = 18
+	oggOpus = 18,
+	sndh = 19
 };
 
 struct audioModeRead_t { };
@@ -314,6 +315,23 @@ public:
 	static wavPack_t *openR(const char *const fileName) noexcept;
 	static bool isWavPack(const char *const fileName) noexcept;
 	static bool isWavPack(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+};
+
+struct sndh_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+public:
+	sndh_t(fd_t &&fd) noexcept;
+	static sndh_t *openR(const char *const fileName) noexcept;
+	static bool isSNDH(const char *const fileName) noexcept;
+	static bool isSNDH(const int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
