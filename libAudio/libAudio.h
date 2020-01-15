@@ -277,9 +277,9 @@ libAUDIO_API bool Is_Audio(const char *fileName);
 
 // Write (Encode)
 libAUDIO_API void *Audio_OpenW(const char *fileName, int Type);
-libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, const fileInfo_t *const p_FI);
-libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nInBufferLen);
-libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr);
+libAUDIO_API bool Audio_SetFileInfo(void *audioFile, const fileInfo_t *const p_FI);
+libAUDIO_API long Audio_WriteBuffer(void *audioFile, uint8_t *InBuffer, int nInBufferLen);
+libAUDIO_API int Audio_CloseFileW(void *audioFile);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 libAUDIO_API uint8_t ExternalPlayback;

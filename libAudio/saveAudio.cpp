@@ -42,13 +42,13 @@ libAUDIO_API void *Audio_OpenW(const char *fileName, int Type)
 
 /*!
  * This function sets the \c FileInfo structure for an opened file
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenW()
+ * @param audioFile A pointer to a file opened with \c Audio_OpenW()
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c Audio_WriteBuffer()
  */
-libAUDIO_API bool Audio_SetFileInfo(void *p_AudioPtr, const fileInfo_t *const p_FI)
+libAUDIO_API bool Audio_SetFileInfo(void *audioFile, const fileInfo_t *const p_FI)
 {
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
+	const auto p_AP = static_cast<AudioPointer *>(audioFile);
 	if (!p_AP || !p_AP || !p_FI || !p_AP->API->SetFileInfo)
 		return false;
 	return p_AP->API->SetFileInfo(p_AP->p_AudioFile, p_FI);
@@ -66,14 +66,14 @@ bool audioFile_t::fileInfo(const fileInfo_t &) { return false; }
 
 /*!
  * This function writes a buffer of audio to an opened file
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenW()
+ * @param audioFile A pointer to a file opened with \c Audio_OpenW()
  * @param InBuffer The buffer of audio to write
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @warning May not work unless \c Audio_SetFileInfo() has been called beforehand
  */
-libAUDIO_API long Audio_WriteBuffer(void *p_AudioPtr, uint8_t *InBuffer, int nInBufferLen)
+libAUDIO_API long Audio_WriteBuffer(void *audioFile, uint8_t *InBuffer, int nInBufferLen)
 {
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
+	const auto p_AP = static_cast<AudioPointer *>(audioFile);
 	if (!p_AP || !InBuffer || !p_AP->p_AudioFile)
 		return -3;
 	else if (!p_AP->API->WriteBuffer)
@@ -93,15 +93,15 @@ int64_t audioFile_t::writeBuffer(const void *const, const uint32_t) { return 0; 
 
 /*!
  * Closes an opened audio file
- * @param p_AudioPtr A pointer to a file opened with \c Audio_OpenW()
+ * @param audioFile A pointer to a file opened with \c Audio_OpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_AudioPtr after using
+ * @warning Do not use the pointer given by \p audioFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-libAUDIO_API int Audio_CloseFileW(void *p_AudioPtr)
+libAUDIO_API int Audio_CloseFileW(void *audioFile)
 {
-	const auto p_AP = static_cast<AudioPointer *>(p_AudioPtr);
+	const auto p_AP = static_cast<AudioPointer *>(audioFile);
 	if (!p_AP || !p_AP->p_AudioFile || !p_AP->API->CloseFileW)
 		return 0;
 	const int result = p_AP->API->CloseFileW(p_AP->p_AudioFile);
