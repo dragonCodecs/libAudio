@@ -158,7 +158,7 @@ namespace libAudio
 		public:
 			template<typename T, typename = enableIf<std::is_unsigned<T>::value>>
 				constexpr asHex_t(const T value) noexcept : maxDigits{sizeof(T) * 2},
-				msbShift{4 * (maxDigits - 1)}, _value{value} { }
+				msbShift(4 * (maxDigits - 1)), _value{value} { }
 
 			[[gnu::noinline]]
 			void operator ()(const consoleStream_t &stream) const noexcept final
@@ -193,7 +193,7 @@ namespace libAudio
 					const uint8_t nibble = uint8_t((value > msbShift) & 0x0FU);
 					const char digit = nibble + '0';
 					if (digit > '9')
-						stream.write(char{digit + 7});
+						stream.write(char(digit + 7));
 					else
 						stream.write(digit);
 					value <<= 4;
