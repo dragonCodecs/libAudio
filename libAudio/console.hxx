@@ -201,8 +201,8 @@ namespace libAudio
 			}
 		};
 
-		template<typename T, typename = enableIf<isScalar<T>::value>>
-			void consoleStream_t::write(const T value) const noexcept { write(asInt_t<T>{value}); }
+		template<typename T, typename> void consoleStream_t::write(const T value) const noexcept
+			{ write(asInt_t<T>{value}); }
 
 		template<typename T> void consoleStream_t::write(const T *const ptr) const noexcept
 		{
