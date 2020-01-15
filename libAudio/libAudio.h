@@ -133,68 +133,68 @@ libAUDIO_API bool Is_MP3(const char *fileName);
 // IT API
 
 libAUDIO_API void *IT_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *IT_GetFileInfo(void *p_ITFile);
-libAUDIO_API long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int IT_CloseFileR(void *p_ITFile);
-libAUDIO_API void IT_Play(void *p_ITFile);
-libAUDIO_API void IT_Pause(void *p_ITFile);
-libAUDIO_API void IT_Stop(void *p_ITFile);
+libAUDIO_API const fileInfo_t *IT_GetFileInfo(void *itFile);
+libAUDIO_API long IT_FillBuffer(void *itFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int IT_CloseFileR(void *itFile);
+libAUDIO_API void IT_Play(void *itFile);
+libAUDIO_API void IT_Pause(void *itFile);
+libAUDIO_API void IT_Stop(void *itFile);
 libAUDIO_API bool Is_IT(const char *fileName);
 
 // MOD API
 
 libAUDIO_API void *MOD_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *MOD_GetFileInfo(void *p_MODFile);
-libAUDIO_API long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int MOD_CloseFileR(void *p_MODFile);
-libAUDIO_API void MOD_Play(void *p_MODFile);
-libAUDIO_API void MOD_Pause(void *p_MODFile);
-libAUDIO_API void MOD_Stop(void *p_MODFile);
+libAUDIO_API const fileInfo_t *MOD_GetFileInfo(void *modFile);
+libAUDIO_API long MOD_FillBuffer(void *modFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int MOD_CloseFileR(void *modFile);
+libAUDIO_API void MOD_Play(void *modFile);
+libAUDIO_API void MOD_Pause(void *modFile);
+libAUDIO_API void MOD_Stop(void *modFile);
 libAUDIO_API bool Is_MOD(const char *fileName);
 
 // S3M API
 
 libAUDIO_API void *S3M_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *S3M_GetFileInfo(void *p_S3MFile);
-libAUDIO_API long S3M_FillBuffer(void *p_S3MFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int S3M_CloseFileR(void *p_S3MFile);
-libAUDIO_API void S3M_Play(void *p_S3MFile);
-libAUDIO_API void S3M_Pause(void *p_S3MFile);
-libAUDIO_API void S3M_Stop(void *p_S3MFile);
+libAUDIO_API const fileInfo_t *S3M_GetFileInfo(void *s3mFile);
+libAUDIO_API long S3M_FillBuffer(void *s3mFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int S3M_CloseFileR(void *s3mFile);
+libAUDIO_API void S3M_Play(void *s3mFile);
+libAUDIO_API void S3M_Pause(void *s3mFile);
+libAUDIO_API void S3M_Stop(void *s3mFile);
 libAUDIO_API bool Is_S3M(const char *fileName);
 
 // STM API
 
 libAUDIO_API void *STM_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *STM_GetFileInfo(void *p_STMFile);
-libAUDIO_API long STM_FillBuffer(void *p_STMFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int STM_CloseFileR(void *p_STMFile);
-libAUDIO_API void STM_Play(void *p_STMFile);
-libAUDIO_API void STM_Pause(void *p_STMFile);
-libAUDIO_API void STM_Stop(void *p_STMFile);
+libAUDIO_API const fileInfo_t *STM_GetFileInfo(void *stmFile);
+libAUDIO_API long STM_FillBuffer(void *stmFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int STM_CloseFileR(void *stmFile);
+libAUDIO_API void STM_Play(void *stmFile);
+libAUDIO_API void STM_Pause(void *stmFile);
+libAUDIO_API void STM_Stop(void *stmFile);
 libAUDIO_API bool Is_STM(const char *fileName);
 
 // AON API
 
 libAUDIO_API void *AON_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *AON_GetFileInfo(void *p_AONFile);
-libAUDIO_API long AON_FillBuffer(void *p_AONFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int AON_CloseFileR(void *p_AONFile);
-libAUDIO_API void AON_Play(void *p_AONFile);
-libAUDIO_API void AON_Pause(void *p_AONFile);
-libAUDIO_API void AON_Stop(void *p_AONFile);
+libAUDIO_API const fileInfo_t *AON_GetFileInfo(void *aonFile);
+libAUDIO_API long AON_FillBuffer(void *aonFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int AON_CloseFileR(void *aonFile);
+libAUDIO_API void AON_Play(void *aonFile);
+libAUDIO_API void AON_Pause(void *aonFile);
+libAUDIO_API void AON_Stop(void *aonFile);
 libAUDIO_API bool Is_AON(const char *fileName);
 
 #ifdef ENABLE_FC1x
 // FC1x API
 
 libAUDIO_API void *FC1x_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *FC1x_GetFileInfo(void *p_FC1xFile);
-libAUDIO_API long FC1x_FillBuffer(void *p_FC1xFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int FC1x_CloseFileR(void *p_FC1xFile);
-libAUDIO_API void FC1x_Play(void *p_FC1xFile);
-libAUDIO_API void FC1x_Pause(void *p_FC1xFile);
-libAUDIO_API void FC1x_Stop(void *p_FC1xFile);
+libAUDIO_API const fileInfo_t *FC1x_GetFileInfo(void *fc1xFile);
+libAUDIO_API long FC1x_FillBuffer(void *fc1xFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int FC1x_CloseFileR(void *fc1xFile);
+libAUDIO_API void FC1x_Play(void *fc1xFile);
+libAUDIO_API void FC1x_Pause(void *fc1xFile);
+libAUDIO_API void FC1x_Stop(void *fc1xFile);
 libAUDIO_API bool Is_FC1x(const char *fileName);
 #endif
 

@@ -36,13 +36,13 @@ modMOD_t *modMOD_t::openR(const char *const fileName) noexcept
 }
 
 void *MOD_OpenR(const char *fileName) { return modMOD_t::openR(fileName); }
-const fileInfo_t *MOD_GetFileInfo(void *p_MODFile) { return audioFileInfo(p_MODFile); }
-long MOD_FillBuffer(void *p_MODFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_MODFile, OutBuffer, nOutBufferLen); }
-int MOD_CloseFileR(void *p_MODFile) { return audioCloseFile(p_MODFile); }
-void MOD_Play(void *p_MODFile) { audioPlay(p_MODFile); }
-void MOD_Pause(void *p_MODFile) { audioPause(p_MODFile); }
-void MOD_Stop(void *p_MODFile) { audioStop(p_MODFile); }
+const fileInfo_t *MOD_GetFileInfo(void *modFile) { return audioFileInfo(modFile); }
+long MOD_FillBuffer(void *modFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(modFile, OutBuffer, nOutBufferLen); }
+int MOD_CloseFileR(void *modFile) { return audioCloseFile(modFile); }
+void MOD_Play(void *modFile) { audioPlay(modFile); }
+void MOD_Pause(void *modFile) { audioPause(modFile); }
+void MOD_Stop(void *modFile) { audioStop(modFile); }
 bool Is_MOD(const char *fileName) { return modMOD_t::isMOD(fileName); }
 
 bool modMOD_t::isMOD(const int32_t fd) noexcept

@@ -35,13 +35,13 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 }
 
 void *IT_OpenR(const char *fileName) { return modIT_t::openR(fileName); }
-const fileInfo_t *IT_GetFileInfo(void *p_ITFile) { return audioFileInfo(p_ITFile); }
-long IT_FillBuffer(void *p_ITFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_ITFile, OutBuffer, nOutBufferLen); }
-int IT_CloseFileR(void *p_ITFile) { return audioCloseFile(p_ITFile); }
-void IT_Play(void *p_ITFile) { audioPlay(p_ITFile); }
-void IT_Pause(void *p_ITFile) { audioPause(p_ITFile); }
-void IT_Stop(void *p_ITFile) { audioStop(p_ITFile); }
+const fileInfo_t *IT_GetFileInfo(void *itFile) { return audioFileInfo(itFile); }
+long IT_FillBuffer(void *itFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(itFile, OutBuffer, nOutBufferLen); }
+int IT_CloseFileR(void *itFile) { return audioCloseFile(itFile); }
+void IT_Play(void *itFile) { audioPlay(itFile); }
+void IT_Pause(void *itFile) { audioPause(itFile); }
+void IT_Stop(void *itFile) { audioStop(itFile); }
 bool Is_IT(const char *fileName) { return modIT_t::isIT(fileName); }
 
 bool modIT_t::isIT(const int32_t fd) noexcept

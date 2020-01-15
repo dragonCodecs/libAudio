@@ -36,13 +36,13 @@ modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
 }
 
 void *STM_OpenR(const char *fileName) { return modSTM_t::openR(fileName); }
-const fileInfo_t *STM_GetFileInfo(void *p_STMFile) { return audioFileInfo(p_STMFile); }
-long STM_FillBuffer(void *p_STMFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_STMFile, OutBuffer, nOutBufferLen); }
-int STM_CloseFileR(void *p_STMFile) { return audioCloseFile(p_STMFile); }
-void STM_Play(void *p_STMFile) { audioPlay(p_STMFile); }
-void STM_Pause(void *p_STMFile) { audioPause(p_STMFile); }
-void STM_Stop(void *p_STMFile) { audioStop(p_STMFile); }
+const fileInfo_t *STM_GetFileInfo(void *stmFile) { return audioFileInfo(stmFile); }
+long STM_FillBuffer(void *stmFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(stmFile, OutBuffer, nOutBufferLen); }
+int STM_CloseFileR(void *stmFile) { return audioCloseFile(stmFile); }
+void STM_Play(void *stmFile) { audioPlay(stmFile); }
+void STM_Pause(void *stmFile) { audioPause(stmFile); }
+void STM_Stop(void *stmFile) { audioStop(stmFile); }
 bool Is_STM(const char *fileName) { return modSTM_t::isSTM(fileName); }
 
 bool modSTM_t::isSTM(const int32_t fd) noexcept
