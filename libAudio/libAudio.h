@@ -122,12 +122,12 @@ libAUDIO_API bool Is_AAC(const char *fileName);
 // MP3 API
 
 libAUDIO_API void *MP3_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *MP3_GetFileInfo(void *p_MP3File);
-libAUDIO_API long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int MP3_CloseFileR(void *p_MP3File);
-libAUDIO_API void MP3_Play(void *p_MP3File);
-libAUDIO_API void MP3_Pause(void *p_MP3File);
-libAUDIO_API void MP3_Stop(void *p_MP3File);
+libAUDIO_API const fileInfo_t *MP3_GetFileInfo(void *mp3File);
+libAUDIO_API long MP3_FillBuffer(void *mp3File, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int MP3_CloseFileR(void *mp3File);
+libAUDIO_API void MP3_Play(void *mp3File);
+libAUDIO_API void MP3_Pause(void *mp3File);
+libAUDIO_API void MP3_Stop(void *mp3File);
 libAUDIO_API bool Is_MP3(const char *fileName);
 
 // IT API

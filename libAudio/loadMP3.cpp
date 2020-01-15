@@ -266,11 +266,11 @@ void *MP3_OpenR(const char *fileName) { return mp3_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
+ * @param mp3File A pointer to a file opened with \c MP3_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  * @warning This function must be called before using \c MP3_Play() or \c MP3_FillBuffer()
  */
-const fileInfo_t *MP3_GetFileInfo(void *p_MP3File) { return audioFileInfo(p_MP3File); }
+const fileInfo_t *MP3_GetFileInfo(void *mp3File) { return audioFileInfo(mp3File); }
 
 mp3_t::decoderContext_t::~decoderContext_t() noexcept
 {
@@ -281,13 +281,13 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept
 
 /*!
  * Closes an opened audio file
- * @param p_MP3File A pointer to a file opened with \c MP3_OpenR(), or \c nullptr for a no-operation
+ * @param mp3File A pointer to a file opened with \c MP3_OpenR(), or \c nullptr for a no-operation
  * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_MP3File after using
+ * @warning Do not use the pointer given by \p mp3File after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int MP3_CloseFileR(void *p_MP3File) { return audioCloseFile(p_MP3File); }
+int MP3_CloseFileR(void *mp3File) { return audioCloseFile(mp3File); }
 
 /*!
  * @internal
@@ -344,14 +344,14 @@ int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
+ * @param mp3File A pointer to a file opened with \c MP3_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long MP3_FillBuffer(void *p_MP3File, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_MP3File, OutBuffer, nOutBufferLen); }
+long MP3_FillBuffer(void *mp3File, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(mp3File, OutBuffer, nOutBufferLen); }
 
 int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -413,14 +413,14 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 /*!
  * Plays an opened MP3 file using OpenAL on the default audio device
- * @param p_MP3File A pointer to a file opened with \c MP3_OpenR()
+ * @param mp3File A pointer to a file opened with \c MP3_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c MP3_OpenR() used to open the file at \p p_MP3File,
+ * the call to \c MP3_OpenR() used to open the file at \p mp3File,
  * this function will do nothing.
  */
-void MP3_Play(void *p_MP3File) { audioPlay(p_MP3File); }
-void MP3_Pause(void *p_MP3File) { audioPause(p_MP3File); }
-void MP3_Stop(void *p_MP3File) { audioStop(p_MP3File); }
+void MP3_Play(void *mp3File) { audioPlay(mp3File); }
+void MP3_Pause(void *mp3File) { audioPause(mp3File); }
+void MP3_Stop(void *mp3File) { audioStop(mp3File); }
 
 /*!
  * Checks the file given by \p fileName for whether it is an MP3
