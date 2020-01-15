@@ -1770,9 +1770,9 @@ int DecodeFrame(WMA_Intern *p_WF, short *samples)
 	return ret;*/
 }
 
-FileInfo *WMA_GetFileInfo(void *p_WMAFile)
+FileInfo *WMA_GetFileInfo(void *wmaFile)
 {
-	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+	WMA_Intern *p_WF = (WMA_Intern *)wmaFile;
 	FileInfo *ret;
 	DWORD a;
 
@@ -2139,14 +2139,14 @@ FileInfo *WMA_GetFileInfo(void *p_WMAFile)
 	//(double)p_WF->p_ASFMain->play_time;// / 1000.0;
 
 	if (ExternalPlayback == 0)
-		p_WF->p_Playback = new playback_t(p_WMAFile, WMA_FillBuffer, p_WF->buffer, 8192, ret);
+		p_WF->p_Playback = new playback_t(wmaFile, WMA_FillBuffer, p_WF->buffer, 8192, ret);
 
 	return ret;
 }
 
-long WMA_FillBuffer(void *p_WMAFile, BYTE *OutBuffer, int nOutBufferLen)
+long WMA_FillBuffer(void *wmaFile, BYTE *OutBuffer, int nOutBufferLen)
 {
-	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+	WMA_Intern *p_WF = (WMA_Intern *)wmaFile;
 	int nframes, bitoffset, i, len, pos;
 	DWORD pktlen;
 	short *samples = (short *)OutBuffer;
@@ -2305,23 +2305,23 @@ fail:
 	return -1;
 }
 
-void WMA_Play(void *p_WMAFile)
+void WMA_Play(void *wmaFile)
 {
-	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+	WMA_Intern *p_WF = (WMA_Intern *)wmaFile;
 
 	p_WF->p_Playback->play();
 }
 
-void WMA_Pause(void *p_WMAFile)
+void WMA_Pause(void *wmaFile)
 {
-	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+	WMA_Intern *p_WF = (WMA_Intern *)wmaFile;
 
 	p_WF->p_Playback->pause();
 }
 
-void WMA_Stop(void *p_WMAFile)
+void WMA_Stop(void *wmaFile)
 {
-	WMA_Intern *p_WF = (WMA_Intern *)p_WMAFile;
+	WMA_Intern *p_WF = (WMA_Intern *)wmaFile;
 
 	p_WF->p_Playback->stop();
 }

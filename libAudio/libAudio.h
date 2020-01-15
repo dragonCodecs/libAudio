@@ -251,12 +251,12 @@ libAUDIO_API bool Is_RealAudio(const char *fileName);
 // WMA API
 
 libAUDIO_API void *WMA_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *WMA_GetFileInfo(void *p_WMAFile);
-libAUDIO_API long WMA_FillBuffer(void *p_WMAFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API const fileInfo_t *WMA_GetFileInfo(void *wmaFile);
+libAUDIO_API long WMA_FillBuffer(void *wmaFile, uint8_t *OutBuffer, int nOutBufferLen);
 //
-libAUDIO_API void WMA_Play(void *p_WMAFile);
-libAUDIO_API void WMA_Pause(void *p_WMAFile);
-libAUDIO_API void WMA_Stop(void *p_WMAFile);
+libAUDIO_API void WMA_Play(void *wmaFile);
+libAUDIO_API void WMA_Pause(void *wmaFile);
+libAUDIO_API void WMA_Stop(void *wmaFile);
 libAUDIO_API bool Is_WMA(const char *fileName);
 
 // Master Audio API
