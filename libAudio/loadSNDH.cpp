@@ -25,19 +25,19 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept
 }
 
 void *SNDH_OpenR(const char *fileName) { return sndh_t::openR(fileName); }
-const fileInfo_t *SNDH_GetFileInfo(void *p_SNDHFile) { return audioFileInfo(p_SNDHFile); }
-long SNDH_FillBuffer(void *p_SNDHFile, uint8_t *OutBuffer, int countBufferLen)
-	{ return audioFillBuffer(p_SNDHFile, OutBuffer, countBufferLen); }
+const fileInfo_t *SNDH_GetFileInfo(void *sndhFile) { return audioFileInfo(sndhFile); }
+long SNDH_FillBuffer(void *sndhFile, uint8_t *OutBuffer, int countBufferLen)
+	{ return audioFillBuffer(sndhFile, OutBuffer, countBufferLen); }
 
 int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	return -2;
 }
 
-int SNDH_CloseFileR(void *p_SNDHFile) { return audioCloseFile(p_SNDHFile); }
-void SNDH_Play(void *p_SNDHFile) { audioPlay(p_SNDHFile); }
-void SNDH_Pause(void *p_SNDHFile) { audioPause(p_SNDHFile); }
-void SNDH_Stop(void *p_SNDHFile) { audioStop(p_SNDHFile); }
+int SNDH_CloseFileR(void *sndhFile) { return audioCloseFile(sndhFile); }
+void SNDH_Play(void *sndhFile) { audioPlay(sndhFile); }
+void SNDH_Pause(void *sndhFile) { audioPause(sndhFile); }
+void SNDH_Stop(void *sndhFile) { audioStop(sndhFile); }
 
 bool Is_SNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
 

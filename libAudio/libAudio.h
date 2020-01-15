@@ -223,12 +223,12 @@ libAUDIO_API bool Is_WavPack(const char *fileName);
 // SNDH API
 
 libAUDIO_API void *SNDH_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *SNDH_GetFileInfo(void *p_SNDHFile);
-libAUDIO_API long SNDH_FillBuffer(void *p_SNDHFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int SNDH_CloseFileR(void *p_SNDHFile);
-libAUDIO_API void SNDH_Play(void *p_SNDHFile);
-libAUDIO_API void SNDH_Pause(void *p_SNDHFile);
-libAUDIO_API void SNDH_Stop(void *p_SNDHFile);
+libAUDIO_API const fileInfo_t *SNDH_GetFileInfo(void *sndhFile);
+libAUDIO_API long SNDH_FillBuffer(void *sndhFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int SNDH_CloseFileR(void *sndhFile);
+libAUDIO_API void SNDH_Play(void *sndhFile);
+libAUDIO_API void SNDH_Pause(void *sndhFile);
+libAUDIO_API void SNDH_Stop(void *sndhFile);
 libAUDIO_API bool Is_SNDH(const char *fileName);
 
 // OptimFROG API
