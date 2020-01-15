@@ -66,19 +66,19 @@ libAUDIO_API bool Is_OggOpus(const char *fileName);
 
 // Read/Playback
 libAUDIO_API void *FLAC_OpenR(const char *fileName);
-libAUDIO_API const fileInfo_t *FLAC_GetFileInfo(void *p_FLACFile);
-libAUDIO_API long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen);
-libAUDIO_API int FLAC_CloseFileR(void *p_FLACFile);
-libAUDIO_API void FLAC_Play(void *p_FLACFile);
-libAUDIO_API void FLAC_Pause(void *p_FLACFile);
-libAUDIO_API void FLAC_Stop(void *p_FLACFile);
+libAUDIO_API const fileInfo_t *FLAC_GetFileInfo(void *flacFile);
+libAUDIO_API long FLAC_FillBuffer(void *flacFile, uint8_t *OutBuffer, int nOutBufferLen);
+libAUDIO_API int FLAC_CloseFileR(void *flacFile);
+libAUDIO_API void FLAC_Play(void *flacFile);
+libAUDIO_API void FLAC_Pause(void *flacFile);
+libAUDIO_API void FLAC_Stop(void *flacFile);
 libAUDIO_API bool Is_FLAC(const char *fileName);
 
 // Write/Encode
 libAUDIO_API void *FLAC_OpenW(const char *fileName);
-libAUDIO_API bool FLAC_SetFileInfo(void *p_FLACFile, const fileInfo_t *const p_FI);
-libAUDIO_API long FLAC_WriteBuffer(void *p_FLACFile, uint8_t *InBuffer, int nInBufferLen);
-libAUDIO_API int FLAC_CloseFileW(void *p_FLACFile);
+libAUDIO_API bool FLAC_SetFileInfo(void *flacFile, const fileInfo_t *const p_FI);
+libAUDIO_API long FLAC_WriteBuffer(void *flacFile, uint8_t *InBuffer, int nInBufferLen);
+libAUDIO_API int FLAC_CloseFileW(void *flacFile);
 
 // WAV(E) API
 

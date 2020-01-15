@@ -262,10 +262,10 @@ void *FLAC_OpenR(const char *fileName) { return flac_t::openR(fileName); }
 
 /*!
  * This function gets the \c FileInfo structure for an opened file
- * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @param flacFile A pointer to a file opened with \c FLAC_OpenR()
  * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
  */
-const fileInfo_t *FLAC_GetFileInfo(void *p_FLACFile) { return audioFileInfo(p_FLACFile); }
+const fileInfo_t *FLAC_GetFileInfo(void *flacFile) { return audioFileInfo(flacFile); }
 
 bool flac_t::decoderContext_t::finish() noexcept
 {
@@ -281,14 +281,14 @@ flac_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
 
 /*!
  * Closes an opened audio file
- * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @param flacFile A pointer to a file opened with \c FLAC_OpenR()
  * @return an integer indicating success or failure relative to whether the
  * FLAC encoder was able to properly finish encoding
- * @warning Do not use the pointer given by \p p_FLACFile after using
+ * @warning Do not use the pointer given by \p flacFile after using
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int FLAC_CloseFileR(void *p_FLACFile) { return audioCloseFile(p_FLACFile); }
+int FLAC_CloseFileR(void *flacFile) { return audioCloseFile(flacFile); }
 
 FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
 {
@@ -300,14 +300,14 @@ FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @param flacFile A pointer to a file opened with \c FLAC_OpenR()
  * @param OutBuffer A pointer to the buffer to be filled
  * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long FLAC_FillBuffer(void *p_FLACFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_FLACFile, OutBuffer, nOutBufferLen); }
+long FLAC_FillBuffer(void *flacFile, uint8_t *OutBuffer, int nOutBufferLen)
+	{ return audioFillBuffer(flacFile, OutBuffer, nOutBufferLen); }
 
 int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -339,14 +339,14 @@ int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
- * @param p_FLACFile A pointer to a file opened with \c FLAC_OpenR()
+ * @param flacFile A pointer to a file opened with \c FLAC_OpenR()
  * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c FLAC_OpenR() used to open the file at \p p_FLACFile,
+ * the call to \c FLAC_OpenR() used to open the file at \p flacFile,
  * this function will do nothing.
  */
-void FLAC_Play(void *p_FLACFile) { audioPlay(p_FLACFile); }
-void FLAC_Pause(void *p_FLACFile) { audioPause(p_FLACFile); }
-void FLAC_Stop(void *p_FLACFile) { audioStop(p_FLACFile); }
+void FLAC_Play(void *flacFile) { audioPlay(flacFile); }
+void FLAC_Pause(void *flacFile) { audioPause(flacFile); }
+void FLAC_Stop(void *flacFile) { audioStop(flacFile); }
 
 /*!
  * Checks the file given by \p fileName for whether it is an FLAC
