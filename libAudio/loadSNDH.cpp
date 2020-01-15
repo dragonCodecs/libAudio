@@ -48,14 +48,17 @@ bool Is_SNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
 
 bool sndh_t::isSNDH(const int32_t fd) noexcept
 {
-	char magic[4];
+	char icePackSig[4], sndhSig[4];
 	if (fd == -1 ||
-		read(fd, magic, 4) != 4 ||
+		read(fd, icePackSig, 4) != 4 ||
+		lseek(fd, 8, SEEK_CUR) != 12 ||
+		read(fd, sndhSig, 4) != 4 ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		// All SNDH files begin with "ICE!" and this is the test
+		// All packed SNDH files begin with "ICE!" and this is the test
 		// that the Linux/Unix Magic Numbers system does too, so
-		// it will always work
-		memcmp(magic, "ICE!", 4) != 0)
+		// it will always work. All unpacked SNDH files start with 'SDNH' at offset 12.
+		!(memcmp(icePackSig, "ICE!", 4) == 0 ||
+		memcmp(sndhSig, "SNDH", 4) == 0))
 		return false;
 	return true;
 }
