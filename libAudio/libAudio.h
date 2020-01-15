@@ -29,9 +29,9 @@
 	#endif
 #endif
 
-#define libAudioVersion "0.4.0"
+#define libAudioVersion "0.5.0"
 #define libAudioVersion_Major 0
-#define libAudioVersion_Minor 4
+#define libAudioVersion_Minor 5
 #define libAudioVersion_Rev 0
 
 // Ogg|Vorbis API
