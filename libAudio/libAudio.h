@@ -74,8 +74,8 @@ libAUDIO_API bool isAAC(const char *fileName);
 libAUDIO_API void *aacOpenR(const char *fileName);
 
 // MP3 API
-libAUDIO_API bool Is_MP3(const char *fileName);
-libAUDIO_API void *MP3_OpenR(const char *fileName);
+libAUDIO_API bool isMP3(const char *fileName);
+libAUDIO_API void *mp3OpenR(const char *fileName);
 
 // IT API
 libAUDIO_API bool isIT(const char *fileName);

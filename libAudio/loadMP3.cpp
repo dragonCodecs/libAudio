@@ -243,6 +243,12 @@ bool mp3_t::readMetadata() noexcept
 	return true;
 }
 
+/*!
+ * Constructs a mp3_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 mp3_t *mp3_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<mp3_t> file(makeUnique<mp3_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
@@ -262,15 +268,7 @@ mp3_t *mp3_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *MP3_OpenR(const char *fileName) { return mp3_t::openR(fileName); }
-
-/*!
- * This function gets the \c FileInfo structure for an opened file
- * @param mp3File A pointer to a file opened with \c MP3_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c MP3_Play() or \c MP3_FillBuffer()
- */
-const fileInfo_t *MP3_GetFileInfo(void *mp3File) { return audioFileInfo(mp3File); }
+void *mp3OpenR(const char *fileName) { return mp3_t::openR(fileName); }
 
 mp3_t::decoderContext_t::~decoderContext_t() noexcept
 {
@@ -278,16 +276,6 @@ mp3_t::decoderContext_t::~decoderContext_t() noexcept
 	mad_frame_finish(&frame);
 	mad_stream_finish(&stream);
 }
-
-/*!
- * Closes an opened audio file
- * @param mp3File A pointer to a file opened with \c MP3_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p mp3File after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int MP3_CloseFileR(void *mp3File) { return audioCloseFile(mp3File); }
 
 /*!
  * @internal
@@ -344,15 +332,11 @@ int32_t mp3_t::decoderContext_t::decodeFrame(const fd_t &fd) noexcept
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param mp3File A pointer to a file opened with \c MP3_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long MP3_FillBuffer(void *mp3File, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(mp3File, OutBuffer, nOutBufferLen); }
-
 int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
@@ -412,17 +396,6 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 }
 
 /*!
- * Plays an opened MP3 file using OpenAL on the default audio device
- * @param mp3File A pointer to a file opened with \c MP3_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c MP3_OpenR() used to open the file at \p mp3File,
- * this function will do nothing.
- */
-void MP3_Play(void *mp3File) { audioPlay(mp3File); }
-void MP3_Pause(void *mp3File) { audioPause(mp3File); }
-void MP3_Stop(void *mp3File) { audioStop(mp3File); }
-
-/*!
  * Checks the file given by \p fileName for whether it is an MP3
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -431,7 +404,7 @@ void MP3_Stop(void *mp3File) { audioStop(mp3File); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MP3 file or not
  */
-bool Is_MP3(const char *fileName) { return mp3_t::isMP3(fileName); }
+bool isMP3(const char *fileName) { return mp3_t::isMP3(fileName); }
 
 inline uint16_t asUint16(uint8_t *value) noexcept
 	{ return (uint16_t{value[0]} << 8) | value[1]; }
@@ -483,7 +456,7 @@ bool mp3_t::isMP3(const char *const fileName) noexcept
  */
 API_Functions MP3Decoder =
 {
-	MP3_OpenR,
+	mp3OpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,
