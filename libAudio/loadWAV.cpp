@@ -105,6 +105,12 @@ bool wav_t::readFormat() noexcept
 	return true;
 }
 
+/*!
+ * Constructs a wav_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 wav_t *wav_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<wav_t> wavFile(makeUnique<wav_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
@@ -161,26 +167,9 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *WAV_OpenR(const char *fileName) { return wav_t::openR(fileName); }
+void *wavOpenR(const char *fileName) { return wav_t::openR(fileName); }
 
-/*!
- * This function gets the \c FileInfo structure for an opened file
- * @param wavFile A pointer to a file opened with \c WAV_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c WAV_Play() or \c WAV_FillBuffer()
- */
-const fileInfo_t *WAV_GetFileInfo(void *wavFile) { return audioFileInfo(wavFile); }
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
-
-/*!
- * Closes an opened audio file
- * @param wavFile A pointer to a file opened with \c WAV_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p wavFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int WAV_CloseFileR(void *wavFile) { return audioCloseFile(wavFile); }
 int8_t dataToSample(const std::array<uint8_t, 1> &data) noexcept
 	{ return int8_t(data[0]) ^ 0x80; }
 int16_t dataToSample(const std::array<uint8_t, 2> &data) noexcept
@@ -238,15 +227,11 @@ template<typename T, uint8_t N> uint32_t readFloatSamples(wav_t &wavFile, void *
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param wavFile A pointer to a file opened with \c WAV_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param buffer A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long WAV_FillBuffer(void *wavFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(wavFile, OutBuffer, nOutBufferLen); }
-
 int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 {
 	uint32_t offset = 0;
@@ -290,17 +275,6 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 }
 
 /*!
- * Plays an opened WAV file using OpenAL on the default audio device
- * @param wavFile A pointer to a file opened with \c WAV_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c WAV_OpenR() used to open the file at \p wavFile,
- * this function will do nothing.
- */
-void WAV_Play(void *wavFile) { audioPlay(wavFile); }
-void WAV_Pause(void *wavFile) { audioPause(wavFile); }
-void WAV_Stop(void *wavFile) { audioStop(wavFile); }
-
-/*!
  * Checks the file given by \p fileName for whether it is a WAV
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -309,7 +283,7 @@ void WAV_Stop(void *wavFile) { audioStop(wavFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is a WAV file or not
  */
-bool Is_WAV(const char *fileName) { return wav_t::isWAV(fileName); }
+bool isWAV(const char *fileName) { return wav_t::isWAV(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a WAV
@@ -357,7 +331,7 @@ bool wav_t::isWAV(const char *const fileName) noexcept
  */
 API_Functions WAVDecoder =
 {
-	WAV_OpenR,
+	wavOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

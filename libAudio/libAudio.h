@@ -57,8 +57,8 @@ libAUDIO_API long FLAC_WriteBuffer(void *flacFile, uint8_t *InBuffer, int nInBuf
 libAUDIO_API int FLAC_CloseFileW(void *flacFile);
 
 // WAV(E) API
-libAUDIO_API bool Is_WAV(const char *fileName);
-libAUDIO_API void *WAV_OpenR(const char *fileName);
+libAUDIO_API bool isWAV(const char *fileName);
+libAUDIO_API void *wavOpenR(const char *fileName);
 
 // M4A API
 libAUDIO_API bool isM4A(const char *fileName);
