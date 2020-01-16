@@ -27,10 +27,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *SNDH_OpenR(const char *fileName) { return sndh_t::openR(fileName); }
-const fileInfo_t *SNDH_GetFileInfo(void *sndhFile) { return audioFileInfo(sndhFile); }
-long SNDH_FillBuffer(void *sndhFile, uint8_t *OutBuffer, int countBufferLen)
-	{ return audioFillBuffer(sndhFile, OutBuffer, countBufferLen); }
+void *sndhOpenR(const char *fileName) { return sndh_t::openR(fileName); }
 
 int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
@@ -39,12 +36,7 @@ int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	return -2;
 }
 
-int SNDH_CloseFileR(void *sndhFile) { return audioCloseFile(sndhFile); }
-void SNDH_Play(void *sndhFile) { audioPlay(sndhFile); }
-void SNDH_Pause(void *sndhFile) { audioPause(sndhFile); }
-void SNDH_Stop(void *sndhFile) { audioStop(sndhFile); }
-
-bool Is_SNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
+bool isSNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
 
 bool sndh_t::isSNDH(const int32_t fd) noexcept
 {
@@ -77,7 +69,7 @@ bool sndh_t::isSNDH(const char *const fileName) noexcept
  */
 API_Functions SNDHDecoder =
 {
-	SNDH_OpenR,
+	sndhOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

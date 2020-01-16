@@ -39,7 +39,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{isOggOpus, oggOpusOpenR}
 #ifdef ENABLE_SNDH
 	,
-	{Is_SNDH, SNDH_OpenR}
+	{isSNDH, sndhOpenR}
 #endif
 };
 
