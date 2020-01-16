@@ -16,7 +16,7 @@ typedef struct _RealAudio_Intern
 	FILE *f_RLA;
 } RealAudio_Intern;
 
-void *RealAudio_OpenR(char *fileName)
+void *realAudioOpenR(char *fileName)
 {
 	RealAudio_Intern *ret = NULL;
 	FILE *f_RLA = NULL;
@@ -35,7 +35,7 @@ void *RealAudio_OpenR(char *fileName)
 	return ret;
 }
 
-bool Is_RealAudio(char *fileName)
+bool isRealAudio(char *fileName)
 {
 	FILE *f_RLA = fopen(fileName, "rb");
 	char RLASig[4];

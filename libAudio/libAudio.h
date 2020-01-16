@@ -119,14 +119,14 @@ libAUDIO_API void *SNDH_OpenR(const char *fileName);
 
 #ifdef ENABLE_OptimFROG
 // OptimFROG API
-libAUDIO_API bool Is_OptimFROG(const char *fileName);
-libAUDIO_API void *OptimFROG_OpenR(const char *fileName);
+libAUDIO_API bool isOptimFROG(const char *fileName);
+libAUDIO_API void *optimFROGOpenR(const char *fileName);
 #endif
 
 #ifdef ENABLE_RA
 // RealAudio API
-libAUDIO_API bool Is_RealAudio(const char *fileName);
-libAUDIO_API void *RealAudio_OpenR(const char *fileName);
+libAUDIO_API bool isRealAudio(const char *fileName);
+libAUDIO_API void *realAudioOpenR(const char *fileName);
 #endif
 
 // WMA API

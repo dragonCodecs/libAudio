@@ -1,7 +1,7 @@
 #include "libAudio.h"
 #include "libAudio.hxx"
 
-bool Is_SID(const char *fileName)
+bool isSID(const char *fileName)
 {
 	FILE *f_SID = fopen(fileName, "rb");
 	char SIDMagic[4];

@@ -29,7 +29,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{isFC1x, fc1xOpenR},
 #endif
 #ifdef ENABLE_OptimFROG
-	{Is_OptimFROG, OptimFROG_OpenR},
+	{isOptimFROG, optimFROGOpenR},
 #endif
 #ifdef ENABLE_WMA
 	{Is_WMA, WMA_OpenR},
