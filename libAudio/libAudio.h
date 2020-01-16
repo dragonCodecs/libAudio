@@ -61,8 +61,8 @@ libAUDIO_API bool Is_WAV(const char *fileName);
 libAUDIO_API void *WAV_OpenR(const char *fileName);
 
 // M4A API
-libAUDIO_API bool Is_M4A(const char *fileName);
-libAUDIO_API void *M4A_OpenR(const char *fileName);
+libAUDIO_API bool isM4A(const char *fileName);
+libAUDIO_API void *m4aOpenR(const char *fileName);
 libAUDIO_API void *M4A_OpenW(const char *fileName);
 
 libAUDIO_API bool M4A_SetFileInfo(void *m4aFile, const fileInfo_t *const p_FI);

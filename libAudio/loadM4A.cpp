@@ -226,6 +226,12 @@ void m4a_t::fetchTags() noexcept
 	info.totalTime = MP4GetTrackDuration(ctx->mp4Stream, ctx->track) / timescale;
 }
 
+/*!
+ * Constructs a m4a_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 m4a_t *m4a_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<m4a_t> file(makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}));
@@ -251,16 +257,7 @@ m4a_t *m4a_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *M4A_OpenR(const char *fileName) { return m4a_t::openR(fileName); }
-
-/*!
- * This function gets the \c FileInfo structure for an opened file
- * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c M4A_Play() or \c M4A_FillBuffer()
- */
-const fileInfo_t *M4A_GetFileInfo(void *m4aFile)
-	{ return audioFileInfo(m4aFile); }
+void *m4aOpenR(const char *fileName) { return m4a_t::openR(fileName); }
 
 void m4a_t::decoderContext_t::finish() noexcept
 {
@@ -273,28 +270,14 @@ void m4a_t::decoderContext_t::finish() noexcept
 m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
 
 /*!
- * Closes an opened audio file
- * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p m4aFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int M4A_CloseFileR(void *m4aFile) { return audioCloseFile(m4aFile); }
-
-/*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long M4A_FillBuffer(void *m4aFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(m4aFile, OutBuffer, nOutBufferLen); }
-
 int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	auto &ctx = *context();
@@ -342,17 +325,6 @@ int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	return offset;
 }
 
-/*!
- * Plays an opened audio file using OpenAL on the default audio device
- * @param m4aFile A pointer to a file opened with \c M4A_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- *   the call to \c M4A_OpenR() used to open the file at \p m4aFile,
- *   this function will do nothing.
- */
-void M4A_Play(void *m4aFile) { audioPlay(m4aFile); }
-void M4A_Pause(void *m4aFile) { audioPause(m4aFile); }
-void M4A_Stop(void *m4aFile) { audioStop(m4aFile); }
-
 // Standard "ftyp" Atom for a MOV based MP4 AAC file:
 // 00 00 00 20 66 74 79 70 4D 34 41 20
 // .  .  .     f  t  y  p  M  4  A
@@ -366,7 +338,7 @@ void M4A_Stop(void *m4aFile) { audioStop(m4aFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MP4/M4A file or not
  */
-bool Is_M4A(const char *fileName) { return m4a_t::isM4A(fileName); }
+bool isM4A(const char *fileName) { return m4a_t::isM4A(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a MP4/M4A
@@ -414,7 +386,7 @@ bool m4a_t::isM4A(const char *const fileName) noexcept
  */
 API_Functions M4ADecoder =
 {
-	M4A_OpenR,
+	m4aOpenR,
 	M4A_OpenW,
 	audioFileInfo,
 	M4A_SetFileInfo,

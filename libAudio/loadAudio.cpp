@@ -15,7 +15,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{Is_OggVorbis, OggVorbis_OpenR},
 	{isFLAC, flacOpenR},
 	{Is_WAV, WAV_OpenR},
-	{Is_M4A, M4A_OpenR},
+	{isM4A, m4aOpenR},
 	{isAAC, aacOpenR},
 	{Is_MP3, MP3_OpenR},
 	{isIT, itOpenR},
