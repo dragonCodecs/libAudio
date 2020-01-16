@@ -70,8 +70,8 @@ libAUDIO_API long M4A_WriteBuffer(void *m4aFile, uint8_t *InBuffer, int nInBuffe
 libAUDIO_API int M4A_CloseFileW(void *m4aFile);
 
 // AAC API
-libAUDIO_API bool Is_AAC(const char *fileName);
-libAUDIO_API void *AAC_OpenR(const char *fileName);
+libAUDIO_API bool isAAC(const char *fileName);
+libAUDIO_API void *aacOpenR(const char *fileName);
 
 // MP3 API
 libAUDIO_API bool Is_MP3(const char *fileName);

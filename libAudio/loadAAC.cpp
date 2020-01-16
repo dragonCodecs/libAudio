@@ -73,6 +73,12 @@ aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)),
 aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, sampleCount{0},
 	samplesUsed{0}, decodeBuffer{nullptr}, playbackBuffer{} { }
 
+/*!
+ * Constructs an aac_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 aac_t *aac_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<aac_t> aacFile(makeUnique<aac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
@@ -105,32 +111,14 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 
 /*!
  * This function opens the file given by \c fileName for reading and playback and returns a pointer
- * to the context of the opened file which must be used only by AAC_* functions
+ * to the context of the opened file which must be used only by audio* functions
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *AAC_OpenR(const char *fileName) { return aac_t::openR(fileName); }
-
-/*!
- * This function gets the \c FileInfo structure for an opened file
- * @param aacFile A pointer to a file opened with \c AAC_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c AAC_Play() or \c AAC_FillBuffer()
- */
-const fileInfo_t *AAC_GetFileInfo(void *aacFile) { return audioFileInfo(aacFile); }
+void *aacOpenR(const char *fileName) { return aac_t::openR(fileName); }
 
 aac_t::decoderContext_t::~decoderContext_t() noexcept
 	{ NeAACDecClose(decoder); }
-
-/*!
- * Closes an opened audio file
- * @param aacFile A pointer to a file opened with \c AAC_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p aacFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int AAC_CloseFileR(void *aacFile) { return audioCloseFile(aacFile); }
 
 namespace libAudio
 {
@@ -210,19 +198,6 @@ namespace libAudio
 
 using namespace libAudio;
 
-/*!
- * If using external playback or not using playback at all but rather wanting
- * to get PCM data, this function will do that by filling a buffer of any given length
- * with audio from an opened file.
- * @param aacFile A pointer to a file opened with \c AAC_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
- * @return Either a negative value when an error condition is entered,
- * or the number of bytes written to the buffer
- */
-long AAC_FillBuffer(void *aacFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(aacFile, OutBuffer, nOutBufferLen); }
-
 uint8_t *aac_t::nextFrame() noexcept
 {
 	const fd_t &file = fd();
@@ -267,6 +242,15 @@ uint8_t *aac_t::nextFrame() noexcept
 	return ctx.decodeBuffer;
 }
 
+/*!
+ * If using external playback or not using playback at all but rather wanting
+ * to get PCM data, this function will do that by filling a buffer of any given length
+ * with audio from an opened file.
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
+ * @return Either a negative value when an error condition is entered,
+ * or the number of bytes written to the buffer
+ */
 int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
@@ -298,17 +282,6 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 }
 
 /*!
- * Plays an opened AAC file using OpenAL on the default audio device
- * @param aacFile A pointer to a file opened with \c AAC_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c AAC_OpenR() used to open the file at \p aacFile,
- * this function will do nothing.
- */
-void AAC_Play(void *aacFile) { return audioPlay(aacFile); }
-void AAC_Pause(void *aacFile) { return audioPause(aacFile); }
-void AAC_Stop(void *aacFile) { return audioStop(aacFile); }
-
-/*!
  * Checks the file given by \p fileName for whether it is an AAC
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -317,7 +290,7 @@ void AAC_Stop(void *aacFile) { return audioStop(aacFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an AAC file or not
  */
-bool Is_AAC(const char *fileName) { return aac_t::isAAC(fileName); }
+bool isAAC(const char *fileName) { return aac_t::isAAC(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a AAC
@@ -366,7 +339,7 @@ bool aac_t::isAAC(const char *const fileName) noexcept
  */
 API_Functions AACDecoder =
 {
-	AAC_OpenR,
+	aacOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,
