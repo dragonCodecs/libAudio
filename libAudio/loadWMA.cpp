@@ -625,7 +625,7 @@ int total_gain_to_bits(int total_gain)
 		return  9;
 }
 
-void *WMA_OpenR(char *fileName)
+void *wmaOpenR(char *fileName)
 {
 	WMA_Intern *ret = NULL;
 	FILE *f_WMA = NULL;
@@ -2326,7 +2326,7 @@ void WMA_Stop(void *wmaFile)
 	p_WF->p_Playback->stop();
 }
 
-bool Is_WMA(char *fileName)
+bool isWMA(char *fileName)
 {
 	FILE *f_WMA = fopen(fileName, "rb");
 	char WMA_Sig[16];
@@ -2350,7 +2350,7 @@ bool Is_WMA(char *fileName)
 
 API_Functions WMADecoder =
 {
-	WMA_OpenR,
+	wmaOpenR,
 	nullptr,
 	WMA_GetFileInfo,
 	nullptr,

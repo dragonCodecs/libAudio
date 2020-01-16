@@ -32,7 +32,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{isOptimFROG, optimFROGOpenR},
 #endif
 #ifdef ENABLE_WMA
-	{Is_WMA, WMA_OpenR},
+	{isWMA, wmaOpenR},
 #endif
 	{isMPC, mpcOpenR},
 	{isWavPack, wavPackOpenR},

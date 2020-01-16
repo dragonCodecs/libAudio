@@ -131,8 +131,8 @@ libAUDIO_API void *realAudioOpenR(const char *fileName);
 
 // WMA API
 #ifdef ENABLE_WMA
-libAUDIO_API bool Is_WMA(const char *fileName);
-libAUDIO_API void *WMA_OpenR(const char *fileName);
+libAUDIO_API bool isWMA(const char *fileName);
+libAUDIO_API void *wmaOpenR(const char *fileName);
 #endif
 
 // Master Audio API
