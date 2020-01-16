@@ -48,8 +48,8 @@ libAUDIO_API bool Is_OggOpus(const char *fileName);
 libAUDIO_API void *OggOpus_OpenR(const char *fileName);
 
 // FLAC API
-libAUDIO_API bool Is_FLAC(const char *fileName);
-libAUDIO_API void *FLAC_OpenR(const char *fileName);
+libAUDIO_API bool isFLAC(const char *fileName);
+libAUDIO_API void *flacOpenR(const char *fileName);
 libAUDIO_API void *FLAC_OpenW(const char *fileName);
 
 libAUDIO_API bool FLAC_SetFileInfo(void *flacFile, const fileInfo_t *const p_FI);
