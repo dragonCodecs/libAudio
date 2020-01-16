@@ -35,7 +35,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{Is_WMA, WMA_OpenR},
 #endif
 	{isMPC, mpcOpenR},
-	{Is_WavPack, WavPack_OpenR},
+	{isWavPack, wavPackOpenR},
 	{isOggOpus, oggOpusOpenR}
 #ifdef ENABLE_SNDH
 	,

@@ -110,8 +110,8 @@ libAUDIO_API bool isMPC(const char *fileName);
 libAUDIO_API void *mpcOpenR(const char *fileName);
 
 // WavPack API
-libAUDIO_API bool Is_WavPack(const char *fileName);
-libAUDIO_API void *WavPack_OpenR(const char *fileName);
+libAUDIO_API bool isWavPack(const char *fileName);
+libAUDIO_API void *wavPackOpenR(const char *fileName);
 
 // SNDH API
 libAUDIO_API bool isSNDH(const char *fileName);

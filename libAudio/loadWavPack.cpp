@@ -193,6 +193,12 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
 	return nullptr;
 }
 
+/*!
+ * Constructs a wavPack_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<wavPack_t> file(makeUnique<wavPack_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), fileName));
@@ -223,28 +229,10 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *WavPack_OpenR(const char *fileName) { return wavPack_t::openR(fileName); }
-
-/*!
- * This function gets the \c FileInfo structure for an opened WavPack file
- * @param p_WVPFile A pointer to a file opened with \c WavPack_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c WavPack_Play() or \c WavPack_FillBuffer()
- */
-const fileInfo_t *WavPack_GetFileInfo(void *p_WVPFile) { return audioFileInfo(p_WVPFile); }
+void *wavPackOpenR(const char *fileName) { return wavPack_t::openR(fileName); }
 
 wavPack_t::decoderContext_t::~decoderContext_t() noexcept
 	{ WavpackCloseFile(decoder); }
-
-/*!
- * Closes an opened audio file
- * @param p_WVPFile A pointer to a file opened with \c WavPack_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_WVPFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int WavPack_CloseFileR(void *p_WVPFile) { return audioCloseFile(p_WVPFile); }
 
 void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
 {
@@ -258,15 +246,11 @@ void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_WVPFile A pointer to a file opened with \c WavPack_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long WavPack_FillBuffer(void *p_WVPFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_WVPFile, OutBuffer, nOutBufferLen); }
-
 int64_t wavPack_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
@@ -296,17 +280,6 @@ int64_t wavPack_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 }
 
 /*!
- * Plays an opened WavPack file using OpenAL on the default audio device
- * @param p_WVPFile A pointer to a file opened with \c WavPack_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c WavPack_OpenR() used to open the file at \p p_WVPFile,
- * this function will do nothing.
- */
-void WavPack_Play(void *p_WVPFile) { return audioPlay(p_WVPFile); }
-void WavPack_Pause(void *p_WVPFile) { return audioPause(p_WVPFile); }
-void WavPack_Stop(void *p_WVPFile) { return audioStop(p_WVPFile); }
-
-/*!
  * Checks the file given by \p fileName for whether it is an WavPack
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -315,7 +288,7 @@ void WavPack_Stop(void *p_WVPFile) { return audioStop(p_WVPFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an WavPack file or not
  */
-bool Is_WavPack(const char *fileName) { return wavPack_t::isWavPack(fileName); }
+bool isWavPack(const char *fileName) { return wavPack_t::isWavPack(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a WavPack
@@ -360,7 +333,7 @@ bool wavPack_t::isWavPack(const char *const fileName) noexcept
  */
 API_Functions WavPackDecoder =
 {
-	WavPack_OpenR,
+	wavPackOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,
