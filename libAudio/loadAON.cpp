@@ -40,13 +40,6 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 }
 
 void *AON_OpenR(const char *fileName) { return modAON_t::openR(fileName); }
-const fileInfo_t *AON_GetFileInfo(void *aonFile) { return audioFileInfo(aonFile); }
-long AON_FillBuffer(void *aonFile, void *const buffer, const uint32_t length)
-	{ return audioFillBuffer(aonFile, buffer, length); }
-int AON_CloseFileR(void *aonFile) { return audioCloseFile(aonFile); }
-void AON_Play(void *aonFile) { audioPlay(aonFile); }
-void AON_Pause(void *aonFile) { audioPause(aonFile); }
-void AON_Stop(void *aonFile) { audioStop(aonFile); }
 bool Is_AON(const char *fileName) { return modAON_t::isAON(fileName); }
 
 bool modAON_t::isAON(const int32_t fd) noexcept

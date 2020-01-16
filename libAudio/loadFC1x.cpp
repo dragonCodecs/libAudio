@@ -34,13 +34,6 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 }
 
 void *FC1x_OpenR(const char *fileName) { return modFC1x_t::openR(fileName); }
-const fileInfo_t *FC1x_GetFileInfo(void *fc1xFile) { return audioFileInfo(fc1xFile); }
-long FC1x_FillBuffer(void *fc1xFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(&fc1xFile, OutBuffer, nOutBufferLen); }
-int FC1x_CloseFileR(void *fc1xFile) { return audioCloseFile(fc1xFile); }
-void FC1x_Play(void *fc1xFile) { return audioPlay(fc1xFile); }
-void FC1x_Pause(void *fc1xFile) { return audioPause(fc1xFile); }
-void FC1x_Stop(void *fc1xFile) { return audioStop(fc1xFile); }
 bool Is_FC1x(const char *fileName) { return modFC1x_t::isFC1x(fileName); }
 
 bool modFC1x_t::isFC1x(const int32_t fd) noexcept

@@ -36,13 +36,6 @@ modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
 }
 
 void *STM_OpenR(const char *fileName) { return modSTM_t::openR(fileName); }
-const fileInfo_t *STM_GetFileInfo(void *stmFile) { return audioFileInfo(stmFile); }
-long STM_FillBuffer(void *stmFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(stmFile, OutBuffer, nOutBufferLen); }
-int STM_CloseFileR(void *stmFile) { return audioCloseFile(stmFile); }
-void STM_Play(void *stmFile) { audioPlay(stmFile); }
-void STM_Pause(void *stmFile) { audioPause(stmFile); }
-void STM_Stop(void *stmFile) { audioStop(stmFile); }
 bool Is_STM(const char *fileName) { return modSTM_t::isSTM(fileName); }
 
 bool modSTM_t::isSTM(const int32_t fd) noexcept
