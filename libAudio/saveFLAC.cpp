@@ -96,11 +96,11 @@ flac_t *flac_t::openW(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *FLAC_OpenW(const char *fileName) { return flac_t::openW(fileName); }
+void *flacOpenW(const char *fileName) { return flac_t::openW(fileName); }
 
 /*!
  * This function sets the \c FileInfo structure for a FLAC file being encoded
- * @param flacFile A pointer to a file opened with \c FLAC_OpenW()
+ * @param flacFile A pointer to a file opened with \c flacOpenW()
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c FLAC_WriteBuffer()
  */
@@ -150,7 +150,7 @@ bool flac_t::fileInfo(const fileInfo_t &info)
 
 /*!
  * This function writes a buffer of audio to a FLAC file opened being encoded
- * @param flacFile A pointer to a file opened with \c FLAC_OpenW()
+ * @param flacFile A pointer to a file opened with \c flacOpenW()
  * @param InBuffer The buffer of audio to write
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c FLAC_SetFileInfo() has been called beforehand
@@ -216,7 +216,7 @@ flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
 
 /*!
  * Closes an open FLAC file
- * @param flacFile A pointer to a file opened with \c FLAC_OpenW()
+ * @param flacFile A pointer to a file opened with \c flacOpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p flacFile after using
  * this function - please either set it to \c nullptr or be extra carefull

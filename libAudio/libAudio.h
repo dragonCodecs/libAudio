@@ -37,7 +37,7 @@
 // Ogg|Vorbis API
 libAUDIO_API bool isOggVorbis(const char *fileName);
 libAUDIO_API void *oggVorbisOpenR(const char *fileName);
-libAUDIO_API void *OggVorbis_OpenW(const char *fileName);
+libAUDIO_API void *oggVorbisOpenW(const char *fileName);
 
 libAUDIO_API bool OggVorbis_SetFileInfo(void *p_VorbisFile, const fileInfo_t *const p_FI);
 libAUDIO_API long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen);
@@ -50,7 +50,7 @@ libAUDIO_API void *oggOpusOpenR(const char *fileName);
 // FLAC API
 libAUDIO_API bool isFLAC(const char *fileName);
 libAUDIO_API void *flacOpenR(const char *fileName);
-libAUDIO_API void *FLAC_OpenW(const char *fileName);
+libAUDIO_API void *flacOpenW(const char *fileName);
 
 libAUDIO_API bool FLAC_SetFileInfo(void *flacFile, const fileInfo_t *const p_FI);
 libAUDIO_API long FLAC_WriteBuffer(void *flacFile, uint8_t *InBuffer, int nInBufferLen);
@@ -63,7 +63,7 @@ libAUDIO_API void *wavOpenR(const char *fileName);
 // M4A API
 libAUDIO_API bool isM4A(const char *fileName);
 libAUDIO_API void *m4aOpenR(const char *fileName);
-libAUDIO_API void *M4A_OpenW(const char *fileName);
+libAUDIO_API void *m4aOpenW(const char *fileName);
 
 libAUDIO_API bool M4A_SetFileInfo(void *m4aFile, const fileInfo_t *const p_FI);
 libAUDIO_API long M4A_WriteBuffer(void *m4aFile, uint8_t *InBuffer, int nInBufferLen);

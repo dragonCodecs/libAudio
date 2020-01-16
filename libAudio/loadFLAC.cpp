@@ -382,7 +382,7 @@ bool flac_t::isFLAC(const char *const fileName) noexcept
 API_Functions FLACDecoder =
 {
 	flacOpenR,
-	FLAC_OpenW,
+	flacOpenW,
 	audioFileInfo,
 	audioFileInfo,
 	audioFillBuffer,

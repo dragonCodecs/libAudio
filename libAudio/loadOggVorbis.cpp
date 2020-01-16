@@ -204,7 +204,7 @@ bool oggVorbis_t::isOggVorbis(const char *const fileName) noexcept
 API_Functions OggVorbisDecoder =
 {
 	oggVorbisOpenR,
-	OggVorbis_OpenW,
+	oggVorbisOpenW,
 	audioFileInfo,
 	audioFileInfo,
 	audioFillBuffer,

@@ -163,7 +163,7 @@ using namespace libAudio;
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c NULL if there was an error
  */
-void *M4A_OpenW(const char *fileName)
+void *m4aOpenW(const char *fileName)
 {
 	M4A_Enc_Intern *ret = NULL;
 
@@ -179,7 +179,7 @@ void *M4A_OpenW(const char *fileName)
 
 /*!
  * This function sets the \c FileInfo structure for a M4A/MP4 file being encoded
- * @param aacFile A pointer to a file opened with \c M4A_OpenW()
+ * @param aacFile A pointer to a file opened with \c m4aOpenW()
  * @param info A \c fileInfo_t pointer containing various metadata about an opened file
  * @warning This function must be called before using \c M4A_WriteBuffer()
  * @bug \p p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
@@ -251,7 +251,7 @@ bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
 
 /*!
  * This function writes a buffer of audio to a M4A/MP4 file opened being encoded
- * @param aacFile A pointer to a file opened with \c M4A_OpenW()
+ * @param aacFile A pointer to a file opened with \c m4aOpenW()
  * @param InBuffer The buffer of audio to write
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c M4A_SetFileInfo() has been called beforehand
@@ -316,7 +316,7 @@ long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
 
 /*!
  * Closes an open M4A/MP4 file
- * @param aacFile A pointer to a file opened with \c M4A_OpenW()
+ * @param aacFile A pointer to a file opened with \c m4aOpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p aacFile after using
  * this function - please either set it to \c NULL or be extra carefull
