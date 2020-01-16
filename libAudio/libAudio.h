@@ -106,8 +106,8 @@ libAUDIO_API void *fc1xOpenR(const char *fileName);
 #endif
 
 // MPC API
-libAUDIO_API bool Is_MPC(const char *fileName);
-libAUDIO_API void *MPC_OpenR(const char *fileName);
+libAUDIO_API bool isMPC(const char *fileName);
+libAUDIO_API void *mpcOpenR(const char *fileName);
 
 // WavPack API
 libAUDIO_API bool Is_WavPack(const char *fileName);

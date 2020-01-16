@@ -163,6 +163,12 @@ mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(
 mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{}, playbackBuffer{},
 	samplesUsed{0}, callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 
+/*!
+ * Constructs a mpc_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 mpc_t *mpc_t::openR(const char *const fileName) noexcept
 {
 	std::unique_ptr<mpc_t> file(makeUnique<mpc_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
@@ -192,29 +198,17 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *MPC_OpenR(const char *fileName) { return mpc_t::openR(fileName); }
-
-/*!
- * This function gets the \c FileInfo structure for an opened file
- * @param mpcFile A pointer to a file opened with \c MPC_OpenR()
- * @return A \c FileInfo pointer containing various metadata about an opened file or \c nullptr
- * @warning This function must be called before using \c MPC_Play() or \c MPC_FillBuffer()
- */
-const fileInfo_t *MPC_GetFileInfo(void *mpcFile) { return audioFileInfo(mpcFile); }
+void *mpcOpenR(const char *fileName) { return mpc_t::openR(fileName); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param mpcFile A pointer to a file opened with \c MPC_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param countBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long MPC_FillBuffer(void *mpcFile, uint8_t *OutBuffer, int countBufferLen)
-	{ return audioFillBuffer(mpcFile, OutBuffer, countBufferLen); }
-
 int64_t mpc_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
@@ -265,27 +259,6 @@ mpc_t::decoderContext_t::~decoderContext_t() noexcept
 	{ mpc_demux_exit(demuxer); }
 
 /*!
- * Closes an opened audio file
- * @param mpcFile A pointer to a file opened with \c MPC_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p mpcFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int MPC_CloseFileR(void *mpcFile) { return audioCloseFile(mpcFile); }
-
-/*!
- * Plays an opened MPC file using OpenAL on the default audio device
- * @param mpcFile A pointer to a file opened with \c MPC_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c MPC_OpenR() used to open the file at \p mpcFile,
- * this function will do nothing.
- */
-void MPC_Play(void *mpcFile) { audioPlay(mpcFile); }
-void MPC_Pause(void *mpcFile) { audioPause(mpcFile); }
-void MPC_Stop(void *mpcFile) { audioStop(mpcFile); }
-
-/*!
  * Checks the file given by \p fileName for whether it is an MPC
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -294,7 +267,7 @@ void MPC_Stop(void *mpcFile) { audioStop(mpcFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an MPC file or not
  */
-bool Is_MPC(const char *fileName) { return mpc_t::isMPC(fileName); }
+bool isMPC(const char *fileName) { return mpc_t::isMPC(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a MPC
@@ -340,7 +313,7 @@ bool mpc_t::isMPC(const char *const fileName) noexcept
  */
 API_Functions MPCDecoder =
 {
-	MPC_OpenR,
+	mpcOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,
