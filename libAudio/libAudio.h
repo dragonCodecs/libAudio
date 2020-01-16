@@ -44,8 +44,8 @@ libAUDIO_API long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, i
 libAUDIO_API int OggVorbis_CloseFileW(void *p_VorbisFile);
 
 // Ogg|Opus API
-libAUDIO_API bool Is_OggOpus(const char *fileName);
-libAUDIO_API void *OggOpus_OpenR(const char *fileName);
+libAUDIO_API bool isOggOpus(const char *fileName);
+libAUDIO_API void *oggOpusOpenR(const char *fileName);
 
 // FLAC API
 libAUDIO_API bool isFLAC(const char *fileName);

@@ -76,6 +76,12 @@ oggOpus_t::oggOpus_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggOpus, std
 	decoderCtx{makeUnique<decoderContext_t>()} { }
 oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
+/*!
+ * Constructs an oggOpus_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 {
 	auto file = makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
@@ -107,28 +113,17 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggOpus_OpenR(const char *fileName) { return oggOpus_t::openR(fileName); }
-
-/*!
- * This function gets the \c fileInfo_t structure for an opened file
- * @param opusFile A pointer to a file opened with \c OggOpus_OpenR()
- * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
- */
-const fileInfo_t *OggOpus_GetFileInfo(void *opusFile) { return audioFileInfo(opusFile); }
+void *oggOpusOpenR(const char *fileName) { return oggOpus_t::openR(fileName); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param opusFile A pointer to a file opened with \c OggOpus_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param bufferLen An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long OggOpus_FillBuffer(void *opusFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(opusFile, OutBuffer, nOutBufferLen); }
-
 int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 {
 	const auto buffer = static_cast<int16_t *>(bufferPtr);
@@ -154,27 +149,6 @@ int64_t oggOpus_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 oggOpus_t::decoderContext_t::~decoderContext_t() noexcept { op_free(decoder); }
 
 /*!
- * Closes an opened audio file
- * @param opusFile A pointer to a file opened with \c OggOpus_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p opusFile after using
- * this function - please either set it to \c NULL or be extra carefull
- * to destroy it via scope
- */
-int OggOpus_CloseFileR(void *opusFile) { return audioCloseFile(opusFile); }
-
-/*!
- * Plays an opened Ogg|Opus file using OpenAL on the default audio device
- * @param opusFile A pointer to a file opened with \c OggOpus_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c OggOpus_OpenR() used to open the file at \p opusFile,
- * this function will do nothing.
- */
-void OggOpus_Play(void *opusFile) { return audioPlay(opusFile); }
-void OggOpus_Pause(void *opusFile) { return audioPause(opusFile); }
-void OggOpus_Stop(void *opusFile) { return audioStop(opusFile); }
-
-/*!
  * Checks the file given by \p fileName for whether it is an Ogg|Opus
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -183,7 +157,7 @@ void OggOpus_Stop(void *opusFile) { return audioStop(opusFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an Ogg|Opus file or not
  */
-bool Is_OggOpus(const char *fileName) { return oggOpus_t::isOggOpus(fileName); }
+bool isOggOpus(const char *fileName) { return oggOpus_t::isOggOpus(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a Ogg|Opus
@@ -223,7 +197,7 @@ bool oggOpus_t::isOggOpus(const char *const fileName) noexcept
  */
 API_Functions OggOpusDecoder =
 {
-	OggOpus_OpenR,
+	oggOpusOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,
