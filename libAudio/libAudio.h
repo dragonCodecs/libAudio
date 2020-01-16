@@ -35,8 +35,8 @@
 #define libAudioVersion_Rev 0
 
 // Ogg|Vorbis API
-libAUDIO_API bool Is_OggVorbis(const char *fileName);
-libAUDIO_API void *OggVorbis_OpenR(const char *fileName);
+libAUDIO_API bool isOggVorbis(const char *fileName);
+libAUDIO_API void *oggVorbisOpenR(const char *fileName);
 libAUDIO_API void *OggVorbis_OpenW(const char *fileName);
 
 libAUDIO_API bool OggVorbis_SetFileInfo(void *p_VorbisFile, const fileInfo_t *const p_FI);

@@ -80,6 +80,12 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
 	}
 }
 
+/*!
+ * Constructs an oggVorbis_t using the file given by \c fileName for reading and playback
+ * and returns a pointer to the context of the opened file
+ * @param fileName The name of the file to open
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
+ */
 oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 {
 	auto file = makeUnique<oggVorbis_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{});
@@ -111,28 +117,17 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
  * @param fileName The name of the file to open
  * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *OggVorbis_OpenR(const char *fileName) { return oggVorbis_t::openR(fileName); }
-
-/*!
- * This function gets the \c fileInfo_t structure for an opened file
- * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR()
- * @return A \c fileInfo_t pointer containing various metadata about an opened file or \c nullptr
- */
-const fileInfo_t *OggVorbis_GetFileInfo(void *p_VorbisFile) { return audioFileInfo(p_VorbisFile); }
+void *oggVorbisOpenR(const char *fileName) { return oggVorbis_t::openR(fileName); }
 
 /*!
  * If using external playback or not using playback at all but rather wanting
  * to get PCM data, this function will do that by filling a buffer of any given length
  * with audio from an opened file.
- * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR()
- * @param OutBuffer A pointer to the buffer to be filled
- * @param nOutBufferLen An integer giving how long the output buffer is as a maximum fill-length
+ * @param bufferPtr A pointer to the buffer to be filled
+ * @param length An integer giving how long the output buffer is as a maximum fill-length
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-long OggVorbis_FillBuffer(void *p_VorbisFile, uint8_t *OutBuffer, int nOutBufferLen)
-	{ return audioFillBuffer(p_VorbisFile, OutBuffer, nOutBufferLen); }
-
 int64_t oggVorbis_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<char *>(bufferPtr);
@@ -160,27 +155,6 @@ oggVorbis_t::decoderContext_t::~decoderContext_t() noexcept
 	{ ov_clear(&decoder); }
 
 /*!
- * Closes an opened audio file
- * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR(), or \c nullptr for a no-operation
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_VorbisFile after using
- * this function - please either set it to \c NULL or be extra carefull
- * to destroy it via scope
- */
-int OggVorbis_CloseFileR(void *p_VorbisFile) { return audioCloseFile(p_VorbisFile); }
-
-/*!
- * Plays an opened Ogg|Vorbis file using OpenAL on the default audio device
- * @param p_VorbisFile A pointer to a file opened with \c OggVorbis_OpenR()
- * @warning If \c ExternalPlayback was a non-zero value for
- * the call to \c OggVorbis_OpenR() used to open the file at \p p_VorbisFile,
- * this function will do nothing.
- */
-void OggVorbis_Play(void *p_VorbisFile) { return audioPlay(p_VorbisFile); }
-void OggVorbis_Pause(void *p_VorbisFile) { return audioPause(p_VorbisFile); }
-void OggVorbis_Stop(void *p_VorbisFile) { return audioStop(p_VorbisFile); }
-
-/*!
  * Checks the file given by \p fileName for whether it is an Ogg|Vorbis
  * file recognised by this library or not
  * @param fileName The name of the file to check
@@ -189,7 +163,7 @@ void OggVorbis_Stop(void *p_VorbisFile) { return audioStop(p_VorbisFile); }
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is an Ogg|Vorbis file or not
  */
-bool Is_OggVorbis(const char *fileName) { return oggVorbis_t::isOggVorbis(fileName); }
+bool isOggVorbis(const char *fileName) { return oggVorbis_t::isOggVorbis(fileName); }
 
 /*!
  * Checks the file descriptor given by \p fd for whether it represents a Ogg|Vorbis
@@ -229,7 +203,7 @@ bool oggVorbis_t::isOggVorbis(const char *const fileName) noexcept
  */
 API_Functions OggVorbisDecoder =
 {
-	OggVorbis_OpenR,
+	oggVorbisOpenR,
 	OggVorbis_OpenW,
 	audioFileInfo,
 	audioFileInfo,
