@@ -34,8 +34,8 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *IT_OpenR(const char *fileName) { return modIT_t::openR(fileName); }
-bool Is_IT(const char *fileName) { return modIT_t::isIT(fileName); }
+void *itOpenR(const char *fileName) { return modIT_t::openR(fileName); }
+bool isIT(const char *fileName) { return modIT_t::isIT(fileName); }
 
 bool modIT_t::isIT(const int32_t fd) noexcept
 {
@@ -58,7 +58,7 @@ bool modIT_t::isIT(const char *const fileName) noexcept
 
 API_Functions ITDecoder =
 {
-	IT_OpenR,
+	itOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

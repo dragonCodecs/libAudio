@@ -33,8 +33,8 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *FC1x_OpenR(const char *fileName) { return modFC1x_t::openR(fileName); }
-bool Is_FC1x(const char *fileName) { return modFC1x_t::isFC1x(fileName); }
+void *fc1xOpenR(const char *fileName) { return modFC1x_t::openR(fileName); }
+bool isFC1x(const char *fileName) { return modFC1x_t::isFC1x(fileName); }
 
 bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 {
@@ -58,7 +58,7 @@ bool modFC1x_t::isFC1x(const char *const fileName) noexcept
 
 API_Functions FC1xDecoder =
 {
-	FC1x_OpenR,
+	fc1xOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

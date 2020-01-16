@@ -78,31 +78,31 @@ libAUDIO_API bool Is_MP3(const char *fileName);
 libAUDIO_API void *MP3_OpenR(const char *fileName);
 
 // IT API
-libAUDIO_API bool Is_IT(const char *fileName);
-libAUDIO_API void *IT_OpenR(const char *fileName);
+libAUDIO_API bool isIT(const char *fileName);
+libAUDIO_API void *itOpenR(const char *fileName);
 
 // MOD API
-libAUDIO_API bool Is_MOD(const char *fileName);
-libAUDIO_API void *MOD_OpenR(const char *fileName);
+libAUDIO_API bool isMOD(const char *fileName);
+libAUDIO_API void *modOpenR(const char *fileName);
 
 // S3M API
-libAUDIO_API bool Is_S3M(const char *fileName);
-libAUDIO_API void *S3M_OpenR(const char *fileName);
+libAUDIO_API bool isS3M(const char *fileName);
+libAUDIO_API void *s3mOpenR(const char *fileName);
 
 // STM API
-libAUDIO_API bool Is_STM(const char *fileName);
-libAUDIO_API void *STM_OpenR(const char *fileName);
+libAUDIO_API bool isSTM(const char *fileName);
+libAUDIO_API void *stmOpenR(const char *fileName);
 
 #ifdef ENABLE_AON
 // AON API
-libAUDIO_API bool Is_AON(const char *fileName);
-libAUDIO_API void *AON_OpenR(const char *fileName);
+libAUDIO_API bool isAON(const char *fileName);
+libAUDIO_API void *aonOpenR(const char *fileName);
 #endif
 
 #ifdef ENABLE_FC1x
 // FC1x API
-libAUDIO_API bool Is_FC1x(const char *fileName);
-libAUDIO_API void *FC1x_OpenR(const char *fileName);
+libAUDIO_API bool isFC1x(const char *fileName);
+libAUDIO_API void *fc1xOpenR(const char *fileName);
 #endif
 
 // MPC API
@@ -149,7 +149,7 @@ libAUDIO_API int64_t audioFillBuffer(void *audioFile, void *const buffer, const 
 libAUDIO_API void audioPlay(void *audioFile);
 libAUDIO_API void audioPause(void *audioFile);
 libAUDIO_API void audioStop(void *audioFile);
-libAUDIO_API bool Is_Audio(const char *fileName);
+libAUDIO_API bool isAudio(const char *fileName);
 
 // Write (Encode)
 libAUDIO_API void *Audio_OpenW(const char *fileName, int Type);

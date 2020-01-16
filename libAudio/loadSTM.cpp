@@ -35,8 +35,8 @@ modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *STM_OpenR(const char *fileName) { return modSTM_t::openR(fileName); }
-bool Is_STM(const char *fileName) { return modSTM_t::isSTM(fileName); }
+void *stmOpenR(const char *fileName) { return modSTM_t::openR(fileName); }
+bool isSTM(const char *fileName) { return modSTM_t::isSTM(fileName); }
 
 bool modSTM_t::isSTM(const int32_t fd) noexcept
 {
@@ -62,7 +62,7 @@ bool modSTM_t::isSTM(const char *const fileName) noexcept
 
 API_Functions STMDecoder =
 {
-	STM_OpenR,
+	stmOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

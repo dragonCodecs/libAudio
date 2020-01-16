@@ -35,8 +35,8 @@ modMOD_t *modMOD_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *MOD_OpenR(const char *fileName) { return modMOD_t::openR(fileName); }
-bool Is_MOD(const char *fileName) { return modMOD_t::isMOD(fileName); }
+void *modOpenR(const char *fileName) { return modMOD_t::openR(fileName); }
+bool isMOD(const char *fileName) { return modMOD_t::isMOD(fileName); }
 
 bool modMOD_t::isMOD(const int32_t fd) noexcept
 {
@@ -79,7 +79,7 @@ bool modMOD_t::isMOD(const char *const fileName) noexcept
 
 API_Functions MODDecoder =
 {
-	MOD_OpenR,
+	modOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

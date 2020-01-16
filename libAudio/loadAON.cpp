@@ -39,8 +39,8 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 	return file.release();
 }
 
-void *AON_OpenR(const char *fileName) { return modAON_t::openR(fileName); }
-bool Is_AON(const char *fileName) { return modAON_t::isAON(fileName); }
+void *aonOpenR(const char *fileName) { return modAON_t::openR(fileName); }
+bool isAON(const char *fileName) { return modAON_t::isAON(fileName); }
 
 bool modAON_t::isAON(const int32_t fd) noexcept
 {
@@ -66,7 +66,7 @@ bool modAON_t::isAON(const char *const fileName) noexcept
 
 API_Functions AONDecoder =
 {
-	AON_OpenR,
+	aonOpenR,
 	nullptr,
 	audioFileInfo,
 	nullptr,

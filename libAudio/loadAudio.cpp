@@ -18,15 +18,15 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	{Is_M4A, M4A_OpenR},
 	{Is_AAC, AAC_OpenR},
 	{Is_MP3, MP3_OpenR},
-	{Is_IT, IT_OpenR},
-	{Is_MOD, MOD_OpenR},
-	{Is_S3M, S3M_OpenR},
-	{Is_STM, STM_OpenR},
+	{isIT, itOpenR},
+	{isMOD, modOpenR},
+	{isS3M, s3mOpenR},
+	{isSTM, stmOpenR},
 #ifdef ENABLE_AON
-	{Is_AON, AON_OpenR},
+	{isAON, aonOpenR},
 #endif
 #ifdef ENABLE_FC1x
-	{Is_FC1x, FC1x_OpenR},
+	{isFC1x, fc1xOpenR},
 #endif
 #ifdef ENABLE_OptimFROG
 	{Is_OptimFROG, OptimFROG_OpenR},
@@ -195,7 +195,7 @@ void audioFile_t::stop()
  * @note This function does not check the file extension, but rather
  * the file contents to see if it is audio or not
  */
-bool Is_Audio(const char *fileName)
+bool isAudio(const char *fileName)
 {
 	for (const auto &loader : loaders)
 	{
