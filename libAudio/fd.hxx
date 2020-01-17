@@ -1,9 +1,13 @@
 #ifndef FD__HXX
 #define FD__HXX
 
-#include <stdint.h>
+#include <cstdint>
 #include <cstddef>
+#ifndef _WINDOWS
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
