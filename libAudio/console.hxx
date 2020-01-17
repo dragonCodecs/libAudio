@@ -158,7 +158,7 @@ namespace libAudio
 		public:
 			template<typename T, typename = enableIf<std::is_unsigned<T>::value>>
 				constexpr asHex_t(const T value) noexcept : maxDigits{sizeof(T) * 2},
-				msbShift(4 * (maxDigits - 1)), _value{value} { }
+				msbShift(4 * (maxDigits - 1)), _value(value) { }
 
 			[[gnu::noinline]]
 			void operator ()(const consoleStream_t &stream) const noexcept final
@@ -176,7 +176,7 @@ namespace libAudio
 				// For up to the maximum number of digits, pad as needed
 				for (; digits > 1; --digits)
 				{
-					const uint8_t nibble = uint8_t((value > msbShift) & 0x0FU);
+					const uint8_t nibble = uint8_t((value >> msbShift) & 0x0FU);
 					if (nibble == 0)
 						value <<= 4;
 					if (digits > padding && nibble == 0)
@@ -190,7 +190,7 @@ namespace libAudio
 
 				for (; digits > 0; --digits)
 				{
-					const uint8_t nibble = uint8_t((value > msbShift) & 0x0FU);
+					const uint8_t nibble = uint8_t((value >> msbShift) & 0x0FU);
 					const char digit = nibble + '0';
 					if (digit > '9')
 						stream.write(char(digit + 7));
