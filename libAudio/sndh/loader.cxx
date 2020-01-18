@@ -33,7 +33,8 @@ sndhLoader_t::sndhLoader_t(const fd_t &file) : _entryPoints{}, _metadata{}
 		!file.readBE(_entryPoints.exit) ||
 		!file.readBE(_entryPoints.play) ||
 		!file.read(magic) ||
-		magic != typeHeader)
+		magic != typeHeader ||
+		!readMeta(file))
 		throw std::exception{};
 }
 
@@ -80,4 +81,52 @@ uint16_t readFrequency(const fd_t &fd, const char *const prefix)
 		}
 	}
 	return result;
+}
+
+bool sndhLoader_t::readMeta(const fd_t &file)
+{
+	std::array<char, 4> tagType{};
+	while (tagType != typeEnd)
+	{
+		if (!file.read(tagType))
+			return false;
+		else if (tagType == typeTitle)
+			readString(file, _metadata.title);
+		else if (tagType == typeComposer)
+			readString(file, _metadata.artist);
+		else if (tagType == typeRipper)
+			readString(file, _metadata.ripper);
+		else if (tagType == typeConverter)
+			readString(file, _metadata.converter);
+		else if (tagType == typeTuneCount)
+		{
+			char junk{};
+			if (!file.read(junk) || junk)
+				return false;
+			_metadata.tuneCount = toInt_t<uint8_t>{tagType.data() + 2, 2}.fromInt();
+			_metadata.tuneTimes = {_metadata.tuneCount};
+		}
+		else if (tagType == typeTimerA || tagType == typeTimerB || tagType == typeTimerC ||
+			tagType == typeTimerD || tagType == typeTimerVBL)
+		{
+			_metadata.timer = tagType[1];
+			_metadata.timerFrequency = readFrequency(file, tagType.data() + 2);
+		}
+		else if (tagType == typeYear)
+		{
+			std::string year{readString(file)};
+			_metadata.year = toInt_t<uint32_t>{year.data()}.fromInt();
+		}
+		else if (tagType == typeTime)
+		{
+			if (!_metadata.tuneTimes.valid())
+				return false;
+			for (auto &time : _metadata.tuneTimes)
+			{
+				if (!file.readBE(time))
+					return false;
+			}
+		}
+	}
+	return true;
 }

@@ -33,6 +33,8 @@ private:
 	sndhEntryPoints_t _entryPoints;
 	sndhMetadata_t _metadata;
 
+	bool readMeta(const fd_t &file);
+
 public:
 	sndhLoader_t(const fd_t &file);
 	const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
