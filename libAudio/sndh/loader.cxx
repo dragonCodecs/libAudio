@@ -55,3 +55,29 @@ void readString(const fd_t &fd, std::unique_ptr<char []> &dst)
 	const std::string result{readString(fd)};
 	copyComment(dst, result.data());
 }
+
+uint16_t readFrequency(const fd_t &fd, const char *const prefix)
+{
+	if (!prefix[0] || !isNumber(prefix[0]))
+		throw std::exception{};
+	uint16_t result{uint8_t(prefix[0] - '0')};
+	if (!prefix[1])
+		return result;
+	else if (!isNumber(prefix[1]))
+		throw std::exception{};
+	result *= 10;
+	result += prefix[1] - '0';
+
+	char value{-1};
+	while (value != 0)
+	{
+		if (!fd.read(value) || (value && !isNumber(value)))
+			throw std::exception{};
+		else if (value)
+		{
+			result *= 10;
+			result += value - '0';
+		}
+	}
+	return result;
+}
