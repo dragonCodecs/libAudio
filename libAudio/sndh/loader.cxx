@@ -26,12 +26,11 @@ template<typename T, size_t sizeA, size_t sizeB, typename = typename std::enable
 
 sndhLoader_t::sndhLoader_t(const fd_t &file) : _entryPoints{}, _metadata{}
 {
-	std::array<char, 4> sndhSig{};
+	std::array<char, 4> magic{};
 	if (!file.readBE(_entryPoints.init) ||
 		!file.readBE(_entryPoints.exit) ||
 		!file.readBE(_entryPoints.play) ||
-		!file.read(sndhSig))
-		throw std::exception{};
-	else if (memcmp(sndhSig.data(), "SNDH", sndhSig.size()) != 0)
+		!file.read(magic) ||
+		magic != typeHeader)
 		throw std::exception{};
 }
