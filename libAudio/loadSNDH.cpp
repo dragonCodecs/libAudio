@@ -21,20 +21,40 @@ using libAudio::console::operator ""_s;
 
 sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)}, ctx{makeUnique<decoderContext_t>()} { }
 
+void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
+{
+	info.title.swap(metadata.title);
+	info.artist.swap(metadata.artist);
+}
+
 sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 {
 	std::unique_ptr<sndh_t> file{makeUnique<sndh_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isSNDH(file->_fd))
 		return nullptr;
+	//auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
 	sndhLoader_t loader{file->_fd}; //, file->context()
+
 	auto &entryPoints = loader.entryPoints();
 	console.debug("Read SNDH entry points"_s);
-	console.debug(" -> init = ", asHex_t<8, '0'>{entryPoints.init}, ", exit = ",
-		asHex_t<8, '0'>{entryPoints.exit}, ", play = ", asHex_t<8, '0'>{entryPoints.play});
+	console.debug(" -> init = "_s, asHex_t<8, '0'>{entryPoints.init}, ", exit = "_s,
+		asHex_t<8, '0'>{entryPoints.exit}, ", play = "_s, asHex_t<8, '0'>{entryPoints.play});
+	auto &metadata = loader.metadata();
+	console.debug("Read SNDH metadata"_s);
+	console.debug(" -> title: "_s, metadata.title);
+	console.debug(" -> composer: "_s, metadata.artist);
+	console.debug(" -> converter: "_s, metadata.converter);
+	console.debug(" -> using timer "_s, metadata.timer, " at "_s, metadata.timerFrequency, "Hz"_s);
+
+	loadFileInfo(info, metadata);
 	return file.release();
 }
 catch (const std::exception &)
-	{ return nullptr; }
+{
+	console.error("Failed to load SNDH file"_s);
+	return nullptr;
+}
 
 void *sndhOpenR(const char *fileName) { return sndh_t::openR(fileName); }
 

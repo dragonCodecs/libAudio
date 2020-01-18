@@ -38,6 +38,8 @@ private:
 public:
 	sndhLoader_t(const fd_t &file);
 	const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
+	sndhMetadata_t &metadata() noexcept { return _metadata; }
+	const sndhMetadata_t &metadata() const noexcept { return _metadata; }
 };
 
 #endif /*SNDH_LOADER__HXX*/
