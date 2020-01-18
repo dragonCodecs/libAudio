@@ -67,6 +67,7 @@ namespace libAudio
 				void write(const T value) const noexcept;
 			template<typename T> void write(const T *const ptr) const noexcept;
 			void write(const bool value) const noexcept;
+			template<size_t N> void write(const std::array<char, N> &value) const noexcept;
 			template<typename T, size_t N> void write(const std::array<T, N> &value) const noexcept;
 		};
 
@@ -210,6 +211,12 @@ namespace libAudio
 			write(asHex_t<8, '0'>{
 				reinterpret_cast<uintptr_t>(ptr) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) lgtm[cpp/reinterpret-cast]
 			});
+		}
+
+		template<size_t N> void consoleStream_t::write(const std::array<char, N> &value) const noexcept
+		{
+			for (const auto &elem : value)
+				write(elem);
 		}
 
 		template<typename T, size_t N> void consoleStream_t::write(const std::array<T, N> &value) const noexcept
