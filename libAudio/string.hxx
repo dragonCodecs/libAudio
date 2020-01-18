@@ -1,6 +1,8 @@
 #ifndef STRING__HXX
 #define STRING__HXX
 
+#include "uniquePtr.hxx"
+
 inline uint32_t stringsLength(const char *const part) noexcept { return strlen(part); }
 template<typename... Args> inline uint32_t stringsLength(const char *const part, Args &&...args) noexcept
 	{ return strlen(part) + stringsLength(args...); }
