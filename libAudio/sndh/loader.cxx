@@ -1,7 +1,9 @@
 #include <cstring>
+#include <string>
 #include <type_traits>
 #include "loader.hxx"
 #include "../conversions.hxx"
+#include "../string.hxx"
 
 using namespace libAudio::conversions;
 
@@ -33,4 +35,23 @@ sndhLoader_t::sndhLoader_t(const fd_t &file) : _entryPoints{}, _metadata{}
 		!file.read(magic) ||
 		magic != typeHeader)
 		throw std::exception{};
+}
+
+std::string readString(const fd_t &fd)
+{
+	std::string result{};
+	char value{-1};
+	while (value != 0)
+	{
+		if (!fd.read(value))
+			throw std::exception{};
+		result += value;
+	}
+	return result;
+}
+
+void readString(const fd_t &fd, std::unique_ptr<char []> &dst)
+{
+	const std::string result{readString(fd)};
+	copyComment(dst, result.data());
 }
