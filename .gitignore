@@ -38,3 +38,6 @@ libAudio/*.so*
 
 libAudio/fixedPoint/tests/TestLinearSlideDown
 libAudio/fixedPoint/tests/TestLinearSlideUp
+
+WMA*/Debug
+WMA*/Release
