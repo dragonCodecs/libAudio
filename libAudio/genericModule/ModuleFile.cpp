@@ -388,13 +388,13 @@ void ModuleFile::s3mLoadPCM(const fd_t &fd)
 				{
 					auto *pcm = reinterpret_cast<uint16_t *>(p_PCM[i]);
 					for (uint32_t j = 0; j < (length >> 1); j++)
-						pcm[j] ^= 0x8000;
+						pcm[j] ^= 0x8000U;
 				}
 				else
 				{
 					auto *pcm = reinterpret_cast<uint8_t *>(p_PCM[i]);
 					for (uint32_t j = 0; j < length; j++)
-						pcm[j] ^= 0x80;
+						pcm[j] ^= 0x80U;
 				}
 			}
 		}
