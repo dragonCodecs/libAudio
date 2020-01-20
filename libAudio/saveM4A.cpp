@@ -1,12 +1,11 @@
-#include <cstdint>
-#include <faac.h>
-#include <mp4v2/mp4v2.h>
-
+#if 0
 #ifdef strncasecmp
 #undef strncasecmp
 #endif
+#endif
 
-#include "libAudio.h"
+#include "m4a.hxx"
+
 #include "libAudio_Common.h"
 
 /*!
@@ -14,7 +13,7 @@
  * @file saveM4A.cpp
  * @brief The implementation of the M4A/MP4 encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 /*!

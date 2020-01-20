@@ -170,7 +170,9 @@ private:
 
 public:
 	m4a_t(fd_t &&fd, audioModeRead_t) noexcept;
+	m4a_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static m4a_t *openR(const char *const fileName) noexcept;
+	static m4a_t *openW(const char *const fileName) noexcept;
 	static bool isM4A(const char *const fileName) noexcept;
 	static bool isM4A(const int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
