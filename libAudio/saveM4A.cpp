@@ -76,7 +76,7 @@ namespace libAudio
 		void *openW(const char *fileName, MP4FileMode Mode)
 		{
 			if (Mode != FILEMODE_CREATE)
-				return NULL;
+				return nullptr;
 			return fopen(fileName, "wb+");
 		}
 
@@ -156,34 +156,39 @@ namespace libAudio
 
 using namespace libAudio;
 
+m4a_t::m4a_t(fd_t &&fd, audioModeWrite_t) noexcept :
+	audioFile_t(audioType_t::m4a, std::move(fd)), encoderCtx{makeUnique<encoderContext_t>()} { }
+m4a_t::encoderContext_t::encoderContext_t() : encoder{nullptr}, mp4Stream{nullptr} { }
+
+m4a_t *m4a_t::openW(const char *const fileName) noexcept
+{
+	auto file{makeUnique<m4a_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode},
+		audioModeWrite_t{})};
+	if (!file || !file->valid())
+		return nullptr;
+	auto &ctx = *file->encoderContext();
+
+	ctx.mp4Stream = MP4CreateProvider(fileName, &saveM4A::ioFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
+
+	return file.release();
+}
+
 /*!
  * This function opens the file given by \c fileName for writing and returns a pointer
  * to the context of the opened file which must be used only by M4A_* functions
  * @param fileName The name of the file to open
- * @return A void pointer to the context of the opened file, or \c NULL if there was an error
+ * @return A void pointer to the context of the opened file, or \c nullptr if there was an error
  */
-void *m4aOpenW(const char *fileName)
-{
-	M4A_Enc_Intern *ret = NULL;
-
-	ret = (M4A_Enc_Intern *)malloc(sizeof(M4A_Enc_Intern));
-	if (ret == NULL)
-		return ret;
-
-	ret->err = false;
-	ret->p_mp4 = MP4CreateProvider(fileName, &saveM4A::ioFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
-
-	return ret;
-}
+void *m4aOpenW(const char *fileName) { return m4a_t::openW(fileName); }
 
 /*!
  * This function sets the \c FileInfo structure for a M4A/MP4 file being encoded
  * @param aacFile A pointer to a file opened with \c m4aOpenW()
  * @param info A \c fileInfo_t pointer containing various metadata about an opened file
  * @warning This function must be called before using \c M4A_WriteBuffer()
- * @bug \p p_FI must not be \c NULL as no checking on the parameter is done. FIXME!
+ * @bug \p p_FI must not be \c nullptr as no checking on the parameter is done. FIXME!
  *
- * @bug \p aacFile must not be \c NULL as no checking on the parameter is done. FIXME!
+ * @bug \p aacFile must not be \c nullptr as no checking on the parameter is done. FIXME!
  */
 bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
 {
@@ -196,7 +201,7 @@ bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
 	p_Tags = MP4TagsAlloc();
 	p_AF->Channels = info->channels;
 	p_AF->p_enc = faacEncOpen(info->bitRate, info->channels, &p_AF->MaxInSamp, &p_AF->MaxOutByte);
-	if (p_AF->p_enc == NULL)
+	if (p_AF->p_enc == nullptr)
 	{
 		p_AF->err = true;
 		return false;
@@ -217,7 +222,7 @@ bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
 	MP4TagsFree(p_Tags);
 
 	p_conf = faacEncGetCurrentConfiguration(p_AF->p_enc);
-	if (p_conf == NULL)
+	if (p_conf == nullptr)
 	{
 		p_AF->err = true;
 		return false;
@@ -259,9 +264,9 @@ long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
 {
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
 	int nOB, j = 0;
-	uint8_t *OB = NULL;
+	uint8_t *OB = nullptr;
 
-	if (p_AF->p_enc == NULL)
+	if (p_AF->p_enc == nullptr)
 		return -3;
 	if (p_AF->err == true)
 		return -4;
@@ -270,16 +275,16 @@ long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
 	{
 		OB = (uint8_t *)malloc(p_AF->MaxOutByte);
 
-		nOB = faacEncEncode(p_AF->p_enc, NULL, 0, OB, p_AF->MaxOutByte);
+		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
 		if (nOB > 0)
 			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-		nOB = faacEncEncode(p_AF->p_enc, NULL, 0, OB, p_AF->MaxOutByte);
+		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
 		if (nOB > 0)
 			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-		nOB = faacEncEncode(p_AF->p_enc, NULL, 0, OB, p_AF->MaxOutByte);
+		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
 		if (nOB > 0)
 			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-		nOB = faacEncEncode(p_AF->p_enc, NULL, 0, OB, p_AF->MaxOutByte);
+		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
 		if (nOB > 0)
 			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
 
@@ -313,19 +318,26 @@ long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
 	return nInBufferLen;
 }
 
+m4a_t::encoderContext_t::~encoderContext_t() noexcept
+{
+	MP4Close(mp4Stream);
+	if (encoder)
+		faacEncClose(encoder);
+}
+
 /*!
  * Closes an open M4A/MP4 file
  * @param aacFile A pointer to a file opened with \c m4aOpenW()
  * @return an integer indicating success or failure with the same values as \c fclose()
  * @warning Do not use the pointer given by \p aacFile after using
- * this function - please either set it to \c NULL or be extra carefull
+ * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
 int M4A_CloseFileW(void *aacFile)
 {
 	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
 
-	if (p_AF == NULL)
+	if (p_AF == nullptr)
 		return 0;
 	MP4Close(p_AF->p_mp4);
 	faacEncClose(p_AF->p_enc);

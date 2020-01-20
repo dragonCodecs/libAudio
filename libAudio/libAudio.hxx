@@ -176,6 +176,7 @@ public:
 	static bool isM4A(const char *const fileName) noexcept;
 	static bool isM4A(const int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
+	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
