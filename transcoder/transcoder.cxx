@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 		for (int64_t result = 1; result > 0; ++loops)
 		{
 			result = audioFillBuffer(inFile.get(), buffer.data(), buffer.size());
-			Audio_WriteBuffer(outFile.get(), buffer.data(), buffer.size());
+			result = Audio_WriteBuffer(outFile.get(), buffer.data(), result);
 			printStatus(loops + 1, *fileInfo);
 		}
 		console.info("Transcode to "_s, argv[i + 1], " complete"_s);
