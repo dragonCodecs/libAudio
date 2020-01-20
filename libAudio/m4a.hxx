@@ -78,6 +78,28 @@ struct m4a_t::encoderContext_t final
 	 * The MP4v2 handle for the MP4 file being written to
 	 */
 	MP4FileHandle mp4Stream;
+	/*!
+	 * @internal
+	 * The MP4v2 track to which the encoded audio data is being written
+	 */
+	MP4TrackId track;
+	/*!
+	 * @internal
+	 * Holds the count returned by \c faacEncOpen() giving the maximum and
+	 *   prefered number of samples to feed \c faacEncEncode() with
+	 */
+	unsigned long inputSamples;
+	/*!
+	 * @internal
+	 * Holds the count returned by \c faacEncOpen() giving the maximum number
+	 *   of bytes that \c faacEncEncode() will return in the output buffer
+	 */
+	unsigned long outputBytes;
+	/*!
+	 * @internal
+	 * A boolean giving whether an encoding error has occured
+	 */
+	bool valid;
 
 	encoderContext_t();
 	~encoderContext_t() noexcept;

@@ -158,7 +158,8 @@ using namespace libAudio;
 
 m4a_t::m4a_t(fd_t &&fd, audioModeWrite_t) noexcept :
 	audioFile_t(audioType_t::m4a, std::move(fd)), encoderCtx{makeUnique<encoderContext_t>()} { }
-m4a_t::encoderContext_t::encoderContext_t() : encoder{nullptr}, mp4Stream{nullptr} { }
+m4a_t::encoderContext_t::encoderContext_t() : encoder{nullptr}, mp4Stream{nullptr}, track{MP4_INVALID_TRACK_ID},
+	inputSamples{}, outputBytes{}, valid{true} { }
 
 m4a_t *m4a_t::openW(const char *const fileName) noexcept
 {
@@ -191,65 +192,58 @@ void *m4aOpenW(const char *fileName) { return m4a_t::openW(fileName); }
  * @bug \p aacFile must not be \c nullptr as no checking on the parameter is done. FIXME!
  */
 bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
+	{ return audioFileInfo(aacFile, info); }
+
+bool m4a_t::fileInfo(const fileInfo_t &info)
 {
-	const MP4Tags *p_Tags;
-	faacEncConfigurationPtr p_conf;
-	uint8_t *ASC;
-	unsigned long lenASC;
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
+	auto &ctx = *encoderContext();
 
-	p_Tags = MP4TagsAlloc();
-	p_AF->Channels = info->channels;
-	p_AF->p_enc = faacEncOpen(info->bitRate, info->channels, &p_AF->MaxInSamp, &p_AF->MaxOutByte);
-	if (p_AF->p_enc == nullptr)
-	{
-		p_AF->err = true;
+	const MP4Tags *tags = MP4TagsAlloc();
+	if (!tags)
 		return false;
-	}
-	MP4SetTimeScale(p_AF->p_mp4, info->bitRate);
-	p_AF->track = MP4AddAudioTrack(p_AF->p_mp4, info->bitRate, 1024);//p_AF->MaxInSamp / info->channels, MP4_MPEG4_AUDIO_TYPE);
-	MP4SetAudioProfileLevel(p_AF->p_mp4, 0x0F);
 
-	if (info->album)
-		MP4TagsSetAlbum(p_Tags, info->album.get());
-	if (info->artist)
-		MP4TagsSetArtist(p_Tags, info->artist.get());
-	if (info->title)
-		MP4TagsSetName(p_Tags, info->title.get());
-
-	MP4TagsSetEncodingTool(p_Tags, "libAudio " libAudioVersion);
-	MP4TagsStore(p_Tags, p_AF->p_mp4);
-	MP4TagsFree(p_Tags);
-
-	p_conf = faacEncGetCurrentConfiguration(p_AF->p_enc);
-	if (p_conf == nullptr)
-	{
-		p_AF->err = true;
+	ctx.encoder = faacEncOpen(info.bitRate, info.channels, &ctx.inputSamples, &ctx.outputBytes);
+	if (!ctx.encoder)
 		return false;
-	}
-	p_conf->inputFormat = FAAC_INPUT_16BIT;
-	p_conf->mpegVersion = MPEG4;
-	p_conf->bitRate = 128000;
-//	p_conf->bitRate = 64000;
-	p_conf->outputFormat = 0;
-	p_conf->useLfe = p_conf->useTns = p_conf->allowMidside = 0;
-	p_conf->aacObjectType = LOW;//MAIN;
-	p_conf->bandWidth = 0;
-	p_conf->quantqual = 100;
-	if (faacEncSetConfiguration(p_AF->p_enc, p_conf) == 0)
-	{
-		p_AF->err = true;
-		return false;
-	}
-	if (faacEncGetDecoderSpecificInfo(p_AF->p_enc, &ASC, &lenASC) != 0)
-	{
-		p_AF->err = true;
-		return false;
-	}
 
-	MP4SetTrackESConfiguration(p_AF->p_mp4, p_AF->track, ASC, lenASC);
+	MP4SetTimeScale(ctx.mp4Stream, info.bitRate);
+	ctx.track = MP4AddAudioTrack(ctx.mp4Stream, info.bitRate, 1024);
+	//p_AF->MaxInSamp / info->channels, MP4_MPEG4_AUDIO_TYPE);
+	MP4SetAudioProfileLevel(ctx.mp4Stream, 0x0F);
 
-	free(ASC);
+	if (info.album)
+		MP4TagsSetAlbum(tags, info.album.get());
+	if (info.artist)
+		MP4TagsSetArtist(tags, info.artist.get());
+	if (info.title)
+		MP4TagsSetName(tags, info.title.get());
+	MP4TagsSetEncodingTool(tags, "libAudio " libAudioVersion);
+	MP4TagsStore(tags, ctx.mp4Stream);
+	MP4TagsFree(tags);
+
+	auto config = faacEncGetCurrentConfiguration(ctx.encoder);
+	if (!config)
+		return ctx.valid = false;
+	config->inputFormat = FAAC_INPUT_16BIT;
+	config->mpegVersion = MPEG4;
+	config->bitRate = 128000;
+//	config->bitRate = 64000;
+	config->outputFormat = 0;
+	config->useLfe = config->useTns = config->allowMidside = 0;
+	config->aacObjectType = LOW;//MAIN;
+	config->bandWidth = 0;
+	config->quantqual = 100;
+	if (faacEncSetConfiguration(ctx.encoder, config) == 0)
+		return ctx.valid = false;
+
+	uint8_t *ascBuffer = nullptr;
+	unsigned long ascLength = 0;
+	if (faacEncGetDecoderSpecificInfo(ctx.encoder, &ascBuffer, &ascLength) != 0)
+		return ctx.valid = false;
+	MP4SetTrackESConfiguration(ctx.encoder, ctx.track, ascBuffer, ascLength);
+	free(ascBuffer);
+
+	fileInfo() = info;
 	return true;
 }
 
@@ -333,15 +327,4 @@ m4a_t::encoderContext_t::~encoderContext_t() noexcept
  * this function - please either set it to \c nullptr or be extra carefull
  * to destroy it via scope
  */
-int M4A_CloseFileW(void *aacFile)
-{
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
-
-	if (p_AF == nullptr)
-		return 0;
-	MP4Close(p_AF->p_mp4);
-	faacEncClose(p_AF->p_enc);
-
-	free(p_AF);
-	return 0;
-}
+int M4A_CloseFileW(void *aacFile) { return audioCloseFile(aacFile); }

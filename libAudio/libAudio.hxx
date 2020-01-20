@@ -179,7 +179,9 @@ public:
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
+	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	bool fileInfo(const fileInfo_t &fileInfo) final override;
 	void fetchTags() noexcept;
 };
 
