@@ -5,7 +5,6 @@
 #endif
 
 #include "m4a.hxx"
-
 #include "libAudio_Common.h"
 
 /*!
@@ -235,14 +234,14 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 	config->aacObjectType = LOW;//MAIN;
 	config->bandWidth = 0;
 	config->quantqual = 100;
-	if (faacEncSetConfiguration(ctx.encoder, config) == 0)
+	if (!faacEncSetConfiguration(ctx.encoder, config))
 		return ctx.valid = false;
 
 	uint8_t *ascBuffer = nullptr;
 	unsigned long ascLength = 0;
-	if (faacEncGetDecoderSpecificInfo(ctx.encoder, &ascBuffer, &ascLength) != 0)
+	if (faacEncGetDecoderSpecificInfo(ctx.encoder, &ascBuffer, &ascLength))
 		return ctx.valid = false;
-	MP4SetTrackESConfiguration(ctx.encoder, ctx.track, ascBuffer, ascLength);
+	MP4SetTrackESConfiguration(ctx.mp4Stream, ctx.track, ascBuffer, ascLength);
 	free(ascBuffer);
 
 	fileInfo() = info;
@@ -294,8 +293,7 @@ int64_t m4a_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
 		MP4WriteSample(ctx.mp4Stream, ctx.track, ctx.buffer.get(), ctx.outputBytes);
 		offset += samplesMax << 1U;
 	}
-
-	return length;
+	return offset;
 }
 
 m4a_t::encoderContext_t::~encoderContext_t() noexcept
