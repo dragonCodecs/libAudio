@@ -181,6 +181,7 @@ public:
 
 	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
 	bool fileInfo(const fileInfo_t &fileInfo) final override;
 	void fetchTags() noexcept;
 };

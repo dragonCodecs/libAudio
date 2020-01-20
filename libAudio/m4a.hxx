@@ -100,6 +100,11 @@ struct m4a_t::encoderContext_t final
 	 * A boolean giving whether an encoding error has occured
 	 */
 	bool valid;
+	/*!
+	 * @internal
+	 * A buffer \c outputBytes long to hold data queued for \c faacEncEncode()
+	 */
+	std::unique_ptr<uint8_t []> buffer;
 
 	encoderContext_t();
 	~encoderContext_t() noexcept;

@@ -197,14 +197,16 @@ bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
 bool m4a_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
-
 	const MP4Tags *tags = MP4TagsAlloc();
-	if (!tags)
+	if (!tags || info.bitsPerSample != 16)
 		return false;
 
 	ctx.encoder = faacEncOpen(info.bitRate, info.channels, &ctx.inputSamples, &ctx.outputBytes);
 	if (!ctx.encoder)
 		return false;
+	ctx.buffer = makeUnique<uint8_t []>(ctx.outputBytes);
+	if (!ctx.buffer)
+		return ctx.valid = false;
 
 	MP4SetTimeScale(ctx.mp4Stream, info.bitRate);
 	ctx.track = MP4AddAudioTrack(ctx.mp4Stream, info.bitRate, 1024);
@@ -255,61 +257,45 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
  * @attention Will not work unless \c M4A_SetFileInfo() has been called beforehand
  */
 long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
+	{ return audioWriteBuffer(aacFile, InBuffer, nInBufferLen); }
+
+int64_t m4a_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
 {
-	M4A_Enc_Intern *p_AF = (M4A_Enc_Intern *)aacFile;
-	int nOB, j = 0;
-	uint8_t *OB = nullptr;
-
-	if (p_AF->p_enc == nullptr)
+	uint32_t offset = 0;
+	auto &ctx = *encoderContext();
+	auto buffer = static_cast<const char *>(bufferPtr);
+	if (!ctx.encoder)
 		return -3;
-	if (p_AF->err == true)
+	else if (!ctx.valid)
 		return -4;
-
-	if (nInBufferLen == -2)
+	else if (length == -2)
 	{
-		OB = (uint8_t *)malloc(p_AF->MaxOutByte);
-
-		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
-		if (nOB > 0)
-			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
-		if (nOB > 0)
-			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
-		if (nOB > 0)
-			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-		nOB = faacEncEncode(p_AF->p_enc, nullptr, 0, OB, p_AF->MaxOutByte);
-		if (nOB > 0)
-			MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
-
-		free(OB);
+		int32_t sampleCount{};
+		do
+		{
+			sampleCount = faacEncEncode(ctx.encoder, nullptr, 0, ctx.buffer.get(), ctx.outputBytes);
+			if (sampleCount > 0)
+				MP4WriteSample(ctx.mp4Stream, ctx.track, ctx.buffer.get(), sampleCount);
+		}
+		while (sampleCount > 0);
 		return -2;
 	}
 
-	OB = (uint8_t *)malloc(p_AF->MaxOutByte);
-	while (j < nInBufferLen)
+	while (offset < length)
 	{
-		if (j + ((int)p_AF->MaxInSamp * 2) > nInBufferLen)
-		{
-			nOB = faacEncEncode(p_AF->p_enc, (int *)(InBuffer + j), (nInBufferLen - j) / 2, OB, p_AF->MaxOutByte);
-			j = nInBufferLen;
-		}
-		else
-		{
-			nOB = faacEncEncode(p_AF->p_enc, (int *)(InBuffer + j), p_AF->MaxInSamp, OB, p_AF->MaxOutByte);
-			j += p_AF->MaxInSamp * 2;
-		}
-
-		if (nOB < 0)
-			break;
-		if (nOB == 0)
+		const uint32_t samplesMax = std::min((length - offset) >> 1U, uint32_t(ctx.inputSamples));
+		int sampleCount = faacEncEncode(ctx.encoder,
+			const_cast<int32_t *>(reinterpret_cast<const int32_t *>(buffer + offset)),
+			samplesMax, ctx.buffer.get(), ctx.outputBytes);
+		if (!sampleCount)
 			continue;
-
-		MP4WriteSample(p_AF->p_mp4, p_AF->track, OB, nOB);
+		else if (sampleCount < 0)
+			break;
+		MP4WriteSample(ctx.mp4Stream, ctx.track, ctx.buffer.get(), ctx.outputBytes);
+		offset += samplesMax << 1U;
 	}
-	free(OB);
 
-	return nInBufferLen;
+	return length;
 }
 
 m4a_t::encoderContext_t::~encoderContext_t() noexcept
