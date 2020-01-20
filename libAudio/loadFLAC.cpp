@@ -232,7 +232,7 @@ flac_t::decoderContext_t::decoderContext_t() noexcept : streamDecoder{FLAC__stre
  */
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<flac_t> flacFile(makeUnique<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{}));
+	std::unique_ptr<flac_t> flacFile{makeUnique<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!flacFile || !flacFile->valid() || !isFLAC(flacFile->_fd))
 		return nullptr;
 	const fd_t &fd = flacFile->fd();

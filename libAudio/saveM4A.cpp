@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <cstdint>
 #include <faac.h>
 #include <mp4v2/mp4v2.h>
 

@@ -164,15 +164,17 @@ struct m4a_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	struct encoderContext_t;
+	std::unique_ptr<decoderContext_t> decoderCtx;
+	std::unique_ptr<encoderContext_t> encoderCtx;
 
 public:
-	m4a_t(fd_t &&fd) noexcept;
+	m4a_t(fd_t &&fd, audioModeRead_t) noexcept;
 	static m4a_t *openR(const char *const fileName) noexcept;
 	static bool isM4A(const char *const fileName) noexcept;
 	static bool isM4A(const int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
 	void fetchTags() noexcept;

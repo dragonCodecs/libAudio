@@ -163,7 +163,8 @@ namespace libAudio
 
 using namespace libAudio;
 
-m4a_t::m4a_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::m4a, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
+m4a_t::m4a_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::m4a, std::move(fd)),
+	decoderCtx{makeUnique<decoderContext_t>()} { }
 m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr},
 	track{MP4_INVALID_TRACK_ID}, frameCount{0}, currentFrame{0}, sampleCount{0}, samplesUsed{0},
 	samples{nullptr}, eof{false}, playbackBuffer{} { }
@@ -213,7 +214,8 @@ void m4a_t::fetchTags() noexcept
 {
 	fileInfo_t &info = fileInfo();
 	const MP4Tags *tags = MP4TagsAlloc();
-	MP4TagsFetch(tags, ctx->mp4Stream);
+	auto &ctx = *decoderContext();
+	MP4TagsFetch(tags, ctx.mp4Stream);
 
 	info.album = stringDup(tags->album);
 	info.artist = stringDup(tags->artist ? tags->artist : tags->albumArtist);
@@ -222,8 +224,8 @@ void m4a_t::fetchTags() noexcept
 		info.other.emplace_back(stringDup(tags->comments));
 
 	info.bitsPerSample = 16;
-	const uint32_t timescale = MP4GetTrackTimeScale(ctx->mp4Stream, ctx->track);
-	info.totalTime = MP4GetTrackDuration(ctx->mp4Stream, ctx->track) / timescale;
+	const uint32_t timescale = MP4GetTrackTimeScale(ctx.mp4Stream, ctx.track);
+	info.totalTime = MP4GetTrackDuration(ctx.mp4Stream, ctx.track) / timescale;
 }
 
 /*!
@@ -234,10 +236,10 @@ void m4a_t::fetchTags() noexcept
  */
 m4a_t *m4a_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<m4a_t> file(makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}));
+	std::unique_ptr<m4a_t> file{makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isM4A(file->_fd))
 		return nullptr;
-	auto &ctx = *file->context();
+	auto &ctx = *file->decoderContext();
 	fileInfo_t &info = file->fileInfo();
 
 	ctx.mp4Stream = MP4ReadProvider(fileName, 0, &loadM4A::ioFunctions);
@@ -280,7 +282,7 @@ m4a_t::decoderContext_t::~decoderContext_t() noexcept { finish(); }
  */
 int64_t m4a_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	auto &ctx = *context();
+	auto &ctx = *decoderContext();
 	auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset = 0;
 
