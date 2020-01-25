@@ -4,7 +4,7 @@
 /*!
  * @internal
  * @file libAudio_Common.cpp
- * @brief libAudio's common routines, including the playback engine
+ * @brief libAudio's old common routines
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
  * @date 2010-2019
  */
@@ -13,7 +13,7 @@
 #include <windows.h>
 #endif
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 
 #ifdef __NICE_OUTPUT__
 void DoDisplay(int *p_CN, int *p_P, char *Chars)

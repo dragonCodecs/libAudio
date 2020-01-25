@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "../libAudio.h"
-#include "../libAudio_Common.h"
+#include "../libAudio.hxx"
 #include "../genericModule/genericModule.h"
 
 #include "waveTables.h"

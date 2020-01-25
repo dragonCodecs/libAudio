@@ -8,10 +8,15 @@
  * @date 2016-2020
  */
 
+#ifdef _WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#define strncasecmp strnicmp
+#endif
+
 #include <stdint.h>
 #include "fd.hxx"
 #include "fileInfo.hxx"
-#include "libAudio_Common.h"
 #include "playback.hxx"
 #include "uniquePtr.hxx"
 
@@ -37,6 +42,13 @@ enum class audioType_t : uint8_t
 	oggOpus = 18,
 	sndh = 19
 };
+
+using fileIs_t = bool (*)(const char *);
+using fileOpenR_t = void *(*)(const char *);
+using fileOpenW_t = void *(*)(const char *);
+
+const fileInfo_t *audioFileInfo(void *audioFile);
+bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
 
 struct audioModeRead_t { };
 struct audioModeWrite_t { };

@@ -4,9 +4,7 @@
 #include <cstdint>
 #include <mutex>
 #include <chrono>
-#include "libAudio.h"
 #include "fileInfo.hxx"
-#include "libAudio_Common.h"
 #include "uniquePtr.hxx"
 
 enum class playState_t : uint8_t
@@ -20,6 +18,8 @@ enum class playState_t : uint8_t
 
 enum class playbackMode_t : uint8_t
 	{ wait, async };
+
+using fileFillBuffer_t = int64_t (*)(void *audioFile, void *const buffer, const uint32_t length);
 
 struct playback_t;
 struct audioPlayer_t

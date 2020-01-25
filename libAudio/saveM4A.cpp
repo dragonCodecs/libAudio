@@ -5,7 +5,6 @@
 #endif
 
 #include "m4a.hxx"
-#include "libAudio_Common.h"
 
 /*!
  * @internal
