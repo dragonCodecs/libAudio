@@ -9,7 +9,7 @@
  * @file loadMPC.cpp
  * @brief The implementation of the MPC decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 struct mpc_t::decoderContext_t final
@@ -306,22 +306,3 @@ bool mpc_t::isMPC(const char *const fileName) noexcept
 		return false;
 	return isMPC(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding MPC files when using the high-level API on them
- */
-API_Functions MPCDecoder =
-{
-	mpcOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

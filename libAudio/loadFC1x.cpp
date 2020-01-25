@@ -55,18 +55,3 @@ bool modFC1x_t::isFC1x(const char *const fileName) noexcept
 		return false;
 	return isFC1x(file);
 }
-
-API_Functions FC1xDecoder =
-{
-	fc1xOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

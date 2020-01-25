@@ -9,7 +9,7 @@
  * @file loadM4A.cpp
  * @brief The implementation of the M4A/MP4 decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2019
+ * @date 2009-2020
  */
 
 namespace libAudio
@@ -324,22 +324,3 @@ bool m4a_t::isM4A(const char *const fileName) noexcept
 		return false;
 	return isM4A(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding MP4/M4A files when using the high-level API on them
- */
-API_Functions M4ADecoder =
-{
-	m4aOpenR,
-	m4aOpenW,
-	audioFileInfo,
-	audioFileInfo,
-	audioFillBuffer,
-	audioWriteBuffer,
-	audioCloseFile,
-	audioCloseFile,
-	audioPlay,
-	audioPause,
-	audioStop
-};

@@ -9,7 +9,7 @@
  * @file loadOggOpus.cxx
  * @brief The implementation of the Ogg|Opus decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2019
+ * @date 2019-2020
  */
 
 /*!
@@ -190,22 +190,3 @@ bool oggOpus_t::isOggOpus(const char *const fileName) noexcept
 		return false;
 	return isOggOpus(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding Ogg|Opus files when using the high-level API on them
- */
-API_Functions OggOpusDecoder =
-{
-	oggOpusOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

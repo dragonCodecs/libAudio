@@ -13,7 +13,7 @@
  * @file loadWavPack.cpp
  * @brief The implementation of the WavPack decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 struct wavPack_t::decoderContext_t final
@@ -326,22 +326,3 @@ bool wavPack_t::isWavPack(const char *const fileName) noexcept
 		return false;
 	return isWavPack(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding WavPack files when using the high-level API on them
- */
-API_Functions WavPackDecoder =
-{
-	wavPackOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

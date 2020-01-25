@@ -8,7 +8,7 @@
  * @file loadWAV.cpp
  * @brief The implementation of the WAV decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 /*!
@@ -324,22 +324,3 @@ bool wav_t::isWAV(const char *const fileName) noexcept
 		return false;
 	return isWAV(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding WAV files when using the high-level API on them
- */
-API_Functions WAVDecoder =
-{
-	wavOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

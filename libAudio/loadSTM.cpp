@@ -59,18 +59,3 @@ bool modSTM_t::isSTM(const char *const fileName) noexcept
 		return false;
 	return isSTM(file);
 }
-
-API_Functions STMDecoder =
-{
-	stmOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

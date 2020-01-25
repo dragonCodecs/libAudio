@@ -12,7 +12,7 @@
  * @file loadMP3.cpp
  * @brief The implementation of the MP3 decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 struct mp3_t::decoderContext_t final
@@ -449,22 +449,3 @@ bool mp3_t::isMP3(const char *const fileName) noexcept
 		return false;
 	return isMP3(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding MP3 files when using the high-level API on them
- */
-API_Functions MP3Decoder =
-{
-	mp3OpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

@@ -8,7 +8,7 @@
  * @file loadSNDH.cpp
  * @brief The implementation of the SNDH decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2019
+ * @date 2019-2020
  */
 
 struct sndh_t::decoderContext_t final
@@ -91,22 +91,3 @@ bool sndh_t::isSNDH(const char *const fileName) noexcept
 		return false;
 	return isSNDH(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding SNDH files when using the high-level API on them
- */
-API_Functions SNDHDecoder =
-{
-	sndhOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

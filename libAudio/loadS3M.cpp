@@ -62,18 +62,3 @@ bool modS3M_t::isS3M(const char *const fileName) noexcept
 		return false;
 	return isS3M(file);
 }
-
-API_Functions S3MDecoder =
-{
-	s3mOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

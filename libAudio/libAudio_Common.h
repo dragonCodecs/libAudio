@@ -25,28 +25,6 @@
 #define __CDECL__
 #endif
 
-/*!
- * @internal
- * This structure holds what all low-level APIs must expose
- * and is used to optimise performance of the high-level API
- * by removing the need to if-check what format we're using
- * on each call - the pointers in this structure say it all
- */
-struct API_Functions
-{
-	void *(__CDECL__ *OpenR)(const char *fileName);
-	void *(__CDECL__ *OpenW)(const char *fileName);
-	const fileInfo_t *(__CDECL__ *GetFileInfo)(void *p_File);
-	bool (__CDECL__ *SetFileInfo)(void *p_File, const fileInfo_t *const p_FI);
-	int64_t (__CDECL__ *FillBuffer)(void *p_File, void *const buffer, const uint32_t length);
-	int64_t (__CDECL__ *WriteBuffer)(void *p_File, void *const buffer, const int64_t length);
-	int (__CDECL__ *CloseFileR)(void *p_File);
-	int (__CDECL__ *CloseFileW)(void *p_File);
-	void (__CDECL__ *Play)(void *p_File);
-	void (__CDECL__ *Pause)(void *p_File);
-	void (__CDECL__ *Stop)(void *p_File);
-};
-
 using fileIs_t = bool (*)(const char *);
 using fileOpenR_t = void *(*)(const char *);
 using fileOpenW_t = void *(*)(const char *);

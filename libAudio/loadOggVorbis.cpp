@@ -11,7 +11,7 @@ inline std::string operator ""_s(const char *const str, const size_t len) noexce
  * @file loadOggVorbis.cpp
  * @brief The implementation of the Ogg|Vorbis decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 namespace libAudio
@@ -196,22 +196,3 @@ bool oggVorbis_t::isOggVorbis(const char *const fileName) noexcept
 		return false;
 	return isOggVorbis(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding Ogg|Vorbis files when using the high-level API on them
- */
-API_Functions OggVorbisDecoder =
-{
-	oggVorbisOpenR,
-	oggVorbisOpenW,
-	audioFileInfo,
-	audioFileInfo,
-	audioFillBuffer,
-	audioWriteBuffer,
-	audioCloseFile,
-	audioCloseFile,
-	audioPlay,
-	audioPause,
-	audioStop
-};

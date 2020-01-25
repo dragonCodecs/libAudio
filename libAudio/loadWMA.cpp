@@ -2347,18 +2347,3 @@ bool isWMA(char *fileName)
 
 	return true;
 }
-
-API_Functions WMADecoder =
-{
-	wmaOpenR,
-	nullptr,
-	WMA_GetFileInfo,
-	nullptr,
-	WMA_FillBuffer,
-	nullptr,
-	WMA_CloseFileR,
-	nullptr,
-	WMA_Play,
-	WMA_Pause,
-	WMA_Stop
-};

@@ -9,7 +9,7 @@
  * @file loadFLAC.cpp
  * @brief The implementation of the FLAC decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2019
+ * @date 2009-2020
  */
 
 namespace libAudio
@@ -374,22 +374,3 @@ bool flac_t::isFLAC(const char *const fileName) noexcept
 		return false;
 	return isFLAC(file);
 }
-
-/*!
- * @internal
- * This structure controls decoding FLAC files when using the high-level API on them
- */
-API_Functions FLACDecoder =
-{
-	flacOpenR,
-	flacOpenW,
-	audioFileInfo,
-	audioFileInfo,
-	audioFillBuffer,
-	audioWriteBuffer,
-	audioCloseFile,
-	audioCloseFile,
-	audioPlay,
-	audioPause,
-	audioStop
-};

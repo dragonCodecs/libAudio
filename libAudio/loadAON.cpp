@@ -63,18 +63,3 @@ bool modAON_t::isAON(const char *const fileName) noexcept
 		return false;
 	return isAON(file);
 }
-
-API_Functions AONDecoder =
-{
-	aonOpenR,
-	nullptr,
-	audioFileInfo,
-	nullptr,
-	audioFillBuffer,
-	nullptr,
-	audioCloseFile,
-	nullptr,
-	audioPlay,
-	audioPause,
-	audioStop
-};

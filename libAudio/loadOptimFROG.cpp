@@ -10,7 +10,7 @@
  * @file loadOptimFROG.cpp
  * @brief The implementation of the OptimFROG decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2009-2013
+ * @date 2009-2020
  */
 
 /*!
@@ -335,22 +335,3 @@ bool isOptimFROG(const char *fileName)
 
 	return true;
 }
-
-/*!
- * @internal
- * This structure controls decoding OptimFROG files when using the high-level API on them
- */
-API_Functions OptimFROGDecoder =
-{
-	optimFROGOpenR,
-	nullptr,
-	OptimFROG_GetFileInfo,
-	nullptr,
-	OptimFROG_FillBuffer,
-	nullptr,
-	OptimFROG_CloseFileR,
-	nullptr,
-	OptimFROG_Play,
-	OptimFROG_Pause,
-	OptimFROG_Stop
-};
