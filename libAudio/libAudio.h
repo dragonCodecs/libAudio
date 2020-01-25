@@ -1,5 +1,12 @@
-#ifndef LIB_AUDIO__HXX
-#define LIB_AUDIO__HXX
+#ifndef LIB_AUDIO__H
+#define LIB_AUDIO__H
+
+/*!
+ * @file libAudio.h
+ * @brief C API header for use by external programs
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @date 2009-2020
+ */
 
 #include <stdint.h> // NOLINT:modernize-deprecated-headers
 #include "fileInfo.hxx"
@@ -29,10 +36,10 @@
 	#endif
 #endif
 
-#define libAudioVersion "0.5.0"
+#define libAudioVersion "0.5.1"
 #define libAudioVersion_Major 0
 #define libAudioVersion_Minor 5
-#define libAudioVersion_Rev 0
+#define libAudioVersion_Rev 1
 
 // Ogg|Vorbis API
 libAUDIO_API bool isOggVorbis(const char *fileName);
@@ -185,4 +192,4 @@ libAUDIO_API uint8_t ToPlayback;
 #define AUDIO_FC1x			17
 #define AUDIO_OGG_OPUS		18
 
-#endif /*LIB_AUDIO__HXX*/
+#endif /*LIB_AUDIO__H*/
