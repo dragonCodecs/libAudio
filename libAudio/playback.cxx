@@ -33,7 +33,7 @@ void playback_t::stop()
 
 long audioPlayer_t::refillBuffer() const noexcept
 	{ return player.refillBuffer(); }
-long playback_t::refillBuffer() noexcept
+int64_t playback_t::refillBuffer() noexcept
 	{ return fillBuffer(audioFile, buffer, bufferLength); }
 void playback_t::mode(playbackMode_t _mode) noexcept { playbackMode = _mode; }
 

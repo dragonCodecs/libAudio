@@ -70,7 +70,7 @@ private:
 	std::unique_ptr<audioPlayer_t> player;
 
 protected:
-	long refillBuffer() noexcept;
+	int64_t refillBuffer() noexcept;
 	friend struct audioPlayer_t;
 
 public:
