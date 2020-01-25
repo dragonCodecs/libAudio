@@ -15,52 +15,6 @@
  * @date 2010-2020
  */
 
-/*!
- * @internal
- * Internal structure for holding the encoding context for a given M4A/MP4 file
- */
-typedef struct _M4A_Enc_Intern
-{
-	/*!
-	 * @internal
-	 * The encoder context itself
-	 */
-	faacEncHandle p_enc;
-	/*!
-	 * @internal
-	 * Holds the count returned by \c faacEncOpen() giving the maximum and
-	 *   prefered number of samples to feed \c faacEncEncode() with
-	 */
-	unsigned long MaxInSamp;
-	/*!
-	 * @internal
-	 * Holds the count returned by \c faacEncOpen() giving the maximum number
-	 *   of bytes that \c faacEncEncode() will return in the output buffer
-	 */
-	unsigned long MaxOutByte;
-	/*!
-	 * @internal
-	 * The MP4v2 handle for the MP4 file being written to
-	 */
-	MP4FileHandle p_mp4;
-	/*!
-	 * @internal
-	 * The MP4v2 track to which the encoded audio data is being written
-	 */
-	MP4TrackId track;
-	/*!
-	 * @internal
-	 * A boolean giving whether an encoding error has occured
-	 */
-	bool err;
-	/*!
-	 * @internal
-	 * A count giving the number of channels being processed. Taken from
-	 * the \c FileInfo structure passed into \c M4A_SetFileInfo()
-	 */
-	int Channels;
-} M4A_Enc_Intern;
-
 namespace libAudio
 {
 	namespace saveM4A
