@@ -152,10 +152,9 @@ libAUDIO_API void audioStop(void *audioFile);
 libAUDIO_API bool isAudio(const char *fileName);
 
 // Write (Encode)
-libAUDIO_API void *Audio_OpenW(const char *fileName, int Type);
-libAUDIO_API bool Audio_SetFileInfo(void *audioFile, const fileInfo_t *const p_FI);
-libAUDIO_API long Audio_WriteBuffer(void *audioFile, uint8_t *InBuffer, int nInBufferLen);
-libAUDIO_API int Audio_CloseFileW(void *audioFile);
+libAUDIO_API void *audioOpenW(const char *fileName, const uint32_t audioType);
+libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
+libAUDIO_API int64_t audioWriteBuffer(void *audioFile, void *const buffer, uint32_t length);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 libAUDIO_API uint8_t ExternalPlayback;

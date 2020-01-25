@@ -15,7 +15,6 @@ using libAudio::console::asTime_t;
 std::array<uint8_t, 8192> buffer;
 
 struct audioClose_t final { void operator ()(void *ptr) noexcept { audioCloseFile(ptr); } };
-struct audioCloseW_t final { void operator ()(void *ptr) noexcept { Audio_CloseFileW(ptr); } };
 
 const std::map<std::string, uint8_t> typeMap
 {
@@ -74,7 +73,7 @@ int main(int argc, char **argv)
 	for (uint32_t i = 2; i < uint32_t(argc); i += 2)
 	{
 		std::unique_ptr<void, audioClose_t> inFile{audioOpenR(argv[i])};
-		std::unique_ptr<void, audioCloseW_t> outFile{Audio_OpenW(argv[i + 1], type)};
+		std::unique_ptr<void, audioClose_t> outFile{audioOpenW(argv[i + 1], type)};
 
 		if (!inFile || !outFile)
 		{
@@ -86,7 +85,7 @@ int main(int argc, char **argv)
 		}
 		const fileInfo_t *fileInfo{audioGetFileInfo(inFile.get())};
 		printInfo(argv[i], *fileInfo);
-		if (!Audio_SetFileInfo(outFile.get(), fileInfo))
+		if (!audioSetFileInfo(outFile.get(), fileInfo))
 		{
 			console.error("Failed to set file information for "_s, argv[i + 1]);
 			continue;
@@ -96,7 +95,7 @@ int main(int argc, char **argv)
 		for (int64_t result = 1; result > 0; ++loops)
 		{
 			result = audioFillBuffer(inFile.get(), buffer.data(), buffer.size());
-			result = Audio_WriteBuffer(outFile.get(), buffer.data(), result);
+			result = audioWriteBuffer(outFile.get(), buffer.data(), result);
 			printStatus(loops + 1, *fileInfo);
 		}
 		console.info("Transcode to "_s, argv[i + 1], " complete"_s);

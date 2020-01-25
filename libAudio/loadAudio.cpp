@@ -102,7 +102,7 @@ int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t leng
 	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (!file)
 		return 0;
-	return file->fillBuffer(static_cast<void *>(buffer), uint32_t(length));
+	return file->fillBuffer(buffer, length);
 }
 
 /*!

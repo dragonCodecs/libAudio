@@ -39,7 +39,7 @@ struct API_Functions
 	const fileInfo_t *(__CDECL__ *GetFileInfo)(void *p_File);
 	bool (__CDECL__ *SetFileInfo)(void *p_File, const fileInfo_t *const p_FI);
 	int64_t (__CDECL__ *FillBuffer)(void *p_File, void *const buffer, const uint32_t length);
-	long (__CDECL__ *WriteBuffer)(void *p_File, uint8_t *InBuffer, int nInBufferLen);
+	long (__CDECL__ *WriteBuffer)(void *p_File, void *const buffer, const uint32_t length);
 	int (__CDECL__ *CloseFileR)(void *p_File);
 	int (__CDECL__ *CloseFileW)(void *p_File);
 	void (__CDECL__ *Play)(void *p_File);
@@ -49,61 +49,10 @@ struct API_Functions
 
 using fileIs_t = bool (*)(const char *);
 using fileOpenR_t = void *(*)(const char *);
+using fileOpenW_t = void *(*)(const char *);
 using fileFillBuffer_t = int64_t (*)(void *audioFile, void *const buffer, const uint32_t length);
 
 const fileInfo_t *audioFileInfo(void *audioFile);
 bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
-long audioWriteBuffer(void *audioFile, uint8_t *buffer, int length);
-
-/*!
- * @internal
- * This structure is what is returned in place of the internal
- * \c p_AudioFile member when using the high-level API to utilise
- * audio files in a reading capacity. It allows for a far more
- * flexible, and faster library by removing a lot of if-checks
- * from the high-level API.
- */
-struct AudioPointer
-{
-	/*!
-	 * @internal
-	 * The real file context returned from a low-level \c *_OpenR()
-	 * call
-	 */
-	void *p_AudioFile;
-	/*!
-	 * @internal
-	 * a pointer to the API_Functions structure for the low-level
-	 * decoder
-	 */
-	API_Functions *API;
-};
-
-extern API_Functions OggVorbisDecoder;
-extern API_Functions OggOpusDecoder;
-extern API_Functions FLACDecoder;
-extern API_Functions WAVDecoder;
-extern API_Functions M4ADecoder;
-extern API_Functions AACDecoder;
-extern API_Functions MP3Decoder;
-extern API_Functions ITDecoder;
-extern API_Functions MODDecoder;
-extern API_Functions S3MDecoder;
-extern API_Functions STMDecoder;
-extern API_Functions AONDecoder;
-#ifdef ENABLE_FC1x
-extern API_Functions FC1xDecoder;
-#endif
-extern API_Functions MPCDecoder;
-extern API_Functions WavPackDecoder;
-#ifdef ENABLE_SNDH
-extern API_Functions SNDHDecoder;
-#endif
-#ifdef ENABLE_OptimFROG
-extern API_Functions OptimFROGDecoder;
-#endif
-#ifdef ENABLE_WMA
-extern API_Functions WMADecoder;
-#endif
 
 #endif /* __libAudio_Common_H__ */
