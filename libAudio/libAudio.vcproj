@@ -567,10 +567,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\libAudio_Common.h"
-				>
-			</File>
-			<File
 				RelativePath=".\loadWMA.h"
 				>
 			</File>
