@@ -130,11 +130,14 @@ template<typename T> uint32_t fillFrame(oggVorbis_t &file, const void *const buf
 	return sampleCount;
 }
 
-int64_t oggVorbis_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
+int64_t oggVorbis_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 {
 	const fileInfo_t &info = fileInfo();
 	auto &ctx = *encoderContext();
 	uint32_t sampleCount = 0;
+	if (rawLength <= 0)
+		return rawLength;
+	const uint32_t length = uint32_t(rawLength);
 	if (info.bitsPerSample == 8)
 		sampleCount = fillFrame<int8_t>(*this, bufferPtr, length);
 	else if (info.bitsPerSample == 16)

@@ -39,7 +39,7 @@ struct API_Functions
 	const fileInfo_t *(__CDECL__ *GetFileInfo)(void *p_File);
 	bool (__CDECL__ *SetFileInfo)(void *p_File, const fileInfo_t *const p_FI);
 	int64_t (__CDECL__ *FillBuffer)(void *p_File, void *const buffer, const uint32_t length);
-	long (__CDECL__ *WriteBuffer)(void *p_File, void *const buffer, const uint32_t length);
+	int64_t (__CDECL__ *WriteBuffer)(void *p_File, void *const buffer, const int64_t length);
 	int (__CDECL__ *CloseFileR)(void *p_File);
 	int (__CDECL__ *CloseFileW)(void *p_File);
 	void (__CDECL__ *Play)(void *p_File);

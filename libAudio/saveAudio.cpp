@@ -65,7 +65,7 @@ bool audioFile_t::fileInfo(const fileInfo_t &) { return false; }
  * @param length An integer giving how long the buffer to write is
  * @warning May not work unless \c audioSetFileInfo() has been called beforehand
  */
-int64_t audioWriteBuffer(void *audioFile, void *const buffer, uint32_t length)
+int64_t audioWriteBuffer(void *audioFile, void *const buffer, int64_t length)
 {
 	const auto file = static_cast<audioFile_t *>(audioFile);
 	if (!file)
@@ -73,4 +73,4 @@ int64_t audioWriteBuffer(void *audioFile, void *const buffer, uint32_t length)
 	return file->writeBuffer(buffer, length);
 }
 
-int64_t audioFile_t::writeBuffer(const void *const, const uint32_t) { return 0; }
+int64_t audioFile_t::writeBuffer(const void *const, const int64_t) { return 0; }

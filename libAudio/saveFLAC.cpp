@@ -170,15 +170,16 @@ void flac_t::encoderContext_t::fillFrame(const int16_t *const buffer, const uint
 		encoderBuffer[i] = buffer[i];
 }
 
-int64_t flac_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
+int64_t flac_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 {
 	const auto buffer = static_cast<const char *>(bufferPtr);
 	uint32_t offset = 0;
 	auto &ctx = *encoderContext();
 	const fileInfo_t &info = fileInfo();
 
-	if (FLAC__stream_encoder_get_state(ctx.streamEncoder) != FLAC__STREAM_ENCODER_OK)
+	if (rawLength <= 0 || FLAC__stream_encoder_get_state(ctx.streamEncoder) != FLAC__STREAM_ENCODER_OK)
 		return -2;
+	const uint32_t length = uint32_t(rawLength);
 	while (offset < length)
 	{
 		const uint32_t samplesMax = (length - offset) / sizeof(int16_t);

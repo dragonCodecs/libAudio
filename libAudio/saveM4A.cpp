@@ -258,7 +258,7 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
 	{ return audioWriteBuffer(aacFile, InBuffer, nInBufferLen); }
 
-int64_t m4a_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
+int64_t m4a_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 {
 	uint32_t offset = 0;
 	auto &ctx = *encoderContext();
@@ -267,7 +267,7 @@ int64_t m4a_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
 		return -3;
 	else if (!ctx.valid)
 		return -4;
-	else if (length == -2)
+	else if (rawLength == -2 || rawLength <= 0)
 	{
 		int32_t sampleCount{};
 		do
@@ -280,6 +280,7 @@ int64_t m4a_t::writeBuffer(const void *const bufferPtr, const uint32_t length)
 		return -2;
 	}
 
+	const uint32_t length = uint32_t(rawLength);
 	while (offset < length)
 	{
 		const uint32_t samplesMax = std::min((length - offset) >> 1U, uint32_t(ctx.inputSamples));

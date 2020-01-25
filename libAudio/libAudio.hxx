@@ -60,7 +60,7 @@ public:
 	void player(std::unique_ptr<playback_t> &&player) noexcept { _player = std::move(player); }
 
 	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
-	virtual int64_t writeBuffer(const void *const buffer, const uint32_t length);
+	virtual int64_t writeBuffer(const void *const buffer, const int64_t length);
 	virtual bool fileInfo(const fileInfo_t &fileInfo);
 	void play();
 	void pause();
@@ -92,7 +92,7 @@ public:
 
 	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
-	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final override;
 	bool fileInfo(const fileInfo_t &fileInfo) final override;
 };
 
@@ -135,7 +135,7 @@ public:
 
 	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
-	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final override;
 	bool fileInfo(const fileInfo_t &fileInfo) final override;
 };
 
@@ -181,7 +181,7 @@ public:
 
 	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
-	int64_t writeBuffer(const void *const buffer, const uint32_t length) final override;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final override;
 	bool fileInfo(const fileInfo_t &fileInfo) final override;
 	void fetchTags() noexcept;
 };
