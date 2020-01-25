@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <algorithm>
-#include "../libAudio.h"
 #include "genericModule.h"
 
 ModuleSample *ModuleSample::LoadSample(const modMOD_t &file, const uint32_t i)

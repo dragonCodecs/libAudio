@@ -1,5 +1,3 @@
-#include "../libAudio.h"
-#include "../libAudio_Common.h"
 #include "genericModule.h"
 
 ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion)

@@ -1,5 +1,3 @@
-#include "../libAudio.h"
-#include "../libAudio_Common.h"
 #include "genericModule.h"
 
 #ifndef _WINDOWS

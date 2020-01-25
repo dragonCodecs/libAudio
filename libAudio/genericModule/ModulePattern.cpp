@@ -1,7 +1,4 @@
-#include "../libAudio.h"
-#include "../libAudio_Common.h"
 #include "genericModule.h"
-#include <stdlib.h>
 
 static const uint16_t Periods[60] =
 {
