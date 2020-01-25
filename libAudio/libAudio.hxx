@@ -1,6 +1,13 @@
 #ifndef LIBAUDIO_HXX
 #define LIBAUDIO_HXX
 
+/*!
+ * @file libAudio.hxx
+ * @brief C++ API header for use by external programs
+ * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @date 2016-2020
+ */
+
 #include <stdint.h>
 #include "fd.hxx"
 #include "fileInfo.hxx"

@@ -7,7 +7,7 @@
  * @file saveAudio.cpp
  * @brief The implementation of the master encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 const std::map<uint32_t, fileOpenW_t> writers
