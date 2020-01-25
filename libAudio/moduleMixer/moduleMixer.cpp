@@ -14,7 +14,7 @@
 #include "mixFunctionTables.h"
 #include "frequencyTables.h"
 
-uint32_t __CDECL__ Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
+uint32_t Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 {
 	uint32_t i;
 	int16_t *out = (int16_t *)_out;

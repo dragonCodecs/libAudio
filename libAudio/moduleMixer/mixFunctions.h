@@ -2,7 +2,7 @@
 #ifndef __mixFunctions_H__
 #define __mixFunctions_H__ 1
 
-typedef void (__CDECL__ *MixInterface)(Channel *, int *, int *);
+typedef void (*MixInterface)(Channel *, int *, int *);
 
 #define WFIR_QUANTBITS		15
 #define WFIR_QUANTSCALE		(1 << WFIR_QUANTBITS)
@@ -287,7 +287,7 @@ void DeinitialiseTables()
 
 // Begin / End interface
 #define BEGIN_MIX_INTERFACE(func) \
-	void __CDECL__ func(Channel *chn, int *Buff, int *BuffMax) \
+	void func(Channel *chn, int *Buff, int *BuffMax) \
 	{
 
 #define END_MIX_INTERFACE() \
