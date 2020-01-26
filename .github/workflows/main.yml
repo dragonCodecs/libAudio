@@ -192,7 +192,7 @@ jobs:
         shell: bash
         run: |
           curl -L1O https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip
-          python3 -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip setuptools wheel
           pip3 install meson
           unzip ninja-win.zip -d /c/ProgramData/Chocolatey/bin
           rm ninja-win.zip
