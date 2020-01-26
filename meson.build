@@ -31,4 +31,6 @@ subdir('player')
 subdir('transcoder')
 subdir('test')
 subdir('harness')
-subdir('spectrometer')
+if get_option('spectrometer')
+	subdir('spectrometer')
+endif
