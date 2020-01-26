@@ -377,7 +377,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 	// If not Impulse Tracker, or we have no actual instruments, always cut on NNA
 	if (ModuleType != MODULE_IT || !p_Instruments)
 	{
-		if (!channel->Length || !channel->LeftVol || !channel->RightVol)
+		if (!channel->Length || !channel->LeftVol || !channel->RightVol || !p_Instruments)
 			return;
 		const uint8_t newChannel = FindFreeNNAChannel();
 		if (!newChannel)
