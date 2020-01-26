@@ -192,7 +192,7 @@ jobs:
         shell: bash
         run: |
           curl -L1O https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip
-          pip3 install --upgrade pip setuptools wheel
+          python3 -m pip install --upgrade pip setuptools wheel
           pip3 install meson
           unzip ninja-win.zip -d /c/ProgramData/Chocolatey/bin
           rm ninja-win.zip
@@ -212,22 +212,23 @@ jobs:
           cd git-sdk-64
           cp -a etc/pacman.{d,conf} /etc
           cp -a usr/bin/pac* usr/bin/aclocal* usr/bin/auto* usr/bin/libtool* usr/bin/msys-ltdl* \
-            usr/bin/make usr/bin/m4.exe /usr/bin
+            usr/bin/make.exe usr/bin/m4.exe /usr/bin
           cp -a usr/share/auto* usr/share/aclocal* usr/share/libtool usr/share/pac* /usr/share
           cp -a usr/bin/as.exe usr/bin/g{cc,++,cc-*}.exe usr/bin/ld{,.bfd}.exe usr/bin/x86_64-pc-msys-* \
-            usr/bin/msys-mpc-*.dll usr/bin/msys-isl-*.dll /usr/bin
+            usr/bin/cpp.exe usr/bin/msys-mpc-*.dll usr/bin/msys-isl-*.dll /usr/bin
           cp -a usr/lib/gcc usr/lib/{crt0.o,libmsys-2.0.a} usr/lib/w32api /usr/lib
           cp -a usr/include /usr
         working-directory: ${{ runner.temp }}
       - name: Install libmp4v2
         shell: bash
         run: |
+          export CPATH=$(echo ${INCLUDE} | sed -e 's-C:-/c-g' -e 's:\\:/:g' -e 's/;/:/g')
           aclocal -I . -I project
           libtoolize -icf
           automake -ac
           autoheader
           autoconf
-          CC=gcc CXX=g++ LD=ld ./configure --prefix=/c/Program\ Files/Git/usr --disable-gch
+          CXX="g++ -D_M_X64" LD=ld ./configure --prefix=/c/Program\ Files/Git/usr --disable-gch
           make -j $CPU_COUNT
           sudo make install
         working-directory: ${{ github.workspace }}/deps/mp4v2
