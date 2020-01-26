@@ -2,7 +2,7 @@
 libAudio
 ========
 
-![C++ CI](https://github.com/DX-MON/libAudio/workflows/C++%20CI/badge.svg)
+[![C++ CI](https://github.com/DX-MON/libAudio/workflows/C++%20CI/badge.svg)](https://github.com/DX-MON/libAudio/actions)
 
 ## Getting started
 
