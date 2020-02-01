@@ -524,11 +524,11 @@ public:
 	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
 
 	// Channel effects
-	void noteCut(bool Triggered);
-	void noteOff();
-	void vibrato(uint8_t param, uint8_t Multiplier);
-	void panbrello(uint8_t param);
+	void noteCut(bool triggered) noexcept;
+	void noteOff() noexcept;
 	void tonePortamento(uint8_t param, uint32_t tickCount);
+	void vibrato(uint8_t param, uint8_t multiplier);
+	void panbrello(uint8_t param);
 	void ChannelEffect(uint8_t param);
 
 	int16_t applyVibrato(const ModuleFile &module, const uint32_t period) noexcept;

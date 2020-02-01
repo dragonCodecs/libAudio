@@ -1051,59 +1051,10 @@ inline void Channel::tonePortamento(uint8_t param, uint32_t tickCount)
 	}
 }
 
-void Channel::noteCut(bool Triggered)
-{
-	if (Triggered)
-	{
-		RawVolume = 0;
-		//FadeOutVol = 0;
-		Flags |= CHN_FASTVOLRAMP;// | CHN_NOTEFADE;
-	}
-}
-
-void Channel::noteOff()
-{
-	bool NoteOn = !(Flags & CHN_NOTEOFF);
-	Flags |= CHN_NOTEOFF;
-	if (Instrument && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
-		Flags |= CHN_NOTEFADE;
-	if (!Length)
-		return;
-	// This false gets replaced with a check for sustain loops.
-	if (false && Sample != nullptr && NoteOn)
-	{
-		if (LoopEnd != 0)
-		{
-			if (Sample->GetBidiLoop())
-				Flags |= CHN_LPINGPONG;
-			else
-				Flags &= ~CHN_LPINGPONG;
-			Flags |= CHN_LOOP;
-			Length = Sample->GetLength();
-			LoopStart = Sample->GetLoopStart();
-			LoopEnd = Sample->GetLoopEnd();
-			if (LoopEnd > Length)
-				LoopEnd = Length;
-			if (Length > LoopEnd)
-				Length = LoopEnd;
-		}
-		else
-		{
-			Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
-			Length = Sample->GetLength();
-		}
-	}
-	if (Instrument != nullptr)
-	{
-		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
-			Flags |= CHN_NOTEFADE;
-	}
-}
-
-void Channel::vibrato(uint8_t param, uint8_t Multiplier)
+void Channel::vibrato(uint8_t param, uint8_t multiplier)
 {
 	if ((param & 0x0F) != 0)
-		VibratoDepth = (param & 0x0F) * Multiplier;
+		VibratoDepth = (param & 0x0F) * multiplier;
 	if ((param & 0xF0) != 0)
 		VibratoSpeed = param >> 4;
 	Flags |= CHN_VIBRATO;
