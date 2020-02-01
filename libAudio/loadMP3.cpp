@@ -129,7 +129,7 @@ uint32_t mp3_t::decoderContext_t::parseXingHeader() noexcept
 		if (remaining < 32)
 			return frames;
 		frames = mad_bit_read(bitStream, 32);
-		remaining -= 32;
+		//remaining -= 32;
 	}
 
 	return frames;
