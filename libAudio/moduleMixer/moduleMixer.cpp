@@ -893,7 +893,7 @@ inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
 			uint32_t OldPeriod = channel->Period;
 			if (param != 0)
 			{
-				channel->Period = LinearSlideDown(OldPeriod, param);
+				channel->Period = linearSlideDown(OldPeriod, param);
 				if (channel->Period == OldPeriod)
 					channel->Period--;
 			}
@@ -938,7 +938,7 @@ inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
 			uint32_t OldPeriod = channel->Period;
 			if (param != 0)
 			{
-				channel->Period = LinearSlideUp(OldPeriod, param);
+				channel->Period = linearSlideUp(OldPeriod, param);
 				if (channel->Period == OldPeriod)
 					channel->Period++;
 			}
@@ -962,7 +962,7 @@ inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
 	if (TickCount == channel->StartTick && channel->Period != 0 && param != 0)
 	{
 		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)
-			channel->Period = LinearSlideDown(channel->Period, param);
+			channel->Period = linearSlideDown(channel->Period, param);
 		else
 			channel->Period -= param << 2;
 		if (channel->Period < MinPeriod)
@@ -975,7 +975,7 @@ inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
 	if (TickCount == channel->StartTick && channel->Period != 0 && param != 0)
 	{
 		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)
-			channel->Period = LinearSlideUp(channel->Period, param);
+			channel->Period = linearSlideUp(channel->Period, param);
 		else
 			channel->Period += param << 2;
 		if (channel->Period > MaxPeriod)
@@ -1022,7 +1022,7 @@ inline void Channel::tonePortamento(uint8_t param, uint32_t tickCount)
 			if (Flags & CHN_GLISSANDO)
 			{
 				uint8_t Slide = uint8_t(PortamentoSlide >> 2U);
-				Delta = LinearSlideUp(Period, Slide) - Period;
+				Delta = linearSlideUp(Period, Slide) - Period;
 				if (Delta < 1)
 					Delta = 1;
 			}
@@ -1038,7 +1038,7 @@ inline void Channel::tonePortamento(uint8_t param, uint32_t tickCount)
 			if (Flags & CHN_GLISSANDO)
 			{
 				uint8_t Slide = uint8_t(PortamentoSlide >> 2);
-				Delta = LinearSlideDown(Period, Slide) - Period;
+				Delta = linearSlideDown(Period, Slide) - Period;
 				if (Delta > -1)
 					Delta = -1;
 			}
