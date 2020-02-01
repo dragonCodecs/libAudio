@@ -1465,8 +1465,6 @@ bool ModuleFile::Tick()
 
 bool ModuleFile::AdvanceTick()
 {
-	uint8_t i, nChannels;
-
 	if (!Tick())
 		return false;
 	if (!MusicTempo)
@@ -1474,11 +1472,8 @@ bool ModuleFile::AdvanceTick()
 	SamplesToMix = (MixSampleRate * 640) / (MusicTempo << 8);
 	SamplesPerTick = SamplesToMix;
 	nMixerChannels = 0;
-	if (p_Instruments == nullptr)
-		nChannels = p_Header->nChannels;
-	else
-		nChannels = 128;
-	for (i = 0; i < nChannels; i++)
+	const uint8_t nChannels = p_Instruments ? 128 : p_Header->nChannels;
+	for (uint8_t i = 0; i < nChannels; i++)
 	{
 		Channel *channel = &Channels[i];
 		bool incNegative = channel->Increment.iValue < 0;
