@@ -1100,7 +1100,7 @@ void Channel::noteOff()
 	}
 }
 
-void Channel::Vibrato(uint8_t param, uint8_t Multiplier)
+void Channel::vibrato(uint8_t param, uint8_t Multiplier)
 {
 	if ((param & 0x0F) != 0)
 		VibratoDepth = (param & 0x0F) * Multiplier;
@@ -1109,7 +1109,7 @@ void Channel::Vibrato(uint8_t param, uint8_t Multiplier)
 	Flags |= CHN_VIBRATO;
 }
 
-void Channel::Panbrello(uint8_t param)
+void Channel::panbrello(uint8_t param)
 {
 	if ((param & 0x0F) != 0)
 		PanbrelloDepth = param & 0x0F;
@@ -1233,7 +1233,7 @@ bool ModuleFile::ProcessEffects()
 				channel->tonePortamento(param, TickCount);
 				break;
 			case CMD_VIBRATO:
-				channel->Vibrato(param, 4);
+				channel->vibrato(param, 4);
 				break;
 			case CMD_TONEPORTAVOL:
 				if (param != 0) // In theory, this if does nothing as VolumeSlide() is protected too.
@@ -1353,7 +1353,7 @@ bool ModuleFile::ProcessEffects()
 				PanningSlide(channel, param);
 				break;
 			case CMD_FINEVIBRATO:
-				channel->Vibrato(param, 1);
+				channel->vibrato(param, 1);
 				break;
 			case CMD_TREMOR:
 				if (TickCount != 0)
@@ -1363,7 +1363,7 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_TREMOR;
 				break;
 			case CMD_PANBRELLO:
-				channel->Panbrello(param);
+				channel->panbrello(param);
 				break;
 			default:
 				break;

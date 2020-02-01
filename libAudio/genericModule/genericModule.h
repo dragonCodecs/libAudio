@@ -526,8 +526,8 @@ public:
 	// Channel effects
 	void noteCut(bool Triggered);
 	void noteOff();
-	void Vibrato(uint8_t param, uint8_t Multiplier);
-	void Panbrello(uint8_t param);
+	void vibrato(uint8_t param, uint8_t Multiplier);
+	void panbrello(uint8_t param);
 	void tonePortamento(uint8_t param, uint32_t tickCount);
 	void ChannelEffect(uint8_t param);
 
