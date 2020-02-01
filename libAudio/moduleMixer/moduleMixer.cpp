@@ -1009,44 +1009,44 @@ inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
 	}
 }
 
-inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
+inline void Channel::tonePortamento(uint8_t param, uint32_t tickCount)
 {
 	if (param != 0)
-		channel->PortamentoSlide = uint16_t(param) << 2;
-	channel->Flags |= CHN_PORTAMENTO;
-	if (channel->Period && channel->PortamentoDest && TickCount > channel->StartTick)
+		PortamentoSlide = uint16_t(param) << 2;
+	Flags |= CHN_PORTAMENTO;
+	if (Period && PortamentoDest && tickCount)// > StartTick
 	{
-		if (channel->Period < channel->PortamentoDest)
+		if (Period < PortamentoDest)
 		{
 			int32_t Delta;
-			if ((channel->Flags & CHN_GLISSANDO) != 0)
+			if (Flags & CHN_GLISSANDO)
 			{
-				uint8_t Slide = uint8_t(channel->PortamentoSlide >> 2);
-				Delta = LinearSlideUp(channel->Period, Slide) - channel->Period;
+				uint8_t Slide = uint8_t(PortamentoSlide >> 2U);
+				Delta = LinearSlideUp(Period, Slide) - Period;
 				if (Delta < 1)
 					Delta = 1;
 			}
 			else
-				Delta = channel->PortamentoSlide;
-			if (channel->PortamentoDest - channel->Period < (uint32_t)Delta)
-				Delta = channel->PortamentoDest - channel->Period;
-			channel->Period += Delta;
+				Delta = PortamentoSlide;
+			if (PortamentoDest - Period < uint32_t(Delta))
+				Delta = PortamentoDest - Period;
+			Period += Delta;
 		}
-		else if (channel->Period > channel->PortamentoDest)
+		else if (Period > PortamentoDest)
 		{
 			int32_t Delta;
-			if ((channel->Flags & CHN_GLISSANDO) != 0)
+			if (Flags & CHN_GLISSANDO)
 			{
-				uint8_t Slide = uint8_t(channel->PortamentoSlide >> 2);
-				Delta = LinearSlideDown(channel->Period, Slide) - channel->Period;
+				uint8_t Slide = uint8_t(PortamentoSlide >> 2);
+				Delta = LinearSlideDown(Period, Slide) - Period;
 				if (Delta > -1)
 					Delta = -1;
 			}
 			else
-				Delta = -int32_t(channel->PortamentoSlide);
-			if (channel->PortamentoDest - channel->Period > ((uint32_t)Delta))
-				Delta = channel->PortamentoDest - channel->Period;
-			channel->Period += Delta;
+				Delta = -int32_t(PortamentoSlide);
+			if (PortamentoDest - Period > uint32_t(Delta))
+				Delta = PortamentoDest - Period;
+			Period += Delta;
 		}
 	}
 }
@@ -1230,7 +1230,7 @@ bool ModuleFile::ProcessEffects()
 				PortamentoDown(channel, param);
 				break;
 			case CMD_TONEPORTAMENTO:
-				TonePortamento(channel, param);
+				channel->tonePortamento(param, TickCount);
 				break;
 			case CMD_VIBRATO:
 				channel->Vibrato(param, 4);
@@ -1238,18 +1238,18 @@ bool ModuleFile::ProcessEffects()
 			case CMD_TONEPORTAVOL:
 				if (param != 0) // In theory, this if does nothing as VolumeSlide() is protected too.
 					VolumeSlide(channel, param);
-				TonePortamento(channel, 0);
+				channel->tonePortamento(0, TickCount);
 				break;
 			case CMD_TONEPORTAVOLUP:
 				// param contains volume in high nibble
 				// Volume low nibble as 0 is "up"
 				VolumeSlide(channel, param & 0xF0);
-				TonePortamento(channel, param & 0x0F);
+				channel->tonePortamento(param & 0x0F, TickCount);
 				break;
 			case CMD_TONEPORTAVOLDOWN:
 				// Volume high nibble as 0 is "down"
 				VolumeSlide(channel, param >> 4);
-				TonePortamento(channel, param & 0x0F);
+				channel->tonePortamento(param & 0x0F, TickCount);
 				break;
 			case CMD_VIBRATOVOL:
 				if (param != 0)

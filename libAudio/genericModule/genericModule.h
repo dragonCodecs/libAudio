@@ -528,6 +528,7 @@ public:
 	void noteOff();
 	void Vibrato(uint8_t param, uint8_t Multiplier);
 	void Panbrello(uint8_t param);
+	void tonePortamento(uint8_t param, uint32_t tickCount);
 	void ChannelEffect(uint8_t param);
 
 	int16_t applyVibrato(const ModuleFile &module, const uint32_t period) noexcept;
@@ -578,7 +579,6 @@ private:
 	void FinePortamentoDown(Channel *channel, uint8_t param);
 	void ExtraFinePortamentoUp(Channel *channel, uint8_t param);
 	void ExtraFinePortamentoDown(Channel *channel, uint8_t param);
-	void TonePortamento(Channel *channel, uint8_t param);
 	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);
