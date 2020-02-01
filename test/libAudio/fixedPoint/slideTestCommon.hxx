@@ -30,9 +30,9 @@ inline void displayWarningCount() noexcept
 	if (warnCount == 0)
 		return;
 	if (isTTY)
-		printf(HIGHLIGHT "%u warnings for suite" NEWLINE, warnCount);
+		printf(HIGHLIGHT "%zu warnings for suite" NEWLINE, warnCount);
 	else
-		printf("%u warnings for suite\n", warnCount);
+		printf("%zu warnings for suite\n", warnCount);
 }
 
 #endif /*SLIDE_TEST_COMMON__HXX*/
