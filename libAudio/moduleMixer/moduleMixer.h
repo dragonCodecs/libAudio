@@ -74,7 +74,7 @@ inline int32_t linearSlideUp(uint8_t slide) noexcept
 }
 
 // Returns ((period * 65536 * 2^(slide / 192)) + 32768) / 65536 using fixed-point maths
-inline int16_t linearSlideUp(uint32_t period, uint8_t slide) noexcept
+inline uint32_t linearSlideUp(uint32_t period, uint8_t slide) noexcept
 {
 	const fixed64_t c192(192);
 	const fixed64_t c32768(32768);
@@ -90,7 +90,7 @@ inline int32_t linearSlideDown(uint8_t slide) noexcept
 }
 
 // Returns ((period * 65535 * 2^(-slide / 192)) + 32768) / 65536 using fixed-point maths
-inline int16_t linearSlideDown(uint32_t period, uint8_t slide) noexcept
+inline uint32_t linearSlideDown(uint32_t period, uint8_t slide) noexcept
 {
 	const fixed64_t c192(192);
 	const fixed64_t c32768(32768);
@@ -100,7 +100,7 @@ inline int16_t linearSlideDown(uint32_t period, uint8_t slide) noexcept
 }
 
 // Returns ((period * 65536 * 2^((slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
-inline int32_t FineLinearSlideUp(uint32_t period, uint8_t slide)
+inline uint32_t fineLinearSlideUp(uint32_t period, uint8_t slide)
 {
 	const fixed64_t c4(4);
 	const fixed64_t c192(192);
@@ -110,7 +110,7 @@ inline int32_t FineLinearSlideUp(uint32_t period, uint8_t slide)
 }
 
 // Returns ((period * 65535 * 2^((-slide / 4) / 192)) + 32768) / 65536 using fixed-point maths
-inline int32_t FineLinearSlideDown(uint32_t period, uint8_t slide)
+inline uint32_t fineLinearSlideDown(uint32_t period, uint8_t slide)
 {
 	const fixed64_t c4(4);
 	const fixed64_t c192(192);

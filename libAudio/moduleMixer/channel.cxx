@@ -26,14 +26,14 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 				const int16_t value = -delta;
 				delta = linearSlideDown(period, value >> 2) - period;
 				if (value & 0x03)
-					delta += FineLinearSlideDown(period, value & 0x03) - period;
+					delta += fineLinearSlideDown(period, value & 0x03) - period;
 			}
 			else
 			{
 				const int16_t value = delta;
 				delta = linearSlideUp(period, value >> 2) - period;
 				if (value & 0x03)
-					delta += FineLinearSlideUp(period, value & 0x03) - period;
+					delta += fineLinearSlideUp(period, value & 0x03) - period;
 			}
 		}
 		if (module.TickCount || module.checkTypeAndNotFlags(MODULE_IT, FILE_FLAGS_OLD_IT_EFFECTS))
