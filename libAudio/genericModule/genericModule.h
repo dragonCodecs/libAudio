@@ -498,15 +498,15 @@ public:
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
 	uint8_t FineTune, PanningSlide;
-	uint16_t RawPanning, Panning;
+	uint16_t RawPanning, Panning; // TODO: Panning should be uint8_t?
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
-	uint16_t PortamentoSlide, Flags;
+	uint16_t Flags;
 	uint32_t Period, C4Speed;
 	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
 	uint32_t PortamentoDest;
-	uint8_t Portamento, Arpeggio;
+	uint8_t Portamento, portamentoSlide, Arpeggio;
 	uint8_t Tremor, TremorCount;
 	uint8_t LeftVol, RightVol;
 	uint8_t NewLeftVol, NewRightVol;
@@ -526,7 +526,7 @@ public:
 	// Channel effects
 	void noteCut(bool triggered) noexcept;
 	void noteOff() noexcept;
-	void tonePortamento(uint8_t param, uint32_t tickCount);
+	void tonePortamento(const ModuleFile &module, uint8_t param);
 	void vibrato(uint8_t param, uint8_t multiplier);
 	void panbrello(uint8_t param);
 	void ChannelEffect(uint8_t param);
@@ -633,6 +633,14 @@ public:
 	uint8_t channels() const noexcept;
 	void InitMixer(fileInfo_t &info);
 	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
+
+	uint32_t ticks() const noexcept { return TickCount; }
+
+	template<uint8_t type> bool typeIs() const noexcept { return ModuleType == type; }
+	template<uint8_t type, uint8_t... types> bool typeIs() const noexcept
+		{ return typeIs<type>() || typeIs<types...>(); }
+
+	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
 };
 
 inline uint32_t swapBytes(const uint32_t val) noexcept
