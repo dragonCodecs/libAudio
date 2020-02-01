@@ -79,7 +79,7 @@ fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 		g++;
 	}
 //	printf("\t% 2.9f\n", fixed64_t(q_i, q_d << (33 - g), sign * b.sign).operator double());
-	return fixed64_t{q_i, q_d << (33 - g), int8_t(sign * b.sign)};
+	return fixed64_t{q_i, uint32_t(uint64_t{q_d} << (33U - g)), int8_t(sign * b.sign)};
 }
 
 // Quick and dirty code, it makes mistakes on occasion, but pumps the right sequence out for it's use
@@ -195,7 +195,8 @@ uint8_t fixed64_t::ulog2(uint64_t value) const noexcept
 #endif
 }
 
-fixed64_t::operator int() const { return sign * (i + (d >> 31)); }
 fixed64_t::operator uint32_t() const { return i + (d >> 31); }
+fixed64_t::operator int32_t() const { return sign * (i + (d >> 31)); }
+fixed64_t::operator int16_t() const { return sign * (i + (d >> 31)); }
 fixed64_t::operator double() const
 	{ return sign * double((uint64_t{i} << 32) | int64_t{d}) / 4294967296.0; }

@@ -29,8 +29,9 @@ public:
 	fixed64_t operator +(const fixed64_t &b) const;
 	fixed64_t &operator +=(const fixed64_t &b);
 
-	operator int() const;
 	operator uint32_t() const;
+	operator int32_t() const;
+	operator int16_t() const;
 	operator double() const;
 };
 
