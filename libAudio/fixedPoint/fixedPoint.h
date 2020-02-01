@@ -35,4 +35,9 @@ public:
 	operator double() const;
 };
 
+inline fixed64_t operator *(const uint32_t a, const fixed64_t &b)
+	{ return fixed64_t{a} * b; }
+inline fixed64_t operator /(const uint8_t a, const fixed64_t &b)
+	{ return fixed64_t{a} / b; }
+
 #endif /*__fixedPoint_H__*/
