@@ -867,145 +867,141 @@ inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 	}
 }
 
-inline void ModuleFile::PortamentoUp(Channel *channel, uint8_t param)
+inline void Channel::portamentoUp(const ModuleFile &module, uint8_t param)
 {
-	if (param != 0)
-		channel->Portamento = param;
+	if (param)
+		Portamento = param;
 	else
-		param = channel->Portamento;
-	if (channel->Period == 0)
+		param = Portamento;
+	if (!Period)
 		return;
-	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT) && (param & 0xE0) == 0xE0)
+	const auto command = param & 0xF0U;
+	if (module.typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>() && command >= 0xE0U)
 	{
-		if ((param & 0x0F) != 0)
+		if (param & 0x0F)
 		{
-			if ((param & 0x10) == 0x10)
-				FinePortamentoUp(channel, param & 0x0F);
+			if (command == 0xF0U)
+				finePortamentoUp(module, param);
 			else
-				ExtraFinePortamentoUp(channel, param & 0x0F);
+				extraFinePortamentoUp(module, param);
 		}
 		return;
 	}
-	if (TickCount > channel->StartTick || MusicSpeed == 1)
+	if (module.ticks() > StartTick || module.speed() == 1)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)// && ModuleType != MODULE_XM)
+		if (module.hasLinearSlides())// && module.typeIs<MODULE_XM>())
 		{
-			uint32_t OldPeriod = channel->Period;
-			if (param != 0)
-			{
-				channel->Period = linearSlideDown(OldPeriod, param);
-				if (channel->Period == OldPeriod)
-					channel->Period--;
-			}
+			uint32_t oldPeriod = Period;
+			Period = linearSlideDown(oldPeriod, param);
+			if (Period == oldPeriod)
+				--Period;
 		}
 		else
-			channel->Period -= param << 2;
-		if (channel->Period > MaxPeriod)
+			Period -= uint16_t{param} << 2;
+		if (Period < module.minimumPeriod())
 		{
-			channel->Period = MaxPeriod;
-			if (ModuleType == MODULE_IT)
+			Period = module.minimumPeriod();
+			if (module.typeIs<MODULE_IT>())
 			{
-				channel->Flags |= CHN_NOTEFADE;
-				channel->FadeOutVol = 0;
+				Flags |= CHN_NOTEFADE;
+				FadeOutVol = 0;
 			}
 		}
 	}
 }
 
-inline void ModuleFile::PortamentoDown(Channel *channel, uint8_t param)
+inline void Channel::portamentoDown(const ModuleFile &module, uint8_t param)
 {
-	if (param != 0)
-		channel->Portamento = param;
+	if (param)
+		Portamento = param;
 	else
-		param = channel->Portamento;
-	if (channel->Period == 0)
+		param = Portamento;
+	if (!Period)
 		return;
-	if ((ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT) && (param & 0xE0) == 0xE0)
+	const auto command = param & 0xF0U;
+	if (module.typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>() && command >= 0xE0U)
 	{
-		if ((param & 0x0F) != 0)
+		if (param & 0x0F)
 		{
-			if ((param & 0x10) == 0x10)
-				FinePortamentoDown(channel, param & 0x0F);
+			if (command == 0xF0U)
+				finePortamentoDown(module, param);
 			else
-				ExtraFinePortamentoDown(channel, param & 0x0F);
+				extraFinePortamentoDown(module, param);
 		}
 		return;
 	}
-	if (TickCount > channel->StartTick || MusicSpeed == 1)
+	if (module.ticks() > StartTick || module.speed() == 1)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)// && ModuleType != MODULE_XM)
+		if (module.hasLinearSlides())// && module.typeIs<MODULE_XM>())
 		{
-			uint32_t OldPeriod = channel->Period;
-			if (param != 0)
-			{
-				channel->Period = linearSlideUp(OldPeriod, param);
-				if (channel->Period == OldPeriod)
-					channel->Period++;
-			}
+			uint32_t oldPeriod = Period;
+			Period = linearSlideUp(oldPeriod, param);
+			if (Period == oldPeriod)
+				++Period;
 		}
 		else
-			channel->Period += param << 2;
-		if (channel->Period > MaxPeriod)
+			Period += uint16_t{param} << 2;
+		if (Period > module.maximumPeriod())
 		{
-			channel->Period = MaxPeriod;
-			if (ModuleType == MODULE_IT)
+			Period = module.maximumPeriod();
+			if (module.typeIs<MODULE_IT>())
 			{
-				channel->Flags |= CHN_NOTEFADE;
-				channel->FadeOutVol = 0;
+				Flags |= CHN_NOTEFADE;
+				FadeOutVol = 0;
 			}
 		}
 	}
 }
 
-inline void ModuleFile::FinePortamentoUp(Channel *channel, uint8_t param)
+inline void Channel::finePortamentoUp(const ModuleFile &module, uint8_t param)
 {
-	if (TickCount == channel->StartTick && channel->Period != 0 && param != 0)
+	if (module.ticks() == StartTick && Period && param)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)
-			channel->Period = linearSlideDown(channel->Period, param);
+		if (module.hasLinearSlides())
+			Period = linearSlideDown(Period, param & 0x0FU);
 		else
-			channel->Period -= param << 2;
-		if (channel->Period < MinPeriod)
-			channel->Period = MinPeriod;
+			Period -= uint16_t{param} << 2U;
+		if (Period < module.minimumPeriod())
+			Period = module.minimumPeriod();
 	}
 }
 
-inline void ModuleFile::FinePortamentoDown(Channel *channel, uint8_t param)
+inline void Channel::finePortamentoDown(const ModuleFile &module, uint8_t param)
 {
-	if (TickCount == channel->StartTick && channel->Period != 0 && param != 0)
+	if (module.ticks() == StartTick && Period && param)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)
-			channel->Period = linearSlideUp(channel->Period, param);
+		if (module.hasLinearSlides())
+			Period = linearSlideUp(Period, param & 0x0FU);
 		else
-			channel->Period += param << 2;
-		if (channel->Period > MaxPeriod)
-			channel->Period = MaxPeriod;
+			Period += uint16_t{param} << 2U;
+		if (Period > module.maximumPeriod())
+			Period = module.maximumPeriod();
 	}
 }
 
-inline void ModuleFile::ExtraFinePortamentoUp(Channel *channel, uint8_t param)
+inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t param)
 {
-	if (TickCount == channel->StartTick && channel->Period != 0 && param != 0)
+	if (module.ticks() == StartTick && Period && param)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)
-			channel->Period = FineLinearSlideDown(channel->Period, param);
+		if (module.hasLinearSlides())
+			Period = fineLinearSlideDown(Period, param & 0x0F);
 		else
-			channel->Period -= param;
-		if (channel->Period < MinPeriod)
-			channel->Period = MinPeriod;
+			Period -= param;
+		if (Period < module.minimumPeriod())
+			Period = module.minimumPeriod();
 	}
 }
 
-inline void ModuleFile::ExtraFinePortamentoDown(Channel *channel, uint8_t param)
+inline void Channel::extraFinePortamentoDown(const ModuleFile &module, uint8_t param)
 {
-	if (TickCount == channel->StartTick && channel->Period != 0 && param != 0)
+	if (module.ticks() == StartTick && Period && param)
 	{
-		if ((p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES) != 0)
-			channel->Period = FineLinearSlideUp(channel->Period, param);
+		if (module.hasLinearSlides())
+			Period = fineLinearSlideUp(Period, param & 0x0FU);
 		else
-			channel->Period += param;
-		if (channel->Period > MaxPeriod)
-			channel->Period = MaxPeriod;
+			Period += param;
+		if (Period > module.maximumPeriod())
+			Period = module.maximumPeriod();
 	}
 }
 
@@ -1171,10 +1167,10 @@ bool ModuleFile::ProcessEffects()
 				}
 				break;
 			case CMD_PORTAMENTOUP:
-				PortamentoUp(channel, param);
+				channel->portamentoUp(*this, param);
 				break;
 			case CMD_PORTAMENTODOWN:
-				PortamentoDown(channel, param);
+				channel->portamentoDown(*this, param);
 				break;
 			case CMD_TONEPORTAMENTO:
 				channel->tonePortamento(*this, param);

@@ -526,6 +526,12 @@ public:
 	// Channel effects
 	void noteCut(bool triggered) noexcept;
 	void noteOff() noexcept;
+	void portamentoUp(const ModuleFile &module, uint8_t param);
+	void portamentoDown(const ModuleFile &module, uint8_t param);
+	void finePortamentoUp(const ModuleFile &module, uint8_t param);
+	void finePortamentoDown(const ModuleFile &module, uint8_t param);
+	void extraFinePortamentoUp(const ModuleFile &module, uint8_t param);
+	void extraFinePortamentoDown(const ModuleFile &module, uint8_t param);
 	void tonePortamento(const ModuleFile &module, uint8_t param);
 	void vibrato(uint8_t param, uint8_t multiplier);
 	void panbrello(uint8_t param);
@@ -573,12 +579,6 @@ private:
 	void ChannelVolumeSlide(Channel *channel, uint8_t param);
 	void GlobalVolumeSlide(uint8_t param);
 	void PanningSlide(Channel *channel, uint8_t param);
-	void PortamentoUp(Channel *channel, uint8_t param);
-	void PortamentoDown(Channel *channel, uint8_t param);
-	void FinePortamentoUp(Channel *channel, uint8_t param);
-	void FinePortamentoDown(Channel *channel, uint8_t param);
-	void ExtraFinePortamentoUp(Channel *channel, uint8_t param);
-	void ExtraFinePortamentoDown(Channel *channel, uint8_t param);
 	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);
@@ -635,10 +635,14 @@ public:
 	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 
 	uint32_t ticks() const noexcept { return TickCount; }
+	uint32_t speed() const noexcept { return MusicSpeed; }
+	uint32_t tempo() const noexcept { return MusicTempo; }
+	uint32_t minimumPeriod() const noexcept { return MinPeriod; }
+	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
 
 	template<uint8_t type> bool typeIs() const noexcept { return ModuleType == type; }
-	template<uint8_t type, uint8_t... types> bool typeIs() const noexcept
-		{ return typeIs<type>() || typeIs<types...>(); }
+	template<uint8_t type, uint8_t... types> typename std::enable_if<sizeof...(types), bool>::type
+		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 
 	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
 };
