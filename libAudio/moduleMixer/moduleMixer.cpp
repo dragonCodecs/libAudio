@@ -282,8 +282,8 @@ void ModuleFile::NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, b
 	{
 		if (cmd != CMD_TONEPORTAMENTO && cmd != CMD_TONEPORTAVOL)
 			channel->Period = period;
-		channel->PortamentoDest = period;
-		if (channel->PortamentoDest == channel->Period || (channel->Length == 0 && ModuleType != MODULE_S3M))
+		channel->portamentoTarget = period;
+		if (channel->portamentoTarget == channel->Period || (channel->Length == 0 && ModuleType != MODULE_S3M))
 		{
 			channel->Sample = sample;
 			channel->NewSampleData = p_PCM[sample->id()];
@@ -335,7 +335,7 @@ void ModuleFile::NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, b
 		}
 	}
 	channel->Flags &= ~CHN_NOTEOFF;
-	if (channel->PortamentoDest == channel->Period)
+	if (channel->portamentoTarget == channel->Period)
 		channel->Flags |= CHN_FASTVOLRAMP;
 	channel->LeftVol = channel->RightVol = 0;
 }
@@ -1014,9 +1014,9 @@ void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 	if (param != 0)
 		portamentoSlide = param;
 	Flags |= CHN_PORTAMENTO;
-	if (Period && PortamentoDest && module.ticks() != StartTick)
+	if (Period && portamentoTarget && module.ticks() != StartTick)
 	{
-		if (Period < PortamentoDest)
+		if (Period < portamentoTarget)
 		{
 			uint16_t delta{};
 			if (module.hasLinearSlides())
@@ -1026,11 +1026,11 @@ void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 			}
 			else
 				delta = uint16_t(portamentoSlide) << 2U;
-			if (PortamentoDest - Period < delta)
-				delta = PortamentoDest - Period;
+			if (portamentoTarget - Period < delta)
+				delta = portamentoTarget - Period;
 			Period += delta;
 		}
-		else if (Period > PortamentoDest)
+		else if (Period > portamentoTarget)
 		{
 			uint16_t delta{};
 			if (module.hasLinearSlides())
@@ -1040,8 +1040,8 @@ void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 			}
 			else
 				delta = uint16_t(portamentoSlide) << 2U;
-			if (Period - PortamentoDest < delta)
-				delta = Period - PortamentoDest;
+			if (Period - portamentoTarget < delta)
+				delta = Period - portamentoTarget;
 			Period -= delta;
 		}
 	}
@@ -1713,7 +1713,7 @@ bool ModuleFile::AdvanceTick()
 			// DEBUG: Uncomment to see the channel's main state information
 			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
 				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->RawVolume, channel->RowNote, channel->RowSample,
-				channel->RowEffect, channel->RowParam, channel->Period, channel->PortamentoDest, channel->FineTune, channel->Increment.Value.Hi,
+				channel->RowEffect, channel->RowParam, channel->Period, channel->portamentoTarget, channel->FineTune, channel->Increment.Value.Hi,
 				channel->Increment.Value.Lo, channel->Pos, channel->PosLo);*/
 			MixerChannels[nMixerChannels++] = i;
 		}

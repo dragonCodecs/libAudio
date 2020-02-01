@@ -505,7 +505,7 @@ public:
 	uint32_t Period, C4Speed;
 	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
-	uint32_t PortamentoDest;
+	uint32_t portamentoTarget;
 	uint8_t Portamento, portamentoSlide, Arpeggio;
 	uint8_t Tremor, TremorCount;
 	uint8_t LeftVol, RightVol;
