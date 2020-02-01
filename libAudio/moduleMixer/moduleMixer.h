@@ -1,5 +1,5 @@
-#ifndef __moduleMixer_H__
-#define __moduleMixer_H__
+#ifndef libAudio_moduleMixer__H
+#define libAudio_moduleMixer__H
 
 #include "../fixedPoint/fixedPoint.h"
 
@@ -122,4 +122,4 @@ inline uint32_t FineLinearSlideDown(uint32_t period, uint8_t slide)
 	return ((fixed64_t(period) * ((fixed64_t(slide, 0, -1) / c4) / c192).pow2() * c65535) + c32768) / c65536;
 }
 
-#endif /*__moduleMixer_H__*/
+#endif /*libAudio_moduleMixer__H*/
