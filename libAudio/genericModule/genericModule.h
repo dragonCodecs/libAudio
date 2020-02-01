@@ -524,8 +524,8 @@ public:
 	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
 
 	// Channel effects
-	void NoteOff();
-	void NoteCut(bool Triggered);
+	void noteCut(bool Triggered);
+	void noteOff();
 	void Vibrato(uint8_t param, uint8_t Multiplier);
 	void Panbrello(uint8_t param);
 	void ChannelEffect(uint8_t param);

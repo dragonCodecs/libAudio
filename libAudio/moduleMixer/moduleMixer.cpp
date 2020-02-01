@@ -243,15 +243,15 @@ void ModuleFile::NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, b
 		if (ModuleType == MODULE_IT)
 		{
 			if (note == 0xFF)
-				channel->NoteOff();
+				channel->noteOff();
 			else
 				channel->Flags |= CHN_NOTEFADE;
 		}
 		else
-			channel->NoteOff();
+			channel->noteOff();
 
 		if (note == 0xFE)
-			channel->NoteCut(true);
+			channel->noteCut(true);
 		return;
 	}
 	//clipInt<uint8_t>(note, 1, 132);
@@ -437,11 +437,11 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 				switch (dnaChannel->Instrument->GetDNA())
 				{
 					case DNA_NOTECUT:
-						dnaChannel->NoteOff();
+						dnaChannel->noteOff();
 						dnaChannel->RawVolume = 0;
 						break;
 					case DNA_NOTEOFF:
-						dnaChannel->NoteOff();
+						dnaChannel->noteOff();
 						break;
 					case DNA_NOTEFADE:
 						dnaChannel->Flags |= CHN_NOTEFADE;
@@ -470,7 +470,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 			switch (instr->GetNNA())
 			{
 				case NNA_NOTEOFF:
-					nnaChannel.NoteOff();
+					nnaChannel.noteOff();
 					break;
 				case NNA_NOTECUT:
 					nnaChannel.FadeOutVol = 0;
@@ -670,7 +670,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			}
 			break;
 		case CMD_S3MEX_NOTECUT:
-			channel->NoteCut(TickCount == param);
+			channel->noteCut(TickCount == param);
 			break;
 		case CMD_S3MEX_DELAYPAT:
 			PatternDelay = param;
@@ -1051,23 +1051,23 @@ inline void ModuleFile::TonePortamento(Channel *channel, uint8_t param)
 	}
 }
 
-void Channel::NoteCut(bool Triggered)
+void Channel::noteCut(bool Triggered)
 {
 	if (Triggered)
 	{
 		RawVolume = 0;
-		FadeOutVol = 0;
-		Flags |= CHN_FASTVOLRAMP | CHN_NOTEFADE;
+		//FadeOutVol = 0;
+		Flags |= CHN_FASTVOLRAMP;// | CHN_NOTEFADE;
 	}
 }
 
-void Channel::NoteOff()
+void Channel::noteOff()
 {
 	bool NoteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
-	if (Instrument != nullptr && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
+	if (Instrument && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
 		Flags |= CHN_NOTEFADE;
-	if (Length == 0)
+	if (!Length)
 		return;
 	// This false gets replaced with a check for sustain loops.
 	if (false && Sample != nullptr && NoteOn)
