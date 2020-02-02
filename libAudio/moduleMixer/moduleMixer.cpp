@@ -762,36 +762,36 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 
 inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 {
-	const bool FirstTick = (TickCount == 0);
-	uint16_t SlideDest = GlobalVolume;
-
-	if (param == 0)
-		param = GlobalVolSlide;
+	if (!param)
+		param = globalVolumeSlide;
 	else
-		GlobalVolSlide = param;
+		globalVolumeSlide = param;
 
-	if ((param & 0xF0) == 0xF0 && (param & 0x0F) != 0)
+	uint16_t volume = GlobalVolume;
+	const uint8_t slideLo = param & 0x0FU;
+	const uint8_t slideHi = param & 0xF0U;
+	if (slideHi == 0xF0U && slideLo)
 	{
-		if (FirstTick)
-			SlideDest -= (param & 0x0F) << 1;
+		if (!ticks())
+			volume -= slideLo/* << 1U*/;
 	}
-	else if ((param & 0x0F) == 0x0F && (param & 0xF0) != 0)
+	else if (slideLo == 0x0FU && slideHi)
 	{
-		if (FirstTick)
-			SlideDest += (param & 0xF0) >> 3;
+		if (!ticks())
+			volume += slideHi >> /*3U*/4U;
 	}
-	else if (!FirstTick)
+	else if (ticks())
 	{
-		if ((param & 0x0F) != 0)
-			SlideDest -= (param & 0x0F) << 1;
-		else if ((param & 0xF0) != 0)
-			SlideDest += (param & 0xF0) >> 3;
+		if (slideLo)
+			volume -= slideLo/* << 1U*/;
+		else
+			volume += slideHi >> /*3U*/4U;
 	}
 
-	if (SlideDest != GlobalVolume)
+	if (volume != GlobalVolume)
 	{
-		clipInt<uint16_t>(SlideDest, 0, 128);
-		GlobalVolume = SlideDest;
+		clipInt<uint16_t>(volume, 0, 128);
+		GlobalVolume = volume;
 	}
 }
 

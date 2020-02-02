@@ -568,7 +568,8 @@ private:
 	Channel *Channels;
 	uint32_t nMixerChannels, *MixerChannels;
 
-	uint8_t GlobalVolume, GlobalVolSlide;
+	uint16_t GlobalVolume;
+	uint8_t globalVolumeSlide;
 	uint8_t PatternLoopCount, PatternLoopStart;
 	uint8_t PatternDelay, FrameDelay;
 	int MixBuffer[MIXBUFFERSIZE * 2];
