@@ -222,7 +222,7 @@ public:
 	ModuleSampleNative(const modSTM_t &file, const uint32_t i);
 	ModuleSampleNative(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths);
 	ModuleSampleNative(const modIT_t &file, const uint32_t i);
-	~ModuleSampleNative() = default;
+	~ModuleSampleNative() noexcept = default;
 
 	uint32_t GetLength() override final { return Length; }
 	uint32_t GetLoopStart() override final { return LoopStart; }
@@ -330,7 +330,7 @@ protected:
 public:
 	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
 
-	virtual ~ModuleInstrument() noexcept { }
+	virtual ~ModuleInstrument() noexcept = default;
 	virtual uint8_t Map(uint8_t Note) noexcept = 0;
 	virtual uint16_t GetFadeOut() const noexcept = 0;
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;
