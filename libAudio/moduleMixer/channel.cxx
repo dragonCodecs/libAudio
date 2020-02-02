@@ -401,23 +401,17 @@ void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
 	uint8_t volume = channelVolume;
 	const uint8_t slideLo = param & 0x0FU;
 	const uint8_t slideHi = param & 0xF0U;
-	if (slideHi == 0xF0U && slideLo)
+	if (!module.ticks())
 	{
-		if (!module.ticks())
+		if (slideHi == 0xF0U && slideLo)
 			volume -= slideLo;
-	}
-	else if (slideLo == 0x0FU && slideHi)
-	{
-		if (!module.ticks())
+		else if (slideLo == 0x0FU && slideHi)
 			volume += slideHi >> 4U;
 	}
-	else if (module.ticks())
-	{
-		if (slideLo)
-			volume -= slideLo;
-		else
-			volume += slideHi >> 4U;
-	}
+	else if (slideLo)
+		volume -= slideLo;
+	else
+		volume += slideHi >> 4U;
 
 	if (volume != channelVolume)
 	{
@@ -436,23 +430,17 @@ void Channel::applyPanningSlide(const ModuleFile &module, uint8_t param)
 	uint16_t slide = RawPanning;
 	const uint8_t slideLo = param & 0x0FU;
 	const uint8_t slideHi = param & 0xF0U;
-	if (slideLo == 0x0FU && slideHi)
+	if (!module.ticks())
 	{
-		if (!module.ticks())
+		if (slideLo == 0x0FU && slideHi)
 			slide -= slideHi >> 2;
-	}
-	else if (slideHi == 0xF0U && slideLo)
-	{
-		if (!module.ticks())
+		else if (slideHi == 0xF0U && slideLo)
 			slide += slideLo << 2;
 	}
-	else if (module.ticks())
-	{
-		if (slideHi)
-			slide -= slideHi >> 2;
-		else
-			slide += slideLo << 2;
-	}
+	else if (slideHi)
+		slide -= slideHi >> 2;
+	else
+		slide += slideLo << 2;
 
 	if (slide != RawPanning)
 	{
