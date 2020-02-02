@@ -511,6 +511,8 @@ public:
 	uint8_t LeftVol, RightVol;
 	uint8_t NewLeftVol, NewRightVol;
 	short LeftRamp, RightRamp;
+	uint8_t patternLoopCount;
+	uint16_t patternLoopStart;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
@@ -526,6 +528,7 @@ public:
 	// Channel effects
 	void noteCut(bool triggered) noexcept;
 	void noteOff() noexcept;
+	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;
 	void portamentoUp(const ModuleFile &module, uint8_t param);
 	void portamentoDown(const ModuleFile &module, uint8_t param);
 	void finePortamentoUp(const ModuleFile &module, uint8_t param);
@@ -570,7 +573,6 @@ private:
 
 	uint16_t GlobalVolume;
 	uint8_t globalVolumeSlide;
-	uint8_t PatternLoopCount, PatternLoopStart;
 	uint8_t PatternDelay, FrameDelay;
 	int MixBuffer[MIXBUFFERSIZE * 2];
 	int DCOffsR, DCOffsL;
@@ -580,7 +582,6 @@ private:
 	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t));
 	void applyGlobalVolumeSlide(uint8_t param);
 	void PanningSlide(Channel *channel, uint8_t param);
-	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);
 

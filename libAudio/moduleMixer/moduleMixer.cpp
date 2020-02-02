@@ -678,27 +678,26 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 	}
 }
 
-inline int ModuleFile::PatternLoop(uint32_t param)
+inline int32_t Channel::patternLoop(const uint8_t param, const uint16_t row) noexcept
 {
-	if (param != 0)
+	if (param)
 	{
-		if (PatternLoopCount != 0)
+		if (patternLoopCount)
 		{
-			PatternLoopCount--;
-			if (PatternLoopCount == 0)
+			if (!--patternLoopCount)
 			{
 				// Reset the default start position for the next
 				// CMDEX_LOOP
-				PatternLoopStart = 0;
+				patternLoopStart = 0;
 				return -1;
 			}
 		}
 		else
-			PatternLoopCount = param;
-		return PatternLoopStart;
+			patternLoopCount = param;
+		return patternLoopStart;
 	}
 	else
-		PatternLoopStart = Row;
+		patternLoopStart = row;
 	return -1;
 }
 
@@ -832,7 +831,7 @@ inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 
 bool ModuleFile::ProcessEffects()
 {
-	int PositionJump = -1, BreakRow = -1, PatternLoopRow = -1;
+	int32_t PositionJump = -1, BreakRow = -1, PatternLoopRow = -1;
 	uint32_t i;
 	for (i = 0; i < p_Header->nChannels; i++)
 	{
@@ -852,7 +851,7 @@ bool ModuleFile::ProcessEffects()
 				if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
 					(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_LOOP))
 				{
-					int loop = PatternLoop(param & 0x0F);
+					const auto loop = channel->patternLoop(param & 0x0F, Row);
 					if (loop >= 0)
 						PatternLoopRow = loop;
 				}
@@ -1086,9 +1085,9 @@ bool ModuleFile::ProcessEffects()
 		if (PatternLoopRow >= 0)
 		{
 			NextPattern = NewPattern;
-			NextRow = PatternLoopRow;
+			NextRow = uint16_t(PatternLoopRow);
 			if (PatternDelay != 0)
-				NextRow++;
+				++NextRow;
 		}
 		else if (BreakRow >= 0 || PositionJump >= 0)
 		{
@@ -1104,7 +1103,13 @@ bool ModuleFile::ProcessEffects()
 			else if (((uint32_t)PositionJump != NewPattern || (uint32_t)BreakRow != Row))
 			{
 				if ((uint32_t)PositionJump != NewPattern)
-					PatternLoopCount = PatternLoopStart = 0;
+				{
+					for (i = 0; i < p_Header->nChannels; i++)
+					{
+						Channel &channel = Channels[i];
+						channel.patternLoopCount = channel.patternLoopStart = 0;
+					}
+				}
 				NextPattern = PositionJump;
 				NextRow = BreakRow;
 			}
