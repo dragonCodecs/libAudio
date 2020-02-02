@@ -760,44 +760,6 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	channel->RawVolume = uint8_t(NewVolume);
 }
 
-// TODO: Write these next two functions as one template as both
-// do the exact same thing, just on different variables.
-inline void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
-{
-	uint8_t SlideDest = ChannelVolume;
-
-	if (param == 0)
-		param = ChannelVolumeSlide;
-	else
-		ChannelVolumeSlide = param;
-
-	const uint8_t slideLo = param & 0x0FU;
-	const uint8_t slideHi = param & 0xF0U;
-	if (slideHi == 0xF0U && slideLo)
-	{
-		if (!module.ticks())
-			SlideDest -= slideLo;
-	}
-	else if (slideLo == 0x0FU && slideHi)
-	{
-		if (!module.ticks())
-			SlideDest += slideHi >> 4U;
-	}
-	else if (module.ticks())
-	{
-		if (slideLo)
-			SlideDest -= slideLo;
-		else
-			SlideDest += slideHi >> 4U;
-	}
-
-	if (SlideDest != ChannelVolume)
-	{
-		clipInt<uint8_t>(SlideDest, 0, 64);
-		ChannelVolume = SlideDest;
-	}
-}
-
 inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
 {
 	const bool FirstTick = (TickCount == 0);

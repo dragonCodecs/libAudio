@@ -492,7 +492,7 @@ public:
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
 	uint8_t RawVolume, Volume, VolumeSlide, FineVolumeSlide;
-	uint8_t ChannelVolume, ChannelVolumeSlide;
+	uint8_t ChannelVolume, channelVolumeSlide;
 	uint16_t AutoVibratoDepth;
 	uint8_t AutoVibratoPos;
 	ModuleSample *Sample;

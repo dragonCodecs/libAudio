@@ -367,3 +367,38 @@ void Channel::panbrello(uint8_t param)
 		PanbrelloSpeed = param >> 4;
 	Flags |= CHN_PANBRELLO;
 }
+
+void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
+{
+	if (!param)
+		param = channelVolumeSlide;
+	else
+		channelVolumeSlide = param;
+
+	uint8_t volume = ChannelVolume;
+	const uint8_t slideLo = param & 0x0FU;
+	const uint8_t slideHi = param & 0xF0U;
+	if (slideHi == 0xF0U && slideLo)
+	{
+		if (!module.ticks())
+			volume -= slideLo;
+	}
+	else if (slideLo == 0x0FU && slideHi)
+	{
+		if (!module.ticks())
+			volume += slideHi >> 4U;
+	}
+	else if (module.ticks())
+	{
+		if (slideLo)
+			volume -= slideLo;
+		else
+			volume += slideHi >> 4U;
+	}
+
+	if (volume != ChannelVolume)
+	{
+		clipInt<uint8_t>(volume, 0, 64);
+		ChannelVolume = volume;
+	}
+}
