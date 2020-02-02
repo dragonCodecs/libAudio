@@ -771,38 +771,38 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 	}
 }
 
-inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
+inline void Channel::applyPanningSlide(const ModuleFile &module, uint8_t param)
 {
-	int16_t panningSlide = 0;
-	bool FirstTick = (TickCount == 0);
-
-	if (param == 0)
-		param = channel->PanningSlide;
+	if (!param)
+		param = panningSlide;
 	else
-		channel->PanningSlide = param;
+		panningSlide = param;
 
-	if ((param & 0x0F) == 0x0F && (param & 0xF0) != 0)
+	uint16_t slide = RawPanning;
+	const uint8_t slideLo = param & 0x0FU;
+	const uint8_t slideHi = param & 0xF0U;
+	if (slideLo == 0x0FU && slideHi)
 	{
-		if (FirstTick)
-			panningSlide = -((param & 0xF0) >> 2);
+		if (!module.ticks())
+			slide -= slideHi >> 2;
 	}
-	else if ((param & 0xF0) == 0xF0 && (param & 0x0F) != 0)
+	else if (slideHi == 0xF0U && slideLo)
 	{
-		if (FirstTick)
-			panningSlide = (param & 0x0F) << 2;
+		if (!module.ticks())
+			slide += slideLo << 2;
 	}
-	else if (!FirstTick)
+	else if (module.ticks())
 	{
-		if (param & 0x0F)
-			panningSlide = (param & 0x0F) << 2;
+		if (slideHi)
+			slide -= slideHi >> 2;
 		else
-			panningSlide = -((param & 0xF0) >> 2);
+			slide += slideLo << 2;
 	}
-	if (panningSlide != 0)
+
+	if (slide != RawPanning)
 	{
-		panningSlide += channel->RawPanning;
-		clipInt<int16_t>(panningSlide, 0, 256);
-		channel->RawPanning = uint16_t(panningSlide);
+		clipInt<uint16_t>(slide, 0, 256);
+		RawPanning = slide;
 	}
 }
 
@@ -1047,7 +1047,7 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_FASTVOLRAMP;
 				break;
 			case CMD_PANNINGSLIDE:
-				PanningSlide(channel, param);
+				channel->applyPanningSlide(*this, param);
 				break;
 			case CMD_FINEVIBRATO:
 				channel->vibrato(param, 1);
