@@ -773,10 +773,9 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 
 bool ModuleFile::ProcessEffects()
 {
-	int16_t PositionJump = -1, BreakRow = -1;
-	int32_t PatternLoopRow = -1;
-	uint32_t i;
-	for (i = 0; i < p_Header->nChannels; i++)
+	int16_t positionJump = -1, breakRow = -1;
+	int32_t patternLoopRow = -1;
+	for (uint16_t i = 0; i < p_Header->nChannels; ++i)
 	{
 		Channel *channel = &Channels[i];
 		uint8_t sample = channel->RowSample;
@@ -804,7 +803,7 @@ bool ModuleFile::ProcessEffects()
 				{
 					const auto loop = channel->patternLoop(param & 0x0F, Row);
 					if (loop >= 0)
-						PatternLoopRow = loop;
+						patternLoopRow = loop;
 				}
 				else if (excmd == CMD_MODEX_DELAYPAT)
 					PatternDelay = param & 0x0F;
@@ -870,168 +869,172 @@ bool ModuleFile::ProcessEffects()
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 		}
-
-		switch (cmd)
-		{
-			case CMD_NONE:
-				break;
-			case CMD_ARPEGGIO:
-				if (TickCount == channel->StartTick && channel->Period != 0 && channel->Note != 0xFF)
-				{
-					if (param == 0 && ModuleType != MODULE_S3M)
-						break;
-					channel->Flags |= CHN_ARPEGGIO;
-					if (param != 0)
-						channel->Arpeggio = param;
-				}
-				break;
-			case CMD_PORTAMENTOUP:
-				channel->portamentoUp(*this, param);
-				break;
-			case CMD_PORTAMENTODOWN:
-				channel->portamentoDown(*this, param);
-				break;
-			case CMD_TONEPORTAMENTO:
-				channel->tonePortamento(*this, param);
-				break;
-			case CMD_VIBRATO:
-				channel->vibrato(param, 4);
-				break;
-			case CMD_TONEPORTAVOL:
-				if (param != 0) // In theory, this if does nothing as VolumeSlide() is protected too.
-					VolumeSlide(channel, param);
-				channel->tonePortamento(*this, 0);
-				break;
-			case CMD_TONEPORTAVOLUP:
-				// param contains volume in high nibble
-				// Volume low nibble as 0 is "up"
-				VolumeSlide(channel, param & 0xF0);
-				channel->tonePortamento(*this, param & 0x0F);
-				break;
-			case CMD_TONEPORTAVOLDOWN:
-				// Volume high nibble as 0 is "down"
-				VolumeSlide(channel, param >> 4);
-				channel->tonePortamento(*this, param & 0x0F);
-				break;
-			case CMD_VIBRATOVOL:
-				if (param != 0)
-					VolumeSlide(channel, param);
-				channel->Flags |= CHN_VIBRATO;
-				break;
-			case CMD_TREMOLO:
-				if ((param & 0x0F) != 0)
-					channel->TremoloDepth = param & 0x0F;
-				if ((param & 0xF0) != 0)
-					channel->TremoloSpeed = param >> 4;
-				channel->Flags |= CHN_TREMOLO;
-				break;
-			case CMD_OFFSET:
-				if (TickCount == channel->StartTick)
-				{
-					channel->Pos = uint32_t(param) << 8;
-					channel->PosLo = 0;
-					if (channel->Pos > channel->Length)
-						channel->Pos = channel->Length;
-				}
-				break;
-			case CMD_VOLUMESLIDE:
-				if (param != 0 || ModuleType != MODULE_MOD)
-					VolumeSlide(channel, param);
-				break;
-			case CMD_CHANNELVOLSLIDE:
-				channel->volumeSlide(*this, param);
-				break;
-			case CMD_GLOBALVOLSLIDE:
-				applyGlobalVolumeSlide(param);
-				break;
-			case CMD_POSITIONJUMP:
-				PositionJump = param;
-				if (PositionJump > p_Header->nOrders)
-					PositionJump = 0;
-				break;
-			case CMD_PATTERNBREAK:
-				BreakRow = ((param >> 4) * 10) + (param & 0x0F);
-				if (BreakRow > (Rows - 1))
-					BreakRow = (Rows - 1);
-				break;
-			case CMD_SPEED:
-				MusicSpeed = param;
-				break;
-			case CMD_MOD_EXTENDED:
-				ProcessMODExtended(channel);
-				break;
-			case CMD_S3M_EXTENDED:
-				ProcessS3MExtended(channel);
-				break;
-			case CMD_RETRIGER:
-				if (param != 0 && (TickCount % param) == 0)
-					NoteChange(channel, channel->NewNote, 0);
-				break;
-			case CMD_TEMPO:
-				MusicTempo = param;
-				break;
-			case CMD_VOLUME:
-				if (TickCount == 0)//channel->StartTick)
-				{
-					uint8_t NewVolume = param;
-					if (NewVolume > 64)
-						NewVolume = 64;
-					channel->RawVolume = NewVolume << 1;
-					channel->Flags |= CHN_FASTVOLRAMP;
-				}
-				break;
-			case CMD_CHANNELVOLUME:
-				if (TickCount == 0 && param < 65)
-				{
-					channel->channelVolume = param;
-					channel->Flags |= CHN_FASTVOLRAMP;
-				}
-				break;
-			case CMD_GLOBALVOLUME:
-				if (TickCount == channel->StartTick)
-				{
-					if (ModuleType == MODULE_IT && param > 128)
-						break;
-					if (param > 128)
-						param = 128;
-					GlobalVolume = param;
-				}
-				break;
-			case CMD_PANNING:
-				if (TickCount > channel->StartTick)
-					break;
-				if (ModuleType == MODULE_MOD || ModuleType == MODULE_IT)
-					channel->RawPanning = param;
-				else if (param <= 128)
-					channel->RawPanning = param << 1;
-				else if (param == 164)
-				{
-					channel->RawPanning = 128;
-					channel->Flags |= CHN_SURROUND;
-				}
-				channel->Flags |= CHN_FASTVOLRAMP;
-				break;
-			case CMD_PANNINGSLIDE:
-				channel->applyPanningSlide(*this, param);
-				break;
-			case CMD_FINEVIBRATO:
-				channel->vibrato(param, 1);
-				break;
-			case CMD_TREMOR:
-				if (TickCount != 0)
-					break;
-				if (param != 0)
-					channel->Tremor = param;
-				channel->Flags |= CHN_TREMOR;
-				break;
-			case CMD_PANBRELLO:
-				channel->panbrello(param);
-				break;
-			default:
-				break;
-		}
+		processEffects(*channel, param, breakRow, positionJump);
 	}
-	return handleNavigationEffects(PatternLoopRow, BreakRow, PositionJump);
+	return handleNavigationEffects(patternLoopRow, breakRow, positionJump);
+}
+
+void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump)
+{
+	switch (channel.RowEffect)
+	{
+		case CMD_NONE:
+			break;
+		case CMD_ARPEGGIO:
+			if (TickCount == channel.StartTick && channel.Period && channel.Note != 0xFF)
+			{
+				if (param == 0 && ModuleType != MODULE_S3M)
+					break;
+				channel.Flags |= CHN_ARPEGGIO;
+				if (param != 0)
+					channel.Arpeggio = param;
+			}
+			break;
+		case CMD_PORTAMENTOUP:
+			channel.portamentoUp(*this, param);
+			break;
+		case CMD_PORTAMENTODOWN:
+			channel.portamentoDown(*this, param);
+			break;
+		case CMD_TONEPORTAMENTO:
+			channel.tonePortamento(*this, param);
+			break;
+		case CMD_VIBRATO:
+			channel.vibrato(param, 4);
+			break;
+		case CMD_TONEPORTAVOL:
+			if (param != 0) // In theory, this if does nothing as VolumeSlide() is protected too.
+				VolumeSlide(&channel, param);
+			channel.tonePortamento(*this, 0);
+			break;
+		case CMD_TONEPORTAVOLUP:
+			// param contains volume in high nibble
+			// Volume low nibble as 0 is "up"
+			VolumeSlide(&channel, param & 0xF0);
+			channel.tonePortamento(*this, param & 0x0F);
+			break;
+		case CMD_TONEPORTAVOLDOWN:
+			// Volume high nibble as 0 is "down"
+			VolumeSlide(&channel, param >> 4);
+			channel.tonePortamento(*this, param & 0x0F);
+			break;
+		case CMD_VIBRATOVOL:
+			if (param != 0)
+				VolumeSlide(&channel, param);
+			channel.Flags |= CHN_VIBRATO;
+			break;
+		case CMD_TREMOLO:
+			if ((param & 0x0F) != 0)
+				channel.TremoloDepth = param & 0x0F;
+			if ((param & 0xF0) != 0)
+				channel.TremoloSpeed = param >> 4;
+			channel.Flags |= CHN_TREMOLO;
+			break;
+		case CMD_OFFSET:
+			if (TickCount == channel.StartTick)
+			{
+				channel.Pos = uint32_t(param) << 8;
+				channel.PosLo = 0;
+				if (channel.Pos > channel.Length)
+					channel.Pos = channel.Length;
+			}
+			break;
+		case CMD_VOLUMESLIDE:
+			if (param != 0 || ModuleType != MODULE_MOD)
+				VolumeSlide(&channel, param);
+			break;
+		case CMD_CHANNELVOLSLIDE:
+			channel.volumeSlide(*this, param);
+			break;
+		case CMD_GLOBALVOLSLIDE:
+			applyGlobalVolumeSlide(param);
+			break;
+		case CMD_POSITIONJUMP:
+			positionJump = param;
+			if (positionJump > p_Header->nOrders)
+				positionJump = 0;
+			break;
+		case CMD_PATTERNBREAK:
+			breakRow = ((param >> 4) * 10) + (param & 0x0F);
+			if (breakRow > (Rows - 1))
+				breakRow = (Rows - 1);
+			break;
+		case CMD_SPEED:
+			MusicSpeed = param;
+			break;
+		case CMD_MOD_EXTENDED:
+			ProcessMODExtended(&channel);
+			break;
+		case CMD_S3M_EXTENDED:
+			ProcessS3MExtended(&channel);
+			break;
+		case CMD_RETRIGER:
+			if (param != 0 && (TickCount % param) == 0)
+				NoteChange(&channel, channel.NewNote, 0);
+			break;
+		case CMD_TEMPO:
+			MusicTempo = param;
+			break;
+		case CMD_VOLUME:
+			if (TickCount == 0)//channel->StartTick)
+			{
+				uint8_t NewVolume = param;
+				if (NewVolume > 64)
+					NewVolume = 64;
+				channel.RawVolume = NewVolume << 1;
+				channel.Flags |= CHN_FASTVOLRAMP;
+			}
+			break;
+		case CMD_CHANNELVOLUME:
+			if (TickCount == 0 && param < 65)
+			{
+				channel.channelVolume = param;
+				channel.Flags |= CHN_FASTVOLRAMP;
+			}
+			break;
+		case CMD_GLOBALVOLUME:
+			if (TickCount == channel.StartTick)
+			{
+				if (ModuleType == MODULE_IT && param > 128)
+					break;
+				if (param > 128)
+					param = 128;
+				GlobalVolume = param;
+			}
+			break;
+		case CMD_PANNING:
+			if (TickCount > channel.StartTick)
+				break;
+			if (ModuleType == MODULE_MOD || ModuleType == MODULE_IT)
+				channel.RawPanning = param;
+			else if (param <= 128)
+				channel.RawPanning = param << 1;
+			else if (param == 164)
+			{
+				channel.RawPanning = 128;
+				channel.Flags |= CHN_SURROUND;
+			}
+			channel.Flags |= CHN_FASTVOLRAMP;
+			break;
+		case CMD_PANNINGSLIDE:
+			channel.applyPanningSlide(*this, param);
+			break;
+		case CMD_FINEVIBRATO:
+			channel.vibrato(param, 1);
+			break;
+		case CMD_TREMOR:
+			if (TickCount != 0)
+				break;
+			if (param != 0)
+				channel.Tremor = param;
+			channel.Flags |= CHN_TREMOR;
+			break;
+		case CMD_PANBRELLO:
+			channel.panbrello(param);
+			break;
+		default:
+			break;
+	}
 }
 
 bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,

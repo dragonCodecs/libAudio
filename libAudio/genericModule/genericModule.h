@@ -592,10 +592,11 @@ private:
 	bool AdvanceTick();
 	bool Tick();
 	bool ProcessEffects();
+	void processEffects(Channel &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump);
 	void ResetChannelPanning();
 	void SampleChange(Channel &channel, const uint32_t sample);
 	void ReloadSample(Channel &channel);
-	void NoteChange(Channel * const channel, uint8_t note, uint8_t cmd, bool handlePorta = false);
+	void NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, bool handlePorta = false);
 	void HandleNNA(Channel *channel, uint32_t sample, uint8_t note);
 	uint8_t FindFreeNNAChannel() const;
 	bool handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
