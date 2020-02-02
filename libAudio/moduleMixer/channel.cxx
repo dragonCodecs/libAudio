@@ -197,7 +197,7 @@ int32_t Channel::patternLoop(const uint8_t param, const uint16_t row) noexcept
 	return -1;
 }
 
-void Channel::portamentoUp(const ModuleFile &module, uint8_t param)
+void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (param)
 		Portamento = param;
@@ -240,7 +240,7 @@ void Channel::portamentoUp(const ModuleFile &module, uint8_t param)
 	}
 }
 
-void Channel::portamentoDown(const ModuleFile &module, uint8_t param)
+void Channel::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (param)
 		Portamento = param;
@@ -283,7 +283,7 @@ void Channel::portamentoDown(const ModuleFile &module, uint8_t param)
 	}
 }
 
-inline void Channel::finePortamentoUp(const ModuleFile &module, uint8_t param)
+inline void Channel::finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -296,7 +296,7 @@ inline void Channel::finePortamentoUp(const ModuleFile &module, uint8_t param)
 	}
 }
 
-inline void Channel::finePortamentoDown(const ModuleFile &module, uint8_t param)
+inline void Channel::finePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -309,7 +309,7 @@ inline void Channel::finePortamentoDown(const ModuleFile &module, uint8_t param)
 	}
 }
 
-inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t param)
+inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -322,7 +322,7 @@ inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t par
 	}
 }
 
-inline void Channel::extraFinePortamentoDown(const ModuleFile &module, uint8_t param)
+inline void Channel::extraFinePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{

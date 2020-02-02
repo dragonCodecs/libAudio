@@ -530,12 +530,12 @@ public:
 	void noteCut(bool triggered) noexcept;
 	void noteOff() noexcept;
 	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;
-	void portamentoUp(const ModuleFile &module, uint8_t param);
-	void portamentoDown(const ModuleFile &module, uint8_t param);
-	void finePortamentoUp(const ModuleFile &module, uint8_t param);
-	void finePortamentoDown(const ModuleFile &module, uint8_t param);
-	void extraFinePortamentoUp(const ModuleFile &module, uint8_t param);
-	void extraFinePortamentoDown(const ModuleFile &module, uint8_t param);
+	void portamentoUp(const ModuleFile &module, uint8_t param) noexcept;
+	void portamentoDown(const ModuleFile &module, uint8_t param) noexcept;
+	void finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept;
+	void finePortamentoDown(const ModuleFile &module, uint8_t param) noexcept;
+	void extraFinePortamentoUp(const ModuleFile &module, uint8_t param) noexcept;
+	void extraFinePortamentoDown(const ModuleFile &module, uint8_t param) noexcept;
 	void tonePortamento(const ModuleFile &module, uint8_t param);
 	void vibrato(uint8_t param, uint8_t multiplier);
 	void panbrello(uint8_t param);
