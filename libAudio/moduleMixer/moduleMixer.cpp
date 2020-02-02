@@ -191,9 +191,9 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 	if (!Note || Note > 0xF0)
 		return 0;
 	Note--;
-	if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT || ModuleType == MODULE_STM)
+	if (typeIs<MODULE_IT, MODULE_S3M, MODULE_STM>())
 	{
-		if (p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
+		if (hasLinearSlides())
 			return (S3MPeriods[Note % 12] << 5) >> (Note / 12);
 		else
 		{
@@ -214,13 +214,13 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 
 uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t PeriodFrac)
 {
-	if (Period == 0)
+	if (!Period)
 		return 0;
-	if (ModuleType == MODULE_MOD)
+	if (typeIs<MODULE_MOD>())
 		return 14187580UL / Period;
 	else
 	{
-		if (p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES)
+		if (hasLinearSlides())
 		{
 			if (!C4Speed)
 				C4Speed = 8363;
