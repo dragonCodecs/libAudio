@@ -506,7 +506,7 @@ public:
 	uint32_t Pos, PosLo, StartTick;
 	int16dot16 Increment;
 	uint32_t portamentoTarget;
-	uint8_t Portamento, portamentoSlide;
+	uint8_t portamento, portamentoSlide;
 	uint8_t Arpeggio, extendedCommand;
 	uint8_t Tremor, TremorCount;
 	uint8_t LeftVol, RightVol;

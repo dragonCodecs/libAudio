@@ -137,14 +137,14 @@ void Channel::noteCut(bool triggered) noexcept
 
 void Channel::noteOff() noexcept
 {
-	bool NoteOn = !(Flags & CHN_NOTEOFF);
+	bool noteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
 	if (Instrument && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
 		Flags |= CHN_NOTEFADE;
 	if (!Length)
 		return;
 	// This false gets replaced with a check for sustain loops.
-	if (false && Sample != nullptr && NoteOn)
+	if (false && Sample != nullptr && noteOn)
 	{
 		if (LoopEnd != 0)
 		{
@@ -200,9 +200,9 @@ int32_t Channel::patternLoop(const uint8_t param, const uint16_t row) noexcept
 void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (param)
-		Portamento = param;
+		portamento = param;
 	else
-		param = Portamento;
+		param = portamento;
 	if (!Period)
 		return;
 	const auto command = param & 0xF0U;
@@ -243,9 +243,9 @@ void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 void Channel::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (param)
-		Portamento = param;
+		portamento = param;
 	else
-		param = Portamento;
+		param = portamento;
 	if (!Period)
 		return;
 	const auto command = param & 0xF0U;
