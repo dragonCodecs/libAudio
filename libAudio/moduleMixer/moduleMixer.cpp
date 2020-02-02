@@ -771,41 +771,6 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 	}
 }
 
-inline void Channel::applyPanningSlide(const ModuleFile &module, uint8_t param)
-{
-	if (!param)
-		param = panningSlide;
-	else
-		panningSlide = param;
-
-	uint16_t slide = RawPanning;
-	const uint8_t slideLo = param & 0x0FU;
-	const uint8_t slideHi = param & 0xF0U;
-	if (slideLo == 0x0FU && slideHi)
-	{
-		if (!module.ticks())
-			slide -= slideHi >> 2;
-	}
-	else if (slideHi == 0xF0U && slideLo)
-	{
-		if (!module.ticks())
-			slide += slideLo << 2;
-	}
-	else if (module.ticks())
-	{
-		if (slideHi)
-			slide -= slideHi >> 2;
-		else
-			slide += slideLo << 2;
-	}
-
-	if (slide != RawPanning)
-	{
-		clipInt<uint16_t>(slide, 0, 256);
-		RawPanning = slide;
-	}
-}
-
 bool ModuleFile::ProcessEffects()
 {
 	int16_t PositionJump = -1, BreakRow = -1;
