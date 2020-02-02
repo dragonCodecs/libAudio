@@ -578,7 +578,7 @@ private:
 	// Effects functions
 	void VolumeSlide(Channel *channel, uint8_t param);
 	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t));
-	void GlobalVolumeSlide(uint8_t param);
+	void applyGlobalVolumeSlide(uint8_t param);
 	void PanningSlide(Channel *channel, uint8_t param);
 	int PatternLoop(uint32_t param);
 	void ProcessMODExtended(Channel *channel);

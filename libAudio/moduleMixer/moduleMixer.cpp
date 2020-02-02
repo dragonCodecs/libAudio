@@ -760,7 +760,7 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 	channel->RawVolume = uint8_t(NewVolume);
 }
 
-inline void ModuleFile::GlobalVolumeSlide(uint8_t param)
+inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 {
 	if (!param)
 		param = globalVolumeSlide;
@@ -992,7 +992,7 @@ bool ModuleFile::ProcessEffects()
 				channel->volumeSlide(*this, param);
 				break;
 			case CMD_GLOBALVOLSLIDE:
-				GlobalVolumeSlide(param);
+				applyGlobalVolumeSlide(param);
 				break;
 			case CMD_POSITIONJUMP:
 				PositionJump = param;
