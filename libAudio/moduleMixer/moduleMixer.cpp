@@ -678,29 +678,6 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 	}
 }
 
-inline int32_t Channel::patternLoop(const uint8_t param, const uint16_t row) noexcept
-{
-	if (param)
-	{
-		if (patternLoopCount)
-		{
-			if (!--patternLoopCount)
-			{
-				// Reset the default start position for the next
-				// CMDEX_LOOP
-				patternLoopStart = 0;
-				return -1;
-			}
-		}
-		else
-			patternLoopCount = param;
-		return patternLoopStart;
-	}
-	else
-		patternLoopStart = row;
-	return -1;
-}
-
 inline void ModuleFile::FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t))
 {
 	if (param == 0)
