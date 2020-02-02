@@ -1037,13 +1037,13 @@ bool ModuleFile::ProcessEffects()
 bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
 	const int16_t positionJump) noexcept
 {
-	if (TickCount == 0)
+	if (!TickCount)
 	{
 		if (patternLoopRow >= 0)
 		{
 			NextPattern = NewPattern;
 			NextRow = uint16_t(patternLoopRow);
-			if (PatternDelay != 0)
+			if (PatternDelay)
 				++NextRow;
 		}
 		else if (breakRow >= 0 || positionJump >= 0)
@@ -1062,7 +1062,8 @@ bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int
 					for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 					{
 						Channel &channel = Channels[i];
-						channel.patternLoopCount = channel.patternLoopStart = 0;
+						channel.patternLoopCount = 0;
+						channel.patternLoopStart = 0;
 					}
 				}
 				NextPattern = _positionJump;
