@@ -48,7 +48,7 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 
 int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t period, int8_t &fractionalPeriod) noexcept
 {
-	if (Sample != nullptr && Sample->GetVibratoDepth() != 0)
+	if (Sample && Sample->GetVibratoDepth() != 0)
 	{
 		ModuleSample &sample = *Sample;
 		if (!sample.GetVibratoRate())
@@ -111,20 +111,19 @@ void Channel::applyPanbrello() noexcept
 	if (Flags & CHN_PANBRELLO)
 	{
 		int8_t delta{0};
-		const uint8_t PanPos = ((uint16_t(PanbrelloPos) + 16) >> 2) & 0x3F;
-		const uint8_t PanType = PanbrelloType & 0x03;
-		if (PanType == 1)
-			delta = RampDownTable[PanPos];
-		else if (PanType == 2)
-			delta = SquareTable[PanPos];
-		else if (PanType == 3)
-			delta = RandomTable[PanPos];
+		const uint8_t position = ((panbrelloPosition + 16) >> 2U) & 0x3FU;
+		const uint8_t type = panbrelloType & 0x03U;
+		if (type == 1)
+			delta = RampDownTable[position];
+		else if (type == 2)
+			delta = SquareTable[position];
+		else if (type == 3)
+			delta = RandomTable[position];
 		else
-			delta = SinusTable[PanPos];
-		uint16_t Pan = Panning + ((delta * PanbrelloDepth + 2) >> 3);
-		clipInt<uint16_t>(Pan, 0, 256);
-		Panning = Pan;
-		PanbrelloPos += PanbrelloSpeed;
+			delta = SinusTable[position];
+		panbrelloPosition += panbrelloSpeed;
+		Panning += (delta * panbrelloDepth + 2) >> 3U;
+		clipInt<uint16_t>(Panning, 0, 256);
 	}
 }
 
@@ -388,9 +387,9 @@ void Channel::vibrato(uint8_t param, uint8_t multiplier)
 void Channel::panbrello(uint8_t param)
 {
 	if ((param & 0x0F) != 0)
-		PanbrelloDepth = param & 0x0F;
+		panbrelloDepth = param & 0x0F;
 	if ((param & 0xF0) != 0)
-		PanbrelloSpeed = param >> 4;
+		panbrelloSpeed = param >> 4;
 	Flags |= CHN_PANBRELLO;
 }
 

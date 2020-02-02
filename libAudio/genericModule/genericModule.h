@@ -518,7 +518,9 @@ public:
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
 	uint8_t vibratoDepth, vibratoSpeed, vibratoPosition, vibratoType;
-	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
+	uint8_t panbrelloDepth, panbrelloSpeed;
+	uint16_t panbrelloPosition;
+	uint8_t panbrelloType;
 	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos, FadeOutVol;
 	int DCOffsL, DCOffsR;
 

@@ -640,7 +640,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 				channel->TremoloType = param & 0x07;
 			break;
 		case CMD_S3MEX_PANWAVE:
-			channel->PanbrelloType = param & 0x07;
+			channel->panbrelloType = param & 0x07;
 			break;
 		case CMD_S3MEX_FRAMEDELAY:
 			FrameDelay = param;
