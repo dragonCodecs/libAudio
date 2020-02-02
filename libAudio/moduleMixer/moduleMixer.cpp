@@ -808,7 +808,8 @@ inline void ModuleFile::PanningSlide(Channel *channel, uint8_t param)
 
 bool ModuleFile::ProcessEffects()
 {
-	int32_t PositionJump = -1, BreakRow = -1, PatternLoopRow = -1;
+	int16_t PositionJump = -1, BreakRow = -1;
+	int32_t PatternLoopRow = -1;
 	uint32_t i;
 	for (i = 0; i < p_Header->nChannels; i++)
 	{
@@ -1065,38 +1066,42 @@ bool ModuleFile::ProcessEffects()
 				break;
 		}
 	}
+	return handleNavigationEffects(PatternLoopRow, BreakRow, PositionJump);
+}
+
+bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
+	const int16_t positionJump) noexcept
+{
 	if (TickCount == 0)
 	{
-		if (PatternLoopRow >= 0)
+		if (patternLoopRow >= 0)
 		{
 			NextPattern = NewPattern;
-			NextRow = uint16_t(PatternLoopRow);
+			NextRow = uint16_t(patternLoopRow);
 			if (PatternDelay != 0)
 				++NextRow;
 		}
-		else if (BreakRow >= 0 || PositionJump >= 0)
+		else if (breakRow >= 0 || positionJump >= 0)
 		{
-			if (PositionJump < 0)
-				PositionJump = NewPattern + 1;
-			if (BreakRow < 0)
-				BreakRow = 0;
-			if ((uint32_t)PositionJump < NewPattern)// || ((uint32_t)PositionJump == NewPattern && (uint32_t)BreakRow <= Row))
+			const uint16_t _positionJump = positionJump < 0 ? NewPattern + 1 : uint32_t(positionJump);
+			const uint16_t _breakRow = breakRow < 0 ? 0 : uint32_t(breakRow);
+			if (_positionJump < NewPattern)// || (_positionJump == NewPattern && _breakRow <= Row))
 			{
 				NextPattern = p_Header->nOrders;
 				return false;
 			}
-			else if (((uint32_t)PositionJump != NewPattern || (uint32_t)BreakRow != Row))
+			else if ((_positionJump != NewPattern || _breakRow != Row))
 			{
-				if ((uint32_t)PositionJump != NewPattern)
+				if (_positionJump != NewPattern)
 				{
-					for (i = 0; i < p_Header->nChannels; i++)
+					for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 					{
 						Channel &channel = Channels[i];
 						channel.patternLoopCount = channel.patternLoopStart = 0;
 					}
 				}
-				NextPattern = PositionJump;
-				NextRow = BreakRow;
+				NextPattern = _positionJump;
+				NextRow = _breakRow;
 			}
 		}
 	}
