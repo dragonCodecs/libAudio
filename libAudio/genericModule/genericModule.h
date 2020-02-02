@@ -517,7 +517,7 @@ public:
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
 	uint8_t TremoloDepth, TremoloSpeed, TremoloPos, TremoloType;
-	uint8_t VibratoDepth, VibratoSpeed, VibratoPos, VibratoType;
+	uint8_t vibratoDepth, vibratoSpeed, vibratoPosition, vibratoType;
 	uint8_t PanbrelloDepth, PanbrelloSpeed, PanbrelloPos, PanbrelloType;
 	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos, FadeOutVol;
 	int DCOffsL, DCOffsR;
@@ -650,6 +650,7 @@ public:
 		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 
 	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
+	bool useOldEffects() const noexcept { return p_Header->Flags & FILE_FLAGS_OLD_IT_EFFECTS; }
 };
 
 inline uint32_t swapBytes(const uint32_t val) noexcept

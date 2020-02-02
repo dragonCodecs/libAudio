@@ -307,8 +307,8 @@ void ModuleFile::NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, b
 				channel->Flags &= ~CHN_LPINGPONG;*/
 			channel->Pos = 0;
 			channel->PosLo = 0;
-			if (channel->VibratoType < 4)
-				channel->VibratoPos = 0;
+			if (channel->vibratoType < 4)
+				channel->vibratoPosition = 0;
 			//if ((channel->TremoloType & 0x03) != 0)
 			if (channel->TremoloType < 4)
 				channel->TremoloPos = 0;
@@ -537,7 +537,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 				channel->Flags |= CHN_GLISSANDO;
 			break;
 		case CMD_MODEX_VIBRATOWAVE:
-			channel->VibratoType = param & 0x07;
+			channel->vibratoType = param & 0x07;
 			break;
 		case CMD_MODEX_FINETUNE:
 			if (TickCount != channel->StartTick)
@@ -629,9 +629,9 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			break;
 		case CMD_S3MEX_VIBRATOWAVE:
 			if (ModuleType == MODULE_S3M)
-				channel->VibratoType = param & 0x03;
+				channel->vibratoType = param & 0x03;
 			else
-				channel->VibratoType = param & 0x07;
+				channel->vibratoType = param & 0x07;
 			break;
 		case CMD_S3MEX_TREMOLOWAVE:
 			if (ModuleType == MODULE_S3M)

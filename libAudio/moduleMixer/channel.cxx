@@ -8,36 +8,39 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 	if (Flags & CHN_VIBRATO)
 	{
 		int16_t delta{0};
-		const uint8_t vibratoType = VibratoType & 0x03;
-		if (vibratoType == 1)
-			delta = RampDownTable[VibratoPos];
-		else if (vibratoType == 2)
-			delta = SquareTable[VibratoPos];
-		else if (vibratoType == 3)
-			delta = RandomTable[VibratoPos];
+		const uint8_t type = vibratoType & 3U;
+		if (type == 1)
+			delta = RampDownTable[vibratoPosition];
+		else if (type == 2)
+			delta = SquareTable[vibratoPosition];
+		else if (type == 3)
+			delta = RandomTable[vibratoPosition];
 		else
-			delta = SinusTable[VibratoPos];
-		const uint8_t depthShift = module.checkTypeAndNotFlags(MODULE_IT, FILE_FLAGS_OLD_IT_EFFECTS) ? 7 : 6;
-		delta = (delta * VibratoDepth) >> depthShift;
-		if (module.checkTypeAndFlags(MODULE_IT, FILE_FLAGS_LINEAR_SLIDES))
+			delta = SinusTable[vibratoPosition];
+		const bool oldSfx = module.typeIs<MODULE_IT>() && module.useOldEffects();
+		const uint8_t depthShift = oldSfx ? 7 : 6;
+		delta = (delta * vibratoDepth) >> depthShift;
+		if (module.typeIs<MODULE_IT>() && module.hasLinearSlides())
 		{
 			if (delta < 0)
 			{
-				const int16_t value = -delta;
-				delta = linearSlideDown(period, value >> 2) - period;
-				if (value & 0x03)
-					delta += fineLinearSlideDown(period, value & 0x03) - period;
+				const uint16_t amount = uint16_t(-delta);
+				delta = linearSlideDown(period, amount >> 2) - period;
+				const uint8_t findSlide = amount & 3U;
+				if (findSlide)
+					delta += fineLinearSlideDown(period, findSlide) - period;
 			}
-			else
+			else if (delta > 0)
 			{
-				const int16_t value = delta;
-				delta = linearSlideUp(period, value >> 2) - period;
-				if (value & 0x03)
-					delta += fineLinearSlideUp(period, value & 0x03) - period;
+				const uint16_t amount = uint16_t(delta);
+				delta = linearSlideUp(period, amount >> 2) - period;
+				const uint8_t findSlide = amount & 3U;
+				if (findSlide)
+					delta += fineLinearSlideUp(period, findSlide) - period;
 			}
 		}
-		if (module.TickCount || module.checkTypeAndNotFlags(MODULE_IT, FILE_FLAGS_OLD_IT_EFFECTS))
-			VibratoPos = (VibratoPos + VibratoSpeed) & 0x3F;
+		if (module.ticks() || oldSfx)
+			vibratoPosition = (vibratoPosition + vibratoSpeed) & 0x3FU;
 		return delta;
 	}
 	return 0;
@@ -56,8 +59,8 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 				AutoVibratoDepth += sample.GetVibratoRate();
 			else if (!(Flags & CHN_NOTEOFF))
 				AutoVibratoDepth += (sample.GetVibratoDepth() << 8) / (sample.GetVibratoRate() >> 3);
-			if ((AutoVibratoDepth >> 8) > VibratoDepth)
-				AutoVibratoDepth = VibratoDepth << 8;
+			if ((AutoVibratoDepth >> 8) > vibratoDepth)
+				AutoVibratoDepth = vibratoDepth << 8;
 		}
 		AutoVibratoPos += sample.GetVibratoSpeed();
 		int8_t delta{0};
@@ -376,9 +379,9 @@ void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 void Channel::vibrato(uint8_t param, uint8_t multiplier)
 {
 	if ((param & 0x0F) != 0)
-		VibratoDepth = (param & 0x0F) * multiplier;
+		vibratoDepth = (param & 0x0F) * multiplier;
 	if ((param & 0xF0) != 0)
-		VibratoSpeed = param >> 4;
+		vibratoSpeed = param >> 4;
 	Flags |= CHN_VIBRATO;
 }
 
