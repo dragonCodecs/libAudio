@@ -6,12 +6,14 @@ else
 GCC_FLAGS = 
 endif
 CC = $(GCC) $(GCC_FLAGS)
-EXTRA_CFLAGS = -I../libAudio
-CFLAGS = -c -O2 $(EXTRA_CFLAGS) -o $@
-genericModule = ModuleEffects.o ModuleFile.o ModuleHeader.o ModulePattern.o ModuleSample.o ModuleInstrument.o
-libAudio = $(addprefix genericModule/,$(genericModule)) moduleMixer/moduleMixer.o fixedPoint/fixedPoint.o loadS3M.o libAudio_Common.o
-LIBS = $(addprefix ../libAudio/,$(libAudio)) -lstdc++ -lm $(shell pkg-config --libs openal)
-LFLAGS = $(O) $(LIBS) -o $(EXE)
+EXTRA_CFLAGS = -I../libAudio -DlibAUDIO -Wall -Wextra -pedantic -Wno-attributes
+CFLAGS = -c -O2 -std=c++11 $(EXTRA_CFLAGS) -o $@
+genericModule = ModuleEffects.cpp.o ModuleFile.cpp.o ModuleHeader.cpp.o ModulePattern.cpp.o ModuleSample.cpp.o ModuleInstrument.cpp.o
+moduleMixer = moduleMixer.cpp.o channel.cxx.o
+libAudio = $(addprefix genericModule_,$(genericModule)) $(addprefix moduleMixer_,$(moduleMixer)) fixedPoint_fixedPoint.cpp.o loadS3M.cpp.o \
+	console.cxx.o
+LIBS = $(addprefix ../build/libAudio/1ac7a65@@libAudio@sha/,$(libAudio)) -lstdc++ -lm $(shell pkg-config --libs openal)
+LFLAGS = -O2 $(O) $(LIBS) -o $(EXE)
 CHMOD = chmod 0755
 STRIP = strip -s
 
@@ -25,7 +27,7 @@ all: $(EXE)
 $(EXE): $(O)
 	$(CC) $(LFLAGS)
 	$(CHMOD) $(EXE)
-	$(STRIP) $(EXE)
+	#$(STRIP) $(EXE)
 
 install: all
 	install -m755 -D $(EXE) ../bin

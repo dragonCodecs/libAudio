@@ -1,45 +1,67 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <malloc.h>
-
 #include "libAudio.h"
-#include "libAudio_Common.h"
+#include "libAudio.hxx"
 #include "genericModule/genericModule.h"
+#include "console.hxx"
 
 uint8_t ExternalPlayback = 1;
+uint8_t ToPlayback = 0;
+using libAudio::console::operator ""_s;
 
 class S3MHeader : public ModuleAllocator
 {
 public:
 	// Common fields
 	char *Name;
+	char *Remark;
 	uint16_t nOrders;
 	uint16_t nSamples;
+	uint16_t nInstruments;
 	uint16_t nPatterns;
 	uint8_t *Orders;
+	uint16_t *Panning;
+	uint16_t Flags;
+	uint16_t CreationVersion;
+	uint16_t FormatVersion;
+	void *InstrumentPtrs;
+	// Slightly badly named
+	// SamplePtrs = pointers to where the sample *descriptors* are
+	void *SamplePtrs;
+	// PatternPtrs = pointers to where the compressed pattern data is
+	void *PatternPtrs;
 
 	// Fields specific to certain formats
 
-	// MOD
+	// MOD/AON
 	uint8_t RestartPos;
 
 	// S3M
 	uint8_t Type;
-	uint16_t Flags;
-	uint16_t CreationVersion;
-	uint16_t FormatVersion;
 	uint8_t GlobalVolume;
 	uint8_t InitialSpeed;
 	uint8_t InitialTempo;
 	uint8_t MasterVolume;
 	uint8_t ChannelSettings[32];
-	// Slightly badly named
-	// SamplePtrs = pointers to where the sample *descriptors* are
-	uint16_t *SamplePtrs;
-	// PatternPtrs = pointers to where the compressed pattern data is
-	uint16_t *PatternPtrs;
 
-	uint8_t *Panning;
+	// AON
+	char *Author;
+	char ArpTable[16][4];
+
+	// FC1x
+	uint32_t SeqLength;
+	uint32_t PatternOffs;
+	uint32_t PatLength;
+	uint32_t FrequenciesOffs;
+	uint32_t FrequenciesLength;
+	uint32_t VolumeOffs;
+	uint32_t VolumeLength;
+	uint32_t SampleOffs;
+	uint32_t SampleLength;
+
+	// IT
+	uint8_t Separation;
+	uint32_t MessageOffs;
+	std::array<uint8_t, 64> Volumes;
+	std::array<bool, 64> PanSurround;
 
 	uint8_t nChannels;
 };
@@ -62,71 +84,36 @@ public:
 	S3MHeader *p_Header;
 	ModuleSample **p_Samples;
 	ModulePattern **p_Patterns;
+
+	virtual ~S3MFile() noexcept = default;
 };
 
-S3M_Intern *openS3M(const char *FileName)
-{
-	S3M_Intern *ret = NULL;
-	FILE *f_S3M = NULL;
-	ret = (S3M_Intern *)malloc(sizeof(S3M_Intern));
-	if (ret == NULL)
-		return ret;
-	memset(ret, 0x00, sizeof(S3M_Intern));
+int64_t audioFile_t::writeBuffer(void const *, long) { return -2; }
+bool audioFile_t::fileInfo(const fileInfo_t &) { return false; }
 
-	f_S3M = fopen(FileName, "rb");
-	if (f_S3M == NULL)
-	{
-		free(ret);
-		return NULL;
-	}
-	ret->f_S3M = f_S3M;
-	return ret;
+playback_t::playback_t(void *const audioFile_, const fileFillBuffer_t fillBuffer_, uint8_t *const buffer_,
+	const uint32_t bufferLength_, const fileInfo_t &fileInfo) : audioFile{audioFile_}, fillBuffer{fillBuffer_},
+	buffer{buffer_}, bufferLength{bufferLength_}, bitsPerSample(fileInfo.bitsPerSample), bitRate{fileInfo.bitRate},
+	channels{fileInfo.channels}, sleepTime{}, playbackMode{playbackMode_t::wait}, player{nullptr}
+{
+	std::chrono::seconds bufferSize{bufferLength};
+	bufferSize /= channels * (bitsPerSample / 8);
+	sleepTime = std::chrono::duration_cast<std::chrono::nanoseconds>(bufferSize) / bitRate;
 }
 
-S3MFile *readS3M(S3M_Intern *p_SF)
+int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t length)
 {
-	FILE *f_S3M;
-	FileInfo *p_FI;
-
-	if (p_SF == NULL)
-		return NULL;
-	f_S3M = p_SF->f_S3M;
-
-	p_FI = (FileInfo *)malloc(sizeof(FileInfo));
-	if (p_FI == NULL)
-		return NULL;
-	memset(p_FI, 0x00, sizeof(FileInfo));
-	p_SF->p_FI = p_FI;
-
-	p_FI->BitRate = 44100;
-	p_FI->BitsPerSample = 16;
-	try
-	{
-		p_SF->p_File = new ModuleFile(p_SF);
-	}
-	catch (ModuleLoaderError *e)
-	{
-		printf("%s\n", e->GetError());
-		return NULL;
-	}
-	p_FI->Title = p_SF->p_File->GetTitle();
-	p_FI->Channels = p_SF->p_File->GetChannels();
-
-	return (S3MFile *)p_SF->p_File;
-}
-
-int closeS3M(S3M_Intern *p_SF)
-{
-	int ret = 0;
-	if (p_SF == NULL)
+	const auto file = static_cast<audioFile_t *>(audioFile);
+	if (!file)
 		return 0;
+	return file->fillBuffer(buffer, length);
+}
 
-	delete p_SF->p_Playback;
-	delete p_SF->p_File;
-
-	ret = fclose(p_SF->f_S3M);
-	free(p_SF);
-	return ret;
+int audioCloseFile(void *audioFile)
+{
+	const auto file = static_cast<const audioFile_t *>(audioFile);
+	delete file;
+	return 0;
 }
 
 bool isHex(const char *str, int len)
@@ -143,7 +130,7 @@ bool isHex(const char *str, int len)
 
 uint8_t hex2int(char c)
 {
-	uint8_t ret = (uint8_t)(c - '0');
+	uint8_t ret = uint8_t(c - '0');
 	if (ret > 9)
 	{
 		if (c >= 'A' && c <= 'Z')
@@ -165,7 +152,7 @@ uint8_t getEffect(const char *hex)
 			return ret;
 	}
 
-	printf("Bad effect ID, must consist of exactly 2 non-zero hex digits!\n");
+	console.error("Bad effect ID, must consist of exactly 2 non-zero hex digits!");
 	exit(1);
 
 	return 0;
@@ -180,56 +167,51 @@ int main(int argc, char **argv)
 		// usage();
 		return 2;
 	}
+	console = {stdout, stderr};
 
 //	printf("Checking command line....\n");
 	effect = getEffect(argv[2]);
 
-	printf("Checking if S3M.... ");
-	if (Is_S3M(argv[1]))
+	const std::unique_ptr<modS3M_t> file{modS3M_t::openR(argv[1])};
+	console.info("Checking if S3M.... "_s, file ? "yes" : "no");
+	if (file)
 	{
+		const auto &fileInfo = file->fileInfo();
+		const auto &context = *file->context();
+		const auto module = reinterpret_cast<S3MFile *>(context.mod.get());
+
+		console.info("Name - '"_s, fileInfo.title, "'...."_s);
+		console.info("Checking for command"_s);
+		console.info('\t', nullptr);
+
 		bool found = false;
-		uint64_t i;
-		S3M_Intern *p_SF = openS3M(argv[1]);
-		S3MFile *module = readS3M(p_SF);
-		ModulePattern **patterns = module->p_Patterns;
-
-		printf("yes\n");
-		printf("Name - '%s'....\n", module->p_Header->Name);
-//		printf("Patterns - %u....\n", module->p_Header->nPatterns);
-//		printf("Channels - %u....\n", module->p_Header->nChannels);
-
-		printf("Checking for command");
-		fflush(stdout);
-		for (i = 0; i < module->p_Header->nPatterns; i++)
+		const auto patterns = module->p_Patterns;
+		for (uint16_t i = 0; i < module->p_Header->nPatterns; i++)
 		{
-			uint8_t j;
-			S3MCommand (*commands)[64] = (S3MCommand (*)[64])patterns[i]->GetCommands();
-
-			for (j = 0; j < module->p_Header->nChannels; j++)
+			const auto &patternCommands = patterns[i]->commands();
+			for (const auto &commands : patternCommands)
 			{
-				for (uint8_t k = 0; k < 64; k++)
+				for (uint8_t k = 0; k < 64 && !found; k++)
 				{
+					const S3MCommand &command = reinterpret_cast<S3MCommand &>(commands[k]);
 					// If effect not "CMD_NONE" and equals effect
-					if (commands[j][k].Effect == effect)
-					{
+					if (command.Effect == effect)
 						found = true;
-						goto effectFound;
-					}
 				}
+				if (found)
+					break;
 			}
+			if (found)
+				break;
 
-			printf(".");
+			fputc('.', stdout);
 			fflush(stdout);
 		}
-effectFound:
-		printf(" %s\n", found ? "yes" : "no");
 
-		closeS3M(p_SF);
+		fputc('\n', stdout);
+		console.info("Command found? "_s, found ? "yes"_s : "no"_s);
 		return 0;
 	}
 	else
-	{
-		printf("no\n");
 		return 1;
-	}
 }
