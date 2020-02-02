@@ -529,6 +529,7 @@ public:
 	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
 
 	// Channel effects
+	void noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool handlePorta = false);
 	void noteCut(bool triggered) noexcept;
 	void noteOff() noexcept;
 	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;
@@ -596,7 +597,6 @@ private:
 	void ResetChannelPanning();
 	void SampleChange(Channel &channel, const uint32_t sample);
 	void ReloadSample(Channel &channel);
-	void NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, bool handlePorta = false);
 	void HandleNNA(Channel *channel, uint32_t sample, uint8_t note);
 	uint8_t FindFreeNNAChannel() const;
 	bool handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,

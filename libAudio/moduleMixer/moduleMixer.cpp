@@ -231,113 +231,114 @@ uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t
 	}
 }
 
-void ModuleFile::NoteChange(Channel *const channel, uint8_t note, uint8_t cmd, bool handlePorta)
+void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool handlePorta)
 {
 	uint32_t period;
-	ModuleSample *sample = channel->Sample;
+	ModuleSample *sample = Sample;
 
 	if (note < 1)
 		return;
 	if (note >= 0x80)
 	{
-		if (ModuleType == MODULE_IT)
+		if (module.typeIs<MODULE_IT>())
 		{
 			if (note == 0xFF)
-				channel->noteOff();
+				noteOff();
 			else
-				channel->Flags |= CHN_NOTEFADE;
+				Flags |= CHN_NOTEFADE;
 		}
 		else
-			channel->noteOff();
+			noteOff();
 
 		if (note == 0xFE)
-			channel->noteCut(true);
+			noteCut(true);
 		return;
 	}
 	//clipInt<uint8_t>(note, 1, 132);
-	channel->Note = note;
-	if (channel->Instrument != nullptr)
+	Note = note;
+	if (Instrument)
 	{
-		uint8_t nSample = channel->Instrument->Map(channel->Note - 1);
-		if (nSample == 0)
+		uint8_t nSample = Instrument->Map(Note - 1);
+		if (!nSample)
 			sample = nullptr;
 		else
-			sample = p_Samples[nSample - 1];
-		channel->EnvVolumePos = 0;
-		channel->EnvPanningPos = 0;
-		channel->EnvPitchPos = 0;
-		channel->AutoVibratoDepth = 0;
-		channel->AutoVibratoPos = 0;
-		channel->Sample = sample;
-		if (sample != nullptr)
-			ReloadSample(*channel);
+			sample = module.p_Samples[nSample - 1];
+		EnvVolumePos = 0;
+		EnvPanningPos = 0;
+		EnvPitchPos = 0;
+		AutoVibratoDepth = 0;
+		AutoVibratoPos = 0;
+		Sample = sample;
+		if (sample)
+			module.ReloadSample(*this);
 		else
-			channel->NewSampleData = nullptr;
+			NewSampleData = nullptr;
 	}
-	channel->NewSample = 0;
-	period = GetPeriodFromNote(note, channel->FineTune, channel->C4Speed);
+	NewSample = 0;
+	period = module.GetPeriodFromNote(note, FineTune, C4Speed);
 	if (!sample)
 		return;
-	if (period != 0)
+	if (period)
 	{
 		if (cmd != CMD_TONEPORTAMENTO && cmd != CMD_TONEPORTAVOL)
-			channel->Period = period;
-		channel->portamentoTarget = period;
-		if (channel->portamentoTarget == channel->Period || (channel->Length == 0 && ModuleType != MODULE_S3M))
+			Period = period;
+		portamentoTarget = period;
+		if (portamentoTarget == Period || (!Length && module.typeIs<MODULE_S3M>()))
 		{
-			channel->Sample = sample;
-			channel->NewSampleData = p_PCM[sample->id()];
-			channel->Length = sample->GetLength();
+			Sample = sample;
+			NewSampleData = module.p_PCM[sample->id()];
+			Length = sample->GetLength();
 			if (sample->GetLooped())
 			{
-				channel->Flags |= CHN_LOOP;
-				channel->LoopStart = (sample->GetLoopStart() < sample->GetLength() ? sample->GetLoopStart() : sample->GetLength());
-				channel->LoopEnd = sample->GetLoopEnd();
+				Flags |= CHN_LOOP;
+				LoopStart = (sample->GetLoopStart() < sample->GetLength() ? sample->GetLoopStart() : sample->GetLength());
+				LoopEnd = sample->GetLoopEnd();
 			}
 			else
 			{
-				channel->Flags &= ~CHN_LOOP;
-				channel->LoopStart = 0;
-				channel->LoopEnd = sample->GetLength();
+				Flags &= ~CHN_LOOP;
+				LoopStart = 0;
+				LoopEnd = sample->GetLength();
 			}
 			// This next bit only applies to sustain loops apparently..
 			/*if (sample->GetBidiLoop())
-				channel->Flags |= CHN_LPINGPONG;
+				Flags |= CHN_LPINGPONG;
 			else
-				channel->Flags &= ~CHN_LPINGPONG;*/
-			channel->Pos = 0;
-			channel->PosLo = 0;
-			if (channel->vibratoType < 4)
-				channel->vibratoPosition = 0;
+				Flags &= ~CHN_LPINGPONG;*/
+			Pos = 0;
+			PosLo = 0;
+			if (vibratoType < 4)
+				vibratoPosition = 0;
 			//if ((channel->TremoloType & 0x03) != 0)
-			if (channel->TremoloType < 4)
-				channel->TremoloPos = 0;
+			if (TremoloType < 4)
+				TremoloPos = 0;
 		}
-		if (channel->Pos > channel->Length)
-			channel->Pos = channel->Length;
+		if (Pos > Length)
+			Pos = Length;
 	}
-	if (!handlePorta || !period || ModuleType != MODULE_IT || (channel->Flags & CHN_NOTEFADE && !channel->FadeOutVol))
+	if (!handlePorta || !period || module.typeIs<MODULE_IT>() || ((Flags & CHN_NOTEFADE) && !FadeOutVol))
 	{
-		if (ModuleType == MODULE_IT && channel->Flags & CHN_NOTEFADE && !channel->FadeOutVol)
+		if (module.typeIs<MODULE_IT>() && Flags & CHN_NOTEFADE && !FadeOutVol)
 		{
-			channel->EnvVolumePos = 0;
-			channel->EnvPanningPos = 0;
-			channel->EnvPitchPos = 0;
-			channel->AutoVibratoDepth = 0;
-			channel->AutoVibratoPos = 0;
-			channel->Flags &= ~CHN_NOTEFADE;
-			channel->FadeOutVol = 0xFFFF;
+			EnvVolumePos = 0;
+			EnvPanningPos = 0;
+			EnvPitchPos = 0;
+			AutoVibratoDepth = 0;
+			AutoVibratoPos = 0;
+			Flags &= ~CHN_NOTEFADE;
+			FadeOutVol = 0xFFFF;
 		}
 		else
 		{
-			channel->Flags &= ~CHN_NOTEFADE;
-			channel->FadeOutVol = 0xFFFF;
+			Flags &= ~CHN_NOTEFADE;
+			FadeOutVol = 0xFFFF;
 		}
 	}
-	channel->Flags &= ~CHN_NOTEOFF;
-	if (channel->portamentoTarget == channel->Period)
-		channel->Flags |= CHN_FASTVOLRAMP;
-	channel->LeftVol = channel->RightVol = 0;
+	Flags &= ~CHN_NOTEOFF;
+	if (portamentoTarget == Period)
+		Flags |= CHN_FASTVOLRAMP;
+	LeftVol = 0;
+	RightVol = 0;
 }
 
 uint8_t ModuleFile::FindFreeNNAChannel() const
@@ -552,7 +553,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			break;
 		case CMD_MODEX_RETRIGER:
 			if (param != 0 && (TickCount % param) == 0)
-				NoteChange(channel, channel->NewNote, 0);
+				channel->noteChange(*this, channel->NewNote, 0);
 			break;
 		case CMD_MODEX_FINEVOLUP:
 			if (param != 0 && TickCount == channel->StartTick)
@@ -856,7 +857,7 @@ bool ModuleFile::ProcessEffects()
 					SampleChange(*channel, channel->NewSample); // XXX: I need to take the doPortamento value.
 					channel->NewSample = 0;
 				}
-				NoteChange(channel, note, cmd, doPortamento);
+				channel->noteChange(*this, note, cmd, doPortamento);
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
 			{
@@ -970,7 +971,7 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 			break;
 		case CMD_RETRIGER:
 			if (param != 0 && (TickCount % param) == 0)
-				NoteChange(&channel, channel.NewNote, 0);
+				channel.noteChange(*this, channel.NewNote, 0);
 			break;
 		case CMD_TEMPO:
 			MusicTempo = param;
