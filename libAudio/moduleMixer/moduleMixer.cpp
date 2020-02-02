@@ -63,7 +63,7 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	{
 		if (i >= 64)
 			break;
-		Channels[i].ChannelVolume = p_Header->Volumes[i];
+		Channels[i].channelVolume = p_Header->Volumes[i];
 	}
 
 	Rows = 2;
@@ -73,7 +73,7 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 
 Channel::Channel()
 {
-	ChannelVolume = 64;
+	channelVolume = 64;
 }
 
 void ModuleFile::DeinitMixer()
@@ -1017,7 +1017,7 @@ bool ModuleFile::ProcessEffects()
 			case CMD_CHANNELVOLUME:
 				if (TickCount == 0 && param < 65)
 				{
-					channel->ChannelVolume = param;
+					channel->channelVolume = param;
 					channel->Flags |= CHN_FASTVOLRAMP;
 				}
 				break;
@@ -1319,7 +1319,7 @@ bool ModuleFile::AdvanceTick()
 //				channel->Flags &= ~CHN_NOTEFADE;
 			}
 
-			vol = muldiv(vol * GlobalVolume, channel->ChannelVolume, 1 << 13);
+			vol = muldiv(vol * GlobalVolume, channel->channelVolume, 1 << 13);
 			clipInt<uint16_t>(vol, 0, 128);
 			channel->Volume = vol;
 			clipInt(channel->Period, MinPeriod, MaxPeriod);

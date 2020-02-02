@@ -398,7 +398,7 @@ void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
 	else
 		channelVolumeSlide = param;
 
-	uint8_t volume = ChannelVolume;
+	uint8_t volume = channelVolume;
 	const uint8_t slideLo = param & 0x0FU;
 	const uint8_t slideHi = param & 0xF0U;
 	if (slideHi == 0xF0U && slideLo)
@@ -419,9 +419,9 @@ void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
 			volume += slideHi >> 4U;
 	}
 
-	if (volume != ChannelVolume)
+	if (volume != channelVolume)
 	{
 		clipInt<uint8_t>(volume, 0, 64);
-		ChannelVolume = volume;
+		channelVolume = volume;
 	}
 }
