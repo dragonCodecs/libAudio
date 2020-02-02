@@ -3,21 +3,21 @@
 
 #include "../fixedPoint/fixedPoint.h"
 
-#define CHN_LOOP			0x0001
-#define CHN_TREMOLO			0x0002
-#define CHN_ARPEGGIO		0x0004
-#define CHN_VIBRATO			0x0008
-#define CHN_VOLUMERAMP		0x0010
-#define CHN_FASTVOLRAMP		0x0020
-#define CHN_PORTAMENTO		0x0040
-#define CHN_GLISSANDO		0x0080
-#define CHN_TREMOR			0x0100
-#define CHN_PANBRELLO		0x0200
-#define CHN_NOTEOFF			0x0400
-#define CHN_NOTEFADE		0x0800
-#define CHN_LPINGPONG		0x1000
-#define CHN_FPINGPONG		0x2000
-#define CHN_SURROUND		0x4000
+#define CHN_LOOP			0x0001U
+#define CHN_TREMOLO			0x0002U
+#define CHN_ARPEGGIO		0x0004U
+#define CHN_VIBRATO			0x0008U
+#define CHN_VOLUMERAMP		0x0010U
+#define CHN_FASTVOLRAMP		0x0020U
+#define CHN_PORTAMENTO		0x0040U
+#define CHN_GLISSANDO		0x0080U
+#define CHN_TREMOR			0x0100U
+#define CHN_PANBRELLO		0x0200U
+#define CHN_NOTEOFF			0x0400U
+#define CHN_NOTEFADE		0x0800U
+#define CHN_LPINGPONG		0x1000U
+#define CHN_FPINGPONG		0x2000U
+#define CHN_SURROUND		0x4000U
 
 template<typename T> inline void clipInt(T &num, const T min, const T max)
 {

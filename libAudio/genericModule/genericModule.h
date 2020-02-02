@@ -26,35 +26,35 @@ using stringPtr_t = std::unique_ptr<char []>;
 
 #define MIXBUFFERSIZE		512
 
-#define MODULE_MOD		1
-#define MODULE_S3M		2
-#define MODULE_STM		3
-#define MODULE_AON		4
-#define MODULE_FC1x		5
-#define MODULE_IT		6
+#define MODULE_MOD		1U
+#define MODULE_S3M		2U
+#define MODULE_STM		3U
+#define MODULE_AON		4U
+#define MODULE_FC1x		5U
+#define MODULE_IT		6U
 
-#define E_BAD_MOD		1
-#define E_BAD_S3M		2
-#define E_BAD_STM		3
-#define E_BAD_AON		4
-#define E_BAD_FC1x		5
-#define E_BAD_IT		6
+#define E_BAD_MOD		1U
+#define E_BAD_S3M		2U
+#define E_BAD_STM		3U
+#define E_BAD_AON		4U
+#define E_BAD_FC1x		5U
+#define E_BAD_IT		6U
 
-#define FILE_FLAGS_AMIGA_SLIDES		0x01
-#define FILE_FLAGS_AMIGA_LIMITS		0x02
-#define FILE_FLAGS_FAST_SLIDES		0x04
-#define FILE_FLAGS_LINEAR_SLIDES	0x08
-#define FILE_FLAGS_OLD_IT_EFFECTS	0x10
+#define FILE_FLAGS_AMIGA_SLIDES		0x01U
+#define FILE_FLAGS_AMIGA_LIMITS		0x02U
+#define FILE_FLAGS_FAST_SLIDES		0x04U
+#define FILE_FLAGS_LINEAR_SLIDES	0x08U
+#define FILE_FLAGS_OLD_IT_EFFECTS	0x10U
 
-#define SAMPLE_FLAGS_LOOP		0x01
-#define SAMPLE_FLAGS_STEREO		0x02
-#define SAMPLE_FLAGS_16BIT		0x04
-#define SAMPLE_FLAGS_LPINGPONG	0x08
-#define SAMPLE_FLAGS_LREVERSE	0x10
+#define SAMPLE_FLAGS_LOOP		0x01U
+#define SAMPLE_FLAGS_STEREO		0x02U
+#define SAMPLE_FLAGS_16BIT		0x04U
+#define SAMPLE_FLAGS_LPINGPONG	0x08U
+#define SAMPLE_FLAGS_LREVERSE	0x10U
 
-#define ENVELOPE_VOLUME		0
-#define ENVELOPE_PANNING	1
-#define ENVELOPE_PITCH		2
+#define ENVELOPE_VOLUME		0U
+#define ENVELOPE_PANNING	1U
+#define ENVELOPE_PITCH		2U
 
 class ModuleLoaderError
 {
@@ -643,8 +643,8 @@ public:
 	uint32_t minimumPeriod() const noexcept { return MinPeriod; }
 	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
 
-	template<uint8_t type> bool typeIs() const noexcept { return ModuleType == type; }
-	template<uint8_t type, uint8_t... types> typename std::enable_if<sizeof...(types), bool>::type
+	template<uint32_t type> bool typeIs() const noexcept { return ModuleType == type; }
+	template<uint32_t type, uint32_t... types> typename std::enable_if<sizeof...(types), bool>::type
 		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 
 	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
