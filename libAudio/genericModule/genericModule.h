@@ -535,6 +535,7 @@ public:
 	void tonePortamento(const ModuleFile &module, uint8_t param);
 	void vibrato(uint8_t param, uint8_t multiplier);
 	void panbrello(uint8_t param);
+	void volumeSlide(const ModuleFile &module, uint8_t param);
 	void ChannelEffect(uint8_t param);
 
 	int16_t applyVibrato(const ModuleFile &module, const uint32_t period) noexcept;
@@ -576,7 +577,6 @@ private:
 	// Effects functions
 	void VolumeSlide(Channel *channel, uint8_t param);
 	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t));
-	void ChannelVolumeSlide(Channel *channel, uint8_t param);
 	void GlobalVolumeSlide(uint8_t param);
 	void PanningSlide(Channel *channel, uint8_t param);
 	int PatternLoop(uint32_t param);

@@ -762,38 +762,39 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 
 // TODO: Write these next two functions as one template as both
 // do the exact same thing, just on different variables.
-inline void ModuleFile::ChannelVolumeSlide(Channel *channel, uint8_t param)
+inline void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
 {
-	const bool FirstTick = (TickCount == 0);
-	uint16_t SlideDest = channel->ChannelVolume;
+	uint8_t SlideDest = ChannelVolume;
 
 	if (param == 0)
-		param = channel->ChannelVolumeSlide;
+		param = ChannelVolumeSlide;
 	else
-		channel->ChannelVolumeSlide = param;
+		ChannelVolumeSlide = param;
 
-	if ((param & 0xF0) == 0xF0 && (param & 0x0F) != 0)
+	const uint8_t slideLo = param & 0x0FU;
+	const uint8_t slideHi = param & 0xF0U;
+	if (slideHi == 0xF0U && slideLo)
 	{
-		if (FirstTick)
-			SlideDest -= param & 0x0F;
+		if (!module.ticks())
+			SlideDest -= slideLo;
 	}
-	else if ((param & 0x0F) == 0x0F && (param & 0xF0) != 0)
+	else if (slideLo == 0x0FU && slideHi)
 	{
-		if (FirstTick)
-			SlideDest += (param & 0xF0) >> 4;
+		if (!module.ticks())
+			SlideDest += slideHi >> 4U;
 	}
-	else if (!FirstTick)
+	else if (module.ticks())
 	{
-		if ((param & 0x0F) != 0)
-			SlideDest -= param & 0x0F;
+		if (slideLo)
+			SlideDest -= slideLo;
 		else
-			SlideDest += (param & 0xF0) >> 4;
+			SlideDest += slideHi >> 4U;
 	}
 
-	if (SlideDest != channel->ChannelVolume)
+	if (SlideDest != ChannelVolume)
 	{
-		clipInt<uint16_t>(SlideDest, 0, 64);
-		channel->ChannelVolume = SlideDest;
+		clipInt<uint8_t>(SlideDest, 0, 64);
+		ChannelVolume = SlideDest;
 	}
 }
 
@@ -1026,7 +1027,7 @@ bool ModuleFile::ProcessEffects()
 					VolumeSlide(channel, param);
 				break;
 			case CMD_CHANNELVOLSLIDE:
-				ChannelVolumeSlide(channel, param);
+				channel->volumeSlide(*this, param);
 				break;
 			case CMD_GLOBALVOLSLIDE:
 				GlobalVolumeSlide(param);

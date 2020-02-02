@@ -27,9 +27,17 @@ template<typename T> inline void clipInt(T &num, const T min, const T max)
 		num = max;
 }
 
+template<> inline void clipInt<uint8_t>(uint8_t &num, const uint8_t min, const uint8_t max)
+{
+	if ((num & 0x80U) != 0 || (min != 0 && num < min))
+		num = min;
+	else if (num > max)
+		num = max;
+}
+
 template<> inline void clipInt<uint16_t>(uint16_t &num, const uint16_t min, const uint16_t max)
 {
-	if ((num & 0x8000) != 0 || (min != 0 && num < min))
+	if ((num & 0x8000U) != 0 || (min != 0 && num < min))
 		num = min;
 	else if (num > max)
 		num = max;
@@ -37,7 +45,7 @@ template<> inline void clipInt<uint16_t>(uint16_t &num, const uint16_t min, cons
 
 template<> inline void clipInt<uint32_t>(uint32_t &num, const uint32_t min, const uint32_t max)
 {
-	if ((num & 0x80000000) != 0 || (min != 0 && num < min))
+	if ((num & 0x80000000U) != 0 || (min != 0 && num < min))
 		num = min;
 	else if (num > max)
 		num = max;
