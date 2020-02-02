@@ -837,7 +837,7 @@ bool ModuleFile::ProcessEffects()
 	{
 		Channel *channel = &Channels[i];
 		uint8_t sample = channel->RowSample;
-		uint8_t cmd = channel->RowEffect;
+		const uint8_t cmd = channel->RowEffect;
 		uint8_t param = channel->RowParam;
 		bool doPortamento = cmd == CMD_TONEPORTAMENTO || cmd == CMD_TONEPORTAVOL ||
 			channel->RowVolEffect == VOLCMD_PORTAMENTO;
@@ -845,10 +845,18 @@ bool ModuleFile::ProcessEffects()
 		channel->Flags &= ~CHN_FASTVOLRAMP;
 		if (cmd == CMD_MOD_EXTENDED || cmd == CMD_S3M_EXTENDED)
 		{
+			static_assert(CMD_MODEX_DELAYSAMP == CMD_S3MEX_DELAYSAMP, "Note/sample delay constants incorrectly defined");
+			static_assert(CMD_MODEX_DELAYPAT == CMD_S3MEX_DELAYPAT, "Pattern delay constants incorrectly defined");
+			if (!param && typeIs<MODULE_S3M, MODULE_IT>())
+				param = channel->extendedCommand;
+			else
+				channel->extendedCommand = param;
 			uint8_t excmd = (param & 0xF0) >> 4;
-			if (!channel->StartTick && !TickCount)
+			if (!TickCount) // Only process extended commands on the first tick of a row.
 			{
-				if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
+				if (excmd == CMD_MODEX_DELAYSAMP)
+					channel->StartTick = param & 0x0F;
+				else if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
 					(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_LOOP))
 				{
 					const auto loop = channel->patternLoop(param & 0x0F, Row);
