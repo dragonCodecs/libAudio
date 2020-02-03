@@ -422,12 +422,12 @@ void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
 	}
 }
 
-void Channel::applyPanningSlide(const ModuleFile &module, uint8_t param)
+void Channel::panningSlide(const ModuleFile &module, uint8_t param)
 {
 	if (!param)
-		param = panningSlide;
+		param = _panningSlide;
 	else
-		panningSlide = param;
+		_panningSlide = param;
 
 	uint16_t slide = RawPanning;
 	const uint8_t slideLo = param & 0x0FU;

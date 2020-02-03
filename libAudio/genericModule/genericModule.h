@@ -497,7 +497,7 @@ public:
 	uint8_t AutoVibratoPos;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
-	uint8_t FineTune, panningSlide;
+	uint8_t FineTune, _panningSlide;
 	uint16_t RawPanning, Panning; // TODO: Panning should be uint8_t?
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
@@ -543,7 +543,7 @@ public:
 	void vibrato(uint8_t param, uint8_t multiplier);
 	void panbrello(uint8_t param);
 	void volumeSlide(const ModuleFile &module, uint8_t param);
-	void applyPanningSlide(const ModuleFile &module, uint8_t param);
+	void panningSlide(const ModuleFile &module, uint8_t param);
 	void ChannelEffect(uint8_t param);
 
 	int16_t applyVibrato(const ModuleFile &module, const uint32_t period) noexcept;

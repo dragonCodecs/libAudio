@@ -1018,7 +1018,7 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 			channel.Flags |= CHN_FASTVOLRAMP;
 			break;
 		case CMD_PANNINGSLIDE:
-			channel.applyPanningSlide(*this, param);
+			channel.panningSlide(*this, param);
 			break;
 		case CMD_FINEVIBRATO:
 			channel.vibrato(param, 1);
