@@ -205,8 +205,8 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 	else
 	{
 		const uint8_t fineTune = (FineTune >> 4) & 0x0F;
-		if (fineTune || Note < 36 || Note >= 108)
-			return (MODTunedPeriods[(fineTune * 12) + (Note % 12)] << 5) >> (Note / 12);
+		if (FineTune || Note < 36 || Note >= 108)
+			return (MODTunedPeriods[(FineTune * 12) + (Note % 12)] << 5) >> (Note / 12);
 		else
 			return MODPeriods[Note - 36] << 2;
 	}
