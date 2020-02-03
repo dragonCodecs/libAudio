@@ -36,10 +36,10 @@
 	#endif
 #endif
 
-#define libAudioVersion "0.5.1"
+#define libAudioVersion "0.5.2"
 #define libAudioVersion_Major 0
 #define libAudioVersion_Minor 5
-#define libAudioVersion_Rev 1
+#define libAudioVersion_Rev 2
 
 // Ogg|Vorbis API
 libAUDIO_API bool isOggVorbis(const char *fileName);
