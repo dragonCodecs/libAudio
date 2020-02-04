@@ -619,11 +619,6 @@ private:
 	void DeinitMixer();
 	friend class Channel;
 
-	bool checkTypeAndFlags(const uint8_t type, const uint16_t flags) const noexcept
-		{ return ModuleType == type && p_Header->Flags & flags; }
-	bool checkTypeAndNotFlags(const uint8_t type, const uint16_t flags) const noexcept
-		{ return ModuleType == type && !(p_Header->Flags & flags); }
-
 public:
 	ModuleFile(const modMOD_t &file);
 	ModuleFile(const modS3M_t &file);
