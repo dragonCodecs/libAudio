@@ -146,7 +146,7 @@ void Channel::noteOff() noexcept
 	if (!Length)
 		return;
 	// This false gets replaced with a check for sustain loops.
-	if (false && Sample != nullptr && noteOn)
+	if (false && Sample && noteOn)
 	{
 		if (LoopEnd != 0)
 		{
@@ -169,7 +169,7 @@ void Channel::noteOff() noexcept
 			Length = Sample->GetLength();
 		}
 	}
-	if (Instrument != nullptr)
+	if (Instrument)
 	{
 		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
 			Flags |= CHN_NOTEFADE;
