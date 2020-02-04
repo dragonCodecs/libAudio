@@ -649,7 +649,7 @@ public:
 	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
 
 	template<uint32_t type> bool typeIs() const noexcept { return ModuleType == type; }
-	template<uint32_t type, uint32_t... types> typename std::enable_if<sizeof...(types), bool>::type
+	template<uint32_t type, uint32_t... types> typename std::enable_if<sizeof...(types) != 0, bool>::type
 		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 
 	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
