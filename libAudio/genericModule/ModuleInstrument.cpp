@@ -93,8 +93,7 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
-	if (!fd.read(magic) ||
-		strncmp(magic.data(), "IMPI", 4) != 0)
+	if (!fd.read(magic) || memcmp(magic.data(), "IMPI", 4))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	FileName = makeUnique<char []>(13);
@@ -121,12 +120,12 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 		!fd.read(SampleMapping, 240))
 		throw ModuleLoaderError(E_BAD_IT);
 
-	if (FileName[11] != 0)
+	if (FileName[11])
 		FileName[12] = 0;
-	if (Name[25] != 0)
+	if (Name[25])
 		Name[26] = 0;
 
-	if (Const != 0 || NNA > 3 || DCT > 3 || DNA > 2)
+	if (Const || NNA > 3 || DCT > 3 || DNA > 2)
 		throw ModuleLoaderError(E_BAD_IT);
 
 	FadeOut <<= 6;
