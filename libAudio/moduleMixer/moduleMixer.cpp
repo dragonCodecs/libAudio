@@ -156,25 +156,27 @@ void ModuleFile::ReloadSample(Channel &channel)
 
 void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
 {
-	uint32_t sample = nSample - 1;
+	uint32_t sample = nSample;
 	if (p_Instruments)
 	{
-		ModuleInstrument *instr = p_Instruments[sample];
-		sample = instr->Map(channel.Note - 1);
+		ModuleInstrument *instr = p_Instruments[sample - 1];
+		uint8_t note{}, sample{};
+		std::tie(note, sample) = instr->mapNote(channel.Note);
 		channel.EnvVolumePos = 0;
 		channel.EnvPanningPos = 0;
 		channel.EnvPitchPos = 0;
-		if (sample == 0)
-		{
-			channel.Sample = nullptr;
-			channel.NewSampleData = nullptr;
-			channel.Length = 0;
-			return;
-		}
 		channel.Instrument = instr;
-		--sample;
 	}
-	channel.Sample = p_Samples[sample];
+	else
+		channel.Instrument = nullptr;
+	if (!sample || sample > totalSamples())
+	{
+		channel.Sample = nullptr;
+		channel.NewSampleData = nullptr;
+		channel.Length = 0;
+		return;
+	}
+	channel.Sample = p_Samples[sample - 1];
 	ReloadSample(channel);
 	if (p_Instruments)
 	{
@@ -236,45 +238,35 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool han
 	uint32_t period;
 	ModuleSample *sample = Sample;
 
-	if (note < 1)
+	if (!note)
 		return;
-	if (note >= 0x80)
+	else if (Instrument)
 	{
-		if (module.typeIs<MODULE_IT>())
-		{
-			if (note == 0xFF)
-				noteOff();
-			else
-				Flags |= CHN_NOTEFADE;
-		}
-		else
-			noteOff();
-
-		if (note == 0xFE)
-			noteCut(true);
-		return;
-	}
-	//clipInt<uint8_t>(note, 1, 132);
-	Note = note;
-	if (Instrument)
-	{
-		uint8_t nSample = Instrument->Map(Note - 1);
-		if (!nSample)
-			sample = nullptr;
-		else
-			sample = module.p_Samples[nSample - 1];
-		EnvVolumePos = 0;
-		EnvPanningPos = 0;
-		EnvPitchPos = 0;
-		AutoVibratoDepth = 0;
-		AutoVibratoPos = 0;
+		uint8_t sampleIndex{};
+		std::tie(note, sampleIndex) = Instrument->mapNote(note);
+		if (sampleIndex && sampleIndex <= module.totalSamples())
+			sample = module.sample(sampleIndex);
 		Sample = sample;
 		if (sample)
 			module.ReloadSample(*this);
 		else
 			NewSampleData = nullptr;
 	}
-	NewSample = 0;
+	if (note >= 0x80U)
+	{
+		if (note == 0xFF || !module.typeIs<MODULE_IT>())
+			noteOff();
+		else
+			Flags |= CHN_NOTEFADE;
+
+		if (note == 0xFE)
+			noteCut(true);
+		return;
+	}
+	clipInt<uint8_t>(note, 1, 132);
+	Note = note;
+	if (!handlePorta || module.typeIs<MODULE_S3M, MODULE_IT>())
+		NewSample = 0;
 	period = module.GetPeriodFromNote(note, FineTune, C4Speed);
 	if (!sample)
 		return;
@@ -368,7 +360,7 @@ uint8_t ModuleFile::FindFreeNNAChannel() const
 	return res;
 }
 
-void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
+void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 {
 	uint8_t i;
 	ModuleSample *sample = channel->Sample;
@@ -398,14 +390,15 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t nSample, uint8_t note)
 		channel->RightVol = 0;
 		return;
 	}
-	if (nSample != 0)
+	if (instrument)
 	{
-		instr = p_Instruments[nSample - 1];
-		if (instr != nullptr)
+		instr = p_Instruments[instrument - 1];
+		if (instr)
 		{
-			nSample = instr->Map(note - 1);
-			if (nSample != 0)
-				sample = p_Samples[nSample - 1];
+			uint8_t sampleIndex{};
+			std::tie(note, sampleIndex) = instr->mapNote(note);
+			if (sampleIndex && sampleIndex <= totalSamples())
+				sample = this->sample(sampleIndex);
 		}
 		else
 			sample = nullptr;

@@ -640,6 +640,8 @@ public:
 	uint32_t tempo() const noexcept { return MusicTempo; }
 	uint32_t minimumPeriod() const noexcept { return MinPeriod; }
 	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
+	uint16_t totalSamples() const noexcept { return p_Header->nSamples; }
+	ModuleSample *sample(uint16_t index) const noexcept { return p_Samples[index - 1]; }
 
 	template<uint32_t type> bool typeIs() const noexcept { return ModuleType == type; }
 	template<uint32_t type, uint32_t... types> typename std::enable_if<sizeof...(types) != 0, bool>::type
