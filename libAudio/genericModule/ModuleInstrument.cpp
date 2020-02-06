@@ -8,6 +8,22 @@ ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, const ui
 		return new ModuleNewInstrument(file, i);
 }
 
+std::pair<uint8_t, uint8_t> ModuleInstrument::mapNote(const uint8_t note) noexcept
+{
+	if (note >= 254) // 0xFE and 0xFF have special meaning.
+		return {note, 0};
+	else if (!note || note > 120)
+		return {250, 0}; // If we get an out of range value, return an invalid note.
+	const uint8_t entry = (note - 1) << 1;
+	uint8_t mappedNote = SampleMapping[entry];
+	const uint8_t mappedSample = SampleMapping[entry + 1];
+	if (mappedNote >= 128 && mappedNote < 254)
+		mappedNote = 250;
+	else if (mappedNote < 128)
+		++mappedNote;
+	return {mappedNote, mappedSample};
+}
+
 ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
 {
 	uint8_t LoopBegin, LoopEnd;
@@ -53,11 +69,6 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 		throw ModuleLoaderError(E_BAD_IT);
 
 	Envelope = makeUnique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
-}
-
-uint8_t ModuleOldInstrument::Map(uint8_t /*Note*/) noexcept
-{
-	return 0;
 }
 
 uint16_t ModuleOldInstrument::GetFadeOut() const noexcept { return FadeOut; }
@@ -121,17 +132,6 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	FadeOut <<= 6;
 	for (uint8_t env = 0; env < Envelopes.size(); ++env)
 		Envelopes[env] = makeUnique<ModuleEnvelope>(file, env);
-}
-
-uint8_t ModuleNewInstrument::Map(uint8_t Note) noexcept
-{
-	uint8_t sample = 0;
-	for (uint16_t i = 0; i < 120; i++)
-	{
-		if (SampleMapping[i << 1] <= Note)
-			sample = SampleMapping[(i << 1) + 1];
-	}
-	return sample;
 }
 
 uint16_t ModuleNewInstrument::GetFadeOut() const noexcept { return FadeOut; }

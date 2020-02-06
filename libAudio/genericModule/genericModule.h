@@ -325,13 +325,15 @@ private:
 	const uint32_t _id;
 
 protected:
+	uint8_t SampleMapping[240];
+
 	ModuleInstrument(const uint32_t id) noexcept : _id(id) { }
 
 public:
 	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
 
+	std::pair<uint8_t, uint8_t> mapNote(const uint8_t note) noexcept;
 	virtual ~ModuleInstrument() noexcept = default;
-	virtual uint8_t Map(uint8_t Note) noexcept = 0;
 	virtual uint16_t GetFadeOut() const noexcept = 0;
 	virtual bool GetEnvEnabled(uint8_t env) const = 0;
 	virtual bool GetEnvLooped(uint8_t env) const = 0;
@@ -356,14 +358,12 @@ private:
 	uint16_t TrackerVersion;
 	uint8_t nSamples;
 	std::unique_ptr<char []> Name;
-	uint8_t SampleMapping[240];
 	std::unique_ptr<ModuleEnvelope> Envelope;
 
 public:
 	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleOldInstrument() = default;
 
-	uint8_t Map(uint8_t Note) noexcept override final;
 	uint16_t GetFadeOut() const noexcept override final;
 	bool GetEnvEnabled(uint8_t env) const noexcept override final;
 	bool GetEnvLooped(uint8_t env) const noexcept override final;
@@ -394,14 +394,12 @@ private:
 	uint16_t TrackerVersion;
 	uint8_t nSamples;
 	std::unique_ptr<char []> Name;
-	uint8_t SampleMapping[240];
 	std::array<std::unique_ptr<ModuleEnvelope>, 3> Envelopes;
 
 public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleNewInstrument() = default;
 
-	uint8_t Map(uint8_t Note) noexcept override final;
 	uint16_t GetFadeOut() const noexcept override final;
 	bool GetEnvEnabled(uint8_t env) const override final;
 	bool GetEnvLooped(uint8_t env) const override final;
