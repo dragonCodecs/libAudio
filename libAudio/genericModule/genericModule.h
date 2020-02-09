@@ -538,7 +538,7 @@ public:
 
 	// Channel effects
 	void noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool handlePorta = false);
-	void noteCut(bool triggered) noexcept;
+	void noteCut(ModuleFile &module, bool triggered) noexcept;
 	void noteOff() noexcept;
 	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;
 	void portamentoUp(const ModuleFile &module, uint8_t param) noexcept;
@@ -651,6 +651,7 @@ public:
 	uint32_t minimumPeriod() const noexcept { return MinPeriod; }
 	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
 	uint16_t totalSamples() const noexcept { return p_Header->nSamples; }
+	uint16_t totalInstruments() const noexcept { return p_Header->nInstruments; }
 	ModuleSample *sample(uint16_t index) const noexcept { return p_Samples[index - 1]; }
 
 	template<uint32_t type> bool typeIs() const noexcept { return ModuleType == type; }

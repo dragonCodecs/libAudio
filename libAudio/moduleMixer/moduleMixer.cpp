@@ -260,7 +260,7 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool han
 			Flags |= CHN_NOTEFADE;
 
 		if (note == 0xFE)
-			noteCut(true);
+			noteCut(module, true);
 		return;
 	}
 	clipInt<uint8_t>(note, 1, 132);
@@ -664,7 +664,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			}
 			break;
 		case CMD_S3MEX_NOTECUT:
-			channel->noteCut(TickCount == param);
+			channel->noteCut(*this, TickCount == param);
 			break;
 		case CMD_S3MEX_DELAYPAT:
 			PatternDelay = param;

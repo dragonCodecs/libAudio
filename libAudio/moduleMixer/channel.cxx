@@ -127,12 +127,12 @@ void Channel::applyPanbrello() noexcept
 	}
 }
 
-void Channel::noteCut(bool triggered) noexcept
+void Channel::noteCut(ModuleFile &module, bool triggered) noexcept
 {
 	if (triggered)
 	{
-		// if (!module.typeIs<MODULE_IT>())
-		RawVolume = 0;
+		if (!module.typeIs<MODULE_IT>() || module.totalInstruments())
+			RawVolume = 0;
 		FadeOutVol = 0;
 		Flags |= CHN_FASTVOLRAMP| CHN_NOTEFADE;
 	}
