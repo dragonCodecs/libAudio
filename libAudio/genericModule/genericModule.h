@@ -609,7 +609,7 @@ private:
 	uint8_t FindFreeNNAChannel() const;
 	bool handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
 		const int16_t positionJump) noexcept;
-	uint32_t GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed);
+	uint32_t GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed);
 	uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t PeriodFrac);
 
 	// Mixing functions

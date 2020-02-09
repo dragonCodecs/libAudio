@@ -188,9 +188,9 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
 	}
 }
 
-uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t C4Speed)
+uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed)
 {
-	if (!Note || Note > 0xF0)
+	if (!Note || Note > 0xF0U)
 		return 0;
 	Note--;
 	if (typeIs<MODULE_IT, MODULE_S3M, MODULE_STM>())
@@ -206,7 +206,6 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t FineTune, uint32_t 
 	}
 	else
 	{
-		const uint8_t fineTune = (FineTune >> 4) & 0x0F;
 		if (fineTune || Note < 36 || Note >= 108)
 			return (MODTunedPeriods[(fineTune * 12) + (Note % 12)] << 5) >> (Note / 12);
 		else
