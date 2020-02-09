@@ -470,17 +470,17 @@ public:
 	uint16_t rows() const noexcept { return _rows; }
 };
 
-typedef struct _int16dot16_t
+struct int16dot16_t
 {
 	uint16_t Lo;
 	int16_t Hi;
-} int16dot16_t;
+};
 
-typedef union _int16dot16
+union int16dot16
 {
 	int32_t iValue;
 	int16dot16_t Value;
-} int16dot16;
+};
 
 class Channel : public ModuleAllocator
 {
@@ -653,12 +653,12 @@ public:
 
 inline uint32_t swapBytes(const uint32_t val) noexcept
 {
-	return ((val >> 24) & 0xFF) | ((val >> 8) & 0xFF00) |
-		((val & 0xFF00) << 8) | ((val & 0xFF) << 24);
+	return ((val >> 24U) & 0xFFU) | ((val >> 8U) & 0xFF00U) |
+		((val & 0xFF00U) << 8U) | ((val & 0xFFU) << 24U);
 }
 
 inline uint16_t swapBytes(const uint16_t val) noexcept
-	{ return ((val >> 8) & 0xFF) | ((val & 0xFF) << 8); }
+	{ return ((val >> 8U) & 0xFFU) | ((val & 0xFFU) << 8U); }
 
 inline uint32_t Swap32(uint32_t i) noexcept { return swapBytes(i); }
 inline uint16_t Swap16(uint16_t i) noexcept { return swapBytes(i); }
