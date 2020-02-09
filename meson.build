@@ -4,7 +4,10 @@ project(
 	default_options: [
 		'cpp_std=c++11',
 		'warning_level=3',
-		'buildtype=release'
+		'buildtype=release',
+		'strip=true',
+		'b_ndebug=if-release',
+		'b_lto=true'
 	],
 	version: '0.5.2',
 	meson_version: '>= 0.52'
