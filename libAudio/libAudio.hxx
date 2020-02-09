@@ -14,7 +14,7 @@
 #define strncasecmp strnicmp
 #endif
 
-#include <stdint.h>
+#include <cstdint>
 #include "fd.hxx"
 #include "fileInfo.hxx"
 #include "playback.hxx"

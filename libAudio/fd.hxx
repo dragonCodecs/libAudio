@@ -45,7 +45,7 @@ public:
 	constexpr fd_t(const int32_t fd_) noexcept : fd{fd_}, eof{false} { }
 	fd_t(const char *const file, const int flags, const mode_t mode = 0) noexcept :
 		fd{::open(file, flags, mode)}, eof{false} { }
-	fd_t(fd_t &&fd_) : fd_t{} { swap(fd_); }
+	fd_t(fd_t &&fd_) noexcept : fd_t{} { swap(fd_); }
 	~fd_t() noexcept { if (fd != -1) close(fd); }
 	void operator =(fd_t &&fd_) noexcept { swap(fd_); }
 	operator int32_t() const noexcept WARN_UNUSED { return fd; }
@@ -124,7 +124,7 @@ public:
 	{
 		std::array<uint8_t, 2> data{};
 		const bool result = read(data);
-		value = (uint16_t(data[1]) << 8) | data[0];
+		value = (uint16_t(data[1]) << 8U) | data[0];
 		return result;
 	}
 
@@ -132,8 +132,8 @@ public:
 	{
 		std::array<uint8_t, 4> data{};
 		const bool result = read(data);
-		value = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) |
-			(uint32_t(data[1]) << 8) | data[0];
+		value = (uint32_t(data[3]) << 24U) | (uint32_t(data[2]) << 16U) |
+			(uint32_t(data[1]) << 8U) | data[0];
 		return result;
 	}
 
@@ -141,7 +141,7 @@ public:
 	{
 		std::array<uint8_t, 2> data{};
 		const bool result = read(data);
-		value = (uint16_t(data[0]) << 8) | data[1];
+		value = (uint16_t(data[0]) << 8U) | data[1];
 		return result;
 	}
 
@@ -149,8 +149,8 @@ public:
 	{
 		std::array<uint8_t, 4> data{};
 		const bool result = read(data);
-		value = (uint32_t(data[0]) << 24) | (uint32_t(data[1]) << 16) |
-			(uint32_t(data[2]) << 8) | data[3];
+		value = (uint32_t(data[0]) << 24U) | (uint32_t(data[1]) << 16U) |
+			(uint32_t(data[2]) << 8U) | data[3];
 		return result;
 	}
 
@@ -167,6 +167,6 @@ public:
 };
 
 inline void swap(fd_t &a, fd_t &b) noexcept { a.swap(b); }
-constexpr mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
+constexpr mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH; // NOLINT(hicpp-signed-bitwise)
 
 #endif /*FD__HXX*/
