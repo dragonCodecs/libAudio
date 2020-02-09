@@ -46,11 +46,12 @@ using stringPtr_t = std::unique_ptr<char []>;
 #define FILE_FLAGS_LINEAR_SLIDES	0x08U
 #define FILE_FLAGS_OLD_IT_EFFECTS	0x10U
 
-#define SAMPLE_FLAGS_LOOP		0x01U
-#define SAMPLE_FLAGS_STEREO		0x02U
-#define SAMPLE_FLAGS_16BIT		0x04U
-#define SAMPLE_FLAGS_LPINGPONG	0x08U
-#define SAMPLE_FLAGS_LREVERSE	0x10U
+#define SAMPLE_FLAGS_LOOP			0x01U
+#define SAMPLE_FLAGS_STEREO			0x02U
+#define SAMPLE_FLAGS_16BIT			0x04U
+#define SAMPLE_FLAGS_LPINGPONG		0x08U
+#define SAMPLE_FLAGS_LREVERSE		0x10U
+#define SAMPLE_FLAGS_SUSTAINLOOP	0x20U
 
 #define ENVELOPE_VOLUME		0U
 #define ENVELOPE_PANNING	1U
@@ -177,6 +178,8 @@ public:
 	virtual uint32_t GetLength() = 0;
 	virtual uint32_t GetLoopStart() = 0;
 	virtual uint32_t GetLoopEnd() = 0;
+	virtual uint32_t GetSustainLoopBegin() = 0;
+	virtual uint32_t GetSustainLoopEnd() = 0;
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
@@ -187,6 +190,7 @@ public:
 	virtual bool Get16Bit() = 0;
 	virtual bool GetStereo() = 0;
 	virtual bool GetLooped() = 0;
+	virtual bool GetSustainLooped() = 0;
 	virtual bool GetBidiLoop() = 0;
 };
 
@@ -227,6 +231,8 @@ public:
 	uint32_t GetLength() override final { return Length; }
 	uint32_t GetLoopStart() override final { return LoopStart; }
 	uint32_t GetLoopEnd() override final { return LoopEnd; }
+	uint32_t GetSustainLoopBegin() override final { return SusLoopBegin; }
+	uint32_t GetSustainLoopEnd() override final { return SusLoopEnd; }
 	uint8_t GetFineTune() override final { return FineTune; }
 	uint32_t GetC4Speed() override final { return C4Speed; }
 	uint8_t GetVolume() override final { return Volume << 1; }
@@ -237,6 +243,7 @@ public:
 	bool Get16Bit() override final;
 	bool GetStereo() override final;
 	bool GetLooped() override final;
+	bool GetSustainLooped() override final;
 	bool GetBidiLoop() override final;
 };
 
@@ -268,6 +275,8 @@ public:
 	uint32_t GetLength();
 	uint32_t GetLoopStart();
 	uint32_t GetLoopEnd();
+	uint32_t GetSustainLoopBegin();
+	uint32_t GetSustainLoopEnd();
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
@@ -278,6 +287,7 @@ public:
 	bool Get16Bit();
 	bool GetStereo();
 	bool GetLooped();
+	bool GetSustainLooped();
 	bool GetBidiLoop();
 };
 

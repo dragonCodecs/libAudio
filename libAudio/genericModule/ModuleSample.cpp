@@ -352,27 +352,33 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 	VibratoRate <<= 1;
 
 	// If looping not enabled, zero the Loop fields
-	if ((Flags & 0x10) == 0)
+	if (!(Flags & 0x10))
 		LoopStart = LoopEnd = 0;
 
 	SampleFlags = 0;
 	SampleFlags |= (Flags & 0x10) ? SAMPLE_FLAGS_LOOP : 0;
+	SampleFlags |= (Flags & 0x20) ? SAMPLE_FLAGS_SUSTAINLOOP : 0;
 	SampleFlags |= (Flags & 0x04) ? SAMPLE_FLAGS_STEREO : 0;
 	SampleFlags |= (Flags & 0x02) ? SAMPLE_FLAGS_16BIT : 0;
 	SampleFlags |= (Flags & 0x40) ? SAMPLE_FLAGS_LPINGPONG : 0;
+
+	FineTune = 0;
 }
 
 bool ModuleSampleNative::Get16Bit()
-	{ return (SampleFlags & SAMPLE_FLAGS_16BIT) != 0; }
+	{ return SampleFlags & SAMPLE_FLAGS_16BIT; }
 
 bool ModuleSampleNative::GetStereo()
-	{ return (SampleFlags & SAMPLE_FLAGS_STEREO) != 0; }
+	{ return SampleFlags & SAMPLE_FLAGS_STEREO; }
 
 bool ModuleSampleNative::GetLooped()
-	{ return (SampleFlags & SAMPLE_FLAGS_LOOP) != 0; }
+	{ return SampleFlags & SAMPLE_FLAGS_LOOP; }
+
+bool ModuleSampleNative::GetSustainLooped()
+	{ return SampleFlags & SAMPLE_FLAGS_SUSTAINLOOP; }
 
 bool ModuleSampleNative::GetBidiLoop()
-	{ return (SampleFlags & SAMPLE_FLAGS_LPINGPONG) != 0; }
+	{ return SampleFlags & SAMPLE_FLAGS_LPINGPONG; }
 
 ModuleSampleAdlib::ModuleSampleAdlib(const modS3M_t &file, const uint32_t i, const uint8_t type) : ModuleSample(i, type)
 {
@@ -436,6 +442,16 @@ uint32_t ModuleSampleAdlib::GetLoopEnd()
 	return 0;
 }
 
+uint32_t ModuleSampleAdlib::GetSustainLoopBegin()
+{
+	return 0;
+}
+
+uint32_t ModuleSampleAdlib::GetSustainLoopEnd()
+{
+	return 0;
+}
+
 uint8_t ModuleSampleAdlib::GetFineTune()
 {
 	return 0;
@@ -482,6 +498,11 @@ bool ModuleSampleAdlib::GetStereo()
 }
 
 bool ModuleSampleAdlib::GetLooped()
+{
+	return false;
+}
+
+bool ModuleSampleAdlib::GetSustainLooped()
 {
 	return false;
 }
