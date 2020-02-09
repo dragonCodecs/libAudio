@@ -135,7 +135,7 @@ void ModuleFile::ReloadSample(Channel &channel)
 	channel.Length = sample.GetLength();
 	channel.LoopStart = (sample.GetLoopStart() < channel.Length ? sample.GetLoopStart() : channel.Length);
 	channel.LoopEnd = sample.GetLoopEnd();
-	if (sample.GetLooped())
+	if (sample.GetLooped() || sample.GetSustainLooped())
 		channel.Flags |= CHN_LOOP;
 	else
 		channel.Flags &= ~CHN_LOOP;
@@ -246,11 +246,12 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool han
 		std::tie(note, sampleIndex) = Instrument->mapNote(note);
 		if (sampleIndex && sampleIndex <= module.totalSamples())
 			sample = module.sample(sampleIndex);
-		Sample = sample;
 		if (sample)
-			module.ReloadSample(*this);
-		else
-			NewSampleData = nullptr;
+		{
+			RawVolume = sample->GetVolume();
+			FineTune = sample->GetFineTune();
+			C4Speed = sample->GetC4Speed();
+		}
 	}
 	if (note >= 0x80U)
 	{
@@ -263,24 +264,33 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool han
 			noteCut(module, true);
 		return;
 	}
+	else if (!sample) // MPT has this above the clip-n-period code.. OpenMPT has this below..
+		return;
 	clipInt<uint8_t>(note, 1, 132);
 	Note = note;
 	if (!handlePorta || module.typeIs<MODULE_S3M, MODULE_IT>())
 		NewSample = 0;
 	period = module.GetPeriodFromNote(note, FineTune, C4Speed);
-	if (!sample)
-		return;
 	if (period)
 	{
-		if (cmd != CMD_TONEPORTAMENTO && cmd != CMD_TONEPORTAVOL)
+		if (!handlePorta || !Period)
 			Period = period;
 		portamentoTarget = period;
-		if (portamentoTarget == Period || (!Length && module.typeIs<MODULE_S3M>()))
+		if (!handlePorta || (!Length && !module.typeIs<MODULE_S3M>()))
 		{
 			Sample = sample;
 			NewSampleData = module.p_PCM[sample->id()];
 			Length = sample->GetLength();
-			if (sample->GetLooped())
+			Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
+			if (sample->GetSustainLooped())
+			{
+				Flags |= CHN_LOOP;
+				LoopStart = sample->GetSustainLoopBegin();
+				LoopEnd = sample->GetSustainLoopEnd();
+				if (sample->GetBidiLoop())
+					Flags |= CHN_LPINGPONG;
+			}
+			else if (sample->GetLooped())
 			{
 				Flags |= CHN_LOOP;
 				LoopStart = (sample->GetLoopStart() < sample->GetLength() ? sample->GetLoopStart() : sample->GetLength());
@@ -288,29 +298,25 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool han
 			}
 			else
 			{
-				Flags &= ~CHN_LOOP;
 				LoopStart = 0;
-				LoopEnd = sample->GetLength();
+				LoopEnd = Length;
 			}
-			// This next bit only applies to sustain loops apparently..
-			/*if (sample->GetBidiLoop())
-				Flags |= CHN_LPINGPONG;
-			else
-				Flags &= ~CHN_LPINGPONG;*/
 			Pos = 0;
 			PosLo = 0;
 			if (vibratoType < 4)
-				vibratoPosition = 0;
+				vibratoPosition = module.typeIs<MODULE_IT>() && module.useOldEffects() ? 0x10 : 0;
 			//if ((channel->TremoloType & 0x03) != 0)
 			if (TremoloType < 4)
 				TremoloPos = 0;
 		}
 		if (Pos > Length)
-			Pos = Length;
+			Pos = LoopStart;
 	}
-	if (!handlePorta || !period || module.typeIs<MODULE_IT>() || ((Flags & CHN_NOTEFADE) && !FadeOutVol))
+	else
+		handlePorta = false;
+	if (!handlePorta || !module.typeIs<MODULE_IT>() || ((Flags & CHN_NOTEFADE) && !FadeOutVol))
 	{
-		if (module.typeIs<MODULE_IT>() && Flags & CHN_NOTEFADE && !FadeOutVol)
+		if (module.typeIs<MODULE_IT>() && (Flags & CHN_NOTEFADE) && !FadeOutVol)
 		{
 			EnvVolumePos = 0;
 			EnvPanningPos = 0;
@@ -318,19 +324,23 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool han
 			AutoVibratoDepth = 0;
 			AutoVibratoPos = 0;
 			Flags &= ~CHN_NOTEFADE;
-			FadeOutVol = 0xFFFF;
+			FadeOutVol = 0xFFFFU;
 		}
-		else
+		else if (!handlePorta)
 		{
 			Flags &= ~CHN_NOTEFADE;
-			FadeOutVol = 0xFFFF;
+			FadeOutVol = 0xFFFFU;
 		}
 	}
 	Flags &= ~CHN_NOTEOFF;
-	if (portamentoTarget == Period)
+	if (!handlePorta)
+	{
 		Flags |= CHN_FASTVOLRAMP;
-	LeftVol = 0;
-	RightVol = 0;
+		TremorCount = 0;
+		// if (resetEnvironment)
+		LeftVol = 0;
+		RightVol = 0;
+	}
 }
 
 uint8_t ModuleFile::FindFreeNNAChannel() const
