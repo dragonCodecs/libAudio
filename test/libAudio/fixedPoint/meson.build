@@ -10,7 +10,7 @@ fixedPointObj = libAudioLibrary.extract_objects('fixedPoint/fixedPoint.cpp')
 foreach test : fixedPointTests
 	custom_target(
 		test,
-		command: [crunchMake, '-s', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude],
+		command: [crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude],
 		input: [test + '.cxx', fixedPointObj],
 		output: test + '.so',
 		build_by_default: true
@@ -18,7 +18,7 @@ foreach test : fixedPointTests
 endforeach
 
 test(
-	'fixedPoint',
+	'testFixedPoint',
 	crunchpp,
 	args: fixedPointTests,
 	workdir: meson.current_build_dir()
