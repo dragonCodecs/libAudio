@@ -537,7 +537,7 @@ public:
 	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
 
 	// Channel effects
-	void noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool handlePorta = false);
+	void noteChange(ModuleFile &module, uint8_t note, bool handlePorta = false);
 	void noteCut(ModuleFile &module, bool triggered) noexcept;
 	void noteOff() noexcept;
 	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;

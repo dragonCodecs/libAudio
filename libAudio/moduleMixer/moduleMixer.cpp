@@ -232,7 +232,7 @@ uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t
 	}
 }
 
-void Channel::noteChange(ModuleFile &module, uint8_t note, uint8_t cmd, bool handlePorta)
+void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 {
 	uint32_t period;
 	ModuleSample *sample = Sample;
@@ -859,7 +859,7 @@ bool ModuleFile::ProcessEffects()
 					SampleChange(*channel, channel->NewSample); // XXX: I need to take the doPortamento value.
 					channel->NewSample = 0;
 				}
-				channel->noteChange(*this, note, cmd, doPortamento);
+				channel->noteChange(*this, note, doPortamento);
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
 			{
