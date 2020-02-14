@@ -133,16 +133,26 @@ void ModuleFile::ReloadSample(Channel &channel)
 	channel.RawVolume = sample.GetVolume();
 	channel.NewSample = 0;
 	channel.Length = sample.GetLength();
-	channel.LoopStart = (sample.GetLoopStart() < channel.Length ? sample.GetLoopStart() : channel.Length);
-	channel.LoopEnd = sample.GetLoopEnd();
-	if (sample.GetLooped() || sample.GetSustainLooped())
+	channel.Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
+	if (sample.GetSustainLooped())
+	{
 		channel.Flags |= CHN_LOOP;
+		channel.LoopStart = sample.GetSustainLoopBegin();
+		channel.LoopEnd = sample.GetSustainLoopEnd();
+		if (sample.GetBidiLoop())
+			channel.Flags |= CHN_LPINGPONG;
+	}
+	else if (sample.GetLooped())
+	{
+		channel.Flags |= CHN_LOOP;
+		channel.LoopStart = (sample.GetLoopStart() < sample.GetLength() ? sample.GetLoopStart() : sample.GetLength());
+		channel.LoopEnd = sample.GetLoopEnd();
+	}
 	else
-		channel.Flags &= ~CHN_LOOP;
-	if (sample.GetBidiLoop())
-		channel.Flags |= CHN_LPINGPONG;
-	else
-		channel.Flags &= ~CHN_LPINGPONG;
+	{
+		channel.LoopStart = 0;
+		channel.LoopEnd = channel.Length;
+	}
 	channel.NewSampleData = p_PCM[sample.id()];
 	channel.FineTune = sample.GetFineTune();
 	channel.C4Speed = sample.GetC4Speed();
