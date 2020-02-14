@@ -113,17 +113,17 @@ void Channel::applyPanbrello() noexcept
 {
 	if (Flags & CHN_PANBRELLO)
 	{
-		int8_t delta{0};
-		const uint8_t position = ((panbrelloPosition + 16) >> 2U) & 0x3FU;
-		const uint8_t type = panbrelloType & 0x03U;
-		if (type == 1)
-			delta = RampDownTable[position];
-		else if (type == 2)
-			delta = SquareTable[position];
-		else if (type == 3)
-			delta = RandomTable[position];
-		else
-			delta = SinusTable[position];
+		const auto delta{[](const uint8_t type, const uint8_t position) noexcept -> int8_t
+		{
+			if (type == 1)
+				return RampDownTable[position];
+			else if (type == 2)
+				return SquareTable[position];
+			else if (type == 3)
+				return RandomTable[position];
+			else
+				return SinusTable[position];
+		}(panbrelloType & 0x03U, ((panbrelloPosition + 16) >> 2U) & 0x3FU)};
 		panbrelloPosition += panbrelloSpeed;
 		Panning += (delta * panbrelloDepth + 2) >> 3U;
 		clipInt<uint16_t>(Panning, 0, 256);
