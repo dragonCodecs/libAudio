@@ -659,6 +659,7 @@ public:
 		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 
 	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
+	bool hasFastSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_FAST_SLIDES; }
 	bool useOldEffects() const noexcept { return p_Header->Flags & FILE_FLAGS_OLD_IT_EFFECTS; }
 };
 

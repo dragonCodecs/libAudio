@@ -708,25 +708,25 @@ inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 		channel->VolumeSlide = param;
 	NewVolume = channel->RawVolume;
 
-	if (ModuleType == MODULE_S3M || ModuleType == MODULE_STM || ModuleType == MODULE_IT)
+	if (typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>())
 	{
 		if ((param & 0x0F) == 0x0F)
 		{
 			if (param & 0xF0)
 				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume + Adjust; });
-			else if (TickCount == channel->StartTick)
+			else if (TickCount == channel->StartTick && !hasFastSlides())
 				NewVolume -= 0x1E; //0x0F * 2;
 		}
 		else if ((param & 0xF0) == 0xF0)
 		{
 			if (param & 0x0F)
 				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume - Adjust; });
-			else if (TickCount == channel->StartTick)
+			else if (TickCount == channel->StartTick && !hasFastSlides())
 				NewVolume += 0x1E; //0x0F * 2;
 		}
 	}
 
-	if (TickCount > channel->StartTick)
+	if (TickCount > channel->StartTick || hasFastSlides())
 	{
 		if ((param & 0xF0) != 0 && (param & 0x0F) == 0)
 			NewVolume += (param & 0xF0) >> 1;
