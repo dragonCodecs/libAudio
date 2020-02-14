@@ -64,21 +64,23 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 				AutoVibratoDepth = vibratoDepth << 8;
 		}
 		AutoVibratoPos += sample.GetVibratoSpeed();
-		int8_t delta{0};
-		const uint8_t vibratoType = sample.GetVibratoType();
-		if (vibratoType == 1) // Square
-			delta = (AutoVibratoPos & 0x80) ? 64 : -64;
-		else if (vibratoType == 2) // Ramp up
-			delta = ((0x40 + (AutoVibratoPos >> 1)) & 0x7F) - 0x40;
-		else if (vibratoType == 3) // Ramp down
-			delta = ((0x40 - (AutoVibratoPos >> 1)) & 0x7F) - 0x40;
-		else if (vibratoType == 4) // Random
+		const auto delta{[](const uint8_t type, uint8_t &position) noexcept -> int8_t
 		{
-			delta = RandomTable[AutoVibratoPos & 0x3F];
-			++AutoVibratoPos;
-		}
-		else
-			delta = FT2VibratoTable[AutoVibratoPos & 0xFF];
+			if (type == 1) // Square
+				return (position & 0x80) ? 64 : -64;
+			else if (type == 2) // Ramp up
+				return ((0x40 + (position >> 1)) & 0x7F) - 0x40;
+			else if (type == 3) // Ramp down
+				return ((0x40 - (position >> 1)) & 0x7F) - 0x40;
+			else if (type == 4) // Random
+			{
+				auto result = RandomTable[position & 0x3F];
+				++position;
+				return result;
+			}
+			else
+				return FT2VibratoTable[position & 0xFF];
+		}(sample.GetVibratoType(), AutoVibratoPos)};
 		int16_t vibrato = (delta * AutoVibratoDepth) >> 8;
 		if (module.ModuleType == MODULE_IT)
 		{
