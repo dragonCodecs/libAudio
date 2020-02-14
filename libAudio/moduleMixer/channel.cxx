@@ -7,16 +7,17 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 {
 	if (Flags & CHN_VIBRATO)
 	{
-		int16_t delta{0};
-		const uint8_t type = vibratoType & 3U;
-		if (type == 1)
-			delta = RampDownTable[vibratoPosition];
-		else if (type == 2)
-			delta = SquareTable[vibratoPosition];
-		else if (type == 3)
-			delta = RandomTable[vibratoPosition];
-		else
-			delta = SinusTable[vibratoPosition];
+		auto delta{[](const uint8_t type, const uint8_t position) noexcept -> int16_t
+		{
+			if (type == 1)
+				return RampDownTable[position];
+			else if (type == 2)
+				return SquareTable[position];
+			else if (type == 3)
+				return RandomTable[position];
+			else
+				return SinusTable[position];
+		}(vibratoType & 3U, vibratoPosition)};
 		const bool oldSfx = module.typeIs<MODULE_IT>() && module.useOldEffects();
 		const uint8_t depthShift = oldSfx ? 7 : 6;
 		delta = (delta * vibratoDepth) >> depthShift;
