@@ -27,5 +27,6 @@ spectrometerSrcs += qt5.preprocess(
 spectrometer = executable(
 	'spectrometer',
 	spectrometerSrcs,
-	dependencies: [libAudio, openGL, qt5Libs, threading]
+	dependencies: [libAudio, openGL, qt5Libs, threading],
+	gnu_symbol_visibility: 'inlineshidden'
 )
