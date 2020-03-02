@@ -145,19 +145,18 @@ void Channel::noteOff() noexcept
 {
 	bool noteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
-	if (Instrument && Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
+	if (Instrument && !Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
 		Flags |= CHN_NOTEFADE;
 	if (!Length)
 		return;
-	// This false gets replaced with a check for sustain loops.
-	if (false && Sample && noteOn)
+	if ((Flags & CHN_SUSTAINLOOP) && Sample && noteOn)
 	{
-		if (LoopEnd != 0)
+		if (Sample->GetLooped())
 		{
 			if (Sample->GetBidiLoop())
 				Flags |= CHN_LPINGPONG;
 			else
-				Flags &= ~CHN_LPINGPONG;
+				Flags &= ~(CHN_LPINGPONG | CHN_FPINGPONG);
 			Flags |= CHN_LOOP;
 			Length = Sample->GetLength();
 			LoopStart = Sample->GetLoopStart();
@@ -169,13 +168,13 @@ void Channel::noteOff() noexcept
 		}
 		else
 		{
-			Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
+			Flags &= ~(CHN_LOOP | CHN_LPINGPONG | CHN_FPINGPONG);
 			Length = Sample->GetLength();
 		}
 	}
 	if (Instrument)
 	{
-		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut() != 0)
+		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut())
 			Flags |= CHN_NOTEFADE;
 	}
 }

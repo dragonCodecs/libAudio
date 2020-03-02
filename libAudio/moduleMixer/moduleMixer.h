@@ -18,6 +18,7 @@
 #define CHN_LPINGPONG		0x1000U
 #define CHN_FPINGPONG		0x2000U
 #define CHN_SURROUND		0x4000U
+#define CHN_SUSTAINLOOP		0x8000U
 
 template<typename T> inline void clipInt(T &num, const T min, const T max)
 {
