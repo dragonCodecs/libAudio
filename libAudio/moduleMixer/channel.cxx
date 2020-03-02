@@ -137,7 +137,7 @@ void Channel::noteCut(ModuleFile &module, bool triggered) noexcept
 		if (!module.typeIs<MODULE_IT>() || module.totalInstruments())
 			RawVolume = 0;
 		FadeOutVol = 0;
-		Flags |= CHN_FASTVOLRAMP| CHN_NOTEFADE;
+		Flags |= CHN_FASTVOLRAMP | CHN_NOTEFADE;
 	}
 }
 
