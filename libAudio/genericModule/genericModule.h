@@ -183,15 +183,18 @@ public:
 	virtual uint8_t GetFineTune() = 0;
 	virtual uint32_t GetC4Speed() = 0;
 	virtual uint8_t GetVolume() = 0;
+	virtual uint8_t GetSampleVolume() = 0;
 	virtual uint8_t GetVibratoSpeed() = 0;
 	virtual uint8_t GetVibratoDepth() = 0;
 	virtual uint8_t GetVibratoType() = 0;
 	virtual uint8_t GetVibratoRate() = 0;
+	virtual uint16_t GetPanning() = 0;
 	virtual bool Get16Bit() = 0;
 	virtual bool GetStereo() = 0;
 	virtual bool GetLooped() = 0;
 	virtual bool GetSustainLooped() = 0;
 	virtual bool GetBidiLoop() = 0;
+	virtual bool GetPanned() = 0;
 };
 
 class ModuleSampleNative final : public ModuleSample
@@ -236,15 +239,18 @@ public:
 	uint8_t GetFineTune() override final { return FineTune; }
 	uint32_t GetC4Speed() override final { return C4Speed; }
 	uint8_t GetVolume() override final { return Volume << 1; }
+	uint8_t GetSampleVolume() override final { return InstrVol; }
 	uint8_t GetVibratoSpeed() override final { return VibratoSpeed; }
 	uint8_t GetVibratoDepth() override final { return VibratoDepth; }
 	uint8_t GetVibratoType() override final { return VibratoType; }
 	uint8_t GetVibratoRate() override final { return VibratoRate; }
+	uint16_t GetPanning() override final { return uint16_t(DefaultPan & 0x7FU) << 2; }
 	bool Get16Bit() override final;
 	bool GetStereo() override final;
 	bool GetLooped() override final;
 	bool GetSustainLooped() override final;
 	bool GetBidiLoop() override final;
+	bool GetPanned() override final { return DefaultPan & 0x80U; }
 };
 
 class ModuleSampleAdlib : public ModuleSample
@@ -280,15 +286,18 @@ public:
 	uint8_t GetFineTune();
 	uint32_t GetC4Speed();
 	uint8_t GetVolume();
+	uint8_t GetSampleVolume();
 	uint8_t GetVibratoSpeed();
 	uint8_t GetVibratoDepth();
 	uint8_t GetVibratoType();
 	uint8_t GetVibratoRate();
+	uint16_t GetPanning();
 	bool Get16Bit();
 	bool GetStereo();
 	bool GetLooped();
 	bool GetSustainLooped();
 	bool GetBidiLoop();
+	bool GetPanned();
 };
 
 #pragma pack(push, 1)
@@ -319,6 +328,7 @@ public:
 	bool GetEnabled() const noexcept;
 	bool GetLooped() const noexcept;
 	bool GetSustained() const noexcept;
+	bool GetCarried() const noexcept;
 	bool HasNodes() const noexcept;
 	bool IsAtEnd(const uint16_t Tick) const noexcept;
 	bool IsZeroLoop() const noexcept;
@@ -345,8 +355,9 @@ public:
 	std::pair<uint8_t, uint8_t> mapNote(const uint8_t note) noexcept;
 	virtual ~ModuleInstrument() noexcept = default;
 	virtual uint16_t GetFadeOut() const noexcept = 0;
-	virtual bool GetEnvEnabled(uint8_t env) const = 0;
-	virtual bool GetEnvLooped(uint8_t env) const = 0;
+	virtual bool GetEnvEnabled(uint8_t env) const noexcept = 0;
+	virtual bool GetEnvLooped(uint8_t env) const noexcept = 0;
+	virtual bool GetEnvCarried(uint8_t env) const noexcept = 0;
 	virtual ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept = 0;
 	virtual bool IsPanned() const noexcept = 0;
 	virtual bool HasVolume() const noexcept = 0;
@@ -377,6 +388,7 @@ public:
 	uint16_t GetFadeOut() const noexcept override final;
 	bool GetEnvEnabled(uint8_t env) const noexcept override final;
 	bool GetEnvLooped(uint8_t env) const noexcept override final;
+	bool GetEnvCarried(uint8_t env) const noexcept override final;
 	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
 	bool IsPanned() const noexcept override final;
 	bool HasVolume() const noexcept override final;
@@ -411,8 +423,9 @@ public:
 	~ModuleNewInstrument() = default;
 
 	uint16_t GetFadeOut() const noexcept override final;
-	bool GetEnvEnabled(uint8_t env) const override final;
-	bool GetEnvLooped(uint8_t env) const override final;
+	bool GetEnvEnabled(uint8_t env) const noexcept override final;
+	bool GetEnvLooped(uint8_t env) const noexcept override final;
+	bool GetEnvCarried(uint8_t env) const noexcept override final;
 	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
 	bool IsPanned() const noexcept override final;
 	bool HasVolume() const noexcept override final;
@@ -500,7 +513,7 @@ public:
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
 	uint8_t RawVolume, Volume, VolumeSlide, FineVolumeSlide;
-	uint8_t channelVolume, channelVolumeSlide;
+	uint8_t channelVolume, channelVolumeSlide, sampleVolume;
 	uint16_t AutoVibratoDepth;
 	uint8_t AutoVibratoPos;
 	ModuleSample *Sample;
@@ -652,7 +665,8 @@ public:
 	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
 	uint16_t totalSamples() const noexcept { return p_Header->nSamples; }
 	uint16_t totalInstruments() const noexcept { return p_Header->nInstruments; }
-	ModuleSample *sample(uint16_t index) const noexcept { return p_Samples[index - 1]; }
+	ModuleSample *sample(uint16_t index) const noexcept
+		{ return index && index <= totalSamples() ? p_Samples[index - 1] : nullptr; }
 
 	template<uint32_t type> bool typeIs() const noexcept { return ModuleType == type; }
 	template<uint32_t type, uint32_t... types> typename std::enable_if<sizeof...(types) != 0, bool>::type

@@ -76,6 +76,8 @@ bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const noexcept
 	{ return !env ? (Flags & 0x01) : false; }
 bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const noexcept
 	{ return !env ? (Flags & 0x02) : false; }
+bool ModuleOldInstrument::GetEnvCarried(uint8_t env) const noexcept
+	{ return !env ? Envelope->GetCarried() : false; }
 ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const noexcept
 	{ return !env ? Envelope.get() : nullptr; }
 bool ModuleOldInstrument::IsPanned() const noexcept { return false; }
@@ -125,19 +127,22 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	if (Name[25])
 		Name[26] = 0;
 
-	if (Const || NNA > 3 || DCT > 3 || DNA > 2)
+	if (Const || NNA > 3 || DCT > 3 || DNA > 2 || Volume > 128)
 		throw ModuleLoaderError(E_BAD_IT);
 
 	FadeOut <<= 6;
+	Volume >>= 1;
 	for (uint8_t env = 0; env < Envelopes.size(); ++env)
 		Envelopes[env] = makeUnique<ModuleEnvelope>(file, env);
 }
 
 uint16_t ModuleNewInstrument::GetFadeOut() const noexcept { return FadeOut; }
-bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const
+bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const noexcept
 	{ return Envelopes[env]->GetEnabled(); }
-bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const
+bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const noexcept
 	{ return Envelopes[env]->GetLooped(); }
+bool ModuleNewInstrument::GetEnvCarried(uint8_t env) const noexcept
+	{ return Envelopes[env]->GetCarried(); }
 ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept
 	{ return env < Envelopes.size() ? Envelopes[env].get() : nullptr; }
 bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128); }
@@ -204,9 +209,10 @@ uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 	return ret;
 }
 
-bool ModuleEnvelope::GetEnabled() const noexcept { return (Flags & 0x01); }
-bool ModuleEnvelope::GetLooped() const noexcept { return (Flags & 0x02); }
-bool ModuleEnvelope::GetSustained() const noexcept { return (Flags & 0x04); }
+bool ModuleEnvelope::GetEnabled() const noexcept { return Flags & 0x01U; }
+bool ModuleEnvelope::GetLooped() const noexcept { return Flags & 0x02U; }
+bool ModuleEnvelope::GetSustained() const noexcept { return Flags & 0x04U; }
+bool ModuleEnvelope::GetCarried() const noexcept { return Flags & 0x08U; }
 bool ModuleEnvelope::HasNodes() const noexcept { return nNodes; }
 bool ModuleEnvelope::IsAtEnd(const uint16_t currentTick) const noexcept
 	{ return currentTick > GetLastTick(); }

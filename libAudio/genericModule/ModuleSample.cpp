@@ -64,6 +64,7 @@ ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) :
 	Packing = 0;
 	C4Speed = 8363;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
+	InstrVol = 64;
 }
 
 // This sucks, is a massive hack, but works on x86* because of how numbers are stored :(
@@ -126,6 +127,7 @@ ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, c
 	|* unused fields to harmless values.        *|
 	\********************************************/
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
+	InstrVol = 64;
 }
 
 ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) : ModuleSample(i, 1)
@@ -178,6 +180,7 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 	Packing = SampleFlags = 0;
 	FineTune = 0;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
+	InstrVol = 64;
 }
 
 ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, char *name, const uint32_t *const pcmLengths) : ModuleSample(i, 1), Name(name)
@@ -293,6 +296,7 @@ ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, c
 	\********************************************/
 	C4Speed = 8363;
 	VibratoRate = 0;
+	InstrVol = 64;
 }
 
 ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : ModuleSample(i, 1)
@@ -467,6 +471,11 @@ uint8_t ModuleSampleAdlib::GetVolume()
 	return Volume << 1;
 }
 
+uint8_t ModuleSampleAdlib::GetSampleVolume()
+{
+	return 0;
+}
+
 uint8_t ModuleSampleAdlib::GetVibratoSpeed()
 {
 	return 0;
@@ -483,6 +492,11 @@ uint8_t ModuleSampleAdlib::GetVibratoType()
 }
 
 uint8_t ModuleSampleAdlib::GetVibratoRate()
+{
+	return 0;
+}
+
+uint16_t ModuleSampleAdlib::GetPanning()
 {
 	return 0;
 }
@@ -508,6 +522,11 @@ bool ModuleSampleAdlib::GetSustainLooped()
 }
 
 bool ModuleSampleAdlib::GetBidiLoop()
+{
+	return false;
+}
+
+bool ModuleSampleAdlib::GetPanned()
 {
 	return false;
 }

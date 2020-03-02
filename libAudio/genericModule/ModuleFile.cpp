@@ -641,7 +641,7 @@ void ModuleFile::itLoadPCM(const fd_t &fd)
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
-		ModuleSampleNative *const Sample = reinterpret_cast<ModuleSampleNative *>(p_Samples[i]);
+		const auto Sample = static_cast<ModuleSampleNative *>(p_Samples[i]);
 		uint32_t Length = p_Samples[i]->GetLength() << ((Sample->Get16Bit() ? 1 : 0) + (Sample->GetStereo() ? 1 : 0));
 		if ((Sample->Flags & 0x01) == 0)
 		{
