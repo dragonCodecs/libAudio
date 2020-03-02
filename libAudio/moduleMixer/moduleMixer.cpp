@@ -1391,14 +1391,23 @@ bool ModuleFile::AdvanceTick()
 						channel->EnvPanningPos = env->GetLastTick();
 				}
 			}
-			else if ((channel->Flags & CHN_NOTEFADE) != 0)
+			else if (channel->Flags & CHN_NOTEFADE)
 			{
-				channel->FadeOutVol = 0;
-				vol = 0;
-//				channel->Flags &= ~CHN_NOTEFADE;
+				uint16_t fadeOut = 0;
+				if (channel->Instrument)
+					fadeOut = channel->Instrument->GetFadeOut();
+				if (fadeOut)
+				{
+					channel->FadeOutVol -= fadeOut << 1;
+					if (channel->FadeOutVol & 0x8000U)
+						channel->FadeOutVol = 0;
+					vol = (vol * channel->FadeOutVol) >> 16U;
+				}
+				else if (!channel->FadeOutVol)
+					vol = 0;
 			}
 
-			vol = muldiv(vol * GlobalVolume, channel->channelVolume, 1 << 13);
+			vol = muldiv(vol * GlobalVolume, channel->channelVolume * channel->sampleVolume, 1 << 19);
 			clipInt<uint16_t>(vol, 0, 128);
 			channel->Volume = vol;
 			clipInt(channel->Period, MinPeriod, MaxPeriod);
