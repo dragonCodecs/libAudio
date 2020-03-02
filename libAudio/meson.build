@@ -76,6 +76,7 @@ libAudioLibrary = shared_library(
 		libAAC, libMP4v2, libMAD, libID3Tag, libOpus, extraDeps, maths
 	],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
+	gnu_symbol_visibility: 'inlineshidden',
 	name_prefix: '',
 	install: true,
 	version: meson.project_version()
