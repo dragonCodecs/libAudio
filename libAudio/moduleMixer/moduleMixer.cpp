@@ -1501,7 +1501,7 @@ bool ModuleFile::AdvanceTick()
 		channel->NewLeftVol = channel->NewRightVol = 0;
 		if ((channel->Increment.Value.Hi + 1) >= (int32_t)channel->LoopEnd)
 			channel->Flags &= ~CHN_LOOP;
-		channel->SampleData = ((channel->NewSampleData != nullptr && channel->Length != 0 && channel->Increment.iValue != 0) ? channel->NewSampleData : nullptr);
+		channel->SampleData = ((channel->NewSampleData && channel->Length && channel->Increment.iValue) ? channel->NewSampleData : nullptr);
 		if (channel->SampleData != nullptr)
 		{
 			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
