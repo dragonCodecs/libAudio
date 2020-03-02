@@ -133,10 +133,10 @@ void ModuleFile::ReloadSample(Channel &channel)
 	channel.RawVolume = sample.GetVolume();
 	channel.NewSample = 0;
 	channel.Length = sample.GetLength();
-	channel.Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
+	channel.Flags &= ~(CHN_LOOP | CHN_SUSTAINLOOP | CHN_LPINGPONG);
 	if (sample.GetSustainLooped())
 	{
-		channel.Flags |= CHN_LOOP;
+		channel.Flags |= CHN_LOOP | CHN_SUSTAINLOOP;
 		channel.LoopStart = sample.GetSustainLoopBegin();
 		channel.LoopEnd = sample.GetSustainLoopEnd();
 		if (sample.GetBidiLoop())
@@ -160,42 +160,132 @@ void ModuleFile::ReloadSample(Channel &channel)
 		channel.LoopEnd = channel.Length;
 	if (channel.Length > channel.LoopEnd)
 		channel.Length = channel.LoopEnd;
-	channel.NewSample = 0;
 	channel.AutoVibratoPos = 0;
 }
 
-void ModuleFile::SampleChange(Channel &channel, const uint32_t nSample)
+void ModuleFile::SampleChange(Channel &channel, const uint32_t sampleIndex, const bool doPortamento)
 {
-	uint32_t sample = nSample;
-	if (p_Instruments)
+	if ((p_Instruments && sampleIndex > totalInstruments()) ||
+		(!p_Instruments && sampleIndex > totalSamples()))
+		return;
+	const auto instr = p_Instruments ? p_Instruments[sampleIndex - 1] : nullptr;
+	auto sample = this->sample(sampleIndex);
+	auto note = channel.Note;
+	bool instrumentChanged = false;
+	channel.RawVolume = 0;
+	if (instr && note && note <= 128)
 	{
-		ModuleInstrument *instr = p_Instruments[sample - 1];
-		uint8_t note{}, sample{};
-		std::tie(note, sample) = instr->mapNote(channel.Note);
-		channel.EnvVolumePos = 0;
-		channel.EnvPanningPos = 0;
-		channel.EnvPitchPos = 0;
+		uint8_t _sampleIndex{};
+		std::tie(note, _sampleIndex) = instr->mapNote(note);
+		if (note >= 0xFEU)
+			return;
+		sample = this->sample(_sampleIndex);
+	}
+	else if (p_Instruments)
+	{
+		if (note >= 0xFEU)
+			return;
+	}
+	channel.RawVolume = sample ? sample->GetVolume() : 0;
+	if (channel.Instrument != instr)
+	{
+		instrumentChanged = true;
 		channel.Instrument = instr;
 	}
-	else
-		channel.Instrument = nullptr;
-	if (!sample || sample > totalSamples())
+	channel.NewSample = 0;
+	if (sample)
 	{
+		if (instr)
+		{
+			if (instr->HasVolume())
+				channel.sampleVolume = (instr->GetVolume() * sample->GetSampleVolume()) >> 6U;
+			else
+				channel.sampleVolume = sample->GetSampleVolume();
+			if (instr->IsPanned())
+				channel.RawPanning = instr->GetPanning();
+		}
+		else
+			channel.sampleVolume = sample->GetSampleVolume();
+		if (sample->GetPanned())
+			channel.RawPanning = sample->GetPanning();
+	}
+	if (!doPortamento || !typeIs<MODULE_IT>() || !channel.Length ||
+		((channel.Flags & CHN_NOTEFADE) && !channel.FadeOutVol))
+	{
+		channel.Flags |= CHN_FASTVOLRAMP;
+		if (typeIs<MODULE_IT>() && !instrumentChanged && instr && !(channel.Flags & (CHN_NOTEOFF | CHN_NOTEFADE)))
+		{
+			if (!instr->GetEnvCarried(ENVELOPE_VOLUME))
+				channel.EnvVolumePos = 0;
+			if (!instr->GetEnvCarried(ENVELOPE_PANNING))
+				channel.EnvPanningPos = 0;
+			if (!instr->GetEnvCarried(ENVELOPE_PITCH))
+				channel.EnvPitchPos = 0;
+		}
+		else
+		{
+			channel.EnvVolumePos = 0;
+			channel.EnvPanningPos = 0;
+			channel.EnvPitchPos = 0;
+		}
+		channel.AutoVibratoDepth = 0;
+		channel.AutoVibratoPos = 0;
+	}
+	else if (instr && !instr->GetEnvEnabled(ENVELOPE_VOLUME))
+	{
+		channel.EnvVolumePos = 0;
+		channel.AutoVibratoDepth = 0;
+		channel.AutoVibratoPos = 0;
+	}
+	if (!sample)
+	{
+		channel.Instrument = nullptr;
 		channel.Sample = nullptr;
 		channel.NewSampleData = nullptr;
-		channel.Length = 0;
+		channel.sampleVolume = 0;
 		return;
 	}
-	channel.Sample = p_Samples[sample - 1];
-	ReloadSample(channel);
-	if (p_Instruments)
+	if (doPortamento && sample == channel.Sample)
 	{
-		ModuleInstrument *instr = channel.Instrument;
-		if (instr->HasVolume())
-			channel.RawVolume = instr->GetVolume();
-		if (instr->IsPanned())
-			channel.RawPanning = instr->GetPanning();
+		if (typeIs<MODULE_S3M, MODULE_IT>())
+			return;
+		channel.Flags &= ~(CHN_NOTEOFF | CHN_NOTEFADE | CHN_LOOP | CHN_SUSTAINLOOP | CHN_LPINGPONG | CHN_FPINGPONG);
+		channel.Flags |= (sample->GetSustainLooped() || sample->GetLooped() ? CHN_LOOP : 0) |
+			(sample->GetSustainLooped() && sample->GetBidiLoop() ? CHN_LPINGPONG : 0) |
+			(sample->GetSustainLooped() ? CHN_SUSTAINLOOP : 0);
 	}
+	else
+	{
+		channel.Flags &= ~(CHN_NOTEOFF | CHN_NOTEFADE | CHN_LOOP | CHN_SUSTAINLOOP | CHN_LPINGPONG);
+		channel.Flags |= (sample->GetSustainLooped() || sample->GetLooped() ? CHN_LOOP : 0) |
+			(sample->GetSustainLooped() && sample->GetBidiLoop() ? CHN_LPINGPONG : 0) |
+			(sample->GetSustainLooped() ? CHN_SUSTAINLOOP : 0);
+		// TODO: Handle volume and panning swing..
+	}
+	channel.Sample = sample;
+	channel.Length = sample->GetLength();
+	if (sample->GetSustainLooped())
+	{
+		channel.LoopStart = sample->GetSustainLoopBegin();
+		channel.LoopEnd = sample->GetSustainLoopEnd();
+	}
+	else if (sample->GetLooped())
+	{
+		channel.LoopStart = sample->GetLoopStart();
+		channel.LoopEnd = sample->GetLoopEnd();
+	}
+	else
+	{
+		channel.LoopStart = 0;
+		channel.LoopEnd = channel.Length;
+	}
+	if (channel.LoopEnd > channel.Length)
+		channel.LoopEnd = channel.Length;
+	channel.C4Speed = sample->GetC4Speed();
+	channel.FineTune = sample->GetFineTune();
+	channel.NewSampleData = p_PCM[sample->id()];
+	if ((channel.Flags & CHN_LOOP) && channel.LoopEnd < channel.Length)
+		channel.Length = channel.LoopEnd;
 }
 
 uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed)
@@ -264,12 +354,12 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 	}
 	if (note >= 0x80U)
 	{
-		if (note == 0xFF || !module.typeIs<MODULE_IT>())
+		if (note == 0xFFU || !module.typeIs<MODULE_IT>())
 			noteOff();
 		else
 			Flags |= CHN_NOTEFADE;
 
-		if (note == 0xFE)
+		if (note == 0xFEU)
 			noteCut(module, true);
 		return;
 	}
@@ -293,7 +383,7 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 			Flags &= ~(CHN_LOOP | CHN_LPINGPONG);
 			if (sample->GetSustainLooped())
 			{
-				Flags |= CHN_LOOP;
+				Flags |= CHN_LOOP | CHN_SUSTAINLOOP;
 				LoopStart = sample->GetSustainLoopBegin();
 				LoopEnd = sample->GetSustainLoopEnd();
 				if (sample->GetBidiLoop())
@@ -855,18 +945,17 @@ bool ModuleFile::ProcessEffects()
 			if (sample)
 			{
 				const auto currentSample = channel->Sample;
-				SampleChange(*channel, sample);
-				//channel->NewSample = 0;
+				SampleChange(*channel, sample, doPortamento);
+				channel->NewSample = 0;
 				// Special case - if IT or S3M song tries to change note and do a portamento, ignore the portamento.
-				if ((ModuleType == MODULE_S3M || ModuleType == MODULE_IT) && currentSample != channel->Sample &&
-					note && note < 128)
+				if (typeIs<MODULE_S3M, MODULE_IT>() && currentSample != channel->Sample && note && note < 128)
 					doPortamento = false;
 			}
 			if (note)
 			{
-				if (!sample && channel->NewSample && note < 0x80)
+				if (!sample && channel->NewSample && note < 0x80U)
 				{
-					SampleChange(*channel, channel->NewSample); // XXX: I need to take the doPortamento value.
+					SampleChange(*channel, channel->NewSample, doPortamento);
 					channel->NewSample = 0;
 				}
 				channel->noteChange(*this, note, doPortamento);

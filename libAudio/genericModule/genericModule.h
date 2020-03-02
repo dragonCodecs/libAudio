@@ -616,7 +616,7 @@ private:
 	bool ProcessEffects();
 	void processEffects(Channel &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump);
 	void ResetChannelPanning();
-	void SampleChange(Channel &channel, const uint32_t sample);
+	void SampleChange(Channel &channel, const uint32_t sample, const bool doPortamento);
 	void ReloadSample(Channel &channel);
 	void HandleNNA(Channel *channel, uint32_t sample, uint8_t note);
 	uint8_t FindFreeNNAChannel() const;
