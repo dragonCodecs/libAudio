@@ -471,13 +471,10 @@ uint8_t ModuleFile::FindFreeNNAChannel() const
 
 void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 {
-	uint8_t i;
-	ModuleSample *sample = channel->Sample;
-	ModuleInstrument *instr = channel->Instrument;
-	if (note > 0x80 || note < 1)
+	if (note > 0x80U || note < 1)
 		return;
 	// If not Impulse Tracker, or we have no actual instruments, always cut on NNA
-	if (ModuleType != MODULE_IT || !p_Instruments)
+	if (!typeIs<MODULE_IT>() || !p_Instruments)
 	{
 		if (!channel->Length || !channel->LeftVol || !channel->RightVol || !p_Instruments)
 			return;
@@ -499,6 +496,10 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 		channel->RightVol = 0;
 		return;
 	}
+	if (instrument >= totalInstruments())
+		instrument = 0;
+	ModuleSample *sample = channel->Sample;
+	ModuleInstrument *instr = channel->Instrument;
 	if (instrument)
 	{
 		instr = p_Instruments[instrument - 1];
@@ -512,21 +513,23 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 		else
 			sample = nullptr;
 	}
+	else
+		return;
 
-	for (i = 0; i < 128; i++)
+	for (uint8_t i = 0; i < 128; i++)
 	{
 		Channel *dnaChannel = &Channels[i];
-		if (dnaChannel->Instrument != nullptr && (i >= p_Header->nChannels || dnaChannel == channel))
+		if (dnaChannel->Instrument && (i >= p_Header->nChannels || dnaChannel == channel))
 		{
 			bool duplicate = false;
 			switch (dnaChannel->Instrument->GetDCT())
 			{
 				case DCT_NOTE:
-					if (note != 0 && dnaChannel->Note == note)
+					if (note && dnaChannel->Note == note && instr == dnaChannel->Instrument)
 						duplicate = true;
 					break;
 				case DCT_SAMPLE:
-					if (sample != nullptr && sample == dnaChannel->Sample)
+					if (sample && sample == dnaChannel->Sample)
 						duplicate = true;
 					break;
 				case DCT_INSTRUMENT:
@@ -550,7 +553,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 						dnaChannel->Flags |= CHN_NOTEFADE;
 						break;
 				}
-				if (dnaChannel->RawVolume == 0)
+				if (!dnaChannel->RawVolume)
 				{
 					dnaChannel->FadeOutVol = 0;
 					dnaChannel->Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
@@ -559,10 +562,10 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 		}
 	}
 
-	if (channel->RawVolume != 0 && channel->Length != 0 && channel->FadeOutVol != 0)
+	if (channel->RawVolume && channel->Length)
 	{
 		const uint8_t newChannel = FindFreeNNAChannel();
-		if (newChannel != 0)
+		if (newChannel)
 		{
 			// With the new channel, duplicate it and clear certain effects
 			Channel &nnaChannel = Channels[newChannel];
@@ -583,7 +586,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 					break;
 			}
 			// NNA_CONTINUE is done implicitly in just duplicating the channel here, so only cull already silent samples.
-			if (nnaChannel.Volume == 0)
+			if (!nnaChannel.RawVolume)
 			{
 				nnaChannel.FadeOutVol = 0;
 				nnaChannel.Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
