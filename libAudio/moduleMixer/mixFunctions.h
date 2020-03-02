@@ -246,7 +246,7 @@ void DeinitialiseTables()
 #define SNDMIX_BEGINSAMPLELOOP8 \
 	uint32_t Pos = chn->PosLo; \
 	const int32_t Increment = chn->Increment.iValue; \
-	const signed char *p = ((signed char *)chn->SampleData) + chn->Pos; \
+	const int8_t *p = ((int8_t *)chn->SampleData) + chn->Pos; \
 	if (chn->Sample->GetStereo()) \
 		p += chn->Pos; \
 	int32_t *vol = Buff; \
@@ -256,7 +256,7 @@ void DeinitialiseTables()
 #define SNDMIX_BEGINSAMPLELOOP16 \
 	uint32_t Pos = chn->PosLo; \
 	const int32_t Increment = chn->Increment.iValue; \
-	const signed short *p = ((signed short *)chn->SampleData) + chn->Pos; \
+	const int16_t *p = ((int16_t *)chn->SampleData) + chn->Pos; \
 	if (chn->Sample->GetStereo()) \
 		p += chn->Pos; \
 	int32_t *vol = Buff; \
@@ -327,7 +327,7 @@ void DeinitialiseTables()
 
 // Mono
 #define SNDMIX_GETMONOVOLNOIDO \
-	auto pcm = p[Pos >> 16]
+	auto pcm = p[Pos >> 16U]
 
 #define SNDMIX_GETMONOVOLNOIDO8 \
 	SNDMIX_GETMONOVOLNOIDO << 8;
@@ -407,15 +407,15 @@ void DeinitialiseTables()
 
 // Volume
 #define SNDMIX_STOREMONOVOL \
-	vol[0] += pcm * (chn->RightVol << 4); \
-	vol[1] += pcm * (chn->LeftVol << 4); \
+	vol[0] += pcm * (chn->RightVol << 4U); \
+	vol[1] += pcm * (chn->LeftVol << 4U); \
 	vol += 2;
 
 #define SNDMIX_RAMPMONOVOL \
 	RampLeftVol += chn->LeftRamp; \
 	RampRightVol += chn->RightRamp; \
-	vol[0] += pcm * (RampRightVol << 4); \
-	vol[1] += pcm * (RampLeftVol << 4); \
+	vol[0] += pcm * (RampRightVol << 4U); \
+	vol[1] += pcm * (RampLeftVol << 4U); \
 	vol += 2;
 
 // sinc
