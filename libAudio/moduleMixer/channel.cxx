@@ -130,14 +130,14 @@ void Channel::applyPanbrello() noexcept
 	}
 }
 
-void Channel::noteCut(ModuleFile &module, bool triggered) noexcept
+void Channel::noteCut(ModuleFile &module, uint32_t tick) noexcept
 {
-	if (triggered)
+	/*if (tick == 0 && module.typeIs<MODULE_S3M>())
+		return;*/
+	if (module.ticks() == tick)
 	{
-		if (!module.typeIs<MODULE_IT>() || module.totalInstruments())
-			RawVolume = 0;
-		FadeOutVol = 0;
-		Flags |= CHN_FASTVOLRAMP | CHN_NOTEFADE;
+		RawVolume = 0;
+		Flags |= CHN_FASTVOLRAMP;
 	}
 }
 

@@ -551,7 +551,7 @@ public:
 
 	// Channel effects
 	void noteChange(ModuleFile &module, uint8_t note, bool handlePorta = false);
-	void noteCut(ModuleFile &module, bool triggered) noexcept;
+	void noteCut(ModuleFile &module, uint32_t tick) noexcept;
 	void noteOff() noexcept;
 	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;
 	void portamentoUp(const ModuleFile &module, uint8_t param) noexcept;

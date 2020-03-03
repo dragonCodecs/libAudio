@@ -360,7 +360,12 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 			Flags |= CHN_NOTEFADE;
 
 		if (note == 0xFEU)
-			noteCut(module, true);
+		{
+			Flags |= CHN_NOTEFADE | CHN_FASTVOLRAMP;
+			if (!module.typeIs<MODULE_IT>() || module.totalInstruments())
+				RawVolume = 0;
+			FadeOutVol = 0;
+		}
 		return;
 	}
 	else if (!sample) // MPT has this above the clip-n-period code.. OpenMPT has this below..
@@ -776,7 +781,7 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			}
 			break;
 		case CMD_S3MEX_NOTECUT:
-			channel->noteCut(*this, TickCount == param);
+			channel->noteCut(*this, param);
 			break;
 		case CMD_S3MEX_DELAYPAT:
 			PatternDelay = param;
