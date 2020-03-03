@@ -172,7 +172,6 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t sampleIndex, cons
 	auto sample = this->sample(sampleIndex);
 	auto note = channel.Note;
 	bool instrumentChanged = false;
-	channel.RawVolume = 0;
 	if (instr && note && note <= 128)
 	{
 		uint8_t _sampleIndex{};
@@ -345,12 +344,6 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 		std::tie(note, sampleIndex) = Instrument->mapNote(note);
 		if (sampleIndex && sampleIndex <= module.totalSamples())
 			sample = module.sample(sampleIndex);
-		if (sample)
-		{
-			RawVolume = sample->GetVolume();
-			FineTune = sample->GetFineTune();
-			C4Speed = sample->GetC4Speed();
-		}
 	}
 	if (note >= 0x80U)
 	{
