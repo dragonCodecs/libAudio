@@ -280,11 +280,11 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t sampleIndex, cons
 	}
 	if (channel.LoopEnd > channel.Length)
 		channel.LoopEnd = channel.Length;
+	if (channel.Length > channel.LoopEnd)
+		channel.Length = channel.LoopEnd;
 	channel.C4Speed = sample->GetC4Speed();
 	channel.FineTune = sample->GetFineTune();
 	channel.NewSampleData = p_PCM[sample->id()];
-	if ((channel.Flags & CHN_LOOP) && channel.LoopEnd < channel.Length)
-		channel.Length = channel.LoopEnd;
 }
 
 uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed)
@@ -344,6 +344,11 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 		std::tie(note, sampleIndex) = Instrument->mapNote(note);
 		if (sampleIndex && sampleIndex <= module.totalSamples())
 			sample = module.sample(sampleIndex);
+		if (sample)
+		{
+			FineTune = sample->GetFineTune();
+			C4Speed = sample->GetC4Speed();
+		}
 	}
 	if (note >= 0x80U)
 	{
