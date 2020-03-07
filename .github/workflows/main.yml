@@ -227,7 +227,7 @@ jobs:
           CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps
           make -j $CPU_COUNT
           sudo make install
-        working-directory: ${{ github.workspace/deps/ogg }}
+        working-directory: ${{ github.workspace }}/deps/ogg
       - name: Install libvorbis
         shell: bash
         run: |
@@ -239,7 +239,7 @@ jobs:
           CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps
           make -j $CPU_COUNT
           sudo make install
-        working-directory: ${{ github.workspace/deps/vorbis }}
+        working-directory: ${{ github.workspace }}/deps/vorbis
       - name: Install libmp4v2
         shell: bash
         run: |
