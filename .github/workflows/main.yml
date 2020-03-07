@@ -216,7 +216,7 @@ jobs:
           cp -a usr/lib/gcc usr/lib/{crt0.o,libmsys-2.0.a} usr/lib/w32api /usr/lib
           cp -a usr/include /usr
         working-directory: ${{ runner.temp }}
-      - name Install libogg
+      - name: Install libogg
         shell: bash
         run: |
           libtoolize -icf
@@ -228,7 +228,7 @@ jobs:
           make -j $CPU_COUNT
           sudo make install
         working-directory: ${{ github.workspace/deps/ogg }}
-      - name Install libvorbis
+      - name: Install libvorbis
         shell: bash
         run: |
           libtoolize -icf
