@@ -7,6 +7,7 @@
 [submodule "deps/ogg"]
 	path = deps/ogg
 	url = https://github.com/xiph/ogg
+	branch = v1.3.4
 [submodule "deps/faac"]
 	path = deps/faac
 	url = https://github.com/knik0/faac
@@ -16,6 +17,7 @@
 [submodule "deps/vorbis"]
 	path = deps/vorbis
 	url = https://github.com/xiph/vorbis
+	branch = v1.3.6
 [submodule "deps/libid3tag"]
 	path = deps/libid3tag
 	url = https://github.com/markjeee/libid3tag
