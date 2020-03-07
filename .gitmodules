@@ -34,3 +34,7 @@
 [submodule "deps/mp4v2"]
 	path = deps/mp4v2
 	url = https://github.com/DX-MON/mp4v2
+[submodule "deps/openal-soft"]
+	path = deps/openal-soft
+	url = git://repo.or.cz/openal-soft.git
+	branch = v1.20.1
