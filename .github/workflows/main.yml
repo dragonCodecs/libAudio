@@ -103,14 +103,9 @@ jobs:
       - name: Install libmp4v2
         shell: bash
         run: |
-          aclocal -I . -I project
-          libtoolize -icf
-          automake -ac
-          autoheader
-          autoconf
-          ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu --disable-gch
-          make -j 2
-          sudo make install
+          meson build --prefix=/usr
+          ninja -C build
+          sudo ninja -C build install
         working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/mp4v2
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
@@ -146,8 +141,8 @@ jobs:
           echo ::set-env name=CommandPromptType::%CommandPromptType%
           echo ::set-env name=DevEnvDir::"%DevEnvDir%"
           echo ::set-env name=ExtensionSdkDir::"%ExtensionSdkDir%"
-          echo ::set-env name=INCLUDE::"%INCLUDE%"
-          echo ::set-env name=LIB::"%LIB%"
+          echo ::set-env name=INCLUDE::"%HOME%\deps\include;%INCLUDE%"
+          echo ::set-env name=LIB::"%HOME%\deps\lib;%LIB%"
           echo ::set-env name=LIBPATH::"%LIBPATH%"
           echo ::set-env name=Platform::"%Platform%"
           echo ::set-env name=UCRTVersion::"%UCRTVersion%"
@@ -166,8 +161,9 @@ jobs:
           echo ::set-env name=WindowsSDKVersion::"%WindowsSDKVersion%"
           echo ::set-env name=WindowsSDK_ExecutablePath_x64::"%WindowsSDK_ExecutablePath_x64%"
           echo ::set-env name=WindowsSDK_ExecutablePath_x86::"%WindowsSDK_ExecutablePath_x86%"
-          bash --version
           echo ::set-env name=CPU_COUNT::%NUMBER_OF_PROCESSORS%
+          mkdir %HOME%\deps
+          echo ::set-env name=PKG_CONFIG_PATH::%HOME%\deps\lib\pkgconfig
       - name: Coverage environment
         env:
           COVERAGE: ${{ matrix.coverage }}
@@ -223,15 +219,9 @@ jobs:
       - name: Install libmp4v2
         shell: bash
         run: |
-          export CPATH=$(echo ${INCLUDE} | sed -e 's-C:-/c-g' -e 's:\\:/:g' -e 's/;/:/g')
-          aclocal -I . -I project
-          libtoolize -icf
-          automake -ac
-          autoheader
-          autoconf
-          CXX="g++ -D_M_X64" LD=ld ./configure --prefix=/c/Program\ Files/Git/usr --disable-gch
-          make -j $CPU_COUNT
-          sudo make install
+          meson build --prefix=$HOME/deps --warnlevel=1
+          ninja -C build
+          sudo ninja -C build install
         working-directory: ${{ github.workspace }}/deps/mp4v2
       - name: Configure
         shell: cmd
