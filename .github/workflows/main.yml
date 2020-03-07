@@ -105,7 +105,7 @@ jobs:
         run: |
           meson build --prefix=/usr
           ninja -C build
-          sudo ninja -C build install
+          sudo $HOME/.local/bin/ninja -C build install
         working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/mp4v2
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
@@ -175,6 +175,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
+      - name: Checkout public deps
+        shell: bash
+        run: |
+          git submodule init deps/ogg deps/vorbis deps/opus deps/opusfile
+          git submodule update --depth 1
       - name: Compute libmp4v2 ref
         run: echo ::set-env name=MP4V2_REF::$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )
       - name: Checkout libmp4v2
