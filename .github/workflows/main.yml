@@ -225,13 +225,13 @@ jobs:
         shell: bash
         run: |
           libtoolize -icf
-          aclocal -I .
+          aclocal -I m4
           autoheader
           automake -ac
           autoconf
           CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps
           make -j $CPU_COUNT
-          sudo make install
+          make install
         working-directory: ${{ github.workspace }}/deps/ogg
       - name: Install libvorbis
         shell: bash
@@ -243,8 +243,50 @@ jobs:
           autoconf
           CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps
           make -j $CPU_COUNT
-          sudo make install
+          make install
         working-directory: ${{ github.workspace }}/deps/vorbis
+      - name: Install libopus
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
+          ninja
+          ninja install
+        working-directory: ${{ github.workspace }}/deps/opus
+      - name: Install libopusfile
+        shell: bash
+        run: |
+          libtoolize -icf
+          aclocal -I m4
+          autoheader
+          automake -ac
+          autoconf
+          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps --disable-examples
+          make -j $CPU_COUNT
+          make install
+        working-directory: ${{ github.workspace }}/deps/opus
+      - name: Install libflac
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
+          ninja
+          ninja install
+          mv $HOME/deps/{share/pkgconfig/flac*.pc,lib/pkgconfig}
+          rm -rf $HOME/deps/share
+        working-directory: ${{ github.workspace }}/deps/flac
+      - name: Install libWavPack
+        shell: bash
+        run: |
+          libtoolize -icf
+          aclocal -I .
+          automake -ac
+          autoconf
+        working-directory: ${{ github.workspace }}/deps/WavPack
       - name: Install libmp4v2
         shell: bash
         run: |
