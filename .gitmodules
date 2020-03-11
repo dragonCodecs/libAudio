@@ -43,3 +43,6 @@
 [submodule "deps/opus"]
 	path = deps/opus
 	url = https://github.com/xiph/opus.git
+[submodule "deps/zlib"]
+	path = deps/zlib
+	url = https://github.com/madler/zlib.git
