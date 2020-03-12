@@ -1,11 +1,5 @@
 #include "genericModule.h"
 
-#ifndef _WINDOWS
-#ifndef max
-#define max(a, b) (a > b ? a : b)
-#endif
-#endif
-
 moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t(type, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 
 void *ModuleAllocator::operator new(const size_t size)
@@ -54,7 +48,7 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 	for (uint16_t i = 0; i < p_Header->nOrders; i++)
 	{
 		if (p_Header->Orders[i] < 128)
-			maxPattern = max(maxPattern, p_Header->Orders[i]);
+			maxPattern = std::max<uint32_t>(maxPattern, p_Header->Orders[i]);
 	}
 	p_Header->nPatterns = maxPattern + 1;
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
