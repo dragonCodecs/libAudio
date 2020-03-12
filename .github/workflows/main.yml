@@ -248,7 +248,7 @@ jobs:
       - name: Install libopus
         shell: bash
         run: |
-          mkdir build
+          mkdir -p build
           cd build
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
             -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
@@ -270,7 +270,7 @@ jobs:
       - name: Install libflac
         shell: bash
         run: |
-          mkdir build
+          mkdir -p build
           cd build
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
             -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
@@ -279,21 +279,113 @@ jobs:
           mv $HOME/deps/{share/pkgconfig/flac*.pc,lib/pkgconfig}
           rm -rf $HOME/deps/share
         working-directory: ${{ github.workspace }}/deps/flac
-      - name: Install libWavPack
+      - name: Install WavPack
         shell: bash
         run: |
-          libtoolize -icf
-          aclocal -I .
-          automake -ac
-          autoconf
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DWAVPACK_BUILD_WINAMP_PLUGIN:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON \
+            -DWAVPACK_BUILD_COOLEDIT_PLUGIN:BOOL=OFF -G Ninja
+          ninja
+          ninja install
         working-directory: ${{ github.workspace }}/deps/WavPack
+      - name: Install libcuefile
+        shell: bash
+        run: |
+          mkdir -p build
+          cd build
+          CFLAGS='-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1 -D_CRT_NONSTDC_NO_WARNINGS=1 \
+            -D_CRT_SECURE_NO_WARNINGS=1'  cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps \
+            -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
+          ninja
+          ninja install
+        working-directory: ${{ github.workspace }}/deps/libcuefile
+      - name: Install libreplaygain
+        shell: bash
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
+            -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
+          ninja
+          ninja install
+        working-directory: ${{ github.workspace }}/deps/libreplaygain
+      - name: Install MusePack
+        shell: bash
+        run: |
+          meson build --prefix=$HOME/deps
+          ninja -C build
+          ninja -C build install
+        working-directory: ${{ github.workspace }}/deps/libmpc
+      - name: Install faac
+        shell: bash
+        run: |
+          ./bootstrap
+          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi -D_USE_MATH_DEFINES \
+            -I${{ github.workspace }}/deps/faac/project/msvc" ./configure
+            --prefix=$HOME/deps --disable-static
+          make -j $CPU_COUNT
+          make install
+          cp $HOME/deps/lib/faac.{dll.,}lib
+        working-directory: ${{ github.workspace }}/deps/faac
+      - name: Install faad2
+        shell: bash
+        run: |
+          ./bootstrap
+          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi -D_USE_MATH_DEFINES \
+            -I${{ github.workspace }}/deps/faad2/include" ./configure
+            --prefix=$HOME/deps --disable-static
+          make -j $CPU_COUNT
+          make install
+          cp $HOME/deps/lib/faad.{dll.,}lib
+        working-directory: ${{ github.workspace }}/deps/faad2
       - name: Install libmp4v2
         shell: bash
         run: |
           meson build --prefix=$HOME/deps --warnlevel=1
           ninja -C build
-          sudo ninja -C build install
+          ninja -C build install
         working-directory: ${{ github.workspace }}/deps/mp4v2
+      - name: Install libmad
+        shell: bash
+        run: |
+          touch NEWS AUTHORS ChangeLog
+          WANT_AUTOMAKE=latest libtoolize -icf
+          WANT_AUTOMAKE=latest aclocal -I . -I m4
+          autoheader
+          WANT_AUTOMAKE=latest automake -ac
+          autoconf
+          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi -I${{ github.workspace }}/deps/libmad/msvc++" \
+            LDFLAGS="-no-undefined" ./configure --prefix=$HOME/deps --disable-static
+          make -j $CPU_COUNT
+          make install
+          cp $HOME/deps/lib/mad{.dll,}.lib
+        working-directory: ${{ github.workspace }}/deps/libmad
+      - name: Install zlib
+        shell: bash
+        run: |
+          nmake -f win32/Makefile.msc
+          cp zlib1.dll $HOME/deps/bin
+          cp zdll.lib $HOME/deps/lib
+          cp $HOME/deps/lib/z{dll,}.lib
+          cp zconf.h zlib.h $HOME/deps/include
+        working-directory: ${{ github.workspace }}/deps/zlib
+      - name: Install libid3tag
+        shell: bash
+        run: |
+          touch NEWS AUTHORS ChangeLog
+          WANT_AUTOMAKE=latest libtoolize -icf
+          WANT_AUTOMAKE=latest aclocal -I . -I m4
+          autoheader
+          WANT_AUTOMAKE=latest automake -ac
+          autoconf
+          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi -I${{ github.workspace }}/deps/libid3tag/msvc++" \
+            LDFLAGS="-no-undefined" ./configure --prefix=$HOME/deps --disable-static
+          make -j $CPU_COUNT
+          make install
+          cp $HOME/deps/lib/id3tag{.dll,}.lib
+        working-directory: ${{ github.workspace }}/deps/libid3tag
       - name: Configure
         shell: cmd
         run: |
