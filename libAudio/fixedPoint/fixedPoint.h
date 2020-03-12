@@ -1,7 +1,7 @@
 #ifndef __fixedPoint_H__
 #define __fixedPoint_H__
 
-#include <inttypes.h>
+#include <cstdint>
 
 class fixed64_t
 {

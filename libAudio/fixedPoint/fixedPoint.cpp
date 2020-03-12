@@ -1,7 +1,11 @@
-#include <stdio.h>
-#include <math.h>
+#include <cmath>
 #include <limits>
 #include "fixedPoint.h"
+//#include "console.hxx"
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 #ifdef __GNUC__
 #define unlikely(x) __builtin_expect(x, 0)
