@@ -95,13 +95,13 @@ namespace libAudio
 			constexpr console_t() noexcept : outputStream{}, errorStream{}, valid{false} { }
 			libAUDIO_CLSMAYBE_API console_t(FILE *const outStream, FILE *const errStream) noexcept;
 
-			template<typename... T> libAUDIO_CLS_API void error(T &&...values) const noexcept
+			template<typename... T> libAUDIO_CLSMAYBE_API void error(T &&...values) const noexcept
 				{ _error(); write(errorStream, std::forward<T>(values)...); }
 
-			template<typename... T> libAUDIO_CLS_API void info(T &&...values) const noexcept
+			template<typename... T> libAUDIO_CLSMAYBE_API void info(T &&...values) const noexcept
 				{ _info(); write(outputStream, std::forward<T>(values)...); }
 
-			template<typename... T> libAUDIO_CLS_API void debug(T &&...values) const noexcept
+			template<typename... T> libAUDIO_CLSMAYBE_API void debug(T &&...values) const noexcept
 				{ _debug(); write(outputStream, std::forward<T>(values)...); }
 
 			void dumpBuffer();
