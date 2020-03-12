@@ -25,7 +25,7 @@ if cxx.get_id() == 'msvc'
 	add_project_arguments(
 		'-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1',
 		'-D_CRT_NONSTDC_NO_WARNINGS=1',
-		'-D_CRT_SECURE_NO_WARNINGS'
+		'-D_CRT_SECURE_NO_WARNINGS',
 		language: 'cpp'
 	)
 elif cxx.get_id() == 'gcc' or cxx.get_id() == 'clang'
