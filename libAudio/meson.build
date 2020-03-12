@@ -23,6 +23,10 @@ extraSrcs = []
 extraArgs = []
 extraDeps = []
 
+if target_machine.system() == 'windows'
+	extraArgs += '-D_WINDOWS'
+endif
+
 if extraFormats.contains('wma')
 	extraSrcs += 'loadWMA.cpp'
 	extraArgs += '-DENABLE_WMA'
