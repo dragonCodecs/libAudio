@@ -21,6 +21,13 @@ add_project_arguments(
 	), language: 'cpp'
 )
 
+if target_machine.system() == 'windows'
+	add_project_arguments(
+		'-D_WINDOWS',
+		language: 'cpp'
+	)
+endif
+
 if cxx.get_id() == 'msvc'
 	add_project_arguments(
 		'-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1',
