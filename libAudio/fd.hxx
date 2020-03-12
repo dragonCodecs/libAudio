@@ -16,8 +16,10 @@
 #include <array>
 #include "managedPtr.hxx"
 
-#ifdef _MSVC
+#ifdef _WINDOWS
 #define O_NOCTTY _O_BINARY
+using mode_t = int32_t;
+using ssize_t = int32_t;
 #endif
 
 #ifdef __GNUC__
@@ -167,6 +169,10 @@ public:
 };
 
 inline void swap(fd_t &a, fd_t &b) noexcept { a.swap(b); }
+#ifndef _WINDOWS
 constexpr mode_t normalMode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH; // NOLINT(hicpp-signed-bitwise)
+#else
+constexpr mode_t normalMode = _S_IWRITE | _S_IREAD; // NOLINT(hicpp-signed-bitwise)
+#endif
 
 #endif /*FD__HXX*/

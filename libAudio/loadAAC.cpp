@@ -173,10 +173,10 @@ namespace libAudio
 				uint64_t result = 0;
 				for (uint32_t num = 0; num < bitCount; ++num)
 				{
-					const uint32_t byte = currentBit / 8;
-					const uint32_t bit = 7 - (currentBit % 8);
-					result <<= 1;
-					const uint8_t value = data[byte] & (1 << bit);
+					const auto byte = uint32_t(currentBit / 8U);
+					const uint8_t bit = 7U - uint8_t(currentBit % 8U);
+					result <<= 1U;
+					const uint8_t value = data[byte] & (1U << bit);
 					result += value >> bit;
 					++currentBit;
 					if (currentBit == bitTotal)
