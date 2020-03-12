@@ -20,6 +20,7 @@
 	#endif
 	#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
 	#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
+	#define libAUDIO_CLSMAYBE_API
 	#define libAUDIO_CXX_API extern
 #else
 	#if __GNUC__ >= 4
@@ -30,6 +31,7 @@
 	#ifdef __cplusplus
 		#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
 		#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
+		#define libAUDIO_CLSMAYBE_API libAUDIO_CLS_API
 		#define libAUDIO_CXX_API extern libAUDIO_CLS_API
 	#else
 		#define libAUDIO_API extern libAUDIO_DEFAULT_VISIBILITY

@@ -93,7 +93,7 @@ namespace libAudio
 
 		public:
 			constexpr console_t() noexcept : outputStream{}, errorStream{}, valid{false} { }
-			libAUDIO_CLS_API console_t(FILE *const outStream, FILE *const errStream) noexcept;
+			libAUDIO_CLSMAYBE_API console_t(FILE *const outStream, FILE *const errStream) noexcept;
 
 			template<typename... T> libAUDIO_CLS_API void error(T &&...values) const noexcept
 				{ _error(); write(errorStream, std::forward<T>(values)...); }
@@ -107,7 +107,7 @@ namespace libAudio
 			void dumpBuffer();
 		};
 
-		template<typename int_t> libAUDIO_CLS_API struct asInt_t final : public printable_t
+		template<typename int_t> libAUDIO_CLSMAYBE_API struct asInt_t final : public printable_t
 		{
 		private:
 			using uint_t = typename std::make_unsigned<int_t>::type;
@@ -149,7 +149,7 @@ namespace libAudio
 		};
 
 		template<uint8_t padding = 0, char paddingChar = ' '>
-			libAUDIO_CLS_API struct asHex_t final : public printable_t
+			libAUDIO_CLSMAYBE_API struct asHex_t final : public printable_t
 		{
 		private:
 			uint8_t maxDigits;
