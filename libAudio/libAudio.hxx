@@ -11,6 +11,7 @@
 #ifdef _WINDOWS
 #include <cstring>
 #define strncasecmp strnicmp
+#define strcasecmp stricmp
 #endif
 
 #include <cstdint>
