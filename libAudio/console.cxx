@@ -2,6 +2,8 @@
 #ifndef _WINDOWS
 #include <unistd.h>
 #else
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <stringapiset.h>
 #include <io.h>
 #include "uniquePtr.hxx"
