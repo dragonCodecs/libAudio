@@ -5,6 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stringapiset.h>
+#include <fcntl.h>
 #include <io.h>
 #include "uniquePtr.hxx"
 #endif
