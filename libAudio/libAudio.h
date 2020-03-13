@@ -21,7 +21,7 @@
 	#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
 	#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
 	#define libAUDIO_CLSMAYBE_API
-	#define libAUDIO_CXX_API extern
+	#define libAUDIO_CXX_API extern libAUDIO_DEFAULT_VISIBILITY
 #else
 	#if __GNUC__ >= 4
 		#define libAUDIO_DEFAULT_VISIBILITY __attribute__ ((visibility("default")))
