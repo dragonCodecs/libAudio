@@ -44,7 +44,7 @@ namespace libAudio
 			const auto file = static_cast<const oggOpus_t *>(filePtr);
 			size_t bytes = 0;
 			if (file->fd().read(buffer, bufferLen, bytes))
-				return bytes;
+				return int(bytes);
 			return -1;
 		}
 
