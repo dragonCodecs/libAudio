@@ -119,7 +119,7 @@ namespace libAudio
 					stream.write(char(number + '0'));
 				else
 				{
-					const char value = number - format(stream, number / 10) * 10 + '0';
+					const char value = char(number - format(stream, number / 10) * 10) + '0';
 					stream.write(value);
 				}
 				return number;
