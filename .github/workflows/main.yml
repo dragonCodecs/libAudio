@@ -389,7 +389,7 @@ jobs:
         shell: cmd
         run: |
           cl
-          meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }}
+          meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }} -Dcpp_link_args="-lz"
       - name: Build
         run: ninja
         working-directory: ${{ github.workspace }}/build
