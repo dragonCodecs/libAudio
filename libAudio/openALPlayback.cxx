@@ -7,12 +7,12 @@ openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player}
 
 bool openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 {
-	const long result = refillBuffer();
+	const int64_t result = refillBuffer();
 	if (result > 0)
 	{
-		_buffer.fill(buffer(), result, bufferFormat, bitRate());
+		_buffer.fill(buffer(), uint32_t(result), bufferFormat, bitRate());
 		source.queue(_buffer);
-		eof = result < bufferLength();
+		eof = uint32_t(result) < bufferLength();
 	}
 	else
 		eof = true;

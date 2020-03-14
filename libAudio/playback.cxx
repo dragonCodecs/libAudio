@@ -31,7 +31,7 @@ void playback_t::stop()
 		player->stop();
 }
 
-long audioPlayer_t::refillBuffer() const noexcept
+int64_t audioPlayer_t::refillBuffer() const noexcept
 	{ return player.refillBuffer(); }
 int64_t playback_t::refillBuffer() noexcept
 	{ return fillBuffer(audioFile, buffer, bufferLength); }

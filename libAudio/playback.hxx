@@ -33,7 +33,7 @@ protected:
 
 	audioPlayer_t(playback_t &_player) noexcept : player{_player},
 		state{playState_t::stopped}, stateMutex{} { }
-	long refillBuffer() const noexcept;
+	int64_t refillBuffer() const noexcept;
 	uint8_t *buffer() const noexcept;
 	uint32_t bufferLength() const noexcept;
 	uint8_t bitsPerSample() const noexcept;
