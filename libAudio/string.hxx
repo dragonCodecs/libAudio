@@ -7,7 +7,7 @@ inline size_t stringsLength(const char *const part) noexcept { return strlen(par
 template<typename... Args> inline size_t stringsLength(const char *const part, Args &&...args) noexcept
 	{ return strlen(part) + stringsLength(args...); }
 
-inline  std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, const uint32_t offset, const char *const part) noexcept
+inline  std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, const size_t offset, const char *const part) noexcept
 {
 	if (!dst)
 		return nullptr;
@@ -15,7 +15,7 @@ inline  std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, c
 	return std::move(dst);
 }
 
-template<typename... Args> inline std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, const uint32_t offset,
+template<typename... Args> inline std::unique_ptr<char []> stringsConcat(std::unique_ptr<char []> &&dst, const size_t offset,
 	const char *const part, Args &&...args) noexcept
 {
 	if (!dst)
