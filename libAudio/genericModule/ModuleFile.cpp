@@ -130,7 +130,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleType(MODULE_AON), p_Instrum
 {
 	std::array<char, 4> blockName{};
 	uint32_t blockLen = 0;
-	uint32_t i, SampleLengths, InstrPos, PCMPos;
+	uint32_t i, SampleLengths;
 	uint8_t ChannelMul;
 	const fd_t &fd = file.fd();
 
@@ -157,7 +157,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleType(MODULE_AON), p_Instrum
 		(blockLen % 32) != 0)
 		throw ModuleLoaderError(E_BAD_AON);
 	p_Header->nSamples = blockLen >> 5;
-	InstrPos = fd.tell();
+	const off_t InstrPos = fd.tell();
 	if (!fd.seekRel(blockLen) ||
 		!fd.read(blockName) ||
 		!fd.readBE(blockLen))
@@ -183,12 +183,12 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleType(MODULE_AON), p_Instrum
 		if (lengthPCM[i] != 0)
 			nPCM = i + 1;
 	}
-	PCMPos = fd.tell();
+	const off_t PCMPos = fd.tell();
 
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	for (i = 0; i < p_Header->nSamples; i++)
 	{
-		const uint32_t offset = InstrPos + (i << 5);
+		const off_t offset = InstrPos + (i << 5);
 		if (fd.seek(offset, SEEK_SET) != offset)
 			throw ModuleLoaderError(E_BAD_AON);
 		p_Samples[i] = ModuleSample::LoadSample(file, i, nullptr, lengthPCM.get());
@@ -218,14 +218,13 @@ ModuleFile::ModuleFile(const modFC1x_t &file) : ModuleType(MODULE_FC1x), p_Instr
 ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
 {
 	const fd_t &fd = file.fd();
-	uint16_t i;
 
 	p_Header = new ModuleHeader(file);
 	if (p_Header->nInstruments)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
 		uint32_t *const instrOffsets = p_Header->InstrumentPtrs.get<uint32_t>();
-		for (i = 0; i < p_Header->nInstruments; ++i)
+		for (uint16_t i = 0; i < p_Header->nInstruments; ++i)
 		{
 			if (fd.seek(instrOffsets[i], SEEK_SET) != instrOffsets[i])
 				throw ModuleLoaderError(E_BAD_IT);
@@ -234,7 +233,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instrumen
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	uint32_t *const sampleOffsets = p_Header->SamplePtrs.get<uint32_t>();
-	for (i = 0; i < p_Header->nSamples; ++i)
+	for (uint16_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		if (fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
 			throw ModuleLoaderError(E_BAD_IT);
@@ -242,7 +241,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instrumen
 	}
 
 	p_Header->nChannels = 64;
-	for (i = 0; i < 64; i++)
+	for (uint8_t i = 0; i < 64; i++)
 	{
 		p_Header->PanSurround[i] = false;
 		if (p_Header->Panning[i] > 128)
@@ -261,7 +260,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instrumen
 
 	p_Patterns = new ModulePattern *[p_Header->nPatterns];
 	uint32_t *const PatternPtrs = p_Header->PatternPtrs.get<uint32_t>();
-	for (i = 0; i < p_Header->nPatterns; i++)
+	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 	{
 		if (PatternPtrs[i] == 0)
 			p_Patterns[i] = nullptr;
@@ -475,8 +474,7 @@ void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool delta
 			j = Length;
 		do
 		{
-			uint16_t bits;
-			bits = itBitstreamRead(buff, buffLen, fd, bitWidth);
+			uint16_t bits = uint16_t(itBitstreamRead(buff, buffLen, fd, bitWidth));
 			if (fd.isEOF())
 				return;
 			if (bitWidth < 7)
@@ -484,7 +482,7 @@ void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool delta
 				uint16_t special = 1 << (bitWidth - 1);
 				if (bits == special)
 				{
-					uint8_t bits = itBitstreamRead(buff, buffLen, fd, 3) + 1;
+					const uint8_t bits = itBitstreamRead(buff, buffLen, fd, 3) + 1;
 					if (bits < bitWidth)
 						bitWidth = bits;
 					else
@@ -500,7 +498,7 @@ void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool delta
 				{
 					bits -= special2;
 					if ((bits & 0xFF) < bitWidth)
-						bitWidth = bits;
+						bitWidth = uint8_t(bits);
 					else
 						bitWidth = bits + 1;
 					continue;
