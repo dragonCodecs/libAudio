@@ -202,7 +202,7 @@ uint64_t decodeIntTag(const id3_tag *tags, const char *tag) noexcept
 
 bool mp3_t::readMetadata() noexcept
 {
-	const fd_t fileDesc = fd().dup();
+	fd_t fileDesc = fd().dup();
 	auto &ctx = *context();
 	fileInfo_t &info = fileInfo();
 	id3_file *const file = id3_file_fdopen(fileDesc, ID3_FILE_MODE_READONLY);
@@ -216,6 +216,7 @@ bool mp3_t::readMetadata() noexcept
 
 	int64_t seekOffset = tags->paddedsize;
 	id3_file_close(file);
+	fileDesc.invalidate();
 	if (fd().seek(seekOffset, SEEK_SET) != seekOffset)
 		return false;
 
