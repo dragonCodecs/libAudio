@@ -6,6 +6,7 @@
 #ifndef _WINDOWS
 #include <unistd.h>
 #else
+#include <type_traits>
 #include <io.h>
 #endif
 #include <sys/types.h>
@@ -16,10 +17,24 @@
 #include <array>
 #include "managedPtr.hxx"
 
-#ifdef _WINDOWS
+#ifndef _WINDOWS
+using stat_t = struct stat;
+
+inline off_t fdseek(const int32_t fd, const off_t offset, const int32_t whence) noexcept
+	{ return lseek(fd, offset, whence); }
+inline off_t fdtell(const int32_t fd) noexcept
+	{ return lseek(fd, 0, SEEK_CUR); }
+#else
 #define O_NOCTTY _O_BINARY
 using mode_t = int32_t;
-using ssize_t = int32_t;
+using ssize_t = typename std::make_signed<std::size_t>::type;
+using stat_t = struct _stat64;
+
+inline int fstat(int32_t fd, stat_t *stat) noexcept { return _fstat64(fd, stat); }
+inline off_t fdseek(const int32_t fd, const off_t offset, const int32_t whence) noexcept
+	{ return _lseeki64(fd, offset, whence); }
+inline off_t fdtell(const int32_t fd) noexcept
+	{ return _telli64(fd); }
 #endif
 
 #ifdef __GNUC__
@@ -27,8 +42,6 @@ using ssize_t = int32_t;
 #else
 #define WARN_UNUSED
 #endif
-
-using stat_t = struct stat;
 
 /*!
  * @internal
@@ -59,12 +72,13 @@ public:
 		std::swap(fd, desc.fd);
 		std::swap(eof, desc.eof);
 	}
+	void invalidate() noexcept { fd = -1; }
 
 	bool read(void *const value, const size_t valueLen, size_t &resultLen) const noexcept WARN_UNUSED
 	{
 		if (eof)
 			return false;
-		const ssize_t result = ::read(fd, value, valueLen);
+		const ssize_t result = read(value, valueLen, nullptr);
 		if (!result && valueLen)
 			eof = true;
 		else if (result < 0)
@@ -79,13 +93,20 @@ public:
 		return read(value, valueLen, resultLen);
 	}
 
+#ifndef _WINDOWS
 	ssize_t read(void *const bufferPtr, const size_t len, std::nullptr_t) const noexcept WARN_UNUSED
 		{ return ::read(fd, bufferPtr, len); }
 	ssize_t write(const void *const bufferPtr, const size_t valueLen) const noexcept WARN_UNUSED
 		{ return ::write(fd, bufferPtr, valueLen); }
+#else
+	ssize_t read(void *const bufferPtr, const size_t len, std::nullptr_t) const noexcept WARN_UNUSED
+		{ return ::read(fd, bufferPtr, uint32_t(len)); }
+	ssize_t write(const void *const bufferPtr, const size_t valueLen) const noexcept WARN_UNUSED
+		{ return ::write(fd, bufferPtr, uint32_t(valueLen)); }
+#endif
 	off_t seek(const off_t offset, const int32_t whence) const noexcept WARN_UNUSED
-		{ return ::lseek(fd, offset, whence); }
-	off_t tell() const noexcept WARN_UNUSED { return seek(0, SEEK_CUR); }
+		{ return fdseek(fd, offset, whence); }
+	off_t tell() const noexcept WARN_UNUSED { return fdtell(fd); }
 	fd_t dup() const noexcept WARN_UNUSED { return ::dup(fd); }
 
 	stat_t stat() const noexcept WARN_UNUSED
