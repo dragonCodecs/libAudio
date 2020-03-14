@@ -85,20 +85,20 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 		if (module.ModuleType == MODULE_IT)
 		{
 			uint32_t a{0}, b{0};
-			int16_t value{0};
+			uint8_t value{0};
 			if (vibrato < 0)
 			{
-				value = (-vibrato) >> 8;
+				value = uint8_t(uint16_t(-vibrato) >> 8U);
 				a = linearSlideUp(value);
 				b = linearSlideUp(value + 1);
 			}
 			else
 			{
-				value = vibrato >> 8;
+				value = uint8_t(uint16_t(vibrato) >> 8U);
 				a = linearSlideDown(value);
 				b = linearSlideDown(value + 1);
 			}
-			value >>= 2;
+			value >>= 2U;
 			const int32_t result = muldiv(period, a + (((b - a) * (value & 0x3F)) >> 6), 256);
 			fractionalPeriod = uint32_t(result) & 0xFF;
 			return period - (result >> 8);
