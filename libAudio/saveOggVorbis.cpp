@@ -76,9 +76,6 @@ vorbis_comment copyComments(const fileInfo_t &info) noexcept
  * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
  * @warning This function must be called before using \c OggVorbis_WriteBuffer()
  */
-bool OggVorbis_SetFileInfo(void *p_VorbisFile, const fileInfo_t *const p_FI)
-	{ return audioFileInfo(p_VorbisFile, p_FI); }
-
 bool oggVorbis_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
@@ -103,16 +100,6 @@ bool oggVorbis_t::fileInfo(const fileInfo_t &info)
 	return true;
 }
 
-/*!
- * This function writes a buffer of audio to a Ogg/Vorbis file opened being encoded
- * @param p_VorbisFile A pointer to a file opened with \c oggVorbisOpenW()
- * @param InBuffer The buffer of audio to write
- * @param nInBufferLen An integer giving how long the buffer to write is
- * @attention Will not work unless \c OggVorbis_SetFileInfo() has been called beforehand
- */
-long OggVorbis_WriteBuffer(void *p_VorbisFile, uint8_t *InBuffer, int nInBufferLen)
-	{ return audioWriteBuffer(p_VorbisFile, InBuffer, nInBufferLen); }
-
 template<typename T> uint32_t fillFrame(oggVorbis_t &file, const void *const bufferPtr,
 	const uint32_t length)
 {
@@ -130,6 +117,13 @@ template<typename T> uint32_t fillFrame(oggVorbis_t &file, const void *const buf
 	return sampleCount;
 }
 
+/*!
+ * This function writes a buffer of audio to a Ogg/Vorbis file opened being encoded
+ * @param p_VorbisFile A pointer to a file opened with \c oggVorbisOpenW()
+ * @param InBuffer The buffer of audio to write
+ * @param nInBufferLen An integer giving how long the buffer to write is
+ * @attention Will not work unless \c OggVorbis_SetFileInfo() has been called beforehand
+ */
 int64_t oggVorbis_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 {
 	const fileInfo_t &info = fileInfo();
@@ -174,13 +168,3 @@ oggVorbis_t::encoderContext_t::~encoderContext_t() noexcept
 	ogg_stream_clear(&streamState);
 	vorbis_info_clear(&vorbisInfo);
 }
-
-/*!
- * Closes an open Ogg/Vorbis file
- * @param p_VorbisFile A pointer to a file opened with \c oggVorbisOpenW()
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p p_VorbisFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int OggVorbis_CloseFileW(void *p_VorbisFile) { return audioCloseFile(p_VorbisFile); }
