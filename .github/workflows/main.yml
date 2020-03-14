@@ -381,10 +381,9 @@ jobs:
           WANT_AUTOMAKE=latest automake -ac
           autoconf
           CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi -I${{ github.workspace }}/deps/libid3tag/msvc++" \
-            LDFLAGS="-no-undefined" ./configure --prefix=$HOME/deps --disable-static
+            LDFLAGS="-no-undefined -MD" ./configure --prefix=$HOME/deps --disable-shared --enable-static
           make -j $CPU_COUNT
           make install
-          cp $HOME/deps/lib/id3tag{.dll,}.lib
         working-directory: ${{ github.workspace }}/deps/libid3tag
       - name: Configure
         shell: cmd
