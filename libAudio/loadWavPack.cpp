@@ -82,7 +82,7 @@ namespace libAudio
 		int32_t read(void *filePtr, void *buffer, int32_t length)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.read(buffer, length, nullptr);
+			return int32_t(file.read(buffer, length, nullptr));
 		}
 
 		/*!
@@ -130,7 +130,7 @@ namespace libAudio
 		int ungetc(void *filePtr, int)
 		{
 			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.seek(-1, SEEK_CUR);
+			return int(file.seek(-1, SEEK_CUR));
 		}
 
 		/*!
@@ -237,7 +237,7 @@ wavPack_t::decoderContext_t::~decoderContext_t() noexcept
 void wavPack_t::decoderContext_t::nextFrame(const uint8_t channels) noexcept
 {
 	sampleCount = WavpackUnpackSamples(decoder, decodeBuffer.data(),
-		decodeBuffer.size() / channels) * channels;
+		uint32_t(decodeBuffer.size()) / channels) * channels;
 	samplesUsed = 0;
 	eof = sampleCount == 0;
 }
