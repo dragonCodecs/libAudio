@@ -22,6 +22,7 @@ extraFormats = get_option('extra_formats')
 extraSrcs = []
 extraArgs = []
 extraDeps = []
+includes = []
 
 if extraFormats.contains('wma')
 	extraSrcs += 'loadWMA.cpp'
@@ -52,6 +53,9 @@ if extraFormats.contains('ra')
 	extraSrcs += 'loadRealAudio.cpp'
 	extraArgs += '-DENABLE_RA'
 endif
+if target_machine.system() == 'windows'
+	includes += include_directories('windows')
+endif
 
 genericModuleSrcs = [
 	'genericModule/ModuleFile.cpp', 'genericModule/ModuleHeader.cpp', 'genericModule/ModuleInstrument.cpp',
@@ -76,6 +80,7 @@ libAudioLibrary = shared_library(
 		libAAC, libMP4v2, libMAD, libID3Tag, libOpus, extraDeps, maths
 	],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
+	include_directories: includes,
 	gnu_symbol_visibility: 'inlineshidden',
 	name_prefix: '',
 	install: true,
