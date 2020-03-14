@@ -24,7 +24,11 @@ void consoleStream_t::checkTTY() noexcept { _tty = isatty(fd); }
 void consoleStream_t::write(const void *const buffer, const size_t bufferLen) const noexcept
 {
 	// We don't actually care if this succeeds. We just try if at all possible.
+#ifndef _WINDOWS
 	[[maybe_unused]] const auto result = ::write(fd, buffer, bufferLen);
+#else
+	[[maybe_unused]] const auto result = ::write(fd, buffer, uint32_t(bufferLen));
+#endif
 	errno = 0; // extra insurance.
 }
 
@@ -38,12 +42,12 @@ void consoleStream_t::write(const char *const value) const noexcept
 		const auto consoleMode = setmode(fd, _O_U8TEXT);
 		const size_t valueLen = charTraits::length(value);
 		const size_t stringLen = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS,
-			value, valueLen, nullptr, 0);
+			value, int(valueLen), nullptr, 0);
 		auto string = makeUnique<wchar_t []>(stringLen);
 		if (!string)
 			return;
-		MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS, value, valueLen,
-			string.get(), stringLen);
+		MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS, value, int(valueLen),
+			string.get(), int(stringLen));
 		write(string.get(), sizeof(wchar_t) * stringLen);
 		setmode(fd, consoleMode);
 #else
