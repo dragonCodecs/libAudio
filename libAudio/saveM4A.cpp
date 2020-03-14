@@ -143,9 +143,6 @@ void *m4aOpenW(const char *fileName) { return m4a_t::openW(fileName); }
  *
  * @bug \p aacFile must not be \c nullptr as no checking on the parameter is done. FIXME!
  */
-bool M4A_SetFileInfo(void *aacFile, const fileInfo_t *const info)
-	{ return audioFileInfo(aacFile, info); }
-
 bool m4a_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
@@ -208,9 +205,6 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
  * @param nInBufferLen An integer giving how long the buffer to write is
  * @attention Will not work unless \c M4A_SetFileInfo() has been called beforehand
  */
-long M4A_WriteBuffer(void *aacFile, uint8_t *InBuffer, int nInBufferLen)
-	{ return audioWriteBuffer(aacFile, InBuffer, nInBufferLen); }
-
 int64_t m4a_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 {
 	uint32_t offset = 0;
@@ -256,13 +250,3 @@ m4a_t::encoderContext_t::~encoderContext_t() noexcept
 	if (encoder)
 		faacEncClose(encoder);
 }
-
-/*!
- * Closes an open M4A/MP4 file
- * @param aacFile A pointer to a file opened with \c m4aOpenW()
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p aacFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int M4A_CloseFileW(void *aacFile) { return audioCloseFile(aacFile); }

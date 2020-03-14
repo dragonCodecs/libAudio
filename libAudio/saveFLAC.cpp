@@ -98,14 +98,6 @@ flac_t *flac_t::openW(const char *const fileName) noexcept
  */
 void *flacOpenW(const char *fileName) { return flac_t::openW(fileName); }
 
-/*!
- * This function sets the \c FileInfo structure for a FLAC file being encoded
- * @param flacFile A pointer to a file opened with \c flacOpenW()
- * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
- * @warning This function must be called before using \c FLAC_WriteBuffer()
- */
-bool FLAC_SetFileInfo(void *flacFile, const fileInfo_t *const p_FI) { return audioFileInfo(flacFile, p_FI); }
-
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const char *const value)
 {
 	if (!value)
@@ -118,6 +110,12 @@ void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const 
 void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const std::unique_ptr<char []> &value)
 	{ writeComment(metadata, name, value.get()); }
 
+/*!
+ * This function sets the \c FileInfo structure for a FLAC file being encoded
+ * @param flacFile A pointer to a file opened with \c flacOpenW()
+ * @param p_FI A \c FileInfo pointer containing various metadata about an opened file
+ * @warning This function must be called before using \c FLAC_WriteBuffer()
+ */
 bool flac_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
@@ -134,29 +132,19 @@ bool flac_t::fileInfo(const fileInfo_t &info)
 	for (const auto &comment : info.other)
 	{
 		entry.entry = reinterpret_cast<uint8_t *>(comment.get());
-		entry.length = strlen(comment.get());
+		entry.length = uint32_t(strlen(comment.get()));
 		FLAC__metadata_object_vorbiscomment_append_comment(ctx.metadata[0], entry, true);
 	}
 
 	writeComment(ctx.metadata[0], "Album", info.album);
 	writeComment(ctx.metadata[0], "Artist", info.artist);
 	writeComment(ctx.metadata[0], "Title", info.title);
-	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, ctx.metadata.data(), ctx.metadata.size());
+	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, ctx.metadata.data(), uint32_t(ctx.metadata.size()));
 	FLAC__stream_encoder_init_stream(ctx.streamEncoder, flac::write, flac::seek,
 		flac::tell, nullptr, this);
 	fileInfo() = info;
 	return true;
 }
-
-/*!
- * This function writes a buffer of audio to a FLAC file opened being encoded
- * @param flacFile A pointer to a file opened with \c flacOpenW()
- * @param InBuffer The buffer of audio to write
- * @param nInBufferLen An integer giving how long the buffer to write is
- * @attention Will not work unless \c FLAC_SetFileInfo() has been called beforehand
- */
-long FLAC_WriteBuffer(void *flacFile, uint8_t *InBuffer, int nInBufferLen)
-	{ return audioWriteBuffer(flacFile, InBuffer, nInBufferLen); }
 
 void flac_t::encoderContext_t::fillFrame(const int8_t *const buffer, const uint32_t samples) noexcept
 {
@@ -170,6 +158,13 @@ void flac_t::encoderContext_t::fillFrame(const int16_t *const buffer, const uint
 		encoderBuffer[i] = buffer[i];
 }
 
+/*!
+ * This function writes a buffer of audio to a FLAC file opened being encoded
+ * @param flacFile A pointer to a file opened with \c flacOpenW()
+ * @param InBuffer The buffer of audio to write
+ * @param nInBufferLen An integer giving how long the buffer to write is
+ * @attention Will not work unless \c FLAC_SetFileInfo() has been called beforehand
+ */
 int64_t flac_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 {
 	const auto buffer = static_cast<const char *>(bufferPtr);
@@ -214,13 +209,3 @@ bool flac_t::encoderContext_t::finish() noexcept
 }
 
 flac_t::encoderContext_t::~encoderContext_t() noexcept { finish(); }
-
-/*!
- * Closes an open FLAC file
- * @param flacFile A pointer to a file opened with \c flacOpenW()
- * @return an integer indicating success or failure with the same values as \c fclose()
- * @warning Do not use the pointer given by \p flacFile after using
- * this function - please either set it to \c nullptr or be extra carefull
- * to destroy it via scope
- */
-int FLAC_CloseFileW(void *flacFile) { return audioCloseFile(flacFile); }
