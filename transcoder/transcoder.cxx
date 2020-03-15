@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 		uint32_t loops = 0;
 		for (int64_t result = 1; result > 0; ++loops)
 		{
-			result = audioFillBuffer(inFile.get(), buffer.data(), buffer.size());
+			result = audioFillBuffer(inFile.get(), buffer.data(), uint32_t(buffer.size()));
 			result = audioWriteBuffer(outFile.get(), buffer.data(), result);
 			printStatus(loops + 1, *fileInfo);
 		}
