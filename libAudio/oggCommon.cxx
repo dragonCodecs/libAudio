@@ -30,7 +30,7 @@ bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 {
 	std::array<unsigned char, 79> header{};
 	if (fd == -1 ||
-		read(fd, header.data(), header.size()) != header.size() ||
+		read(fd, header.data(), uint32_t(header.size())) != header.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		memcmp(header.data(), "OggS", 4) != 0)
 		return false;
@@ -43,8 +43,8 @@ bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 	ogg_sync_init(&syncState);
 	ogg_stream_init(&streamState, -1);
 	syncState.data = header.data();
-	syncState.storage = header.size();
-	if (ogg_sync_wrote(&syncState, header.size()))
+	syncState.storage = int32_t(header.size());
+	if (ogg_sync_wrote(&syncState, int32_t(header.size())))
 		return oggCleanup(syncState, streamState);
 	ogg_page page{};
 	if (ogg_sync_pageout(&syncState, &page) != 1 ||
