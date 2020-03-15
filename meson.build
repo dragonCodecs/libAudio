@@ -24,6 +24,7 @@ add_project_arguments(
 if target_machine.system() == 'windows'
 	add_project_arguments(
 		'-D_WINDOWS',
+		'-wd5030',
 		language: 'cpp'
 	)
 endif
