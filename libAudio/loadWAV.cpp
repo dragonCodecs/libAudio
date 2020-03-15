@@ -175,20 +175,22 @@ void *wavOpenR(const char *fileName) { return wav_t::openR(fileName); }
 
 wav_t::decoderContext_t::~decoderContext_t() noexcept { }
 int8_t dataToSample(const std::array<uint8_t, 1> &data) noexcept
-	{ return int8_t(data[0]) ^ 0x80; }
+	{ return int8_t(data[0] ^ 0x80U); }
 int16_t dataToSample(const std::array<uint8_t, 2> &data) noexcept
-	{ return int16_t((uint16_t(data[1]) << 8) | data[0]); }
+	{ return int16_t((uint16_t(data[1]) << 8U) | data[0]); }
 int16_t dataToSample(const std::array<uint8_t, 3> &data) noexcept
-	{ return int16_t((uint16_t(data[2]) << 8) | data[1]); }
+	{ return int16_t((uint16_t(data[2]) << 8U) | data[1]); }
 int16_t dataToSample(const std::array<uint8_t, 4> &data) noexcept
-	{ return int16_t((uint16_t(data[3]) << 8) | data[2]); }
-const float *asFloat(const void *value) noexcept { return reinterpret_cast<const float *>(value); }
+	{ return int16_t((uint16_t(data[3]) << 8U) | data[2]); }
 
 float dataToFloat(const std::array<uint8_t, 4> &data) noexcept
 {
 	const uint32_t value = (uint32_t(data[3]) << 24) |
 		(uint32_t(data[2]) << 16) | (uint32_t(data[1]) << 8) | data[0];
-	return *asFloat(&value);
+	float result{};
+	static_assert(sizeof(float) == 4, "Float is not the expected size of 4 on this platform");
+	memcpy(&result, &value, 4);
+	return result;
 }
 
 template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
