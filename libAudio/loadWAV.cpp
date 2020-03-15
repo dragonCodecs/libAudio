@@ -43,6 +43,10 @@ struct wav_t::decoderContext_t final
 
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
+	template<size_t N> bool copyDataTo(std::array<uint8_t, N> &buffer, const fd_t &file,
+		const size_t sampleByteCount) noexcept;
+
+private:
 	bool maybeReadData(const fd_t &file, const size_t sampleByteCount) noexcept;
 };
 
@@ -209,6 +213,21 @@ bool wav_t::decoderContext_t::maybeReadData(const fd_t &file, const size_t sampl
 	return true;
 }
 
+template<size_t N> bool wav_t::decoderContext_t::copyDataTo(std::array<uint8_t, N> &buffer,
+	const fd_t &file, const size_t sampleByteCount) noexcept
+{
+	if (!maybeReadData(file, sampleByteCount))
+		return false;
+	const size_t amount = std::min(bytesAvailable - bytesUsed, buffer.size());
+	memcpy(buffer.data(), inputBuffer.data() + bytesUsed, amount);
+	bytesUsed += amount;
+	if (!maybeReadData(file, sampleByteCount))
+		return false;
+	memcpy(buffer.data() + amount, inputBuffer.data() + bytesUsed, buffer.size() - amount);
+	bytesUsed += buffer.size() - amount;
+	return true;
+}
+
 template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
 	const uint32_t length, const size_t sampleByteCount)
 {
@@ -217,11 +236,9 @@ template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *bu
 	uint32_t offset = 0;
 	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
 	{
-		if (!ctx.maybeReadData(wavFile.fd(), sampleByteCount - offset))
-			break;
 		std::array<uint8_t, N> data{};
-		memcpy(data.data(), ctx.inputBuffer.data() + ctx.bytesUsed, data.size());
-		ctx.bytesUsed += data.size();
+		if (!ctx.copyDataTo(data, wavFile.fd(), sampleByteCount - offset))
+			break;
 		playbackBuffer[index] = dataToSample(data);
 		offset += sizeof(T);
 	}
@@ -237,11 +254,9 @@ template<typename T, uint8_t N> uint32_t readFloatSamples(wav_t &wavFile, void *
 	uint32_t offset = 0;
 	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
 	{
-		if (!ctx.maybeReadData(wavFile.fd(), sampleByteCount - offset))
-			break;
 		std::array<uint8_t, N> data{};
-		memcpy(data.data(), ctx.inputBuffer.data() + ctx.bytesUsed, data.size());
-		ctx.bytesUsed += data.size();
+		if (!ctx.copyDataTo(data, wavFile.fd(), sampleByteCount - offset))
+			break;
 		const float sample = dataToFloat(data);
 		playbackBuffer[index] = T(sample * limits::max());
 		offset += sizeof(T);
