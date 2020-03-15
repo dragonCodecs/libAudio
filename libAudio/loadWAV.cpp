@@ -17,6 +17,8 @@
  */
 struct wav_t::decoderContext_t final
 {
+	std::array<uint8_t, 8192> inputBuffer;
+	size_t bytesAvailable, bytesUsed;
 	/*!
 	 * @internal
 	 * The internal decoded data buffer
@@ -45,7 +47,9 @@ struct wav_t::decoderContext_t final
 
 wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd)),
 	ctx(makeUnique<decoderContext_t>()) { }
-wav_t::decoderContext_t::decoderContext_t() noexcept { }
+wav_t::decoderContext_t::decoderContext_t() noexcept : inputBuffer{}, bytesAvailable{0},
+	bytesUsed{0}, playbackBuffer{}, offsetDataLength{0}, compression{0}, bitsPerSample{0},
+	floatData{false} { }
 
 constexpr std::array<char, 4> waveFormatChunk{'f', 'm', 't', ' '};
 constexpr std::array<char, 4> waveDataChunk{'d', 'a', 't', 'a'};
@@ -190,14 +194,25 @@ float dataToFloat(const std::array<uint8_t, 4> &data) noexcept
 template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
 	const uint32_t length, const uint32_t sampleByteCount)
 {
+	const fd_t &file = wavFile.fd();
+	auto &ctx = *wavFile.context();
 	const auto playbackBuffer = static_cast<T *>(buffer);
 	uint32_t offset = 0;
-	const fd_t &file = wavFile.fd();
 	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
 	{
+		if (ctx.bytesUsed == ctx.bytesAvailable)
+		{
+			const auto amount = std::min<size_t>(sampleByteCount, ctx.inputBuffer.size());
+			const auto result = file.read(ctx.inputBuffer.data(), amount, nullptr);
+			if (result <= 0)
+				break;
+			else
+				ctx.bytesAvailable = size_t(result);
+			ctx.bytesUsed = 0;
+		}
 		std::array<uint8_t, N> data{};
-		if (!file.read(data))
-			break;
+		memcpy(data.data(), ctx.inputBuffer.data() + ctx.bytesUsed, data.size());
+		ctx.bytesUsed += data.size();
 		playbackBuffer[index] = dataToSample(data);
 		offset += sizeof(T);
 	}
