@@ -43,6 +43,7 @@ struct wav_t::decoderContext_t final
 
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
+	bool maybeReadData(const fd_t &file, const size_t sampleByteCount) noexcept;
 };
 
 wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd)),
@@ -193,25 +194,31 @@ float dataToFloat(const std::array<uint8_t, 4> &data) noexcept
 	return result;
 }
 
-template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
-	const uint32_t length, const uint32_t sampleByteCount)
+bool wav_t::decoderContext_t::maybeReadData(const fd_t &file, const size_t sampleByteCount) noexcept
 {
-	const fd_t &file = wavFile.fd();
+	if (bytesUsed == bytesAvailable)
+	{
+		const auto amount = std::min(sampleByteCount, inputBuffer.size());
+		const auto result = file.read(inputBuffer.data(), amount, nullptr);
+		if (result <= 0)
+			return false;
+		else
+			bytesAvailable = size_t(result);
+		bytesUsed = 0;
+	}
+	return true;
+}
+
+template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *buffer,
+	const uint32_t length, const size_t sampleByteCount)
+{
 	auto &ctx = *wavFile.context();
 	const auto playbackBuffer = static_cast<T *>(buffer);
 	uint32_t offset = 0;
 	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
 	{
-		if (ctx.bytesUsed == ctx.bytesAvailable)
-		{
-			const auto amount = std::min<size_t>(sampleByteCount, ctx.inputBuffer.size());
-			const auto result = file.read(ctx.inputBuffer.data(), amount, nullptr);
-			if (result <= 0)
-				break;
-			else
-				ctx.bytesAvailable = size_t(result);
-			ctx.bytesUsed = 0;
-		}
+		if (!ctx.maybeReadData(wavFile.fd(), sampleByteCount - offset))
+			break;
 		std::array<uint8_t, N> data{};
 		memcpy(data.data(), ctx.inputBuffer.data() + ctx.bytesUsed, data.size());
 		ctx.bytesUsed += data.size();
@@ -222,17 +229,19 @@ template<typename T, uint8_t N> uint32_t readIntSamples(wav_t &wavFile, void *bu
 }
 
 template<typename T, uint8_t N> uint32_t readFloatSamples(wav_t &wavFile, void *buffer,
-	const uint32_t length, const uint32_t sampleByteCount)
+	const uint32_t length, const size_t sampleByteCount)
 {
 	using limits = std::numeric_limits<T>;
+	auto &ctx = *wavFile.context();
 	const auto playbackBuffer = static_cast<T *>(buffer);
 	uint32_t offset = 0;
-	const fd_t &file = wavFile.fd();
 	for (uint32_t index = 0; offset < length && offset < sampleByteCount; ++index)
 	{
-		std::array<uint8_t, N> data{};
-		if (!file.read(data))
+		if (!ctx.maybeReadData(wavFile.fd(), sampleByteCount - offset))
 			break;
+		std::array<uint8_t, N> data{};
+		memcpy(data.data(), ctx.inputBuffer.data() + ctx.bytesUsed, data.size());
+		ctx.bytesUsed += data.size();
 		const float sample = dataToFloat(data);
 		playbackBuffer[index] = T(sample * limits::max());
 		offset += sizeof(T);
@@ -258,7 +267,7 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 	const off_t fileOffset = file.tell();
 	if (file.isEOF() || fileOffset == -1 || fileOffset >= ctx.offsetDataLength)
 		return -2;
-	const uint32_t sampleByteCount = uint32_t(ctx.offsetDataLength - fileOffset);
+	const size_t sampleByteCount = size_t(ctx.offsetDataLength - fileOffset);
 	// 8-bit char reader
 	if (!ctx.floatData && ctx.bitsPerSample == 8)
 		return readIntSamples<int8_t, 1>(*this, buffer, length, sampleByteCount);
