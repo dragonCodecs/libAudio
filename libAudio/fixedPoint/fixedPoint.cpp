@@ -17,7 +17,7 @@ fixed64_t fixed64_t::exp()
 {
 	fixed64_t ret{1}, x{1};
 	uint8_t i{1};
-	uint64_t j{1};
+	uint32_t j{1};
 	for (i = 1, j = 1; i <= 32; i++)
 	{
 		j *= i;
@@ -66,7 +66,7 @@ fixed64_t fixed64_t::operator /(const fixed64_t &b) const
 	if (e == 0)
 		return {0};
 
-	q_i = e / f;
+	q_i = uint32_t(e / f);
 //	printf("%llu %d\t", e, q_i);
 	e -= q_i * f;
 //	printf("%llu %llu", q_i * f, e);
@@ -102,7 +102,7 @@ fixed64_t &fixed64_t::operator /=(const fixed64_t &b)
 
 	sign *= b.sign;
 	d = 0;
-	i = e / f;
+	i = uint32_t(e / f);
 	g = 0;
 	while (e > 0 && f > 0 && g < 32)
 	{
@@ -133,8 +133,8 @@ fixed64_t fixed64_t::operator +(const fixed64_t &b) const
 		const bool overflow = decimal < 0;
 		if (overflow)
 			decimal = (1LL << 32) + decimal;
-		return fixed64_t((integer < 0 ? -integer : integer) - (overflow ? 1 : 0),
-			decimal, (integer < 0 ? -1 : 1));
+		return fixed64_t(uint32_t(integer < 0 ? -integer : integer) - (overflow ? 1 : 0),
+			uint32_t(decimal), (integer < 0 ? -1 : 1));
 	}
 	else
 	{
@@ -158,8 +158,8 @@ fixed64_t &fixed64_t::operator +=(const fixed64_t &b)
 		if (overflow)
 			decimal = (1LL << 32) + decimal;
 		sign = (integer < 0 ? -1 : 1);
-		i = (integer < 0 ? -integer : integer) - (overflow == true ? 1 : 0);
-		d = decimal;
+		i = uint32_t(integer < 0 ? -integer : integer) - (overflow ? 1 : 0);
+		d = uint32_t(decimal);
 	}
 	else
 	{
@@ -176,11 +176,11 @@ uint8_t fixed64_t::ulog2(uint64_t value) const noexcept
 		if (unlikely(!value))
 				return std::numeric_limits<uint8_t>::max();
 #if defined(__ICC)
-		return (sizeof(uint8_t) * 8) - _lzcnt_u64(value);
+		return uint8_t(sizeof(uint8_t) * 8) - uint8_t(_lzcnt_u64(value));
 #elif defined(__GNUC__)
-		return (sizeof(uint8_t) * 8) - __builtin_clzl(value);
+		return uint8_t(sizeof(uint8_t) * 8) - uint8_t(__builtin_clzl(value));
 #elif defined(_MSC_VER)
-		return (sizeof(uint8_t) * 8) - __lzcnt64(value);
+		return uint8_t(sizeof(uint8_t) * 8) - uint8_t(__lzcnt64(value));
 #else
 		uint8_t result = 0;
 		if (value <= UINT64_C(0x00000000FFFFFFFF))
@@ -195,7 +195,7 @@ uint8_t fixed64_t::ulog2(uint64_t value) const noexcept
 				result += 2, value <<= 2;
 		if (value <= UINT64_C(0x7FFFFFFFFFFFFFFF))
 				++result;
-		return (sizeof(uint8_t) * 8) - result;
+		return uint8_t(sizeof(uint8_t) * 8) - result;
 #endif
 }
 
