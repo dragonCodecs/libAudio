@@ -31,13 +31,13 @@ namespace libAudio
 		int seek(void *filePtr, int64_t offset, int whence)
 		{
 			const auto file = static_cast<const oggVorbis_t *>(filePtr);
-			return file->fd().seek(offset, whence);
+			return int(file->fd().seek(offset, whence));
 		}
 
 		long tell(void *filePtr)
 		{
 			const auto file = static_cast<const oggVorbis_t *>(filePtr);
-			return file->fd().tell();
+			return long(file->fd().tell());
 		}
 
 		constexpr static ov_callbacks callbacks
@@ -103,7 +103,7 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 	info.channels = vorbisInfo.channels;
 	info.bitsPerSample = 16;
 	if (ov_seekable(&ctx.decoder))
-		info.totalTime = ov_time_total(&ctx.decoder, -1);
+		info.totalTime = uint64_t(ov_time_total(&ctx.decoder, -1));
 	copyComments(info, *ov_comment(&ctx.decoder, -1));
 
 	if (!ExternalPlayback)

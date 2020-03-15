@@ -26,7 +26,7 @@ struct wav_t::decoderContext_t final
 	 * @internal
 	 * The byte possition where the final byte of the data chunk should be in the file
 	 */
-	uint32_t offsetDataLength;
+	off_t offsetDataLength;
 	/*!
 	 * @internal
 	 * The compression flags read from the WAV file
@@ -241,7 +241,7 @@ int64_t wav_t::fillBuffer(void *const buffer, const uint32_t length)
 	const off_t fileOffset = file.tell();
 	if (file.isEOF() || fileOffset == -1 || fileOffset >= ctx.offsetDataLength)
 		return -2;
-	const uint32_t sampleByteCount = ctx.offsetDataLength - fileOffset;
+	const uint32_t sampleByteCount = uint32_t(ctx.offsetDataLength - fileOffset);
 	// 8-bit char reader
 	if (!ctx.floatData && ctx.bitsPerSample == 8)
 		return readIntSamples<int8_t, 1>(*this, buffer, length, sampleByteCount);

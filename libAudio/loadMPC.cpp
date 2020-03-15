@@ -92,7 +92,7 @@ namespace libAudio
 		int32_t read(mpc_reader *reader, void *buffer, int bufferLen)
 		{
 			const auto file = static_cast<mpc_t *>(reader->data);
-			return file->fd().read(buffer, bufferLen, nullptr);
+			return int32_t(file->fd().read(buffer, bufferLen, nullptr));
 		}
 
 		/*!
@@ -121,7 +121,7 @@ namespace libAudio
 		int32_t tell(mpc_reader *reader)
 		{
 			const auto file = static_cast<mpc_t *>(reader->data);
-			return file->fd().tell();
+			return int32_t(file->fd().tell());
 		}
 
 		/*!
@@ -135,7 +135,7 @@ namespace libAudio
 		int32_t length(mpc_reader *reader)
 		{
 			const auto file = static_cast<mpc_t *>(reader->data);
-			return file->fd().length();
+			return int32_t(file->fd().length());
 		}
 
 		/*!

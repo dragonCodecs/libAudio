@@ -95,7 +95,7 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 		return nullptr;
 	unsigned long bitRate;
 	unsigned char channels;
-	NeAACDecInit(ctx.decoder, frameHeader.data(), frameHeader.size(), &bitRate, &channels);
+	NeAACDecInit(ctx.decoder, frameHeader.data(), uint16_t(frameHeader.size()), &bitRate, &channels);
 	NeAACDecConfiguration *const config = NeAACDecGetCurrentConfiguration(ctx.decoder);
 	config->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(ctx.decoder, config);
@@ -161,7 +161,7 @@ namespace libAudio
 				data{buffer}, bitTotal{bufferLen * 8}, currentBit{0} { }
 
 			template<typename T, size_t N> bitStream_t(std::array<T, N> &buffer) noexcept :
-				bitStream_t(reinterpret_cast<uint8_t *>(buffer.data()), buffer.size()) { }
+				bitStream_t{reinterpret_cast<uint8_t *>(buffer.data()), uint32_t(buffer.size())} {}
 
 			/*!
 			* @internal
@@ -272,10 +272,10 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		}
 		uint8_t *const decodeBuffer = ctx.decodeBuffer;
 
-		const uint32_t count = std::min(ctx.sampleCount, uint64_t{length - offset});
+		const auto count = std::min(ctx.sampleCount, uint64_t{length - offset});
 		memcpy(buffer + offset, decodeBuffer + ctx.samplesUsed, count);
 		ctx.samplesUsed += count;
-		offset += count;
+		offset += uint32_t(count);
 	}
 
 	return offset;
