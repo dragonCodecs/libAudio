@@ -221,7 +221,9 @@ template<size_t N> bool wav_t::decoderContext_t::copyDataTo(std::array<uint8_t, 
 	const size_t amount = std::min(bytesAvailable - bytesUsed, buffer.size());
 	memcpy(buffer.data(), inputBuffer.data() + bytesUsed, amount);
 	bytesUsed += amount;
-	if (!maybeReadData(file, sampleByteCount))
+	if (amount == buffer.size())
+		return true; // If we're done, exit early to avoid the expense of the second half of this function
+	else if (!maybeReadData(file, sampleByteCount))
 		return false;
 	memcpy(buffer.data() + amount, inputBuffer.data() + bytesUsed, buffer.size() - amount);
 	bytesUsed += buffer.size() - amount;
