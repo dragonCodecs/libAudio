@@ -19,7 +19,7 @@ namespace libAudio
 			using uint_t = makeUnsigned<int_t>;
 			const char *const _value;
 			const size_t _length;
-			constexpr static const bool _isSigned = isSigned<int_t>::value;
+			constexpr static bool _isSigned = isSigned<int_t>::value;
 
 			template<bool isFunc(const char)> bool checkValue() const noexcept
 			{
@@ -54,6 +54,12 @@ namespace libAudio
 			bool isOct() const noexcept { return checkValue<isOct>(); }
 			int_t fromInt() const noexcept { return *this; }
 
+#ifdef _MSC_VER
+// The `-int_t(value)` line in the next chunk of code
+// generates this warning for unsigned types, even though
+// the line is unreachable dead-code in this situation
+#pragma warning(disable:4146)
+#endif
 			operator int_t() const noexcept
 			{
 				uint_t value(0);
@@ -68,6 +74,10 @@ namespace libAudio
 					return -int_t(value);
 				return int_t(value);
 			}
+#ifdef _MSC_VER
+// Put the warning back how we found it..
+#pragma warning(default:4146)
+#endif
 
 			int_t fromHex() const noexcept
 			{
