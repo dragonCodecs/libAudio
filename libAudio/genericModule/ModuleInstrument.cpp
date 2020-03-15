@@ -185,7 +185,8 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8
 
 uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 {
-	uint8_t pt, n1 = 0, ret = 0;
+	uint8_t pt, ret = 0;
+	uint16_t n1 = 0;
 	for (pt = 0; pt < (nNodes - 1); ++pt)
 	{
 		if (currentTick <= Nodes[pt].Tick)
@@ -198,7 +199,7 @@ uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 		n1 = Nodes[pt - 1].Tick;
 		ret = Nodes[pt - 1].Value;
 	}
-	uint8_t n2 = Nodes[pt].Tick;
+	uint16_t n2 = Nodes[pt].Tick;
 	if (n2 > n1 && currentTick > n1)
 	{
 		int16_t val = currentTick - n1;
