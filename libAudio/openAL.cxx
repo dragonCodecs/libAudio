@@ -32,13 +32,13 @@ alSource_t::alSource_t() noexcept : source{AL_NONE}
 	al::alGenSources(1, &source);
 	if (!source)
 		return;
-	al::alSourcef(source, AL_GAIN, 1);
-	al::alSourcef(source, AL_PITCH, 1);
-	al::alListener3f(AL_POSITION, 0, 0, 0);
-	al::alSource3f(source, AL_POSITION, 0, 0, 0);
-	al::alSource3f(source, AL_VELOCITY, 0, 0, 0);
-	al::alSource3f(source, AL_DIRECTION, 0, 0, 0);
-	al::alSourcef(source, AL_ROLLOFF_FACTOR, 0);
+	al::alSourcef(source, AL_GAIN, 1.f);
+	al::alSourcef(source, AL_PITCH, 1.f);
+	al::alListener3f(AL_POSITION, 0.f, 0.f, 0.f);
+	al::alSource3f(source, AL_POSITION, 0.f, 0.f, 0.f);
+	al::alSource3f(source, AL_VELOCITY, 0.f, 0.f, 0.f);
+	al::alSource3f(source, AL_DIRECTION, 0.f, 0.f, 0.f);
+	al::alSourcef(source, AL_ROLLOFF_FACTOR, 0.f);
 }
 
 alSource_t::~alSource_t() noexcept
