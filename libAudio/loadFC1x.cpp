@@ -7,7 +7,7 @@ modFC1x_t::modFC1x_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleFC1x,
 
 modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<modFC1x_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<modFC1x_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isFC1x(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();

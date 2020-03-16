@@ -8,7 +8,7 @@ modS3M_t::modS3M_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleS3M, st
 
 modS3M_t *modS3M_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<modS3M_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<modS3M_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isS3M(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();

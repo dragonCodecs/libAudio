@@ -179,7 +179,7 @@ void m4a_t::fetchTags() noexcept
  */
 m4a_t *m4a_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<m4a_t> file{makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	auto file{makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isM4A(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();

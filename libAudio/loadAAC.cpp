@@ -81,17 +81,17 @@ aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false
  */
 aac_t *aac_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<aac_t> aacFile(makeUnique<aac_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!aacFile || !aacFile->valid() || !isAAC(aacFile->_fd))
+	auto file{makeUnique<aac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	if (!file || !file->valid() || !isAAC(file->_fd))
 		return nullptr;
 
-	auto &ctx = *aacFile->context();
-	fileInfo_t &info = aacFile->fileInfo();
-	const fd_t &file = aacFile->fd();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
+	const fd_t &fd = file->fd();
 	std::array<uint8_t, ADTS_MAX_SIZE> frameHeader;
 
-	if (!file.read(frameHeader) ||
-		file.seek(0, SEEK_SET) != 0)
+	if (!fd.read(frameHeader) ||
+		fd.seek(0, SEEK_SET) != 0)
 		return nullptr;
 	unsigned long bitRate;
 	unsigned char channels;
@@ -105,8 +105,8 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 	info.bitsPerSample = 16;
 
 	if (!ExternalPlayback)
-		aacFile->player(makeUnique<playback_t>(aacFile.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-	return aacFile.release();
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return file.release();
 }
 
 /*!

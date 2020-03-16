@@ -9,7 +9,7 @@ modSTM_t::modSTM_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleSTM, st
 
 modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<modSTM_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<modSTM_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isSTM(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();

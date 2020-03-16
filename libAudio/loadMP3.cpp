@@ -252,7 +252,7 @@ bool mp3_t::readMetadata() noexcept
  */
 mp3_t *mp3_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<mp3_t> file(makeUnique<mp3_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	auto file{makeUnique<mp3_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isMP3(file->_fd) || !file->readMetadata())
 		return nullptr;
 	auto &ctx = *file->context();

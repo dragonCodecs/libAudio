@@ -88,7 +88,7 @@ void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
  */
 oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<oggVorbis_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{});
+	auto file{makeUnique<oggVorbis_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isOggVorbis(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();

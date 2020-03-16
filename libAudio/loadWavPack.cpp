@@ -201,7 +201,7 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
  */
 wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<wavPack_t> file(makeUnique<wavPack_t>(fd_t(fileName, O_RDONLY | O_NOCTTY), fileName));
+	auto file{makeUnique<wavPack_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, fileName)};
 	if (!file || !file->valid() || !isWavPack(file->_fd))
 		return nullptr;
 	fd_t &fileDesc = const_cast<fd_t &>(file->fd());

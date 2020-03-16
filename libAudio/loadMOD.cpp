@@ -9,7 +9,7 @@ modMOD_t::modMOD_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std
 
 modMOD_t *modMOD_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<modMOD_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<modMOD_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isMOD(file->_fd) || file->_fd.seek(0, SEEK_SET))
 		return nullptr;
 	auto &ctx = *file->context();

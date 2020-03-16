@@ -8,7 +8,7 @@ modAON_t::modAON_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleAON, st
 
 modAON_t *modAON_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isAON(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();

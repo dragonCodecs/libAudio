@@ -171,7 +171,7 @@ mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamI
  */
 mpc_t *mpc_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<mpc_t> file(makeUnique<mpc_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
+	auto file{makeUnique<mpc_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isMPC(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();

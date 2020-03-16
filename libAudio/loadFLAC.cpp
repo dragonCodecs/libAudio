@@ -232,11 +232,11 @@ flac_t::decoderContext_t::decoderContext_t() noexcept : streamDecoder{FLAC__stre
  */
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<flac_t> flacFile{makeUnique<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
-	if (!flacFile || !flacFile->valid() || !isFLAC(flacFile->_fd))
+	auto file{makeUnique<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	if (!file || !file->valid() || !isFLAC(file->_fd))
 		return nullptr;
-	const fd_t &fd = flacFile->fd();
-	auto &ctx = *flacFile->decoderContext();
+	const fd_t &fd = file->fd();
+	auto &ctx = *file->decoderContext();
 
 	FLAC__stream_decoder_set_metadata_ignore_all(ctx.streamDecoder);
 	FLAC__stream_decoder_set_metadata_respond(ctx.streamDecoder, FLAC__METADATA_TYPE_STREAMINFO);
@@ -249,13 +249,13 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
 	else if (memcmp(sig.data(), "OggS", sig.size()) == 0)
 		FLAC__stream_decoder_init_ogg_stream(ctx.streamDecoder, flac::read, flac::seek,
 			flac::tell, flac::length, flac::eof, flac::data, flac::metadata, flac::error,
-			flacFile.get());
+			file.get());
 	else
 		FLAC__stream_decoder_init_stream(ctx.streamDecoder, flac::read, flac::seek, flac::tell,
-			flac::length, flac::eof, flac::data, flac::metadata, flac::error, flacFile.get());
+			flac::length, flac::eof, flac::data, flac::metadata, flac::error, file.get());
 
 	FLAC__stream_decoder_process_until_end_of_metadata(ctx.streamDecoder);
-	return flacFile.release();
+	return file.release();
 }
 
 /*!

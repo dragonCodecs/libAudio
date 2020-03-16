@@ -22,7 +22,7 @@ oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : encoderState{}, blo
 
 oggVorbis_t *oggVorbis_t::openW(const char *const fileName) noexcept
 {
-	auto file{makeUnique<oggVorbis_t>(fd_t(fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode),
+	auto file{makeUnique<oggVorbis_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode},
 		audioModeWrite_t{})};
 	if (!file || !file->valid())
 		return nullptr;

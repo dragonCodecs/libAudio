@@ -122,52 +122,52 @@ bool wav_t::readFormat() noexcept
  */
 wav_t *wav_t::openR(const char *const fileName) noexcept
 {
-	std::unique_ptr<wav_t> wavFile(makeUnique<wav_t>(fd_t(fileName, O_RDONLY | O_NOCTTY)));
-	if (!wavFile || !wavFile->valid() || !isWAV(wavFile->_fd))
+	auto file{makeUnique<wav_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	if (!file || !file->valid() || !isWAV(file->_fd))
 		return nullptr;
-	auto &ctx = *wavFile->context();
-	fileInfo_t &info = wavFile->fileInfo();
-	const fd_t &file = wavFile->fd();
-	const off_t fileSize = file.length();
+	auto &ctx = *file->context();
+	fileInfo_t &info = file->fileInfo();
+	const fd_t &fd = file->fd();
+	const off_t fileSize = fd.length();
 	uint32_t chunkLength = 0;
 
 	if (fileSize == -1 ||
-		file.seek(4, SEEK_SET) != 4 ||
-		!file.readLE(chunkLength) ||
+		fd.seek(4, SEEK_SET) != 4 ||
+		!fd.readLE(chunkLength) ||
 		chunkLength > (fileSize - 8) ||
-		file.seek(4, SEEK_CUR) != 12 ||
-		!wavFile->skipToChunk(waveFormatChunk))
+		fd.seek(4, SEEK_CUR) != 12 ||
+		!file->skipToChunk(waveFormatChunk))
 		return nullptr;
-	off_t offset = file.tell();
+	off_t offset = fd.tell();
 	if (offset == -1 ||
-		!file.readLE(chunkLength) ||
+		!fd.readLE(chunkLength) ||
 		chunkLength > (fileSize - offset - 4) ||
 		chunkLength < 16 ||
-		!wavFile->readFormat())
+		!file->readFormat())
 		return nullptr;
 
 	// Currently we do not care if the file has extra data, we're only looking to work with PCM.
 	for (uint32_t i = 16; i < chunkLength; ++i)
 	{
 		char value = 0;
-		if (!file.read(value))
+		if (!fd.read(value))
 			return nullptr;
 	}
 
-	if (!wavFile->skipToChunk(waveDataChunk) ||
-		!file.readLE(chunkLength) ||
-		(offset = file.tell()) == -1 ||
+	if (!file->skipToChunk(waveDataChunk) ||
+		!fd.readLE(chunkLength) ||
+		(offset = fd.tell()) == -1 ||
 		chunkLength > (fileSize - offset) ||
-		file.isEOF())
+		fd.isEOF())
 		return nullptr;
 	info.totalTime = chunkLength / info.channels;
 	info.totalTime /= ctx.bitsPerSample / 8;
 	info.totalTime /= info.bitRate;
-	ctx.offsetDataLength = chunkLength + file.tell();
+	ctx.offsetDataLength = chunkLength + fd.tell();
 
 	if (!ExternalPlayback)
-		wavFile->player(makeUnique<playback_t>(wavFile.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
-	return wavFile.release();
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+	return file.release();
 }
 
 /*!

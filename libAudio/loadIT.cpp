@@ -7,7 +7,7 @@ modIT_t::modIT_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleIT, std::
 
 modIT_t *modIT_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<modIT_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<modIT_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isIT(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();

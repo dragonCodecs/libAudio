@@ -84,7 +84,7 @@ oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBu
  */
 oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 {
-	auto file = makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY});
+	auto file{makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isOggOpus(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();
