@@ -83,7 +83,7 @@ flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stre
 
 flac_t *flac_t::openW(const char *const fileName) noexcept
 {
-	auto file = makeUnique<flac_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, normalMode},
+	auto file = makeUnique<flac_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
 		audioModeWrite_t{});
 	if (!file || !file->valid())
 		return nullptr;

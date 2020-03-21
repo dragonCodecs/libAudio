@@ -22,7 +22,7 @@ extraFormats = get_option('extra_formats')
 extraSrcs = []
 extraArgs = []
 extraDeps = []
-includes = []
+includes = [include_directories('../deps/substrate')]
 
 if extraFormats.contains('wma')
 	extraSrcs += 'loadWMA.cpp'

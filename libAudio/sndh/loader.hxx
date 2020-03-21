@@ -4,8 +4,10 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "../fd.hxx"
+#include <substrate/fd>
 #include "../fixedVector.hxx"
+
+using substrate::fd_t;
 
 struct sndhEntryPoints_t final
 {

@@ -15,10 +15,12 @@
 #endif
 
 #include <cstdint>
-#include "fd.hxx"
+#include <substrate/fd>
 #include "fileInfo.hxx"
 #include "playback.hxx"
 #include "uniquePtr.hxx"
+
+using substrate::fd_t;
 
 enum class audioType_t : uint8_t
 {

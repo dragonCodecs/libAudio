@@ -1,9 +1,11 @@
 #include <array>
 #include <string.h>
 
-#include "fd.hxx"
+#include <substrate/fd>
 #include "uniquePtr.hxx"
 #include "oggCommon.hxx"
+
+using substrate::fd_t;
 
 inline bool clonePacketData(ogg_packet &packet) noexcept try
 {
