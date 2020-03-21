@@ -125,7 +125,7 @@ jobs:
         working-directory: ${{ env.GITHUB_WORKSPACE }}/build
       - name: Codecov
         if: success() && matrix.coverage
-        run: bash <(curl -s https://codecov.io/bash) -x "$GCOV";
+        run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }} -x "$GCOV";
 
   build-windows:
     runs-on: ${{matrix.os}}
