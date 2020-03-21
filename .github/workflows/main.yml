@@ -115,14 +115,11 @@ jobs:
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
-        run: ninja
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+        run: ninja -C build
       - name: Test
-        run: ninja test
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+        run: ninja -C build test
       - name: Install
-        run: ninja install
-        working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+        run: ninja -C build install
       - name: Codecov
         if: success() && matrix.coverage
         run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }} -x "$GCOV";
@@ -399,11 +396,8 @@ jobs:
           cl
           meson build --prefix=%HOME%/.local -Db_coverage=${{ matrix.coverage }} -Dcpp_link_args="-lz"
       - name: Build
-        run: ninja
-        working-directory: ${{ github.workspace }}/build
+        run: ninja -C build
       - name: Test
-        run: ninja test
-        working-directory: ${{ github.workspace }}/build
+        run: ninja -C build test
       - name: Install
-        run: ninja install
-        working-directory: ${{ github.workspace }}/build
+        run: ninja -C build install
