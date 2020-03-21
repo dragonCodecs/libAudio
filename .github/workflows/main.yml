@@ -67,6 +67,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: true
+      - name: Checkout public deps
+        shell: bash
+        run: |
+          git submodule init deps/substrate
+          git submodule update --depth 1
       - name: Compute libmp4v2 ref
         run: echo ::set-env name=MP4V2_REF::$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )
       - name: Checkout libmp4v2
@@ -181,7 +186,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/ogg deps/vorbis deps/opus deps/opusfile
+          git submodule init deps/substrate deps/ogg deps/vorbis deps/opus deps/opusfile
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         run: echo ::set-env name=MP4V2_REF::$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )
