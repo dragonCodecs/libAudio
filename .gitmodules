@@ -46,3 +46,6 @@
 [submodule "deps/zlib"]
 	path = deps/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "deps/substrate"]
+	path = deps/substrate
+	url = https://github.com/bad-alloc-heavy-industries/substrate
