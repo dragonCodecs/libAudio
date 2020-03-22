@@ -5,9 +5,10 @@
 #include <memory>
 #include <vector>
 #include <substrate/fd>
-#include "../fixedVector.hxx"
+#include <substrate/fixed_vector>
 
 using substrate::fd_t;
+using substrate::fixedVector_t;
 
 struct sndhEntryPoints_t final
 {

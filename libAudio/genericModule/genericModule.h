@@ -1,11 +1,12 @@
 #ifndef GENERIC_MODULE__H
 #define GENERIC_MODULE__H
 
+#include <substrate/fixed_vector>
 #include <substrate/managed_ptr>
 #include "../libAudio.hxx"
-#include "../fixedVector.hxx"
 #include <array>
 
+using substrate::fixedVector_t;
 using substrate::managedPtr_t;
 
 /***************************\
