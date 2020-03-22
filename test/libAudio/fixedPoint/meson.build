@@ -12,7 +12,7 @@ foreach test : fixedPointTests
 		test,
 		command: [
 			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude
-		] + crunchCoverage,
+		] + commandExtra,
 		input: [test + '.cxx', fixedPointObj],
 		output: test + '.so',
 		build_by_default: true

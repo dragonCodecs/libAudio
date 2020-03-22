@@ -26,9 +26,8 @@ foreach test : libAudioTests
 	custom_target(
 		test,
 		command: [
-			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude,
-			'-I' + substrateDir
-		] + crunchCoverage + testLibs,
+			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude
+		] + commandExtra + testLibs,
 		input: [test + '.cxx'] + libAudioObjs + testObjs,
 		output: test + '.so',
 		build_by_default: true

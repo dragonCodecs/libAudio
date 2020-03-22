@@ -45,10 +45,12 @@ elif cxx.get_id() == 'gcc' or cxx.get_id() == 'clang'
 	)
 endif
 
+crunchMake = find_program('crunchMake', required: false)
+
 subdir('libAudio')
 subdir('player')
 subdir('transcoder')
-subdir('test')
+subdir('test', if_found: crunchMake)
 subdir('harness')
 if get_option('spectrometer')
 	subdir('spectrometer')
