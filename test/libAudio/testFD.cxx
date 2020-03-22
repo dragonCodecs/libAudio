@@ -6,7 +6,7 @@
 #include <crunch++.h>
 #include "testFD.hxx"
 
-class testBoundedIterator final : public testsuit
+class testFD final : public testsuit
 {
 private:
 	void testBadFD() { fd::testBadFD(*this); }
@@ -16,7 +16,7 @@ private:
 	void testRead() { fd::testRead(*this); }
 
 public:
-	~testBoundedIterator() { unlink("fd.test"); }
+	~testFD() { unlink("fd.test"); }
 
 	void registerTests() final override
 	{
@@ -27,3 +27,9 @@ public:
 		CXX_TEST(testRead)
 	}
 };
+
+CRUNCH_API void registerCXXTests() noexcept;
+void registerCXXTests() noexcept
+{
+	registerTestClasses<testFD>();
+}
