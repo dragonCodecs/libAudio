@@ -3,6 +3,7 @@ libAudio
 ========
 
 [![C++ CI](https://github.com/DX-MON/libAudio/workflows/C++%20CI/badge.svg)](https://github.com/DX-MON/libAudio/actions)
+[![codecov](https://codecov.io/gh/DX-MON/libAudio/branch/master/graph/badge.svg?token=Q4GadidCzX)](https://codecov.io/gh/DX-MON/libAudio)
 
 ## Getting started
 
