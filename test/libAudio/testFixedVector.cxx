@@ -1,15 +1,17 @@
 #include <crunch++.h>
-#include <fixedVector.hxx>
+#include <substrate/fixed_vector>
 #include "testFixedVector.hxx"
+
+using substrate::fixedVector_t;
 
 class testBoundedIterator final : public testsuit
 {
-public:
 	void testCtor() { boundedIterator::testCtor(*this); }
 	void testIndex() { boundedIterator::testIndex(*this); }
 	void testInc() { boundedIterator::testInc(*this); }
 	void testDec() { boundedIterator::testDec(*this); }
 
+public:
 	void registerTests() final override
 	{
 		CXX_TEST(testCtor)
@@ -21,7 +23,6 @@ public:
 
 class testFixedVector final : public testsuit
 {
-public:
 	void testTraits()
 	{
 		assertTrue(std::is_move_constructible<fixedVector_t<char>>::value);
@@ -39,6 +40,7 @@ public:
 	catch (const std::out_of_range &)
 		{ fail("Unexpected exception thrown during normal fixedVector_t<> access"); }
 
+public:
 	void registerTests() final override
 	{
 		CXX_TEST(testTraits)

@@ -15,6 +15,7 @@ project(
 
 cxx = meson.get_compiler('cpp')
 substrate = include_directories('deps/substrate')
+substrateDir = meson.current_source_dir() + '/deps/substrate'
 
 add_project_arguments(
 	cxx.get_supported_arguments(
