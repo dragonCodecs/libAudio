@@ -176,5 +176,11 @@ namespace fd
 		readBE(suite, file, i32);
 		readBE(suite, file, u64);
 		readBE(suite, file, i64);
+
+		char junk{};
+		suite.assertFalse(file.read(junk));
+		suite.assertTrue(file.isEOF());
+		suite.assertFalse(file.read(junk));
+		suite.assertTrue(file.isEOF());
 	}
 }
