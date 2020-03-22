@@ -82,6 +82,13 @@ jobs:
           path: deps/mp4v2
           ref: ${{ env.MP4V2_REF }}
           lfs: true
+      - name: Checkout crunch
+        uses: actions/checkout@v2
+        with:
+          repository: DX-MON/crunch
+          path: deps/crunch
+          #ref: TODO: need to feed what version of crunch to use in here..
+          lfs: true
       - name: Setup Meson + Ninja
         shell: bash
         run: |
@@ -112,6 +119,13 @@ jobs:
           ninja -C build
           sudo $HOME/.local/bin/ninja -C build install
         working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/mp4v2
+      - name: Install crunch
+        shell: bash
+        run: |
+          meson build --prefix=/usr -Db_coverage=${{ matrix.coverage }}
+          ninja -C build
+          sudo $HOME/.local/bin/ninja -C build install
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/crunch
       - name: Configure
         run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
       - name: Build
