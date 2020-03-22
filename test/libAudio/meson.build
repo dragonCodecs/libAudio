@@ -1,10 +1,10 @@
 libAudioTests = [
-	'testFixedVector', 'testFD'
+	'testFixedVector', 'testFD', 'testString'
 ]
 
 testHelpers = static_library(
 	'testHelpers',
-	['fixedVector.cxx', 'fd.cxx'],
+	['fixedVector.cxx', 'fd.cxx', 'string.cxx'],
 	pic: true,
 	dependencies: [libAudio, libcrunchpp],
 	include_directories: substrate,
@@ -14,7 +14,8 @@ testHelpers = static_library(
 
 testObjectMap = {
 	'testFixedVector': {'test': ['fixedVector.cxx']},
-	'testFD': {'test': ['fd.cxx']}
+	'testFD': {'test': ['fd.cxx']},
+	'testString': {'test': ['string.cxx']},
 }
 
 foreach test : libAudioTests
