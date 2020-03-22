@@ -4,8 +4,9 @@
 #include <substrate/managed_ptr>
 #include "../libAudio.hxx"
 #include "../fixedVector.hxx"
-#include "../managedPtr.hxx"
 #include <array>
+
+using substrate::managedPtr_t;
 
 /***************************\
 |* ----=== WARNING ===---- *|
