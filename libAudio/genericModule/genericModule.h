@@ -1,5 +1,5 @@
-#ifndef __GenericModule_H__
-#define __GenericModule_H__
+#ifndef GENERIC_MODULE__H
+#define GENERIC_MODULE__H
 
 #include <substrate/managed_ptr>
 #include "../libAudio.hxx"
@@ -696,4 +696,4 @@ struct moduleFile_t::decoderContext_t
 	std::unique_ptr<ModuleFile> mod;
 };
 
-#endif /*__GenericModule_H__*/
+#endif /*GENERIC_MODULE__H*/
