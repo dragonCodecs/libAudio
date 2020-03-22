@@ -1,6 +1,7 @@
 #ifndef __GenericModule_H__
 #define __GenericModule_H__
 
+#include <substrate/managed_ptr>
 #include "../libAudio.hxx"
 #include "../fixedVector.hxx"
 #include "../managedPtr.hxx"

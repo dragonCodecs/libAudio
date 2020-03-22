@@ -1,5 +1,8 @@
 #include "genericModule.h"
 
+using substrate::make_unique;
+using substrate::make_managed;
+
 // Default initalise key fields
 ModuleHeader::ModuleHeader() : Name{}, Remark{}, RestartPos{255}, GlobalVolume{64}, InitialSpeed{6},
 	InitialTempo{125}, MasterVolume{64}, Author{}, Separation{128}, Volumes{} { Volumes.fill(64); }
@@ -10,8 +13,8 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 	std::array<char, 4> magic;
 	const fd_t &fd = file.fd();
 
-	Name = makeUnique<char []>(21);
-	Orders = makeUnique<uint8_t []>(128);
+	Name = make_unique<char []>(21);
+	Orders = make_unique<uint8_t []>(128);
 	nOrders = 0;
 
 	if (!Name || !Orders ||
@@ -77,7 +80,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 	uint16_t Special, rawFlags;
 	const fd_t &fd = file.fd();
 
-	Name = makeUnique<char []>(29);
+	Name = make_unique<char []>(29);
 	if (!Name ||
 		!fd.read(Name, 28) ||
 		!fd.read(Const) ||
@@ -112,9 +115,9 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 		memcmp(magic.data(), "SCRM", 4) != 0)
 		throw ModuleLoaderError(E_BAD_S3M);
 
-	Orders = makeUnique<uint8_t []>(nOrders);
-	SamplePtrs = new uint16_t[nSamples];
-	PatternPtrs = new uint16_t[nPatterns];
+	Orders = make_unique<uint8_t []>(nOrders);
+	SamplePtrs = make_managed<uint16_t []>(nSamples);
+	PatternPtrs = make_managed<uint16_t []>(nPatterns);
 	if (!Orders || !SamplePtrs || !PatternPtrs ||
 		!fd.read(Orders.get(), nOrders) ||
 		!fd.read(SamplePtrs.get(), nSamples * 2) ||
@@ -125,7 +128,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 	if (dontCare[1] == 0xFC)
 	{
 		uint8_t i;
-		Panning = makeUnique<uint16_t []>(32);
+		Panning = make_unique<uint16_t []>(32);
 		if (!Panning)
 			throw ModuleLoaderError(E_BAD_S3M);
 		for (i = 0; i < 32; i++)
@@ -155,8 +158,8 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	const fd_t &fd = file.fd();
 
 	nOrders = 128;
-	Name = makeUnique<char []>(21);
-	Orders = makeUnique<uint8_t []>(nOrders);
+	Name = make_unique<char []>(21);
+	Orders = make_unique<uint8_t []>(nOrders);
 	if (!Name || !Orders ||
 		!fd.read(Name, 20) ||
 		!fd.read(magic) ||
@@ -211,7 +214,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader()
 		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
 	nChannels = magic1[3] - '0';
-	Name = makeUnique<char []>(blockLen + 1);
+	Name = make_unique<char []>(blockLen + 1);
 	if (!Name ||
 		!fd.read(Name, blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
@@ -220,7 +223,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader()
 		memcmp(blockName.data(), "AUTH", 4) != 0 ||
 		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
-	Author = makeUnique<char []>(blockLen + 1);
+	Author = make_unique<char []>(blockLen + 1);
 	if (!Author ||
 		!fd.read(Author, blockLen))
 	Author[blockLen] = 0;
@@ -234,7 +237,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader()
 		throw ModuleLoaderError(E_BAD_AON);
 	else if (blockLen)
 	{
-		Remark = makeUnique<char []>(blockLen + 1);
+		Remark = make_unique<char []>(blockLen + 1);
 		if (!fd.read(Remark, blockLen))
 			throw ModuleLoaderError(E_BAD_AON);
 		Remark[blockLen] = 0;
@@ -279,7 +282,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader()
 	if ((nOrders & 1) != 0)
 		// Get rid of the fill byte from the count
 		blockLen--;
-	Orders = makeUnique<uint8_t []>(nOrders);
+	Orders = make_unique<uint8_t []>(nOrders);
 	if (blockLen != nOrders || !Orders)
 		throw ModuleLoaderError(E_BAD_AON);
 	for (uint16_t i = 0; i < nOrders; i++)
@@ -342,8 +345,8 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		strncmp(magic.data(), "IMPM", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	Name = makeUnique<char []>(27);
-	Panning = makeUnique<uint16_t []>(64);
+	Name = make_unique<char []>(27);
+	Panning = make_unique<uint16_t []>(64);
 
 	if (!Name || !Panning ||
 		!fd.read(Name, 26) ||
@@ -381,12 +384,12 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		Panning[i] = value;
 	}
 
-	Orders = makeUnique<uint8_t []>(nOrders);
-	InstrumentPtrs = new uint32_t[nInstruments];
+	Orders = make_unique<uint8_t []>(nOrders);
+	InstrumentPtrs = make_managed<uint32_t []>(nInstruments);
 	// TODO: Implement managedPtr_t<> to handle type elision of uint32_t to void
 	// for storage and retrieval + proper deletion of these.
-	SamplePtrs = new uint32_t[nSamples];
-	PatternPtrs = new uint32_t[nPatterns];
+	SamplePtrs = make_managed<uint32_t []>(nSamples);
+	PatternPtrs = make_managed<uint32_t []>(nPatterns);
 
 	if (!Orders || !InstrumentPtrs || !SamplePtrs || !PatternPtrs ||
 		!fd.read(Volumes) ||
@@ -408,7 +411,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 
 	if (MessageOffs != 0)
 	{
-		Remark = makeUnique<char []>(msgLength + 1);
+		Remark = make_unique<char []>(msgLength + 1);
 		if (fd.seek(MessageOffs, SEEK_SET) != MessageOffs ||
 			!fd.read(Remark, msgLength))
 			throw ModuleLoaderError(E_BAD_IT);
