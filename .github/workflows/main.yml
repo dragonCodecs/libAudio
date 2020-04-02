@@ -89,6 +89,7 @@ jobs:
           path: deps/crunch
           #ref: TODO: need to feed what version of crunch to use in here..
           lfs: true
+          submodules: true
       - name: Setup Meson + Ninja
         shell: bash
         run: |
