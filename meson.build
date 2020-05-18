@@ -53,6 +53,7 @@ subdir('player')
 subdir('transcoder')
 subdir('test', if_found: crunchMake)
 subdir('harness')
+subdir('bindings')
 if get_option('spectrometer')
 	subdir('spectrometer')
 endif
