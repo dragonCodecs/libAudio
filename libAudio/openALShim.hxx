@@ -1,4 +1,8 @@
+#ifndef OPENAL_SHIM__HXX
+#define OPENAL_SHIM__HXX
+
 #include <utility>
+#include <cstdio>
 
 inline const char *alErrorString(const ALenum error) noexcept
 {
@@ -94,3 +98,5 @@ namespace al
 
 #undef ALC_CALL
 #undef AL_CALL
+
+#endif /*OPENAL_SHIM__HXX*/

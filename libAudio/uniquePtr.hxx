@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <cstring>
+#include <cstdlib>
 
 template<typename T> struct makeUnique_ { using uniqueType = std::unique_ptr<T>; };
 template<typename T> struct makeUnique_<T []> { using arrayType = std::unique_ptr<T []>; };
