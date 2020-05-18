@@ -10,7 +10,8 @@ project(
 		'b_lto=true'
 	],
 	version: '0.5.2',
-	meson_version: '>= 0.52'
+	meson_version: '>= 0.52',
+	subproject_dir: 'deps'
 )
 
 cxx = meson.get_compiler('cpp')
