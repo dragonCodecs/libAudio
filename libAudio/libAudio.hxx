@@ -20,6 +20,14 @@
 #include "playback.hxx"
 #include "uniquePtr.hxx"
 
+#if __has_cpp_attribute(nodiscard) || __cplusplus >= 201402L
+#	define libAUDIO_NO_DISCARD(x) [[nodiscard]] x
+#elif defined(__GNUC__)
+#	define libAUDIO_NO_DISCARD(x) x __attribute__((warn_unused_result))
+#else
+#	define libAUDIO_NO_DISCARD(x) x
+#endif
+
 using substrate::fd_t;
 
 enum class audioType_t : uint8_t
@@ -232,7 +240,7 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> ctx;
 
-	bool readMetadata() noexcept WARN_UNUSED;
+	libAUDIO_NO_DISCARD(bool readMetadata() noexcept);
 
 public:
 	mp3_t(fd_t &&fd) noexcept;

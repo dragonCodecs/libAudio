@@ -40,7 +40,7 @@ struct flac_t::decoderContext_t final
 	decoderContext_t() noexcept;
 	~decoderContext_t() noexcept;
 	bool finish() noexcept;
-	FLAC__StreamDecoderState nextFrame() noexcept WARN_UNUSED;
+	libAUDIO_NO_DISCARD(FLAC__StreamDecoderState nextFrame() noexcept);
 };
 
 /*!

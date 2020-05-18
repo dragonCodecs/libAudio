@@ -61,9 +61,9 @@ struct mp3_t::decoderContext_t final
 
 	decoderContext_t();
 	~decoderContext_t() noexcept;
-	bool readData(const fd_t &fd) noexcept WARN_UNUSED;
-	int32_t decodeFrame(const fd_t &fd) noexcept WARN_UNUSED;
-	uint32_t parseXingHeader() noexcept WARN_UNUSED;
+	libAUDIO_NO_DISCARD(bool readData(const fd_t &fd) noexcept);
+	libAUDIO_NO_DISCARD(int32_t decodeFrame(const fd_t &fd) noexcept);
+	libAUDIO_NO_DISCARD(uint32_t parseXingHeader() noexcept);
 };
 
 namespace libAudio

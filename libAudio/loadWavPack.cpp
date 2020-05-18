@@ -62,7 +62,7 @@ struct wavPack_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 	std::unique_ptr<char []> readTag(const char *const tag) noexcept;
 	void nextFrame(const uint8_t channels) noexcept;
-	void *wvcFile() noexcept WARN_UNUSED { return wvcFileFD.valid() ? &wvcFileFD : nullptr; }
+	libAUDIO_NO_DISCARD(void *wvcFile() noexcept) { return wvcFileFD.valid() ? &wvcFileFD : nullptr; }
 	static fd_t wvcFile(std::string &fileName) noexcept;
 };
 
