@@ -13,5 +13,6 @@ libAudioPython = python.extension_module(
 	dependencies: [libAudio, pythonDep],
 	include_directories: [substrate],
 	gnu_symbol_visibility: 'inlineshidden',
-	install: true
+	install: true,
+	install_dir: python.get_install_dir()
 )
