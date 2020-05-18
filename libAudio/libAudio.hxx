@@ -19,6 +19,7 @@
 #include "fileInfo.hxx"
 #include "playback.hxx"
 #include "uniquePtr.hxx"
+#include "libAudio.h"
 
 #if __has_cpp_attribute(nodiscard) || __cplusplus >= 201402L
 #	define libAUDIO_NO_DISCARD(x) [[nodiscard]] x
@@ -63,7 +64,7 @@ bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
 struct audioModeRead_t { };
 struct audioModeWrite_t { };
 
-struct audioFile_t
+struct libAUDIO_CLSMAYBE_API audioFile_t
 {
 protected:
 	audioType_t _type;
@@ -88,12 +89,12 @@ public:
 	void fd(fd_t &&fd) noexcept { _fd.swap(fd); }
 	void player(std::unique_ptr<playback_t> &&player) noexcept { _player = std::move(player); }
 
-	virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
-	virtual int64_t writeBuffer(const void *const buffer, const int64_t length);
-	virtual bool fileInfo(const fileInfo_t &fileInfo);
-	void play();
-	void pause();
-	void stop();
+	libAUDIO_CLS_API virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
+	libAUDIO_CLS_API virtual int64_t writeBuffer(const void *const buffer, const int64_t length);
+	libAUDIO_CLS_API virtual bool fileInfo(const fileInfo_t &fileInfo);
+	libAUDIO_CLS_API void play();
+	libAUDIO_CLS_API void pause();
+	libAUDIO_CLS_API void stop();
 
 	audioFile_t(const audioFile_t &) = delete;
 	audioFile_t &operator =(const audioFile_t &) = delete;
