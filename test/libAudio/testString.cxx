@@ -6,7 +6,7 @@
 #include <crunch++.h>
 #include "testString.hxx"
 
-class testString final : public testsuit
+class testString final : public testsuite
 {
 private:
 	void testRawDup() { string::testRawDup(*this); }

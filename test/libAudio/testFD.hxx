@@ -3,11 +3,11 @@
 
 namespace fd
 {
-	void testBadFD(testsuit &suite);
-	void testBadOpen(testsuit &suite);
-	void testWrite(testsuit &suite);
-	void testSeek(testsuit &suite);
-	void testRead(testsuit &suite);
+	void testBadFD(testsuite &suite);
+	void testBadOpen(testsuite &suite);
+	void testWrite(testsuite &suite);
+	void testSeek(testsuite &suite);
+	void testRead(testsuite &suite);
 }
 
 #endif /*TEST_FIXED_VECTOR__HXX*/

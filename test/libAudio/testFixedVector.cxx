@@ -4,7 +4,7 @@
 
 using substrate::fixedVector_t;
 
-class testBoundedIterator final : public testsuit
+class testBoundedIterator final : public testsuite
 {
 	void testCtor() { boundedIterator::testCtor(*this); }
 	void testIndex() { boundedIterator::testIndex(*this); }
@@ -21,7 +21,7 @@ public:
 	}
 };
 
-class testFixedVector final : public testsuit
+class testFixedVector final : public testsuite
 {
 	void testTraits()
 	{

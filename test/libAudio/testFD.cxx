@@ -6,7 +6,7 @@
 #include <crunch++.h>
 #include "testFD.hxx"
 
-class testFD final : public testsuit
+class testFD final : public testsuite
 {
 private:
 	void testBadFD() { fd::testBadFD(*this); }

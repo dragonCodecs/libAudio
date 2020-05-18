@@ -4,13 +4,14 @@
 #include <fixedPoint/fixedPoint.h>
 #include <crunch++.h>
 
-CRUNCHpp_API bool isTTY;
+namespace crunch { CRUNCHpp_API bool isTTY; }
 #define COLOUR(Code) "\x1B[" Code "m"
 #define NORMAL COLOUR("0;39")
 #define WARNING COLOUR("1;33")
 #define HIGHLIGHT COLOUR("1;34")
 #define NEWLINE NORMAL "\n"
 
+using crunch::isTTY;
 size_t warnCount{0};
 
 inline uint32_t unsign(int32_t num) noexcept

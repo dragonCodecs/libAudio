@@ -37,7 +37,7 @@ const uint32_t linearSlideUpTable[256] =
 	160439, 161019, 161601, 162186, 162772, 163361, 163952, 164545
 };
 
-class linearSlideUp_t final : public testsuit
+class linearSlideUp_t final : public testsuite
 {
 private:
 	uint32_t linearSlideUp(uint8_t slide) const noexcept
@@ -67,10 +67,8 @@ private:
 public:
 	void registerTests() final override
 	{
-		CXX_TEST(testComputation)
+		CRUNCHpp_TEST(testComputation)
 	}
 };
 
-CRUNCHpp_TEST void registerCXXTests();
-void registerCXXTests()
-	{ registerTestClasses<linearSlideUp_t>(); }
+CRUNCHpp_TESTS(linearSlideUp_t)

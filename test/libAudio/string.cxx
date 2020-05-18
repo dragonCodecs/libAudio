@@ -6,7 +6,7 @@ static const std::string testString = "This is only a test";
 
 namespace string
 {
-	void testRawDup(testsuit &suite)
+	void testRawDup(testsuite &suite)
 	{
 		suite.assertNull(stringDup(nullptr));
 		auto result = stringDup(testString.data());
@@ -14,7 +14,7 @@ namespace string
 		suite.assertEqual(result.get(), testString.data(), testString.size());
 	}
 
-	void testUniqueDup(testsuit &suite)
+	void testUniqueDup(testsuite &suite)
 	{
 		std::unique_ptr<char []> stringPtr{};
 		suite.assertNull(stringDup(stringPtr));
@@ -24,7 +24,7 @@ namespace string
 		suite.assertEqual(result.get(), testString.data(), testString.size());
 	}
 
-	void testStringsLength(testsuit &suite)
+	void testStringsLength(testsuite &suite)
 	{
 		suite.assertEqual(stringsLength(""), 0);
 		suite.assertEqual(stringsLength("T"), 1);
@@ -32,7 +32,7 @@ namespace string
 		suite.assertEqual(stringsLength("The ", "quick ", "fox"), 13);
 	}
 
-	void testStringConcat(testsuit &suite)
+	void testStringConcat(testsuite &suite)
 	{
 		const auto a = stringConcat("");
 		suite.assertNotNull(a);

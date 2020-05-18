@@ -3,10 +3,10 @@
 
 namespace string
 {
-	void testRawDup(testsuit &suite);
-	void testUniqueDup(testsuit &suite);
-	void testStringsLength(testsuit &suite);
-	void testStringConcat(testsuit &suite);
+	void testRawDup(testsuite &suite);
+	void testUniqueDup(testsuite &suite);
+	void testStringsLength(testsuite &suite);
+	void testStringConcat(testsuite &suite);
 }
 
 #endif /*TEST_STRING__HXX*/

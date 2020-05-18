@@ -7,7 +7,7 @@ const uint32_t linearSlideDownTable[16] =
 	65065, 65006, 64947, 64888, 64830, 64772, 64713, 64645
 };
 
-class fineLinearSlideDown_t final : public testsuit
+class fineLinearSlideDown_t final : public testsuite
 {
 private:
 	uint32_t linearSlideDown(uint8_t slide) const noexcept
@@ -38,10 +38,8 @@ private:
 public:
 	void registerTests() final override
 	{
-		CXX_TEST(testComputation)
+		CRUNCHpp_TEST(testComputation)
 	}
 };
 
-CRUNCHpp_TEST void registerCXXTests();
-void registerCXXTests()
-	{ registerTestClasses<fineLinearSlideDown_t>(); }
+CRUNCHpp_TESTS(fineLinearSlideDown_t)
