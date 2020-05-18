@@ -45,8 +45,8 @@ PyObject *pyAudioFile_t::play(PyObject *args, PyObject *kwargs) noexcept
 		PyErr_SetString(PyExc_ValueError, "AudioFile already playing");
 		return nullptr;
 	}
-	else if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:play", const_cast<char **>(playKeywords.data()),
-		PyBool_Type, &pyWait))
+	else if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O!:play", const_cast<char **>(playKeywords.data()),
+		&PyBool_Type, &pyWait))
 		return nullptr;
 	const bool wait = pyWait == Py_True;
 	if (wait)
