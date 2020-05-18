@@ -96,7 +96,7 @@ static PyTypeObject pyAudioFileType
 	nullptr, /*tp_setattro*/
 	nullptr, /*tp_as_buffer*/
 	Py_TPFLAGS_DEFAULT, /*tp_flags*/
-	"A file-backed stream", /*tp_doc*/
+	"AudioFile represents a libAudio audioFile_t object in Python", /*tp_doc*/
 	nullptr, /*tp_traverse*/
 	nullptr, /*tp_clear*/
 	nullptr, /*tp_richcompare*/
