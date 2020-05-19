@@ -15,6 +15,7 @@ project(
 )
 
 cxx = meson.get_compiler('cpp')
+debug = get_option('debug')
 substrate = include_directories('deps/substrate')
 substrateDir = meson.current_source_dir() + '/deps/substrate'
 
@@ -39,7 +40,7 @@ if cxx.get_id() == 'msvc'
 		'-D_CRT_SECURE_NO_WARNINGS',
 		language: 'cpp'
 	)
-elif cxx.get_id() == 'gcc' or cxx.get_id() == 'clang'
+elif (cxx.get_id() == 'gcc' or cxx.get_id() == 'clang') and not debug
 	add_project_arguments(
 		'-D_FORTIFY_SOURCE=2',
 		language: 'cpp'
