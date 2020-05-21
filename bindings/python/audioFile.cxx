@@ -50,7 +50,14 @@ PyObject *pyAudioFile_t::play(PyObject *args, PyObject *kwargs) noexcept
 		return nullptr;
 	const bool wait = pyWait == Py_True;
 	if (wait)
+	{
+		std::promise<bool> finished{};
+		playbackFinished = finished.get_future();
+		auto *const threadState = PyEval_SaveThread();
 		audioFile->play();
+		finished.set_value(true);
+		PyEval_RestoreThread(threadState);
+	}
 	else
 	{
 		playbackFinished = std::async(std::launch::async,
