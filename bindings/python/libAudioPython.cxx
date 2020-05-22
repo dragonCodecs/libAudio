@@ -12,7 +12,16 @@
 	#error "You are using an unsupported or ancient compiler"
 #endif
 
-EXPORT PyObject *PyInit_libAudio();
+PyObject *pyAudioVersion(PyObject *, PyObject *) noexcept
+{
+	return PyUnicode_FromStringAndSize(libAudioVersion, strlen(libAudioVersion));
+}
+
+static auto pyModuleFuncs{substrate::make_array<PyMethodDef>(
+{
+	{"libAudioVersion", pyAudioVersion, METH_NOARGS, ""},
+	{nullptr, nullptr, 0, nullptr} // Sentinel
+})};
 
 static PyModuleDef libAudioPython
 {
@@ -20,7 +29,7 @@ static PyModuleDef libAudioPython
 	"libAudio",
 	"Python bindings for libAudio",
 	-1,
-	nullptr,
+	pyModuleFuncs.data(),
 	nullptr,
 	nullptr,
 	nullptr,
@@ -143,6 +152,7 @@ bool registerType(PyObject *const module, PyTypeObject &type, const char *name)
 	return !PyModule_AddObject(module, name, reinterpret_cast<PyObject *>(&type));
 }
 
+EXPORT PyObject *PyInit_libAudio();
 PyObject *PyInit_libAudio()
 {
 	PyObject *const module = PyModule_Create(&libAudioPython);
