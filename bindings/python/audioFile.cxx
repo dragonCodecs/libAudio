@@ -3,12 +3,19 @@
 #include <libAudio.h>
 #include "audioFile.hxx"
 
-constexpr static auto ctorKeywords{substrate::make_array<const char *>({
+constexpr static auto ctorKeywords{substrate::make_array<const char *>(
+{
 	"fileName", nullptr
 })};
 
-constexpr static auto playKeywords{substrate::make_array<const char *>({
+constexpr static auto playKeywords{substrate::make_array<const char *>(
+{
 	"wait", nullptr
+})};
+
+constexpr static auto playbackVolumeKeywords{substrate::make_array<const char *>(
+{
+	"level", nullptr
 })};
 
 pyAudioFile_t::pyAudioFile_t(const char *const fileName) : PyObject{},
@@ -102,5 +109,34 @@ PyObject *pyAudioFile_t::stop(PyObject *) noexcept
 	}
 	audioFile->stop();
 	playbackFinished.get();
+	return Py_None;
+}
+
+PyObject *pyAudioFile_t::mode(PyObject *args, PyObject *kwargs) noexcept
+{
+	//PyObject *pyMode{nullptr};
+	if (!audioFile)
+	{
+		PyErr_SetString(PyExc_ValueError, "AudioFile in invalid state - audioFile is null");
+		return nullptr;
+	}
+	/*else if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:mode", const_cast<char **>(playKeywords.data()),
+		&PyBool_Type, &pyWait))
+		return nullptr;*/
+	return Py_False;
+}
+
+PyObject *pyAudioFile_t::playbackVolume(PyObject *args, PyObject *kwargs) noexcept
+{
+	float level{0.f};
+	if (!audioFile)
+	{
+		PyErr_SetString(PyExc_ValueError, "AudioFile in invalid state - audioFile is null");
+		return nullptr;
+	}
+	else if (!PyArg_ParseTupleAndKeywords(args, kwargs, "f:playbackVolume",
+		const_cast<char **>(playbackVolumeKeywords.data()), &level))
+		return nullptr;
+	audioFile->playbackVolume(level);
 	return Py_None;
 }

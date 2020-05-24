@@ -17,6 +17,8 @@ private:
 	PyObject *play(PyObject *args, PyObject *kwargs) noexcept;
 	PyObject *pause(PyObject *args) noexcept;
 	PyObject *stop(PyObject *args) noexcept;
+	PyObject *mode(PyObject *args, PyObject *kwargs) noexcept;
+	PyObject *playbackVolume(PyObject *args, PyObject *kwargs) noexcept;
 
 public:
 	pyAudioFile_t() noexcept : PyObject{}, audioFile{}, playbackFinished{} { }
@@ -34,6 +36,10 @@ public:
 		{ return static_cast<pyAudioFile_t *>(self)->pause(args); }
 	static PyObject *stop(PyObject *self, PyObject *args) noexcept
 		{ return static_cast<pyAudioFile_t *>(self)->stop(args); }
+	static PyObject *mode(PyObject *self, PyObject *args, PyObject *kwargs) noexcept
+		{ return static_cast<pyAudioFile_t *>(self)->mode(args, kwargs); }
+	static PyObject *playbackVolume(PyObject *self, PyObject *args, PyObject *kwargs) noexcept
+		{ return static_cast<pyAudioFile_t *>(self)->playbackVolume(args, kwargs); }
 
 	operator const audioFile_t *() const noexcept { return audioFile.get(); }
 };

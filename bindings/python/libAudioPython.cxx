@@ -53,11 +53,15 @@ template<typename targetFunc_t, typename sourceFunc_t> targetFunc_t asFuncType(c
 }
 
 const static PyCFunctionWithKeywords pyAudioFilePlay = pyAudioFile_t::play;
+const static PyCFunctionWithKeywords pyAudioFileMode = pyAudioFile_t::mode;
+const static PyCFunctionWithKeywords pyAudioFilePlaybackVolume = pyAudioFile_t::playbackVolume;
 static auto pyAudioFileFuncs{substrate::make_array<PyMethodDef>(
 {
 	{"play", asFuncType<PyCFunction>(pyAudioFilePlay), METH_VARARGS | METH_KEYWORDS, ""},
 	{"pause", pyAudioFile_t::pause, METH_VARARGS, ""},
 	{"stop", pyAudioFile_t::stop, METH_VARARGS, ""},
+	//{"mode", asFuncType<PyCFunction>(ppyAudioFileMode), METH_VARARGS, ""},
+	{"playbackVolume", asFuncType<PyCFunction>(pyAudioFilePlaybackVolume), METH_VARARGS, ""},
 	{nullptr, nullptr, 0, nullptr} // Sentinel
 })};
 
