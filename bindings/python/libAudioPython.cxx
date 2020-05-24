@@ -90,10 +90,14 @@ static PyTypeObject pyAudioFileType
 	sizeof(pyAudioFile_t), /* tp_basicsize */
 	0, /* tp_itemsize */
 	cppTypeDealloc, /*tp_dealloc*/
+#if PY_MINOR_VERSION < 8
+	nullptr, /*tp_print*/
+#else
 	0, /*tp_vectorcall_offset*/
+#endif
 	nullptr, /*tp_getattr*/
 	nullptr, /*tp_setattr*/
-	nullptr, /*tp_compare*/
+	nullptr, /*tp_as_async*/
 	pyAudioFile_t::repr, /*tp_repr*/
 	nullptr, /*tp_as_number*/
 	nullptr, /*tp_as_sequence*/
@@ -133,8 +137,12 @@ static PyTypeObject pyAudioFileType
 	nullptr, /*tp_del*/
 	0, /*tp_version_tag*/
 	nullptr, /*tp_finalize*/
+#if PY_MINOR_VERSION >= 8
 	nullptr, /*tp_vectorcall*/
+#endif
+#if PY_MINOR_VERSION == 8
 	nullptr, /*tp_print*/
+#endif
 #ifdef COUNT_ALLOCS
 	0, /*tp_allocations*/
 	0, /*tp_frees*/
