@@ -48,6 +48,7 @@ public:
 	virtual void play() = 0;
 	virtual void pause() = 0;
 	virtual void stop() = 0;
+	bool mode(const playbackMode_t _mode) noexcept;
 
 	audioPlayer_t(const audioPlayer_t &) noexcept = delete;
 	audioPlayer_t(audioPlayer_t &&) noexcept = delete;
@@ -79,7 +80,7 @@ public:
 	playback_t(playback_t &&) noexcept = default;
 	playback_t &operator =(playback_t &&) noexcept = default;
 	~playback_t() noexcept = default;
-	void mode(const playbackMode_t mode) noexcept;
+	bool mode(const playbackMode_t mode) noexcept;
 	void play();
 	void pause();
 	void stop();

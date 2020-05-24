@@ -35,7 +35,13 @@ int64_t audioPlayer_t::refillBuffer() const noexcept
 	{ return player.refillBuffer(); }
 int64_t playback_t::refillBuffer() noexcept
 	{ return fillBuffer(audioFile, buffer, bufferLength); }
-void playback_t::mode(const playbackMode_t _mode) noexcept { playbackMode = _mode; }
+
+bool playback_t::mode(const playbackMode_t _mode) noexcept
+{
+	if (player)
+		return player->mode(_mode);
+	return false;
+}
 
 uint8_t *audioPlayer_t::buffer() const noexcept { return player.buffer; }
 uint32_t audioPlayer_t::bufferLength() const noexcept { return player.bufferLength; }
@@ -45,3 +51,12 @@ uint8_t audioPlayer_t::channels() const noexcept { return player.channels; }
 std::chrono::nanoseconds audioPlayer_t::sleepTime() const noexcept { return player.sleepTime; }
 bool audioPlayer_t::isPlaying() const noexcept { return state == playState_t::playing; }
 playbackMode_t audioPlayer_t::mode() const noexcept { return player.playbackMode; }
+
+bool audioPlayer_t::mode(const playbackMode_t _mode) noexcept
+{
+	std::unique_lock<std::mutex> lock{stateMutex};
+	const bool result{!isPlaying()};
+	if (result)
+		player.playbackMode = _mode;
+	return result;
+}

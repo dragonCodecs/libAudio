@@ -120,10 +120,11 @@ int audioCloseFile(void *audioFile)
 	return 0;
 }
 
-void audioFile_t::playbackMode(const playbackMode_t mode) noexcept
+bool audioFile_t::playbackMode(const playbackMode_t mode) noexcept
 {
 	if (_player)
-		_player->mode(mode);
+		return _player->mode(mode);
+	return false;
 }
 
 /*!
