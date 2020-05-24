@@ -122,6 +122,15 @@ void openALPlayback_t::stop()
 	}
 }
 
+void openALPlayback_t::volume(float level) noexcept
+{
+	if (level > 1.f)
+		level = 1.f;
+	else if (level < 0.f)
+		level = 0.f;
+	source.level(level);
+}
+
 void openALPlayback_t::player() noexcept
 {
 	std::unique_lock<std::mutex> lock{stateMutex};

@@ -93,6 +93,7 @@ public:
 	libAUDIO_CLS_API virtual int64_t writeBuffer(const void *const buffer, const int64_t length);
 	libAUDIO_CLS_API virtual bool fileInfo(const fileInfo_t &fileInfo);
 	libAUDIO_CLS_API bool playbackMode(const playbackMode_t mode) noexcept;
+	libAUDIO_CLS_API void playbackVolume(const float level) noexcept;
 	libAUDIO_CLS_API void play();
 	libAUDIO_CLS_API void pause();
 	libAUDIO_CLS_API void stop();

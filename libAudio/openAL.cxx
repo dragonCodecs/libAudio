@@ -86,6 +86,9 @@ int alSource_t::state() const noexcept
 	return result;
 }
 
+void alSource_t::level(const float gain) const noexcept
+	{ al::alSourcef(source, AL_GAIN, gain); }
+
 alBuffer_t::alBuffer_t() noexcept : buffer{AL_NONE}, queued{false}
 	{ al::alGenBuffers(1, &buffer); }
 

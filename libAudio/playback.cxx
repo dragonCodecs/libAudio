@@ -43,6 +43,12 @@ bool playback_t::mode(const playbackMode_t _mode) noexcept
 	return false;
 }
 
+void playback_t::volume(const float level) noexcept
+{
+	if (player)
+		player->volume(level);
+}
+
 uint8_t *audioPlayer_t::buffer() const noexcept { return player.buffer; }
 uint32_t audioPlayer_t::bufferLength() const noexcept { return player.bufferLength; }
 uint8_t audioPlayer_t::bitsPerSample() const noexcept { return player.bitsPerSample; }

@@ -53,6 +53,7 @@ public:
 	int processedBuffers() const noexcept;
 	int queuedBuffers() const noexcept;
 	int state() const noexcept;
+	void level(const float gain) const noexcept;
 
 	alSource_t(const alSource_t &) = delete;
 	alSource_t &operator =(const alSource_t &) = delete;

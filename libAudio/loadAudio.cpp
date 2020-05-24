@@ -127,6 +127,12 @@ bool audioFile_t::playbackMode(const playbackMode_t mode) noexcept
 	return false;
 }
 
+void audioFile_t::playbackVolume(const float level) noexcept
+{
+	if (_player)
+		_player->volume(level);
+}
+
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
  * @param audioFile A pointer to a file opened with \c audioOpenR()

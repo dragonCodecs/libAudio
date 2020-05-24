@@ -26,10 +26,11 @@ private:
 
 public:
 	openALPlayback_t(playback_t &_player);
-	~openALPlayback_t() final override { stop(); }
-	void play() final override;
-	void pause() final override;
-	void stop() final override;
+	~openALPlayback_t() final { stop(); }
+	void play() final;
+	void pause() final;
+	void stop() final;
+	void volume(const float level) noexcept final;
 
 	openALPlayback_t(const openALPlayback_t &) noexcept = delete;
 	openALPlayback_t(openALPlayback_t &&) noexcept = delete;
