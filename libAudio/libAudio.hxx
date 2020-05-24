@@ -122,9 +122,9 @@ public:
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final override;
-	bool fileInfo(const fileInfo_t &fileInfo) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 
 struct oggOpus_t final : public audioFile_t
@@ -142,7 +142,7 @@ public:
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
 	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct flac_t final : public audioFile_t
@@ -165,9 +165,9 @@ public:
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final override;
-	bool fileInfo(const fileInfo_t &fileInfo) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 
 struct wav_t final : public audioFile_t
@@ -188,7 +188,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct m4a_t final : public audioFile_t
@@ -211,9 +211,9 @@ public:
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final override;
-	bool fileInfo(const fileInfo_t &fileInfo) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	bool fileInfo(const fileInfo_t &fileInfo) final;
 	void fetchTags() noexcept;
 };
 
@@ -233,7 +233,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct mp3_t final : public audioFile_t
@@ -252,7 +252,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct moduleFile_t : public audioFile_t
@@ -267,7 +267,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct modMOD_t final : public moduleFile_t
@@ -340,7 +340,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct wavPack_t final : public audioFile_t
@@ -357,7 +357,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 struct sndh_t final : public audioFile_t
@@ -374,7 +374,7 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final override;
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
 #endif /*LIBAUDIO_HXX*/
