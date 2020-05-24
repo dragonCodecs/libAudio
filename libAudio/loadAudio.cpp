@@ -120,6 +120,12 @@ int audioCloseFile(void *audioFile)
 	return 0;
 }
 
+void audioFile_t::playbackMode(const playbackMode_t mode) noexcept
+{
+	if (_player)
+		_player->mode(mode);
+}
+
 /*!
  * Plays an opened audio file using OpenAL on the default audio device
  * @param audioFile A pointer to a file opened with \c audioOpenR()

@@ -35,7 +35,7 @@ int64_t audioPlayer_t::refillBuffer() const noexcept
 	{ return player.refillBuffer(); }
 int64_t playback_t::refillBuffer() noexcept
 	{ return fillBuffer(audioFile, buffer, bufferLength); }
-void playback_t::mode(playbackMode_t _mode) noexcept { playbackMode = _mode; }
+void playback_t::mode(const playbackMode_t _mode) noexcept { playbackMode = _mode; }
 
 uint8_t *audioPlayer_t::buffer() const noexcept { return player.buffer; }
 uint32_t audioPlayer_t::bufferLength() const noexcept { return player.bufferLength; }

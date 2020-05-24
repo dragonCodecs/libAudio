@@ -79,7 +79,7 @@ public:
 	playback_t(playback_t &&) noexcept = default;
 	playback_t &operator =(playback_t &&) noexcept = default;
 	~playback_t() noexcept = default;
-	void mode(playbackMode_t mode) noexcept;
+	void mode(const playbackMode_t mode) noexcept;
 	void play();
 	void pause();
 	void stop();
