@@ -12,14 +12,36 @@
 	#error "You are using an unsupported or ancient compiler"
 #endif
 
+constexpr static auto audioDefaultLevelKeywords{substrate::make_array<const char *>(
+{
+	"level", nullptr
+})};
+
+template<typename targetFunc_t, typename sourceFunc_t> targetFunc_t asFuncType(const sourceFunc_t func) noexcept
+{
+	auto *const addr = reinterpret_cast<void *>(func);
+	return reinterpret_cast<targetFunc_t>(addr);
+}
+
 PyObject *pyAudioVersion(PyObject *, PyObject *) noexcept
 {
 	return PyUnicode_FromStringAndSize(libAudioVersion, strlen(libAudioVersion));
 }
 
+PyObject *pyAudioDefaultLevel(PyObject *, PyObject *args, PyObject *kwargs) noexcept
+{
+	float level{0.f};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "f:audioDefaultLevel",
+		const_cast<char **>(audioDefaultLevelKeywords.data()), &level))
+		return nullptr;
+	audioDefaultLevel(level);
+	return Py_None;
+}
+
 static auto pyModuleFuncs{substrate::make_array<PyMethodDef>(
 {
 	{"libAudioVersion", pyAudioVersion, METH_NOARGS, ""},
+	{"audioDefaultLevel", asFuncType<PyCFunction>(pyAudioDefaultLevel), METH_VARARGS | METH_KEYWORDS, ""},
 	{nullptr, nullptr, 0, nullptr} // Sentinel
 })};
 
@@ -46,12 +68,6 @@ PyObject *cppTypeAlloc(PyTypeObject *subtype, const Py_ssize_t)
 void cppTypeDealloc(PyObject *self) noexcept
 	{ self->ob_type->tp_free(self); }
 
-template<typename targetFunc_t, typename sourceFunc_t> targetFunc_t asFuncType(const sourceFunc_t func) noexcept
-{
-	auto *const addr = reinterpret_cast<void *>(func);
-	return reinterpret_cast<targetFunc_t>(addr);
-}
-
 const static PyCFunctionWithKeywords pyAudioFilePlay = pyAudioFile_t::play;
 const static PyCFunctionWithKeywords pyAudioFileMode = pyAudioFile_t::mode;
 const static PyCFunctionWithKeywords pyAudioFilePlaybackVolume = pyAudioFile_t::playbackVolume;
@@ -61,7 +77,7 @@ static auto pyAudioFileFuncs{substrate::make_array<PyMethodDef>(
 	{"pause", pyAudioFile_t::pause, METH_VARARGS, ""},
 	{"stop", pyAudioFile_t::stop, METH_VARARGS, ""},
 	//{"mode", asFuncType<PyCFunction>(ppyAudioFileMode), METH_VARARGS, ""},
-	{"playbackVolume", asFuncType<PyCFunction>(pyAudioFilePlaybackVolume), METH_VARARGS, ""},
+	{"playbackVolume", asFuncType<PyCFunction>(pyAudioFilePlaybackVolume), METH_VARARGS | METH_KEYWORDS, ""},
 	{nullptr, nullptr, 0, nullptr} // Sentinel
 })};
 

@@ -112,7 +112,7 @@ PyObject *pyAudioFile_t::stop(PyObject *) noexcept
 	return Py_None;
 }
 
-PyObject *pyAudioFile_t::mode(PyObject *args, PyObject *kwargs) noexcept
+PyObject *pyAudioFile_t::mode(PyObject */*args*/, PyObject */*kwargs*/) noexcept
 {
 	//PyObject *pyMode{nullptr};
 	if (!audioFile)

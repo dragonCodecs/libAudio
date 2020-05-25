@@ -2,6 +2,7 @@
 #include "openALShim.hxx"
 
 std::unique_ptr<alContext_t> alContext;
+std::atomic<float> defaultLevel_{1.f};
 
 alContext_t *alContext_t::ensure() noexcept
 {
@@ -32,7 +33,7 @@ alSource_t::alSource_t() noexcept : source{AL_NONE}
 	al::alGenSources(1, &source);
 	if (!source)
 		return;
-	al::alSourcef(source, AL_GAIN, 1.f);
+	al::alSourcef(source, AL_GAIN, defaultLevel_);
 	al::alSourcef(source, AL_PITCH, 1.f);
 	al::alListener3f(AL_POSITION, 0.f, 0.f, 0.f);
 	al::alSource3f(source, AL_POSITION, 0.f, 0.f, 0.f);

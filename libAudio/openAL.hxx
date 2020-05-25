@@ -9,6 +9,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #endif
+#include <atomic>
 #include "uniquePtr.hxx"
 
 struct alContext_t final
@@ -85,5 +86,6 @@ public:
 };
 
 extern std::unique_ptr<alContext_t> alContext;
+extern std::atomic<float> defaultLevel_;
 
 #endif /*OPEN_AL__HXX*/

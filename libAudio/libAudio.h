@@ -148,6 +148,8 @@ libAUDIO_API void audioPause(void *audioFile);
 libAUDIO_API void audioStop(void *audioFile);
 libAUDIO_API bool isAudio(const char *fileName);
 
+libAUDIO_API void audioDefaultLevel(const float level);
+
 // Write (Encode)
 libAUDIO_API void *audioOpenW(const char *fileName, const uint32_t audioType);
 libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *const fileInfo);

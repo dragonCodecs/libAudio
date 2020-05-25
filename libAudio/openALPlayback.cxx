@@ -1,4 +1,5 @@
 #include <exception>
+#include "libAudio.h"
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
@@ -168,3 +169,6 @@ void openALPlayback_t::player() noexcept
 		state = playState_t::stopped;
 	}
 }
+
+void audioDefaultLevel(const float level)
+	{ defaultLevel_ = level; }
