@@ -12,6 +12,9 @@
 	#error "You are using an unsupported or ancient compiler"
 #endif
 
+struct pyFreeObject_t final { void operator ()(PyObject *object) const noexcept { Py_XDECREF(object); } };
+using pyUniquePtr_t = std::unique_ptr<PyObject, pyFreeObject_t>;
+
 constexpr static auto audioDefaultLevelKeywords{substrate::make_array<const char *>(
 {
 	"level", nullptr
@@ -38,10 +41,32 @@ PyObject *pyAudioDefaultLevel(PyObject *, PyObject *args, PyObject *kwargs) noex
 	return Py_None;
 }
 
+PyObject *pyAudioDevices(PyObject *, PyObject *) noexcept
+{
+	const auto devices{audioOutputDevices()};
+	pyUniquePtr_t result{PyTuple_New(devices.size() + 1)};
+	if (!result)
+		return nullptr;
+	size_t index{0};
+	pyUniquePtr_t defaultDevice{PyUnicode_FromString("Default")};
+	if (!defaultDevice)
+		return nullptr;
+	PyTuple_SET_ITEM(result.get(), index++, defaultDevice.release());
+	for (const auto &device : devices)
+	{
+		pyUniquePtr_t pyDevice{PyUnicode_FromStringAndSize(device.data(), device.size())};
+		if (!pyDevice)
+			return nullptr;
+		PyTuple_SET_ITEM(result.get(), index++, pyDevice.release());
+	}
+	return result.release();
+}
+
 static auto pyModuleFuncs{substrate::make_array<PyMethodDef>(
 {
 	{"libAudioVersion", pyAudioVersion, METH_NOARGS, ""},
 	{"audioDefaultLevel", asFuncType<PyCFunction>(pyAudioDefaultLevel), METH_VARARGS | METH_KEYWORDS, ""},
+	{"audioDevices", pyAudioDevices, METH_NOARGS, ""},
 	{nullptr, nullptr, 0, nullptr} // Sentinel
 })};
 

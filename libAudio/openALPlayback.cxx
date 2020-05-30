@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <exception>
 #include "libAudio.h"
+#include "libAudio.hxx"
 #include "openALPlayback.hxx"
 
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
