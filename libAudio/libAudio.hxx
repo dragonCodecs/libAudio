@@ -60,6 +60,7 @@ using fileOpenW_t = void *(*)(const char *);
 
 const fileInfo_t *audioFileInfo(void *audioFile);
 bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
+libAUDIO_CXX_API std::vector<std::string> audioOutputDevices();
 
 struct audioModeRead_t { };
 struct audioModeWrite_t { };

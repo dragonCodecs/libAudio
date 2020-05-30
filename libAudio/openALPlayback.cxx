@@ -172,3 +172,18 @@ void openALPlayback_t::player() noexcept
 
 void audioDefaultLevel(const float level)
 	{ defaultLevel_ = level; }
+
+std::vector<std::string> audioOutputDevices()
+{
+	if (!alContext_t::haveExtension("ALC_ENUMERATION_EXT"))
+		return {};
+	std::vector<std::string> result{};
+	const auto *devices = alContext_t::devices();
+	while (*devices)
+	{
+		const auto length = std::strlen(devices);
+		result.emplace_back(devices, length);
+		devices += length + 1;
+	}
+	return result;
+}

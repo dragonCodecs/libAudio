@@ -28,6 +28,9 @@ public:
 	static alContext_t *ensure() noexcept;
 	~alContext_t() noexcept;
 
+	static bool haveExtension(const char *const extensionName) noexcept;
+	static const char *devices() noexcept;
+
 	alContext_t(const alContext_t &) noexcept = delete;
 	alContext_t(alContext_t &&) noexcept = delete;
 	alContext_t &operator =(const alContext_t &) noexcept = delete;

@@ -78,6 +78,7 @@ namespace al
 	auto alcCreateContext = ALC_CALL(::alcCreateContext);
 	auto alcGetCurrentContext = ALC_CALL(::alcGetCurrentContext);
 	auto alcMakeContextCurrent = ALC_CALL(::alcMakeContextCurrent);
+	auto alcIsExtensionPresent = ALC_CALL(::alcIsExtensionPresent);
 	auto alcDestroyContext = ALC_CALL(::alcDestroyContext);
 	auto alcCloseDevice = ALC_CALL(::alcCloseDevice);
 	auto alGenSources = AL_CALL(::alGenSources);

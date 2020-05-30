@@ -28,6 +28,12 @@ alContext_t::~alContext_t() noexcept
 void alContext_t::makeCurrent() noexcept
 	{ al::alcMakeContextCurrent(context); }
 
+bool alContext_t::haveExtension(const char *const extensionName) noexcept
+	{ return al::alcIsExtensionPresent(nullptr, extensionName) == AL_TRUE; }
+
+const char *alContext_t::devices() noexcept
+	{ return al::alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER); }
+
 alSource_t::alSource_t() noexcept : source{AL_NONE}
 {
 	al::alGenSources(1, &source);
