@@ -68,12 +68,12 @@ struct audioModeWrite_t { };
 struct libAUDIO_CLSMAYBE_API audioFile_t
 {
 protected:
-	audioType_t _type;
-	fileInfo_t _fileInfo;
-	fd_t _fd;
-	std::unique_ptr<playback_t> _player;
+	audioType_t _type{};
+	fileInfo_t _fileInfo{};
+	fd_t _fd{};
+	std::unique_ptr<playback_t> _player{};
 
-	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type(type), _fileInfo(), _fd(std::move(fd)) { }
+	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type{type}, _fd{std::move(fd)} { }
 
 public:
 	audioFile_t(audioFile_t &&) = default;
