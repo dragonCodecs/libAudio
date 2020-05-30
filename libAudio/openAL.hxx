@@ -10,6 +10,7 @@
 #include <AL/alc.h>
 #endif
 #include <atomic>
+#include <string>
 #include "uniquePtr.hxx"
 
 struct alContext_t final
@@ -30,6 +31,7 @@ public:
 
 	static bool haveExtension(const char *const extensionName) noexcept;
 	static const char *devices() noexcept;
+	static bool defaultDevice(const std::string &device) noexcept;
 
 	alContext_t(const alContext_t &) noexcept = delete;
 	alContext_t(alContext_t &&) noexcept = delete;

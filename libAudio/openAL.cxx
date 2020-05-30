@@ -3,19 +3,23 @@
 
 std::unique_ptr<alContext_t> alContext;
 std::atomic<float> defaultLevel_{1.f};
+ALCdevice *defaultDevice_{};
 
 alContext_t *alContext_t::ensure() noexcept
 {
 	alcGetError(nullptr);
 	if (!alContext)
+	{
+		if (!defaultDevice_)
+			defaultDevice_ = al::alcOpenDevice(al::alcGetString(nullptr, ALC_DEFAULT_DEVICE_SPECIFIER));
 		alContext = makeUniqueT<alContext_t>();
+	}
 	alContext->makeCurrent();
 	alGetError();
 	return alContext.get();
 }
 
-alContext_t::alContext_t() noexcept : device{al::alcOpenDevice(al::alcGetString(nullptr,
-	ALC_DEFAULT_DEVICE_SPECIFIER))}, context{al::alcCreateContext(device, nullptr)} { }
+alContext_t::alContext_t() noexcept : device{defaultDevice_}, context{al::alcCreateContext(device, nullptr)} { }
 
 alContext_t::~alContext_t() noexcept
 {
@@ -33,6 +37,16 @@ bool alContext_t::haveExtension(const char *const extensionName) noexcept
 
 const char *alContext_t::devices() noexcept
 	{ return al::alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER); }
+
+bool alContext_t::defaultDevice(const std::string &device) noexcept
+{
+	if (alContext)
+		return false;
+	if (defaultDevice_)
+		al::alcCloseDevice(defaultDevice_);
+	defaultDevice_ = al::alcOpenDevice(device.data());
+	return defaultDevice_;
+}
 
 alSource_t::alSource_t() noexcept : source{AL_NONE}
 {
