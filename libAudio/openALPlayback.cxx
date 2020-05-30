@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <exception>
 #include "libAudio.h"
 #include "openALPlayback.hxx"
@@ -5,6 +6,15 @@
 openALPlayback_t::openALPlayback_t(playback_t &_player) : audioPlayer_t{_player},
 	context{alContext_t::ensure()}, source{}, buffers{{}}, bufferFormat{format()},
 	eof{false}, playerThread{} { }
+
+openALPlayback_t::~openALPlayback_t()
+{
+	stop();
+	auto queued = std::count_if(buffers.begin(), buffers.end(),
+		[](const alBuffer_t &buffer) { return buffer.isQueued(); });
+	while (queued--)
+		source.dequeueOne();
+}
 
 bool openALPlayback_t::fillBuffer(alBuffer_t &_buffer) noexcept
 {

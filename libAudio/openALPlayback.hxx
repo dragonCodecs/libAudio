@@ -26,7 +26,7 @@ private:
 
 public:
 	openALPlayback_t(playback_t &_player);
-	~openALPlayback_t() final { stop(); }
+	~openALPlayback_t() final;
 	void play() final;
 	void pause() final;
 	void stop() final;
