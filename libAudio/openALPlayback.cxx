@@ -198,3 +198,9 @@ std::vector<std::string> audioOutputDevices()
 	}
 	return result;
 }
+
+bool audioDefaultDevice(const std::string &device) noexcept
+	{ return alContext_t::defaultDevice(device); }
+
+const std::string &audioDefaultDevice() noexcept
+	{ return alContext_t::defaultDevice(); }

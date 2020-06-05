@@ -24,6 +24,7 @@ private:
 protected:
 	alContext_t() noexcept;
 	friend std::unique_ptr<alContext_t> makeUniqueT<alContext_t>();
+	void swap(alContext_t &) noexcept;
 
 public:
 	static alContext_t *ensure() noexcept;
@@ -32,6 +33,7 @@ public:
 	static bool haveExtension(const char *const extensionName) noexcept;
 	static const char *devices() noexcept;
 	static bool defaultDevice(const std::string &device) noexcept;
+	static const std::string &defaultDevice() noexcept;
 
 	alContext_t(const alContext_t &) noexcept = delete;
 	alContext_t(alContext_t &&) noexcept = delete;
