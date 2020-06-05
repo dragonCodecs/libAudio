@@ -20,6 +20,11 @@ constexpr static auto audioDefaultLevelKeywords{substrate::make_array<const char
 	"level", nullptr
 })};
 
+constexpr static auto audioDefaultDeviceKeywords{substrate::make_array<const char *>(
+{
+	"name", nullptr
+})};
+
 template<typename targetFunc_t, typename sourceFunc_t> targetFunc_t asFuncType(const sourceFunc_t func) noexcept
 {
 	auto *const addr = reinterpret_cast<void *>(func);
@@ -41,7 +46,7 @@ PyObject *pyAudioDefaultLevel(PyObject *, PyObject *args, PyObject *kwargs) noex
 	return Py_None;
 }
 
-PyObject *pyAudioDevices(PyObject *, PyObject *) noexcept
+PyObject *pyAudioDevices(PyObject *, PyObject *) noexcept try
 {
 	const auto devices{audioOutputDevices()};
 	pyUniquePtr_t result{PyTuple_New(devices.size() + 1)};
@@ -61,12 +66,41 @@ PyObject *pyAudioDevices(PyObject *, PyObject *) noexcept
 	}
 	return result.release();
 }
+catch (std::exception &error)
+{
+	PyErr_SetString(PyExc_RuntimeError, error.what());
+	return nullptr;
+}
+
+PyObject *pyAudioDefaultDevice(PyObject *, PyObject *args, PyObject *kwargs) noexcept
+{
+	const char *deviceName{};
+	Py_ssize_t nameLength{};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "z#:audioDefaultDevice",
+		const_cast<char **>(audioDefaultDeviceKeywords.data()), &deviceName, &nameLength))
+		return nullptr;
+	std::string device{};
+	if (deviceName)
+		device = {deviceName, size_t(nameLength)};
+	const auto result = audioDefaultDevice(device);
+	return result ? Py_True : Py_False;
+}
+
+PyObject *pyAudioCurrentDevice(PyObject *, PyObject *) noexcept
+{
+	const auto &device = audioDefaultDevice();
+	if (device.empty())
+		return Py_None;
+	return PyUnicode_FromStringAndSize(device.data(), device.size());
+}
 
 static auto pyModuleFuncs{substrate::make_array<PyMethodDef>(
 {
 	{"libAudioVersion", pyAudioVersion, METH_NOARGS, ""},
 	{"audioDefaultLevel", asFuncType<PyCFunction>(pyAudioDefaultLevel), METH_VARARGS | METH_KEYWORDS, ""},
 	{"audioDevices", pyAudioDevices, METH_NOARGS, ""},
+	{"audioDefaultDevice", asFuncType<PyCFunction>(pyAudioDefaultDevice), METH_VARARGS | METH_KEYWORDS, ""},
+	{"audioCurrentDevice", pyAudioCurrentDevice, METH_NOARGS, ""},
 	{nullptr, nullptr, 0, nullptr} // Sentinel
 })};
 
