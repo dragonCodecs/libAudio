@@ -37,6 +37,7 @@ jobs:
         run: |
           echo "Coverage enabled for build? ${{ matrix.coverage }}"
           echo ::set-env name=COVERAGE::$([ $COVERAGE == "true" ] && echo -n 1 || echo -n 0)
+          echo ::set-env name=BUILD_OPTS::$([ $COVERAGE == "true" ] && echo "--buildtype=debug" || echo "")
       - name: Setup GCC
         if: startsWith(matrix.compiler, 'gcc')
         shell: bash
@@ -128,7 +129,7 @@ jobs:
           sudo $HOME/.local/bin/ninja -C build install
         working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/crunch
       - name: Configure
-        run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }}
+        run: meson build --prefix=$HOME/.local -Db_coverage=${{ matrix.coverage }} $BUILD_OPTS
       - name: Build
         run: ninja -C build
       - name: Test
