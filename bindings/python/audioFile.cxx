@@ -5,17 +5,17 @@
 
 constexpr static auto ctorKeywords{substrate::make_array<const char *>(
 {
-	"fileName", nullptr
+	"fileName", static_cast<const char *>(nullptr)
 })};
 
 constexpr static auto playKeywords{substrate::make_array<const char *>(
 {
-	"wait", nullptr
+	"wait", static_cast<const char *>(nullptr)
 })};
 
 constexpr static auto playbackVolumeKeywords{substrate::make_array<const char *>(
 {
-	"level", nullptr
+	"level", static_cast<const char *>(nullptr)
 })};
 
 pyAudioFile_t::pyAudioFile_t(const char *const fileName) : PyObject{},

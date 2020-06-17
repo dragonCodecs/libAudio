@@ -17,12 +17,12 @@ using pyUniquePtr_t = std::unique_ptr<PyObject, pyFreeObject_t>;
 
 constexpr static auto audioDefaultLevelKeywords{substrate::make_array<const char *>(
 {
-	"level", nullptr
+	"level", static_cast<const char *>(nullptr)
 })};
 
 constexpr static auto audioDefaultDeviceKeywords{substrate::make_array<const char *>(
 {
-	"name", nullptr
+	"name", static_cast<const char *>(nullptr)
 })};
 
 template<typename targetFunc_t, typename sourceFunc_t> targetFunc_t asFuncType(const sourceFunc_t func) noexcept
