@@ -1,4 +1,4 @@
-name: C++ CI
+name: GitHub Actions
 
 on:
   push:
@@ -16,11 +16,13 @@ jobs:
           - 'clang-7'
           - 'clang-8'
           - 'clang-9'
+          - 'clang-10'
           - 'gcc-5'
           - 'gcc-6'
           - 'gcc-7'
           - 'gcc-8'
           - 'gcc-9'
+          - 'gcc-10'
         coverage: [false, true]
       fail-fast: false
     steps:
@@ -30,6 +32,7 @@ jobs:
           WORKSPACE: ${{ github.workspace }}
         run: |
           echo ::set-env name=PATH::"$HOME/.local/bin:$PATH"
+          echo ::set-env name=PKG_CONFIG_PATH::"$HOME/.local/lib/x86_64-linux-gnu/pkgconfig"
           echo ::set-env name=GITHUB_WORKSPACE::"`pwd`"
       - name: Coverage environment
         env:
@@ -37,7 +40,8 @@ jobs:
         run: |
           echo "Coverage enabled for build? ${{ matrix.coverage }}"
           echo ::set-env name=COVERAGE::$([ $COVERAGE == "true" ] && echo -n 1 || echo -n 0)
-          echo ::set-env name=BUILD_OPTS::$([ $COVERAGE == "true" ] && echo "--buildtype=debug" || echo "")
+          echo ::set-env name=BUILD_OPTS::$([ $COVERAGE == "true" ] && \
+            echo "--buildtype=debug -Db_lto=false" || echo "")
       - name: Setup GCC
         if: startsWith(matrix.compiler, 'gcc')
         shell: bash
