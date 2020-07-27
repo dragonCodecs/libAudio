@@ -115,7 +115,7 @@ int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t leng
  */
 int audioCloseFile(void *audioFile)
 {
-	const auto file = static_cast<const audioFile_t *>(audioFile);
+	auto *const file{static_cast<const audioFile_t *>(audioFile)};
 	delete file;
 	return 0;
 }
