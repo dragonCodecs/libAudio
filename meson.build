@@ -10,7 +10,7 @@ project(
 		'b_lto=true'
 	],
 	version: '0.5.2',
-	meson_version: '>= 0.52',
+	meson_version: '>= 0.53',
 	subproject_dir: 'deps'
 )
 
@@ -50,11 +50,15 @@ endif
 crunchMake = find_program('crunchMake', required: false)
 
 subdir('libAudio')
-subdir('player')
-subdir('transcoder')
+if not meson.is_subproject()
+	subdir('player')
+	subdir('transcoder')
+endif
 subdir('test', if_found: crunchMake)
-subdir('harness')
-subdir('bindings')
-if get_option('spectrometer')
-	subdir('spectrometer')
+if not meson.is_subproject()
+	subdir('harness')
+	subdir('bindings')
+	if get_option('spectrometer')
+		subdir('spectrometer')
+	endif
 endif
