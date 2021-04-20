@@ -31,7 +31,7 @@ endif
 if extraFormats.contains('optimFROG')
 	extraSrcs += 'loadOptimFROG.cpp'
 	extraArgs += '-DENABLE_OptimFROG'
-	extraDeps += cxx.find_library('OptimFROG')
+	extraDeps += dependency('optimfrog')
 endif
 if extraFormats.contains('sndh')
 	extraSrcs += ['loadSNDH.cpp', 'sndh/loader.cxx']
