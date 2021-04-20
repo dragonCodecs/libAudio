@@ -47,6 +47,30 @@ namespace libAudio
 			nullptr, // We intentionally don't allow vorbisfile to close the file on us.
 			tell
 		};
+
+		bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string &tag) noexcept
+		{
+			const bool result = !strncasecmp(value, tag.data(), tag.size());
+			if (result)
+				copyComment(dst, value + tag.size());
+			return result;
+		}
+
+		void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
+		{
+			for (int i = 0; i < tags.comments; ++i)
+			{
+				const char *const value = tags.user_comments[i];
+				if (!maybeCopyComment(info.title, value, "title="_s) &&
+					!maybeCopyComment(info.artist, value, "artist="_s) &&
+					!maybeCopyComment(info.album, value, "album="_s))
+				{
+					std::unique_ptr<char []> other;
+					copyComment(other, value);
+					info.other.emplace_back(std::move(other));
+				}
+			}
+		}
 	}
 }
 
@@ -55,30 +79,6 @@ using namespace libAudio;
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept :
 	audioFile_t(audioType_t::oggVorbis, std::move(fd)), decoderCtx(makeUnique<decoderContext_t>()) { }
 oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
-
-bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string &tag) noexcept
-{
-	const bool result = !strncasecmp(value, tag.data(), tag.size());
-	if (result)
-		copyComment(dst, value + tag.size());
-	return result;
-}
-
-void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
-{
-	for (int i = 0; i < tags.comments; ++i)
-	{
-		const char *const value = tags.user_comments[i];
-		if (!maybeCopyComment(info.title, value, "title="_s) &&
-			!maybeCopyComment(info.artist, value, "artist="_s) &&
-			!maybeCopyComment(info.album, value, "album="_s))
-		{
-			std::unique_ptr<char []> other;
-			copyComment(other, value);
-			info.other.emplace_back(std::move(other));
-		}
-	}
-}
 
 /*!
  * Constructs an oggVorbis_t using the file given by \c fileName for reading and playback
@@ -104,7 +104,7 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 	info.bitsPerSample = 16;
 	if (ov_seekable(&ctx.decoder))
 		info.totalTime = uint64_t(ov_time_total(&ctx.decoder, -1));
-	copyComments(info, *ov_comment(&ctx.decoder, -1));
+	oggVorbis::copyComments(info, *ov_comment(&ctx.decoder, -1));
 
 	if (!ExternalPlayback)
 		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
