@@ -5,9 +5,9 @@
 /*!
  * @internal
  * @file saveOggVorbis.cpp
- * @brief The implementation of the Ogg/Vorbis encoder API
+ * @brief The implementation of the Ogg|Vorbis encoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2019
+ * @date 2010-2020
  */
 
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept :
