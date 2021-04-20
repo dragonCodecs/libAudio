@@ -115,7 +115,6 @@ private:
 
 public:
 	oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept;
-	oggVorbis_t(audioModeWrite_t) noexcept;
 	oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static oggVorbis_t *openR(const char *const fileName) noexcept;
 	static oggVorbis_t *openW(const char *const fileName) noexcept;
@@ -138,8 +137,7 @@ private:
 	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
-	oggOpus_t() noexcept;
-	oggOpus_t(fd_t &&fd) noexcept;
+	oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept;
 	static oggOpus_t *openR(const char *const fileName) noexcept;
 	static bool isOggOpus(const char *const fileName) noexcept;
 	static bool isOggOpus(const int32_t fd) noexcept;

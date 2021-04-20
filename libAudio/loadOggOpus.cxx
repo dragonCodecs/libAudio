@@ -1,39 +1,14 @@
-#include <opusfile.h>
-
 #include "libAudio.h"
 #include "libAudio.hxx"
-#include "oggCommon.hxx"
+#include "oggOpus.hxx"
 
 /*!
  * @internal
  * @file loadOggOpus.cxx
  * @brief The implementation of the Ogg|Opus decoder API
  * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2019-2020
+ * @date 2019-2021
  */
-
-/*!
- * @internal
- * Internal structure for holding the decoding context for a given Ogg|Opus file
- */
-struct oggOpus_t::decoderContext_t final
-{
-	/*!
-	 * @internal
-	 * The decoder context handle and handle to the Ogg|Opus
-	 * file being decoded
-	 */
-	OggOpusFile *decoder;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t playbackBuffer[8192];
-	bool eof;
-
-	decoderContext_t() noexcept;
-	~decoderContext_t() noexcept;
-};
 
 namespace libAudio
 {
@@ -72,7 +47,7 @@ namespace libAudio
 
 using namespace libAudio;
 
-oggOpus_t::oggOpus_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::oggOpus, std::move(fd)),
+oggOpus_t::oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::oggOpus, std::move(fd)),
 	decoderCtx{makeUnique<decoderContext_t>()} { }
 oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
@@ -84,7 +59,7 @@ oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBu
  */
 oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isOggOpus(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();

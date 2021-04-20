@@ -2,7 +2,7 @@ threading = dependency('threads')
 libOpenAL = dependency('openal')
 libOGG = dependency('ogg')
 libVorbis = [dependency('vorbis'), dependency('vorbisfile'), dependency('vorbisenc')]
-libOpus = [dependency('opus'), dependency('opusfile')]
+libOpus = [dependency('opus'), dependency('opusfile'), dependency('libopusenc')]
 libFLAC = dependency('flac')
 libWavPack = dependency('wavpack', version: '>=5.0.0')
 libMPC = cxx.find_library('mpcdec')
