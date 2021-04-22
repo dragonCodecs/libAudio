@@ -145,7 +145,7 @@ void *optimFROGOpenR(const char *fileName) { return optimFROG_t::openR(fileName)
  * @return Either a negative value when an error condition is entered,
  * or the number of bytes written to the buffer
  */
-int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t length)
+int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 {
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset{0};
@@ -155,9 +155,9 @@ int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 	if (ctx.eof)
 		return -2;
-	while (offset < length && !ctx.eof)
+	while (offset < bufferLen && !ctx.eof)
 	{
-		const auto samples{std::min<size_t>(length - offset, sizeof(ctx.playbackBuffer)) / stride};
+		const auto samples{std::min<size_t>(bufferLen - offset, sizeof(ctx.playbackBuffer)) / stride};
 		const auto result{OptimFROG_read(ctx.decoder, buffer + offset, samples, C_TRUE)};
 		if (result == -1)
 			return -1;
