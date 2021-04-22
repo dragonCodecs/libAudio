@@ -29,7 +29,7 @@ const std::map<uint32_t, fileOpenW_t> writers
  */
 void *audioOpenW(const char *fileName, uint32_t audioType)
 {
-	const auto writer = writers.find(audioType);
+	const auto writer{writers.find(audioType)};
 	if (writer == writers.end())
 		return nullptr;
 	return writer->second(fileName);
@@ -43,7 +43,7 @@ void *audioOpenW(const char *fileName, uint32_t audioType)
  */
 bool audioSetFileInfo(void *audioFile, const fileInfo_t *const fileInfo)
 {
-	const auto file = static_cast<audioFile_t *>(audioFile);
+	auto *const file{static_cast<audioFile_t *>(audioFile)};
 	if (!file)
 		return false;
 	return file->fileInfo(*fileInfo);
@@ -51,7 +51,7 @@ bool audioSetFileInfo(void *audioFile, const fileInfo_t *const fileInfo)
 
 bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo)
 {
-	const auto file = static_cast<audioFile_t *>(audioFile);
+	auto *const file{static_cast<audioFile_t *>(audioFile)};
 	if (file && fileInfo)
 		return file->fileInfo(*fileInfo);
 	return false;
@@ -68,7 +68,7 @@ bool audioFile_t::fileInfo(const fileInfo_t &) { return false; }
  */
 int64_t audioWriteBuffer(void *audioFile, void *const buffer, int64_t length)
 {
-	const auto file = static_cast<audioFile_t *>(audioFile);
+	auto *const file{static_cast<audioFile_t *>(audioFile)};
 	if (!file)
 		return 0;
 	return file->writeBuffer(buffer, length);
