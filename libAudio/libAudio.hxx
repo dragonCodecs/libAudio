@@ -134,17 +134,25 @@ struct oggOpus_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
+	struct encoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
+	std::unique_ptr<encoderContext_t> encoderCtx;
 
 public:
 	oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept;
+	oggOpus_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static oggOpus_t *openR(const char *const fileName) noexcept;
+	static oggOpus_t *openW(const char *const fileName) noexcept;
 	static bool isOggOpus(const char *const fileName) noexcept;
 	static bool isOggOpus(const int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
-	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
+	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
+	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
+	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 
 struct flac_t final : public audioFile_t

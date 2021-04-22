@@ -19,6 +19,7 @@ struct audioClose_t final { void operator ()(void *ptr) noexcept { audioCloseFil
 const std::map<std::string, uint8_t> typeMap
 {
 	{"OGG", AUDIO_OGG_VORBIS},
+	{"OPUS", AUDIO_OGG_OPUS},
 	{"FLAC", AUDIO_FLAC},
 	{"WAVE", AUDIO_WAVE},
 	{"MP4", AUDIO_MP4},

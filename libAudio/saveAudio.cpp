@@ -13,6 +13,7 @@
 const std::map<uint32_t, fileOpenW_t> writers
 {
 	{AUDIO_OGG_VORBIS, oggVorbisOpenW},
+	{AUDIO_OGG_OPUS, oggOpusOpenW},
 	{AUDIO_FLAC, flacOpenW},
 	{AUDIO_MP4, m4aOpenW}
 };

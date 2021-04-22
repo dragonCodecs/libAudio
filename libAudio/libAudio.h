@@ -51,6 +51,7 @@ libAUDIO_API void *oggVorbisOpenW(const char *fileName);
 // Ogg|Opus API
 libAUDIO_API bool isOggOpus(const char *fileName);
 libAUDIO_API void *oggOpusOpenR(const char *fileName);
+libAUDIO_API void *oggOpusOpenW(const char *fileName);
 
 // FLAC API
 libAUDIO_API bool isFLAC(const char *fileName);

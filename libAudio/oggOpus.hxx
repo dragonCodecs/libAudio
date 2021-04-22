@@ -42,7 +42,6 @@ struct oggOpus_t::encoderContext_t final
 	 * The Ogg|Opus encoder state
 	 */
 	OggOpusEnc *encoder;
-	bool eos;
 
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
