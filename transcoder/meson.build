@@ -3,8 +3,7 @@ transcoderSrcs = ['transcoder.cxx']
 executable(
 	'libAudioTranscode',
 	transcoderSrcs,
-	dependencies: libAudio,
-	include_directories: includes,
+	dependencies: [libAudio, substrate],
 	gnu_symbol_visibility: 'inlineshidden',
 	install: true
 )

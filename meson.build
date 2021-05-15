@@ -16,7 +16,19 @@ project(
 
 cxx = meson.get_compiler('cpp')
 debug = get_option('debug')
-substrate = include_directories('deps/substrate')
+substrate = subproject(
+	'substrate',
+	required: true,
+	version: '>=0.0.1',
+	default_options: [
+		'build_tests=false'
+	]
+).get_variable(
+	'substrate_dep'
+).partial_dependency(
+	compile_args: true,
+	includes: true
+)
 substrateDir = meson.current_source_dir() + '/deps/substrate'
 
 add_project_arguments(

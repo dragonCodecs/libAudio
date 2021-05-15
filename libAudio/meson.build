@@ -22,7 +22,7 @@ extraFormats = get_option('extra_formats')
 extraSrcs = []
 extraArgs = []
 extraDeps = []
-includes = [substrate]
+includes = []
 
 if extraFormats.contains('wma')
 	extraSrcs += 'loadWMA.cpp'
@@ -78,7 +78,7 @@ libAudioLibrary = shared_library(
 	libAudioSrcs,
 	dependencies: [
 		threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC,
-		libAAC, libMP4v2, libMAD, libID3Tag, libOpus, extraDeps, maths
+		libAAC, libMP4v2, libMAD, libID3Tag, libOpus, extraDeps, maths, substrate
 	],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
 	include_directories: includes,
