@@ -123,10 +123,12 @@ fixed64_t &fixed64_t::operator /=(const fixed64_t &b)
 			d |= 1U;
 		}
 		f >>= 1U;
-		g++;
+		++g;
 	}
 	// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-	d <<= 33U - g;
+	d <<= 1U;
+	// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+	d <<= 32U - g;
 	return *this;
 }
 
@@ -146,7 +148,7 @@ fixed64_t fixed64_t::operator +(const fixed64_t &b) const
 			// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 			decimal = (1ULL << 32U) + decimal;
 		return {uint32_t(integer < 0 ? -integer : integer) - (overflow ? 1U : 0U),
-			uint32_t(decimal), (integer < 0 ? -1 : 1)};
+			uint32_t(decimal), int8_t(integer < 0 ? -1 : 1)};
 	}
 	else
 	{
