@@ -6,8 +6,7 @@ testHelpers = static_library(
 	'testHelpers',
 	['fixedVector.cxx', 'fd.cxx', 'string.cxx'],
 	pic: true,
-	dependencies: [libAudio, libcrunchpp],
-	include_directories: substrate,
+	dependencies: [libAudio, libcrunchpp, substrate],
 	install: false,
 	build_by_default: true
 )
