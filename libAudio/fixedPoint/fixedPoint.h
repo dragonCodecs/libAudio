@@ -1,9 +1,9 @@
-#ifndef __fixedPoint_H__
-#define __fixedPoint_H__
+#ifndef FIXED_POINT___H
+#define FIXED_POINT___H
 
 #include <cstdint>
 
-class fixed64_t
+struct fixed64_t final
 {
 private:
 	uint32_t i;
@@ -14,12 +14,13 @@ private:
 	uint8_t ulog2(uint64_t n) const noexcept;
 
 public:
-	constexpr fixed64_t(uint32_t a, uint32_t b = 0, int8_t _sign = 1) noexcept : i{a}, d{b}, sign{_sign} { }
+	constexpr fixed64_t(const uint32_t a, const uint32_t b = 0, const int8_t _sign = 1) noexcept :
+		i{a}, d{b}, sign{_sign} { }
 
-	fixed64_t exp();
+	fixed64_t exp() const noexcept;
 	//fixed64_t ln();
 
-	fixed64_t pow2();
+	fixed64_t pow2() const noexcept;
 
 	fixed64_t operator *(const fixed64_t &b) const;
 	fixed64_t &operator *=(const fixed64_t &b);
@@ -40,4 +41,4 @@ inline fixed64_t operator *(const uint32_t a, const fixed64_t &b)
 inline fixed64_t operator /(const uint8_t a, const fixed64_t &b)
 	{ return fixed64_t{a} / b; }
 
-#endif /*__fixedPoint_H__*/
+#endif /*FIXED_POINT___H*/
