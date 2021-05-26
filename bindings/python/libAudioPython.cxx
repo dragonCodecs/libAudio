@@ -25,7 +25,7 @@ constexpr static auto audioDefaultDeviceKeywords{substrate::make_array<const cha
 	"name", static_cast<const char *>(nullptr)
 })};
 
-template<typename targetFunc_t, typename sourceFunc_t> targetFunc_t asFuncType(const sourceFunc_t func) noexcept
+template<typename targetFunc_t, typename sourceFunc_t> static targetFunc_t asFuncType(const sourceFunc_t func) noexcept
 {
 	auto *const addr = reinterpret_cast<void *>(func);
 	return reinterpret_cast<targetFunc_t>(addr);
