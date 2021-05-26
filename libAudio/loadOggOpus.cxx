@@ -14,24 +14,24 @@ namespace libAudio
 {
 	namespace oggOpus
 	{
-		int read(void *filePtr, unsigned char *buffer, int bufferLen)
+		int read(void *const filePtr, unsigned char *buffer, const int bufferLen)
 		{
-			const auto file = static_cast<const oggOpus_t *>(filePtr);
-			size_t bytes = 0;
+			const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
+			size_t bytes{0};
 			if (file->fd().read(buffer, bufferLen, bytes))
 				return int(bytes);
 			return -1;
 		}
 
-		int seek(void *filePtr, opus_int64 offset, int whence)
+		int seek(void *const filePtr, const opus_int64 offset, const int whence)
 		{
-			const auto file = static_cast<const oggOpus_t *>(filePtr);
+			const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
 			return file->fd().seek(offset, whence) >= 0 ? 0 : -1;
 		}
 
-		opus_int64 tell(void *filePtr)
+		opus_int64 tell(void *const filePtr)
 		{
-			const auto file = static_cast<const oggOpus_t *>(filePtr);
+			const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
 			return file->fd().tell();
 		}
 
@@ -42,8 +42,8 @@ namespace libAudio
 			tell,
 			nullptr // We intentionally don't allow opusfile to close the file on us.
 		};
-	}
-}
+	} // namespace oggOpus
+} // namespace libAudio
 
 using namespace libAudio;
 
