@@ -54,12 +54,8 @@ ALenum openALPlayback_t::format() const noexcept
 
 bool openALPlayback_t::haveQueued() const noexcept
 {
-	for (const alBuffer_t &buffer : buffers)
-	{
-		if (buffer.isQueued())
-			return true;
-	}
-	return false;
+	return std::any_of(buffers.begin(), buffers.end(),
+		[](const alBuffer_t &buffer) { return buffer.isQueued(); });
 }
 
 void openALPlayback_t::refill() noexcept
@@ -136,10 +132,10 @@ void openALPlayback_t::stop()
 
 void openALPlayback_t::volume(float level) noexcept
 {
-	if (level > 1.f)
-		level = 1.f;
-	else if (level < 0.f)
-		level = 0.f;
+	if (level > 1.F)
+		level = 1.F;
+	else if (level < 0.F)
+		level = 0.F;
 	source.level(level);
 }
 
