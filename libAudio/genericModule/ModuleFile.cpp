@@ -564,7 +564,7 @@ void itUnpackPCM16(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, bool del
 			bits = itBitstreamRead(buff, buffLen, fd, bitWidth);
 			if (bitWidth < 7)
 			{
-				uint32_t special = 1 << (bitWidth - 1);
+				uint32_t special = 1U << (bitWidth - 1U);
 				if (bits == special)
 				{
 					uint8_t bits = itBitstreamRead(buff, buffLen, fd, 4) + 1;

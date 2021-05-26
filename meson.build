@@ -29,7 +29,7 @@ substrate = subproject(
 	compile_args: true,
 	includes: true
 )
-substrateDir = meson.current_source_dir() + '/deps/substrate'
+substrateDir = meson.current_source_dir() / 'deps/substrate'
 
 add_project_arguments(
 	cxx.get_supported_arguments(
