@@ -1504,13 +1504,13 @@ bool ModuleFile::AdvanceTick()
 		{
 			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
 			{
-				channel->NewLeftVol = (channel->Volume * channel->Panning) >> 8;
-				channel->NewRightVol = (channel->Volume * (256 - channel->Panning)) >> 8;
+				channel->NewLeftVol = (channel->Volume * channel->Panning) >> 8U;
+				channel->NewRightVol = (channel->Volume * (256 - channel->Panning)) >> 8U;
 			}
 			else
 				channel->NewLeftVol = channel->NewRightVol = channel->Volume;
 
-			channel->RightRamp = channel->LeftRamp = 0;
+			channel->RightRamp = channel->LeftRamp = 0U;
 			// TODO: Process ping-pong flag (pos = -pos)
 			// Do we need to ramp the volume up or down?
 			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->LeftVol != channel->NewLeftVol || channel->RightVol != channel->NewRightVol))
