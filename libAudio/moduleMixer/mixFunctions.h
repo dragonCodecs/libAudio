@@ -204,36 +204,36 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 	auto pcm = p[Pos >> 16U]
 
 #define SNDMIX_GETMONOVOLNOIDO8 \
-	SNDMIX_GETMONOVOLNOIDO << 8;
+	SNDMIX_GETMONOVOLNOIDO << 8U;
 
 #define SNDMIX_GETMONOVOLNOIDO16 \
-	SNDMIX_GETMONOVOLNOIDO >> 0;
+	SNDMIX_GETMONOVOLNOIDO;
 
 #define SNDMIX_GETMONOVOLLINEAR \
-	int posHi = Pos >> 16; \
-	int posLo = (Pos >> 8) & 0xFF; \
+	int posHi = Pos >> 16U; \
+	int posLo = (Pos >> 8U) & 0xFFU; \
 	int SrcVol = p[posHi]; \
 	int DestVol = p[posHi + 1];
 
 #define SNDMIX_GETMONOVOLLINEAR8 \
 	SNDMIX_GETMONOVOLLINEAR \
-	auto pcm = (SrcVol << 7) + (posLo * (DestVol - SrcVol));
+	auto pcm = (SrcVol << 7U) + (posLo * (DestVol - SrcVol));
 
 #define SNDMIX_GETMONOVOLLINEAR16 \
 	SNDMIX_GETMONOVOLLINEAR \
-	auto pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 9);
+	auto pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 9U);
 
 #define SNDMIX_GETMONOVOLHQSRC \
-	int posHi = Pos >> 16; \
-	int posLo = (Pos >> 6) & 0x03FC; \
+	int posHi = Pos >> 16U; \
+	int posLo = (Pos >> 6U) & 0x03FCU; \
 	int pcm = (FastSinc[posLo] * p[posHi - 1] + FastSinc[posLo + 1] * p[posHi] + \
 		FastSinc[posLo + 2] * p[posHi + 1] + FastSinc[posLo + 3] * p[posHi + 2])
 
 #define SNDMIX_GETMONOVOLHQSRC8 \
-	SNDMIX_GETMONOVOLHQSRC >> 7;
+	SNDMIX_GETMONOVOLHQSRC >> 7U;
 
 #define SNDMIX_GETMONOVOLHQSRC16 \
-	SNDMIX_GETMONOVOLHQSRC >> 15;
+	SNDMIX_GETMONOVOLHQSRC >> 15U;
 
 // Volume
 #define SNDMIX_STOREMONOVOL \
@@ -250,26 +250,26 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 
 // Stereo
 #define SNDMIX_GETSTEREOVOLNOIDO(shift) \
-	auto pcmL = p[((Pos >> 16) << 1) + 0] shift; \
-	auto pcmR = p[((Pos >> 16) << 1) + 1] shift;
+	auto pcmL = p[((Pos >> 16U) << 1U) + 0] shift; \
+	auto pcmR = p[((Pos >> 16U) << 1U) + 1] shift;
 
 #define SNDMIX_GETSTEREOVOLNOIDO8 \
-	SNDMIX_GETSTEREOVOLNOIDO(<< 8)
+	SNDMIX_GETSTEREOVOLNOIDO(<< 8U)
 
 #define SNDMIX_GETSTEREOVOLNOIDO16 \
-	SNDMIX_GETSTEREOVOLNOIDO(>> 0)
+	SNDMIX_GETSTEREOVOLNOIDO()
 
 // Volume
 #define SNDMIX_STORESTEREOVOL \
-	vol[0] += pcmL * (chn->LeftVol << 3); \
-	vol[1] += pcmR * (chn->RightVol << 3); \
+	vol[0] += pcmL * (chn->LeftVol << 3U); \
+	vol[1] += pcmR * (chn->RightVol << 3U); \
 	vol += 2;
 
 #define SNDMIX_RAMPSTEREOVOL \
 	RampLeftVol += chn->LeftRamp; \
 	RampRightVol += chn->RightRamp; \
-	vol[0] += pcmL * (RampLeftVol << 3); \
-	vol[1] += pcmR * (RampRightVol << 3); \
+	vol[0] += pcmL * (RampLeftVol << 3U); \
+	vol[1] += pcmR * (RampRightVol << 3U); \
 	vol += 2;
 
 // Interfaces
