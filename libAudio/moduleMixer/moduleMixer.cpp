@@ -68,7 +68,6 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 
 	Rows = 2;
 	ResetChannelPanning();
-	InitialiseTables();
 }
 
 Channel::Channel()
@@ -78,8 +77,6 @@ Channel::Channel()
 
 void ModuleFile::DeinitMixer()
 {
-	DeinitialiseTables();
-
 	delete [] Channels;
 	delete [] MixerChannels;
 }

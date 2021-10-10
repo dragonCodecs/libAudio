@@ -1,37 +1,17 @@
 // Standard mixing functions
-#ifndef __mixFunctions_H__
-#define __mixFunctions_H__ 1
+#ifndef LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H
+#define LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H 1
+
+#include <cstdint>
+#include <array>
 
 typedef void (*MixInterface)(Channel *, int *, int *);
-
-#define WFIR_QUANTBITS		15
-#define WFIR_QUANTSCALE		(1 << WFIR_QUANTBITS)
-#define WFIR_SHIFT_8BIT		(WFIR_QUANTBITS - 7)
-#define WFIR_SHIFT_16BIT	WFIR_QUANTBITS
-#define WFIR_FRACBITS		12
-#define WFIR_LUTLEN			((1 << (WFIR_FRACBITS + 1)) + 1)
-#define WFIR_LOG2WIDTH		3
-#define WFIR_WIDTH			(1 << WFIR_LOG2WIDTH)
-#define WFIR_SMPSPERWING	((WFIR_WIDTH - 1) >> 1)
-
-#define WFIR_HANN			0
-#define WFIR_HAMMING		1
-#define	WFIR_BLACKMANEXACT	2
-#define WFIR_BLACKMAN3T61	3
-#define WFIR_BLACKMAN3T67	4
-#define WFIR_BLACKMAN4T92	5
-#define WFIR_BLACKMAN4T74	6
-#define WFIR_KAISER4T		7
-
-#define WFIR_FRACSHIFT		(16 - (WFIR_FRACBITS + 1 + WFIR_LOG2WIDTH))
-#define WFIR_FRACMASK		(((1 << (17 - WFIR_FRACSHIFT)) - 1) &~ ((1 << WFIR_LOG2WIDTH) - 1))
-#define WFIR_FRACHALVE		(1 << (16 - (WFIR_FRACBITS + 2)))
 
 #define SINC_PHASES			4096
 #define M_EPS				1e-8
 
-short FastSinc[1024] =
-{
+const std::array<int16_t, 1024> FastSinc
+{{
     0, 16384,     0,     0,   -31, 16383,    32,     0,   -63, 16381,    65,     0,   -93, 16378,   100,    -1,
  -124, 16374,   135,    -1,  -153, 16368,   172,    -3,  -183, 16361,   209,    -4,  -211, 16353,   247,    -5,
  -240, 16344,   287,    -7,  -268, 16334,   327,    -9,  -295, 16322,   368,   -12,  -322, 16310,   410,   -14,
@@ -96,97 +76,7 @@ short FastSinc[1024] =
   -17,   453, 16296,  -348,   -14,   410, 16310,  -322,   -12,   368, 16322,  -295,    -9,   327, 16334,  -268,
    -7,   287, 16344,  -240,    -5,   247, 16353,  -211,    -4,   209, 16361,  -183,    -3,   172, 16368,  -153,
    -1,   135, 16374,  -124,    -1,   100, 16378,   -93,     0,    65, 16381,   -63,     0,    32, 16383,   -31,
-};
-
-short *KaiserSinc = NULL;
-short *DownSample13x = NULL;
-short *DownSample2x = NULL;
-signed short *WFIRlutTab;
-bool InitTables = false;
-double WFIRCutoff = 0.99;
-uint8_t WFIRType = WFIR_KAISER4T;
-
-float WFIRCoef(int Cnr, float Offs, float Cut, int Width, int Type)
-{
-	double WidthM1 = Width - 1;
-	double WidthM1Half = WidthM1 * 0.5;
-	double PosU = (Cnr - Offs);
-	double Pos = PosU - WidthM1Half;
-	double Idl = 2.0 * M_PI * WidthM1;
-	double Wc, Si;
-
-	if (fabs(Pos) < M_EPS)
-	{
-		Wc = 1.0;
-		Si = Cut;
-	}
-	else
-	{
-		switch (Type)
-		{
-			case WFIR_HANN:
-				Wc = 0.5 - 0.5 * cos(Idl * PosU);
-				break;
-			case WFIR_HAMMING:
-				Wc = 0.54 - 0.45 * cos(Idl * PosU);
-				break;
-			case WFIR_BLACKMANEXACT:
-				Wc = 0.42 - 0.50 * cos(Idl * PosU) + 0.08 * cos(2.0 * Idl * PosU);
-				break;
-			case WFIR_BLACKMAN3T61:
-				Wc = 0.44959 - 0.49254 * cos(Idl * PosU) + 0.05677 * cos(2.0 * Idl * PosU);
-				break;
-			case WFIR_BLACKMAN3T67:
-				Wc = 0.42323 - 0.49755 * cos(Idl * PosU) + 0.07922 * cos(2.0 * Idl * PosU);
-				break;
-			case WFIR_BLACKMAN4T92:
-				Wc = 0.35875 - 0.48829 * cos(Idl * PosU) + 0.14128 * cos(2.0 * Idl * PosU) - 0.01168 * cos(3.0 * Idl * PosU);
-				break;
-			case WFIR_BLACKMAN4T74:
-				Wc = 0.40217 - 0.49703 * cos(Idl * PosU) + 0.09392 * cos(2.0 * Idl * PosU) - 0.00183 * cos(3.0 * Idl * PosU);
-				break;
-			case WFIR_KAISER4T:
-				Wc = 0.40243 - 0.49804 * cos(Idl * PosU) + 0.09831 * cos(2.0 * Idl * PosU) - 0.00122 * cos(3.0 * Idl * PosU);
-				break;
-			default:
-				Wc = 1.0;
-		}
-		Pos *= M_PI;
-		Si = sin(Cut * Pos) / Pos;
-	}
-	return (float)(Wc * Si);
-}
-
-void InitWFIRTable()
-{
-	int Pcl;
-	float PclLen = (float)(1 << WFIR_FRACBITS);
-	float Norm = 1.0F / (2.0F * PclLen);
-	float Cut = (float)WFIRCutoff;
-	float Scale = WFIR_QUANTSCALE;
-	WFIRlutTab = (signed short *)malloc(sizeof(signed short) * WFIR_LUTLEN * WFIR_WIDTH);
-
-	for (Pcl = 0; Pcl < WFIR_LUTLEN; Pcl++)
-	{
-		float Gain, Coefs[WFIR_WIDTH];
-		float Offs = (Pcl - PclLen) * Norm;
-		int Cc, Idx = Pcl << WFIR_LOG2WIDTH;
-
-		for (Cc = 0, Gain = 0.0F; Cc < WFIR_WIDTH; Cc++)
-			Gain += (Coefs[Cc] = WFIRCoef(Cc, Offs, Cut, WFIR_WIDTH, WFIRType));
-		Gain = 1.0F / Gain;
-		for (Cc = 0; Cc < WFIR_WIDTH; Cc++)
-		{
-			float Coef = (float)floor(0.5 + Scale * Coefs[Cc] * Gain);
-			WFIRlutTab[Idx + Cc] = (signed short)(Coef < -Scale ? -Scale : (Coef > Scale ? Scale : Coef));
-		}
-	}
-}
-
-void DeinitWFIRTable()
-{
-	free(WFIRlutTab);
-}
+}};
 
 double Zero(double y)
 {
@@ -223,22 +113,6 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 		*Sinc = (n + 0x80) >> 8;
 		Sinc++;
 	}
-}
-
-void InitialiseTables()
-{
-	InitWFIRTable();
-	getsinc(&KaiserSinc, 9.6377, WFIRCutoff);
-	getsinc(&DownSample13x, 8.5, 0.5);
-	getsinc(&DownSample2x, 2.7625, 0.425);
-}
-
-void DeinitialiseTables()
-{
-	DeinitWFIRTable();
-	free(KaiserSinc);
-	free(DownSample13x);
-	free(DownSample2x);
 }
 
 // Begin / End loop
@@ -361,50 +235,6 @@ void DeinitialiseTables()
 #define SNDMIX_GETMONOVOLHQSRC16 \
 	SNDMIX_GETMONOVOLHQSRC >> 15;
 
-#define SNDMIX_GETMONOVOLKAISER \
-	int posHi = Pos >> 16; \
-	short *posLo = (short *)(sinc + (Pos & 0xFFF0)); \
-	int pcm = (posLo[0] * p[posHi - 3] + posLo[1] * p[posHi - 2] + \
-		posLo[2] * p[posHi - 1] + posLo[3] * p[posHi] + \
-		posLo[4] * p[posHi + 1] + posLo[5] * p[posHi + 2] + \
-		posLo[6] * p[posHi + 3] + posLo[7] * p[posHi + 4])
-
-#define SNDMIX_GETMONOVOLKAISER8 \
-	SNDMIX_GETMONOVOLKAISER >> 7;
-
-#define SNDMIX_GETMONOVOLKAISER16 \
-	SNDMIX_GETMONOVOLKAISER >> 15;
-
-#define SNDMIX_GETMONOVOLFIRFILTER \
-	int posHi = Pos >> 16; \
-	int posLo = Pos & 0xFFFF; \
-	int firIdx = ((posLo + WFIR_FRACHALVE) >> WFIR_FRACSHIFT) & WFIR_FRACMASK
-
-#define SNDMIX_GETMONOVOLFIRFILTER8 \
-	SNDMIX_GETMONOVOLFIRFILTER; \
-	int pcm = WFIRlutTab[firIdx + 0] * p[posHi - 3]; \
-	pcm += WFIRlutTab[firIdx + 1] * p[posHi - 2]; \
-	pcm += WFIRlutTab[firIdx + 2] * p[posHi - 1]; \
-	pcm += WFIRlutTab[firIdx + 3] * p[posHi + 0]; \
-	pcm += WFIRlutTab[firIdx + 4] * p[posHi + 1]; \
-	pcm += WFIRlutTab[firIdx + 5] * p[posHi + 2]; \
-	pcm += WFIRlutTab[firIdx + 6] * p[posHi + 3]; \
-	pcm += WFIRlutTab[firIdx + 7] * p[posHi + 4]; \
-	pcm >>= WFIR_SHIFT_8BIT;
-
-#define SNDMIX_GETMONOVOLFIRFILTER16 \
-	SNDMIX_GETMONOVOLFIRFILTER; \
-	int pcm, pcm2; \
-	int pcm1 = WFIRlutTab[firIdx + 0] * p[posHi - 3]; \
-	pcm1 += WFIRlutTab[firIdx + 1] * p[posHi - 2]; \
-	pcm1 += WFIRlutTab[firIdx + 2] * p[posHi - 1]; \
-	pcm1 += WFIRlutTab[firIdx + 3] * p[posHi + 0]; \
-	pcm2 = WFIRlutTab[firIdx + 4] * p[posHi + 1]; \
-	pcm2 += WFIRlutTab[firIdx + 5] * p[posHi + 2]; \
-	pcm2 += WFIRlutTab[firIdx + 6] * p[posHi + 3]; \
-	pcm2 += WFIRlutTab[firIdx + 7] * p[posHi + 4]; \
-	pcm = ((pcm1 >> 1) + (pcm2 >> 1)) >> WFIR_SHIFT_16BIT;
-
 // Volume
 #define SNDMIX_STOREMONOVOL \
 	vol[0] += pcm * (chn->RightVol << 4U); \
@@ -417,11 +247,6 @@ void DeinitialiseTables()
 	vol[0] += pcm * (RampRightVol << 4U); \
 	vol[1] += pcm * (RampLeftVol << 4U); \
 	vol += 2;
-
-// sinc
-#define SNDMIX_INITSINCTABLE \
-	char *sinc = (char *)(chn->Increment.iValue > 0x13000 || chn->Increment.iValue < -0x13000 ? \
-		(chn->Increment.iValue > 0x18000 || chn->Increment.iValue < -0x18000 ? DownSample2x : DownSample13x) : KaiserSinc);
 
 // Stereo
 #define SNDMIX_GETSTEREOVOLNOIDO(shift) \
@@ -485,32 +310,6 @@ BEGIN_RAMPMIX_INTERFACE(Mono8BitHQRampMix)
 	SNDMIX_RAMPMONOVOL
 END_RAMPMIX_INTERFACE()
 
-BEGIN_MIX_INTERFACE(Mono8BitKaiserMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLKAISER8
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono8BitKaiserRampMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLKAISER8
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
-
-BEGIN_MIX_INTERFACE(Mono8BitFIRFilterMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLFIRFILTER8
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono8BitFIRFilterRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLFIRFILTER8
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
-
 // Mono 16-bit
 BEGIN_MIX_INTERFACE(Mono16BitMix)
 	SNDMIX_BEGINSAMPLELOOP16
@@ -545,32 +344,6 @@ END_MIX_INTERFACE()
 BEGIN_RAMPMIX_INTERFACE(Mono16BitHQRampMix)
 	SNDMIX_BEGINSAMPLELOOP16
 	SNDMIX_GETMONOVOLHQSRC16
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
-
-BEGIN_MIX_INTERFACE(Mono16BitKaiserMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLKAISER16
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono16BitKaiserRampMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLKAISER16
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
-
-BEGIN_MIX_INTERFACE(Mono16BitFIRFilterMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLFIRFILTER16
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono16BitFIRFilterRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLFIRFILTER16
 	SNDMIX_RAMPMONOVOL
 END_RAMPMIX_INTERFACE()
 
@@ -618,36 +391,6 @@ BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitHQRampMix)
 	SNDMIX_RAMPMONOVOL
 END_RAMPMIX_FLT_INTERFACE()
 
-BEGIN_MIX_FLT_INTERFACE(FilterMono8BitKaiserMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLKAISER8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitKaiserRampMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLKAISER8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
-
-BEGIN_MIX_FLT_INTERFACE(FilterMono8BitFIRFilterMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLFIRFILTER8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitFIRFilterRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLFIRFILTER8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_MIX_FLT_INTERFACE()
-
 // Mono 16-bit
 BEGIN_MIX_FLT_INTERFACE(FilterMono16BitMix)
 	SNDMIX_BEGINSAMPLELOOP16
@@ -691,36 +434,6 @@ BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitHQRampMix)
 	SNDMIX_RAMPMONOVOL
 END_RAMPMIX_FLT_INTERFACE()
 
-BEGIN_MIX_FLT_INTERFACE(FilterMono16BitKaiserMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLKAISER16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitKaiserRampMix)
-	SNDMIX_INITSINCTABLE
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLKAISER16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
-
-BEGIN_MIX_FLT_INTERFACE(FilterMono16BitFIRFilterMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLFIRFILTER16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitFIRFilterRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLFIRFILTER16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_MIX_FLT_INTERFACE()
-
 // Stereo 8-bit
 BEGIN_MIX_INTERFACE(Stereo8BitMix)
 	SNDMIX_BEGINSAMPLELOOP8
@@ -747,4 +460,4 @@ BEGIN_RAMPMIX_INTERFACE(Stereo16BitRampMix)
 	SNDMIX_RAMPSTEREOVOL
 END_RAMPMIX_INTERFACE()
 
-#endif /*__mixFunctions_H__*/
+#endif /*LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H*/
