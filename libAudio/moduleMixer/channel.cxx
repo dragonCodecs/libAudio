@@ -26,7 +26,7 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 			if (delta < 0)
 			{
 				const uint16_t amount = uint16_t(-delta);
-				delta = linearSlideDown(period, amount >> 2) - period;
+				delta = linearSlideDown(period, amount >> 2U) - period;
 				const uint8_t findSlide = amount & 3U;
 				if (findSlide)
 					delta += fineLinearSlideDown(period, findSlide) - period;
@@ -34,7 +34,7 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 			else if (delta > 0)
 			{
 				const uint16_t amount = uint16_t(delta);
-				delta = linearSlideUp(period, amount >> 2) - period;
+				delta = linearSlideUp(period, amount >> 2U) - period;
 				const uint8_t findSlide = amount & 3U;
 				if (findSlide)
 					delta += fineLinearSlideUp(period, findSlide) - period;
@@ -53,35 +53,35 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 	{
 		ModuleSample &sample = *Sample;
 		if (!sample.GetVibratoRate())
-			AutoVibratoDepth = sample.GetVibratoDepth() << 8;
+			AutoVibratoDepth = sample.GetVibratoDepth() << 8U;
 		else
 		{
 			if (module.ModuleType == MODULE_IT)
 				AutoVibratoDepth += sample.GetVibratoRate();
 			else if (!(Flags & CHN_NOTEOFF))
-				AutoVibratoDepth += (sample.GetVibratoDepth() << 8) / (sample.GetVibratoRate() >> 3);
-			if ((AutoVibratoDepth >> 8) > vibratoDepth)
-				AutoVibratoDepth = vibratoDepth << 8;
+				AutoVibratoDepth += (sample.GetVibratoDepth() << 8U) / (sample.GetVibratoRate() >> 3U);
+			if ((AutoVibratoDepth >> 8U) > vibratoDepth)
+				AutoVibratoDepth = vibratoDepth << 8U;
 		}
 		AutoVibratoPos += sample.GetVibratoSpeed();
 		const auto delta{[](const uint8_t type, uint8_t &position) noexcept -> int8_t
 		{
 			if (type == 1) // Square
-				return (position & 0x80) ? 64 : -64;
+				return (position & 0x80U) ? 64 : -64;
 			else if (type == 2) // Ramp up
-				return ((0x40 + (position >> 1)) & 0x7F) - 0x40;
+				return ((0x40U + (position >> 1U)) & 0x7FU) - 0x40;
 			else if (type == 3) // Ramp down
-				return ((0x40 - (position >> 1)) & 0x7F) - 0x40;
+				return ((0x40U - (position >> 1U)) & 0x7FU) - 0x40;
 			else if (type == 4) // Random
 			{
-				auto result = RandomTable[position & 0x3F];
+				auto result = RandomTable[position & 0x3FU];
 				++position;
 				return result;
 			}
 			else
-				return FT2VibratoTable[position & 0xFF];
+				return FT2VibratoTable[position];
 		}(sample.GetVibratoType(), AutoVibratoPos)};
-		int16_t vibrato = (delta * AutoVibratoDepth) >> 8;
+		int16_t vibrato = (delta * AutoVibratoDepth) >> 8U;
 		if (module.ModuleType == MODULE_IT)
 		{
 			uint32_t a{0}, b{0};
@@ -99,12 +99,12 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 				b = linearSlideDown(value + 1);
 			}
 			value >>= 2U;
-			const int32_t result = muldiv(period, a + (((b - a) * (value & 0x3F)) >> 6), 256);
-			fractionalPeriod = uint32_t(result) & 0xFF;
-			return period - (result >> 8);
+			const int32_t result = muldiv(period, a + (((b - a) * (value & 0x3FU)) >> 6U), 256);
+			fractionalPeriod = uint32_t(result) & 0xFFU;
+			return period - (result >> 8U);
 		}
 		else
-			return vibrato >> 6;
+			return vibrato >> 6U;
 	}
 	return 0;
 }
@@ -123,9 +123,9 @@ void Channel::applyPanbrello() noexcept
 				return RandomTable[position];
 			else
 				return SinusTable[position];
-		}(panbrelloType & 0x03U, ((panbrelloPosition + 16) >> 2U) & 0x3FU)};
+		}(panbrelloType & 0x03U, ((panbrelloPosition + 16U) >> 2U) & 0x3FU)};
 		panbrelloPosition += panbrelloSpeed;
-		Panning += (delta * panbrelloDepth + 2) >> 3U;
+		Panning += (delta * panbrelloDepth + 2U) >> 3U;
 		clipInt<uint16_t>(Panning, 0, 256);
 	}
 }
@@ -213,7 +213,7 @@ void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 	const auto command = param & 0xF0U;
 	if (module.typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>() && command >= 0xE0U)
 	{
-		if (param & 0x0F)
+		if (param & 0x0FU)
 		{
 			if (command == 0xF0U)
 				finePortamentoUp(module, param);
@@ -232,7 +232,7 @@ void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 				--Period;
 		}
 		else
-			Period -= uint16_t{param} << 2;
+			Period -= uint16_t{param} << 2U;
 		if (Period < module.minimumPeriod())
 		{
 			Period = module.minimumPeriod();
@@ -256,7 +256,7 @@ void Channel::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 	const auto command = param & 0xF0U;
 	if (module.typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>() && command >= 0xE0U)
 	{
-		if (param & 0x0F)
+		if (param & 0x0FU)
 		{
 			if (command == 0xF0U)
 				finePortamentoDown(module, param);
@@ -275,7 +275,7 @@ void Channel::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 				++Period;
 		}
 		else
-			Period += uint16_t{param} << 2;
+			Period += uint16_t{param} << 2U;
 		if (Period > module.maximumPeriod())
 		{
 			Period = module.maximumPeriod();
@@ -319,7 +319,7 @@ inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t par
 	if (module.ticks() == StartTick && Period && param)
 	{
 		if (module.hasLinearSlides())
-			Period = fineLinearSlideDown(Period, param & 0x0F);
+			Period = fineLinearSlideDown(Period, param & 0x0FU);
 		else
 			Period -= param;
 		if (Period < module.minimumPeriod())
@@ -342,7 +342,7 @@ inline void Channel::extraFinePortamentoDown(const ModuleFile &module, uint8_t p
 
 void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 {
-	if (param != 0)
+	if (param)
 		portamentoSlide = param;
 	Flags |= CHN_PORTAMENTO;
 	if (Period && portamentoTarget && module.ticks() != StartTick)
@@ -380,19 +380,19 @@ void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 
 void Channel::vibrato(uint8_t param, uint8_t multiplier)
 {
-	if ((param & 0x0F) != 0)
-		vibratoDepth = (param & 0x0F) * multiplier;
-	if ((param & 0xF0) != 0)
-		vibratoSpeed = param >> 4;
+	if (param & 0x0FU)
+		vibratoDepth = (param & 0x0FU) * multiplier;
+	if (param & 0xF0U)
+		vibratoSpeed = param >> 4U;
 	Flags |= CHN_VIBRATO;
 }
 
 void Channel::panbrello(uint8_t param)
 {
-	if ((param & 0x0F) != 0)
-		panbrelloDepth = param & 0x0F;
-	if ((param & 0xF0) != 0)
-		panbrelloSpeed = param >> 4;
+	if (param & 0x0FU)
+		panbrelloDepth = param & 0x0FU;
+	if (param & 0xF0U)
+		panbrelloSpeed = param >> 4U;
 	Flags |= CHN_PANBRELLO;
 }
 
@@ -438,14 +438,14 @@ void Channel::panningSlide(const ModuleFile &module, uint8_t param)
 	if (!module.ticks())
 	{
 		if (slideLo == 0x0FU && slideHi)
-			slide -= slideHi >> 2;
+			slide -= slideHi >> 2U;
 		else if (slideHi == 0xF0U && slideLo)
-			slide += slideLo << 2;
+			slide += slideLo << 2U;
 	}
 	else if (slideHi)
-		slide -= slideHi >> 2;
+		slide -= slideHi >> 2U;
 	else
-		slide += slideLo << 2;
+		slide += slideLo << 2U;
 
 	if (slide != RawPanning)
 	{

@@ -806,13 +806,11 @@ inline void ModuleFile::FineVolumeSlide(Channel *channel, uint8_t param, uint16_
 
 inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
 {
-	uint16_t NewVolume;
-
 	if (param == 0)
 		param = channel->VolumeSlide;
 	else
 		channel->VolumeSlide = param;
-	NewVolume = channel->RawVolume;
+	uint16_t NewVolume = channel->RawVolume;
 
 	if (typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>())
 	{
@@ -1089,7 +1087,7 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 				uint8_t NewVolume = param;
 				if (NewVolume > 64)
 					NewVolume = 64;
-				channel.RawVolume = NewVolume << 1;
+				channel.RawVolume = NewVolume << 1U;
 				channel.Flags |= CHN_FASTVOLRAMP;
 			}
 			break;
