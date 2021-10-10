@@ -99,7 +99,7 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 				b = linearSlideDown(value + 1);
 			}
 			value >>= 2U;
-			const int32_t result = muldiv(period, a + (((b - a) * (value & 0x3FU)) >> 6U), 256);
+			const int32_t result = muldiv_t<>{}(period, a + (((b - a) * (value & 0x3FU)) >> 6U), 256);
 			fractionalPeriod = uint32_t(result) & 0xFFU;
 			return period - (result >> 8U);
 		}

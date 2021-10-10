@@ -53,27 +53,39 @@ template<> inline void clipInt<uint32_t>(uint32_t &num, const uint32_t min, cons
 }
 
 // Return (a * b) / c [ - no divide error ]
-inline int32_t muldiv(int32_t a, int32_t b, int32_t c)
+template<typename T = int32_t> struct muldiv_t final
 {
-	int32_t result;
-	int32_t d = a;
-	if (a < 0)
-		a = -a;
-	d ^= b;
-	if (b < 0)
-		b = -b;
-	d ^= c;
-	if (c < 0)
-		c = -c;
-	const uint64_t e = uint64_t(a) * uint64_t(b);
-	if (uint64_t(c) < e)
-		result = int32_t(e / uint64_t(c));
-	else
-		return 0x7FFFFFFF;
-	if (d < 0)
-		result = -result;
-	return result;
-}
+	inline T operator ()(int32_t a, int32_t b, int32_t c)
+	{
+		auto d = a;
+		if (a < 0)
+			a = -a;
+		d ^= b;
+		if (b < 0)
+			b = -b;
+		d ^= c;
+		if (c < 0)
+			c = -c;
+		const uint64_t e = uint64_t(a) * uint64_t(b);
+		if (uint64_t(c) >= e)
+			return 0x7FFFFFFF;
+		const auto result = int32_t(e / uint64_t(c));
+		if (d < 0)
+			return -result;
+		return result;
+	}
+};
+
+template<> struct muldiv_t<uint32_t> final
+{
+	inline uint32_t operator ()(const uint32_t a, const uint32_t b, const uint32_t c)
+	{
+		const auto d = uint64_t(a) * uint64_t(b);
+		if (c >= d)
+			return 0xFFFFFFFFU;
+		return d / c;
+	}
+};
 
 inline int32_t linearSlideUp(uint8_t slide) noexcept
 {

@@ -300,7 +300,7 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t 
 		{
 			if (C4Speed == 0)
 				C4Speed = 8363;
-			return muldiv(8363, (S3MPeriods[Note % 12] << 5), C4Speed << (Note / 12));
+			return muldiv_t<>{}(8363, (S3MPeriods[Note % 12] << 5), C4Speed << (Note / 12));
 		}
 	}
 	else
@@ -324,10 +324,10 @@ uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t
 		{
 			if (!C4Speed)
 				C4Speed = 8363;
-			return muldiv(C4Speed, 438272UL, (Period << 8) + PeriodFrac);
+			return muldiv_t<uint32_t>{}(C4Speed, 438272UL, (Period << 8U) + PeriodFrac);
 		}
 		else
-			return muldiv(8363, 438272UL, (Period << 8) + PeriodFrac);
+			return muldiv_t<uint32_t>{}(8363, 438272UL, (Period << 8U) + PeriodFrac);
 	}
 }
 
@@ -1267,7 +1267,7 @@ bool ModuleFile::AdvanceTick()
 
 		if (channel->Period != 0 && channel->Length != 0)
 		{
-			uint32_t period, freq;
+			uint32_t period;
 			int32_t inc;
 			uint16_t vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
@@ -1328,7 +1328,7 @@ bool ModuleFile::AdvanceTick()
 				if (env->GetEnabled() && env->HasNodes())
 				{
 					uint8_t volValue = env->Apply(channel->EnvVolumePos);
-					vol = muldiv(vol, volValue, 1 << 6);
+					vol = muldiv_t<uint32_t>{}(vol, volValue, 1U << 6U);
 					clipInt<uint16_t>(vol, 0, 128);
 					channel->EnvVolumePos++;
 					if (env->GetLooped())
@@ -1408,7 +1408,7 @@ bool ModuleFile::AdvanceTick()
 					vol = 0;
 			}
 
-			vol = muldiv(vol * GlobalVolume, channel->channelVolume * channel->sampleVolume, 1 << 19);
+			vol = muldiv_t<uint32_t>{}(vol * GlobalVolume, channel->channelVolume * channel->sampleVolume, 1U << 19U);
 			clipInt<uint16_t>(vol, 0, 128);
 			channel->Volume = vol;
 			clipInt(channel->Period, MinPeriod, MaxPeriod);
@@ -1482,7 +1482,7 @@ bool ModuleFile::AdvanceTick()
 				fractionalPeriod = 0;
 			}
 			// Calculate the increment from the frequency from the period
-			freq = GetFreqFromPeriod(period, channel->C4Speed, fractionalPeriod);
+			const uint32_t freq = GetFreqFromPeriod(period, channel->C4Speed, fractionalPeriod);
 			// Silence impulse tracker notes that fall off the bottom of the reproduction spectrum
 			if (ModuleType == MODULE_IT && freq < 256)
 			{
@@ -1490,7 +1490,7 @@ bool ModuleFile::AdvanceTick()
 				channel->Volume = 0;
 				channel->Flags |= CHN_NOTEFADE;
 			}
-			inc = muldiv(freq, 0x10000, MixSampleRate) + 1;
+			inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
 			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
 				inc = -inc;
 			channel->Increment.iValue = inc & ~3;
