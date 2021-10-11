@@ -63,6 +63,7 @@ ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) :
 	\********************************************/
 	Packing = 0;
 	C4Speed = 8363;
+	DefaultPan = 0;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 	InstrVol = 64;
 }
@@ -126,6 +127,7 @@ ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, c
 	|* The following block just initialises the *|
 	|* unused fields to harmless values.        *|
 	\********************************************/
+	DefaultPan = 0;
 	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
 	InstrVol = 64;
 }
