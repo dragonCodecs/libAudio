@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <array>
+#include <utility>
 
 typedef void (*MixInterface)(Channel *, int *, int *);
 
@@ -259,32 +260,100 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 #define SNDMIX_GETSTEREOVOLNOIDO16 \
 	SNDMIX_GETSTEREOVOLNOIDO()
 
-// Volume
-#define SNDMIX_STORESTEREOVOL \
-	vol[0] += pcmL * (chn->LeftVol << 3U); \
-	vol[1] += pcmR * (chn->RightVol << 3U); \
-	vol += 2;
+using samplePair_t = std::pair<int16_t, int16_t>;
+template<typename T> using sampleFn_t = samplePair_t(const T *const, const uint32_t);
+using storeFn_t = void(const Channel &, int32_t *const , const int16_t, const int16_t,
+	uint32_t &, uint32_t &);
 
-#define SNDMIX_RAMPSTEREOVOL \
-	RampLeftVol += chn->LeftRamp; \
-	RampRightVol += chn->RightRamp; \
-	vol[0] += pcmL * (RampLeftVol << 3U); \
-	vol[1] += pcmR * (RampRightVol << 3U); \
-	vol += 2;
+inline samplePair_t monoSample8Bit(const int8_t *const buffer, const uint32_t position) noexcept
+{
+	const int16_t sample = static_cast<uint16_t>(buffer[position >> 16U]) << 8U;
+	return {sample, sample};
+}
+inline samplePair_t monoSample16Bit(const int16_t *const buffer, const uint32_t position) noexcept
+{
+	const int16_t sample{buffer[position >> 16U]};
+	return {sample, sample};
+}
+
+inline samplePair_t stereoSample8Bit(const int8_t *const buffer, const uint32_t position) noexcept
+{
+	const auto shiftedPosition{(position >> 16U) << 1U};
+	return {
+		buffer[shiftedPosition + 0] << 8U,
+		buffer[shiftedPosition + 1] << 8U,
+	};
+}
+
+inline samplePair_t stereoSample16Bit(const int16_t *const buffer, const uint32_t position) noexcept
+{
+	const auto shiftedPosition{(position >> 16U) << 1U};
+	return {
+		buffer[shiftedPosition + 0],
+		buffer[shiftedPosition + 1],
+	};
+}
+
+inline void storeMono(const Channel &, int32_t *const buffer,
+	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
+{
+	buffer[0] += sampleR * (rightVol << 4U);
+	buffer[1] += sampleL * (leftVol << 4U);
+}
+
+inline void rampMono(const Channel &channel, int32_t *const buffer,
+	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
+{
+	leftVol += channel.LeftRamp;
+	rightVol += channel.RightRamp;
+	storeMono(channel, buffer, sampleL, sampleR, leftVol, rightVol);
+}
+
+inline void storeStereo(const Channel &, int32_t *const buffer,
+	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
+{
+	buffer[0] += sampleR * (rightVol << 3U);
+	buffer[1] += sampleL * (leftVol << 3U);
+}
+
+inline void rampStereo(const Channel &channel, int32_t *const buffer,
+	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
+{
+	leftVol += channel.LeftRamp;
+	rightVol += channel.RightRamp;
+	storeStereo(channel, buffer, sampleL, sampleR, leftVol, rightVol);
+}
+
+template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, const int32_t *const end,
+	const sampleFn_t<T> sample, const storeFn_t store) noexcept
+{
+	auto position{channel.PosLo};
+	const auto increment{channel.Increment.iValue};
+	const auto *sampleData = reinterpret_cast<T *>(channel.SampleData) + channel.Pos;
+	if (channel.Sample->GetStereo())
+		sampleData += channel.Pos;
+	uint32_t leftVol{channel.LeftVol};
+	uint32_t rightVol{channel.RightVol};
+	do
+	{
+		const auto samples{sample(sampleData, position)};
+		store(channel, begin, samples.first, samples.second, leftVol, rightVol);
+		begin += 2U;
+		position += increment;
+	}
+	while (begin < end);
+	channel.Pos += position >> 16U;
+	channel.PosLo = position & 0xFFFFU;
+	channel.LeftVol = leftVol;
+	channel.RightVol = rightVol;
+}
 
 // Interfaces
 // Mono 8-bit
-BEGIN_MIX_INTERFACE(Mono8BitMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLNOIDO8
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono8BitRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLNOIDO8
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
+static void Mono8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample8Bit, storeMono); }
+static void Mono8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample8Bit, rampMono); }
 
 BEGIN_MIX_INTERFACE(Mono8BitLinearMix)
 	SNDMIX_BEGINSAMPLELOOP8
@@ -311,17 +380,10 @@ BEGIN_RAMPMIX_INTERFACE(Mono8BitHQRampMix)
 END_RAMPMIX_INTERFACE()
 
 // Mono 16-bit
-BEGIN_MIX_INTERFACE(Mono16BitMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLNOIDO16
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono16BitRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLNOIDO16
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
+static void Mono16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample16Bit, storeMono); }
+static void Mono16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample16Bit, rampMono); }
 
 BEGIN_MIX_INTERFACE(Mono16BitLinearMix)
 	SNDMIX_BEGINSAMPLELOOP16
@@ -435,29 +497,15 @@ BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitHQRampMix)
 END_RAMPMIX_FLT_INTERFACE()
 
 // Stereo 8-bit
-BEGIN_MIX_INTERFACE(Stereo8BitMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETSTEREOVOLNOIDO8
-	SNDMIX_STORESTEREOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Stereo8BitRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETSTEREOVOLNOIDO8
-	SNDMIX_RAMPSTEREOVOL
-END_RAMPMIX_INTERFACE()
+static void Stereo8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample8Bit, storeStereo); }
+static void Stereo8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample8Bit, rampStereo); }
 
 // Stereo 16-bit
-BEGIN_MIX_INTERFACE(Stereo16BitMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETSTEREOVOLNOIDO16
-	SNDMIX_STORESTEREOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Stereo16BitRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETSTEREOVOLNOIDO16
-	SNDMIX_RAMPSTEREOVOL
-END_RAMPMIX_INTERFACE()
+static void Stereo16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample16Bit, storeStereo); }
+static void Stereo16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample16Bit, rampStereo); }
 
 #endif /*LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H*/
