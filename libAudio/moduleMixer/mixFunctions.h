@@ -424,17 +424,10 @@ static void Mono16BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
 static void Mono16BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-BEGIN_MIX_INTERFACE(Mono16BitHQMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLHQSRC16
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono16BitHQRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLHQSRC16
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
+static void Mono16BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
+static void Mono16BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Filter Interfaces
 // Mono 8-bit
