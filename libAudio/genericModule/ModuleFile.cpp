@@ -368,8 +368,8 @@ void ModuleFile::s3mLoadPCM(const fd_t &fd)
 		const uint32_t length = p_Samples[i]->GetLength() << (p_Samples[i]->Get16Bit() ? 1 : 0);
 		if (length != 0 && p_Samples[i]->GetType() == 1)
 		{
-			const auto *sample = reinterpret_cast<ModuleSampleNative *>(p_Samples[i]);
-			const uint32_t offset = uint32_t{sample->SamplePos} << 4;
+			const auto *sample = dynamic_cast<ModuleSampleNative *>(p_Samples[i]);
+			const uint32_t offset = uint32_t{sample->SamplePos} << 4U;
 			p_PCM[i] = new uint8_t[length];
 			if (fd.seek(offset, SEEK_SET) != offset ||
 				!fd.read(p_PCM[i], length))
