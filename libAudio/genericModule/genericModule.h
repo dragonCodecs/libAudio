@@ -159,7 +159,7 @@ public:
 	~ModuleHeader() noexcept = default;
 };
 
-class ModuleSample : public ModuleAllocator
+class ModuleSample
 {
 protected:
 	const uint8_t _type;
@@ -168,7 +168,7 @@ private:
 	uint32_t _id;
 
 protected:
-	ModuleSample(const uint32_t id, const uint8_t type) noexcept : _type(type), _id(id) { }
+	constexpr ModuleSample(const uint32_t id, const uint8_t type) noexcept : _type(type), _id(id) { }
 	void resetID(const uint32_t id) noexcept { _id = id; }
 
 public:
@@ -216,7 +216,7 @@ private:
 
 private:
 	std::unique_ptr<char []> FileName;
-	uint32_t SamplePos; // actually 24-bit..
+	uint32_t SamplePos; // actually 24-bit for S3M
 	uint8_t Packing;
 	uint8_t Flags;
 	uint8_t SampleFlags;
