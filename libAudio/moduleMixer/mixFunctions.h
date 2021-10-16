@@ -266,18 +266,37 @@ template<typename T> using sampleFn_t = samplePair_t(const T *const, const uint3
 using storeFn_t = void(const Channel &, int32_t *const , const int16_t, const int16_t,
 	uint32_t &, uint32_t &);
 
-inline samplePair_t monoSample8Bit(const int8_t *const buffer, const uint32_t position) noexcept
+inline samplePair_t monoSample(const int8_t *const buffer, const uint32_t position) noexcept
 {
 	const int16_t sample = static_cast<uint16_t>(buffer[position >> 16U]) << 8U;
 	return {sample, sample};
 }
-inline samplePair_t monoSample16Bit(const int16_t *const buffer, const uint32_t position) noexcept
+
+inline samplePair_t monoSample(const int16_t *const buffer, const uint32_t position) noexcept
 {
 	const int16_t sample{buffer[position >> 16U]};
 	return {sample, sample};
 }
 
-inline samplePair_t stereoSample8Bit(const int8_t *const buffer, const uint32_t position) noexcept
+inline samplePair_t monoLinearSample(const int8_t *const buffer, const uint32_t position) noexcept
+{
+	const auto positionLow{uint8_t(position >> 8U)};
+	const auto firstSample{monoSample(buffer, position).first};
+	const auto secondSample{monoSample(buffer, position + (1U << 16U)).first};
+	const auto sample{(firstSample << 7U) + (positionLow * (secondSample - firstSample))};
+	return {sample, sample};
+}
+
+inline samplePair_t monoLinearSample(const int16_t *const buffer, const uint32_t position) noexcept
+{
+	const auto positionLow{uint8_t(position >> 8U)};
+	const auto firstSample{monoLinearSample(buffer, position).first};
+	const auto secondSample{monoLinearSample(buffer, position + (1U << 16U)).first};
+	const auto sample{firstSample + ((positionLow * (secondSample - firstSample)) >> 9U)};
+	return {sample, sample};
+}
+
+inline samplePair_t stereoSample(const int8_t *const buffer, const uint32_t position) noexcept
 {
 	const auto shiftedPosition{(position >> 16U) << 1U};
 	return {
@@ -286,7 +305,7 @@ inline samplePair_t stereoSample8Bit(const int8_t *const buffer, const uint32_t 
 	};
 }
 
-inline samplePair_t stereoSample16Bit(const int16_t *const buffer, const uint32_t position) noexcept
+inline samplePair_t stereoSample(const int16_t *const buffer, const uint32_t position) noexcept
 {
 	const auto shiftedPosition{(position >> 16U) << 1U};
 	return {
@@ -352,21 +371,14 @@ template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, co
 // Interfaces
 // Mono 8-bit
 static void Mono8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample8Bit, storeMono); }
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
 static void Mono8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample8Bit, rampMono); }
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-BEGIN_MIX_INTERFACE(Mono8BitLinearMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLLINEAR8
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono8BitLinearRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLLINEAR8
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
+static void Mono8BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
+static void Mono8BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
 BEGIN_MIX_INTERFACE(Mono8BitHQMix)
 	SNDMIX_BEGINSAMPLELOOP8
@@ -382,21 +394,14 @@ END_RAMPMIX_INTERFACE()
 
 // Mono 16-bit
 static void Mono16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample16Bit, storeMono); }
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
 static void Mono16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample16Bit, rampMono); }
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-BEGIN_MIX_INTERFACE(Mono16BitLinearMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLLINEAR16
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono16BitLinearRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLLINEAR16
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
+static void Mono16BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
+static void Mono16BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
 BEGIN_MIX_INTERFACE(Mono16BitHQMix)
 	SNDMIX_BEGINSAMPLELOOP16
@@ -499,14 +504,14 @@ END_RAMPMIX_FLT_INTERFACE()
 
 // Stereo 8-bit
 static void Stereo8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample8Bit, storeStereo); }
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample, storeStereo); }
 static void Stereo8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample8Bit, rampStereo); }
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample, rampStereo); }
 
 // Stereo 16-bit
 static void Stereo16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample16Bit, storeStereo); }
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample, storeStereo); }
 static void Stereo16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
-	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample16Bit, rampStereo); }
+	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample, rampStereo); }
 
 #endif /*LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H*/
