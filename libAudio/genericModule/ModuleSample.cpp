@@ -76,7 +76,7 @@ bool readLE24b(const fd_t &fd, uint32_t &dest) noexcept
 ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t type) :
 	ModuleSample(i, type), Name{makeUnique<char []>(29)}, FineTune{}, InstrVol{64U},
 	FileName{makeUnique<char []>(13)}, SampleFlags{}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
-	VibratoType{}, VibratoRate{}
+	VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
 {
 	const auto &fd{file.fd()};
 	std::array<uint8_t, 12> dontCare{};
@@ -118,15 +118,23 @@ ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, c
 	SampleFlags |= (Flags & 4U) ? SAMPLE_FLAGS_16BIT : 0;
 }
 
-ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) : ModuleSample(i, 1),
+	Name{makeUnique<char []>(13)}, FineTune{}, InstrVol{64}, FileName{}, SamplePos{}, Packing{},
+	Flags{}, SampleFlags{}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{}, VibratoType{}, VibratoRate{},
+	SusLoopBegin{}, SusLoopEnd{}
 {
-	uint8_t id, disk, reserved2;
-	uint16_t reserved1, c3Speed, unknown;
-	uint16_t length_, loopStart_, loopEnd_;
-	uint32_t reserved3;
-	const fd_t &fd = file.fd();
+	const auto &fd{file.fd()};
+	uint8_t id{};
+	uint8_t disk{};
+	uint8_t reserved2{};
+	uint16_t reserved1{};
+	uint16_t c3Speed{};
+	uint16_t unknown{};
+	uint16_t length_{};
+	uint16_t loopStart_{};
+	uint16_t loopEnd_{};
+	uint32_t reserved3{};
 
-	Name = makeUnique<char []>(13);
 	if (!Name ||
 		!fd.read(Name, 12) ||
 		!fd.read(id) || id > 0 ||
@@ -150,25 +158,15 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 	C4Speed = c3Speed;
 	if (Name[11] != 0)
 		Name[12] = 0;
-	SampleFlags = 0;
-	if (LoopEnd < LoopStart || LoopEnd == 0xFFFF)
+	if (LoopEnd < LoopStart || LoopEnd == 0xFFFFU)
 	{
-		LoopEnd = 0;
-		LoopStart = 0;
+		LoopEnd = 0U;
+		LoopStart = 0U;
 	}
 	else
 		SampleFlags |= SAMPLE_FLAGS_LOOP;
-	if (Volume > 64)
-		Volume = 64;
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	Packing = SampleFlags = 0;
-	FineTune = 0;
-	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
-	InstrVol = 64;
+	if (Volume > 64U)
+		Volume = 64U;
 }
 
 ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, char *name, const uint32_t *const pcmLengths) : ModuleSample(i, 1), Name(name)
