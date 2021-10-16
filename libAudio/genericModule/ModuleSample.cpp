@@ -285,39 +285,37 @@ ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, c
 	InstrVol = 64;
 }
 
-ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : ModuleSample(i, 1),
+	Name{makeUnique<char []>(27)}, FineTune{}, FileName{makeUnique<char []>(13)}, SampleFlags{}
 {
-	char Const;
-	std::array<char, 4> magic;
-	const fd_t &fd = file.fd();
+	const auto &fd{file.fd()};
+	uint8_t _const{};
+	std::array<char, 4> magic{};
 
 	if (!fd.read(magic) ||
 		strncmp(magic.data(), "IMPS", 4) != 0)
-		throw ModuleLoaderError(E_BAD_IT);
-
-	FileName = makeUnique<char []>(13);
-	Name = makeUnique<char []>(27);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (!FileName || !Name ||
 		!fd.read(FileName, 12) ||
-		!fd.read(&Const, 1) ||
-		!fd.read(&InstrVol, 1) ||
-		!fd.read(&Flags, 1) ||
-		!fd.read(&Volume, 1) ||
+		!fd.read(_const) ||
+		!fd.read(InstrVol) ||
+		!fd.read(Flags) ||
+		!fd.read(Volume) ||
 		!fd.read(Name, 26) ||
-		!fd.read(&Packing, 1) ||
-		!fd.read(&DefaultPan, 1) ||
-		!fd.read(&Length, 4) ||
-		!fd.read(&LoopStart, 4) ||
-		!fd.read(&LoopEnd, 4) ||
-		!fd.read(&C4Speed, 4) ||
-		!fd.read(&SusLoopBegin, 4) ||
-		!fd.read(&SusLoopEnd, 4) ||
-		!fd.read(&SamplePos, 4) ||
-		!fd.read(&VibratoSpeed, 1) ||
-		!fd.read(&VibratoDepth, 1) ||
-		!fd.read(&VibratoRate, 1) ||
-		!fd.read(&VibratoType, 1))
+		!fd.read(Packing) ||
+		!fd.read(DefaultPan) ||
+		!fd.readLE(Length) ||
+		!fd.readLE(LoopStart) ||
+		!fd.readLE(LoopEnd) ||
+		!fd.readLE(C4Speed) ||
+		!fd.readLE(SusLoopBegin) ||
+		!fd.readLE(SusLoopEnd) ||
+		!fd.readLE(SamplePos) ||
+		!fd.read(VibratoSpeed) ||
+		!fd.read(VibratoDepth) ||
+		!fd.read(VibratoRate) ||
+		!fd.read(VibratoType))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	if (FileName[11] != 0)
@@ -327,32 +325,35 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 	if (Name[25] != 0)
 		Name[26] = 0;
 
-	if (Const != 0 || Packing > 63 || VibratoSpeed > 64 || VibratoDepth > 64 ||
-		VibratoType > 4 || /*(VibratoType < 4 && VibratoRate > 64) ||*/ InstrVol > 64)
+	if (_const != 0 || Packing > 63U || VibratoSpeed > 64U || VibratoDepth > 64U ||
+		VibratoType >= 4U || /*(VibratoType < 4U && VibratoRate > 64U) ||*/ InstrVol > 64U)
 		throw ModuleLoaderError(E_BAD_IT);
 	else if (VibratoRate > 64)
 		VibratoRate = 64;
 
-	if (C4Speed == 0)
-		C4Speed = 8363;
-	else if (C4Speed < 256)
-		C4Speed = 256;
+	if (C4Speed == 0U)
+		C4Speed = 8363U;
+	else if (C4Speed < 256U)
+		C4Speed = 256U;
 	/*else
 		C4Speed /= 2;*/
-	VibratoRate <<= 1;
+	VibratoRate <<= 1U;
 
+	// if (Flags & 0x02)
+	// {
+	// 	Length >>= 1U;
+	// 	LoopStart >>= 1U;
+	// 	LoopEnd >>= 1U;
+	// }
 	// If looping not enabled, zero the Loop fields
-	if (!(Flags & 0x10))
-		LoopStart = LoopEnd = 0;
+	if (!(Flags & 0x10U))
+		LoopStart = LoopEnd = 0U;
 
-	SampleFlags = 0;
-	SampleFlags |= (Flags & 0x10) ? SAMPLE_FLAGS_LOOP : 0;
-	SampleFlags |= (Flags & 0x20) ? SAMPLE_FLAGS_SUSTAINLOOP : 0;
-	SampleFlags |= (Flags & 0x04) ? SAMPLE_FLAGS_STEREO : 0;
-	SampleFlags |= (Flags & 0x02) ? SAMPLE_FLAGS_16BIT : 0;
-	SampleFlags |= (Flags & 0x40) ? SAMPLE_FLAGS_LPINGPONG : 0;
-
-	FineTune = 0;
+	SampleFlags |= (Flags & 0x10U) ? SAMPLE_FLAGS_LOOP : 0U;
+	SampleFlags |= (Flags & 0x20U) ? SAMPLE_FLAGS_SUSTAINLOOP : 0U;
+	SampleFlags |= (Flags & 0x04U) ? SAMPLE_FLAGS_STEREO : 0U;
+	SampleFlags |= (Flags & 0x02U) ? SAMPLE_FLAGS_16BIT : 0U;
+	SampleFlags |= (Flags & 0x40U) ? SAMPLE_FLAGS_LPINGPONG : 0U;
 }
 
 bool ModuleSampleNative::Get16Bit()
