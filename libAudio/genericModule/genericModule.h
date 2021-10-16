@@ -519,8 +519,8 @@ public:
 	uint8_t Note, RampLength;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
-	uint8_t RawVolume, Volume, VolumeSlide, FineVolumeSlide;
-	uint8_t channelVolume, channelVolumeSlide, sampleVolume;
+	uint8_t RawVolume, volume, _sampleVolumeSlide, _fineSampleVolumeSlide;
+	uint8_t channelVolume, _channelVolumeSlide, sampleVolume;
 	uint16_t AutoVibratoDepth;
 	uint8_t AutoVibratoPos;
 	ModuleSample *Sample;
@@ -570,7 +570,10 @@ public:
 	void tonePortamento(const ModuleFile &module, uint8_t param);
 	void vibrato(uint8_t param, uint8_t multiplier);
 	void panbrello(uint8_t param);
-	void volumeSlide(const ModuleFile &module, uint8_t param);
+	void channelVolumeSlide(const ModuleFile &module, uint8_t param) noexcept;
+	void sampleVolumeSlide(const ModuleFile &module, uint8_t param);
+	void fineSampleVolumeSlide(const ModuleFile &module, uint8_t param,
+		uint16_t (*op)(const uint16_t, const uint8_t)) noexcept;
 	void panningSlide(const ModuleFile &module, uint8_t param);
 	void ChannelEffect(uint8_t param);
 
@@ -611,8 +614,6 @@ private:
 	int DCOffsR, DCOffsL;
 
 	// Effects functions
-	void VolumeSlide(Channel *channel, uint8_t param);
-	void FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t));
 	void applyGlobalVolumeSlide(uint8_t param);
 	void ProcessMODExtended(Channel *channel);
 	void ProcessS3MExtended(Channel *channel);

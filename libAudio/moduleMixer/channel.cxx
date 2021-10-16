@@ -397,12 +397,12 @@ void Channel::panbrello(uint8_t param)
 	Flags |= CHN_PANBRELLO;
 }
 
-void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
+void Channel::channelVolumeSlide(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (!param)
-		param = channelVolumeSlide;
+		param = _channelVolumeSlide;
 	else
-		channelVolumeSlide = param;
+		_channelVolumeSlide = param;
 
 	uint8_t volume = channelVolume;
 	const uint8_t slideLo = param & 0x0FU;
@@ -423,6 +423,69 @@ void Channel::volumeSlide(const ModuleFile &module, uint8_t param)
 	{
 		clipInt<uint8_t>(volume, 0, 64);
 		channelVolume = volume;
+	}
+}
+
+void Channel::sampleVolumeSlide(const ModuleFile &module, uint8_t param)
+{
+	if (param == 0)
+		param = _sampleVolumeSlide;
+	else
+		_sampleVolumeSlide = param;
+	uint16_t NewVolume{RawVolume};
+
+	if (module.typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>())
+	{
+		if ((param & 0x0FU) == 0x0FU)
+		{
+			if (param & 0xF0U)
+				return fineSampleVolumeSlide(module, param >> 4U,
+					[](const uint16_t volume, const uint8_t adjust) noexcept -> uint16_t
+						{ return volume + adjust; }
+				);
+			else if (module.ticks() == StartTick && !module.hasFastSlides())
+				NewVolume -= 0x1EU; //0x0F * 2;
+		}
+		else if ((param & 0xF0U) == 0xF0U)
+		{
+			if (param & 0x0FU)
+				return fineSampleVolumeSlide(module, param >> 4U,
+					[](const uint16_t volume, const uint8_t adjust) noexcept -> uint16_t
+						{ return volume - adjust; }
+				);
+			else if (module.ticks() == StartTick && !module.hasFastSlides())
+				NewVolume += 0x1EU; //0x0F * 2;
+		}
+	}
+
+	if (module.ticks() > StartTick || module.hasFastSlides())
+	{
+		if ((param & 0xF0U) && !(param & 0x0FU))
+			NewVolume += (param & 0xF0U) >> 1U;
+		else if ((param & 0x0FU) && !(param & 0xF0U))
+			NewVolume -= (param & 0x0FU) << 1U;
+		if (module.typeIs<MODULE_MOD>())
+			Flags |= CHN_FASTVOLRAMP;
+	}
+	clipInt<uint16_t>(NewVolume, 0, 128);
+	RawVolume = static_cast<uint8_t>(NewVolume);
+}
+
+inline void Channel::fineSampleVolumeSlide(const ModuleFile &module, uint8_t param,
+	uint16_t (*const op)(const uint16_t, const uint8_t)) noexcept
+{
+	if (param == 0)
+		param = _fineSampleVolumeSlide;
+	else
+		_fineSampleVolumeSlide = param;
+
+	if (module.ticks() == StartTick)
+	{
+		auto volume{op(RawVolume, param << 1U)};
+		if (module.typeIs<MODULE_MOD>())
+			Flags |= CHN_FASTVOLRAMP;
+		clipInt<uint16_t>(volume, 0, 128);
+		RawVolume = static_cast<uint8_t>(volume);
 	}
 }
 

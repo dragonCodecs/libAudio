@@ -785,62 +785,6 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 	}
 }
 
-inline void ModuleFile::FineVolumeSlide(Channel *channel, uint8_t param, uint16_t (*op)(const uint16_t, const uint8_t))
-{
-	if (param == 0)
-		param = channel->FineVolumeSlide;
-	else
-		channel->FineVolumeSlide = param;
-
-	if (TickCount == channel->StartTick)
-	{
-		uint16_t NewVolume = op(channel->RawVolume, param << 1);
-		if (ModuleType == MODULE_MOD)
-			channel->Flags |= CHN_FASTVOLRAMP;
-		clipInt<uint16_t>(NewVolume, 0, 128);
-		channel->RawVolume = uint8_t(NewVolume);
-	}
-}
-
-inline void ModuleFile::VolumeSlide(Channel *channel, uint8_t param)
-{
-	if (param == 0)
-		param = channel->VolumeSlide;
-	else
-		channel->VolumeSlide = param;
-	uint16_t NewVolume = channel->RawVolume;
-
-	if (typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>())
-	{
-		if ((param & 0x0F) == 0x0F)
-		{
-			if (param & 0xF0)
-				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume + Adjust; });
-			else if (TickCount == channel->StartTick && !hasFastSlides())
-				NewVolume -= 0x1E; //0x0F * 2;
-		}
-		else if ((param & 0xF0) == 0xF0)
-		{
-			if (param & 0x0F)
-				return FineVolumeSlide(channel, param >> 4, [](const uint16_t Volume, const uint8_t Adjust) noexcept -> uint16_t { return Volume - Adjust; });
-			else if (TickCount == channel->StartTick && !hasFastSlides())
-				NewVolume += 0x1E; //0x0F * 2;
-		}
-	}
-
-	if (TickCount > channel->StartTick || hasFastSlides())
-	{
-		if ((param & 0xF0) != 0 && (param & 0x0F) == 0)
-			NewVolume += (param & 0xF0) >> 1;
-		else if ((param & 0x0F) != 0 && (param & 0xF0) == 0)
-			NewVolume -= (param & 0x0F) << 1;
-		if (ModuleType == MODULE_MOD)
-			channel->Flags |= CHN_FASTVOLRAMP;
-	}
-	clipInt<uint16_t>(NewVolume, 0, 128);
-	channel->RawVolume = uint8_t(NewVolume);
-}
-
 inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 {
 	if (!param)
@@ -1008,30 +952,30 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 			break;
 		case CMD_TONEPORTAVOL:
 			if (param != 0) // In theory, this if does nothing as VolumeSlide() is protected too.
-				VolumeSlide(&channel, param);
+				channel.sampleVolumeSlide(*this, param);
 			channel.tonePortamento(*this, 0);
 			break;
 		case CMD_TONEPORTAVOLUP:
 			// param contains volume in high nibble
 			// Volume low nibble as 0 is "up"
-			VolumeSlide(&channel, param & 0xF0);
-			channel.tonePortamento(*this, param & 0x0F);
+			channel.sampleVolumeSlide(*this, param & 0xF0U);
+			channel.tonePortamento(*this, param & 0x0FU);
 			break;
 		case CMD_TONEPORTAVOLDOWN:
 			// Volume high nibble as 0 is "down"
-			VolumeSlide(&channel, param >> 4);
-			channel.tonePortamento(*this, param & 0x0F);
+			channel.sampleVolumeSlide(*this, param >> 4U);
+			channel.tonePortamento(*this, param & 0x0FU);
 			break;
 		case CMD_VIBRATOVOL:
 			if (param != 0)
-				VolumeSlide(&channel, param);
+				channel.sampleVolumeSlide(*this, param);
 			channel.Flags |= CHN_VIBRATO;
 			break;
 		case CMD_TREMOLO:
-			if ((param & 0x0F) != 0)
-				channel.TremoloDepth = param & 0x0F;
-			if ((param & 0xF0) != 0)
-				channel.TremoloSpeed = param >> 4;
+			if (param & 0x0FU)
+				channel.TremoloDepth = param & 0x0FU;
+			if (param & 0xF0U)
+				channel.TremoloSpeed = param >> 4U;
 			channel.Flags |= CHN_TREMOLO;
 			break;
 		case CMD_OFFSET:
@@ -1045,10 +989,10 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 			break;
 		case CMD_VOLUMESLIDE:
 			if (param != 0 || ModuleType != MODULE_MOD)
-				VolumeSlide(&channel, param);
+				channel.sampleVolumeSlide(*this, param);
 			break;
 		case CMD_CHANNELVOLSLIDE:
-			channel.volumeSlide(*this, param);
+			channel.channelVolumeSlide(*this, param);
 			break;
 		case CMD_GLOBALVOLSLIDE:
 			applyGlobalVolumeSlide(param);
@@ -1259,7 +1203,7 @@ bool ModuleFile::AdvanceTick()
 		bool incNegative = channel->Increment.iValue < 0;
 
 		channel->Increment.iValue = 0;
-		channel->Volume = 0;
+		channel->volume = 0;
 		channel->Panning = channel->RawPanning;
 		channel->RampLength = 0;
 
@@ -1408,7 +1352,7 @@ bool ModuleFile::AdvanceTick()
 
 			vol = muldiv_t<uint32_t>{}(vol * GlobalVolume, channel->channelVolume * channel->sampleVolume, 1U << 19U);
 			clipInt<uint16_t>(vol, 0, 128);
-			channel->Volume = vol;
+			channel->volume = vol;
 			clipInt(channel->Period, MinPeriod, MaxPeriod);
 			period = channel->Period;
 			if ((channel->Flags & (CHN_GLISSANDO | CHN_PORTAMENTO)) == (CHN_GLISSANDO | CHN_PORTAMENTO))
@@ -1473,7 +1417,7 @@ bool ModuleFile::AdvanceTick()
 				if (ModuleType == MODULE_IT || period >= 0x100000)
 				{
 					channel->FadeOutVol = 0;
-					channel->Volume = 0;
+					channel->volume = 0;
 					channel->Flags |= CHN_NOTEFADE;
 				}
 				period = MaxPeriod;
@@ -1485,7 +1429,7 @@ bool ModuleFile::AdvanceTick()
 			if (ModuleType == MODULE_IT && freq < 256)
 			{
 				channel->FadeOutVol = 0;
-				channel->Volume = 0;
+				channel->volume = 0;
 				channel->Flags |= CHN_NOTEFADE;
 			}
 			inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
@@ -1493,7 +1437,7 @@ bool ModuleFile::AdvanceTick()
 				inc = -inc;
 			channel->Increment.iValue = inc & ~3;
 		}
-		if (channel->Volume != 0 || channel->LeftVol != 0 || channel->RightVol != 0)
+		if (channel->volume != 0 || channel->LeftVol != 0 || channel->RightVol != 0)
 			channel->Flags |= CHN_VOLUMERAMP;
 		else
 			channel->Flags &= ~CHN_VOLUMERAMP;
@@ -1505,11 +1449,11 @@ bool ModuleFile::AdvanceTick()
 		{
 			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
 			{
-				channel->NewLeftVol = (channel->Volume * channel->Panning) >> 8U;
-				channel->NewRightVol = (channel->Volume * (256 - channel->Panning)) >> 8U;
+				channel->NewLeftVol = (channel->volume * channel->Panning) >> 8U;
+				channel->NewRightVol = (channel->volume * (256 - channel->Panning)) >> 8U;
 			}
 			else
-				channel->NewLeftVol = channel->NewRightVol = channel->Volume;
+				channel->NewLeftVol = channel->NewRightVol = channel->volume;
 
 			channel->RightRamp = channel->LeftRamp = 0U;
 			// TODO: Process ping-pong flag (pos = -pos)
