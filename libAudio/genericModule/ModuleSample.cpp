@@ -12,7 +12,7 @@ ModuleSample *ModuleSample::LoadSample(const modS3M_t &file, const uint32_t i)
 	const fd_t &fd = file.fd();
 
 	if (!fd.read(type))
-		throw ModuleLoaderError(E_BAD_S3M);
+		throw ModuleLoaderError{E_BAD_S3M};
 	if (type > 1)
 		return new ModuleSampleAdlib(file, i, type);
 	else
@@ -28,45 +28,37 @@ ModuleSample *ModuleSample::LoadSample(const modAON_t &file, const uint32_t i, c
 ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
-ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) : ModuleSample(i, 1)
+ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) : ModuleSample(i, 1),
+	Name{makeUnique<char []>(23)}, Length{}, InstrVol{64}, LoopStart{}, LoopEnd{}, FileName{}, SamplePos{},
+	Packing{}, Flags{}, SampleFlags{}, C4Speed{8363}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
+	VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
 {
-	uint16_t length16, loopStart16, loopEnd16;
-	const fd_t &fd = file.fd();
-
-	Name = makeUnique<char []>(23);
+	const auto &fd{file.fd()};
+	uint16_t length16{};
+	uint16_t loopStart16{};
+	uint16_t loopEnd16{};
 
 	if (!Name ||
-		!fd.read(Name.get(), 22) ||
-		!fd.read(&length16, 2) ||
-		!fd.read(&FineTune, 1) ||
-		!fd.read(&Volume, 1) ||
-		!fd.read(&loopStart16, 2) ||
-		!fd.read(&loopEnd16, 2))
-		throw ModuleLoaderError(E_BAD_MOD);
+		!fd.read(Name, 22U) ||
+		!fd.readBE(length16) ||
+		!fd.read(FineTune) ||
+		!fd.read(Volume) ||
+		!fd.readBE(loopStart16) ||
+		!fd.readBE(loopEnd16))
+		throw ModuleLoaderError{E_BAD_MOD};
 
-	Length = Swap16(length16) * 2;
-	LoopStart = Swap16(loopStart16) * 2;
-	LoopEnd = Swap16(loopEnd16) * 2;
+	Length = length16 * 2U;
+	LoopStart = loopStart16 * 2U;
+	LoopEnd = loopEnd16 * 2U;
 	if (Name[21] != 0)
 		Name[22] = 0;
-	if (Volume > 64)
-		Volume = 64;
-	FineTune &= 0x0F;
-	LoopEnd = (LoopStart < Length && LoopEnd > 2 ? LoopStart + LoopEnd : 0);
+	if (Volume > 64U)
+		Volume = 64U;
+	FineTune &= 0x0FU;
+	LoopEnd = LoopStart < Length && LoopEnd > 2U ? LoopStart + LoopEnd : 0U;
 
-	SampleFlags = 0;
 	if (LoopEnd != 0)
 		SampleFlags |= SAMPLE_FLAGS_LOOP;
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	Packing = 0;
-	C4Speed = 8363;
-	DefaultPan = 0;
-	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
-	InstrVol = 64;
 }
 
 // This sucks, is a massive hack, but works on x86* because of how numbers are stored :(
