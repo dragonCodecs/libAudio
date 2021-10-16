@@ -216,7 +216,8 @@ private:
 	std::unique_ptr<char []> FileName;
 	uint32_t SamplePos; // actually 24-bit..
 	uint8_t Packing;
-	uint8_t Flags, SampleFlags;
+	uint8_t Flags;
+	uint8_t SampleFlags;
 	uint32_t C4Speed;
 	uint8_t DefaultPan;
 	uint8_t VibratoSpeed;

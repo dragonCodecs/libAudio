@@ -3,13 +3,15 @@
 #include <algorithm>
 #include "genericModule.h"
 
+constexpr std::array<char, 4> s3mSampleMagic{{'S', 'C', 'R', 'S'}};
+
 ModuleSample *ModuleSample::LoadSample(const modMOD_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
 ModuleSample *ModuleSample::LoadSample(const modS3M_t &file, const uint32_t i)
 {
-	uint8_t type;
-	const fd_t &fd = file.fd();
+	const auto &fd{file.fd()};
+	uint8_t type{};
 
 	if (!fd.read(type))
 		throw ModuleLoaderError{E_BAD_S3M};
@@ -29,8 +31,8 @@ ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
 ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) : ModuleSample(i, 1),
-	Name{makeUnique<char []>(23)}, Length{}, InstrVol{64}, LoopStart{}, LoopEnd{}, FileName{}, SamplePos{},
-	Packing{}, Flags{}, SampleFlags{}, C4Speed{8363}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
+	Name{makeUnique<char []>(23)}, Length{}, InstrVol{64U}, LoopStart{}, LoopEnd{}, FileName{}, SamplePos{},
+	Packing{}, Flags{}, SampleFlags{}, C4Speed{8363U}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
 	VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
 {
 	const auto &fd{file.fd()};
@@ -61,68 +63,59 @@ ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) :
 		SampleFlags |= SAMPLE_FLAGS_LOOP;
 }
 
-// This sucks, is a massive hack, but works on x86* because of how numbers are stored :(
-bool read24b(const fd_t &fd, uint32_t &dest) noexcept
+bool readLE24b(const fd_t &fd, uint32_t &dest) noexcept
 {
-	dest = 0;
-	if (!fd.read(&dest, 3))
+	std::array<uint8_t, 3> data{};
+	if (!fd.read(data))
 		return false;
-	dest >>= 8;
+	dest = (uint32_t(data[2]) << 16U) | (uint32_t(data[1]) << 8U) | data[0];
+	dest >>= 8U; // Format says all 24 bits are used, but S3M format spec is a liar and only [8:23] are used
 	return true;
 }
 
-ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t type) : ModuleSample(i, type)
+ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t type) :
+	ModuleSample(i, type), Name{makeUnique<char []>(29)}, FineTune{}, InstrVol{64U},
+	FileName{makeUnique<char []>(13)}, SampleFlags{}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
+	VibratoType{}, VibratoRate{}
 {
-	std::array<uint8_t, 12> dontCare;
-	std::array<char, 4> magic;
-	const fd_t &fd = file.fd();
+	const auto &fd{file.fd()};
+	std::array<uint8_t, 12> dontCare{};
+	std::array<char, 4> magic{};
 
-	Name = makeUnique<char []>(29);
-	FileName = makeUnique<char []>(13);
+	if (!Name || !FileName ||
+		!fd.read(FileName, 12) ||
+		!readLE24b(fd, SamplePos) ||
+		!fd.readLE(Length) ||
+		!fd.readLE(LoopStart) ||
+		!fd.readLE(LoopEnd) ||
+		!fd.read(Volume) ||
+		!fd.read<1>(dontCare) ||
+		!fd.read(Packing) ||
+		!fd.read(Flags) ||
+		!fd.read(C4Speed) ||
+		!fd.read(dontCare) ||
+		!fd.read(Name, 28) ||
+		!fd.read(magic))
+		throw ModuleLoaderError{E_BAD_S3M};
 
-	if (!Name || !FileName)
-		throw ModuleLoaderError(E_BAD_S3M);
-	fd.read(FileName, 12);
-	read24b(fd, SamplePos);
-	fd.read(Length);
-	fd.read(LoopStart);
-	fd.read(LoopEnd);
-	fd.read(Volume);
-	fd.read<1>(dontCare);
-	fd.read(Packing);
-	fd.read(Flags);
-	fd.read(C4Speed);
-	fd.read(dontCare);
-	fd.read(Name, 28);
-	fd.read(magic);
-
-	if (_type == 1 && memcmp(magic.data(), "SCRS", 4) != 0)
-		throw ModuleLoaderError(E_BAD_S3M);
+	if (_type == 1 && magic != s3mSampleMagic)
+		throw ModuleLoaderError{E_BAD_S3M};
 
 	if (FileName[11] != 0)
 		FileName[12] = 0;
 	if (Packing == 1)
 		printf("%d => ADPCM sample\n", i);
-	if ((Flags & 2) != 0)
+	if (Flags & 2U)
 		printf("%d => Stereo\n", i);
 	if (Name[27] != 0)
 		Name[28] = 0;
 	// If looping not enabled, zero the Loop fields
-	if ((Flags & 1) == 0)
+	if (!(Flags & 1U))
 		LoopStart = LoopEnd = 0;
 
-	SampleFlags = 0;
-	SampleFlags |= (Flags & 1) ? SAMPLE_FLAGS_LOOP : 0;
-	SampleFlags |= (Flags & 2) ? SAMPLE_FLAGS_STEREO : 0;
-	SampleFlags |= (Flags & 4) ? SAMPLE_FLAGS_16BIT : 0;
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	DefaultPan = 0;
-	VibratoSpeed = VibratoDepth = VibratoType = VibratoRate = 0;
-	InstrVol = 64;
+	SampleFlags |= (Flags & 1U) ? SAMPLE_FLAGS_LOOP : 0;
+	SampleFlags |= (Flags & 2U) ? SAMPLE_FLAGS_STEREO : 0;
+	SampleFlags |= (Flags & 4U) ? SAMPLE_FLAGS_16BIT : 0;
 }
 
 ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) : ModuleSample(i, 1)
@@ -390,7 +383,7 @@ ModuleSampleAdlib::ModuleSampleAdlib(const modS3M_t &file, const uint32_t i, con
 	FileName = new char[13];
 
 	if (!fd.read(FileName, 12) ||
-		!read24b(fd, zero) || zero ||
+		!readLE24b(fd, zero) || zero ||
 		!fd.read(D00) ||
 		!fd.read(D01) ||
 		!fd.read(D02) ||
