@@ -6,6 +6,7 @@
 #include <substrate/managed_ptr>
 #include "../libAudio.hxx"
 #include <array>
+#include <exception>
 
 using substrate::fixedVector_t;
 using substrate::managedPtr_t;
@@ -61,7 +62,7 @@ using stringPtr_t = std::unique_ptr<char []>;
 #define ENVELOPE_PANNING	1U
 #define ENVELOPE_PITCH		2U
 
-class ModuleLoaderError
+class ModuleLoaderError : std::exception
 {
 private:
 	const uint32_t Error;
@@ -70,6 +71,7 @@ public:
 	ModuleLoaderError(const uint32_t Error);
 	const char *GetError() const noexcept { return error(); }
 	const char *error() const noexcept;
+	const char *what() const noexcept final { return error(); }
 };
 
 class ModuleAllocator
