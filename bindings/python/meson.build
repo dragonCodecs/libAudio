@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 pythonDep = python.dependency()
 if not pythonDep.found()
 	subdir_done()

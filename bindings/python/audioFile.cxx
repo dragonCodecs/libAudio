@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include <exception>
 #include <substrate/utility>
 #include <libAudio.h>

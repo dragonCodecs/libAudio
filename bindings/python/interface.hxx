@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef INTERFACE__HXX
 #define INTERFACE__HXX
 

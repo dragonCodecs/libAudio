@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef AUDIO_FILE__HXX
 #define AUDIO_FILE__HXX
 
