@@ -296,6 +296,34 @@ inline samplePair_t monoLinearSample(const int16_t *const buffer, const uint32_t
 	return {sample, sample};
 }
 
+inline samplePair_t monoHighQualitySample(const int8_t *const buffer, const uint32_t position) noexcept
+{
+	const auto positionHigh{uint16_t(position >> 16U)};
+	const auto positionLow{uint16_t((position >> 6U) & 0x03FCU)};
+	const auto sample
+	{
+		FastSinc[positionLow]      * buffer[positionHigh - 1U] +
+		FastSinc[positionLow + 1U] * buffer[positionHigh]      +
+		FastSinc[positionLow + 2U] * buffer[positionHigh + 1U] +
+		FastSinc[positionLow + 3U] * buffer[positionHigh + 2U]
+	};
+	return {sample >> 7U, sample >> 7U};
+}
+
+inline samplePair_t monoHighQualitySample(const int16_t *const buffer, const uint32_t position) noexcept
+{
+	const auto positionHigh{uint16_t(position >> 16U)};
+	const auto positionLow{uint16_t((position >> 6U) & 0x03FCU)};
+	const auto sample
+	{
+		FastSinc[positionLow]      * buffer[positionHigh - 1U] +
+		FastSinc[positionLow + 1U] * buffer[positionHigh]      +
+		FastSinc[positionLow + 2U] * buffer[positionHigh + 1U] +
+		FastSinc[positionLow + 3U] * buffer[positionHigh + 2U]
+	};
+	return {sample >> 15U, sample >> 15U};
+}
+
 inline samplePair_t stereoSample(const int8_t *const buffer, const uint32_t position) noexcept
 {
 	const auto shiftedPosition{(position >> 16U) << 1U};
@@ -380,17 +408,10 @@ static void Mono8BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
 static void Mono8BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-BEGIN_MIX_INTERFACE(Mono8BitHQMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLHQSRC8
-	SNDMIX_STOREMONOVOL
-END_MIX_INTERFACE()
-
-BEGIN_RAMPMIX_INTERFACE(Mono8BitHQRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLHQSRC8
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_INTERFACE()
+static void Mono8BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
+static void Mono8BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Mono 16-bit
 static void Mono16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
