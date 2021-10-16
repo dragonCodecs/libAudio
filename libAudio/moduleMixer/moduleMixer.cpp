@@ -23,9 +23,9 @@ uint32_t Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 	{
 		int32_t samp = _in[i]/* + (1 << 11)*/;
 		clipInt<int32_t>(samp, 0xF8000001, 0x07FFFFFF);
-		out[i] = samp >> 12;
+		out[i] = samp >> 12U;
 	}
-	return SampleCount << 1;
+	return SampleCount << 1U;
 }
 
 int64_t moduleFile_t::fillBuffer(void *const bufferPtr, const uint32_t length)
@@ -43,10 +43,10 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;
 	if (ModuleType != MODULE_IT)
-		GlobalVolume = p_Header->GlobalVolume << 1;
+		GlobalVolume = p_Header->GlobalVolume << 1U;
 	else
 		GlobalVolume = p_Header->GlobalVolume;
-	SamplesPerTick = (MixSampleRate * 640) / (MusicTempo << 8);
+	SamplesPerTick = (MixSampleRate * 640U) / (MusicTempo << 8U);
 	// If we have the possibility of NNAs, allocate a full set of channels.
 	if (p_Instruments != nullptr)
 	{
@@ -62,7 +62,7 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 
 	for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 	{
-		if (i >= 64)
+		if (i >= 64U)
 			break;
 		Channels[i].channelVolume = p_Header->Volumes[i];
 	}
@@ -84,28 +84,27 @@ void ModuleFile::DeinitMixer()
 
 void ModuleFile::ResetChannelPanning()
 {
-	uint8_t i;
 	if (ModuleType == MODULE_MOD || ModuleType == MODULE_AON)
 	{
-		for (i = 0; i < p_Header->nChannels; i++)
+		for (uint8_t i = 0; i < p_Header->nChannels; i++)
 		{
-			uint8_t j = i % 4;
-			if (j == 0 || j == 3)
-				Channels[i].RawPanning = 64;
+			uint8_t j = i % 4U;
+			if (j == 0 || j == 3U)
+				Channels[i].RawPanning = 64U;
 			else
-				Channels[i].RawPanning = 192;
+				Channels[i].RawPanning = 192U;
 		}
 	}
 	else if (ModuleType == MODULE_S3M || ModuleType == MODULE_IT)
 	{
 		if (p_Header->Panning == nullptr)
 		{
-			for (i = 0; i < p_Header->nChannels; i++)
-				Channels[i].RawPanning = 128;
+			for (uint8_t i = 0; i < p_Header->nChannels; i++)
+				Channels[i].RawPanning = 128U;
 		}
 		else
 		{
-			for (i = 0; i < p_Header->nChannels; i++)
+			for (uint8_t i = 0; i < p_Header->nChannels; i++)
 			{
 				Channels[i].RawPanning = p_Header->Panning[i];
 				Channels[i].Flags |= (p_Header->PanSurround[i] ? CHN_SURROUND : 0);
@@ -114,12 +113,12 @@ void ModuleFile::ResetChannelPanning()
 	}
 	else if (ModuleType == MODULE_STM)
 	{
-		for (i = 0; i < p_Header->nChannels; i++)
+		for (uint8_t i = 0; i < p_Header->nChannels; i++)
 		{
-			if ((i % 2) != 0)
-				Channels[i].RawPanning = 64;
+			if (i % 2U)
+				Channels[i].RawPanning = 64U;
 			else
-				Channels[i].RawPanning = 192;
+				Channels[i].RawPanning = 192U;
 		}
 	}
 }
@@ -166,11 +165,11 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t sampleIndex, cons
 	if ((p_Instruments && sampleIndex > totalInstruments()) ||
 		(!p_Instruments && sampleIndex > totalSamples()))
 		return;
-	const auto instr = p_Instruments ? p_Instruments[sampleIndex - 1] : nullptr;
-	auto sample = this->sample(sampleIndex);
+	auto *const instr = p_Instruments ? p_Instruments[sampleIndex - 1] : nullptr;
+	auto *sample = this->sample(sampleIndex);
 	auto note = channel.Note;
 	bool instrumentChanged = false;
-	if (instr && note && note <= 128)
+	if (instr && note && note <= 128U)
 	{
 		uint8_t _sampleIndex{};
 		std::tie(note, _sampleIndex) = instr->mapNote(note);
@@ -195,7 +194,7 @@ void ModuleFile::SampleChange(Channel &channel, const uint32_t sampleIndex, cons
 		if (instr)
 		{
 			if (instr->HasVolume())
-				channel.sampleVolume = (instr->GetVolume() * sample->GetSampleVolume()) >> 6U;
+				channel.sampleVolume = uint32_t(instr->GetVolume() * sample->GetSampleVolume()) >> 6U;
 			else
 				channel.sampleVolume = sample->GetSampleVolume();
 			if (instr->IsPanned())
@@ -293,20 +292,20 @@ uint32_t ModuleFile::GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t 
 	if (typeIs<MODULE_IT, MODULE_S3M, MODULE_STM>())
 	{
 		if (hasLinearSlides())
-			return (S3MPeriods[Note % 12] << 5) >> (Note / 12);
+			return (S3MPeriods[Note % 12U] << 5U) >> (Note / 12U);
 		else
 		{
 			if (C4Speed == 0)
-				C4Speed = 8363;
-			return muldiv_t<>{}(8363, (S3MPeriods[Note % 12] << 5), C4Speed << (Note / 12));
+				C4Speed = 8363U;
+			return muldiv_t<uint32_t>{}(8363U, (S3MPeriods[Note % 12U] << 5U), C4Speed << (Note / 12U));
 		}
 	}
 	else
 	{
-		if (fineTune || Note < 36 || Note >= 108)
-			return (MODTunedPeriods[(fineTune * 12) + (Note % 12)] << 5) >> (Note / 12);
+		if (fineTune || Note < 36U || Note >= 108U)
+			return (MODTunedPeriods[(fineTune * 12U) + (Note % 12U)] << 5U) >> (Note / 12U);
 		else
-			return MODPeriods[Note - 36] << 2;
+			return MODPeriods[Note - 36U] << 2U;
 	}
 }
 
@@ -445,10 +444,10 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 
 uint8_t ModuleFile::FindFreeNNAChannel() const
 {
-	uint8_t i, res = 0;
-	uint32_t volWeight = 64 << 16;
-	uint16_t envVolumePos = 0xFFFF;
-	for (i = p_Header->nChannels; i < 128; i++)
+	uint8_t res = 0;
+	uint32_t volWeight = 64U << 16U;
+	uint16_t envVolumePos = 0xFFFFU;
+	for (uint8_t i = p_Header->nChannels; i < 128U; i++)
 	{
 		const Channel &chn = Channels[i];
 		uint32_t weight = chn.RawVolume;
@@ -457,9 +456,9 @@ uint8_t ModuleFile::FindFreeNNAChannel() const
 		if ((chn.Flags & CHN_NOTEFADE) != 0)
 			weight *= chn.FadeOutVol;
 		else
-			weight <<= 16;
+			weight <<= 16U;
 		if ((chn.Flags & CHN_LOOP) != 0)
-			weight >>= 1;
+			weight >>= 1U;
 		if (weight < volWeight || (weight == volWeight && chn.EnvVolumePos > envVolumePos))
 		{
 			envVolumePos = chn.EnvVolumePos;
@@ -499,8 +498,8 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 	}
 	if (instrument >= totalInstruments())
 		instrument = 0;
-	ModuleSample *sample = channel->Sample;
-	ModuleInstrument *instr = channel->Instrument;
+	auto *sample = channel->Sample;
+	auto *instr = channel->Instrument;
 	if (instrument)
 	{
 		instr = p_Instruments[instrument - 1];
@@ -605,8 +604,8 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 void ModuleFile::ProcessMODExtended(Channel *channel)
 {
 	uint8_t param = channel->RowParam;
-	uint8_t cmd = (param & 0xF0) >> 4;
-	param &= 0x0F;
+	uint8_t cmd = (param & 0xF0U) >> 4U;
+	param &= 0x0FU;
 
 	switch (cmd)
 	{
@@ -620,9 +619,9 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			{
 				if (channel->Period != 0 && param != 0)
 				{
-					channel->Period -= param << 2;
-					if (channel->Period < 56)
-						channel->Period = 56;
+					channel->Period -= param << 2U;
+					if (channel->Period < 56U)
+						channel->Period = 56U;
 				}
 			}
 			break;
@@ -631,9 +630,9 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			{
 				if (channel->Period != 0 && param != 0)
 				{
-					channel->Period += param << 2;
-					if (channel->Period > 7040)
-						channel->Period = 7040;
+					channel->Period += param << 2U;
+					if (channel->Period > 7040U)
+						channel->Period = 7040U;
 				}
 			}
 			break;
@@ -644,7 +643,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 				channel->Flags |= CHN_GLISSANDO;
 			break;
 		case CMD_MODEX_VIBRATOWAVE:
-			channel->vibratoType = param & 0x07;
+			channel->vibratoType = param & 0x07U;
 			break;
 		case CMD_MODEX_FINETUNE:
 			if (TickCount != channel->StartTick)
@@ -655,7 +654,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 				channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
 			break;
 		case CMD_MODEX_TREMOLOWAVE:
-			channel->TremoloType = param & 0x07;
+			channel->TremoloType = param & 0x07U;
 			break;
 		case CMD_MODEX_RETRIGER:
 			if (param != 0 && (TickCount % param) == 0)
@@ -664,7 +663,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 		case CMD_MODEX_FINEVOLUP:
 			if (param != 0 && TickCount == channel->StartTick)
 			{
-				param <<= 1; // << 1?
+				param <<= 1U; // << 1?
 				if (128 - param > channel->RawVolume)
 					channel->RawVolume += param;
 				else
@@ -674,7 +673,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 		case CMD_MODEX_FINEVOLDOWN:
 			if (param != 0 && TickCount == channel->StartTick)
 			{
-				param <<= 1; // << 1?
+				param <<= 1U; // << 1?
 				if (channel->RawVolume > param)
 					channel->RawVolume -= param;
 				else
@@ -704,7 +703,7 @@ void Channel::ChannelEffect(uint8_t param)
 			break;
 		case 0x01:
 			Flags |= CHN_SURROUND;
-			RawPanning = 128;
+			RawPanning = 128U;
 			break;
 		// There are also some (Open)MPT extended modes we might want to suport here hence this structure.
 	}
@@ -713,8 +712,8 @@ void Channel::ChannelEffect(uint8_t param)
 void ModuleFile::ProcessS3MExtended(Channel *channel)
 {
 	uint8_t param = channel->RowParam;
-	uint8_t cmd = (param & 0xF0) >> 4;
-	param &= 0x0F;
+	uint8_t cmd = (param & 0xF0U) >> 4U;
+	param &= 0x0FU;
 
 	switch (cmd)
 	{
@@ -736,18 +735,18 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 			break;
 		case CMD_S3MEX_VIBRATOWAVE:
 			if (ModuleType == MODULE_S3M)
-				channel->vibratoType = param & 0x03;
+				channel->vibratoType = param & 0x03U;
 			else
-				channel->vibratoType = param & 0x07;
+				channel->vibratoType = param & 0x07U;
 			break;
 		case CMD_S3MEX_TREMOLOWAVE:
 			if (ModuleType == MODULE_S3M)
-				channel->TremoloType = param & 0x03;
+				channel->TremoloType = param & 0x03U;
 			else
-				channel->TremoloType = param & 0x07;
+				channel->TremoloType = param & 0x07U;
 			break;
 		case CMD_S3MEX_PANWAVE:
-			channel->panbrelloType = param & 0x07;
+			channel->panbrelloType = param & 0x07U;
 			break;
 		case CMD_S3MEX_FRAMEDELAY:
 			FrameDelay = param;
@@ -760,18 +759,18 @@ void ModuleFile::ProcessS3MExtended(Channel *channel)
 		case CMD_S3MEX_PANNING:
 			if (TickCount == channel->StartTick)
 			{
-				channel->RawPanning = param | (param << 4);
+				channel->RawPanning = param | (param << 4U);
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			break;
 		case CMD_S3MEX_CHNEFFECT:
 			if (TickCount == channel->StartTick)
-				channel->ChannelEffect(param & 0x0F);
+				channel->ChannelEffect(param & 0x0FU);
 			break;
 		case CMD_S3MEX_OFFSET:
-			if (TickCount == channel->StartTick && channel->RowNote != 0 && channel->RowNote < 0x80)
+			if (TickCount == channel->StartTick && channel->RowNote != 0 && channel->RowNote < 0x80U)
 			{
-				int pos = param << 16;
+				int pos = param << 16U;
 				if (pos < (int)channel->Length)
 					channel->Pos = pos;
 			}
@@ -822,7 +821,8 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 
 bool ModuleFile::ProcessEffects()
 {
-	int16_t positionJump = -1, breakRow = -1;
+	int16_t positionJump = -1;
+	int16_t breakRow = -1;
 	int32_t patternLoopRow = -1;
 	for (uint16_t i = 0; i < p_Header->nChannels; ++i)
 	{
@@ -842,20 +842,20 @@ bool ModuleFile::ProcessEffects()
 				param = channel->extendedCommand;
 			else
 				channel->extendedCommand = param;
-			uint8_t excmd = (param & 0xF0) >> 4;
+			uint8_t excmd = (param & 0xF0U) >> 4U;
 			if (!TickCount) // Only process extended commands on the first tick of a row.
 			{
 				if (excmd == CMD_MODEX_DELAYSAMP)
-					channel->StartTick = param & 0x0F;
+					channel->StartTick = param & 0x0FU;
 				else if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
 					(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_LOOP))
 				{
-					const auto loop = channel->patternLoop(param & 0x0F, Row);
+					const auto loop = channel->patternLoop(param & 0x0FU, Row);
 					if (loop >= 0)
 						patternLoopRow = loop;
 				}
 				else if (excmd == CMD_MODEX_DELAYPAT)
-					PatternDelay = param & 0x0F;
+					PatternDelay = param & 0x0FU;
 			}
 		}
 
@@ -864,7 +864,7 @@ bool ModuleFile::ProcessEffects()
 			uint8_t note = channel->RowNote;
 			if (sample != 0)
 				channel->NewSample = sample;
-			if (ModuleType == MODULE_MOD && note == 0xFF)
+			if (ModuleType == MODULE_MOD && note == 0xFFU)
 			{
 				channel->Flags |= CHN_FASTVOLRAMP;
 				channel->RawVolume = 0;
@@ -880,9 +880,9 @@ bool ModuleFile::ProcessEffects()
 				else
 					channel->RawVolume = p_Samples[sample - 1]->GetVolume();
 			}
-			if (note >= 0xFE)
+			if (note >= 0xFEU)
 				sample = 0;
-			if (note && note <= 128)
+			if (note && note <= 128U)
 			{
 				channel->NewNote = note;
 				if (!doPortamento)
@@ -890,7 +890,7 @@ bool ModuleFile::ProcessEffects()
 			}
 			if (sample)
 			{
-				const auto currentSample = channel->Sample;
+				auto *const currentSample = channel->Sample;
 				SampleChange(*channel, sample, doPortamento);
 				channel->NewSample = 0;
 				// Special case - if IT or S3M song tries to change note and do a portamento, ignore the portamento.
@@ -908,12 +908,12 @@ bool ModuleFile::ProcessEffects()
 			}
 			if (channel->RowVolEffect == VOLCMD_VOLUME)
 			{
-				channel->RawVolume = channel->RowVolParam << 1;
+				channel->RawVolume = channel->RowVolParam << 1U;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 			else if (channel->RowVolEffect == VOLCMD_PANNING)
 			{
-				channel->RawPanning = channel->RowVolParam << 2;
+				channel->RawPanning = channel->RowVolParam << 2U;
 				channel->Flags |= CHN_FASTVOLRAMP;
 			}
 		}
@@ -981,7 +981,7 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 		case CMD_OFFSET:
 			if (TickCount == channel.StartTick)
 			{
-				channel.Pos = uint32_t(param) << 8;
+				channel.Pos = param << 8U;
 				channel.PosLo = 0;
 				if (channel.Pos > channel.Length)
 					channel.Pos = channel.Length;
@@ -1003,9 +1003,9 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 				positionJump = 0;
 			break;
 		case CMD_PATTERNBREAK:
-			breakRow = ((param >> 4) * 10) + (param & 0x0F);
-			if (breakRow > (Rows - 1))
-				breakRow = (Rows - 1);
+			breakRow = ((param >> 4U) * 10) + (param & 0x0FU);
+			if (breakRow > Rows - 1)
+				breakRow = Rows - 1;
 			break;
 		case CMD_SPEED:
 			MusicSpeed = param;
@@ -1018,7 +1018,7 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 			break;
 		case CMD_RETRIGER:
 			if (param != 0 && (TickCount % param) == 0)
-				channel.noteChange(*this, channel.NewNote, 0);
+				channel.noteChange(*this, channel.NewNote, false);
 			break;
 		case CMD_TEMPO:
 			MusicTempo = param;
@@ -1056,7 +1056,7 @@ void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakR
 			if (ModuleType == MODULE_MOD || ModuleType == MODULE_IT)
 				channel.RawPanning = param;
 			else if (param <= 128)
-				channel.RawPanning = param << 1;
+				channel.RawPanning = param << 1U;
 			else if (param == 164)
 			{
 				channel.RawPanning = 128;
@@ -1136,10 +1136,10 @@ void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 	RowVolParam = Command->VolParam;
 	RowEffect = Command->Effect;
 	RowParam = Command->Param;
-	excmd = (RowParam & 0xF0) >> 4;
+	excmd = (RowParam & 0xF0U) >> 4U;
 	if ((RowEffect == CMD_MOD_EXTENDED && excmd == CMD_MODEX_DELAYSAMP) ||
 		(RowEffect == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_DELAYSAMP))
-		StartTick = RowParam & 0x0F;
+		StartTick = RowParam & 0x0FU;
 	else
 		StartTick = 0;
 	Flags &= ~(CHN_TREMOLO | CHN_ARPEGGIO | CHN_VIBRATO | CHN_PORTAMENTO | CHN_GLISSANDO | CHN_TREMOR | CHN_PANBRELLO);
@@ -1193,7 +1193,7 @@ bool ModuleFile::AdvanceTick()
 		return false;
 	if (!MusicTempo)
 		return false;
-	SamplesToMix = (MixSampleRate * 640) / (MusicTempo << 8);
+	SamplesToMix = (MixSampleRate * 640U) / (MusicTempo << 8U);
 	SamplesPerTick = SamplesToMix;
 	nMixerChannels = 0;
 	const uint8_t nChannels = p_Instruments ? 128 : p_Header->nChannels;
@@ -1202,14 +1202,13 @@ bool ModuleFile::AdvanceTick()
 		Channel *channel = &Channels[i];
 		bool incNegative = channel->Increment.iValue < 0;
 
-		channel->Increment.iValue = 0;
+		channel->Increment.iValue = 0U;
 		channel->volume = 0;
 		channel->Panning = channel->RawPanning;
 		channel->RampLength = 0;
 
 		if (channel->Period != 0 && channel->Length != 0)
 		{
-			uint32_t period;
 			int32_t inc;
 			uint16_t vol = channel->RawVolume;
 			if ((channel->Flags & CHN_TREMOLO) != 0)
@@ -1217,24 +1216,24 @@ bool ModuleFile::AdvanceTick()
 				uint8_t TremoloPos = channel->TremoloPos;
 				if (vol > 0)
 				{
-					uint8_t TremoloType = channel->TremoloType & 0x03;
-					uint8_t TremoloDepth = channel->TremoloDepth << 4;
+					uint8_t TremoloType = channel->TremoloType & 0x03U;
+					uint8_t TremoloDepth = channel->TremoloDepth << 4U;
 					if (TremoloType == 1)
-						vol += (RampDownTable[TremoloPos] * TremoloDepth) >> 8;
+						vol += (RampDownTable[TremoloPos] * TremoloDepth) >> 8U;
 					else if (TremoloType == 2)
-						vol += (SquareTable[TremoloPos] * TremoloDepth) >> 8;
+						vol += (SquareTable[TremoloPos] * TremoloDepth) >> 8U;
 					else if (TremoloType == 3)
-						vol += (RandomTable[TremoloPos] * TremoloDepth) >> 8;
+						vol += (RandomTable[TremoloPos] * TremoloDepth) >> 8U;
 					else
-						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8;
+						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8U;
 				}
 				if (TickCount > channel->StartTick)
-					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3F;
+					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3FU;
 			}
 			if ((channel->Flags & CHN_TREMOR) != 0)
 			{
-				uint8_t Duration = (channel->Tremor >> 4) + (channel->Tremor & 0x0F) + 2;
-				uint8_t OnTime = (channel->Tremor >> 4) + 1;
+				uint8_t Duration = (channel->Tremor >> 4U) + (channel->Tremor & 0x0FU) + 2U;
+				uint8_t OnTime = (channel->Tremor >> 4U) + 1U;
 				uint8_t Count = channel->TremorCount;
 				if (Count > Duration)
 					Count = 0;
@@ -1253,19 +1252,19 @@ bool ModuleFile::AdvanceTick()
 			{
 				ModuleInstrument *instr = channel->Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
-				if ((channel->Flags & CHN_NOTEFADE) != 0)
+				if ((channel->Flags & CHN_NOTEFADE) != 0U)
 				{
 					uint16_t FadeOut = instr->GetFadeOut();
 					if (FadeOut != 0)
 					{
-						if (channel->FadeOutVol < (FadeOut << 1))
+						if (channel->FadeOutVol < (FadeOut << 1U))
 							channel->FadeOutVol = 0;
 						else
-							channel->FadeOutVol -= FadeOut << 1;
-						vol = (vol * channel->FadeOutVol) >> 16;
+							channel->FadeOutVol -= FadeOut << 1U;
+						vol = (vol * channel->FadeOutVol) >> 16U;
 					}
-					else if (channel->FadeOutVol == 0)
-						vol = 0;
+					else if (channel->FadeOutVol == 0U)
+						vol = 0U;
 				}
 				if (env->GetEnabled() && env->HasNodes())
 				{
@@ -1341,7 +1340,7 @@ bool ModuleFile::AdvanceTick()
 					fadeOut = channel->Instrument->GetFadeOut();
 				if (fadeOut)
 				{
-					channel->FadeOutVol -= fadeOut << 1;
+					channel->FadeOutVol -= fadeOut << 1U;
 					if (channel->FadeOutVol & 0x8000U)
 						channel->FadeOutVol = 0;
 					vol = (vol * channel->FadeOutVol) >> 16U;
@@ -1354,16 +1353,16 @@ bool ModuleFile::AdvanceTick()
 			clipInt<uint16_t>(vol, 0, 128);
 			channel->volume = vol;
 			clipInt(channel->Period, MinPeriod, MaxPeriod);
-			period = channel->Period;
+			uint32_t period = channel->Period;
 			if ((channel->Flags & (CHN_GLISSANDO | CHN_PORTAMENTO)) == (CHN_GLISSANDO | CHN_PORTAMENTO))
 				period = GetPeriodFromNote(/*GetNoteFromPeriod(period)*/channel->Note, channel->FineTune, channel->C4Speed);
 			if ((channel->Flags & CHN_ARPEGGIO) != 0)
 			{
 				uint8_t n = TickCount % 3;
 				if (n == 1)
-					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio >> 4), channel->FineTune, channel->C4Speed);
+					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio >> 4U), channel->FineTune, channel->C4Speed);
 				else if (n == 2)
-					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio & 0x0F), channel->FineTune, channel->C4Speed);
+					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio & 0x0FU), channel->FineTune, channel->C4Speed);
 			}
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
 				clipInt<uint32_t>(period, 452, 3424);
@@ -1435,7 +1434,7 @@ bool ModuleFile::AdvanceTick()
 			inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
 			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
 				inc = -inc;
-			channel->Increment.iValue = inc & ~3;
+			channel->Increment.iValue = inc & ~3U;
 		}
 		if (channel->volume != 0 || channel->LeftVol != 0 || channel->RightVol != 0)
 			channel->Flags |= CHN_VOLUMERAMP;
@@ -1450,7 +1449,7 @@ bool ModuleFile::AdvanceTick()
 			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
 			{
 				channel->NewLeftVol = (channel->volume * channel->Panning) >> 8U;
-				channel->NewRightVol = (channel->volume * (256 - channel->Panning)) >> 8U;
+				channel->NewRightVol = (channel->volume * (256U - channel->Panning)) >> 8U;
 			}
 			else
 				channel->NewLeftVol = channel->NewRightVol = channel->volume;
@@ -1479,7 +1478,7 @@ bool ModuleFile::AdvanceTick()
 				channel->LeftVol = channel->NewLeftVol - (channel->LeftRamp * RampLength);
 				channel->RightVol = channel->NewRightVol - (channel->RightRamp * RampLength);
 				// If the ramp values aren't 0 (ramping already done?)
-				if ((channel->LeftRamp | channel->RightRamp) != 0)
+				if ((channel->LeftRamp | channel->RightRamp) != 0U)
 					channel->RampLength = RampLength;
 				else
 				{
@@ -1525,9 +1524,9 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 	{
 		if (increment.iValue < 0)
 		{
-			int delta = ((loopStart - Pos) << 16) - (PosLo & 0xFFFF);
-			Pos = loopStart + (delta >> 16);
-			PosLo = delta & 0xFFFF;
+			int delta = ((loopStart - Pos) << 16U) - (PosLo & 0xFFFFU);
+			Pos = loopStart + (delta >> 16U);
+			PosLo = delta & 0xFFFFU;
 			if (Pos < loopStart || Pos >= (loopStart + Length) / 2)
 			{
 				Pos = loopStart;
@@ -1549,14 +1548,14 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 			return 0;
 		if ((Flags & CHN_LPINGPONG) != 0)
 		{
-			uint32_t delta = ((~PosLo) & 0xFFFF) + 1;
+			uint32_t delta = ((~PosLo) & 0xFFFFU) + 1U;
 			if (increment.iValue > 0)
 			{
 				increment.iValue = -increment.iValue;
 				Increment.iValue = increment.iValue;
 			}
-			Pos -= ((Pos - Length) << 1) + (delta >> 16);
-			PosLo = delta & 0xFFFF;
+			Pos -= ((Pos - Length) << 1U) + (delta >> 16U);
+			PosLo = delta & 0xFFFFU;
 			if (Pos <= LoopStart || Pos >= Length)
 				Pos = Length - 1;
 		}
@@ -1575,40 +1574,40 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 	}
 	if (Pos < loopStart)
 	{
-		if ((Pos & 0x80000000) || Increment.iValue < 0)
+		if ((Pos & 0x80000000U) || Increment.iValue < 0)
 			return 0;
 	}
-	if ((Pos & 0x80000000) || Pos >= Length)
+	if ((Pos & 0x80000000U) || Pos >= Length)
 		return 0;
 	sampleCount = samples;
 	if (increment.iValue < 0)
 		increment.iValue = -increment.iValue;
-	maxSamples = 16384 / (increment.Value.Hi + 1);
+	maxSamples = 16384U / (increment.Value.Hi + 1U);
 	if (maxSamples < 2)
 		maxSamples = 2;
 	if (samples > maxSamples)
 		samples = maxSamples;
-	deltaHi = increment.Value.Hi * (samples - 1);
-	deltaLo = increment.Value.Lo * (samples - 1);
+	deltaHi = increment.Value.Hi * (samples - 1U);
+	deltaLo = increment.Value.Lo * (samples - 1U);
 	if (Increment.iValue < 0)
 	{
-		uint32_t posDest = Pos - deltaHi - ((deltaLo - PosLo) >> 16);
-		if (posDest & 0x80000000 || posDest < loopStart)
+		uint32_t posDest = Pos - deltaHi - ((deltaLo - PosLo) >> 16U);
+		if (posDest & 0x80000000U || posDest < loopStart)
 		{
-			sampleCount = (((Pos - loopStart) << 16) + PosLo) / increment.iValue;
+			sampleCount = (((Pos - loopStart) << 16U) + PosLo) / increment.iValue;
 			++sampleCount;
 		}
 	}
 	else
 	{
-		uint32_t posDest = Pos + deltaHi + ((deltaLo + PosLo) >> 16);
+		uint32_t posDest = Pos + deltaHi + ((deltaLo + PosLo) >> 16U);
 		if (posDest >= Length)
 		{
-			sampleCount = (((Length - Pos) << 16) - PosLo) / increment.iValue;
+			sampleCount = (((Length - Pos) << 16U) - PosLo) / increment.iValue;
 			++sampleCount;
 		}
 	}
-	if (sampleCount <= 1)
+	if (sampleCount <= 1U)
 		return 1;
 	if (sampleCount > samples)
 		return samples;
@@ -1624,14 +1623,14 @@ inline void ModuleFile::FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, u
 		int OffsL = -DCOffsL;
 		int OffsR = -DCOffsR;
 
-		OffsL >>= 31;
-		OffsR >>= 31;
-		OffsL &= 0xFF;
-		OffsR &= 0xFF;
+		OffsL >>= 31U;
+		OffsR >>= 31U;
+		OffsL &= 0xFFU;
+		OffsR &= 0xFFU;
 		OffsL += DCOffsL;
 		OffsR += DCOffsR;
-		OffsL >>= 8;
-		OffsR >>= 8;
+		OffsL >>= 8U;
+		OffsR >>= 8U;
 		DCOffsL -= OffsL;
 		DCOffsR -= OffsR;
 		buff[0] += DCOffsR;
@@ -1658,11 +1657,11 @@ inline void ModuleFile::DCFixingFill(uint32_t samples)
 void ModuleFile::CreateStereoMix(uint32_t count)
 {
 	int SampleCount;
-	uint32_t i, /*Flags, */rampSamples;
+	uint32_t /*Flags, */rampSamples;
 	if (count == 0)
 		return;
 	/*Flags = GetResamplingFlag();*/
-	for (i = 0; i < nMixerChannels; i++)
+	for (uint32_t i = 0; i < nMixerChannels; i++)
 	{
 		uint32_t samples = count;
 		int *buff = MixBuffer;
@@ -1691,14 +1690,14 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 				buff += SampleCount * 2;
 			else
 			{
-				MixInterface MixFunc = MixFunctionTable[/*Flags*/MIX_NOSRC | (channel->RampLength != 0 ? MIX_RAMP : 0) |
-					(channel->Sample->Get16Bit() == true ? MIX_16BIT : 0) | (channel->Sample->GetStereo() == true ? MIX_STEREO : 0)];
-				int *BuffMax = buff + (SampleCount * 2);
-				channel->DCOffsR = -((BuffMax - 2)[0]);
-				channel->DCOffsL = -((BuffMax - 2)[1]);
+				MixInterface MixFunc = MixFunctionTable[/*Flags*/MIX_NOSRC | (channel->RampLength ? MIX_RAMP : 0) |
+					(channel->Sample->Get16Bit() ? MIX_16BIT : 0) | (channel->Sample->GetStereo() ? MIX_STEREO : 0)];
+				int *BuffMax = buff + (SampleCount * 2U);
+				channel->DCOffsR = -((BuffMax - 2U)[0]);
+				channel->DCOffsL = -((BuffMax - 2U)[1]);
 				MixFunc(channel, buff, BuffMax);
-				channel->DCOffsR += ((BuffMax - 2)[0]);
-				channel->DCOffsL += ((BuffMax - 2)[1]);
+				channel->DCOffsR += ((BuffMax - 2U)[0]);
+				channel->DCOffsL += ((BuffMax - 2U)[1]);
 				buff = BuffMax;
 			}
 			samples -= SampleCount;
@@ -1722,24 +1721,25 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 inline void ModuleFile::MonoFromStereo(uint32_t count)
 {
 	for (uint32_t i = 0; i < count; i++)
-		MixBuffer[i] = MixBuffer[i << 1];
+		MixBuffer[i] = MixBuffer[i << 1U];
 }
 
 int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 {
 	uint32_t Count, SampleCount, Mixed = 0;
-	uint32_t SampleSize = MixBitsPerSample / 8 * MixChannels, Max = BuffLen / SampleSize;
+	uint32_t SampleSize = MixBitsPerSample / 8U * MixChannels;
+	uint32_t Max = BuffLen / SampleSize;
 
 	if (Max == 0)
 		return -2;
 	if (NextPattern >= p_Header->nOrders)
-		return (Mixed == 0 ? -2 : Mixed * (MixBitsPerSample / 8) * MixChannels);
+		return (Mixed == 0 ? -2 : Mixed * (MixBitsPerSample / 8U) * MixChannels);
 	while (Mixed < Max)
 	{
 		if (SamplesToMix == 0)
 		{
 			// TODO: Deal with song fading
-			if (AdvanceTick() == false)
+			if (!AdvanceTick())
 				Max = Mixed;
 		}
 		Count = SamplesToMix;
@@ -1769,5 +1769,5 @@ int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 		Mixed += Count;
 		SamplesToMix -= Count;
 	}
-	return (Mixed == 0 ? -2 : Mixed * (MixBitsPerSample / 8) * MixChannels);
+	return (Mixed == 0 ? -2 : Mixed * (MixBitsPerSample / 8U) * MixChannels);
 }
