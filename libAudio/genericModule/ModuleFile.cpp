@@ -70,9 +70,9 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
 	for (uint16_t i = 0; i < p_Header->nSamples; ++i)
 	{
-		const uint32_t offset = uint32_t{SamplePtrs[i]} << 4;
+		const uint32_t offset = uint32_t{SamplePtrs[i]} << 4U;
 		if (fd.seek(offset, SEEK_SET) != offset)
-			throw ModuleLoaderError(E_BAD_S3M);
+			throw ModuleLoaderError{E_BAD_S3M};
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	}
 
@@ -93,7 +93,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 	{
 		const uint32_t offset = uint32_t{PatternPtrs[i]} << 4;
 		if (fd.seek(offset, SEEK_SET) != offset)
-			throw ModuleLoaderError(E_BAD_S3M);
+			throw ModuleLoaderError{E_BAD_S3M};
 		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
 	}
 
