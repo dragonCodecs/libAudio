@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 threading = dependency('threads')
 libOpenAL = dependency('openal')
 libOGG = dependency('ogg')
