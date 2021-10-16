@@ -75,3 +75,9 @@ if not meson.is_subproject()
 		subdir('spectrometer')
 	endif
 endif
+
+runClangTidy = find_program('runClangTidy.py')
+run_target(
+        'clang-tidy',
+        command: [runClangTidy, '-s', meson.current_source_dir(), '-p', meson.current_build_dir()]
+)
