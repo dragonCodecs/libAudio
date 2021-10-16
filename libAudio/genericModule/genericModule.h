@@ -515,7 +515,8 @@ union int16dot16
 class Channel : public ModuleAllocator
 {
 public:
-	uint8_t *SampleData, *NewSampleData;
+	uint8_t *SampleData;
+	uint8_t *NewSampleData;
 	uint8_t Note, RampLength;
 	uint8_t NewNote, NewSample;
 	uint32_t LoopStart, LoopEnd, Length;
@@ -526,13 +527,14 @@ public:
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
 	uint8_t FineTune, _panningSlide;
-	uint16_t RawPanning, Panning; // TODO: Panning should be uint8_t?
+	uint16_t RawPanning;
+	uint16_t panning; // TODO: panning should be uint8_t?
 	uint8_t RowNote, RowSample, RowVolEffect;
 	uint8_t RowEffect, RowVolParam, RowParam;
 	uint16_t Flags;
 	uint32_t Period, C4Speed;
 	uint32_t Pos, PosLo, StartTick;
-	int16dot16 Increment;
+	int16dot16 increment;
 	uint32_t portamentoTarget;
 	uint8_t portamento, portamentoSlide;
 	uint8_t Arpeggio, extendedCommand;

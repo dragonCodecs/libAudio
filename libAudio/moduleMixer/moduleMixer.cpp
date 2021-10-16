@@ -689,7 +689,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 			break;
 		case CMD_MODEX_INVERTLOOP:
 			if (ModuleType == MODULE_MOD)
-				channel->Increment.iValue = -channel->Increment.iValue;
+				channel->increment.iValue = -channel->increment.iValue;
 			break;
 	}
 }
@@ -1200,11 +1200,11 @@ bool ModuleFile::AdvanceTick()
 	for (uint8_t i = 0; i < nChannels; i++)
 	{
 		Channel *channel = &Channels[i];
-		bool incNegative = channel->Increment.iValue < 0;
+		bool incNegative = channel->increment.iValue < 0;
 
-		channel->Increment.iValue = 0U;
+		channel->increment.iValue = 0U;
 		channel->volume = 0;
-		channel->Panning = channel->RawPanning;
+		channel->panning = channel->RawPanning;
 		channel->RampLength = 0;
 
 		if (channel->Period != 0 && channel->Length != 0)
@@ -1315,7 +1315,7 @@ bool ModuleFile::AdvanceTick()
 					else
 						pan += (panningValue * pan) / 32;
 					clipInt<uint16_t>(pan, 0, 256);
-					channel->Panning = pan;
+					channel->panning = pan;
 					channel->EnvPanningPos++;
 					if (env->GetLooped())
 					{
@@ -1434,22 +1434,22 @@ bool ModuleFile::AdvanceTick()
 			inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
 			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
 				inc = -inc;
-			channel->Increment.iValue = inc & ~3U;
+			channel->increment.iValue = inc & ~3U;
 		}
 		if (channel->volume != 0 || channel->LeftVol != 0 || channel->RightVol != 0)
 			channel->Flags |= CHN_VOLUMERAMP;
 		else
 			channel->Flags &= ~CHN_VOLUMERAMP;
 		channel->NewLeftVol = channel->NewRightVol = 0;
-		if ((channel->Increment.Value.Hi + 1) >= (int32_t)channel->LoopEnd)
+		if ((channel->increment.Value.Hi + 1) >= (int32_t)channel->LoopEnd)
 			channel->Flags &= ~CHN_LOOP;
-		channel->SampleData = ((channel->NewSampleData && channel->Length && channel->Increment.iValue) ? channel->NewSampleData : nullptr);
+		channel->SampleData = ((channel->NewSampleData && channel->Length && channel->increment.iValue) ? channel->NewSampleData : nullptr);
 		if (channel->SampleData != nullptr)
 		{
 			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
 			{
-				channel->NewLeftVol = (channel->volume * channel->Panning) >> 8U;
-				channel->NewRightVol = (channel->volume * (256U - channel->Panning)) >> 8U;
+				channel->NewLeftVol = (channel->volume * channel->panning) >> 8U;
+				channel->NewRightVol = (channel->volume * (256U - channel->panning)) >> 8U;
 			}
 			else
 				channel->NewLeftVol = channel->NewRightVol = channel->volume;
@@ -1498,8 +1498,8 @@ bool ModuleFile::AdvanceTick()
 			// DEBUG: Uncomment to see the channel's main state information
 			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
 				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->RawVolume, channel->RowNote, channel->RowSample,
-				channel->RowEffect, channel->RowParam, channel->Period, channel->portamentoTarget, channel->FineTune, channel->Increment.Value.Hi,
-				channel->Increment.Value.Lo, channel->Pos, channel->PosLo);*/
+				channel->RowEffect, channel->RowParam, channel->Period, channel->portamentoTarget, channel->FineTune, channel->increment.Value.Hi,
+				channel->increment.Value.Lo, channel->Pos, channel->PosLo);*/
 			MixerChannels[nMixerChannels++] = i;
 		}
 		else
@@ -1513,8 +1513,8 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 {
 	uint32_t deltaHi, deltaLo, maxSamples, sampleCount;
 	uint32_t loopStart = ((Flags & CHN_LOOP) != 0 ? LoopStart : 0);
-	int16dot16 increment = Increment;
-	if (samples == 0 || Increment.iValue == 0 || Length == 0)
+	int16dot16 nextIncrement = increment;
+	if (samples == 0 || increment.iValue == 0 || Length == 0)
 		return 0;
 	// The following fixes 3 or 4 bugs and allows
 	// for loops to run correctly. DO NOT REMOVE!
@@ -1532,8 +1532,8 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 				Pos = loopStart;
 				PosLo = 0;
 			}
-			increment.iValue = -increment.iValue;
-			Increment.iValue = increment.iValue;
+			nextIncrement.iValue = -nextIncrement.iValue;
+			increment.iValue = nextIncrement.iValue;
 			if ((Flags & CHN_LOOP) == 0 || Pos >= Length)
 			{
 				Pos = Length;
@@ -1549,10 +1549,10 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 		if ((Flags & CHN_LPINGPONG) != 0)
 		{
 			uint32_t delta = ((~PosLo) & 0xFFFFU) + 1U;
-			if (increment.iValue > 0)
+			if (nextIncrement.iValue > 0)
 			{
-				increment.iValue = -increment.iValue;
-				Increment.iValue = increment.iValue;
+				nextIncrement.iValue = -nextIncrement.iValue;
+				increment.iValue = nextIncrement.iValue;
 			}
 			Pos -= ((Pos - Length) << 1U) + (delta >> 16U);
 			PosLo = delta & 0xFFFFU;
@@ -1561,11 +1561,11 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 		}
 		else
 		{
-			if (Increment.iValue < 0) // Theory says this is imposible..
+			if (increment.iValue < 0) // Theory says this is imposible..
 			{
 				printf("This should not happen\n");
-				increment.iValue = -increment.iValue;
-				Increment.iValue = increment.iValue;
+				nextIncrement.iValue = -nextIncrement.iValue;
+				increment.iValue = nextIncrement.iValue;
 			}
 			Pos -= Length - loopStart;
 			if (Pos < loopStart)
@@ -1574,27 +1574,27 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 	}
 	if (Pos < loopStart)
 	{
-		if ((Pos & 0x80000000U) || Increment.iValue < 0)
+		if ((Pos & 0x80000000U) || increment.iValue < 0)
 			return 0;
 	}
 	if ((Pos & 0x80000000U) || Pos >= Length)
 		return 0;
 	sampleCount = samples;
-	if (increment.iValue < 0)
-		increment.iValue = -increment.iValue;
-	maxSamples = 16384U / (increment.Value.Hi + 1U);
+	if (nextIncrement.iValue < 0)
+		nextIncrement.iValue = -nextIncrement.iValue;
+	maxSamples = 16384U / (nextIncrement.Value.Hi + 1U);
 	if (maxSamples < 2)
 		maxSamples = 2;
 	if (samples > maxSamples)
 		samples = maxSamples;
-	deltaHi = increment.Value.Hi * (samples - 1U);
-	deltaLo = increment.Value.Lo * (samples - 1U);
-	if (Increment.iValue < 0)
+	deltaHi = nextIncrement.Value.Hi * (samples - 1U);
+	deltaLo = nextIncrement.Value.Lo * (samples - 1U);
+	if (increment.iValue < 0)
 	{
 		uint32_t posDest = Pos - deltaHi - ((deltaLo - PosLo) >> 16U);
 		if (posDest & 0x80000000U || posDest < loopStart)
 		{
-			sampleCount = (((Pos - loopStart) << 16U) + PosLo) / increment.iValue;
+			sampleCount = (((Pos - loopStart) << 16U) + PosLo) / nextIncrement.iValue;
 			++sampleCount;
 		}
 	}
@@ -1603,7 +1603,7 @@ uint32_t Channel::GetSampleCount(uint32_t samples)
 		uint32_t posDest = Pos + deltaHi + ((deltaLo + PosLo) >> 16U);
 		if (posDest >= Length)
 		{
-			sampleCount = (((Length - Pos) << 16U) - PosLo) / increment.iValue;
+			sampleCount = (((Length - Pos) << 16U) - PosLo) / nextIncrement.iValue;
 			++sampleCount;
 		}
 	}

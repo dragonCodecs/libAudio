@@ -126,8 +126,8 @@ void Channel::applyPanbrello() noexcept
 				return SinusTable[position];
 		}(panbrelloType & 0x03U, ((panbrelloPosition + 16U) >> 2U) & 0x3FU)};
 		panbrelloPosition += panbrelloSpeed;
-		Panning += (delta * panbrelloDepth + 2U) >> 3U;
-		clipInt<uint16_t>(Panning, 0, 256);
+		panning += (delta * panbrelloDepth + 2U) >> 3U;
+		clipInt<uint16_t>(panning, 0, 256);
 	}
 }
 

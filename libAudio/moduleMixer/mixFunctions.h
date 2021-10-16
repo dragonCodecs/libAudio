@@ -121,7 +121,7 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 // TODO: Figure out if anything here can be made unsigned by adjusting the maths any
 #define SNDMIX_BEGINSAMPLELOOP8 \
 	uint32_t Pos = chn->PosLo; \
-	const int32_t Increment = chn->Increment.iValue; \
+	const int32_t increment = chn->increment.iValue; \
 	const int8_t *p = ((int8_t *)chn->SampleData) + chn->Pos; \
 	if (chn->Sample->GetStereo()) \
 		p += chn->Pos; \
@@ -131,7 +131,7 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 
 #define SNDMIX_BEGINSAMPLELOOP16 \
 	uint32_t Pos = chn->PosLo; \
-	const int32_t Increment = chn->Increment.iValue; \
+	const int32_t increment = chn->increment.iValue; \
 	const int16_t *p = ((int16_t *)chn->SampleData) + chn->Pos; \
 	if (chn->Sample->GetStereo()) \
 		p += chn->Pos; \
@@ -140,7 +140,7 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 	{
 
 #define SNDMIX_ENDSAMPLELOOP \
-		Pos += Increment; \
+		Pos += increment; \
 	} \
 	while (vol < BuffMax); \
 	chn->Pos += Pos >> 16; \
@@ -329,7 +329,7 @@ template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, co
 	const sampleFn_t<T> sample, const storeFn_t store) noexcept
 {
 	auto position{channel.PosLo};
-	const auto increment{channel.Increment.iValue};
+	const auto increment{channel.increment.iValue};
 	const auto *sampleData = reinterpret_cast<T *>(channel.SampleData) + channel.Pos;
 	if (channel.Sample->GetStereo())
 		sampleData += channel.Pos;
