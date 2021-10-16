@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 include $(call my-dir)/*/Android.mk
 #SRC_WMA = loadWMA.cpp
 SRC_WMA =

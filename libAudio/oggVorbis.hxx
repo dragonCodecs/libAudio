@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef OGG_VORBIS__HXX
 #define OGG_VORBIS__HXX
 

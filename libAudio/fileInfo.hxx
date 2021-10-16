@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef FILE_INFO__HXX
 #define FILE_INFO__HXX
 

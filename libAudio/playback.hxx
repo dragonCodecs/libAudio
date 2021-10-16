@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef PLAYBACK__HXX
 #define PLAYBACK__HXX
 

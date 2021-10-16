@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: BSD-3-Clause
 namespace libAudio
 {
 	namespace conversions

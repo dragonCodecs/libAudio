@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 // Standard mixing functions
 #ifndef LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H
 #define LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H 1

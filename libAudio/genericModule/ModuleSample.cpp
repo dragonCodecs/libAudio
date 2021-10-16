@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include <stdlib.h>
 #include <algorithm>
 #include "genericModule.h"

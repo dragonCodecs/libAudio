@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <inttypes.h>

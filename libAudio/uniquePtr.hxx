@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef UNIQUE_PTR__HXX
 #define UNIQUE_PTR__HXX
 

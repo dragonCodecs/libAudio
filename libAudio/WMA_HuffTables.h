@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #define NB_LSP_COEFS 10
 
 typedef struct _CoefVLCTable

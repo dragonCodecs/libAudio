@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include <random>
 #include <limits>
 #include "oggVorbis.hxx"

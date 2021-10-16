@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef OPEN_AL__HXX
 #define OPEN_AL__HXX
 

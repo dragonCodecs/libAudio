@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "libAudio.h"
 #include "libAudio.hxx"
 #include "oggOpus.hxx"

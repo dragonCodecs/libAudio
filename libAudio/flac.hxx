@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef FLAC__HXX
 #define FLAC__HXX
 

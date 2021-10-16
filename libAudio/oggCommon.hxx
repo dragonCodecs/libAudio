@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef OGG_COMMON__HXX
 #define OGG_COMMON__HXX
 

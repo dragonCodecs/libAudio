@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef M4A__HXX
 #define M4A__HXX
 

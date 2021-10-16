@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef __waveTables_H__
 #define __waveTables_H__
 

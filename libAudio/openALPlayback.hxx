@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef OPEN_AL_PLAYBACK__HXX
 #define OPEN_AL_PLAYBACK__HXX
 

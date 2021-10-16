@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef LIBAUDIO_HXX
 #define LIBAUDIO_HXX
 

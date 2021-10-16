@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef GENERIC_MODULE__H
 #define GENERIC_MODULE__H
 

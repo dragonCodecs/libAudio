@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef FIXED_POINT___H
 #define FIXED_POINT___H
 

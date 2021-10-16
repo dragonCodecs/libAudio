@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "genericModule.h"
 
 using substrate::make_unique;

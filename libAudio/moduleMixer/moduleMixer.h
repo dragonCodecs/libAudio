@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef libAudio_moduleMixer__H
 #define libAudio_moduleMixer__H
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "genericModule.h"
 
 void ModuleCommand::TranslateMODEffect(const uint8_t cmd, const uint8_t param) noexcept

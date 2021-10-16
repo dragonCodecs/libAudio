@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef __frequencyTables_H__
 #define __frequencyTables_H__
 
