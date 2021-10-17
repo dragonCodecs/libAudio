@@ -43,9 +43,9 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;
 	if (ModuleType != MODULE_IT)
-		GlobalVolume = p_Header->GlobalVolume << 1U;
+		globalVolume = p_Header->GlobalVolume << 1U;
 	else
-		GlobalVolume = p_Header->GlobalVolume;
+		globalVolume = p_Header->GlobalVolume;
 	SamplesPerTick = (MixSampleRate * 640U) / (MusicTempo << 8U);
 	// If we have the possibility of NNAs, allocate a full set of channels.
 	if (p_Instruments != nullptr)
@@ -800,7 +800,7 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 	else
 		globalVolumeSlide = param;
 
-	uint16_t volume = GlobalVolume;
+	uint16_t volume = globalVolume;
 	const uint8_t slideLo = param & 0x0FU;
 	const uint8_t slideHi = param & 0xF0U;
 	if (slideHi == 0xF0U && slideLo)
@@ -821,10 +821,10 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 			volume += slideHi >> /*3U*/4U;
 	}
 
-	if (volume != GlobalVolume)
+	if (volume != globalVolume)
 	{
 		clipInt<uint16_t>(volume, 0, 128);
-		GlobalVolume = volume;
+		globalVolume = volume;
 	}
 }
 
@@ -1056,7 +1056,7 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &brea
 					break;
 				if (param > 128)
 					param = 128;
-				GlobalVolume = param;
+				globalVolume = param;
 			}
 			break;
 		case CMD_PANNING:
@@ -1246,7 +1246,7 @@ bool ModuleFile::AdvanceTick()
 				vol = 0;
 			}
 
-			vol = muldiv_t<uint32_t>{}(vol * GlobalVolume, channel.channelVolume * channel.sampleVolume, 1U << 19U);
+			vol = muldiv_t<uint32_t>{}(vol * globalVolume, channel.channelVolume * channel.sampleVolume, 1U << 19U);
 			clipInt<uint16_t>(vol, 0, 128);
 			channel.volume = vol;
 			clipInt(channel.Period, MinPeriod, MaxPeriod);

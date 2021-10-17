@@ -624,7 +624,7 @@ private:
 	channel_t *Channels;
 	uint32_t nMixerChannels, *MixerChannels;
 
-	uint16_t GlobalVolume;
+	uint16_t globalVolume;
 	uint8_t globalVolumeSlide;
 	uint8_t PatternDelay, FrameDelay;
 	int MixBuffer[MIXBUFFERSIZE * 2];
