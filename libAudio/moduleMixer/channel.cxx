@@ -128,6 +128,49 @@ void channel_t::applyPanningEnvelope(ModuleEnvelope &envelope) noexcept
 		EnvPanningPos = envelope.GetLastTick();
 }
 
+uint32_t channel_t::applyPitchEnvelope(const uint32_t period, ModuleEnvelope &envelope) noexcept
+{
+	auto pitchValue{int8_t(envelope.Apply(EnvPitchPos) - 128)};
+	clipInt<int8_t>(pitchValue, -32, 32);
+	auto result{period};
+	if (envelope.IsFilter())
+	{
+	}
+	else
+	{
+		if (pitchValue < 0)
+		{
+			uint16_t adjust = uint16_t(-pitchValue) << 3U;
+			if (adjust > 255U)
+				adjust = 255U;
+			result = linearSlideUp(period, adjust);
+		}
+		else if (pitchValue > 0)
+		{
+			uint16_t adjust = uint16_t(pitchValue) << 3U;
+			if (adjust > 255U)
+				adjust = 255U;
+			result = linearSlideDown(period, adjust);
+		}
+	}
+	++EnvPitchPos;
+	if (envelope.GetLooped())
+	{
+		uint16_t endTick = envelope.GetLoopEnd();
+		if (EnvPitchPos == ++endTick)
+			EnvPitchPos = envelope.GetLoopBegin();
+	}
+	if (envelope.GetSustained() && (Flags & CHN_NOTEOFF) == 0)
+	{
+		uint16_t endTick = envelope.GetSustainEnd();
+		if (EnvPitchPos == ++endTick)
+			EnvPitchPos = envelope.GetSustainBegin();
+	}
+	else if (envelope.IsAtEnd(EnvPitchPos))
+		EnvPitchPos = envelope.GetLastTick();
+	return result;
+}
+
 int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)

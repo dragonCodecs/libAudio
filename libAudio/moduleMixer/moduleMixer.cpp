@@ -1265,38 +1265,9 @@ bool ModuleFile::AdvanceTick()
 				clipInt<uint32_t>(period, 452, 3424);
 			if (channel.Instrument != nullptr)
 			{
-				ModuleInstrument *instr = channel.Instrument;
-				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_PITCH);
+				ModuleEnvelope *env = channel.Instrument->GetEnvelope(ENVELOPE_PITCH);
 				if (env->GetEnabled() && env->HasNodes())
-				{
-					int8_t pitchValue = env->Apply(channel.EnvPitchPos) - 128;
-					clipInt<int8_t>(pitchValue, -32, 32);
-					/*if (pitchValue < 0)
-					{
-						uint16_t adjust = uint16_t(-pitchValue) << 3;
-						period = LinearSlideUp(period, adjust);
-					}
-					else
-					{
-						uint16_t adjust = uint16_t(pitchValue) << 3;
-						period = LinearSlideDown(period, adjust);
-					}*/
-					channel.EnvPitchPos++;
-					if (env->GetLooped())
-					{
-						uint16_t endTick = env->GetLoopEnd();
-						if (channel.EnvPitchPos == ++endTick)
-							channel.EnvPitchPos = env->GetLoopBegin();
-					}
-					if (env->GetSustained() && (channel.Flags & CHN_NOTEOFF) == 0)
-					{
-						uint16_t endTick = env->GetSustainEnd();
-						if (channel.EnvPitchPos == ++endTick)
-							channel.EnvPitchPos = env->GetSustainBegin();
-					}
-					else if (env->IsAtEnd(channel.EnvPitchPos))
-						channel.EnvPitchPos = env->GetLastTick();
-				}
+					period = channel.applyPitchEnvelope(period, *env);
 			}
 			period += channel.applyVibrato(*this, period);
 			channel.applyPanbrello();
