@@ -31,7 +31,14 @@ void *ModuleAllocator::operator new[](const size_t size, const std::nothrow_t &)
 	return ret;
 }
 
-ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType{moduleType}, p_Header{nullptr},
+	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},
+	MixSampleRate{}, MixBitsPerSample{}, TickCount{}, SamplesToMix{}, MinPeriod{}, MaxPeriod{}, MixChannels{},
+	Row{}, NextRow{}, Rows{}, MusicSpeed{}, MusicTempo{}, Pattern{}, NewPattern{}, NextPattern{}, RowsPerBeat{},
+	SamplesPerTick{}, Channels{nullptr}, nMixerChannels{}, MixerChannels{nullptr}, globalVolume{},
+	globalVolumeSlide{}, PatternDelay{}, FrameDelay{}, MixBuffer{}, DCOffsR{}, DCOffsL{} { }
+
+ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
 {
 	const fd_t &fd = file.fd();
 
@@ -61,7 +68,7 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleType(MODULE_MOD), p_Instrum
 	MaxPeriod = 7040;
 }
 
-ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modS3M_t &file) : ModuleFile{MODULE_S3M}
 {
 	const fd_t &fd = file.fd();
 
@@ -102,7 +109,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleType(MODULE_S3M), p_Instrum
 	MaxPeriod = 32767;
 }
 
-ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modSTM_t &file) : ModuleFile{MODULE_STM}
 {
 	const fd_t &fd = file.fd();
 
@@ -127,7 +134,7 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleType(MODULE_STM), p_Instrum
 // http://www.tigernt.com/onlineDoc/68000.pdf
 // http://eab.abime.net/showthread.php?t=21516
 // ftp://ftp.modland.com/pub/documents/format_documentation/Art%20Of%20Noise%20(.aon).txt
-ModuleFile::ModuleFile(const modAON_t &file) : ModuleType(MODULE_AON), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 {
 	std::array<char, 4> blockName{};
 	uint32_t blockLen = 0;
@@ -208,7 +215,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleType(MODULE_AON), p_Instrum
 }
 
 #ifdef ENABLE_FC1x
-ModuleFile::ModuleFile(const modFC1x_t &file) : ModuleType(MODULE_FC1x), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modFC1x_t &file) : ModuleFile{MODULE_FC1x}
 {
 //	const fd_t &fd = file.fd();
 
@@ -216,7 +223,7 @@ ModuleFile::ModuleFile(const modFC1x_t &file) : ModuleType(MODULE_FC1x), p_Instr
 }
 #endif
 
-ModuleFile::ModuleFile(const modIT_t &file) : ModuleType(MODULE_IT), p_Instruments(nullptr), Channels(nullptr), MixerChannels(nullptr)
+ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 {
 	const fd_t &fd = file.fd();
 

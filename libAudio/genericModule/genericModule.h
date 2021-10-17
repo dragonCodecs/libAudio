@@ -604,7 +604,7 @@ public:
 	uint32_t GetSampleCount(uint32_t Samples);
 };
 
-class ModuleFile : public ModuleAllocator
+class ModuleFile final
 {
 private:
 	uint8_t ModuleType;
@@ -631,6 +631,8 @@ private:
 	uint8_t PatternDelay, FrameDelay;
 	int MixBuffer[MIXBUFFERSIZE * 2];
 	int DCOffsR, DCOffsL;
+
+	constexpr ModuleFile(uint8_t moduleType) noexcept;
 
 	// Effects functions
 	void applyGlobalVolumeSlide(uint8_t param);
