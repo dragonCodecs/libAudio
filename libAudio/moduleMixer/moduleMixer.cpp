@@ -1208,76 +1208,76 @@ bool ModuleFile::AdvanceTick()
 	const uint8_t nChannels = p_Instruments ? 128 : p_Header->nChannels;
 	for (uint8_t i = 0; i < nChannels; i++)
 	{
-		channel_t *channel = &Channels[i];
-		bool incNegative = channel->increment.iValue < 0;
+		auto &channel = Channels[i];
+		bool incNegative = channel.increment.iValue < 0;
 
-		channel->increment.iValue = 0U;
-		channel->volume = 0;
-		channel->panning = channel->RawPanning;
-		channel->RampLength = 0;
+		channel.increment.iValue = 0U;
+		channel.volume = 0;
+		channel.panning = channel.RawPanning;
+		channel.RampLength = 0;
 
-		if (channel->Period != 0 && channel->Length != 0)
+		if (channel.Period != 0 && channel.Length != 0)
 		{
-			uint16_t vol = channel->RawVolume;
-			if (channel->Flags & CHN_TREMOLO)
-				vol += channel->applyTremolo(*this, vol);
-			if (channel->Flags & CHN_TREMOR)
-				vol -= channel->applyTremor(*this, vol);
+			uint16_t vol = channel.RawVolume;
+			if (channel.Flags & CHN_TREMOLO)
+				vol += channel.applyTremolo(*this, vol);
+			if (channel.Flags & CHN_TREMOR)
+				vol -= channel.applyTremor(*this, vol);
 			/*clipInt<uint16_t>(vol, 0, 128);
 			//vol <<= 7;*/
 
-			if (channel->Instrument != nullptr)
+			if (channel.Instrument != nullptr)
 			{
-				ModuleInstrument *instr = channel->Instrument;
+				ModuleInstrument *instr = channel.Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
-				if ((channel->Flags & CHN_NOTEFADE) != 0U)
+				if ((channel.Flags & CHN_NOTEFADE) != 0U)
 				{
 					uint16_t FadeOut = instr->GetFadeOut();
 					if (FadeOut != 0)
 					{
-						if (channel->FadeOutVol < (FadeOut << 1U))
-							channel->FadeOutVol = 0;
+						if (channel.FadeOutVol < (FadeOut << 1U))
+							channel.FadeOutVol = 0;
 						else
-							channel->FadeOutVol -= FadeOut << 1U;
-						vol = (vol * channel->FadeOutVol) >> 16U;
+							channel.FadeOutVol -= FadeOut << 1U;
+						vol = (vol * channel.FadeOutVol) >> 16U;
 					}
-					else if (channel->FadeOutVol == 0U)
+					else if (channel.FadeOutVol == 0U)
 						vol = 0U;
 				}
 				if (env->GetEnabled() && env->HasNodes())
 				{
-					uint8_t volValue = env->Apply(channel->EnvVolumePos);
+					uint8_t volValue = env->Apply(channel.EnvVolumePos);
 					vol = muldiv_t<uint32_t>{}(vol, volValue, 1U << 6U);
 					clipInt<uint16_t>(vol, 0, 128);
-					channel->EnvVolumePos++;
+					channel.EnvVolumePos++;
 					if (env->GetLooped())
 					{
 						uint16_t endTick = env->GetLoopEnd();
-						if (channel->EnvVolumePos == ++endTick)
+						if (channel.EnvVolumePos == ++endTick)
 						{
-							channel->EnvVolumePos = env->GetLoopBegin();
-							if (env->IsZeroLoop() && env->Apply(channel->EnvVolumePos) == 0)
+							channel.EnvVolumePos = env->GetLoopBegin();
+							if (env->IsZeroLoop() && env->Apply(channel.EnvVolumePos) == 0)
 							{
-								channel->Flags |= CHN_NOTEFADE;
-								channel->FadeOutVol = 0;
+								channel.Flags |= CHN_NOTEFADE;
+								channel.FadeOutVol = 0;
 							}
 						}
 					}
-					if (env->GetSustained() && (channel->Flags & CHN_NOTEOFF) == 0)
+					if (env->GetSustained() && (channel.Flags & CHN_NOTEOFF) == 0)
 					{
 						uint16_t endTick = env->GetSustainEnd();
-						if (channel->EnvVolumePos == ++endTick)
-							channel->EnvVolumePos = env->GetSustainBegin();
+						if (channel.EnvVolumePos == ++endTick)
+							channel.EnvVolumePos = env->GetSustainBegin();
 					}
-					else if (env->IsAtEnd(channel->EnvVolumePos))
+					else if (env->IsAtEnd(channel.EnvVolumePos))
 					{
-						if (ModuleType == MODULE_IT || (channel->Flags & CHN_NOTEOFF) != 0)
-							channel->Flags |= CHN_NOTEFADE;
-						channel->EnvVolumePos = env->GetLastTick();
-						if (env->Apply(channel->EnvVolumePos) == 0)
+						if (ModuleType == MODULE_IT || (channel.Flags & CHN_NOTEOFF) != 0)
+							channel.Flags |= CHN_NOTEFADE;
+						channel.EnvVolumePos = env->GetLastTick();
+						if (env->Apply(channel.EnvVolumePos) == 0)
 						{
-							channel->Flags |= CHN_NOTEFADE;
-							channel->FadeOutVol = 0;
+							channel.Flags |= CHN_NOTEFADE;
+							channel.FadeOutVol = 0;
 							vol = 0;
 						}
 					}
@@ -1285,72 +1285,72 @@ bool ModuleFile::AdvanceTick()
 				env = instr->GetEnvelope(ENVELOPE_PANNING);
 				if (env->GetEnabled() && env->HasNodes())
 				{
-					uint16_t pan = channel->RawPanning;
-					int8_t panningValue = env->Apply(channel->EnvPanningPos) - 128;
+					uint16_t pan = channel.RawPanning;
+					int8_t panningValue = env->Apply(channel.EnvPanningPos) - 128;
 					clipInt<int8_t>(panningValue, -32, 32);
 					if (pan >= 128)
 						pan += (panningValue * (256 - pan)) / 32;
 					else
 						pan += (panningValue * pan) / 32;
 					clipInt<uint16_t>(pan, 0, 256);
-					channel->panning = pan;
-					channel->EnvPanningPos++;
+					channel.panning = pan;
+					channel.EnvPanningPos++;
 					if (env->GetLooped())
 					{
 						uint16_t endTick = env->GetLoopEnd();
-						if (channel->EnvPanningPos == ++endTick)
-							channel->EnvPanningPos = endTick;
+						if (channel.EnvPanningPos == ++endTick)
+							channel.EnvPanningPos = endTick;
 					}
-					if (env->GetSustained() && (channel->Flags & CHN_NOTEOFF) == 0)
+					if (env->GetSustained() && (channel.Flags & CHN_NOTEOFF) == 0)
 					{
 						uint16_t endTick = env->GetSustainEnd();
-						if (channel->EnvPanningPos == ++endTick)
-							channel->EnvPanningPos = env->GetSustainBegin();
+						if (channel.EnvPanningPos == ++endTick)
+							channel.EnvPanningPos = env->GetSustainBegin();
 					}
-					else if (env->IsAtEnd(channel->EnvPanningPos))
-						channel->EnvPanningPos = env->GetLastTick();
+					else if (env->IsAtEnd(channel.EnvPanningPos))
+						channel.EnvPanningPos = env->GetLastTick();
 				}
 			}
-			else if (channel->Flags & CHN_NOTEFADE)
+			else if (channel.Flags & CHN_NOTEFADE)
 			{
 				uint16_t fadeOut = 0;
-				if (channel->Instrument)
-					fadeOut = channel->Instrument->GetFadeOut();
+				if (channel.Instrument)
+					fadeOut = channel.Instrument->GetFadeOut();
 				if (fadeOut)
 				{
-					channel->FadeOutVol -= fadeOut << 1U;
-					if (channel->FadeOutVol & 0x8000U)
-						channel->FadeOutVol = 0;
-					vol = (vol * channel->FadeOutVol) >> 16U;
+					channel.FadeOutVol -= fadeOut << 1U;
+					if (channel.FadeOutVol & 0x8000U)
+						channel.FadeOutVol = 0;
+					vol = (vol * channel.FadeOutVol) >> 16U;
 				}
-				else if (!channel->FadeOutVol)
+				else if (!channel.FadeOutVol)
 					vol = 0;
 			}
 
-			vol = muldiv_t<uint32_t>{}(vol * GlobalVolume, channel->channelVolume * channel->sampleVolume, 1U << 19U);
+			vol = muldiv_t<uint32_t>{}(vol * GlobalVolume, channel.channelVolume * channel.sampleVolume, 1U << 19U);
 			clipInt<uint16_t>(vol, 0, 128);
-			channel->volume = vol;
-			clipInt(channel->Period, MinPeriod, MaxPeriod);
-			uint32_t period = channel->Period;
-			if ((channel->Flags & (CHN_GLISSANDO | CHN_PORTAMENTO)) == (CHN_GLISSANDO | CHN_PORTAMENTO))
-				period = GetPeriodFromNote(/*GetNoteFromPeriod(period)*/channel->Note, channel->FineTune, channel->C4Speed);
-			if ((channel->Flags & CHN_ARPEGGIO) != 0)
+			channel.volume = vol;
+			clipInt(channel.Period, MinPeriod, MaxPeriod);
+			uint32_t period = channel.Period;
+			if ((channel.Flags & (CHN_GLISSANDO | CHN_PORTAMENTO)) == (CHN_GLISSANDO | CHN_PORTAMENTO))
+				period = GetPeriodFromNote(/*GetNoteFromPeriod(period)*/channel.Note, channel.FineTune, channel.C4Speed);
+			if ((channel.Flags & CHN_ARPEGGIO) != 0)
 			{
 				uint8_t n = TickCount % 3;
 				if (n == 1)
-					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio >> 4U), channel->FineTune, channel->C4Speed);
+					period = GetPeriodFromNote(channel.Note + (channel.Arpeggio >> 4U), channel.FineTune, channel.C4Speed);
 				else if (n == 2)
-					period = GetPeriodFromNote(channel->Note + (channel->Arpeggio & 0x0FU), channel->FineTune, channel->C4Speed);
+					period = GetPeriodFromNote(channel.Note + (channel.Arpeggio & 0x0FU), channel.FineTune, channel.C4Speed);
 			}
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
 				clipInt<uint32_t>(period, 452, 3424);
-			if (channel->Instrument != nullptr)
+			if (channel.Instrument != nullptr)
 			{
-				ModuleInstrument *instr = channel->Instrument;
+				ModuleInstrument *instr = channel.Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_PITCH);
 				if (env->GetEnabled() && env->HasNodes())
 				{
-					int8_t pitchValue = env->Apply(channel->EnvPitchPos) - 128;
+					int8_t pitchValue = env->Apply(channel.EnvPitchPos) - 128;
 					clipInt<int8_t>(pitchValue, -32, 32);
 					/*if (pitchValue < 0)
 					{
@@ -1362,126 +1362,126 @@ bool ModuleFile::AdvanceTick()
 						uint16_t adjust = uint16_t(pitchValue) << 3;
 						period = LinearSlideDown(period, adjust);
 					}*/
-					channel->EnvPitchPos++;
+					channel.EnvPitchPos++;
 					if (env->GetLooped())
 					{
 						uint16_t endTick = env->GetLoopEnd();
-						if (channel->EnvPitchPos == ++endTick)
-							channel->EnvPitchPos = env->GetLoopBegin();
+						if (channel.EnvPitchPos == ++endTick)
+							channel.EnvPitchPos = env->GetLoopBegin();
 					}
-					if (env->GetSustained() && (channel->Flags & CHN_NOTEOFF) == 0)
+					if (env->GetSustained() && (channel.Flags & CHN_NOTEOFF) == 0)
 					{
 						uint16_t endTick = env->GetSustainEnd();
-						if (channel->EnvPitchPos == ++endTick)
-							channel->EnvPitchPos = env->GetSustainBegin();
+						if (channel.EnvPitchPos == ++endTick)
+							channel.EnvPitchPos = env->GetSustainBegin();
 					}
-					else if (env->IsAtEnd(channel->EnvPitchPos))
-						channel->EnvPitchPos = env->GetLastTick();
+					else if (env->IsAtEnd(channel.EnvPitchPos))
+						channel.EnvPitchPos = env->GetLastTick();
 				}
 			}
-			period += channel->applyVibrato(*this, period);
-			channel->applyPanbrello();
+			period += channel.applyVibrato(*this, period);
+			channel.applyPanbrello();
 			int8_t fractionalPeriod{0};
-			period += channel->applyAutoVibrato(*this, period, fractionalPeriod);
+			period += channel.applyAutoVibrato(*this, period, fractionalPeriod);
 			if (period <= MinPeriod || period & 0x80000000)
 			{
 				if (ModuleType == MODULE_S3M)
-					channel->Length = 0;
+					channel.Length = 0;
 				period = MinPeriod;
 			}
 			else if (period > MaxPeriod)
 			{
 				if (ModuleType == MODULE_IT || period >= 0x100000)
 				{
-					channel->FadeOutVol = 0;
-					channel->volume = 0;
-					channel->Flags |= CHN_NOTEFADE;
+					channel.FadeOutVol = 0;
+					channel.volume = 0;
+					channel.Flags |= CHN_NOTEFADE;
 				}
 				period = MaxPeriod;
 				fractionalPeriod = 0;
 			}
 			// Calculate the increment from the frequency from the period
-			const uint32_t freq = GetFreqFromPeriod(period, channel->C4Speed, fractionalPeriod);
+			const uint32_t freq = GetFreqFromPeriod(period, channel.C4Speed, fractionalPeriod);
 			// Silence impulse tracker notes that fall off the bottom of the reproduction spectrum
 			if (ModuleType == MODULE_IT && freq < 256)
 			{
-				channel->FadeOutVol = 0;
-				channel->volume = 0;
-				channel->Flags |= CHN_NOTEFADE;
+				channel.FadeOutVol = 0;
+				channel.volume = 0;
+				channel.Flags |= CHN_NOTEFADE;
 			}
 			int32_t inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
-			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
+			if (incNegative && (channel.Flags & CHN_LPINGPONG) != 0 && channel.Pos != 0)
 				inc = -inc;
-			channel->increment.iValue = inc & ~3U;
+			channel.increment.iValue = inc & ~3U;
 		}
-		if (channel->volume != 0 || channel->leftVol != 0 || channel->rightVol != 0)
-			channel->Flags |= CHN_VOLUMERAMP;
+		if (channel.volume != 0 || channel.leftVol != 0 || channel.rightVol != 0)
+			channel.Flags |= CHN_VOLUMERAMP;
 		else
-			channel->Flags &= ~CHN_VOLUMERAMP;
-		channel->NewLeftVol = channel->NewRightVol = 0;
-		if ((channel->increment.Value.Hi + 1) >= (int32_t)channel->LoopEnd)
-			channel->Flags &= ~CHN_LOOP;
-		channel->SampleData = ((channel->NewSampleData && channel->Length && channel->increment.iValue) ? channel->NewSampleData : nullptr);
-		if (channel->SampleData != nullptr)
+			channel.Flags &= ~CHN_VOLUMERAMP;
+		channel.NewLeftVol = channel.NewRightVol = 0;
+		if ((channel.increment.Value.Hi + 1) >= (int32_t)channel.LoopEnd)
+			channel.Flags &= ~CHN_LOOP;
+		channel.SampleData = ((channel.NewSampleData && channel.Length && channel.increment.iValue) ? channel.NewSampleData : nullptr);
+		if (channel.SampleData != nullptr)
 		{
-			if (MixChannels == 2 && (channel->Flags & CHN_SURROUND) == 0)
+			if (MixChannels == 2 && (channel.Flags & CHN_SURROUND) == 0)
 			{
-				channel->NewLeftVol = (channel->volume * channel->panning) >> 8U;
-				channel->NewRightVol = (channel->volume * (256U - channel->panning)) >> 8U;
+				channel.NewLeftVol = (channel.volume * channel.panning) >> 8U;
+				channel.NewRightVol = (channel.volume * (256U - channel.panning)) >> 8U;
 			}
 			else
-				channel->NewLeftVol = channel->NewRightVol = channel->volume;
+				channel.NewLeftVol = channel.NewRightVol = channel.volume;
 
-			channel->RightRamp = channel->LeftRamp = 0U;
+			channel.RightRamp = channel.LeftRamp = 0U;
 			// TODO: Process ping-pong flag (pos = -pos)
 			// Do we need to ramp the volume up or down?
-			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->leftVol != channel->NewLeftVol || channel->rightVol != channel->NewRightVol))
+			if ((channel.Flags & CHN_VOLUMERAMP) != 0 && (channel.leftVol != channel.NewLeftVol || channel.rightVol != channel.NewRightVol))
 			{
 				int32_t LeftDelta, RightDelta;
 				int32_t RampLength = 1;
 				// Calculate Volume deltas
-				LeftDelta = channel->NewLeftVol - channel->leftVol;
-				RightDelta = channel->NewRightVol - channel->rightVol;
+				LeftDelta = channel.NewLeftVol - channel.leftVol;
+				RightDelta = channel.NewRightVol - channel.rightVol;
 				// Check if we need to calculate the RampLength, and do so if need be
-				if ((channel->leftVol | channel->rightVol) != 0 && (channel->NewLeftVol | channel->NewRightVol) != 0 && (channel->Flags & CHN_FASTVOLRAMP) != 0)
+				if ((channel.leftVol | channel.rightVol) != 0 && (channel.NewLeftVol | channel.NewRightVol) != 0 && (channel.Flags & CHN_FASTVOLRAMP) != 0)
 				{
 					RampLength = SamplesToMix;
 					// Clipping:
 					clipInt(RampLength, 2, 256);
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
-				channel->LeftRamp = LeftDelta / RampLength;
-				channel->RightRamp = RightDelta / RampLength;
+				channel.LeftRamp = LeftDelta / RampLength;
+				channel.RightRamp = RightDelta / RampLength;
 				// Normalise the current volume so that the ramping won't under or over shoot
-				channel->leftVol = channel->NewLeftVol - (channel->LeftRamp * RampLength);
-				channel->rightVol = channel->NewRightVol - (channel->RightRamp * RampLength);
+				channel.leftVol = channel.NewLeftVol - (channel.LeftRamp * RampLength);
+				channel.rightVol = channel.NewRightVol - (channel.RightRamp * RampLength);
 				// If the ramp values aren't 0 (ramping already done?)
-				if ((channel->LeftRamp | channel->RightRamp) != 0U)
-					channel->RampLength = RampLength;
+				if ((channel.LeftRamp | channel.RightRamp) != 0U)
+					channel.RampLength = RampLength;
 				else
 				{
 					// Otherwise the ramping is done, so don't need to make the mixer functions do it for us
-					channel->Flags &= ~CHN_VOLUMERAMP;
-					channel->leftVol = channel->NewLeftVol;
-					channel->rightVol = channel->NewRightVol;
+					channel.Flags &= ~CHN_VOLUMERAMP;
+					channel.leftVol = channel.NewLeftVol;
+					channel.rightVol = channel.NewRightVol;
 				}
 			}
 			// No? ok, scratch the ramping.
 			else
 			{
-				channel->Flags &= ~CHN_VOLUMERAMP;
-				channel->leftVol = channel->NewLeftVol;
-				channel->rightVol = channel->NewRightVol;
+				channel.Flags &= ~CHN_VOLUMERAMP;
+				channel.leftVol = channel.NewLeftVol;
+				channel.rightVol = channel.NewRightVol;
 			}
 			// DEBUG: Uncomment to see the channel's main state information
 			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
-				channel->Flags, channel->LoopStart, channel->LoopEnd, channel->Length, channel->RawVolume, channel->RowNote, channel->RowSample,
-				channel->RowEffect, channel->RowParam, channel->Period, channel->portamentoTarget, channel->FineTune, channel->increment.Value.Hi,
-				channel->increment.Value.Lo, channel->Pos, channel->PosLo);*/
+				channel.Flags, channel.LoopStart, channel.LoopEnd, channel.Length, channel.RawVolume, channel.RowNote, channel.RowSample,
+				channel.RowEffect, channel.RowParam, channel.Period, channel.portamentoTarget, channel.FineTune, channel.increment.Value.Hi,
+				channel.increment.Value.Lo, channel.Pos, channel.PosLo);*/
 			MixerChannels[nMixerChannels++] = i;
 		}
 		else
-			channel->leftVol = channel->rightVol = channel->Length = 0;
+			channel.leftVol = channel.rightVol = channel.Length = 0;
 	}
 
 	return true;
