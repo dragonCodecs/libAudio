@@ -629,7 +629,7 @@ private:
 	uint16_t globalVolume;
 	uint8_t globalVolumeSlide;
 	uint8_t PatternDelay, FrameDelay;
-	int MixBuffer[MIXBUFFERSIZE * 2];
+	int32_t MixBuffer[MIXBUFFERSIZE * 2];
 	int DCOffsR, DCOffsL;
 
 	constexpr ModuleFile(uint8_t moduleType) noexcept;
