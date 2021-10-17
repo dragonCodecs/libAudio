@@ -21,7 +21,7 @@ const std::array<MixInterface, 64> MixFunctionTable
 	Mono8BitHQMix, Mono8BitHQRampMix, NULL, NULL,
 	// Filtering functions
 	FilterMono8BitMix, FilterMono8BitRampMix, FilterMono8BitLinearMix, FilterMono8BitLinearRampMix,
-	FilterMono8BitHQRampMix, FilterMono8BitLinearRampMix, NULL, NULL,
+	FilterMono8BitHQMix, FilterMono8BitHQRampMix, NULL, NULL,
 	// Stereo
 	// Non filtering functions
 	Stereo8BitMix, Stereo8BitRampMix, NULL, NULL,
@@ -35,7 +35,7 @@ const std::array<MixInterface, 64> MixFunctionTable
 	Mono16BitHQMix, Mono16BitHQRampMix, NULL, NULL,
 	// Filtering functions
 	FilterMono16BitMix, FilterMono16BitRampMix, FilterMono16BitLinearMix, FilterMono16BitLinearRampMix,
-	FilterMono16BitHQRampMix, FilterMono16BitLinearRampMix, NULL, NULL,
+	FilterMono16BitHQMix, FilterMono16BitHQRampMix, NULL, NULL,
 	// Stereo
 	// Non filtering functions
 	Stereo16BitMix, Stereo16BitRampMix, NULL, NULL,

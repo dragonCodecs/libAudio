@@ -117,150 +117,6 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 	}
 }
 
-// Begin / End loop
-// TODO: Figure out if anything here can be made unsigned by adjusting the maths any
-#define SNDMIX_BEGINSAMPLELOOP8 \
-	uint32_t Pos = chn->PosLo; \
-	const int32_t increment = chn->increment.iValue; \
-	const int8_t *p = ((int8_t *)chn->SampleData) + chn->Pos; \
-	if (chn->Sample->GetStereo()) \
-		p += chn->Pos; \
-	int32_t *vol = Buff; \
-	do \
-	{
-
-#define SNDMIX_BEGINSAMPLELOOP16 \
-	uint32_t Pos = chn->PosLo; \
-	const int32_t increment = chn->increment.iValue; \
-	const int16_t *p = ((int16_t *)chn->SampleData) + chn->Pos; \
-	if (chn->Sample->GetStereo()) \
-		p += chn->Pos; \
-	int32_t *vol = Buff; \
-	do \
-	{
-
-#define SNDMIX_ENDSAMPLELOOP \
-		Pos += increment; \
-	} \
-	while (vol < BuffMax); \
-	chn->Pos += Pos >> 16; \
-	chn->PosLo = Pos & 0xFFFF;
-
-// Begin / End Mono Filter
-#define MIX_BEGIN_FILTER \
-	int fy1 = chn->Filter_Y1; \
-	int fy2 = chn->Filter_Y2;
-
-#define MIX_END_FILTER \
-	chn->Filter_Y1 = fy1; \
-	chn->Filter_Y2 = fy2;
-
-#define SNDMIX_PROCESSFILTER \
-	int fy = (pcm * chn->Filter_A0 + fy1 * chn->Filter_B0 + fy2 * chn->Filter_B1 + 4096) >> 13; \
-	fy2 = fy1; \
-	fy1 = fy - (pcm & chn->Filter_HP); \
-	pcm = fy;
-
-// Begin / End interface
-#define BEGIN_MIX_INTERFACE(func) \
-	void func(Channel *chn, int *Buff, int *BuffMax) \
-	{
-
-#define END_MIX_INTERFACE() \
-		SNDMIX_ENDSAMPLELOOP \
-	}
-
-#define BEGIN_RAMPMIX_INTERFACE(func) \
-	BEGIN_MIX_INTERFACE(func) \
-		uint32_t RampRightVol = chn->RightVol; \
-		uint32_t RampLeftVol = chn->LeftVol;
-
-#define END_RAMPMIX_INTERFACE() \
-		SNDMIX_ENDSAMPLELOOP \
-		chn->RightVol = RampRightVol; \
-		chn->LeftVol = RampLeftVol; \
-	}
-
-#define BEGIN_MIX_FLT_INTERFACE(func) \
-	BEGIN_MIX_INTERFACE(func) \
-		MIX_BEGIN_FILTER
-
-#define END_MIX_FLT_INTERFACE() \
-		SNDMIX_ENDSAMPLELOOP \
-		MIX_END_FILTER \
-	}
-
-#define BEGIN_RAMPMIX_FLT_INTERFACE(func) \
-	BEGIN_RAMPMIX_INTERFACE(func) \
-		MIX_BEGIN_FILTER
-
-#define END_RAMPMIX_FLT_INTERFACE() \
-		SNDMIX_ENDSAMPLELOOP \
-		MIX_END_FILTER \
-		chn->RightVol = RampRightVol; \
-		chn->LeftVol = RampLeftVol; \
-	}
-
-// Mono
-#define SNDMIX_GETMONOVOLNOIDO \
-	auto pcm = p[Pos >> 16U]
-
-#define SNDMIX_GETMONOVOLNOIDO8 \
-	SNDMIX_GETMONOVOLNOIDO << 8U;
-
-#define SNDMIX_GETMONOVOLNOIDO16 \
-	SNDMIX_GETMONOVOLNOIDO;
-
-#define SNDMIX_GETMONOVOLLINEAR \
-	int posHi = Pos >> 16U; \
-	int posLo = (Pos >> 8U) & 0xFFU; \
-	int SrcVol = p[posHi]; \
-	int DestVol = p[posHi + 1];
-
-#define SNDMIX_GETMONOVOLLINEAR8 \
-	SNDMIX_GETMONOVOLLINEAR \
-	auto pcm = (SrcVol << 7U) + (posLo * (DestVol - SrcVol));
-
-#define SNDMIX_GETMONOVOLLINEAR16 \
-	SNDMIX_GETMONOVOLLINEAR \
-	auto pcm = SrcVol + ((posLo * (DestVol - SrcVol)) >> 9U);
-
-#define SNDMIX_GETMONOVOLHQSRC \
-	int posHi = Pos >> 16U; \
-	int posLo = (Pos >> 6U) & 0x03FCU; \
-	int pcm = (FastSinc[posLo] * p[posHi - 1] + FastSinc[posLo + 1] * p[posHi] + \
-		FastSinc[posLo + 2] * p[posHi + 1] + FastSinc[posLo + 3] * p[posHi + 2])
-
-#define SNDMIX_GETMONOVOLHQSRC8 \
-	SNDMIX_GETMONOVOLHQSRC >> 7U;
-
-#define SNDMIX_GETMONOVOLHQSRC16 \
-	SNDMIX_GETMONOVOLHQSRC >> 15U;
-
-// Volume
-#define SNDMIX_STOREMONOVOL \
-	vol[0] += pcm * (chn->RightVol << 4U); \
-	vol[1] += pcm * (chn->LeftVol << 4U); \
-	vol += 2;
-
-#define SNDMIX_RAMPMONOVOL \
-	RampLeftVol += chn->LeftRamp; \
-	RampRightVol += chn->RightRamp; \
-	vol[0] += pcm * (RampRightVol << 4U); \
-	vol[1] += pcm * (RampLeftVol << 4U); \
-	vol += 2;
-
-// Stereo
-#define SNDMIX_GETSTEREOVOLNOIDO(shift) \
-	auto pcmL = p[((Pos >> 16U) << 1U) + 0] shift; \
-	auto pcmR = p[((Pos >> 16U) << 1U) + 1] shift;
-
-#define SNDMIX_GETSTEREOVOLNOIDO8 \
-	SNDMIX_GETSTEREOVOLNOIDO(<< 8U)
-
-#define SNDMIX_GETSTEREOVOLNOIDO16 \
-	SNDMIX_GETSTEREOVOLNOIDO()
-
 using samplePair_t = std::pair<int16_t, int16_t>;
 template<typename T> using sampleFn_t = samplePair_t(const T *const, const uint32_t);
 using storeFn_t = void(const Channel &, int32_t *const , const int16_t, const int16_t,
@@ -396,6 +252,45 @@ template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, co
 	channel.RightVol = rightVol;
 }
 
+template<typename T> inline void sampleFilterLoop(Channel &channel, int32_t *begin, const int32_t *const end,
+	const sampleFn_t<T> sample, const storeFn_t store) noexcept
+{
+	auto position{channel.PosLo};
+	const auto increment{channel.increment.iValue};
+	const auto *sampleData = reinterpret_cast<T *>(channel.SampleData) + channel.Pos;
+	if (channel.Sample->GetStereo())
+		sampleData += channel.Pos;
+	uint32_t leftVol{channel.LeftVol};
+	uint32_t rightVol{channel.RightVol};
+	auto fltY1{channel.Filter_Y1};
+	auto fltY2{channel.Filter_Y2};
+	do
+	{
+		auto samples{sample(sampleData, position)};
+
+		// TODO: Figure out how this is actually supposed to work and fix it up as this is terrible.
+		auto fltY
+		{
+			(samples.first * channel.Filter_A0 + fltY1 * channel.Filter_B0 + fltY2 * channel.Filter_B1 + 4096) >> 13U
+		};
+
+		fltY2 = fltY1;
+		fltY1 = fltY - (samples.first & channel.Filter_HP);
+		samples = {fltY, fltY};
+
+		store(channel, begin, samples.first, samples.second, leftVol, rightVol);
+		begin += 2U;
+		position += increment;
+	}
+	while (begin < end);
+	channel.Pos += position >> 16U;
+	channel.PosLo = position & 0xFFFFU;
+	channel.LeftVol = leftVol;
+	channel.RightVol = rightVol;
+	channel.Filter_Y1 = fltY1;
+	channel.Filter_Y2 = fltY2;
+}
+
 // Interfaces
 // Mono 8-bit
 static void Mono8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
@@ -431,90 +326,36 @@ static void Mono16BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
 
 // Filter Interfaces
 // Mono 8-bit
-BEGIN_MIX_FLT_INTERFACE(FilterMono8BitMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLNOIDO8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
+static void FilterMono8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
+static void FilterMono8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLNOIDO8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
+static void FilterMono8BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
+static void FilterMono8BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-BEGIN_MIX_FLT_INTERFACE(FilterMono8BitLinearMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLLINEAR8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitLinearRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLLINEAR8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
-
-BEGIN_MIX_FLT_INTERFACE(FilterMono8BitHQMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLHQSRC8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono8BitHQRampMix)
-	SNDMIX_BEGINSAMPLELOOP8
-	SNDMIX_GETMONOVOLHQSRC8
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
+static void FilterMono8BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
+static void FilterMono8BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Mono 16-bit
-BEGIN_MIX_FLT_INTERFACE(FilterMono16BitMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLNOIDO16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
+static void FilterMono16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
+static void FilterMono16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLNOIDO16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
+static void FilterMono16BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
+static void FilterMono16BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-BEGIN_MIX_FLT_INTERFACE(FilterMono16BitLinearMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLLINEAR16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitLinearRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLLINEAR16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
-
-BEGIN_MIX_FLT_INTERFACE(FilterMono16BitHQMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLHQSRC16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_STOREMONOVOL
-END_MIX_FLT_INTERFACE()
-
-BEGIN_RAMPMIX_FLT_INTERFACE(FilterMono16BitHQRampMix)
-	SNDMIX_BEGINSAMPLELOOP16
-	SNDMIX_GETMONOVOLHQSRC16
-	SNDMIX_PROCESSFILTER
-	SNDMIX_RAMPMONOVOL
-END_RAMPMIX_FLT_INTERFACE()
+static void FilterMono16BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
+static void FilterMono16BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Stereo 8-bit
 static void Stereo8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
