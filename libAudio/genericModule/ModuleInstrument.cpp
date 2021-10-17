@@ -15,7 +15,7 @@ std::pair<uint8_t, uint8_t> ModuleInstrument::mapNote(const uint8_t note) noexce
 		return {note, 0};
 	else if (!note || note > 120)
 		return {250, 0}; // If we get an out of range value, return an invalid note.
-	const uint8_t entry = (note - 1) << 1;
+	const uint8_t entry = (note - 1) << 1U;
 	uint8_t mappedNote = SampleMapping[entry];
 	const uint8_t mappedSample = SampleMapping[entry + 1];
 	if (mappedNote >= 128 && mappedNote < 254)
@@ -74,9 +74,9 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 
 uint16_t ModuleOldInstrument::GetFadeOut() const noexcept { return FadeOut; }
 bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const noexcept
-	{ return !env ? (Flags & 0x01) : false; }
+	{ return !env ? (Flags & 0x01U) : false; }
 bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const noexcept
-	{ return !env ? (Flags & 0x02) : false; }
+	{ return !env ? (Flags & 0x02U) : false; }
 bool ModuleOldInstrument::GetEnvCarried(uint8_t env) const noexcept
 	{ return !env ? Envelope->GetCarried() : false; }
 ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const noexcept
@@ -131,9 +131,9 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	if (Const || NNA > 3 || DCT > 3 || DNA > 2 || Volume > 128)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	FadeOut <<= 6;
-	Volume >>= 1;
-	for (uint8_t env = 0; env < Envelopes.size(); ++env)
+	FadeOut <<= 6U;
+	Volume >>= 1U; // XXX: This seems like a bug..
+	for (size_t env = 0; env < Envelopes.size(); ++env)
 		Envelopes[env] = makeUnique<ModuleEnvelope>(file, env);
 }
 
@@ -146,10 +146,10 @@ bool ModuleNewInstrument::GetEnvCarried(uint8_t env) const noexcept
 	{ return Envelopes[env]->GetCarried(); }
 ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept
 	{ return env < Envelopes.size() ? Envelopes[env].get() : nullptr; }
-bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128); }
+bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128U); }
 bool ModuleNewInstrument::HasVolume() const noexcept { return true; }
-uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7F) << 1; }
-uint8_t ModuleNewInstrument::GetVolume() const noexcept { return Volume & 0x7F; }
+uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7FU) << 1U; }
+uint8_t ModuleNewInstrument::GetVolume() const noexcept { return Volume & 0x7FU; }
 uint8_t ModuleNewInstrument::GetNNA() const noexcept { return NNA; }
 uint8_t ModuleNewInstrument::GetDCT() const noexcept { return DCT; }
 uint8_t ModuleNewInstrument::GetDNA() const noexcept { return DNA; }
@@ -176,7 +176,7 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 	{
 		// This requires signed/unsigned conversion
 		for (uint8_t i = 0; i < nNodes; i++)
-			Nodes[i].Value ^= 0x80;
+			Nodes[i].Value ^= 0x80U;
 	}
 }
 
@@ -186,9 +186,10 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8
 
 uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 {
-	uint8_t pt, ret = 0;
+	uint8_t pt = 0;
+	uint8_t ret = 0;
 	uint16_t n1 = 0;
-	for (pt = 0; pt < (nNodes - 1); ++pt)
+	for (; pt < (nNodes - 1); ++pt)
 	{
 		if (currentTick <= Nodes[pt].Tick)
 			break;
@@ -203,7 +204,7 @@ uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 	uint16_t n2 = Nodes[pt].Tick;
 	if (n2 > n1 && currentTick > n1)
 	{
-		int16_t val = currentTick - n1;
+		int32_t val = currentTick - n1;
 		val *= int16_t(Nodes[pt].Value) - ret;
 		n2 -= n1;
 		return ret + (val / n2);
