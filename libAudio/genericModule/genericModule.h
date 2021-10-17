@@ -592,6 +592,7 @@ public:
 	int16_t applyTremolo(const ModuleFile &module, uint16_t volume) noexcept;
 	uint16_t applyTremor(const ModuleFile &module, uint16_t volume) noexcept;
 	uint16_t applyNoteFade(uint16_t volume) noexcept;
+	uint16_t applyVolumeEnvelope(const ModuleFile &module, uint16_t volume, ModuleEnvelope &envelope) noexcept;
 	int16_t applyVibrato(const ModuleFile &module, uint32_t period) noexcept;
 	int16_t applyAutoVibrato(const ModuleFile &module, uint32_t period, int8_t &fractionalPeriod) noexcept;
 	void applyPanbrello() noexcept;

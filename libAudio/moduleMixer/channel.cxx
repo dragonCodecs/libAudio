@@ -59,6 +59,47 @@ uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
 	return volume;
 }
 
+uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t volume,
+	ModuleEnvelope &envelope) noexcept
+{
+	uint8_t volValue{envelope.Apply(EnvVolumePos)};
+	auto result{uint16_t(muldiv_t<uint32_t>{}(volume, volValue, 1U << 6U))};
+	clipInt<uint16_t>(result, 0, 128);
+	++EnvVolumePos;
+	if (envelope.GetLooped())
+	{
+		uint16_t endTick = envelope.GetLoopEnd();
+		if (EnvVolumePos == ++endTick)
+		{
+			EnvVolumePos = envelope.GetLoopBegin();
+			if (envelope.IsZeroLoop() && envelope.Apply(EnvVolumePos) == 0)
+			{
+				Flags |= CHN_NOTEFADE;
+				FadeOutVol = 0;
+			}
+		}
+	}
+	if (envelope.GetSustained() && !(Flags & CHN_NOTEOFF))
+	{
+		uint16_t endTick = envelope.GetSustainEnd();
+		if (EnvVolumePos == ++endTick)
+			EnvVolumePos = envelope.GetSustainBegin();
+	}
+	else if (envelope.IsAtEnd(EnvVolumePos))
+	{
+		if (module.typeIs<MODULE_IT>() || (Flags & CHN_NOTEOFF))
+			Flags |= CHN_NOTEFADE;
+		EnvVolumePos = envelope.GetLastTick();
+		if (envelope.Apply(EnvVolumePos) == 0)
+		{
+			Flags |= CHN_NOTEFADE;
+			FadeOutVol = 0;
+			return 0;
+		}
+	}
+	return result;
+}
+
 int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)

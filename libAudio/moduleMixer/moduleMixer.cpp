@@ -1229,48 +1229,15 @@ bool ModuleFile::AdvanceTick()
 			if (channel.Instrument != nullptr)
 			{
 				ModuleInstrument *instr = channel.Instrument;
-				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
 				if ((channel.Flags & CHN_NOTEFADE) != 0U)
 					vol = channel.applyNoteFade(vol);
-				if (env->GetEnabled() && env->HasNodes())
+				[&](ModuleEnvelope &env) noexcept
 				{
-					uint8_t volValue = env->Apply(channel.EnvVolumePos);
-					vol = muldiv_t<uint32_t>{}(vol, volValue, 1U << 6U);
-					clipInt<uint16_t>(vol, 0, 128);
-					channel.EnvVolumePos++;
-					if (env->GetLooped())
-					{
-						uint16_t endTick = env->GetLoopEnd();
-						if (channel.EnvVolumePos == ++endTick)
-						{
-							channel.EnvVolumePos = env->GetLoopBegin();
-							if (env->IsZeroLoop() && env->Apply(channel.EnvVolumePos) == 0)
-							{
-								channel.Flags |= CHN_NOTEFADE;
-								channel.FadeOutVol = 0;
-							}
-						}
-					}
-					if (env->GetSustained() && (channel.Flags & CHN_NOTEOFF) == 0)
-					{
-						uint16_t endTick = env->GetSustainEnd();
-						if (channel.EnvVolumePos == ++endTick)
-							channel.EnvVolumePos = env->GetSustainBegin();
-					}
-					else if (env->IsAtEnd(channel.EnvVolumePos))
-					{
-						if (ModuleType == MODULE_IT || (channel.Flags & CHN_NOTEOFF) != 0)
-							channel.Flags |= CHN_NOTEFADE;
-						channel.EnvVolumePos = env->GetLastTick();
-						if (env->Apply(channel.EnvVolumePos) == 0)
-						{
-							channel.Flags |= CHN_NOTEFADE;
-							channel.FadeOutVol = 0;
-							vol = 0;
-						}
-					}
-				}
-				env = instr->GetEnvelope(ENVELOPE_PANNING);
+					if (env.GetEnabled() && env.HasNodes())
+						vol = channel.applyVolumeEnvelope(*this, vol, env);
+				}(*instr->GetEnvelope(ENVELOPE_VOLUME));
+
+				auto *env = instr->GetEnvelope(ENVELOPE_PANNING);
 				if (env->GetEnabled() && env->HasNodes())
 				{
 					uint16_t pan = channel.RawPanning;
