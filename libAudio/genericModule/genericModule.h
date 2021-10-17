@@ -522,8 +522,8 @@ public:
 	uint32_t LoopStart, LoopEnd, Length;
 	uint8_t RawVolume, volume, _sampleVolumeSlide, _fineSampleVolumeSlide;
 	uint8_t channelVolume, _channelVolumeSlide, sampleVolume;
-	uint16_t AutoVibratoDepth;
-	uint8_t AutoVibratoPos;
+	uint16_t autoVibratoDepth;
+	uint8_t autoVibratoPos;
 	ModuleSample *Sample;
 	ModuleInstrument *Instrument;
 	uint8_t FineTune, _panningSlide;

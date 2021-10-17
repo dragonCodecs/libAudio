@@ -93,17 +93,17 @@ int16_t channel_t::applyAutoVibrato(const ModuleFile &module, const uint32_t per
 	{
 		ModuleSample &sample = *Sample;
 		if (!sample.GetVibratoRate())
-			AutoVibratoDepth = sample.GetVibratoDepth() << 8U;
+			autoVibratoDepth = sample.GetVibratoDepth() << 8U;
 		else
 		{
 			if (module.ModuleType == MODULE_IT)
-				AutoVibratoDepth += sample.GetVibratoRate();
+				autoVibratoDepth += sample.GetVibratoRate();
 			else if (!(Flags & CHN_NOTEOFF))
-				AutoVibratoDepth += (sample.GetVibratoDepth() << 8U) / (sample.GetVibratoRate() >> 3U);
-			if ((AutoVibratoDepth >> 8U) > vibratoDepth)
-				AutoVibratoDepth = vibratoDepth << 8U;
+				autoVibratoDepth += (sample.GetVibratoDepth() << 8U) / (sample.GetVibratoRate() >> 3U);
+			if ((autoVibratoDepth >> 8U) > vibratoDepth)
+				autoVibratoDepth = vibratoDepth << 8U;
 		}
-		AutoVibratoPos += sample.GetVibratoSpeed();
+		autoVibratoPos += sample.GetVibratoSpeed();
 		const auto delta{[](const uint8_t type, uint8_t &position) noexcept -> int8_t
 		{
 			if (type == 1) // Square
@@ -120,8 +120,8 @@ int16_t channel_t::applyAutoVibrato(const ModuleFile &module, const uint32_t per
 			}
 			else
 				return FT2VibratoTable[position];
-		}(sample.GetVibratoType(), AutoVibratoPos)};
-		int16_t vibrato = (delta * AutoVibratoDepth) >> 8U;
+		}(sample.GetVibratoType(), autoVibratoPos)};
+		int16_t vibrato = (delta * autoVibratoDepth) >> 8U;
 		if (module.ModuleType == MODULE_IT)
 		{
 			uint32_t a{0}, b{0};

@@ -74,7 +74,7 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 channel_t::channel_t() noexcept : SampleData{nullptr}, NewSampleData{nullptr}, Note{}, RampLength{},
 	NewNote{}, NewSample{}, LoopStart{}, LoopEnd{}, Length{}, RawVolume{}, volume{},
 	_sampleVolumeSlide{}, _fineSampleVolumeSlide{}, channelVolume{64}, sampleVolume{},
-	AutoVibratoDepth{}, AutoVibratoPos{}, Sample{nullptr}, Instrument{nullptr}, FineTune{},
+	autoVibratoDepth{}, autoVibratoPos{}, Sample{nullptr}, Instrument{nullptr}, FineTune{},
 	_panningSlide{}, RawPanning{}, panning{}, RowNote{}, RowSample{}, RowVolEffect{}, Flags{},
 	Period{}, C4Speed{}, Pos{}, PosLo{}, StartTick{}, increment{}, portamentoTarget{},
 	portamento{}, portamentoSlide{}, Arpeggio{}, extendedCommand{}, tremor{}, tremorCount{},
@@ -166,7 +166,7 @@ void ModuleFile::ReloadSample(channel_t &channel)
 		channel.LoopEnd = channel.Length;
 	if (channel.Length > channel.LoopEnd)
 		channel.Length = channel.LoopEnd;
-	channel.AutoVibratoPos = 0;
+	channel.autoVibratoPos = 0;
 }
 
 void ModuleFile::SampleChange(channel_t &channel, const uint32_t sampleIndex, const bool doPortamento)
@@ -233,14 +233,14 @@ void ModuleFile::SampleChange(channel_t &channel, const uint32_t sampleIndex, co
 			channel.EnvPanningPos = 0;
 			channel.EnvPitchPos = 0;
 		}
-		channel.AutoVibratoDepth = 0;
-		channel.AutoVibratoPos = 0;
+		channel.autoVibratoDepth = 0;
+		channel.autoVibratoPos = 0;
 	}
 	else if (instr && !instr->GetEnvEnabled(ENVELOPE_VOLUME))
 	{
 		channel.EnvVolumePos = 0;
-		channel.AutoVibratoDepth = 0;
-		channel.AutoVibratoPos = 0;
+		channel.autoVibratoDepth = 0;
+		channel.autoVibratoPos = 0;
 	}
 	if (!sample)
 	{
@@ -429,8 +429,8 @@ void channel_t::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 			EnvVolumePos = 0;
 			EnvPanningPos = 0;
 			EnvPitchPos = 0;
-			AutoVibratoDepth = 0;
-			AutoVibratoPos = 0;
+			autoVibratoDepth = 0;
+			autoVibratoPos = 0;
 			Flags &= ~CHN_NOTEFADE;
 			FadeOutVol = 0xFFFFU;
 		}
