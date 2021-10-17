@@ -9,16 +9,16 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 	int16_t result{};
 	if (volume)
 	{
-		uint8_t _tremoloType = tremoloType & 0x03U;
-		uint8_t _tremoloDepth = tremoloDepth << 4U;
-		if (_tremoloType == 1)
-			result = (RampDownTable[tremoloPos] * _tremoloDepth) >> 8U;
-		else if (_tremoloType == 2)
-			result = (SquareTable[tremoloPos] * _tremoloDepth) >> 8U;
-		else if (_tremoloType == 3)
-			result = (RandomTable[tremoloPos] * _tremoloDepth) >> 8U;
+		uint8_t type = tremoloType & 0x03U;
+		uint8_t depth = tremoloDepth << 4U;
+		if (type == 1)
+			result = (RampDownTable[tremoloPos] * depth) >> 8U;
+		else if (type == 2)
+			result = (SquareTable[tremoloPos] * depth) >> 8U;
+		else if (type == 3)
+			result = (RandomTable[tremoloPos] * depth) >> 8U;
 		else
-			result = (SinusTable[tremoloPos] * _tremoloDepth) >> 8U;
+			result = (SinusTable[tremoloPos] * depth) >> 8U;
 	}
 	if (module.ticks() > StartTick)
 		tremoloPos = uint32_t(tremoloPos + tremoloSpeed) & 0x3FU;
