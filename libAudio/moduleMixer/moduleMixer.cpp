@@ -1218,7 +1218,6 @@ bool ModuleFile::AdvanceTick()
 
 		if (channel->Period != 0 && channel->Length != 0)
 		{
-			int32_t inc;
 			uint16_t vol = channel->RawVolume;
 			if (channel->Flags & CHN_TREMOLO)
 				vol += channel->applyTremolo(*this, vol);
@@ -1423,7 +1422,7 @@ bool ModuleFile::AdvanceTick()
 				channel->volume = 0;
 				channel->Flags |= CHN_NOTEFADE;
 			}
-			inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
+			int32_t inc = muldiv_t<uint32_t>{}(freq, 0x10000U, MixSampleRate) + 1;
 			if (incNegative && (channel->Flags & CHN_LPINGPONG) != 0 && channel->Pos != 0)
 				inc = -inc;
 			channel->increment.iValue = inc & ~3U;
