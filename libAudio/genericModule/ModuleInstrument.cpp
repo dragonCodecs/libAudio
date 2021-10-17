@@ -210,17 +210,3 @@ uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 	}
 	return ret;
 }
-
-bool ModuleEnvelope::GetEnabled() const noexcept { return Flags & 0x01U; }
-bool ModuleEnvelope::GetLooped() const noexcept { return Flags & 0x02U; }
-bool ModuleEnvelope::GetSustained() const noexcept { return Flags & 0x04U; }
-bool ModuleEnvelope::GetCarried() const noexcept { return Flags & 0x08U; }
-bool ModuleEnvelope::HasNodes() const noexcept { return nNodes; }
-bool ModuleEnvelope::IsAtEnd(const uint16_t currentTick) const noexcept
-	{ return currentTick > GetLastTick(); }
-bool ModuleEnvelope::IsZeroLoop() const noexcept { return LoopEnd == LoopBegin; }
-uint16_t ModuleEnvelope::GetLoopEnd() const noexcept { return Nodes[LoopEnd].Tick; }
-uint16_t ModuleEnvelope::GetLoopBegin() const noexcept { return Nodes[LoopBegin].Tick; }
-uint16_t ModuleEnvelope::GetSustainEnd() const noexcept { return Nodes[SusLoopBegin].Tick; }
-uint16_t ModuleEnvelope::GetSustainBegin() const noexcept { return Nodes[SusLoopBegin].Tick; }
-uint16_t ModuleEnvelope::GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }

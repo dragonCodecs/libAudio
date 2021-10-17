@@ -332,18 +332,19 @@ public:
 	ModuleEnvelope(const modIT_t &file, const uint8_t Flags, const uint8_t LoopBegin,
 		const uint8_t LoopEnd, const uint8_t SusLoopBegin, const uint8_t SusLoopEnd) noexcept;
 	uint8_t Apply(const uint16_t Tick) noexcept;
-	bool GetEnabled() const noexcept;
-	bool GetLooped() const noexcept;
-	bool GetSustained() const noexcept;
-	bool GetCarried() const noexcept;
-	bool HasNodes() const noexcept;
-	bool IsAtEnd(const uint16_t Tick) const noexcept;
-	bool IsZeroLoop() const noexcept;
-	uint16_t GetLoopEnd() const noexcept;
-	uint16_t GetLoopBegin() const noexcept;
-	uint16_t GetSustainEnd() const noexcept;
-	uint16_t GetSustainBegin() const noexcept;
-	uint16_t GetLastTick() const noexcept;
+	bool GetEnabled() const noexcept { return Flags & 0x01U; }
+	bool GetLooped() const noexcept { return Flags & 0x02U; }
+	bool GetSustained() const noexcept { return Flags & 0x04U; }
+	bool GetCarried() const noexcept { return Flags & 0x08U; }
+	bool IsFilter() const noexcept { return Flags & 0x80U; }
+	bool HasNodes() const noexcept { return nNodes; }
+	bool IsAtEnd(const uint16_t currentTick) const noexcept { return currentTick > GetLastTick(); }
+	bool IsZeroLoop() const noexcept { return LoopEnd == LoopBegin; }
+	uint16_t GetLoopBegin() const noexcept { return Nodes[LoopBegin].Tick; }
+	uint16_t GetLoopEnd() const noexcept { return Nodes[LoopEnd].Tick; }
+	uint16_t GetSustainBegin() const noexcept { return Nodes[SusLoopBegin].Tick; }
+	uint16_t GetSustainEnd() const noexcept { return Nodes[SusLoopBegin].Tick; }
+	uint16_t GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }
 };
 
 class ModuleInstrument : public ModuleAllocator
