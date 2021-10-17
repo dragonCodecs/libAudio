@@ -80,7 +80,7 @@ channel_t::channel_t() noexcept : SampleData{nullptr}, NewSampleData{nullptr}, N
 	portamento{}, portamentoSlide{}, Arpeggio{}, extendedCommand{}, Tremor{}, TremorCount{},
 	leftVol{}, rightVol{}, NewLeftVol{}, NewRightVol{}, LeftRamp{}, RightRamp{}, patternLoopCount{},
 	patternLoopStart{}, Filter_Y1{}, Filter_Y2{}, Filter_Y3{}, Filter_Y4{}, Filter_A0{},
-	Filter_B0{}, Filter_B1{}, Filter_HP{}, TremoloDepth{}, TremoloSpeed{}, TremoloPos{}, TremoloType{},
+	Filter_B0{}, Filter_B1{}, Filter_HP{}, tremoloDepth{}, tremoloSpeed{}, tremoloPos{}, tremoloType{},
 	vibratoDepth{}, vibratoSpeed{}, vibratoPosition{}, vibratoType{}, panbrelloDepth{}, panbrelloSpeed{},
 	panbrelloPosition{}, panbrelloType{}, EnvVolumePos{}, EnvPanningPos{}, EnvPitchPos{}, FadeOutVol{},
 	DCOffsL{}, DCOffsR{} { }
@@ -413,9 +413,9 @@ void channel_t::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 			PosLo = 0;
 			if (vibratoType < 4)
 				vibratoPosition = module.typeIs<MODULE_IT>() && module.useOldEffects() ? 0x10 : 0;
-			//if ((channel->TremoloType & 0x03) != 0)
-			if (TremoloType < 4)
-				TremoloPos = 0;
+			//if ((channel->tremoloType & 0x03) != 0)
+			if (tremoloType < 4)
+				tremoloPos = 0;
 		}
 		if (Pos > Length)
 			Pos = LoopStart;
@@ -663,7 +663,7 @@ void ModuleFile::ProcessMODExtended(channel_t *channel)
 				channel->Period = GetPeriodFromNote(channel->Note, channel->FineTune, channel->C4Speed);
 			break;
 		case CMD_MODEX_TREMOLOWAVE:
-			channel->TremoloType = param & 0x07U;
+			channel->tremoloType = param & 0x07U;
 			break;
 		case CMD_MODEX_RETRIGER:
 			if (param != 0 && (TickCount % param) == 0)
@@ -750,9 +750,9 @@ void ModuleFile::ProcessS3MExtended(channel_t *channel)
 			break;
 		case CMD_S3MEX_TREMOLOWAVE:
 			if (ModuleType == MODULE_S3M)
-				channel->TremoloType = param & 0x03U;
+				channel->tremoloType = param & 0x03U;
 			else
-				channel->TremoloType = param & 0x07U;
+				channel->tremoloType = param & 0x07U;
 			break;
 		case CMD_S3MEX_PANWAVE:
 			channel->panbrelloType = param & 0x07U;
@@ -982,9 +982,9 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &brea
 			break;
 		case CMD_TREMOLO:
 			if (param & 0x0FU)
-				channel.TremoloDepth = param & 0x0FU;
+				channel.tremoloDepth = param & 0x0FU;
 			if (param & 0xF0U)
-				channel.TremoloSpeed = param >> 4U;
+				channel.tremoloSpeed = param >> 4U;
 			channel.Flags |= CHN_TREMOLO;
 			break;
 		case CMD_OFFSET:
@@ -1220,25 +1220,8 @@ bool ModuleFile::AdvanceTick()
 		{
 			int32_t inc;
 			uint16_t vol = channel->RawVolume;
-			if ((channel->Flags & CHN_TREMOLO) != 0)
-			{
-				uint8_t TremoloPos = channel->TremoloPos;
-				if (vol > 0)
-				{
-					uint8_t TremoloType = channel->TremoloType & 0x03U;
-					uint8_t TremoloDepth = channel->TremoloDepth << 4U;
-					if (TremoloType == 1)
-						vol += (RampDownTable[TremoloPos] * TremoloDepth) >> 8U;
-					else if (TremoloType == 2)
-						vol += (SquareTable[TremoloPos] * TremoloDepth) >> 8U;
-					else if (TremoloType == 3)
-						vol += (RandomTable[TremoloPos] * TremoloDepth) >> 8U;
-					else
-						vol += (SinusTable[TremoloPos] * TremoloDepth) >> 8U;
-				}
-				if (TickCount > channel->StartTick)
-					channel->TremoloPos = (TremoloPos + channel->TremoloSpeed) & 0x3FU;
-			}
+			if (channel->Flags & CHN_TREMOLO)
+				vol += channel->applyTremolo(*this, vol);
 			if ((channel->Flags & CHN_TREMOR) != 0)
 			{
 				uint8_t Duration = (channel->Tremor >> 4U) + (channel->Tremor & 0x0FU) + 2U;

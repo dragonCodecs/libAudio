@@ -4,6 +4,27 @@
 #include "moduleMixer.h"
 #include "waveTables.h"
 
+int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume) noexcept
+{
+	int16_t result{};
+	if (volume)
+	{
+		uint8_t _tremoloType = tremoloType & 0x03U;
+		uint8_t _tremoloDepth = tremoloDepth << 4U;
+		if (_tremoloType == 1)
+			result = (RampDownTable[tremoloPos] * _tremoloDepth) >> 8U;
+		else if (_tremoloType == 2)
+			result = (SquareTable[tremoloPos] * _tremoloDepth) >> 8U;
+		else if (_tremoloType == 3)
+			result = (RandomTable[tremoloPos] * _tremoloDepth) >> 8U;
+		else
+			result = (SinusTable[tremoloPos] * _tremoloDepth) >> 8U;
+	}
+	if (module.ticks() > StartTick)
+		tremoloPos = uint32_t(tremoloPos + tremoloSpeed) & 0x3FU;
+	return result;
+}
+
 int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)
