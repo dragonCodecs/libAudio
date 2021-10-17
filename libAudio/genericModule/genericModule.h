@@ -547,7 +547,10 @@ public:
 	uint16_t patternLoopStart;
 	int Filter_Y1, Filter_Y2, Filter_Y3, Filter_Y4;
 	int Filter_A0, Filter_B0, Filter_B1, Filter_HP;
-	uint8_t tremoloDepth, tremoloSpeed, tremoloPos, tremoloType;
+	uint8_t tremoloDepth;
+	uint8_t tremoloSpeed;
+	uint8_t tremoloPos;
+	uint8_t tremoloType;
 	uint8_t vibratoDepth, vibratoSpeed, vibratoPosition, vibratoType;
 	uint8_t panbrelloDepth, panbrelloSpeed;
 	uint16_t panbrelloPosition;
@@ -581,6 +584,7 @@ public:
 	void ChannelEffect(uint8_t param);
 
 	int16_t applyTremolo(const ModuleFile &module, uint16_t volume) noexcept;
+	uint16_t applyTremor(const ModuleFile &module, uint16_t volume) noexcept;
 	int16_t applyVibrato(const ModuleFile &module, uint32_t period) noexcept;
 	int16_t applyAutoVibrato(const ModuleFile &module, uint32_t period, int8_t &fractionalPeriod) noexcept;
 	void applyPanbrello() noexcept;

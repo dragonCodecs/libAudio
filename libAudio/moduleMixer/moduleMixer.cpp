@@ -77,7 +77,7 @@ channel_t::channel_t() noexcept : SampleData{nullptr}, NewSampleData{nullptr}, N
 	AutoVibratoDepth{}, AutoVibratoPos{}, Sample{nullptr}, Instrument{nullptr}, FineTune{},
 	_panningSlide{}, RawPanning{}, panning{}, RowNote{}, RowSample{}, RowVolEffect{}, Flags{},
 	Period{}, C4Speed{}, Pos{}, PosLo{}, StartTick{}, increment{}, portamentoTarget{},
-	portamento{}, portamentoSlide{}, Arpeggio{}, extendedCommand{}, Tremor{}, TremorCount{},
+	portamento{}, portamentoSlide{}, Arpeggio{}, extendedCommand{}, tremor{}, tremorCount{},
 	leftVol{}, rightVol{}, NewLeftVol{}, NewRightVol{}, LeftRamp{}, RightRamp{}, patternLoopCount{},
 	patternLoopStart{}, Filter_Y1{}, Filter_Y2{}, Filter_Y3{}, Filter_Y4{}, Filter_A0{},
 	Filter_B0{}, Filter_B1{}, Filter_HP{}, tremoloDepth{}, tremoloSpeed{}, tremoloPos{}, tremoloType{},
@@ -444,7 +444,7 @@ void channel_t::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 	if (!handlePorta)
 	{
 		Flags |= CHN_FASTVOLRAMP;
-		TremorCount = 0;
+		tremorCount = 0;
 		// if (resetEnvironment)
 		leftVol = 0;
 		rightVol = 0;
@@ -1083,7 +1083,7 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &brea
 			if (TickCount != 0)
 				break;
 			if (param != 0)
-				channel.Tremor = param;
+				channel.tremor = param;
 			channel.Flags |= CHN_TREMOR;
 			break;
 		case CMD_PANBRELLO:
@@ -1221,21 +1221,8 @@ bool ModuleFile::AdvanceTick()
 			uint16_t vol = channel->RawVolume;
 			if (channel->Flags & CHN_TREMOLO)
 				vol += channel->applyTremolo(*this, vol);
-			if ((channel->Flags & CHN_TREMOR) != 0)
-			{
-				uint8_t Duration = (channel->Tremor >> 4U) + (channel->Tremor & 0x0FU) + 2U;
-				uint8_t OnTime = (channel->Tremor >> 4U) + 1U;
-				uint8_t Count = channel->TremorCount;
-				if (Count > Duration)
-					Count = 0;
-				if (TickCount != 0 || ModuleType == MODULE_S3M)
-				{
-					if (Count > OnTime)
-						vol = 0;
-					channel->TremorCount = Count + 1;
-				}
-				channel->Flags |= CHN_FASTVOLRAMP;
-			}
+			if (channel->Flags & CHN_TREMOR)
+				vol -= channel->applyTremor(*this, vol);
 			/*clipInt<uint16_t>(vol, 0, 128);
 			//vol <<= 7;*/
 

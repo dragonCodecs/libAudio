@@ -25,6 +25,24 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 	return result;
 }
 
+uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t volume) noexcept
+{
+	uint16_t result{};
+	uint8_t duration = (tremor >> 4U) + (tremor & 0x0FU) + 2U;
+	uint8_t onTime = (tremor >> 4U) + 1U;
+	uint8_t count = tremorCount;
+	if (count > duration)
+		count = 0;
+	if (module.ticks() || module.typeIs<MODULE_S3M>())
+	{
+		if (count > onTime)
+			result = volume;
+		tremorCount = count + 1;
+	}
+	Flags |= CHN_FASTVOLRAMP;
+	return result;
+}
+
 int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)
