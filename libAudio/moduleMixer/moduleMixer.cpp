@@ -437,8 +437,8 @@ void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 		Flags |= CHN_FASTVOLRAMP;
 		TremorCount = 0;
 		// if (resetEnvironment)
-		LeftVol = 0;
-		RightVol = 0;
+		leftVol = 0;
+		rightVol = 0;
 	}
 }
 
@@ -476,7 +476,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 	// If not Impulse Tracker, or we have no actual instruments, always cut on NNA
 	if (!typeIs<MODULE_IT>() || !p_Instruments)
 	{
-		if (!channel->Length || !channel->LeftVol || !channel->RightVol || !p_Instruments)
+		if (!channel->Length || !channel->leftVol || !channel->rightVol || !p_Instruments)
 			return;
 		const uint8_t newChannel = FindFreeNNAChannel();
 		if (!newChannel)
@@ -492,8 +492,8 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 		channel->PosLo = 0;
 		channel->DCOffsL = 0;
 		channel->DCOffsR = 0;
-		channel->LeftVol = 0;
-		channel->RightVol = 0;
+		channel->leftVol = 0;
+		channel->rightVol = 0;
 		return;
 	}
 	if (instrument >= totalInstruments())
@@ -1436,7 +1436,7 @@ bool ModuleFile::AdvanceTick()
 				inc = -inc;
 			channel->increment.iValue = inc & ~3U;
 		}
-		if (channel->volume != 0 || channel->LeftVol != 0 || channel->RightVol != 0)
+		if (channel->volume != 0 || channel->leftVol != 0 || channel->rightVol != 0)
 			channel->Flags |= CHN_VOLUMERAMP;
 		else
 			channel->Flags &= ~CHN_VOLUMERAMP;
@@ -1457,15 +1457,15 @@ bool ModuleFile::AdvanceTick()
 			channel->RightRamp = channel->LeftRamp = 0U;
 			// TODO: Process ping-pong flag (pos = -pos)
 			// Do we need to ramp the volume up or down?
-			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->LeftVol != channel->NewLeftVol || channel->RightVol != channel->NewRightVol))
+			if ((channel->Flags & CHN_VOLUMERAMP) != 0 && (channel->leftVol != channel->NewLeftVol || channel->rightVol != channel->NewRightVol))
 			{
 				int32_t LeftDelta, RightDelta;
 				int32_t RampLength = 1;
 				// Calculate Volume deltas
-				LeftDelta = channel->NewLeftVol - channel->LeftVol;
-				RightDelta = channel->NewRightVol - channel->RightVol;
+				LeftDelta = channel->NewLeftVol - channel->leftVol;
+				RightDelta = channel->NewRightVol - channel->rightVol;
 				// Check if we need to calculate the RampLength, and do so if need be
-				if ((channel->LeftVol | channel->RightVol) != 0 && (channel->NewLeftVol | channel->NewRightVol) != 0 && (channel->Flags & CHN_FASTVOLRAMP) != 0)
+				if ((channel->leftVol | channel->rightVol) != 0 && (channel->NewLeftVol | channel->NewRightVol) != 0 && (channel->Flags & CHN_FASTVOLRAMP) != 0)
 				{
 					RampLength = SamplesToMix;
 					// Clipping:
@@ -1475,8 +1475,8 @@ bool ModuleFile::AdvanceTick()
 				channel->LeftRamp = LeftDelta / RampLength;
 				channel->RightRamp = RightDelta / RampLength;
 				// Normalise the current volume so that the ramping won't under or over shoot
-				channel->LeftVol = channel->NewLeftVol - (channel->LeftRamp * RampLength);
-				channel->RightVol = channel->NewRightVol - (channel->RightRamp * RampLength);
+				channel->leftVol = channel->NewLeftVol - (channel->LeftRamp * RampLength);
+				channel->rightVol = channel->NewRightVol - (channel->RightRamp * RampLength);
 				// If the ramp values aren't 0 (ramping already done?)
 				if ((channel->LeftRamp | channel->RightRamp) != 0U)
 					channel->RampLength = RampLength;
@@ -1484,16 +1484,16 @@ bool ModuleFile::AdvanceTick()
 				{
 					// Otherwise the ramping is done, so don't need to make the mixer functions do it for us
 					channel->Flags &= ~CHN_VOLUMERAMP;
-					channel->LeftVol = channel->NewLeftVol;
-					channel->RightVol = channel->NewRightVol;
+					channel->leftVol = channel->NewLeftVol;
+					channel->rightVol = channel->NewRightVol;
 				}
 			}
 			// No? ok, scratch the ramping.
 			else
 			{
 				channel->Flags &= ~CHN_VOLUMERAMP;
-				channel->LeftVol = channel->NewLeftVol;
-				channel->RightVol = channel->NewRightVol;
+				channel->leftVol = channel->NewLeftVol;
+				channel->rightVol = channel->NewRightVol;
 			}
 			// DEBUG: Uncomment to see the channel's main state information
 			/*printf("%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %d, %u, %u, %u\n",
@@ -1503,7 +1503,7 @@ bool ModuleFile::AdvanceTick()
 			MixerChannels[nMixerChannels++] = i;
 		}
 		else
-			channel->LeftVol = channel->RightVol = channel->Length = 0;
+			channel->leftVol = channel->rightVol = channel->Length = 0;
 	}
 
 	return true;
@@ -1686,7 +1686,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 				samples = 0;
 				continue;
 			}
-			if (channel->RampLength == 0 && (channel->LeftVol | channel->RightVol) == 0)
+			if (channel->RampLength == 0 && (channel->leftVol | channel->rightVol) == 0)
 				buff += SampleCount * 2;
 			else
 			{
@@ -1707,8 +1707,8 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 				if (channel->RampLength <= 0)
 				{
 					channel->RampLength = 0;
-					channel->LeftVol = channel->NewLeftVol;
-					channel->RightVol = channel->NewRightVol;
+					channel->leftVol = channel->NewLeftVol;
+					channel->rightVol = channel->NewRightVol;
 					channel->LeftRamp = channel->RightRamp = 0;
 					channel->Flags &= ~(CHN_FASTVOLRAMP | CHN_VOLUMERAMP);
 				}

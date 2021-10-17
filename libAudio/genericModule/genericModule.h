@@ -539,7 +539,8 @@ public:
 	uint8_t portamento, portamentoSlide;
 	uint8_t Arpeggio, extendedCommand;
 	uint8_t Tremor, TremorCount;
-	uint8_t LeftVol, RightVol;
+	uint8_t leftVol;
+	uint8_t rightVol;
 	uint8_t NewLeftVol, NewRightVol;
 	short LeftRamp, RightRamp;
 	uint8_t patternLoopCount;

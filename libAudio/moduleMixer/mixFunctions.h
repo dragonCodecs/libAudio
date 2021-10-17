@@ -237,8 +237,8 @@ template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, co
 	const auto *sampleData = reinterpret_cast<T *>(channel.SampleData) + channel.Pos;
 	if (channel.Sample->GetStereo())
 		sampleData += channel.Pos;
-	uint32_t leftVol{channel.LeftVol};
-	uint32_t rightVol{channel.RightVol};
+	uint32_t leftVol{channel.leftVol};
+	uint32_t rightVol{channel.rightVol};
 	do
 	{
 		const auto samples{sample(sampleData, position)};
@@ -249,8 +249,8 @@ template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, co
 	while (begin < end);
 	channel.Pos += position >> 16U;
 	channel.PosLo = position & 0xFFFFU;
-	channel.LeftVol = leftVol;
-	channel.RightVol = rightVol;
+	channel.leftVol = leftVol;
+	channel.rightVol = rightVol;
 }
 
 template<typename T> inline void sampleFilterLoop(Channel &channel, int32_t *begin, const int32_t *const end,
@@ -261,8 +261,8 @@ template<typename T> inline void sampleFilterLoop(Channel &channel, int32_t *beg
 	const auto *sampleData = reinterpret_cast<T *>(channel.SampleData) + channel.Pos;
 	if (channel.Sample->GetStereo())
 		sampleData += channel.Pos;
-	uint32_t leftVol{channel.LeftVol};
-	uint32_t rightVol{channel.RightVol};
+	uint32_t leftVol{channel.leftVol};
+	uint32_t rightVol{channel.rightVol};
 	auto fltY1{channel.Filter_Y1};
 	auto fltY2{channel.Filter_Y2};
 	do
@@ -286,8 +286,8 @@ template<typename T> inline void sampleFilterLoop(Channel &channel, int32_t *beg
 	while (begin < end);
 	channel.Pos += position >> 16U;
 	channel.PosLo = position & 0xFFFFU;
-	channel.LeftVol = leftVol;
-	channel.RightVol = rightVol;
+	channel.leftVol = leftVol;
+	channel.rightVol = rightVol;
 	channel.Filter_Y1 = fltY1;
 	channel.Filter_Y2 = fltY2;
 }
