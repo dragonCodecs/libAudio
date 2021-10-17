@@ -1316,7 +1316,7 @@ bool ModuleFile::AdvanceTick()
 		{
 			if (MixChannels == 2 && (channel.Flags & CHN_SURROUND) == 0)
 			{
-				channel.NewLeftVol = (channel.volume * channel.panning) >> 8U;
+				channel.NewLeftVol = uint16_t(channel.volume * channel.panning) >> 8U;
 				channel.NewRightVol = (channel.volume * (256U - channel.panning)) >> 8U;
 			}
 			else
@@ -1327,17 +1327,16 @@ bool ModuleFile::AdvanceTick()
 			// Do we need to ramp the volume up or down?
 			if ((channel.Flags & CHN_VOLUMERAMP) != 0 && (channel.leftVol != channel.NewLeftVol || channel.rightVol != channel.NewRightVol))
 			{
-				int32_t LeftDelta, RightDelta;
-				int32_t RampLength = 1;
+				uint32_t RampLength = 1;
 				// Calculate Volume deltas
-				LeftDelta = channel.NewLeftVol - channel.leftVol;
-				RightDelta = channel.NewRightVol - channel.rightVol;
+				int32_t LeftDelta = channel.NewLeftVol - channel.leftVol;
+				int32_t RightDelta = channel.NewRightVol - channel.rightVol;
 				// Check if we need to calculate the RampLength, and do so if need be
 				if ((channel.leftVol | channel.rightVol) != 0 && (channel.NewLeftVol | channel.NewRightVol) != 0 && (channel.Flags & CHN_FASTVOLRAMP) != 0)
 				{
 					RampLength = SamplesToMix;
 					// Clipping:
-					clipInt(RampLength, 2, 256);
+					clipInt<uint32_t>(RampLength, 2U, 256U);
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
 				channel.LeftRamp = LeftDelta / RampLength;
