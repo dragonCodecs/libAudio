@@ -1226,9 +1226,7 @@ bool ModuleFile::AdvanceTick()
 
 			if (channel.Instrument)
 			{
-				ModuleInstrument *instr = channel.Instrument;
-				if ((channel.Flags & CHN_NOTEFADE) != 0U)
-					vol = channel.applyNoteFade(vol);
+				const auto *const instr{channel.Instrument};
 				[&](ModuleEnvelope &env) noexcept
 				{
 					if (env.GetEnabled() && env.HasNodes())
@@ -1239,21 +1237,13 @@ bool ModuleFile::AdvanceTick()
 					if (env.GetEnabled() && env.HasNodes())
 						channel.applyPanningEnvelope(env);
 				}(*instr->GetEnvelope(ENVELOPE_PANNING));
+				if ((channel.Flags & CHN_NOTEFADE) != 0U)
+					vol = channel.applyNoteFade(vol);
 			}
 			else if (channel.Flags & CHN_NOTEFADE)
 			{
-				uint16_t fadeOut = 0;
-				if (channel.Instrument)
-					fadeOut = channel.Instrument->GetFadeOut();
-				if (fadeOut)
-				{
-					channel.FadeOutVol -= fadeOut << 1U;
-					if (channel.FadeOutVol & 0x8000U)
-						channel.FadeOutVol = 0;
-					vol = (vol * channel.FadeOutVol) >> 16U;
-				}
-				else if (!channel.FadeOutVol)
-					vol = 0;
+				channel.FadeOutVol = 0;
+				vol = 0;
 			}
 
 			vol = muldiv_t<uint32_t>{}(vol * GlobalVolume, channel.channelVolume * channel.sampleVolume, 1U << 19U);
