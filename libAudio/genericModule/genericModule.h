@@ -553,8 +553,12 @@ public:
 	uint8_t tremoloSpeed;
 	uint8_t tremoloPos;
 	uint8_t tremoloType;
-	uint8_t vibratoDepth, vibratoSpeed, vibratoPosition, vibratoType;
-	uint8_t panbrelloDepth, panbrelloSpeed;
+	uint8_t vibratoDepth;
+	uint8_t vibratoSpeed;
+	uint8_t vibratoPosition;
+	uint8_t vibratoType;
+	uint8_t panbrelloDepth;
+	uint8_t panbrelloSpeed;
 	uint16_t panbrelloPosition;
 	uint8_t panbrelloType;
 	uint16_t EnvVolumePos, EnvPanningPos, EnvPitchPos, FadeOutVol;
