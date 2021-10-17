@@ -533,12 +533,14 @@ public:
 	uint8_t RowEffect, RowVolParam, RowParam;
 	uint16_t Flags;
 	uint32_t Period, C4Speed;
-	uint32_t Pos, PosLo, StartTick;
+	uint32_t Pos, PosLo;
+	uint32_t startTick;
 	int16dot16 increment;
 	uint32_t portamentoTarget;
 	uint8_t portamento, portamentoSlide;
 	uint8_t Arpeggio, extendedCommand;
-	uint8_t Tremor, TremorCount;
+	uint8_t tremor;
+	uint8_t tremorCount;
 	uint8_t leftVol;
 	uint8_t rightVol;
 	uint8_t NewLeftVol, NewRightVol;

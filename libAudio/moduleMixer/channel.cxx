@@ -20,7 +20,7 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 		else
 			result = (SinusTable[tremoloPos] * depth) >> 8U;
 	}
-	if (module.ticks() > StartTick)
+	if (module.ticks() > startTick)
 		tremoloPos = uint32_t(tremoloPos + tremoloSpeed) & 0x3FU;
 	return result;
 }
@@ -262,7 +262,7 @@ void channel_t::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 		}
 		return;
 	}
-	if (module.ticks() > StartTick || module.speed() == 1)
+	if (module.ticks() > startTick || module.speed() == 1)
 	{
 		if (module.hasLinearSlides())// && module.typeIs<MODULE_XM>())
 		{
@@ -305,7 +305,7 @@ void channel_t::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 		}
 		return;
 	}
-	if (module.ticks() > StartTick || module.speed() == 1)
+	if (module.ticks() > startTick || module.speed() == 1)
 	{
 		if (module.hasLinearSlides())// && module.typeIs<MODULE_XM>())
 		{
@@ -330,7 +330,7 @@ void channel_t::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 
 inline void channel_t::finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
-	if (module.ticks() == StartTick && Period && param)
+	if (module.ticks() == startTick && Period && param)
 	{
 		if (module.hasLinearSlides())
 			Period = linearSlideDown(Period, param & 0x0FU);
@@ -343,7 +343,7 @@ inline void channel_t::finePortamentoUp(const ModuleFile &module, uint8_t param)
 
 inline void channel_t::finePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
-	if (module.ticks() == StartTick && Period && param)
+	if (module.ticks() == startTick && Period && param)
 	{
 		if (module.hasLinearSlides())
 			Period = linearSlideUp(Period, param & 0x0FU);
@@ -356,7 +356,7 @@ inline void channel_t::finePortamentoDown(const ModuleFile &module, uint8_t para
 
 inline void channel_t::extraFinePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
-	if (module.ticks() == StartTick && Period && param)
+	if (module.ticks() == startTick && Period && param)
 	{
 		if (module.hasLinearSlides())
 			Period = fineLinearSlideDown(Period, param & 0x0FU);
@@ -369,7 +369,7 @@ inline void channel_t::extraFinePortamentoUp(const ModuleFile &module, uint8_t p
 
 inline void channel_t::extraFinePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
-	if (module.ticks() == StartTick && Period && param)
+	if (module.ticks() == startTick && Period && param)
 	{
 		if (module.hasLinearSlides())
 			Period = fineLinearSlideUp(Period, param & 0x0FU);
@@ -385,7 +385,7 @@ void channel_t::tonePortamento(const ModuleFile &module, uint8_t param)
 	if (param)
 		portamentoSlide = param;
 	Flags |= CHN_PORTAMENTO;
-	if (Period && portamentoTarget && module.ticks() != StartTick)
+	if (Period && portamentoTarget && module.ticks() != startTick)
 	{
 		if (Period < portamentoTarget)
 		{
@@ -482,7 +482,7 @@ void channel_t::sampleVolumeSlide(const ModuleFile &module, uint8_t param)
 					[](const uint16_t volume, const uint8_t adjust) noexcept -> uint16_t
 						{ return volume + adjust; }
 				);
-			else if (module.ticks() == StartTick && !module.hasFastSlides())
+			else if (module.ticks() == startTick && !module.hasFastSlides())
 				NewVolume -= 0x1EU; //0x0F * 2;
 		}
 		else if ((param & 0xF0U) == 0xF0U)
@@ -492,12 +492,12 @@ void channel_t::sampleVolumeSlide(const ModuleFile &module, uint8_t param)
 					[](const uint16_t volume, const uint8_t adjust) noexcept -> uint16_t
 						{ return volume - adjust; }
 				);
-			else if (module.ticks() == StartTick && !module.hasFastSlides())
+			else if (module.ticks() == startTick && !module.hasFastSlides())
 				NewVolume += 0x1EU; //0x0F * 2;
 		}
 	}
 
-	if (module.ticks() > StartTick || module.hasFastSlides())
+	if (module.ticks() > startTick || module.hasFastSlides())
 	{
 		if ((param & 0xF0U) && !(param & 0x0FU))
 			NewVolume += (param & 0xF0U) >> 1U;
@@ -518,7 +518,7 @@ inline void channel_t::fineSampleVolumeSlide(const ModuleFile &module, uint8_t p
 	else
 		_fineSampleVolumeSlide = param;
 
-	if (module.ticks() == StartTick)
+	if (module.ticks() == startTick)
 	{
 		auto volume{op(RawVolume, param << 1U)};
 		if (module.typeIs<MODULE_MOD>())
