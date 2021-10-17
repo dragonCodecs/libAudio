@@ -1523,7 +1523,6 @@ inline void ModuleFile::DCFixingFill(uint32_t samples)
 
 void ModuleFile::CreateStereoMix(uint32_t count)
 {
-	int SampleCount;
 	uint32_t /*Flags, */rampSamples;
 	if (count == 0)
 		return;
@@ -1531,7 +1530,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 	for (uint32_t i = 0; i < nMixerChannels; i++)
 	{
 		uint32_t samples = count;
-		int *buff = MixBuffer;
+		int32_t *buff = MixBuffer;
 		channel_t * const channel = &Channels[MixerChannels[i]];
 		if (channel->SampleData == nullptr)
 			continue;
@@ -1543,7 +1542,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 				if (rampSamples > channel->RampLength)
 					rampSamples = channel->RampLength;
 			}
-			SampleCount = channel->GetSampleCount(rampSamples);
+			const auto SampleCount = channel->GetSampleCount(rampSamples);
 			if (SampleCount <= 0)
 			{
 				FixDCOffset(&channel->DCOffsL, &channel->DCOffsR, buff, samples);
