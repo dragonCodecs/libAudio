@@ -21,7 +21,7 @@ using substrate::managedPtr_t;
 \***************************/
 
 class ModuleFile;
-class Channel;
+class channel_t;
 class ModuleSample;
 class ModulePattern;
 
@@ -144,7 +144,7 @@ private:
 private:
 	uint8_t nChannels;
 	friend class ModuleFile;
-	friend class Channel;
+	friend class channel_t;
 	ModuleHeader();
 
 public:
@@ -457,7 +457,7 @@ private:
 	inline uint8_t MODPeriodToNoteIndex(const uint16_t Period) noexcept;
 	void TranslateMODEffect(const uint8_t Effect, const uint8_t Param) noexcept;
 	friend class ModuleFile;
-	friend class Channel;
+	friend class channel_t;
 
 public:
 	void SetSample(const uint8_t _sample) noexcept { Sample = _sample; }
@@ -512,7 +512,7 @@ union int16dot16
 	int16dot16_t Value;
 };
 
-class Channel : public ModuleAllocator
+class channel_t final
 {
 public:
 	uint8_t *SampleData;
@@ -556,7 +556,7 @@ public:
 	int DCOffsL, DCOffsR;
 
 public:
-	Channel();
+	channel_t() noexcept;
 	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
 
 	// Channel effects
@@ -607,7 +607,7 @@ private:
 	uint32_t MusicSpeed, MusicTempo;
 	uint16_t Pattern, NewPattern, NextPattern;
 	uint32_t RowsPerBeat, SamplesPerTick;
-	Channel *Channels;
+	channel_t *Channels;
 	uint32_t nMixerChannels, *MixerChannels;
 
 	uint16_t GlobalVolume;
@@ -618,18 +618,18 @@ private:
 
 	// Effects functions
 	void applyGlobalVolumeSlide(uint8_t param);
-	void ProcessMODExtended(Channel *channel);
-	void ProcessS3MExtended(Channel *channel);
+	void ProcessMODExtended(channel_t *channel);
+	void ProcessS3MExtended(channel_t *channel);
 
 	// Processing functions
 	bool AdvanceTick();
 	bool Tick();
 	bool ProcessEffects();
-	void processEffects(Channel &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump);
+	void processEffects(channel_t &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump);
 	void ResetChannelPanning();
-	void SampleChange(Channel &channel, const uint32_t sample, const bool doPortamento);
-	void ReloadSample(Channel &channel);
-	void HandleNNA(Channel *channel, uint32_t sample, uint8_t note);
+	void SampleChange(channel_t &channel, const uint32_t sample, const bool doPortamento);
+	void ReloadSample(channel_t &channel);
+	void HandleNNA(channel_t *channel, uint32_t sample, uint8_t note);
 	uint8_t FindFreeNNAChannel() const;
 	bool handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
 		const int16_t positionJump) noexcept;
@@ -649,7 +649,7 @@ private:
 	void aonLoadPCM(const fd_t &fd);
 	void itLoadPCM(const fd_t &fd);
 	void DeinitMixer();
-	friend class Channel;
+	friend class channel_t;
 
 public:
 	ModuleFile(const modMOD_t &file);

@@ -50,13 +50,13 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	// If we have the possibility of NNAs, allocate a full set of channels.
 	if (p_Instruments != nullptr)
 	{
-		Channels = new Channel[128]();
+		Channels = new channel_t[128]();
 		MixerChannels = new uint32_t[128];
 	}
 	// Otherwise just allocate the number in the song as that's all we can process in this case.
 	else
 	{
-		Channels = new Channel[p_Header->nChannels]();
+		Channels = new channel_t[p_Header->nChannels]();
 		MixerChannels = new uint32_t[p_Header->nChannels];
 	}
 
@@ -71,7 +71,7 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	ResetChannelPanning();
 }
 
-Channel::Channel()
+channel_t::channel_t() noexcept
 {
 	channelVolume = 64;
 }
@@ -123,7 +123,7 @@ void ModuleFile::ResetChannelPanning()
 	}
 }
 
-void ModuleFile::ReloadSample(Channel &channel)
+void ModuleFile::ReloadSample(channel_t &channel)
 {
 	ModuleSample &sample = *channel.Sample;
 	//if (channel.Instrument == nullptr)
@@ -160,7 +160,7 @@ void ModuleFile::ReloadSample(Channel &channel)
 	channel.AutoVibratoPos = 0;
 }
 
-void ModuleFile::SampleChange(Channel &channel, const uint32_t sampleIndex, const bool doPortamento)
+void ModuleFile::SampleChange(channel_t &channel, const uint32_t sampleIndex, const bool doPortamento)
 {
 	if ((p_Instruments && sampleIndex > totalInstruments()) ||
 		(!p_Instruments && sampleIndex > totalSamples()))
@@ -328,7 +328,7 @@ uint32_t ModuleFile::GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t
 	}
 }
 
-void Channel::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
+void channel_t::noteChange(ModuleFile &module, uint8_t note, bool handlePorta)
 {
 	uint32_t period;
 	ModuleSample *sample = Sample;
@@ -449,7 +449,7 @@ uint8_t ModuleFile::FindFreeNNAChannel() const
 	uint16_t envVolumePos = 0xFFFFU;
 	for (uint8_t i = p_Header->nChannels; i < 128U; i++)
 	{
-		const Channel &chn = Channels[i];
+		const channel_t &chn = Channels[i];
 		uint32_t weight = chn.RawVolume;
 		if (chn.FadeOutVol == 0)
 			return i;
@@ -469,7 +469,7 @@ uint8_t ModuleFile::FindFreeNNAChannel() const
 	return res;
 }
 
-void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
+void ModuleFile::HandleNNA(channel_t *channel, uint32_t instrument, uint8_t note)
 {
 	if (note > 0x80U || note < 1)
 		return;
@@ -481,7 +481,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 		const uint8_t newChannel = FindFreeNNAChannel();
 		if (!newChannel)
 			return;
-		Channel &nnaChannel = Channels[newChannel];
+		channel_t &nnaChannel = Channels[newChannel];
 		nnaChannel = *channel;
 		nnaChannel.Flags &= ~(CHN_VIBRATO | CHN_TREMOLO | CHN_PANBRELLO | CHN_PORTAMENTO);
 		nnaChannel.RowEffect = CMD_NONE;
@@ -518,7 +518,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 
 	for (uint8_t i = 0; i < 128; i++)
 	{
-		Channel *dnaChannel = &Channels[i];
+		channel_t *dnaChannel = &Channels[i];
 		if (dnaChannel->Instrument && (i >= p_Header->nChannels || dnaChannel == channel))
 		{
 			bool duplicate = false;
@@ -568,7 +568,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 		if (newChannel)
 		{
 			// With the new channel, duplicate it and clear certain effects
-			Channel &nnaChannel = Channels[newChannel];
+			channel_t &nnaChannel = Channels[newChannel];
 			nnaChannel = *channel;
 			nnaChannel.Flags &= ~(CHN_VIBRATO | CHN_TREMOLO | CHN_PANBRELLO | CHN_PORTAMENTO);
 			nnaChannel.RowEffect = CMD_NONE;
@@ -601,7 +601,7 @@ void ModuleFile::HandleNNA(Channel *channel, uint32_t instrument, uint8_t note)
 	}
 }
 
-void ModuleFile::ProcessMODExtended(Channel *channel)
+void ModuleFile::ProcessMODExtended(channel_t *channel)
 {
 	uint8_t param = channel->RowParam;
 	uint8_t cmd = (param & 0xF0U) >> 4U;
@@ -694,7 +694,7 @@ void ModuleFile::ProcessMODExtended(Channel *channel)
 	}
 }
 
-void Channel::ChannelEffect(uint8_t param)
+void channel_t::ChannelEffect(uint8_t param)
 {
 	switch (param)
 	{
@@ -709,7 +709,7 @@ void Channel::ChannelEffect(uint8_t param)
 	}
 }
 
-void ModuleFile::ProcessS3MExtended(Channel *channel)
+void ModuleFile::ProcessS3MExtended(channel_t *channel)
 {
 	uint8_t param = channel->RowParam;
 	uint8_t cmd = (param & 0xF0U) >> 4U;
@@ -826,7 +826,7 @@ bool ModuleFile::ProcessEffects()
 	int32_t patternLoopRow = -1;
 	for (uint16_t i = 0; i < p_Header->nChannels; ++i)
 	{
-		Channel *channel = &Channels[i];
+		channel_t *channel = &Channels[i];
 		uint8_t sample = channel->RowSample;
 		const uint8_t cmd = channel->RowEffect;
 		uint8_t param = channel->RowParam;
@@ -922,7 +922,7 @@ bool ModuleFile::ProcessEffects()
 	return handleNavigationEffects(patternLoopRow, breakRow, positionJump);
 }
 
-void ModuleFile::processEffects(Channel &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump)
+void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump)
 {
 	switch (channel.RowEffect)
 	{
@@ -1112,7 +1112,7 @@ bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int
 				{
 					for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 					{
-						Channel &channel = Channels[i];
+						channel_t &channel = Channels[i];
 						channel.patternLoopCount = 0;
 						channel.patternLoopStart = 0;
 					}
@@ -1125,7 +1125,7 @@ bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int
 	return true;
 }
 
-void Channel::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
+void channel_t::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
 {
 	uint8_t excmd;
 	RowNote = Command->Note;
@@ -1199,7 +1199,7 @@ bool ModuleFile::AdvanceTick()
 	const uint8_t nChannels = p_Instruments ? 128 : p_Header->nChannels;
 	for (uint8_t i = 0; i < nChannels; i++)
 	{
-		Channel *channel = &Channels[i];
+		channel_t *channel = &Channels[i];
 		bool incNegative = channel->increment.iValue < 0;
 
 		channel->increment.iValue = 0U;
@@ -1509,7 +1509,7 @@ bool ModuleFile::AdvanceTick()
 	return true;
 }
 
-uint32_t Channel::GetSampleCount(uint32_t samples)
+uint32_t channel_t::GetSampleCount(uint32_t samples)
 {
 	uint32_t deltaHi, deltaLo, maxSamples, sampleCount;
 	uint32_t loopStart = ((Flags & CHN_LOOP) != 0 ? LoopStart : 0);
@@ -1665,7 +1665,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 	{
 		uint32_t samples = count;
 		int *buff = MixBuffer;
-		Channel * const channel = &Channels[MixerChannels[i]];
+		channel_t * const channel = &Channels[MixerChannels[i]];
 		if (channel->SampleData == nullptr)
 			continue;
 		do

@@ -4,7 +4,7 @@
 #include "moduleMixer.h"
 #include "waveTables.h"
 
-int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
+int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)
 	{
@@ -48,7 +48,7 @@ int16_t Channel::applyVibrato(const ModuleFile &module, const uint32_t period) n
 	return 0;
 }
 
-int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t period, int8_t &fractionalPeriod) noexcept
+int16_t channel_t::applyAutoVibrato(const ModuleFile &module, const uint32_t period, int8_t &fractionalPeriod) noexcept
 {
 	if (Sample && Sample->GetVibratoDepth() != 0)
 	{
@@ -110,7 +110,7 @@ int16_t Channel::applyAutoVibrato(const ModuleFile &module, const uint32_t perio
 	return 0;
 }
 
-void Channel::applyPanbrello() noexcept
+void channel_t::applyPanbrello() noexcept
 {
 	if (Flags & CHN_PANBRELLO)
 	{
@@ -131,7 +131,7 @@ void Channel::applyPanbrello() noexcept
 	}
 }
 
-void Channel::noteCut(ModuleFile &module, uint32_t tick) noexcept
+void channel_t::noteCut(ModuleFile &module, uint32_t tick) noexcept
 {
 	/*if (tick == 0 && module.typeIs<MODULE_S3M>())
 		return;*/
@@ -142,7 +142,7 @@ void Channel::noteCut(ModuleFile &module, uint32_t tick) noexcept
 	}
 }
 
-void Channel::noteOff() noexcept
+void channel_t::noteOff() noexcept
 {
 	bool noteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
@@ -180,7 +180,7 @@ void Channel::noteOff() noexcept
 	}
 }
 
-int32_t Channel::patternLoop(const uint8_t param, const uint16_t row) noexcept
+int32_t channel_t::patternLoop(const uint8_t param, const uint16_t row) noexcept
 {
 	if (param)
 	{
@@ -203,7 +203,7 @@ int32_t Channel::patternLoop(const uint8_t param, const uint16_t row) noexcept
 	return -1;
 }
 
-void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
+void channel_t::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (param)
 		portamento = param;
@@ -246,7 +246,7 @@ void Channel::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 	}
 }
 
-void Channel::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
+void channel_t::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (param)
 		portamento = param;
@@ -289,7 +289,7 @@ void Channel::portamentoDown(const ModuleFile &module, uint8_t param) noexcept
 	}
 }
 
-inline void Channel::finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
+inline void channel_t::finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -302,7 +302,7 @@ inline void Channel::finePortamentoUp(const ModuleFile &module, uint8_t param) n
 	}
 }
 
-inline void Channel::finePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
+inline void channel_t::finePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -315,7 +315,7 @@ inline void Channel::finePortamentoDown(const ModuleFile &module, uint8_t param)
 	}
 }
 
-inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
+inline void channel_t::extraFinePortamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -328,7 +328,7 @@ inline void Channel::extraFinePortamentoUp(const ModuleFile &module, uint8_t par
 	}
 }
 
-inline void Channel::extraFinePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
+inline void channel_t::extraFinePortamentoDown(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (module.ticks() == StartTick && Period && param)
 	{
@@ -341,7 +341,7 @@ inline void Channel::extraFinePortamentoDown(const ModuleFile &module, uint8_t p
 	}
 }
 
-void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
+void channel_t::tonePortamento(const ModuleFile &module, uint8_t param)
 {
 	if (param)
 		portamentoSlide = param;
@@ -379,7 +379,7 @@ void Channel::tonePortamento(const ModuleFile &module, uint8_t param)
 	}
 }
 
-void Channel::vibrato(uint8_t param, uint8_t multiplier)
+void channel_t::vibrato(uint8_t param, uint8_t multiplier)
 {
 	if (param & 0x0FU)
 		vibratoDepth = (param & 0x0FU) * multiplier;
@@ -388,7 +388,7 @@ void Channel::vibrato(uint8_t param, uint8_t multiplier)
 	Flags |= CHN_VIBRATO;
 }
 
-void Channel::panbrello(uint8_t param)
+void channel_t::panbrello(uint8_t param)
 {
 	if (param & 0x0FU)
 		panbrelloDepth = param & 0x0FU;
@@ -397,7 +397,7 @@ void Channel::panbrello(uint8_t param)
 	Flags |= CHN_PANBRELLO;
 }
 
-void Channel::channelVolumeSlide(const ModuleFile &module, uint8_t param) noexcept
+void channel_t::channelVolumeSlide(const ModuleFile &module, uint8_t param) noexcept
 {
 	if (!param)
 		param = _channelVolumeSlide;
@@ -426,7 +426,7 @@ void Channel::channelVolumeSlide(const ModuleFile &module, uint8_t param) noexce
 	}
 }
 
-void Channel::sampleVolumeSlide(const ModuleFile &module, uint8_t param)
+void channel_t::sampleVolumeSlide(const ModuleFile &module, uint8_t param)
 {
 	if (param == 0)
 		param = _sampleVolumeSlide;
@@ -471,7 +471,7 @@ void Channel::sampleVolumeSlide(const ModuleFile &module, uint8_t param)
 	RawVolume = static_cast<uint8_t>(NewVolume);
 }
 
-inline void Channel::fineSampleVolumeSlide(const ModuleFile &module, uint8_t param,
+inline void channel_t::fineSampleVolumeSlide(const ModuleFile &module, uint8_t param,
 	uint16_t (*const op)(const uint16_t, const uint8_t)) noexcept
 {
 	if (param == 0)
@@ -489,7 +489,7 @@ inline void Channel::fineSampleVolumeSlide(const ModuleFile &module, uint8_t par
 	}
 }
 
-void Channel::panningSlide(const ModuleFile &module, uint8_t param)
+void channel_t::panningSlide(const ModuleFile &module, uint8_t param)
 {
 	if (!param)
 		param = _panningSlide;

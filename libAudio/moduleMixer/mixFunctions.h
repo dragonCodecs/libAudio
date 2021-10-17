@@ -7,7 +7,7 @@
 #include <array>
 #include <utility>
 
-typedef void (*MixInterface)(Channel *, int *, int *);
+typedef void (*MixInterface)(channel_t *, int *, int *);
 
 constexpr static const uint32_t syncPhases{4096U};
 
@@ -120,7 +120,7 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 
 using samplePair_t = std::pair<int16_t, int16_t>;
 template<typename T> using sampleFn_t = samplePair_t(const T *const, const uint32_t);
-using storeFn_t = void(const Channel &, int32_t *const , const int16_t, const int16_t,
+using storeFn_t = void(const channel_t &, int32_t *const , const int16_t, const int16_t,
 	uint32_t &, uint32_t &);
 
 inline samplePair_t monoSample(const int8_t *const buffer, const uint32_t position) noexcept
@@ -199,14 +199,14 @@ inline samplePair_t stereoSample(const int16_t *const buffer, const uint32_t pos
 	};
 }
 
-inline void storeMono(const Channel &, int32_t *const buffer,
+inline void storeMono(const channel_t &, int32_t *const buffer,
 	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
 {
 	buffer[0] += sampleR * (rightVol << 4U);
 	buffer[1] += sampleL * (leftVol << 4U);
 }
 
-inline void rampMono(const Channel &channel, int32_t *const buffer,
+inline void rampMono(const channel_t &channel, int32_t *const buffer,
 	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
 {
 	leftVol += channel.LeftRamp;
@@ -214,14 +214,14 @@ inline void rampMono(const Channel &channel, int32_t *const buffer,
 	storeMono(channel, buffer, sampleL, sampleR, leftVol, rightVol);
 }
 
-inline void storeStereo(const Channel &, int32_t *const buffer,
+inline void storeStereo(const channel_t &, int32_t *const buffer,
 	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
 {
 	buffer[0] += sampleR * (rightVol << 3U);
 	buffer[1] += sampleL * (leftVol << 3U);
 }
 
-inline void rampStereo(const Channel &channel, int32_t *const buffer,
+inline void rampStereo(const channel_t &channel, int32_t *const buffer,
 	const int16_t sampleL, const int16_t sampleR, uint32_t &leftVol, uint32_t &rightVol) noexcept
 {
 	leftVol += channel.LeftRamp;
@@ -229,7 +229,7 @@ inline void rampStereo(const Channel &channel, int32_t *const buffer,
 	storeStereo(channel, buffer, sampleL, sampleR, leftVol, rightVol);
 }
 
-template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, const int32_t *const end,
+template<typename T> inline void sampleLoop(channel_t &channel, int32_t *begin, const int32_t *const end,
 	const sampleFn_t<T> sample, const storeFn_t store) noexcept
 {
 	auto position{channel.PosLo};
@@ -253,7 +253,7 @@ template<typename T> inline void sampleLoop(Channel &channel, int32_t *begin, co
 	channel.rightVol = rightVol;
 }
 
-template<typename T> inline void sampleFilterLoop(Channel &channel, int32_t *begin, const int32_t *const end,
+template<typename T> inline void sampleFilterLoop(channel_t &channel, int32_t *begin, const int32_t *const end,
 	const sampleFn_t<T> sample, const storeFn_t store) noexcept
 {
 	auto position{channel.PosLo};
@@ -294,80 +294,80 @@ template<typename T> inline void sampleFilterLoop(Channel &channel, int32_t *beg
 
 // Interfaces
 // Mono 8-bit
-static void Mono8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono8BitMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
-static void Mono8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono8BitRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-static void Mono8BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono8BitLinearMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
-static void Mono8BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono8BitLinearRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-static void Mono8BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono8BitHQMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
-static void Mono8BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono8BitHQRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Mono 16-bit
-static void Mono16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono16BitMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
-static void Mono16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono16BitRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-static void Mono16BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono16BitLinearMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
-static void Mono16BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono16BitLinearRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-static void Mono16BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono16BitHQMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
-static void Mono16BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Mono16BitHQRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Filter Interfaces
 // Mono 8-bit
-static void FilterMono8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono8BitMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
-static void FilterMono8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono8BitRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-static void FilterMono8BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono8BitLinearMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
-static void FilterMono8BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono8BitLinearRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-static void FilterMono8BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono8BitHQMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
-static void FilterMono8BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono8BitHQRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int8_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Mono 16-bit
-static void FilterMono16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono16BitMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoSample, storeMono); }
-static void FilterMono16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono16BitRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoSample, rampMono); }
 
-static void FilterMono16BitLinearMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono16BitLinearMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, storeMono); }
-static void FilterMono16BitLinearRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono16BitLinearRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoLinearSample, rampMono); }
 
-static void FilterMono16BitHQMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono16BitHQMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, storeMono); }
-static void FilterMono16BitHQRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void FilterMono16BitHQRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleFilterLoop<int16_t>(*chn, Buff, BuffMax, monoHighQualitySample, rampMono); }
 
 // Stereo 8-bit
-static void Stereo8BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Stereo8BitMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample, storeStereo); }
-static void Stereo8BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Stereo8BitRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int8_t>(*chn, Buff, BuffMax, stereoSample, rampStereo); }
 
 // Stereo 16-bit
-static void Stereo16BitMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Stereo16BitMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample, storeStereo); }
-static void Stereo16BitRampMix(Channel *chn, int *Buff, int *BuffMax) noexcept
+static void Stereo16BitRampMix(channel_t *chn, int *Buff, int *BuffMax) noexcept
 	{ sampleLoop<int16_t>(*chn, Buff, BuffMax, stereoSample, rampStereo); }
 
 #endif /*LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H*/
