@@ -47,7 +47,7 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 		{
 			if (delta < 0)
 			{
-				const uint16_t amount = uint16_t(-delta);
+				const auto amount{uint16_t(-delta)};
 				delta = linearSlideDown(period, amount >> 2U) - period;
 				const uint8_t findSlide = amount & 3U;
 				if (findSlide)
@@ -55,7 +55,7 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 			}
 			else if (delta > 0)
 			{
-				const uint16_t amount = uint16_t(delta);
+				const auto amount{uint16_t(delta)};
 				delta = linearSlideUp(period, amount >> 2U) - period;
 				const uint8_t findSlide = amount & 3U;
 				if (findSlide)
@@ -63,7 +63,7 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 			}
 		}
 		if (module.ticks() || oldSfx)
-			vibratoPosition = (vibratoPosition + vibratoSpeed) & 0x3FU;
+			vibratoPosition = uint32_t(vibratoPosition + vibratoSpeed) & 0x3FU;
 		return delta;
 	}
 	return 0;
