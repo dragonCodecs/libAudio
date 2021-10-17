@@ -1236,35 +1236,11 @@ bool ModuleFile::AdvanceTick()
 					if (env.GetEnabled() && env.HasNodes())
 						vol = channel.applyVolumeEnvelope(*this, vol, env);
 				}(*instr->GetEnvelope(ENVELOPE_VOLUME));
-
-				auto *env = instr->GetEnvelope(ENVELOPE_PANNING);
-				if (env->GetEnabled() && env->HasNodes())
+				[&](ModuleEnvelope &env) noexcept
 				{
-					uint16_t pan = channel.RawPanning;
-					int8_t panningValue = env->Apply(channel.EnvPanningPos) - 128;
-					clipInt<int8_t>(panningValue, -32, 32);
-					if (pan >= 128)
-						pan += (panningValue * (256 - pan)) / 32;
-					else
-						pan += (panningValue * pan) / 32;
-					clipInt<uint16_t>(pan, 0, 256);
-					channel.panning = pan;
-					channel.EnvPanningPos++;
-					if (env->GetLooped())
-					{
-						uint16_t endTick = env->GetLoopEnd();
-						if (channel.EnvPanningPos == ++endTick)
-							channel.EnvPanningPos = endTick;
-					}
-					if (env->GetSustained() && (channel.Flags & CHN_NOTEOFF) == 0)
-					{
-						uint16_t endTick = env->GetSustainEnd();
-						if (channel.EnvPanningPos == ++endTick)
-							channel.EnvPanningPos = env->GetSustainBegin();
-					}
-					else if (env->IsAtEnd(channel.EnvPanningPos))
-						channel.EnvPanningPos = env->GetLastTick();
-				}
+					if (env.GetEnabled() && env.HasNodes())
+						channel.applyPanningEnvelope(env);
+				}(*instr->GetEnvelope(ENVELOPE_PANNING));
 			}
 			else if (channel.Flags & CHN_NOTEFADE)
 			{

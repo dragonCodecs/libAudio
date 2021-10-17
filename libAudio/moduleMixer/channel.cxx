@@ -100,6 +100,34 @@ uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t
 	return result;
 }
 
+void channel_t::applyPanningEnvelope(ModuleEnvelope &envelope) noexcept
+{
+	uint16_t result{RawPanning};
+	auto panningValue{int8_t(envelope.Apply(EnvPanningPos) - 128)};
+	clipInt<int8_t>(panningValue, -32, 32);
+	if (result >= 128)
+		result += (panningValue * (256 - result)) / 32;
+	else
+		result += (panningValue * result) / 32;
+	clipInt<uint16_t>(result, 0, 256);
+	panning = result;
+	++EnvPanningPos;
+	if (envelope.GetLooped())
+	{
+		uint16_t endTick = envelope.GetLoopEnd();
+		if (EnvPanningPos == ++endTick)
+			EnvPanningPos = endTick;
+	}
+	if (envelope.GetSustained() && !(Flags & CHN_NOTEOFF))
+	{
+		uint16_t endTick = envelope.GetSustainEnd();
+		if (EnvPanningPos == ++endTick)
+			EnvPanningPos = envelope.GetSustainBegin();
+	}
+	else if (envelope.IsAtEnd(EnvPanningPos))
+		EnvPanningPos = envelope.GetLastTick();
+}
+
 int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)
