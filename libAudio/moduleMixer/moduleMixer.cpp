@@ -71,10 +71,19 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	ResetChannelPanning();
 }
 
-channel_t::channel_t() noexcept
-{
-	channelVolume = 64;
-}
+channel_t::channel_t() noexcept : SampleData{nullptr}, NewSampleData{nullptr}, Note{}, RampLength{},
+	NewNote{}, NewSample{}, LoopStart{}, LoopEnd{}, Length{}, RawVolume{}, volume{},
+	_sampleVolumeSlide{}, _fineSampleVolumeSlide{}, channelVolume{64}, sampleVolume{},
+	AutoVibratoDepth{}, AutoVibratoPos{}, Sample{nullptr}, Instrument{nullptr}, FineTune{},
+	_panningSlide{}, RawPanning{}, panning{}, RowNote{}, RowSample{}, RowVolEffect{}, Flags{},
+	Period{}, C4Speed{}, Pos{}, PosLo{}, StartTick{}, increment{}, portamentoTarget{},
+	portamento{}, portamentoSlide{}, Arpeggio{}, extendedCommand{}, Tremor{}, TremorCount{},
+	leftVol{}, rightVol{}, NewLeftVol{}, NewRightVol{}, LeftRamp{}, RightRamp{}, patternLoopCount{},
+	patternLoopStart{}, Filter_Y1{}, Filter_Y2{}, Filter_Y3{}, Filter_Y4{}, Filter_A0{},
+	Filter_B0{}, Filter_B1{}, Filter_HP{}, TremoloDepth{}, TremoloSpeed{}, TremoloPos{}, TremoloType{},
+	vibratoDepth{}, vibratoSpeed{}, vibratoPosition{}, vibratoType{}, panbrelloDepth{}, panbrelloSpeed{},
+	panbrelloPosition{}, panbrelloType{}, EnvVolumePos{}, EnvPanningPos{}, EnvPitchPos{}, FadeOutVol{},
+	DCOffsL{}, DCOffsR{} { }
 
 void ModuleFile::DeinitMixer()
 {
