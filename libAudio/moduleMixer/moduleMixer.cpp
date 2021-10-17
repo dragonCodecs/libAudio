@@ -1198,9 +1198,7 @@ bool ModuleFile::Tick()
 
 bool ModuleFile::AdvanceTick()
 {
-	if (!Tick())
-		return false;
-	if (!MusicTempo)
+	if (!Tick() || !MusicTempo)
 		return false;
 	SamplesToMix = (MixSampleRate * 640U) / (MusicTempo << 8U);
 	SamplesPerTick = SamplesToMix;
@@ -1226,7 +1224,7 @@ bool ModuleFile::AdvanceTick()
 			/*clipInt<uint16_t>(vol, 0, 128);
 			//vol <<= 7;*/
 
-			if (channel.Instrument != nullptr)
+			if (channel.Instrument)
 			{
 				ModuleInstrument *instr = channel.Instrument;
 				if ((channel.Flags & CHN_NOTEFADE) != 0U)
