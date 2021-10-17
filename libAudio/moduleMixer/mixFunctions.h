@@ -9,8 +9,7 @@
 
 typedef void (*MixInterface)(Channel *, int *, int *);
 
-#define SINC_PHASES			4096
-#define M_EPS				1e-8
+constexpr static const uint32_t syncPhases{4096U};
 
 const std::array<int16_t, 1024> FastSinc
 {{
@@ -100,17 +99,17 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 {
 	double ZeroBeta = zero(Beta);
 	double LPAt = 4.0 * atan(1.0) * LowPassFactor;
-	short *Sinc = *p_Sinc = (short *)malloc(sizeof(short) * SINC_PHASES * 8);
-	for (int i = 0; i < 8 * SINC_PHASES; i++)
+	short *Sinc = *p_Sinc = (short *)malloc(sizeof(short) * syncPhases * 8);
+	for (uint32_t i = 0; i < 8U * syncPhases; i++)
 	{
 		double FSinc;
 		int x = 7U - (i & 7U), n;
-		x = (x * SINC_PHASES) + (i >> 3U);
-		if (x == 4 * SINC_PHASES)
+		x = (x * syncPhases) + (i >> 3U);
+		if (x == 4 * syncPhases)
 			FSinc = 1.0;
 		else
 		{
-			double y = (x - (4 * SINC_PHASES)) * (1.0 / SINC_PHASES);
+			double y = (x - (4 * syncPhases)) * (1.0 / syncPhases);
 			FSinc = sin(y * LPAt) * zero(Beta * sqrt(1 - y * y * (1.0 / 16.0))) / (ZeroBeta * y * LPAt);
 		}
 		n = (int)(FSinc * LowPassFactor * (16384 * 256));
