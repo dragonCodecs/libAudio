@@ -43,6 +43,22 @@ uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t volume)
 	return result;
 }
 
+uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
+{
+	const uint16_t FadeOut{Instrument->GetFadeOut()};
+	if (FadeOut)
+	{
+		if (FadeOutVol < (FadeOut << 1U))
+			FadeOutVol = 0;
+		else
+			FadeOutVol -= FadeOut << 1U;
+		return uint32_t(volume * FadeOutVol) >> 16U;
+	}
+	else if (FadeOutVol == 0U)
+		return 0U;
+	return volume;
+}
+
 int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period) noexcept
 {
 	if (Flags & CHN_VIBRATO)

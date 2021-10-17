@@ -1231,19 +1231,7 @@ bool ModuleFile::AdvanceTick()
 				ModuleInstrument *instr = channel.Instrument;
 				ModuleEnvelope *env = instr->GetEnvelope(ENVELOPE_VOLUME);
 				if ((channel.Flags & CHN_NOTEFADE) != 0U)
-				{
-					uint16_t FadeOut = instr->GetFadeOut();
-					if (FadeOut != 0)
-					{
-						if (channel.FadeOutVol < (FadeOut << 1U))
-							channel.FadeOutVol = 0;
-						else
-							channel.FadeOutVol -= FadeOut << 1U;
-						vol = (vol * channel.FadeOutVol) >> 16U;
-					}
-					else if (channel.FadeOutVol == 0U)
-						vol = 0U;
-				}
+					vol = channel.applyNoteFade(vol);
 				if (env->GetEnabled() && env->HasNodes())
 				{
 					uint8_t volValue = env->Apply(channel.EnvVolumePos);
