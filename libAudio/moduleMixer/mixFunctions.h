@@ -80,9 +80,11 @@ const std::array<int16_t, 1024> FastSinc
    -1,   135, 16374,  -124,    -1,   100, 16378,   -93,     0,    65, 16381,   -63,     0,    32, 16383,   -31,
 }};
 
-double Zero(double y)
+double zero(double y)
 {
-	double s = 1, ds = 1, d = 0;
+	double s = 1;
+	double ds = 1;
+	double d = 0;
 
 	do
 	{
@@ -96,23 +98,23 @@ double Zero(double y)
 
 void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 {
-	double ZeroBeta = Zero(Beta);
+	double ZeroBeta = zero(Beta);
 	double LPAt = 4.0 * atan(1.0) * LowPassFactor;
 	short *Sinc = *p_Sinc = (short *)malloc(sizeof(short) * SINC_PHASES * 8);
 	for (int i = 0; i < 8 * SINC_PHASES; i++)
 	{
 		double FSinc;
-		int x = 7 - (i & 7), n;
-		x = (x * SINC_PHASES) + (i >> 3);
+		int x = 7U - (i & 7U), n;
+		x = (x * SINC_PHASES) + (i >> 3U);
 		if (x == 4 * SINC_PHASES)
 			FSinc = 1.0;
 		else
 		{
 			double y = (x - (4 * SINC_PHASES)) * (1.0 / SINC_PHASES);
-			FSinc = sin(y * LPAt) * Zero(Beta * sqrt(1 - y * y * (1.0 / 16.0))) / (ZeroBeta * y * LPAt);
+			FSinc = sin(y * LPAt) * zero(Beta * sqrt(1 - y * y * (1.0 / 16.0))) / (ZeroBeta * y * LPAt);
 		}
 		n = (int)(FSinc * LowPassFactor * (16384 * 256));
-		*Sinc = (n + 0x80) >> 8;
+		*Sinc = (n + 0x80U) >> 8U;
 		Sinc++;
 	}
 }
