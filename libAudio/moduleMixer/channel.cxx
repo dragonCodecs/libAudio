@@ -59,9 +59,11 @@ uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
 	return volume;
 }
 
-uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t volume,
-	ModuleEnvelope &envelope) noexcept
+uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t volume) noexcept
 {
+	auto &envelope{Instrument->GetEnvelope(envelopeType_t::volume)};
+	if (!envelope.GetEnabled() || !envelope.HasNodes())
+		return volume;
 	uint8_t volValue{envelope.Apply(EnvVolumePos)};
 	auto result{uint16_t(muldiv_t<uint32_t>{}(volume, volValue, 1U << 6U))};
 	clipInt<uint16_t>(result, 0, 128);
@@ -100,8 +102,11 @@ uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t
 	return result;
 }
 
-void channel_t::applyPanningEnvelope(ModuleEnvelope &envelope) noexcept
+void channel_t::applyPanningEnvelope() noexcept
 {
+	auto &envelope{Instrument->GetEnvelope(envelopeType_t::panning)};
+	if (!envelope.GetEnabled() || !envelope.HasNodes())
+		return;
 	uint16_t result{RawPanning};
 	auto panningValue{int8_t(envelope.Apply(EnvPanningPos) - 128)};
 	clipInt<int8_t>(panningValue, -32, 32);
@@ -128,8 +133,11 @@ void channel_t::applyPanningEnvelope(ModuleEnvelope &envelope) noexcept
 		EnvPanningPos = envelope.GetLastTick();
 }
 
-uint32_t channel_t::applyPitchEnvelope(const uint32_t period, ModuleEnvelope &envelope) noexcept
+uint32_t channel_t::applyPitchEnvelope(const uint32_t period) noexcept
 {
+	auto &envelope{Instrument->GetEnvelope(envelopeType_t::pitch)};
+	if (!envelope.GetEnabled() || !envelope.HasNodes())
+		return period;
 	auto pitchValue{int8_t(envelope.Apply(EnvPitchPos) - 128)};
 	clipInt<int8_t>(pitchValue, -32, 32);
 	auto result{period};

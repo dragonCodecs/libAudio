@@ -1226,17 +1226,8 @@ bool ModuleFile::AdvanceTick()
 
 			if (channel.Instrument)
 			{
-				const auto *const instr{channel.Instrument};
-				[&](ModuleEnvelope &env) noexcept
-				{
-					if (env.GetEnabled() && env.HasNodes())
-						vol = channel.applyVolumeEnvelope(*this, vol, env);
-				}(instr->GetEnvelope(envelopeType_t::volume));
-				[&](ModuleEnvelope &env) noexcept
-				{
-					if (env.GetEnabled() && env.HasNodes())
-						channel.applyPanningEnvelope(env);
-				}(instr->GetEnvelope(envelopeType_t::panning));
+				vol = channel.applyVolumeEnvelope(*this, vol);
+				channel.applyPanningEnvelope();
 				if ((channel.Flags & CHN_NOTEFADE) != 0U)
 					vol = channel.applyNoteFade(vol);
 			}
@@ -1264,11 +1255,7 @@ bool ModuleFile::AdvanceTick()
 			if ((p_Header->Flags & FILE_FLAGS_AMIGA_LIMITS) != 0)
 				clipInt<uint32_t>(period, 452, 3424);
 			if (channel.Instrument != nullptr)
-			{
-				auto &env = channel.Instrument->GetEnvelope(envelopeType_t::pitch);
-				if (env.GetEnabled() && env.HasNodes())
-					period = channel.applyPitchEnvelope(period, env);
-			}
+				period = channel.applyPitchEnvelope(period);
 			period += channel.applyVibrato(*this, period);
 			channel.applyPanbrello();
 			int8_t fractionalPeriod{0};

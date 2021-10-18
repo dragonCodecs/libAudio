@@ -163,7 +163,7 @@ public:
 	~ModuleHeader() noexcept = default;
 };
 
-class ModuleSample
+struct ModuleSample
 {
 protected:
 	const uint8_t _type;
@@ -517,7 +517,7 @@ union int16dot16
 	int16dot16_t Value;
 };
 
-class channel_t final
+struct channel_t final
 {
 public:
 	uint8_t *SampleData;
@@ -597,9 +597,9 @@ public:
 	int16_t applyTremolo(const ModuleFile &module, uint16_t volume) noexcept;
 	uint16_t applyTremor(const ModuleFile &module, uint16_t volume) noexcept;
 	uint16_t applyNoteFade(uint16_t volume) noexcept;
-	uint16_t applyVolumeEnvelope(const ModuleFile &module, uint16_t volume, ModuleEnvelope &envelope) noexcept;
-	void applyPanningEnvelope(ModuleEnvelope &envelope) noexcept;
-	uint32_t applyPitchEnvelope(uint32_t period, ModuleEnvelope &envelope) noexcept;
+	uint16_t applyVolumeEnvelope(const ModuleFile &module, uint16_t volume) noexcept;
+	void applyPanningEnvelope() noexcept;
+	uint32_t applyPitchEnvelope(uint32_t period) noexcept;
 	int16_t applyVibrato(const ModuleFile &module, uint32_t period) noexcept;
 	int16_t applyAutoVibrato(const ModuleFile &module, uint32_t period, int8_t &fractionalPeriod) noexcept;
 	void applyPanbrello() noexcept;
@@ -608,7 +608,7 @@ public:
 	uint32_t GetSampleCount(uint32_t Samples);
 };
 
-class ModuleFile final
+struct ModuleFile final
 {
 private:
 	uint8_t ModuleType;
