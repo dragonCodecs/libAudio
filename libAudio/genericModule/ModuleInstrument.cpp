@@ -73,14 +73,12 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 }
 
 uint16_t ModuleOldInstrument::GetFadeOut() const noexcept { return FadeOut; }
-bool ModuleOldInstrument::GetEnvEnabled(uint8_t env) const noexcept
-	{ return !env ? (Flags & 0x01U) : false; }
-bool ModuleOldInstrument::GetEnvLooped(uint8_t env) const noexcept
-	{ return !env ? (Flags & 0x02U) : false; }
-bool ModuleOldInstrument::GetEnvCarried(uint8_t env) const noexcept
-	{ return !env ? Envelope->GetCarried() : false; }
-ModuleEnvelope *ModuleOldInstrument::GetEnvelope(uint8_t env) const noexcept
-	{ return !env ? Envelope.get() : nullptr; }
+bool ModuleOldInstrument::GetEnvEnabled(const envelopeType_t env) const noexcept
+	{ return static_cast<uint8_t>(env) ? false : (Flags & 0x01U); }
+bool ModuleOldInstrument::GetEnvLooped(const envelopeType_t env) const noexcept
+	{ return static_cast<uint8_t>(env) ? false : (Flags & 0x02U); }
+bool ModuleOldInstrument::GetEnvCarried(const envelopeType_t env) const noexcept
+	{ return static_cast<uint8_t>(env) ? false : Envelope->GetCarried(); }
 bool ModuleOldInstrument::IsPanned() const noexcept { return false; }
 bool ModuleOldInstrument::HasVolume() const noexcept { return false; }
 uint8_t ModuleOldInstrument::GetPanning() const noexcept { return 0; }
@@ -88,6 +86,13 @@ uint8_t ModuleOldInstrument::GetVolume() const noexcept { return 0; }
 uint8_t ModuleOldInstrument::GetNNA() const noexcept { return NNA; }
 uint8_t ModuleOldInstrument::GetDCT() const noexcept { return DCT_OFF; }
 uint8_t ModuleOldInstrument::GetDNA() const noexcept { return DNA_NOTECUT; }
+
+ModuleEnvelope &ModuleOldInstrument::GetEnvelope(const envelopeType_t env) const
+{
+	if (static_cast<uint8_t>(env))
+		throw std::range_error{"instrument envelope index out of range"};
+	return *Envelope;
+}
 
 ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
 {
@@ -133,19 +138,11 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 
 	FadeOut <<= 6U;
 	Volume >>= 1U; // XXX: This seems like a bug..
-	for (size_t env = 0; env < Envelopes.size(); ++env)
-		Envelopes[env] = makeUnique<ModuleEnvelope>(file, env);
+	for (uint8_t env{0}; env < static_cast<uint8_t>(envelopeType_t::count); ++env)
+		Envelopes[env] = makeUnique<ModuleEnvelope>(file, static_cast<envelopeType_t>(env));
 }
 
 uint16_t ModuleNewInstrument::GetFadeOut() const noexcept { return FadeOut; }
-bool ModuleNewInstrument::GetEnvEnabled(uint8_t env) const noexcept
-	{ return Envelopes[env]->GetEnabled(); }
-bool ModuleNewInstrument::GetEnvLooped(uint8_t env) const noexcept
-	{ return Envelopes[env]->GetLooped(); }
-bool ModuleNewInstrument::GetEnvCarried(uint8_t env) const noexcept
-	{ return Envelopes[env]->GetCarried(); }
-ModuleEnvelope *ModuleNewInstrument::GetEnvelope(uint8_t env) const noexcept
-	{ return env < Envelopes.size() ? Envelopes[env].get() : nullptr; }
 bool ModuleNewInstrument::IsPanned() const noexcept { return !(Panning & 128U); }
 bool ModuleNewInstrument::HasVolume() const noexcept { return true; }
 uint8_t ModuleNewInstrument::GetPanning() const noexcept { return (Panning & 0x7FU) << 1U; }
@@ -154,7 +151,35 @@ uint8_t ModuleNewInstrument::GetNNA() const noexcept { return NNA; }
 uint8_t ModuleNewInstrument::GetDCT() const noexcept { return DCT; }
 uint8_t ModuleNewInstrument::GetDNA() const noexcept { return DNA; }
 
-ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
+bool ModuleNewInstrument::GetEnvEnabled(const envelopeType_t env) const noexcept
+{
+	if (env >= envelopeType_t::count)
+		return false;
+	return Envelopes[static_cast<size_t>(env)]->GetEnabled();
+}
+
+bool ModuleNewInstrument::GetEnvLooped(const envelopeType_t env) const noexcept
+{
+	if (env >= envelopeType_t::count)
+		return false;
+	return Envelopes[static_cast<size_t>(env)]->GetLooped();
+}
+
+bool ModuleNewInstrument::GetEnvCarried(const envelopeType_t env) const noexcept
+{
+	if (env >= envelopeType_t::count)
+		return false;
+	return Envelopes[static_cast<size_t>(env)]->GetCarried();
+}
+
+ModuleEnvelope &ModuleNewInstrument::GetEnvelope(const envelopeType_t env) const
+{
+	if (env >= envelopeType_t::count)
+		throw std::range_error{"instrument envelope index out of range"};
+	return *Envelopes[static_cast<size_t>(env)];
+}
+
+ModuleEnvelope::ModuleEnvelope(const modIT_t &file, const envelopeType_t env) : Type{env}
 {
 	uint8_t DontCare;
 	const fd_t &fd = file.fd();
@@ -172,7 +197,7 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	if (env != ENVELOPE_VOLUME)
+	if (env != envelopeType_t::volume)
 	{
 		// This requires signed/unsigned conversion
 		for (uint8_t i = 0; i < nNodes; i++)
@@ -182,7 +207,8 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, uint8_t env) : Type(env)
 
 ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8_t loopBegin,
 	const uint8_t loopEnd, const uint8_t susLoopBegin, const uint8_t susLoopEnd) noexcept :
-	Type(0), Flags(flags), LoopBegin(loopBegin), LoopEnd(loopEnd), SusLoopBegin(susLoopBegin), SusLoopEnd(susLoopEnd) { }
+	Type{envelopeType_t::volume}, Flags{flags}, LoopBegin{loopBegin}, LoopEnd{loopEnd},
+	SusLoopBegin{susLoopBegin}, SusLoopEnd{susLoopEnd} { }
 
 uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 {

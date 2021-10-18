@@ -220,11 +220,11 @@ void ModuleFile::SampleChange(channel_t &channel, const uint32_t sampleIndex, co
 		channel.Flags |= CHN_FASTVOLRAMP;
 		if (typeIs<MODULE_IT>() && !instrumentChanged && instr && !(channel.Flags & (CHN_NOTEOFF | CHN_NOTEFADE)))
 		{
-			if (!instr->GetEnvCarried(ENVELOPE_VOLUME))
+			if (!instr->GetEnvCarried(envelopeType_t::volume))
 				channel.EnvVolumePos = 0;
-			if (!instr->GetEnvCarried(ENVELOPE_PANNING))
+			if (!instr->GetEnvCarried(envelopeType_t::panning))
 				channel.EnvPanningPos = 0;
-			if (!instr->GetEnvCarried(ENVELOPE_PITCH))
+			if (!instr->GetEnvCarried(envelopeType_t::pitch))
 				channel.EnvPitchPos = 0;
 		}
 		else
@@ -236,7 +236,7 @@ void ModuleFile::SampleChange(channel_t &channel, const uint32_t sampleIndex, co
 		channel.autoVibratoDepth = 0;
 		channel.autoVibratoPos = 0;
 	}
-	else if (instr && !instr->GetEnvEnabled(ENVELOPE_VOLUME))
+	else if (instr && !instr->GetEnvEnabled(envelopeType_t::volume))
 	{
 		channel.EnvVolumePos = 0;
 		channel.autoVibratoDepth = 0;
@@ -1231,12 +1231,12 @@ bool ModuleFile::AdvanceTick()
 				{
 					if (env.GetEnabled() && env.HasNodes())
 						vol = channel.applyVolumeEnvelope(*this, vol, env);
-				}(*instr->GetEnvelope(ENVELOPE_VOLUME));
+				}(instr->GetEnvelope(envelopeType_t::volume));
 				[&](ModuleEnvelope &env) noexcept
 				{
 					if (env.GetEnabled() && env.HasNodes())
 						channel.applyPanningEnvelope(env);
-				}(*instr->GetEnvelope(ENVELOPE_PANNING));
+				}(instr->GetEnvelope(envelopeType_t::panning));
 				if ((channel.Flags & CHN_NOTEFADE) != 0U)
 					vol = channel.applyNoteFade(vol);
 			}
@@ -1265,9 +1265,9 @@ bool ModuleFile::AdvanceTick()
 				clipInt<uint32_t>(period, 452, 3424);
 			if (channel.Instrument != nullptr)
 			{
-				ModuleEnvelope *env = channel.Instrument->GetEnvelope(ENVELOPE_PITCH);
-				if (env->GetEnabled() && env->HasNodes())
-					period = channel.applyPitchEnvelope(period, *env);
+				auto &env = channel.Instrument->GetEnvelope(envelopeType_t::pitch);
+				if (env.GetEnabled() && env.HasNodes())
+					period = channel.applyPitchEnvelope(period, env);
 			}
 			period += channel.applyVibrato(*this, period);
 			channel.applyPanbrello();
@@ -1523,7 +1523,7 @@ inline void ModuleFile::DCFixingFill(uint32_t samples)
 
 void ModuleFile::CreateStereoMix(uint32_t count)
 {
-	uint32_t /*Flags, */rampSamples;
+	/*uint32_t Flags;*/
 	if (count == 0)
 		return;
 	/*Flags = GetResamplingFlag();*/
@@ -1536,7 +1536,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 			continue;
 		do
 		{
-			rampSamples = samples;
+			auto rampSamples = samples;
 			if (channel->RampLength > 0)
 			{
 				if (rampSamples > channel->RampLength)

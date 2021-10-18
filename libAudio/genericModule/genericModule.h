@@ -58,9 +58,13 @@ using stringPtr_t = std::unique_ptr<char []>;
 #define SAMPLE_FLAGS_LREVERSE		0x10U
 #define SAMPLE_FLAGS_SUSTAINLOOP	0x20U
 
-#define ENVELOPE_VOLUME		0U
-#define ENVELOPE_PANNING	1U
-#define ENVELOPE_PITCH		2U
+enum class envelopeType_t : uint8_t
+{
+	volume = 0,
+	panning = 1,
+	pitch = 2,
+	count = 3
+};
 
 class ModuleLoaderError : std::exception
 {
@@ -318,7 +322,7 @@ struct envelopeNode_t final
 class ModuleEnvelope : public ModuleAllocator
 {
 private:
-	uint8_t Type;
+	envelopeType_t Type;
 	uint8_t Flags;
 	uint8_t nNodes;
 	uint8_t LoopBegin;
@@ -328,7 +332,7 @@ private:
 	std::array<envelopeNode_t, 25> Nodes;
 
 public:
-	ModuleEnvelope(const modIT_t &file, const uint8_t env);
+	ModuleEnvelope(const modIT_t &file, const envelopeType_t env);
 	ModuleEnvelope(const modIT_t &file, const uint8_t Flags, const uint8_t LoopBegin,
 		const uint8_t LoopEnd, const uint8_t SusLoopBegin, const uint8_t SusLoopEnd) noexcept;
 	uint8_t Apply(const uint16_t Tick) noexcept;
@@ -355,7 +359,7 @@ private:
 protected:
 	uint8_t SampleMapping[240];
 
-	ModuleInstrument(const uint32_t id) noexcept : _id(id) { }
+	ModuleInstrument(const uint32_t id) noexcept : _id{id} { }
 
 public:
 	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
@@ -363,10 +367,10 @@ public:
 	std::pair<uint8_t, uint8_t> mapNote(const uint8_t note) noexcept;
 	virtual ~ModuleInstrument() noexcept = default;
 	virtual uint16_t GetFadeOut() const noexcept = 0;
-	virtual bool GetEnvEnabled(uint8_t env) const noexcept = 0;
-	virtual bool GetEnvLooped(uint8_t env) const noexcept = 0;
-	virtual bool GetEnvCarried(uint8_t env) const noexcept = 0;
-	virtual ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept = 0;
+	virtual bool GetEnvEnabled(envelopeType_t env) const noexcept = 0;
+	virtual bool GetEnvLooped(envelopeType_t env) const noexcept = 0;
+	virtual bool GetEnvCarried(envelopeType_t env) const noexcept = 0;
+	virtual ModuleEnvelope &GetEnvelope(envelopeType_t env) const = 0;
 	virtual bool IsPanned() const noexcept = 0;
 	virtual bool HasVolume() const noexcept = 0;
 	virtual uint8_t GetPanning() const noexcept = 0;
@@ -394,10 +398,10 @@ public:
 	~ModuleOldInstrument() = default;
 
 	uint16_t GetFadeOut() const noexcept override final;
-	bool GetEnvEnabled(uint8_t env) const noexcept override final;
-	bool GetEnvLooped(uint8_t env) const noexcept override final;
-	bool GetEnvCarried(uint8_t env) const noexcept override final;
-	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
+	bool GetEnvEnabled(envelopeType_t env) const noexcept override final;
+	bool GetEnvLooped(envelopeType_t env) const noexcept override final;
+	bool GetEnvCarried(envelopeType_t env) const noexcept override final;
+	ModuleEnvelope &GetEnvelope(envelopeType_t env) const override final;
 	bool IsPanned() const noexcept override final;
 	bool HasVolume() const noexcept override final;
 	uint8_t GetPanning() const noexcept override final;
@@ -424,17 +428,17 @@ private:
 	uint16_t TrackerVersion;
 	uint8_t nSamples;
 	std::unique_ptr<char []> Name;
-	std::array<std::unique_ptr<ModuleEnvelope>, 3> Envelopes;
+	std::array<std::unique_ptr<ModuleEnvelope>, static_cast<size_t>(envelopeType_t::count)> Envelopes;
 
 public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleNewInstrument() = default;
 
 	uint16_t GetFadeOut() const noexcept override final;
-	bool GetEnvEnabled(uint8_t env) const noexcept override final;
-	bool GetEnvLooped(uint8_t env) const noexcept override final;
-	bool GetEnvCarried(uint8_t env) const noexcept override final;
-	ModuleEnvelope *GetEnvelope(uint8_t env) const noexcept override final;
+	bool GetEnvEnabled(envelopeType_t env) const noexcept override final;
+	bool GetEnvLooped(envelopeType_t env) const noexcept override final;
+	bool GetEnvCarried(envelopeType_t env) const noexcept override final;
+	ModuleEnvelope &GetEnvelope(envelopeType_t env) const override final;
 	bool IsPanned() const noexcept override final;
 	bool HasVolume() const noexcept override final;
 	uint8_t GetPanning() const noexcept override final;

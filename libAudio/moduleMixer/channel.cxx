@@ -313,7 +313,7 @@ void channel_t::noteOff() noexcept
 {
 	bool noteOn = !(Flags & CHN_NOTEOFF);
 	Flags |= CHN_NOTEOFF;
-	if (Instrument && !Instrument->GetEnvEnabled(ENVELOPE_VOLUME))
+	if (Instrument && !Instrument->GetEnvEnabled(envelopeType_t::volume))
 		Flags |= CHN_NOTEFADE;
 	if (!Length)
 		return;
@@ -342,7 +342,7 @@ void channel_t::noteOff() noexcept
 	}
 	if (Instrument)
 	{
-		if (Instrument->GetEnvLooped(ENVELOPE_VOLUME) && Instrument->GetFadeOut())
+		if (Instrument->GetEnvLooped(envelopeType_t::volume) && Instrument->GetFadeOut())
 			Flags |= CHN_NOTEFADE;
 	}
 }
