@@ -318,16 +318,18 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		!fd.read(VibratoType))
 		throw ModuleLoaderError(E_BAD_IT);
 
-	if (FileName[11] != 0)
+	if (FileName[11])
 		FileName[12] = 0;
 	if (Volume > 64)
 		Volume = 64;
-	if (Name[25] != 0)
+	if (Name[25])
 		Name[26] = 0;
 
-	if (_const != 0 || Packing > 63U || VibratoSpeed > 64U || VibratoDepth > 64U ||
-		VibratoType >= 4U || /*(VibratoType < 4U && VibratoRate > 64U) ||*/ InstrVol > 64U)
-		throw ModuleLoaderError(E_BAD_IT);
+	// ITTECH.TXT from Impulse Tracker 2.14v5 says VibratoType can be at most 3, however
+	// we have run into several files in the wild where it is at least 4. MPT says 7 max.
+	if (_const || Packing > 63U || VibratoSpeed > 64U || VibratoDepth > 64U ||
+		VibratoType >= 8U || /*(VibratoType < 4U && VibratoRate > 64U) ||*/ InstrVol > 64U)
+		throw ModuleLoaderError{E_BAD_IT};
 	else if (VibratoRate > 64)
 		VibratoRate = 64;
 
