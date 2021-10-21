@@ -181,21 +181,21 @@ ModuleEnvelope &ModuleNewInstrument::GetEnvelope(const envelopeType_t env) const
 
 ModuleEnvelope::ModuleEnvelope(const modIT_t &file, const envelopeType_t env) : Type{env}
 {
-	uint8_t DontCare;
-	const fd_t &fd = file.fd();
+	const auto &fd{file.fd()};
+	uint8_t DontCare{};
 
-	if (!fd.read(&Flags, 1) ||
-		!fd.read(&nNodes, 1) ||
-		!fd.read(&LoopBegin, 1) ||
-		!fd.read(&LoopEnd, 1) ||
-		!fd.read(&SusLoopBegin, 1) ||
-		!fd.read(&SusLoopEnd, 1) ||
+	if (!fd.read(Flags) ||
+		!fd.read(nNodes) ||
+		!fd.read(LoopBegin) ||
+		!fd.read(LoopEnd) ||
+		!fd.read(SusLoopBegin) ||
+		!fd.read(SusLoopEnd) ||
 		!fd.read(Nodes) ||
-		!fd.read(&DontCare, 1))
-		throw ModuleLoaderError(E_BAD_IT);
+		!fd.read(DontCare))
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (LoopBegin > nNodes || LoopEnd > nNodes)
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (env != envelopeType_t::volume)
 	{
@@ -207,8 +207,8 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, const envelopeType_t env) : 
 
 ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8_t loopBegin,
 	const uint8_t loopEnd, const uint8_t susLoopBegin, const uint8_t susLoopEnd) noexcept :
-	Type{envelopeType_t::volume}, Flags{flags}, LoopBegin{loopBegin}, LoopEnd{loopEnd},
-	SusLoopBegin{susLoopBegin}, SusLoopEnd{susLoopEnd} { }
+	Type{envelopeType_t::volume}, Flags{flags}, nNodes{}, LoopBegin{loopBegin}, LoopEnd{loopEnd},
+	SusLoopBegin{susLoopBegin}, SusLoopEnd{susLoopEnd}, Nodes{} { }
 
 uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 {

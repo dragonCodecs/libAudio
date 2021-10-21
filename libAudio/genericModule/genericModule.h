@@ -319,7 +319,7 @@ struct envelopeNode_t final
 };
 #pragma pack(pop)
 
-class ModuleEnvelope : public ModuleAllocator
+struct ModuleEnvelope final
 {
 private:
 	envelopeType_t Type;
