@@ -45,6 +45,8 @@ uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t volume)
 
 uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
 {
+	if (!Instrument)
+		return volume;
 	const uint16_t FadeOut{Instrument->GetFadeOut()};
 	if (FadeOut)
 	{
@@ -61,6 +63,8 @@ uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
 
 uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t volume) noexcept
 {
+	if (!Instrument)
+		return volume;
 	auto &envelope{Instrument->GetEnvelope(envelopeType_t::volume)};
 	if (!envelope.GetEnabled() || !envelope.HasNodes())
 		return volume;
@@ -104,6 +108,8 @@ uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t
 
 void channel_t::applyPanningEnvelope() noexcept
 {
+	if (!Instrument)
+		return;
 	auto &envelope{Instrument->GetEnvelope(envelopeType_t::panning)};
 	if (!envelope.GetEnabled() || !envelope.HasNodes())
 		return;
@@ -135,6 +141,8 @@ void channel_t::applyPanningEnvelope() noexcept
 
 uint32_t channel_t::applyPitchEnvelope(const uint32_t period) noexcept
 {
+	if (!Instrument)
+		return period;
 	auto &envelope{Instrument->GetEnvelope(envelopeType_t::pitch)};
 	if (!envelope.GetEnabled() || !envelope.HasNodes())
 		return period;
