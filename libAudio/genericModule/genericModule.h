@@ -350,7 +350,7 @@ private:
 	const uint32_t _id;
 
 protected:
-	uint8_t SampleMapping[240]{};
+	std::array<uint8_t, 240> SampleMapping{};
 
 	ModuleInstrument(const uint32_t id) noexcept : _id{id} { }
 

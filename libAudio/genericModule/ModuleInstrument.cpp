@@ -40,33 +40,33 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 	uint8_t SusLoopBegin{};
 	uint8_t SusLoopEnd{};
 	uint8_t Const{};
-	char DontCare[6]{};
+	std::array<char, 6> DontCare{};
 	std::array<char, 4> magic{};
 	const fd_t &fd = file.fd();
 
 	if (!fd.read(magic) ||
 		strncmp(magic.data(), "IMPI", 4) != 0)
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (!FileName || !Name ||
 		!fd.read(FileName, 12) ||
-		!fd.read(&Const, 1) ||
-		!fd.read(&Flags, 1) ||
-		!fd.read(&LoopBegin, 1) ||
-		!fd.read(&LoopEnd, 1) ||
-		!fd.read(&SusLoopBegin, 1) ||
-		!fd.read(&SusLoopEnd, 1) ||
-		!fd.read(DontCare, 2) ||
-		!fd.read(&FadeOut, 2) ||
-		!fd.read(&NNA, 1) ||
-		!fd.read(&DNC, 1) ||
-		!fd.read(&TrackerVersion, 2) ||
-		!fd.read(&nSamples, 1) ||
-		!fd.read(DontCare, 1) ||
+		!fd.read(Const) ||
+		!fd.read(Flags) ||
+		!fd.read(LoopBegin) ||
+		!fd.read(LoopEnd) ||
+		!fd.read(SusLoopBegin) ||
+		!fd.read(SusLoopEnd) ||
+		!fd.read<2>(DontCare) ||
+		!fd.readLE(FadeOut) ||
+		!fd.read(NNA) ||
+		!fd.read(DNC) ||
+		!fd.readLE(TrackerVersion) ||
+		!fd.read(nSamples) ||
+		!fd.read<1>(DontCare) ||
 		!fd.read(Name, 26) ||
-		!fd.read(DontCare, 6) ||
-		!fd.read(SampleMapping, 240))
-		throw ModuleLoaderError(E_BAD_IT);
+		!fd.read(DontCare) ||
+		!fd.read(SampleMapping))
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (FileName[11] != 0)
 		FileName[12] = 0;
@@ -74,7 +74,7 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 		Name[26] = 0;
 
 	if (Const != 0 || NNA > 3 || DNC > 1)
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	Envelope = make_unique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
@@ -105,33 +105,33 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 	FileName{make_unique<char []>(13)}, Name{make_unique<char []>(27)}
 {
 	uint8_t Const{};
-	char DontCare[6]{};
+	std::array<char, 6> DontCare{};
 	std::array<char, 4> magic{};
 	const fd_t &fd = file.fd();
 
 	if (!fd.read(magic) || magic != itInstrumentMagic)
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (!FileName || !Name ||
 		!fd.read(FileName, 12) ||
-		!fd.read(&Const, 1) ||
-		!fd.read(&NNA, 1) ||
-		!fd.read(&DCT, 1) ||
-		!fd.read(&DNA, 1) ||
-		!fd.read(&FadeOut, 2) ||
-		!fd.read(&PPS, 1) ||
-		!fd.read(&PPC, 1) ||
-		!fd.read(&Volume, 1) ||
-		!fd.read(&Panning, 1) ||
-		!fd.read(&RandVolume, 1) ||
-		!fd.read(&RandPanning, 1) ||
-		!fd.read(&TrackerVersion, 2) ||
-		!fd.read(&nSamples, 1) ||
-		!fd.read(DontCare, 1) ||
+		!fd.read(Const) ||
+		!fd.read(NNA) ||
+		!fd.read(DCT) ||
+		!fd.read(DNA) ||
+		!fd.readLE(FadeOut) ||
+		!fd.read(PPS) ||
+		!fd.read(PPC) ||
+		!fd.read(Volume) ||
+		!fd.read(Panning) ||
+		!fd.read(RandVolume) ||
+		!fd.read(RandPanning) ||
+		!fd.readLE(TrackerVersion) ||
+		!fd.read(nSamples) ||
+		!fd.read<1>(DontCare) ||
 		!fd.read(Name, 26) ||
-		!fd.read(DontCare, 6) ||
-		!fd.read(SampleMapping, 240))
-		throw ModuleLoaderError(E_BAD_IT);
+		!fd.read(DontCare) ||
+		!fd.read(SampleMapping))
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (FileName[11])
 		FileName[12] = 0;
@@ -139,7 +139,7 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 		Name[26] = 0;
 
 	if (Const || NNA > 3 || DCT > 3 || DNA > 2 || Volume > 128)
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	FadeOut <<= 6U;
 	Volume >>= 1U; // XXX: This seems like a bug..
