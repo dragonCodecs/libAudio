@@ -460,20 +460,20 @@ private:
 
 public:
 	void SetSample(const uint8_t _sample) noexcept { Sample = _sample; }
-	void SetVolume(const uint8_t Volume) noexcept;
-	void SetMODData(const std::array<uint8_t, 4> &Data) noexcept;
-	void SetS3MNote(uint8_t Note, uint8_t Sample);
-	void SetS3MVolume(uint8_t Volume);
-	void SetS3MEffect(uint8_t Effect, uint8_t Param);
-	void SetSTMNote(uint8_t Note);
-	void SetSTMEffect(uint8_t Effect, uint8_t Param);
-	void SetAONNote(uint8_t Note);
-	void SetAONArpIndex(uint8_t Index);
-	void SetAONEffect(uint8_t Effect, uint8_t Param);
-	void SetITRepVal(const uint8_t channelMask, const ModuleCommand &lastCommand) noexcept;
+	void SetVolume(uint8_t volume) noexcept;
+	void SetMODData(const std::array<uint8_t, 4> &data) noexcept;
+	void SetS3MNote(uint8_t note, uint8_t sample);
+	void SetS3MVolume(uint8_t volume);
+	void SetS3MEffect(uint8_t effect, uint8_t param);
+	void SetSTMNote(uint8_t note);
+	void SetSTMEffect(uint8_t effect, uint8_t param);
+	void SetAONNote(const uint8_t note) noexcept { Note = note; }
+	void SetAONArpIndex(const uint8_t index) noexcept { ArpIndex = index; }
+	void SetAONEffect(uint8_t effect, uint8_t param);
+	void SetITRepVal(uint8_t channelMask, const ModuleCommand &lastCommand) noexcept;
 	void SetITNote(uint8_t note) noexcept;
-	void SetITVolume(const uint8_t volume) noexcept;
-	void SetITEffect(const uint8_t Effect, const uint8_t Param);
+	void SetITVolume(uint8_t volume) noexcept;
+	void SetITEffect(uint8_t effect, uint8_t param);
 };
 
 class ModulePattern final
