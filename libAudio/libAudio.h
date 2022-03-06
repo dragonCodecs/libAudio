@@ -9,39 +9,56 @@
  * @date 2009-2020
  */
 
-#include <stdint.h> // NOLINT:modernize-deprecated-headers
+#include <stdint.h> // NOLINT(modernize-deprecated-headers)
 #include "fileInfo.hxx"
 
 #ifdef _WINDOWS
 	#ifdef libAUDIO
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllexport)
 		#pragma warning (disable : 4996)
 	#else
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllimport)
 	#endif
+	// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 	#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
+	// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 	#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
+	// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 	#define libAUDIO_CLSMAYBE_API
+	// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 	#define libAUDIO_CXX_API extern libAUDIO_DEFAULT_VISIBILITY
 #else
 	#if __GNUC__ >= 4
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_DEFAULT_VISIBILITY __attribute__ ((visibility("default")))
 	#else
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_DEFAULT_VISIBILITY
 	#endif
 	#ifdef __cplusplus
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_CLS_API libAUDIO_DEFAULT_VISIBILITY
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_CLSMAYBE_API libAUDIO_CLS_API
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_CXX_API extern libAUDIO_CLS_API
 	#else
+		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_API extern libAUDIO_DEFAULT_VISIBILITY
 	#endif
 #endif
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion "0.5.2"
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion_Major 0
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion_Minor 5
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion_Rev 2
 
 // Ogg|Vorbis API
@@ -158,32 +175,53 @@ libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *const file
 libAUDIO_API int64_t audioWriteBuffer(void *audioFile, void *const buffer, int64_t length);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
+// cppcoreguidelines-avoid-non-const-global-variables
 libAUDIO_API uint8_t ExternalPlayback;
 
 // Set this to zero if you do not want the genericModule/moduleMixer
 // powered decoders to initialise a mixer instance
+// cppcoreguidelines-avoid-non-const-global-variables
 libAUDIO_API uint8_t ToPlayback;
 
 // Master Audio API Defines
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_OGG_VORBIS	1
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_FLAC			2
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_WAVE			3
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_MP4			4
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_M4A			AUDIO_MP4
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_AAC			5
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_MP3			6
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_IT			7
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_MUSEPACK		8
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_WAVPACK		9
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_OPTIMFROG		10
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_REALAUDIO		11
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_WMA			12
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_MOD			13
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_S3M			14
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_STM			15
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_AON			16
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_FC1x			17
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_OGG_OPUS		18
 
 #endif /*LIB_AUDIO__H*/
