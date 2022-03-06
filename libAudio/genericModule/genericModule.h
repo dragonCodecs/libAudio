@@ -21,7 +21,7 @@ using substrate::managedPtr_t;
 \***************************/
 
 class ModuleFile;
-class channel_t;
+struct channel_t;
 class ModuleSample;
 class ModulePattern;
 
@@ -139,7 +139,7 @@ private:
 private:
 	uint8_t nChannels{};
 	friend class ModuleFile;
-	friend class channel_t;
+	friend struct channel_t;
 	ModuleHeader() noexcept;
 
 public:
@@ -456,7 +456,7 @@ private:
 	inline uint8_t MODPeriodToNoteIndex(const uint16_t Period) noexcept;
 	void TranslateMODEffect(const uint8_t Effect, const uint8_t Param) noexcept;
 	friend class ModuleFile;
-	friend class channel_t;
+	friend struct channel_t;
 
 public:
 	void SetSample(const uint8_t _sample) noexcept { Sample = _sample; }
@@ -665,7 +665,7 @@ private:
 	void aonLoadPCM(const fd_t &fd);
 	void itLoadPCM(const fd_t &fd);
 	void DeinitMixer();
-	friend class channel_t;
+	friend struct channel_t;
 
 public:
 	ModuleFile(const modMOD_t &file);
