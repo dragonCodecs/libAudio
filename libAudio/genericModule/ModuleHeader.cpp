@@ -68,23 +68,15 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 		nOrders = 128;
 	if (RestartPos > 127)
 		RestartPos = 127;
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	Type = 0;
-	Flags = 0;
-	nInstruments = 0;
-	CreationVersion = FormatVersion = 0;
 }
 
 ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 {
-	std::array<char, 4> magic;
-	std::array<uint8_t, 10> dontCare;
-	uint8_t Const;
-	uint16_t Special, rawFlags;
+	std::array<char, 4> magic{};
+	std::array<uint8_t, 10> dontCare{};
+	uint8_t Const{};
+	uint16_t Special{};
+	uint16_t rawFlags{};
 	const fd_t &fd = file.fd();
 
 	Name = make_unique<char []>(29);
@@ -111,14 +103,14 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 
 	if (Name[27] != 0)
 		Name[28] = 0;
-	if ((rawFlags & 0x04) != 0)
+	if ((rawFlags & 0x04U) != 0)
 		Flags |= FILE_FLAGS_AMIGA_SLIDES;
-	if ((rawFlags & 0x10) != 0)
+	if ((rawFlags & 0x10U) != 0)
 		Flags |= FILE_FLAGS_AMIGA_LIMITS;
-	if (CreationVersion < 0x1320 && (rawFlags & 0x40) != 0)
+	if (CreationVersion < 0x1320U && (rawFlags & 0x40U) != 0)
 		Flags |= FILE_FLAGS_FAST_SLIDES;
 
-	if (Const != 0x1A || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
+	if (Const != 0x1AU || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
 		memcmp(magic.data(), "SCRM", 4) != 0)
 		throw ModuleLoaderError(E_BAD_S3M);
 
@@ -127,12 +119,12 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 	PatternPtrs = make_managed<uint16_t []>(nPatterns);
 	if (!Orders || !SamplePtrs || !PatternPtrs ||
 		!fd.read(Orders.get(), nOrders) ||
-		!fd.read(SamplePtrs.get(), nSamples * 2) ||
-		!fd.read(PatternPtrs.get(), nPatterns * 2))
+		!fd.read(SamplePtrs.get(), static_cast<size_t>(nSamples) * 2U) ||
+		!fd.read(PatternPtrs.get(), static_cast<size_t>(nPatterns) * 2U))
 		throw ModuleLoaderError(E_BAD_S3M);
 
 	// Panning?
-	if (dontCare[1] == 0xFC)
+	if (dontCare[1] == 0xFCU)
 	{
 		uint8_t i;
 		Panning = make_unique<uint16_t []>(32);
@@ -140,28 +132,22 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 			throw ModuleLoaderError(E_BAD_S3M);
 		for (i = 0; i < 32; i++)
 		{
-			uint8_t value;
+			uint8_t value{};
 			if (!fd.read(value))
 				throw ModuleLoaderError(E_BAD_S3M);
-			else if (value & 0x20)
-				Panning[i] = ((value & 0x0F) << 4) | (value & 0x0F);
+			else if (value & 0x20U)
+				Panning[i] = ((value & 0x0FU) << 4U) | (value & 0x0FU);
 			else
 				Panning[i] = 128;
 		}
 	}
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	nInstruments = 0;
 }
 
 ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 {
-	std::array<char, 9> magic;
-	std::array<char, 13> reserved;
-	uint8_t patternCount_;
+	std::array<char, 9> magic{};
+	std::array<char, 13> reserved{};
+	uint8_t patternCount_{};
 	const fd_t &fd = file.fd();
 
 	nOrders = 128;
@@ -182,33 +168,27 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 		fd.seek(48, SEEK_SET) != 48)
 		throw ModuleLoaderError(E_BAD_STM);
 
-	InitialSpeed >>= 4;
+	InitialSpeed >>= 4U;
 	nPatterns = patternCount_;
 	if (Name[19] != 0)
 		Name[20] = 0;
 
-	for (uint8_t i = 0; i < nOrders; ++i)
+	for (uint16_t i{}; i < nOrders; ++i)
 	{
 		if (Orders[i] >= 99)
 			Orders[i] = 255;
 	}
 	nSamples = 31;
 	nChannels = 4;
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	Flags = 0;
-	nInstruments = 0;
 }
 
 ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 {
-	std::array<char, 4> magic1{}, blockName{};
+	std::array<char, 4> magic1{};
+	std::array<char, 4> blockName{};
 	std::array<char, 42> magic2{};
 	uint32_t blockLen = 0;
-	uint8_t Const;
+	uint8_t Const{};
 	const fd_t &fd = file.fd();
 
 	if (!fd.read(magic1) ||
@@ -233,6 +213,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 	Author = make_unique<char []>(blockLen + 1);
 	if (!Author ||
 		!fd.read(Author, blockLen))
+		throw ModuleLoaderError(E_BAD_AON);
 	Author[blockLen] = 0;
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "DATE", 4) != 0 ||
@@ -270,9 +251,9 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		!fd.readBE(blockLen) ||
 		blockLen != 64)
 		throw ModuleLoaderError(E_BAD_AON);
-	for (uint8_t i = 0; i < 16; ++i)
+	for (size_t i{}; i < 16; ++i)
 	{
-		for (uint8_t j = 0; j < 4; ++j)
+		for (size_t j{}; j < 4; ++j)
 		{
 			if (!fd.read(ArpTable[i][j]))
 				throw ModuleLoaderError(E_BAD_AON);
@@ -286,7 +267,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		!fd.readBE(blockLen))
 		throw ModuleLoaderError(E_BAD_AON);
 	// If odd number of orders
-	if ((nOrders & 1) != 0)
+	if ((nOrders & 1U) != 0)
 		// Get rid of the fill byte from the count
 		blockLen--;
 	Orders = make_unique<uint8_t []>(nOrders);
@@ -298,18 +279,9 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 			throw ModuleLoaderError(E_BAD_AON);
 	}
 	// If odd read length, read the fill byte
-	if ((blockLen & 1) != 0 &&
+	if ((blockLen & 1U) != 0 &&
 		!fd.read(Const))
 		throw ModuleLoaderError(E_BAD_AON);
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	Type = 0;
-	Flags = 0;
-	CreationVersion = FormatVersion = 0;
-	nInstruments = 0;
 }
 
 #ifdef ENABLE_FC1x
@@ -331,21 +303,16 @@ ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}
 		!fd.read(SampleOffs) ||
 		!fd.read(SampleLength))
 		throw ModuleLoaderError(E_BAD_FC1x);
-
-	/********************************************\
-	|* The following block just initialises the *|
-	|* unused fields to harmless values.        *|
-	\********************************************/
-	nInstruments = 0;
 }
 #endif
 
 ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 {
-	std::array<char, 4> magic;
-	std::array<char, 4> dontCare;
-	uint16_t msgLength, songFlags;
-	uint8_t Const;
+	std::array<char, 4> magic{};
+	std::array<char, 4> dontCare{};
+	uint16_t msgLength{};
+	uint16_t songFlags{};
+	uint8_t Const{};
 	const fd_t &fd = file.fd();
 
 	if (!fd.read(magic) ||
@@ -383,7 +350,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 
 	// This loop is unfortunately necessary to perform a width conversion
 	// from the read value to our internal panning value.
-	for (uint8_t i = 0; i < 64; i++)
+	for (size_t i = 0; i < 64; i++)
 	{
 		uint8_t value{};
 		if (!fd.read(value))
@@ -401,19 +368,19 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 	if (!Orders || !InstrumentPtrs || !SamplePtrs || !PatternPtrs ||
 		!fd.read(Volumes) ||
 		!fd.read(Orders, nOrders) ||
-		!fd.read(InstrumentPtrs, nInstruments * 4) ||
-		!fd.read(SamplePtrs, nSamples * 4) ||
-		!fd.read(PatternPtrs, nPatterns * 4))
+		!fd.read(InstrumentPtrs, static_cast<size_t>(nInstruments) * 4U) ||
+		!fd.read(SamplePtrs, static_cast<size_t>(nSamples) * 4U) ||
+		!fd.read(PatternPtrs, static_cast<size_t>(nPatterns) * 4U))
 		throw ModuleLoaderError(E_BAD_IT);
 
 	Flags = 0;
-	if (songFlags & 0x0008)
+	if (songFlags & 0x0008U)
 		Flags |= FILE_FLAGS_LINEAR_SLIDES;
-	if (songFlags & 0x0010)
+	if (songFlags & 0x0010U)
 		Flags |= FILE_FLAGS_OLD_IT_EFFECTS;
 	else
 		Flags |= FILE_FLAGS_AMIGA_SLIDES;
-	if (!(songFlags & 0x0004))
+	if (!(songFlags & 0x0004U))
 		nInstruments = 0;
 
 	if (MessageOffs != 0)
