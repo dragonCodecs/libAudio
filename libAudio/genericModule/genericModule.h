@@ -344,17 +344,23 @@ public:
 	uint16_t GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }
 };
 
-class ModuleInstrument
+struct ModuleInstrument
 {
 private:
 	const uint32_t _id;
 
 protected:
+	// NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 	std::array<uint8_t, 240> SampleMapping{};
 
 	ModuleInstrument(const uint32_t id) noexcept : _id{id} { }
 
 public:
+	ModuleInstrument(const ModuleInstrument &) noexcept = delete;
+	ModuleInstrument(ModuleInstrument &&) noexcept = default;
+	ModuleInstrument &operator =(const ModuleInstrument &) noexcept = delete;
+	ModuleInstrument &operator =(ModuleInstrument &&) noexcept = default;
+
 	static std::unique_ptr<ModuleInstrument> LoadInstrument(const modIT_t &file,
 		const uint32_t i, const uint16_t FormatVersion);
 
@@ -374,7 +380,7 @@ public:
 	virtual uint8_t GetDNA() const noexcept = 0;
 };
 
-class ModuleOldInstrument final : public ModuleInstrument
+struct ModuleOldInstrument final : public ModuleInstrument
 {
 private:
 	std::unique_ptr<char []> FileName;
@@ -389,7 +395,11 @@ private:
 
 public:
 	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
+	ModuleOldInstrument(const ModuleOldInstrument &) noexcept = delete;
+	ModuleOldInstrument(ModuleOldInstrument &&) noexcept = default;
 	~ModuleOldInstrument() final = default;
+	ModuleOldInstrument &operator =(const ModuleOldInstrument &) noexcept = delete;
+	ModuleOldInstrument &operator =(ModuleOldInstrument &&) noexcept = default;
 
 	uint16_t GetFadeOut() const noexcept final;
 	bool GetEnvEnabled(envelopeType_t env) const noexcept final;
@@ -405,7 +415,7 @@ public:
 	uint8_t GetDNA() const noexcept final;
 };
 
-class ModuleNewInstrument final : public ModuleInstrument
+struct ModuleNewInstrument final : public ModuleInstrument
 {
 private:
 	std::unique_ptr<char []> FileName;
@@ -426,7 +436,11 @@ private:
 
 public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
+	ModuleNewInstrument(const ModuleNewInstrument &) noexcept = delete;
+	ModuleNewInstrument(ModuleNewInstrument &&) noexcept = default;
 	~ModuleNewInstrument() final = default;
+	ModuleNewInstrument &operator =(const ModuleNewInstrument &) noexcept = delete;
+	ModuleNewInstrument &operator =(ModuleNewInstrument &&) noexcept = default;
 
 	uint16_t GetFadeOut() const noexcept final;
 	bool GetEnvEnabled(envelopeType_t env) const noexcept final;
