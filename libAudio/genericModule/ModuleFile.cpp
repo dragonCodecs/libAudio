@@ -203,7 +203,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 	if (p_Header->nInstruments)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
-		uint32_t *const instrOffsets = p_Header->InstrumentPtrs.get<uint32_t>();
+		auto *const instrOffsets = p_Header->InstrumentPtrs.get<uint32_t>();
 		for (uint16_t i = 0; i < p_Header->nInstruments; ++i)
 		{
 			if (fd.seek(instrOffsets[i], SEEK_SET) != instrOffsets[i])
@@ -212,7 +212,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
-	uint32_t *const sampleOffsets = p_Header->SamplePtrs.get<uint32_t>();
+	auto *const sampleOffsets = p_Header->SamplePtrs.get<uint32_t>();
 	for (uint16_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		if (fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
