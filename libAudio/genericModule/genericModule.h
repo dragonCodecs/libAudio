@@ -257,7 +257,7 @@ public:
 	bool GetPanned() final { return DefaultPan & 0x80U; }
 };
 
-class ModuleSampleAdlib : public ModuleSample
+class ModuleSampleAdlib final : public ModuleSample
 {
 private:
 	char *FileName;
@@ -282,26 +282,26 @@ public:
 	ModuleSampleAdlib(const modS3M_t &file, const uint32_t i, const uint8_t Type);
 	~ModuleSampleAdlib();
 
-	uint32_t GetLength();
-	uint32_t GetLoopStart();
-	uint32_t GetLoopEnd();
-	uint32_t GetSustainLoopBegin();
-	uint32_t GetSustainLoopEnd();
-	uint8_t GetFineTune();
-	uint32_t GetC4Speed();
-	uint8_t GetVolume();
-	uint8_t GetSampleVolume();
-	uint8_t GetVibratoSpeed();
-	uint8_t GetVibratoDepth();
-	uint8_t GetVibratoType();
-	uint8_t GetVibratoRate();
-	uint16_t GetPanning();
-	bool Get16Bit();
-	bool GetStereo();
-	bool GetLooped();
-	bool GetSustainLooped();
-	bool GetBidiLoop();
-	bool GetPanned();
+	uint32_t GetLength() final;
+	uint32_t GetLoopStart() final;
+	uint32_t GetLoopEnd() final;
+	uint32_t GetSustainLoopBegin() final;
+	uint32_t GetSustainLoopEnd() final;
+	uint8_t GetFineTune() final;
+	uint32_t GetC4Speed() final;
+	uint8_t GetVolume() final;
+	uint8_t GetSampleVolume() final;
+	uint8_t GetVibratoSpeed() final;
+	uint8_t GetVibratoDepth() final;
+	uint8_t GetVibratoType() final;
+	uint8_t GetVibratoRate() final;
+	uint16_t GetPanning() final;
+	bool Get16Bit() final;
+	bool GetStereo() final;
+	bool GetLooped() final;
+	bool GetSustainLooped() final;
+	bool GetBidiLoop() final;
+	bool GetPanned() final;
 };
 
 #pragma pack(push, 1)
