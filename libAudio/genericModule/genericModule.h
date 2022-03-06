@@ -722,18 +722,6 @@ public:
 	bool useOldEffects() const noexcept { return p_Header->Flags & FILE_FLAGS_OLD_IT_EFFECTS; }
 };
 
-inline uint32_t swapBytes(const uint32_t val) noexcept
-{
-	return ((val >> 24U) & 0xFFU) | ((val >> 8U) & 0xFF00U) |
-		((val & 0xFF00U) << 8U) | ((val & 0xFFU) << 24U);
-}
-
-inline uint16_t swapBytes(const uint16_t val) noexcept
-	{ return ((val >> 8U) & 0xFFU) | ((val & 0xFFU) << 8U); }
-
-inline uint32_t Swap32(uint32_t i) noexcept { return swapBytes(i); }
-inline uint16_t Swap16(uint16_t i) noexcept { return swapBytes(i); }
-
 struct moduleFile_t::decoderContext_t
 {
 	uint8_t playbackBuffer[8192];
