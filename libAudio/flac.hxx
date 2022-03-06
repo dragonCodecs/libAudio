@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef FLAC__HXX
-#define FLAC__HXX
+#ifndef FLAC_HXX
+#define FLAC_HXX
 
 #include <FLAC/all.h>
 
@@ -65,4 +65,4 @@ struct flac_t::encoderContext_t final
 	void fillFrame(const int16_t *const buffer, const uint32_t samples) noexcept;
 };
 
-#endif /*FLAC__HXX*/
+#endif /*FLAC_HXX*/

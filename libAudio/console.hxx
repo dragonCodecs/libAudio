@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef CONSOLE__HXX
-#define CONSOLE__HXX
+#ifndef CONSOLE_HXX
+#define CONSOLE_HXX
 
 #include <cstdio>
 #include <cstddef>
@@ -249,4 +249,4 @@ namespace libAudio
 
 libAUDIO_CXX_API libAudio::console::console_t console;
 
-#endif /*CONSOLE__HXX*/
+#endif /*CONSOLE_HXX*/

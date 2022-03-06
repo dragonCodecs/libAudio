@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef OGG_VORBIS__HXX
-#define OGG_VORBIS__HXX
+#ifndef OGG_VORBIS_HXX
+#define OGG_VORBIS_HXX
 
 #include <vorbis/vorbisfile.h>
 #include <vorbis/vorbisenc.h>
@@ -65,4 +65,4 @@ struct oggVorbis_t::encoderContext_t final
 	bool writePage(const fd_t &fd, const bool force) noexcept;
 };
 
-#endif /*OGG_VORBIS__HXX*/
+#endif /*OGG_VORBIS_HXX*/

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef UNIQUE_PTR__HXX
-#define UNIQUE_PTR__HXX
+#ifndef UNIQUE_PTR_HXX
+#define UNIQUE_PTR_HXX
 
 #include <memory>
 #include <cstring>
@@ -55,4 +55,4 @@ inline std::unique_ptr<char []> stringDup(const std::unique_ptr<char []> &str)
 
 struct freeDelete final { void operator ()(void *ptr) noexcept { free(ptr); } };
 
-#endif /*UNIQUE_PTR__HXX*/
+#endif /*UNIQUE_PTR_HXX*/

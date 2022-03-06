@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef M4A__HXX
-#define M4A__HXX
+#ifndef M4A_HXX
+#define M4A_HXX
 
 #include <cstdint>
 #include <neaacdec.h>
@@ -111,4 +111,4 @@ struct m4a_t::encoderContext_t final
 	~encoderContext_t() noexcept;
 };
 
-#endif /*M4A__HXX*/
+#endif /*M4A_HXX*/

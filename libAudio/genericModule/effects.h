@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef __effects_H__
-#define __effects_H__
+#ifndef EFFECTS_H
+#define EFFECTS_H
 
 #define CMD_NONE				0x00
 #define CMD_ARPEGGIO			0x01
@@ -92,5 +92,5 @@
 #define DNA_NOTEOFF		1
 #define DNA_NOTEFADE	2
 
-#endif /*__effects_H__*/
+#endif /*EFFECTS_H*/
 

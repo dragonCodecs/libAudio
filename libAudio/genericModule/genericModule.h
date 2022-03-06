@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef GENERIC_MODULE__H
-#define GENERIC_MODULE__H
+#ifndef GENERIC_MODULE_H
+#define GENERIC_MODULE_H
 
 #include <substrate/fixed_vector>
 #include <substrate/managed_ptr>
@@ -722,4 +722,4 @@ struct moduleFile_t::decoderContext_t
 	std::unique_ptr<ModuleFile> mod;
 };
 
-#endif /*GENERIC_MODULE__H*/
+#endif /*GENERIC_MODULE_H*/

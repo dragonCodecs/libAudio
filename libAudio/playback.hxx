@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef PLAYBACK__HXX
-#define PLAYBACK__HXX
+#ifndef PLAYBACK_HXX
+#define PLAYBACK_HXX
 
 #include <cstdint>
 #include <mutex>
@@ -92,4 +92,4 @@ public:
 	playback_t &operator =(const playback_t &) noexcept = delete;
 };
 
-#endif /*PLAYBACK__HXX*/
+#endif /*PLAYBACK_HXX*/

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef OPEN_AL__HXX
-#define OPEN_AL__HXX
+#ifndef OPEN_AL_HXX
+#define OPEN_AL_HXX
 
 #include <cstdint>
 #ifdef _WINDOWS
@@ -96,4 +96,4 @@ public:
 extern std::unique_ptr<alContext_t> alContext;
 extern std::atomic<float> defaultLevel_;
 
-#endif /*OPEN_AL__HXX*/
+#endif /*OPEN_AL_HXX*/

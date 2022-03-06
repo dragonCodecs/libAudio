@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef OPEN_AL_PLAYBACK__HXX
-#define OPEN_AL_PLAYBACK__HXX
+#ifndef OPEN_AL_PLAYBACK_HXX
+#define OPEN_AL_PLAYBACK_HXX
 
 #include <array>
 #include <thread>
@@ -39,4 +39,4 @@ public:
 	openALPlayback_t &operator =(openALPlayback_t &&) noexcept = delete;
 };
 
-#endif /*OPEN_AL_PLAYBACK__HXX*/
+#endif /*OPEN_AL_PLAYBACK_HXX*/

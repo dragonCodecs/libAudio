@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef STRING__HXX
-#define STRING__HXX
+#ifndef STRING_HXX
+#define STRING_HXX
 
 #include "uniquePtr.hxx"
 
@@ -31,4 +31,4 @@ template<typename... Args> inline std::unique_ptr<char []> stringConcat(const ch
 inline void copyComment(std::unique_ptr<char []> &dst, const char *const src) noexcept
 	{ dst = !dst ? stringConcat(src) : stringConcat(dst.get(), " / ", src); }
 
-#endif /*STRING__HXX*/
+#endif /*STRING_HXX*/

@@ -1,5 +1,5 @@
-#ifndef SNDH_LOADER__HXX
-#define SNDH_LOADER__HXX
+#ifndef SNDH_LOADER_HXX
+#define SNDH_LOADER_HXX
 
 #include <cstdint>
 #include <memory>
@@ -45,4 +45,4 @@ public:
 	const sndhMetadata_t &metadata() const noexcept { return _metadata; }
 };
 
-#endif /*SNDH_LOADER__HXX*/
+#endif /*SNDH_LOADER_HXX*/

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef OGG_OPUS__HXX
-#define OGG_OPUS__HXX
+#ifndef OGG_OPUS_HXX
+#define OGG_OPUS_HXX
 
 #include <opusfile.h>
 #include <opusenc.h>
@@ -48,4 +48,4 @@ struct oggOpus_t::encoderContext_t final
 	~encoderContext_t() noexcept;
 };
 
-#endif /*OGG_OPUS__HXX*/
+#endif /*OGG_OPUS_HXX*/

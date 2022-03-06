@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef FILE_INFO__HXX
-#define FILE_INFO__HXX
+#ifndef FILE_INFO_HXX
+#define FILE_INFO_HXX
 
 #include <cstdint>
 #include <memory>
@@ -35,4 +35,4 @@ struct fileInfo_t final
 	fileInfo_t(const fileInfo_t &) = delete;
 };
 
-#endif /*FILE_INFO__HXX*/
+#endif /*FILE_INFO_HXX*/

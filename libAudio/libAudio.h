@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef LIB_AUDIO__H
-#define LIB_AUDIO__H
+#ifndef LIB_AUDIO_H
+#define LIB_AUDIO_H
 
 /*!
  * @file libAudio.h
@@ -9,7 +9,7 @@
  * @date 2009-2020
  */
 
-#include <stdint.h> // NOLINT(modernize-deprecated-headers)
+#include <stdint.h> // NOLINT(modernize-deprecated-headers,hicpp-deprecated-headers)
 #include "fileInfo.hxx"
 
 #ifdef _WINDOWS
@@ -224,4 +224,4 @@ libAUDIO_API uint8_t ToPlayback;
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_OGG_OPUS		18
 
-#endif /*LIB_AUDIO__H*/
+#endif /*LIB_AUDIO_H*/

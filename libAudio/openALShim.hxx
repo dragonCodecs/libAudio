@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef OPENAL_SHIM__HXX
-#define OPENAL_SHIM__HXX
+#ifndef OPENAL_SHIM_HXX
+#define OPENAL_SHIM_HXX
 
 #include <utility>
 #include <cstdio>
@@ -101,4 +101,4 @@ namespace al
 #undef ALC_CALL
 #undef AL_CALL
 
-#endif /*OPENAL_SHIM__HXX*/
+#endif /*OPENAL_SHIM_HXX*/

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef FIXED_POINT___H
-#define FIXED_POINT___H
+#ifndef FIXED_POINT_H
+#define FIXED_POINT_H
 
 #include <cstdint>
 
@@ -42,4 +42,4 @@ inline fixed64_t operator *(const uint32_t a, const fixed64_t &b)
 inline fixed64_t operator /(const uint8_t a, const fixed64_t &b)
 	{ return fixed64_t{a} / b; }
 
-#endif /*FIXED_POINT___H*/
+#endif /*FIXED_POINT_H*/
