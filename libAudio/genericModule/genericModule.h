@@ -87,7 +87,7 @@ public:
 	void *operator new[](const size_t s, const std::nothrow_t &);
 };
 
-class ModuleHeader final : public ModuleAllocator
+class ModuleHeader final
 {
 private:
 	// Common fields
@@ -149,7 +149,7 @@ private:
 	uint8_t nChannels;
 	friend class ModuleFile;
 	friend class channel_t;
-	ModuleHeader();
+	ModuleHeader() noexcept;
 
 public:
 	ModuleHeader(const modMOD_t &file);

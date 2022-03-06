@@ -5,18 +5,24 @@ using substrate::make_unique;
 using substrate::make_managed;
 
 // Default initalise key fields
-ModuleHeader::ModuleHeader() : Name{}, Remark{}, RestartPos{255}, GlobalVolume{64}, InitialSpeed{6},
-	InitialTempo{125}, MasterVolume{64}, Author{}, Separation{128}, Volumes{} { Volumes.fill(64); }
+ModuleHeader::ModuleHeader() noexcept : Name{}, Remark{}, nOrders{}, nSamples{}, nInstruments{}, nPatterns{},
+	Orders{}, Panning{}, Flags{}, CreationVersion{}, FormatVersion{}, InstrumentPtrs{}, SamplePtrs{},
+	PatternPtrs{}, RestartPos{255}, Type{}, GlobalVolume{64}, InitialSpeed{6}, InitialTempo{125},
+	MasterVolume{64}, ChannelSettings{}, Author{}, ArpTable{},
+#ifdef ENABLE_FC1x
+	SeqLength{}, PatternOffs{}, PatLength{}, FrequenciesOffs{}, FrequenciesLength{},
+	VolumeOffs{}, VolumeLength{}, SampleOffs{}, SampleLength{},
+#endif
+	Separation{128}, MessageOffs{}, Volumes{}, PanSurround{}, nChannels{} { Volumes.fill(64); }
 
 ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 {
 	constexpr const uint32_t seekOffset = (30 * 31) + 130;
-	std::array<char, 4> magic;
+	std::array<char, 4> magic{};
 	const fd_t &fd = file.fd();
 
 	Name = make_unique<char []>(21);
 	Orders = make_unique<uint8_t []>(128);
-	nOrders = 0;
 
 	if (!Name || !Orders ||
 		!fd.read(Name, 20) ||
@@ -197,7 +203,7 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	nInstruments = 0;
 }
 
-ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader()
+ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> magic1{}, blockName{};
 	std::array<char, 42> magic2{};
@@ -379,7 +385,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 	// from the read value to our internal panning value.
 	for (uint8_t i = 0; i < 64; i++)
 	{
-		uint8_t value;
+		uint8_t value{};
 		if (!fd.read(value))
 			throw ModuleLoaderError(E_BAD_IT);
 		Panning[i] = value;
