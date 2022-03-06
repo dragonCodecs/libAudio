@@ -91,62 +91,62 @@ class ModuleHeader final
 {
 private:
 	// Common fields
-	std::unique_ptr<char []> Name;
-	std::unique_ptr<char []> Remark;
-	uint16_t nOrders;
-	uint16_t nSamples;
-	uint16_t nInstruments;
-	uint16_t nPatterns;
-	std::unique_ptr<uint8_t []> Orders;
-	std::unique_ptr<uint16_t []> Panning;
-	uint16_t Flags;
-	uint16_t CreationVersion;
-	uint16_t FormatVersion;
-	managedPtr_t<void> InstrumentPtrs;
+	std::unique_ptr<char []> Name{};
+	std::unique_ptr<char []> Remark{};
+	uint16_t nOrders{};
+	uint16_t nSamples{};
+	uint16_t nInstruments{};
+	uint16_t nPatterns{};
+	std::unique_ptr<uint8_t []> Orders{};
+	std::unique_ptr<uint16_t []> Panning{};
+	uint16_t Flags{};
+	uint16_t CreationVersion{};
+	uint16_t FormatVersion{};
+	managedPtr_t<void> InstrumentPtrs{};
 	// Slightly badly named
 	// SamplePtrs = pointers to where the sample *descriptors* are
-	managedPtr_t<void> SamplePtrs;
+	managedPtr_t<void> SamplePtrs{};
 	// PatternPtrs = pointers to where the compressed pattern data is
-	managedPtr_t<void> PatternPtrs;
+	managedPtr_t<void> PatternPtrs{};
 
 	// Fields specific to certain formats
 
 	// MOD/AON
-	uint8_t RestartPos;
+	uint8_t RestartPos{255};
 
 	// S3M
-	uint8_t Type;
-	uint8_t GlobalVolume;
-	uint8_t InitialSpeed;
-	uint8_t InitialTempo;
-	uint8_t MasterVolume;
-	uint8_t ChannelSettings[32];
+	uint8_t Type{};
+	uint8_t GlobalVolume{64};
+	uint8_t InitialSpeed{6};
+	uint8_t InitialTempo{125};
+	uint8_t MasterVolume{64};
+	uint8_t ChannelSettings[32]{};
 
 	// AON
-	std::unique_ptr<char []> Author;
-	char ArpTable[16][4];
+	std::unique_ptr<char []> Author{};
+	char ArpTable[16][4]{};
 
 #ifdef ENABLE_FC1x
 	// FC1x
-	uint32_t SeqLength;
-	uint32_t PatternOffs;
-	uint32_t PatLength;
-	uint32_t FrequenciesOffs;
-	uint32_t FrequenciesLength;
-	uint32_t VolumeOffs;
-	uint32_t VolumeLength;
-	uint32_t SampleOffs;
-	uint32_t SampleLength;
+	uint32_t SeqLength{};
+	uint32_t PatternOffs{};
+	uint32_t PatLength{};
+	uint32_t FrequenciesOffs{};
+	uint32_t FrequenciesLength{};
+	uint32_t VolumeOffs{};
+	uint32_t VolumeLength{};
+	uint32_t SampleOffs{};
+	uint32_t SampleLength{};
 #endif
 
 	// IT
-	uint8_t Separation;
-	uint32_t MessageOffs;
-	std::array<uint8_t, 64> Volumes;
-	std::array<bool, 64> PanSurround;
+	uint8_t Separation{128};
+	uint32_t MessageOffs{};
+	std::array<uint8_t, 64> Volumes{};
+	std::array<bool, 64> PanSurround{};
 
 private:
-	uint8_t nChannels;
+	uint8_t nChannels{};
 	friend class ModuleFile;
 	friend class channel_t;
 	ModuleHeader() noexcept;

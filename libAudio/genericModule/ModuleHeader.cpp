@@ -5,15 +5,7 @@ using substrate::make_unique;
 using substrate::make_managed;
 
 // Default initalise key fields
-ModuleHeader::ModuleHeader() noexcept : Name{}, Remark{}, nOrders{}, nSamples{}, nInstruments{}, nPatterns{},
-	Orders{}, Panning{}, Flags{}, CreationVersion{}, FormatVersion{}, InstrumentPtrs{}, SamplePtrs{},
-	PatternPtrs{}, RestartPos{255}, Type{}, GlobalVolume{64}, InitialSpeed{6}, InitialTempo{125},
-	MasterVolume{64}, ChannelSettings{}, Author{}, ArpTable{},
-#ifdef ENABLE_FC1x
-	SeqLength{}, PatternOffs{}, PatLength{}, FrequenciesOffs{}, FrequenciesLength{},
-	VolumeOffs{}, VolumeLength{}, SampleOffs{}, SampleLength{},
-#endif
-	Separation{128}, MessageOffs{}, Volumes{}, PanSurround{}, nChannels{} { Volumes.fill(64); }
+ModuleHeader::ModuleHeader() noexcept { Volumes.fill(64); }
 
 ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 {
