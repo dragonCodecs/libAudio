@@ -235,26 +235,26 @@ public:
 	ModuleSampleNative(const modIT_t &file, const uint32_t i);
 	~ModuleSampleNative() noexcept = default;
 
-	uint32_t GetLength() override final { return Length; }
-	uint32_t GetLoopStart() override final { return LoopStart; }
-	uint32_t GetLoopEnd() override final { return LoopEnd; }
-	uint32_t GetSustainLoopBegin() override final { return SusLoopBegin; }
-	uint32_t GetSustainLoopEnd() override final { return SusLoopEnd; }
-	uint8_t GetFineTune() override final { return FineTune; }
-	uint32_t GetC4Speed() override final { return C4Speed; }
-	uint8_t GetVolume() override final { return Volume << 1U; }
-	uint8_t GetSampleVolume() override final { return InstrVol; }
-	uint8_t GetVibratoSpeed() override final { return VibratoSpeed; }
-	uint8_t GetVibratoDepth() override final { return VibratoDepth; }
-	uint8_t GetVibratoType() override final { return VibratoType; }
-	uint8_t GetVibratoRate() override final { return VibratoRate; }
-	uint16_t GetPanning() override final { return uint16_t(DefaultPan & 0x7FU) << 2; }
-	bool Get16Bit() override final;
-	bool GetStereo() override final;
-	bool GetLooped() override final;
-	bool GetSustainLooped() override final;
-	bool GetBidiLoop() override final;
-	bool GetPanned() override final { return DefaultPan & 0x80U; }
+	uint32_t GetLength() final { return Length; }
+	uint32_t GetLoopStart() final { return LoopStart; }
+	uint32_t GetLoopEnd() final { return LoopEnd; }
+	uint32_t GetSustainLoopBegin() final { return SusLoopBegin; }
+	uint32_t GetSustainLoopEnd() final { return SusLoopEnd; }
+	uint8_t GetFineTune() final { return FineTune; }
+	uint32_t GetC4Speed() final { return C4Speed; }
+	uint8_t GetVolume() final { return Volume << 1U; }
+	uint8_t GetSampleVolume() final { return InstrVol; }
+	uint8_t GetVibratoSpeed() final { return VibratoSpeed; }
+	uint8_t GetVibratoDepth() final { return VibratoDepth; }
+	uint8_t GetVibratoType() final { return VibratoType; }
+	uint8_t GetVibratoRate() final { return VibratoRate; }
+	uint16_t GetPanning() final { return uint16_t(DefaultPan & 0x7FU) << 2; }
+	bool Get16Bit() final;
+	bool GetStereo() final;
+	bool GetLooped() final;
+	bool GetSustainLooped() final;
+	bool GetBidiLoop() final;
+	bool GetPanned() final { return DefaultPan & 0x80U; }
 };
 
 class ModuleSampleAdlib : public ModuleSample
@@ -391,18 +391,18 @@ public:
 	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleOldInstrument() final = default;
 
-	uint16_t GetFadeOut() const noexcept override final;
-	bool GetEnvEnabled(envelopeType_t env) const noexcept override final;
-	bool GetEnvLooped(envelopeType_t env) const noexcept override final;
-	bool GetEnvCarried(envelopeType_t env) const noexcept override final;
-	ModuleEnvelope &GetEnvelope(envelopeType_t env) const override final;
-	bool IsPanned() const noexcept override final;
-	bool HasVolume() const noexcept override final;
-	uint8_t GetPanning() const noexcept override final;
-	uint8_t GetVolume() const noexcept override final;
-	uint8_t GetNNA() const noexcept override final;
-	uint8_t GetDCT() const noexcept override final;
-	uint8_t GetDNA() const noexcept override final;
+	uint16_t GetFadeOut() const noexcept final;
+	bool GetEnvEnabled(envelopeType_t env) const noexcept final;
+	bool GetEnvLooped(envelopeType_t env) const noexcept final;
+	bool GetEnvCarried(envelopeType_t env) const noexcept final;
+	ModuleEnvelope &GetEnvelope(envelopeType_t env) const final;
+	bool IsPanned() const noexcept final;
+	bool HasVolume() const noexcept final;
+	uint8_t GetPanning() const noexcept final;
+	uint8_t GetVolume() const noexcept final;
+	uint8_t GetNNA() const noexcept final;
+	uint8_t GetDCT() const noexcept final;
+	uint8_t GetDNA() const noexcept final;
 };
 
 class ModuleNewInstrument final : public ModuleInstrument
@@ -428,18 +428,18 @@ public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
 	~ModuleNewInstrument() final = default;
 
-	uint16_t GetFadeOut() const noexcept override final;
-	bool GetEnvEnabled(envelopeType_t env) const noexcept override final;
-	bool GetEnvLooped(envelopeType_t env) const noexcept override final;
-	bool GetEnvCarried(envelopeType_t env) const noexcept override final;
-	ModuleEnvelope &GetEnvelope(envelopeType_t env) const override final;
-	bool IsPanned() const noexcept override final;
-	bool HasVolume() const noexcept override final;
-	uint8_t GetPanning() const noexcept override final;
-	uint8_t GetVolume() const noexcept override final;
-	uint8_t GetNNA() const noexcept override final;
-	uint8_t GetDCT() const noexcept override final;
-	uint8_t GetDNA() const noexcept override final;
+	uint16_t GetFadeOut() const noexcept final;
+	bool GetEnvEnabled(envelopeType_t env) const noexcept final;
+	bool GetEnvLooped(envelopeType_t env) const noexcept final;
+	bool GetEnvCarried(envelopeType_t env) const noexcept final;
+	ModuleEnvelope &GetEnvelope(envelopeType_t env) const final;
+	bool IsPanned() const noexcept final;
+	bool HasVolume() const noexcept final;
+	uint8_t GetPanning() const noexcept final;
+	uint8_t GetVolume() const noexcept final;
+	uint8_t GetNNA() const noexcept final;
+	uint8_t GetDCT() const noexcept final;
+	uint8_t GetDNA() const noexcept final;
 };
 
 class ModuleCommand final
