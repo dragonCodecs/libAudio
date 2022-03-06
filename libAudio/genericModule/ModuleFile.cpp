@@ -3,34 +3,6 @@
 
 moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t(type, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
 
-void *ModuleAllocator::operator new(const size_t size)
-{
-	void *ret = ::operator new(size);
-	memset(ret, 0x00, size);
-	return ret;
-}
-
-void *ModuleAllocator::operator new[](const size_t size)
-{
-	void *ret = ::operator new[](size);
-	memset(ret, 0x00, size);
-	return ret;
-}
-
-void *ModuleAllocator::operator new(const size_t size, const std::nothrow_t &)
-{
-	void *ret = ::operator new(size, std::nothrow);
-	memset(ret, 0x00, size);
-	return ret;
-}
-
-void *ModuleAllocator::operator new[](const size_t size, const std::nothrow_t &)
-{
-	void *ret = ::operator new[](size, std::nothrow);
-	memset(ret, 0x00, size);
-	return ret;
-}
-
 constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType{moduleType}, p_Header{nullptr},
 	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},
 	MixSampleRate{}, MixBitsPerSample{}, TickCount{}, SamplesToMix{}, MinPeriod{}, MaxPeriod{}, MixChannels{},

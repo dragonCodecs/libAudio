@@ -78,15 +78,6 @@ public:
 	const char *what() const noexcept final { return error(); }
 };
 
-class ModuleAllocator
-{
-public:
-	void *operator new(const size_t s);
-	void *operator new[](const size_t s);
-	void *operator new(const size_t s, const std::nothrow_t &);
-	void *operator new[](const size_t s, const std::nothrow_t &);
-};
-
 class ModuleHeader final
 {
 private:
