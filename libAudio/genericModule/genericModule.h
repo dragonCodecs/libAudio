@@ -23,7 +23,7 @@ using substrate::managedPtr_t;
 class ModuleFile;
 struct channel_t;
 class ModuleSample;
-class ModulePattern;
+struct ModulePattern;
 
 using stringPtr_t = std::unique_ptr<char []>;
 
@@ -456,7 +456,7 @@ public:
 	uint8_t GetDNA() const noexcept final;
 };
 
-class ModuleCommand final
+struct ModuleCommand final
 {
 private:
 	uint8_t Sample{};
@@ -490,7 +490,7 @@ public:
 	void SetITEffect(uint8_t effect, uint8_t param);
 };
 
-class ModulePattern final
+struct ModulePattern final
 {
 public:
 	using commandPtr_t = std::unique_ptr<ModuleCommand []>;
