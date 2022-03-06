@@ -23,7 +23,7 @@ using substrate::managedPtr_t;
 class ModuleFile;
 struct channel_t;
 class ModuleSample;
-struct ModulePattern;
+struct pattern_t;
 
 using stringPtr_t = std::unique_ptr<char []>;
 
@@ -456,7 +456,7 @@ public:
 	uint8_t GetDNA() const noexcept final;
 };
 
-struct ModuleCommand final
+struct command_t final
 {
 private:
 	uint8_t Sample{};
@@ -484,30 +484,30 @@ public:
 	void SetAONNote(const uint8_t note) noexcept { Note = note; }
 	void SetAONArpIndex(const uint8_t index) noexcept { ArpIndex = index; }
 	void SetAONEffect(uint8_t effect, uint8_t param);
-	void SetITRepVal(uint8_t channelMask, const ModuleCommand &lastCommand) noexcept;
+	void SetITRepVal(uint8_t channelMask, const command_t &lastCommand) noexcept;
 	void SetITNote(uint8_t note) noexcept;
 	void SetITVolume(uint8_t volume) noexcept;
 	void SetITEffect(uint8_t effect, uint8_t param);
 };
 
-struct ModulePattern final
+struct pattern_t final
 {
 public:
-	using commandPtr_t = std::unique_ptr<ModuleCommand []>;
+	using commandPtr_t = std::unique_ptr<command_t []>;
 
 private:
 	const uint32_t Channels;
 	fixedVector_t<commandPtr_t> _commands;
 	uint16_t _rows;
 
-	ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type);
+	pattern_t(const uint32_t _channels, const uint16_t rows, const uint32_t type);
 
 public:
-	ModulePattern(const modMOD_t &file, const uint32_t channels);
-	ModulePattern(const modS3M_t &file, const uint32_t channels);
-	ModulePattern(const modSTM_t &file);
-	ModulePattern(const modAON_t &file, const uint32_t channels);
-	ModulePattern(const modIT_t &file, const uint32_t channels);
+	pattern_t(const modMOD_t &file, const uint32_t channels);
+	pattern_t(const modS3M_t &file, const uint32_t channels);
+	pattern_t(const modSTM_t &file);
+	pattern_t(const modAON_t &file, const uint32_t channels);
+	pattern_t(const modIT_t &file, const uint32_t channels);
 
 	const fixedVector_t<commandPtr_t> &commands() const { return _commands; }
 	uint16_t rows() const noexcept { return _rows; }
@@ -579,7 +579,7 @@ public:
 
 public:
 	channel_t() noexcept;
-	void SetData(ModuleCommand *Command, ModuleHeader *p_Header);
+	void SetData(command_t *Command, ModuleHeader *p_Header);
 
 	// Channel effects
 	void noteChange(ModuleFile &module, uint8_t note, bool handlePorta = false);
@@ -622,7 +622,7 @@ private:
 	uint8_t ModuleType;
 	ModuleHeader *p_Header;
 	ModuleSample **p_Samples;
-	ModulePattern **p_Patterns;
+	pattern_t **p_Patterns;
 	ModuleInstrument **p_Instruments;
 	uint8_t **p_PCM;
 	std::unique_ptr<uint32_t []> lengthPCM;

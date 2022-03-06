@@ -1134,7 +1134,7 @@ bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int
 	return true;
 }
 
-void channel_t::SetData(ModuleCommand *Command, ModuleHeader *p_Header)
+void channel_t::SetData(command_t *Command, ModuleHeader *p_Header)
 {
 	uint8_t excmd;
 	RowNote = Command->Note;
@@ -1185,7 +1185,7 @@ bool ModuleFile::Tick()
 		}
 		if (!p_Patterns[Pattern])
 			return false;
-		const ModulePattern &pattern = *p_Patterns[Pattern];
+		const pattern_t &pattern = *p_Patterns[Pattern];
 		const auto &commands = pattern.commands();
 		Rows = pattern.rows();
 		for (uint32_t i = 0; i < p_Header->nChannels; ++i)

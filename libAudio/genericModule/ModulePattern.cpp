@@ -15,14 +15,14 @@ static const uint16_t Periods[60] =
 };
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type) :
+pattern_t::pattern_t(const uint32_t _channels, const uint16_t rows, const uint32_t type) :
 	Channels{_channels}, _commands{_channels}, _rows{rows}
 {
 	if (!_commands.valid())
 		throw ModuleLoaderError{type};
 }
 
-ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t channels) : ModulePattern(channels, 64, E_BAD_MOD)
+pattern_t::pattern_t(const modMOD_t &file, const uint32_t channels) : pattern_t{channels, 64, E_BAD_MOD}
 {
 	const fd_t &fd = file.fd();
 	for (size_t row = 0; row < _rows; ++row)
@@ -33,7 +33,7 @@ ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t channels) : Mo
 			std::array<uint8_t, 4> data{};
 			if (row == 0)
 			{
-				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
+				_commands[channel] = makeUnique<command_t []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError{E_BAD_MOD};
 			}
@@ -48,14 +48,14 @@ ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t channels) : Mo
 	if ((cnt) + 1 >= (length)) \
 		break
 
-ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : ModulePattern{channels, 64, E_BAD_S3M}
+pattern_t::pattern_t(const modS3M_t &file, const uint32_t channels) : pattern_t{channels, 64, E_BAD_S3M}
 {
 	uint32_t length{};
 	const fd_t &fd = file.fd();
 
 	for (uint32_t i = 0; i < channels; ++i)
 	{
-		_commands[i] = makeUnique<ModuleCommand []>(_rows);
+		_commands[i] = makeUnique<command_t []>(_rows);
 		if (!_commands[i])
 			throw ModuleLoaderError{E_BAD_S3M};
 	}
@@ -114,7 +114,7 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 
 #undef checkLength
 
-ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_STM)
+pattern_t::pattern_t(const modSTM_t &file) : pattern_t(4, 64, E_BAD_STM)
 {
 	const fd_t &fd = file.fd();
 
@@ -124,7 +124,7 @@ ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_
 		{
 			if (row == 0)
 			{
-				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
+				_commands[channel] = makeUnique<command_t []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError{E_BAD_STM};
 			}
@@ -150,7 +150,7 @@ ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_
 	}
 }
 
-ModulePattern::ModulePattern(const modAON_t &file, const uint32_t channels) : ModulePattern{channels, 64, E_BAD_AON}
+pattern_t::pattern_t(const modAON_t &file, const uint32_t channels) : pattern_t{channels, 64, E_BAD_AON}
 {
 	using arithUInt = substrate::promoted_type_t<uint8_t>;
 	const fd_t &fd = file.fd();
@@ -160,7 +160,7 @@ ModulePattern::ModulePattern(const modAON_t &file, const uint32_t channels) : Mo
 		{
 			if (row == 0)
 			{
-				_commands[channel] = make_unique<ModuleCommand []>(_rows);
+				_commands[channel] = make_unique<command_t []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError{E_BAD_AON};
 			}
@@ -190,12 +190,12 @@ inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &f
 	return false;
 }
 
-ModulePattern::ModulePattern(const modIT_t &file, const uint32_t channels) : Channels{channels}
+pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{channels}
 {
 	std::array<char, 4> dontCare{};
 	std::array<uint8_t, 64> channelMask{};
 	uint16_t len{};
-	std::array<ModuleCommand, 64> lastCmd{};
+	std::array<command_t, 64> lastCmd{};
 	const fd_t &fd = file.fd();
 
 	_commands = fixedVector_t<commandPtr_t>(channels);
@@ -207,7 +207,7 @@ ModulePattern::ModulePattern(const modIT_t &file, const uint32_t channels) : Cha
 
 	for (size_t channel = 0; channel < channels; ++channel)
 	{
-		_commands[channel] = makeUnique<ModuleCommand []>(_rows);
+		_commands[channel] = makeUnique<command_t []>(_rows);
 		if (!_commands[channel])
 			throw ModuleLoaderError{E_BAD_IT};
 	}
@@ -280,13 +280,13 @@ ModulePattern::ModulePattern(const modIT_t &file, const uint32_t channels) : Cha
 	}
 }
 
-void ModuleCommand::SetVolume(const uint8_t volume) noexcept
+void command_t::SetVolume(const uint8_t volume) noexcept
 {
 	VolEffect = VOLCMD_VOLUME;
 	VolParam = volume;
 }
 
-uint8_t ModuleCommand::MODPeriodToNoteIndex(const uint16_t period) noexcept
+uint8_t command_t::MODPeriodToNoteIndex(const uint16_t period) noexcept
 {
 	if (period == 0)
 		return 0;
@@ -327,7 +327,7 @@ uint8_t ModuleCommand::MODPeriodToNoteIndex(const uint16_t period) noexcept
 		return 0;
 }
 
-void ModuleCommand::SetMODData(const std::array<uint8_t, 4> &data) noexcept
+void command_t::SetMODData(const std::array<uint8_t, 4> &data) noexcept
 {
 	using arithUInt = substrate::promoted_type_t<uint8_t>;
 	Sample = (arithUInt{data[0]} & 0xF0U) | (arithUInt{data[2]} >> 4U);
@@ -335,7 +335,7 @@ void ModuleCommand::SetMODData(const std::array<uint8_t, 4> &data) noexcept
 	TranslateMODEffect(data[2] & 0x0FU, data[3]);
 }
 
-void ModuleCommand::SetS3MNote(const uint8_t note, const uint8_t sample)
+void command_t::SetS3MNote(const uint8_t note, const uint8_t sample)
 {
 	Sample = sample;
 	if (note < 0xF0U)
@@ -346,7 +346,7 @@ void ModuleCommand::SetS3MNote(const uint8_t note, const uint8_t sample)
 		Note = note;
 }
 
-void ModuleCommand::SetS3MVolume(const uint8_t volume)
+void command_t::SetS3MVolume(const uint8_t volume)
 {
 	if (volume >= 128 && volume <= 192)
 	{
@@ -360,7 +360,7 @@ void ModuleCommand::SetS3MVolume(const uint8_t volume)
 	}
 }
 
-void ModuleCommand::SetSTMNote(const uint8_t note)
+void command_t::SetSTMNote(const uint8_t note)
 {
 	if (note > 250)
 	{
@@ -376,7 +376,7 @@ void ModuleCommand::SetSTMNote(const uint8_t note)
 	}
 }
 
-void ModuleCommand::SetITRepVal(const uint8_t channelMask, const ModuleCommand &lastCmd) noexcept
+void command_t::SetITRepVal(const uint8_t channelMask, const command_t &lastCmd) noexcept
 {
 	if ((channelMask & 0x10U) != 0)
 		Note = lastCmd.Note;
@@ -394,7 +394,7 @@ void ModuleCommand::SetITRepVal(const uint8_t channelMask, const ModuleCommand &
 	}
 }
 
-void ModuleCommand::SetITNote(const uint8_t note) noexcept
+void command_t::SetITNote(const uint8_t note) noexcept
 {
 	if (note < 0x80)
 		Note = note + 1U;
@@ -402,7 +402,7 @@ void ModuleCommand::SetITNote(const uint8_t note) noexcept
 		Note = note;
 }
 
-void ModuleCommand::SetITVolume(const uint8_t volume) noexcept
+void command_t::SetITVolume(const uint8_t volume) noexcept
 {
 	if (volume <= 64)
 	{

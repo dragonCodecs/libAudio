@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "genericModule.h"
 
-void ModuleCommand::TranslateMODEffect(const uint8_t cmd, const uint8_t param) noexcept
+void command_t::TranslateMODEffect(const uint8_t cmd, const uint8_t param) noexcept
 {
 	switch (cmd)
 	{
@@ -83,7 +83,7 @@ void ModuleCommand::TranslateMODEffect(const uint8_t cmd, const uint8_t param) n
 	}
 }
 
-void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
+void command_t::SetSTMEffect(uint8_t effect, uint8_t param)
 {
 	switch (effect)
 	{
@@ -140,7 +140,7 @@ void ModuleCommand::SetSTMEffect(uint8_t effect, uint8_t param)
 	}
 }
 
-void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
+void command_t::SetS3MEffect(uint8_t effect, uint8_t param)
 {
 	if (effect > 1 && effect <= 12)
 	{
@@ -210,7 +210,7 @@ void ModuleCommand::SetS3MEffect(uint8_t effect, uint8_t param)
 	}
 }
 
-void ModuleCommand::SetAONEffect(uint8_t effect, uint8_t param)
+void command_t::SetAONEffect(uint8_t effect, uint8_t param)
 {
 	// Effect 8 is unused, 0 is CMD_NONE
 	// and all the standard MOD effect IDs
@@ -282,7 +282,7 @@ void ModuleCommand::SetAONEffect(uint8_t effect, uint8_t param)
 	}
 }
 
-void ModuleCommand::SetITEffect(uint8_t effect, uint8_t param)
+void command_t::SetITEffect(uint8_t effect, uint8_t param)
 {
 	if (effect < 26)
 	{

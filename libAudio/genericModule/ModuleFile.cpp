@@ -31,9 +31,9 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
 			maxPattern = std::max<uint32_t>(maxPattern, p_Header->Orders[i]);
 	}
 	p_Header->nPatterns = maxPattern + 1;
-	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
+		p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
 
 	modLoadPCM(fd);
 	MinPeriod = 56;
@@ -66,14 +66,14 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleFile{MODULE_S3M}
 		}
 	}
 
-	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	uint16_t *const PatternPtrs = p_Header->PatternPtrs.get<uint16_t>();
 	for (uint16_t i = 0; i < p_Header->nPatterns; ++i)
 	{
 		const uint32_t offset = uint32_t{PatternPtrs[i]} << 4;
 		if (fd.seek(offset, SEEK_SET) != offset)
 			throw ModuleLoaderError{E_BAD_S3M};
-		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
+		p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
 	}
 
 	s3mLoadPCM(fd);
@@ -91,9 +91,9 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleFile{MODULE_STM}
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	if (!fd.seekRel(128))
 		throw ModuleLoaderError(E_BAD_STM);
-	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(file);
+		p_Patterns[i] = new pattern_t(file);
 	const uint32_t pcmOffset = 1104 + (1024 * p_Header->nPatterns);
 	if (fd.seek(pcmOffset, SEEK_SET) != pcmOffset)
 		throw ModuleLoaderError(E_BAD_STM);
@@ -127,9 +127,9 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 	if ((blockLen % (1 << ChannelMul)) != 0)
 		throw ModuleLoaderError(E_BAD_AON);
 	p_Header->nPatterns = blockLen >> ChannelMul;
-	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
-		p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
+		p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
 
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "INST", 4) != 0 ||
@@ -238,7 +238,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 		}
 	}
 
-	p_Patterns = new ModulePattern *[p_Header->nPatterns];
+	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	uint32_t *const PatternPtrs = p_Header->PatternPtrs.get<uint32_t>();
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 	{
@@ -248,7 +248,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 		{
 			if (fd.seek(PatternPtrs[i], SEEK_SET) != PatternPtrs[i])
 				throw ModuleLoaderError(E_BAD_IT);
-			p_Patterns[i] = new ModulePattern(file, p_Header->nChannels);
+			p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
 		}
 	}
 
