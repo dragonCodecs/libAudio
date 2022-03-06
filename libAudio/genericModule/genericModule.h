@@ -676,7 +676,11 @@ public:
 	ModuleFile(const modFC1x_t &file);
 #endif
 	ModuleFile(const modIT_t &file);
+	ModuleFile(const ModuleFile &) noexcept = delete;
+	ModuleFile(ModuleFile &&) noexcept = default;
 	virtual ~ModuleFile();
+	ModuleFile &operator =(const ModuleFile &) noexcept = delete;
+	ModuleFile &operator =(ModuleFile &&) noexcept = default;
 
 	stringPtr_t title() const noexcept;
 	stringPtr_t author() const noexcept;
