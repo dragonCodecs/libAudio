@@ -19,7 +19,7 @@ ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t rows, cons
 	Channels{_channels}, _commands{_channels}, _rows{rows}
 {
 	if (!_commands.valid())
-		throw ModuleLoaderError(type);
+		throw ModuleLoaderError{type};
 }
 
 ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t channels) : ModulePattern(channels, 64, E_BAD_MOD)
@@ -57,17 +57,17 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 	{
 		_commands[i] = makeUnique<ModuleCommand []>(_rows);
 		if (!_commands[i])
-			throw ModuleLoaderError(E_BAD_S3M);
+			throw ModuleLoaderError{E_BAD_S3M};
 	}
 	if (!fd.read(&length, sizeof(uint16_t)))
-		throw ModuleLoaderError(E_BAD_S3M);
+		throw ModuleLoaderError{E_BAD_S3M};
 
 	for (uint32_t j = 0, row = 0; row < _rows && j < length;)
 	{
 		uint8_t byte{};
 		checkLength(j, length);
 		if (!fd.read(byte))
-			throw ModuleLoaderError(E_BAD_S3M);
+			throw ModuleLoaderError{E_BAD_S3M};
 		else if (byte == 0)
 		{
 			++row;
@@ -81,7 +81,7 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 			uint8_t sample{};
 			if (!fd.read(note) ||
 				!fd.read(sample))
-				throw ModuleLoaderError(E_BAD_S3M);
+				throw ModuleLoaderError{E_BAD_S3M};
 			else if (channel < channels)
 				_commands[channel][row].SetS3MNote(note, sample);
 			j += 2;
@@ -91,7 +91,7 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 		{
 			uint8_t volume{};
 			if (!fd.read(volume))
-				throw ModuleLoaderError(E_BAD_S3M);
+				throw ModuleLoaderError{E_BAD_S3M};
 			else if (channel < channels)
 				_commands[channel][row].SetS3MVolume(volume);
 			++j;
@@ -103,7 +103,7 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 			uint8_t param{};
 			if (!fd.read(effect) ||
 				!fd.read(param))
-				throw ModuleLoaderError(E_BAD_S3M);
+				throw ModuleLoaderError{E_BAD_S3M};
 			if (channel < channels)
 				_commands[channel][row].SetS3MEffect(effect, param);
 			j += 2;
