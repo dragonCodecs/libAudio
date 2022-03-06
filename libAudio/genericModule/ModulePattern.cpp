@@ -38,7 +38,7 @@ pattern_t::pattern_t(const modMOD_t &file, const uint32_t channels) : pattern_t{
 					throw ModuleLoaderError{E_BAD_MOD};
 			}
 			fd.read(data);
-			_commands[channel][row].SetMODData(data);
+			_commands[channel][row].setMODData(data);
 		}
 	}
 }
@@ -83,7 +83,7 @@ pattern_t::pattern_t(const modS3M_t &file, const uint32_t channels) : pattern_t{
 				!fd.read(sample))
 				throw ModuleLoaderError{E_BAD_S3M};
 			else if (channel < channels)
-				_commands[channel][row].SetS3MNote(note, sample);
+				_commands[channel][row].setS3MNote(note, sample);
 			j += 2;
 			checkLength(j, length);
 		}
@@ -93,7 +93,7 @@ pattern_t::pattern_t(const modS3M_t &file, const uint32_t channels) : pattern_t{
 			if (!fd.read(volume))
 				throw ModuleLoaderError{E_BAD_S3M};
 			else if (channel < channels)
-				_commands[channel][row].SetS3MVolume(volume);
+				_commands[channel][row].setS3MVolume(volume);
 			++j;
 			checkLength(j, length);
 		}
@@ -105,7 +105,7 @@ pattern_t::pattern_t(const modS3M_t &file, const uint32_t channels) : pattern_t{
 				!fd.read(param))
 				throw ModuleLoaderError{E_BAD_S3M};
 			if (channel < channels)
-				_commands[channel][row].SetS3MEffect(effect, param);
+				_commands[channel][row].setS3MEffect(effect, param);
 			j += 2;
 			checkLength(j, length);
 		}
@@ -135,17 +135,17 @@ pattern_t::pattern_t(const modSTM_t &file) : pattern_t(4, 64, E_BAD_STM)
 			if (!fd.read(Note) ||
 				!fd.read(Param))
 				throw ModuleLoaderError{E_BAD_STM};
-			_commands[channel][row].SetSTMNote(Note);
+			_commands[channel][row].setSTMNote(Note);
 			uint8_t Volume = Param & 0x07U;
-			_commands[channel][row].SetSample(Param >> 3U);
+			_commands[channel][row].setSample(Param >> 3U);
 			if (!fd.read(Param))
 				throw ModuleLoaderError{E_BAD_STM};
 			Volume += Param >> 1U;
-			_commands[channel][row].SetVolume(Volume);
+			_commands[channel][row].setVolume(Volume);
 			const uint8_t Effect = Param & 0x0FU;
 			if (!fd.read(Param))
 				throw ModuleLoaderError{E_BAD_STM};
-			_commands[channel][row].SetSTMEffect(Effect, Param);
+			_commands[channel][row].setSTMEffect(Effect, Param);
 		}
 	}
 }
@@ -174,10 +174,10 @@ pattern_t::pattern_t(const modAON_t &file, const uint32_t channels) : pattern_t{
 				!fd.read(param))
 				throw ModuleLoaderError{E_BAD_AON};
 			const uint8_t arpIndex = ((arithUInt{sample} >> 6U) & 0x03U) | ((arithUInt{effect} >> 4U) & 0x0CU);
-			_commands[channel][row].SetAONNote(note);
-			_commands[channel][row].SetSample(sample & 0x3FU);
-			_commands[channel][row].SetAONArpIndex(arpIndex);
-			_commands[channel][row].SetAONEffect(effect & 0x3FU, param);
+			_commands[channel][row].setAONNote(note);
+			_commands[channel][row].setSample(sample & 0x3FU);
+			_commands[channel][row].setAONArpIndex(arpIndex);
+			_commands[channel][row].setAONEffect(effect & 0x3FU, param);
 		}
 	}
 }
@@ -231,7 +231,7 @@ pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{ch
 		if ((b & 0x80U) != 0 && readInc(channelMask[channel], j, len, fd))
 			break;
 		if (channel < channels)
-			_commands[channel][row].SetITRepVal(channelMask[channel], lastCmd[channel]);
+			_commands[channel][row].setITRepVal(channelMask[channel], lastCmd[channel]);
 		if ((channelMask[channel] & 0x01U) != 0)
 		{
 			uint8_t note{};
@@ -239,8 +239,8 @@ pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{ch
 				break;
 			if (channel < channels)
 			{
-				_commands[channel][row].SetITNote(note);
-				lastCmd[channel].SetITNote(note);
+				_commands[channel][row].setITNote(note);
+				lastCmd[channel].setITNote(note);
 			}
 		}
 		if ((channelMask[channel] & 0x02U) != 0)
@@ -250,8 +250,8 @@ pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{ch
 				break;
 			if (channel < channels)
 			{
-				_commands[channel][row].SetSample(sample);
-				lastCmd[channel].SetSample(sample);
+				_commands[channel][row].setSample(sample);
+				lastCmd[channel].setSample(sample);
 			}
 		}
 		if ((channelMask[channel] & 0x04U) != 0)
@@ -261,8 +261,8 @@ pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{ch
 				break;
 			if (channel < channels)
 			{
-				_commands[channel][row].SetITVolume(volume);
-				lastCmd[channel].SetITVolume(volume);
+				_commands[channel][row].setITVolume(volume);
+				lastCmd[channel].setITVolume(volume);
 			}
 		}
 		if ((channelMask[channel] & 0x08U) != 0)
@@ -273,20 +273,20 @@ pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{ch
 				break;
 			if (channel < channels)
 			{
-				_commands[channel][row].SetITEffect(effect, param);
-				lastCmd[channel].SetITEffect(effect, param);
+				_commands[channel][row].setITEffect(effect, param);
+				lastCmd[channel].setITEffect(effect, param);
 			}
 		}
 	}
 }
 
-void command_t::SetVolume(const uint8_t volume) noexcept
+void command_t::setVolume(const uint8_t volume) noexcept
 {
 	VolEffect = VOLCMD_VOLUME;
 	VolParam = volume;
 }
 
-uint8_t command_t::MODPeriodToNoteIndex(const uint16_t period) noexcept
+uint8_t command_t::modPeriodToNoteIndex(const uint16_t period) noexcept
 {
 	if (period == 0)
 		return 0;
@@ -327,15 +327,15 @@ uint8_t command_t::MODPeriodToNoteIndex(const uint16_t period) noexcept
 		return 0;
 }
 
-void command_t::SetMODData(const std::array<uint8_t, 4> &data) noexcept
+void command_t::setMODData(const std::array<uint8_t, 4> &data) noexcept
 {
 	using arithUInt = substrate::promoted_type_t<uint8_t>;
 	Sample = (arithUInt{data[0]} & 0xF0U) | (arithUInt{data[2]} >> 4U);
-	Note = MODPeriodToNoteIndex(((arithUInt{data[0]} & 0x0FU) << 8U) | data[1]);
-	TranslateMODEffect(data[2] & 0x0FU, data[3]);
+	Note = modPeriodToNoteIndex(((arithUInt{data[0]} & 0x0FU) << 8U) | data[1]);
+	translateMODEffect(data[2] & 0x0FU, data[3]);
 }
 
-void command_t::SetS3MNote(const uint8_t note, const uint8_t sample)
+void command_t::setS3MNote(const uint8_t note, const uint8_t sample)
 {
 	Sample = sample;
 	if (note < 0xF0U)
@@ -346,7 +346,7 @@ void command_t::SetS3MNote(const uint8_t note, const uint8_t sample)
 		Note = note;
 }
 
-void command_t::SetS3MVolume(const uint8_t volume)
+void command_t::setS3MVolume(const uint8_t volume)
 {
 	if (volume >= 128 && volume <= 192)
 	{
@@ -360,7 +360,7 @@ void command_t::SetS3MVolume(const uint8_t volume)
 	}
 }
 
-void command_t::SetSTMNote(const uint8_t note)
+void command_t::setSTMNote(const uint8_t note)
 {
 	if (note > 250)
 	{
@@ -376,7 +376,7 @@ void command_t::SetSTMNote(const uint8_t note)
 	}
 }
 
-void command_t::SetITRepVal(const uint8_t channelMask, const command_t &lastCmd) noexcept
+void command_t::setITRepVal(const uint8_t channelMask, const command_t &lastCmd) noexcept
 {
 	if ((channelMask & 0x10U) != 0)
 		Note = lastCmd.Note;
@@ -394,7 +394,7 @@ void command_t::SetITRepVal(const uint8_t channelMask, const command_t &lastCmd)
 	}
 }
 
-void command_t::SetITNote(const uint8_t note) noexcept
+void command_t::setITNote(const uint8_t note) noexcept
 {
 	if (note < 0x80)
 		Note = note + 1U;
@@ -402,7 +402,7 @@ void command_t::SetITNote(const uint8_t note) noexcept
 		Note = note;
 }
 
-void command_t::SetITVolume(const uint8_t volume) noexcept
+void command_t::setITVolume(const uint8_t volume) noexcept
 {
 	if (volume <= 64)
 	{

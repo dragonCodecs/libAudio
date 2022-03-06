@@ -467,27 +467,27 @@ private:
 	uint8_t Param{};
 	uint8_t ArpIndex{};
 
-	inline uint8_t MODPeriodToNoteIndex(const uint16_t Period) noexcept;
-	void TranslateMODEffect(const uint8_t Effect, const uint8_t Param) noexcept;
+	inline uint8_t modPeriodToNoteIndex(const uint16_t period) noexcept;
+	void translateMODEffect(const uint8_t effect, const uint8_t param) noexcept;
 	friend class ModuleFile;
 	friend struct channel_t;
 
 public:
-	void SetSample(const uint8_t _sample) noexcept { Sample = _sample; }
-	void SetVolume(uint8_t volume) noexcept;
-	void SetMODData(const std::array<uint8_t, 4> &data) noexcept;
-	void SetS3MNote(uint8_t note, uint8_t sample);
-	void SetS3MVolume(uint8_t volume);
-	void SetS3MEffect(uint8_t effect, uint8_t param);
-	void SetSTMNote(uint8_t note);
-	void SetSTMEffect(uint8_t effect, uint8_t param);
-	void SetAONNote(const uint8_t note) noexcept { Note = note; }
-	void SetAONArpIndex(const uint8_t index) noexcept { ArpIndex = index; }
-	void SetAONEffect(uint8_t effect, uint8_t param);
-	void SetITRepVal(uint8_t channelMask, const command_t &lastCommand) noexcept;
-	void SetITNote(uint8_t note) noexcept;
-	void SetITVolume(uint8_t volume) noexcept;
-	void SetITEffect(uint8_t effect, uint8_t param);
+	void setSample(const uint8_t _sample) noexcept { Sample = _sample; }
+	void setVolume(uint8_t volume) noexcept;
+	void setMODData(const std::array<uint8_t, 4> &data) noexcept;
+	void setS3MNote(uint8_t note, uint8_t sample);
+	void setS3MVolume(uint8_t volume);
+	void setS3MEffect(uint8_t effect, uint8_t param);
+	void setSTMNote(uint8_t note);
+	void setSTMEffect(uint8_t effect, uint8_t param);
+	void setAONNote(const uint8_t note) noexcept { Note = note; }
+	void setAONArpIndex(const uint8_t index) noexcept { ArpIndex = index; }
+	void setAONEffect(uint8_t effect, uint8_t param);
+	void setITRepVal(uint8_t channelMask, const command_t &lastCommand) noexcept;
+	void setITNote(uint8_t note) noexcept;
+	void setITVolume(uint8_t volume) noexcept;
+	void setITEffect(uint8_t effect, uint8_t param);
 };
 
 struct pattern_t final
