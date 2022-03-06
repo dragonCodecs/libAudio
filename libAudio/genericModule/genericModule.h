@@ -451,16 +451,16 @@ public:
 	uint8_t GetDNA() const noexcept override final;
 };
 
-class ModuleCommand : public ModuleAllocator
+class ModuleCommand final
 {
 private:
-	uint8_t Sample;
-	uint8_t Note;
-	uint8_t VolEffect;
-	uint8_t VolParam;
-	uint8_t Effect;
-	uint8_t Param;
-	uint8_t ArpIndex;
+	uint8_t Sample{};
+	uint8_t Note{};
+	uint8_t VolEffect{};
+	uint8_t VolParam{};
+	uint8_t Effect{};
+	uint8_t Param{};
+	uint8_t ArpIndex{};
 
 	inline uint8_t MODPeriodToNoteIndex(const uint16_t Period) noexcept;
 	void TranslateMODEffect(const uint8_t Effect, const uint8_t Param) noexcept;
@@ -485,7 +485,7 @@ public:
 	void SetITEffect(const uint8_t Effect, const uint8_t Param);
 };
 
-class ModulePattern final : public ModuleAllocator
+class ModulePattern final
 {
 public:
 	using commandPtr_t = std::unique_ptr<ModuleCommand []>;

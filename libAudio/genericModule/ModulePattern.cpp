@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include <substrate/utility>
 #include "genericModule.h"
+
+using substrate::make_unique;
 
 static const uint16_t Periods[60] =
 {
@@ -10,8 +13,9 @@ static const uint16_t Periods[60] =
 	107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60, 57
 };
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t rows, const uint32_t type) :
-	Channels(_channels), _commands(_channels), _rows(rows)
+	Channels{_channels}, _commands{_channels}, _rows{rows}
 {
 	if (!_commands.valid())
 		throw ModuleLoaderError(type);
@@ -20,12 +24,12 @@ ModulePattern::ModulePattern(const uint32_t _channels, const uint16_t rows, cons
 ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t channels) : ModulePattern(channels, 64, E_BAD_MOD)
 {
 	const fd_t &fd = file.fd();
-	for (uint32_t row = 0; row < _rows; row++)
+	for (size_t row = 0; row < _rows; ++row)
 	{
-		for (uint32_t channel = 0; channel < channels; channel++)
+		for (size_t channel = 0; channel < channels; ++channel)
 		{
 			// Read 4 bytes of data and unpack it into the structure.
-			std::array<uint8_t, 4> data;
+			std::array<uint8_t, 4> data{};
 			if (row == 0)
 			{
 				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
@@ -38,13 +42,14 @@ ModulePattern::ModulePattern(const modMOD_t &file, const uint32_t channels) : Mo
 	}
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define checkLength(cnt, length) \
-	if (cnt + 1 >= length) \
+	if ((cnt) + 1 >= (length)) \
 		break
 
-ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : ModulePattern(channels, 64, E_BAD_S3M)
+ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : ModulePattern{channels, 64, E_BAD_S3M}
 {
-	uint32_t length;
+	uint32_t length{};
 	const fd_t &fd = file.fd();
 
 	for (uint32_t i = 0; i < channels; ++i)
@@ -58,7 +63,7 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 
 	for (uint32_t j = 0, row = 0; row < _rows && j < length;)
 	{
-		uint8_t byte;
+		uint8_t byte{};
 		checkLength(j, length);
 		if (!fd.read(byte))
 			throw ModuleLoaderError(E_BAD_S3M);
@@ -68,10 +73,11 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 			continue;
 		}
 
-		const uint8_t channel = byte & 0x1F;
-		if (byte & 0x20)
+		const uint8_t channel = byte & 0x1FU;
+		if (byte & 0x20U)
 		{
-			uint8_t note, sample;
+			uint8_t note{};
+			uint8_t sample{};
 			if (!fd.read(note) ||
 				!fd.read(sample))
 				throw ModuleLoaderError(E_BAD_S3M);
@@ -80,9 +86,9 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 			j += 2;
 			checkLength(j, length);
 		}
-		if (byte & 0x40)
+		if (byte & 0x40U)
 		{
-			uint8_t volume;
+			uint8_t volume{};
 			if (!fd.read(volume))
 				throw ModuleLoaderError(E_BAD_S3M);
 			else if (channel < channels)
@@ -90,9 +96,10 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 			++j;
 			checkLength(j, length);
 		}
-		if (byte & 0x80)
+		if (byte & 0x80U)
 		{
-			uint8_t effect, param;
+			uint8_t effect{};
+			uint8_t param{};
 			if (!fd.read(effect) ||
 				!fd.read(param))
 				throw ModuleLoaderError(E_BAD_S3M);
@@ -108,12 +115,11 @@ ModulePattern::ModulePattern(const modS3M_t &file, const uint32_t channels) : Mo
 
 ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_STM)
 {
-	uint8_t row, channel;
 	const fd_t &fd = file.fd();
 
-	for (row = 0; row < _rows; ++row)
+	for (size_t row{}; row < _rows; ++row)
 	{
-		for (channel = 0; channel < 4; ++channel)
+		for (size_t channel{}; channel < 4; ++channel)
 		{
 			if (row == 0)
 			{
@@ -122,20 +128,20 @@ ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_
 					throw ModuleLoaderError(E_BAD_STM);
 			}
 
-			uint8_t Note;
-			uint8_t Param;
+			uint8_t Note{};
+			uint8_t Param{};
 
 			if (!fd.read(Note) ||
 				!fd.read(Param))
 				throw ModuleLoaderError(E_BAD_STM);
 			_commands[channel][row].SetSTMNote(Note);
-			uint8_t Volume = Param & 0x07;
-			_commands[channel][row].SetSample(Param >> 3);
+			uint8_t Volume = Param & 0x07U;
+			_commands[channel][row].SetSample(Param >> 3U);
 			if (!fd.read(Param))
 				throw ModuleLoaderError(E_BAD_STM);
-			Volume += Param >> 1;
+			Volume += Param >> 1U;
 			_commands[channel][row].SetVolume(Volume);
-			const uint8_t Effect = Param & 0x0F;
+			const uint8_t Effect = Param & 0x0FU;
 			if (!fd.read(Param))
 				throw ModuleLoaderError(E_BAD_STM);
 			_commands[channel][row].SetSTMEffect(Effect, Param);
@@ -143,33 +149,33 @@ ModulePattern::ModulePattern(const modSTM_t &file) : ModulePattern(4, 64, E_BAD_
 	}
 }
 
-ModulePattern::ModulePattern(const modAON_t &file, const uint32_t channels) : ModulePattern(channels, 64, E_BAD_AON)
+ModulePattern::ModulePattern(const modAON_t &file, const uint32_t channels) : ModulePattern{channels, 64, E_BAD_AON}
 {
-	uint8_t row, channel;
 	const fd_t &fd = file.fd();
-
-	for (row = 0; row < _rows; row++)
+	for (size_t row{}; row < _rows; ++row)
 	{
-		for (channel = 0; channel < channels; channel++)
+		for (size_t channel{}; channel < channels; ++channel)
 		{
 			if (row == 0)
 			{
-				_commands[channel] = makeUnique<ModuleCommand []>(_rows);
+				_commands[channel] = make_unique<ModuleCommand []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError(E_BAD_AON);
 			}
-			uint8_t note, sample;
-			uint8_t effect, param;
+			uint8_t note{};
+			uint8_t sample{};
+			uint8_t effect{};
+			uint8_t param{};
 			if (!fd.read(note) ||
 				!fd.read(sample) ||
 				!fd.read(effect) ||
 				!fd.read(param))
 				throw ModuleLoaderError(E_BAD_AON);
-			const uint8_t arpIndex = ((sample >> 6) & 0x03) | ((effect >> 4) & 0x0C);
+			const uint8_t arpIndex = ((sample >> 6U) & 0x03U) | ((effect >> 4U) & 0x0CU);
 			_commands[channel][row].SetAONNote(note);
-			_commands[channel][row].SetSample(sample & 0x3F);
+			_commands[channel][row].SetSample(sample & 0x3FU);
 			_commands[channel][row].SetAONArpIndex(arpIndex);
-			_commands[channel][row].SetAONEffect(effect & 0x3F, param);
+			_commands[channel][row].SetAONEffect(effect & 0x3FU, param);
 		}
 	}
 }
@@ -182,12 +188,12 @@ inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &f
 	return false;
 }
 
-ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(channels)
+ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels{channels}
 {
-	std::array<char, 4> dontCare;
-	std::array<uint8_t, 64> channelMask;
-	uint16_t len;
-	std::array<ModuleCommand, 64> lastCmd;
+	std::array<char, 4> dontCare{};
+	std::array<uint8_t, 64> channelMask{};
+	uint16_t len{};
+	std::array<ModuleCommand, 64> lastCmd{};
 	const fd_t &fd = file.fd();
 
 	_commands = fixedVector_t<commandPtr_t>(channels);
@@ -197,7 +203,7 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(
 		!fd.read(dontCare))
 		throw ModuleLoaderError(E_BAD_IT);
 
-	for (uint16_t channel = 0; channel < channels; ++channel)
+	for (size_t channel = 0; channel < channels; ++channel)
 	{
 		_commands[channel] = makeUnique<ModuleCommand []>(_rows);
 		if (!_commands[channel])
@@ -209,7 +215,7 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(
 	while (row < _rows)
 	{
 		uint16_t channel = 0;
-		uint8_t b;
+		uint8_t b{};
 		if (readInc(b, j, len, fd))
 			break;
 		if (b == 0)
@@ -217,16 +223,16 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(
 			++row;
 			continue;
 		}
-		channel = b & 0x7F;
+		channel = b & 0x7FU;
 		if (channel != 0)
-			channel = (channel - 1) & 0x3F;
-		if ((b & 0x80) != 0 && readInc(channelMask[channel], j, len, fd))
+			channel = (channel - 1) & 0x3FU;
+		if ((b & 0x80U) != 0 && readInc(channelMask[channel], j, len, fd))
 			break;
 		if (channel < channels)
 			_commands[channel][row].SetITRepVal(channelMask[channel], lastCmd[channel]);
-		if ((channelMask[channel] & 0x01) != 0)
+		if ((channelMask[channel] & 0x01U) != 0)
 		{
-			uint8_t note;
+			uint8_t note{};
 			if (readInc(note, j, len, fd))
 				break;
 			if (channel < channels)
@@ -235,9 +241,9 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(
 				lastCmd[channel].SetITNote(note);
 			}
 		}
-		if ((channelMask[channel] & 0x02) != 0)
+		if ((channelMask[channel] & 0x02U) != 0)
 		{
-			uint8_t sample;
+			uint8_t sample{};
 			if (readInc(sample, j, len, fd))
 				break;
 			if (channel < channels)
@@ -246,9 +252,9 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(
 				lastCmd[channel].SetSample(sample);
 			}
 		}
-		if ((channelMask[channel] & 0x04) != 0)
+		if ((channelMask[channel] & 0x04U) != 0)
 		{
-			uint8_t volume;
+			uint8_t volume{};
 			if (readInc(volume, j, len, fd))
 				break;
 			if (channel < channels)
@@ -257,9 +263,10 @@ ModulePattern::ModulePattern(const modIT_t &file, uint32_t channels) : Channels(
 				lastCmd[channel].SetITVolume(volume);
 			}
 		}
-		if ((channelMask[channel] & 0x08) != 0)
+		if ((channelMask[channel] & 0x08U) != 0)
 		{
-			uint8_t effect, param;
+			uint8_t effect{};
+			uint8_t param{};
 			if (readInc(effect, j, len, fd) || readInc(param, j, len, fd))
 				break;
 			if (channel < channels)
@@ -279,12 +286,13 @@ void ModuleCommand::SetVolume(const uint8_t volume) noexcept
 
 uint8_t ModuleCommand::MODPeriodToNoteIndex(const uint16_t Period) noexcept
 {
-	uint8_t i, min = 0, max = 59;
 	if (Period == 0)
 		return 0;
+	uint8_t min{0};
+	uint8_t max{59};
 	do
 	{
-		i = min + ((max - min) / 2);
+		const auto i = min + ((max - min) / 2);
 		if (Periods[i] == Period)
 			return 37 + i;
 		else if (Periods[i] < Period)
@@ -319,16 +327,16 @@ uint8_t ModuleCommand::MODPeriodToNoteIndex(const uint16_t Period) noexcept
 
 void ModuleCommand::SetMODData(const std::array<uint8_t, 4> &data) noexcept
 {
-	Sample = (data[0] & 0xF0) | (data[2] >> 4);
-	Note = MODPeriodToNoteIndex((((uint16_t)(data[0] & 0x0F)) << 8) | data[1]);
-	TranslateMODEffect(data[2] & 0x0F, data[3]);
+	Sample = (data[0] & 0xF0U) | (data[2] >> 4U);
+	Note = MODPeriodToNoteIndex(uint16_t((data[0] & 0x0FU) << 8U) | data[1]);
+	TranslateMODEffect(data[2] & 0x0FU, data[3]);
 }
 
 void ModuleCommand::SetS3MNote(uint8_t note, uint8_t sample)
 {
 	Sample = sample;
-	if (note < 0xF0)
-		Note = (note & 0x0F) + (12 * (note >> 4)) + 13;
+	if (note < 0xF0U)
+		Note = (note & 0x0FU) + (12U * (note >> 4U)) + 13U;
 	else if (note == 0xFF)
 		Note = 0;
 	else
@@ -358,8 +366,8 @@ void ModuleCommand::SetSTMNote(uint8_t note)
 	}
 	else
 	{
-		uint8_t Octave = (note & 0xF0) >> 4;
-		uint8_t Pitch = note & 0x0F;
+		uint8_t Octave = (note & 0xF0U) >> 4U;
+		uint8_t Pitch = note & 0x0FU;
 		Pitch %= 12;
 		Note = (Octave * 12) + Pitch + 37;
 	}
@@ -377,16 +385,16 @@ void ModuleCommand::SetAONArpIndex(uint8_t Index)
 
 void ModuleCommand::SetITRepVal(const uint8_t channelMask, const ModuleCommand &lastCmd) noexcept
 {
-	if ((channelMask & 0x10) != 0)
+	if ((channelMask & 0x10U) != 0)
 		Note = lastCmd.Note;
-	if ((channelMask & 0x20) != 0)
+	if ((channelMask & 0x20U) != 0)
 		Sample = lastCmd.Sample;
-	if ((channelMask & 0x40) != 0)
+	if ((channelMask & 0x40U) != 0)
 	{
 		VolEffect = lastCmd.VolEffect;
 		VolParam = lastCmd.VolParam;
 	}
-	if ((channelMask & 0x80) != 0)
+	if ((channelMask & 0x80U) != 0)
 	{
 		Effect = lastCmd.Effect;
 		Param = lastCmd.Param;
