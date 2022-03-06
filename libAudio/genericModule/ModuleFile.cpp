@@ -236,7 +236,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 		{
 			if (fd.seek(instrOffsets[i], SEEK_SET) != instrOffsets[i])
 				throw ModuleLoaderError(E_BAD_IT);
-			p_Instruments[i] = ModuleInstrument::LoadInstrument(file, i, p_Header->FormatVersion);
+			p_Instruments[i] = ModuleInstrument::LoadInstrument(file, i, p_Header->FormatVersion).release();
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];

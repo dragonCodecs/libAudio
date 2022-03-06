@@ -172,14 +172,16 @@ private:
 	uint32_t _id;
 
 protected:
-	constexpr ModuleSample(const uint32_t id, const uint8_t type) noexcept : _type(type), _id(id) { }
+	constexpr ModuleSample(const uint32_t id, const uint8_t type) noexcept :
+		_type{type}, _id{id} { }
 	void resetID(const uint32_t id) noexcept { _id = id; }
 
 public:
 	static ModuleSample *LoadSample(const modMOD_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(const modS3M_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(const modSTM_t &file, const uint32_t i);
-	static ModuleSample *LoadSample(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths);
+	static ModuleSample *LoadSample(const modAON_t &file, const uint32_t i,
+		char *Name, const uint32_t *const pcmLengths);
 	static ModuleSample *LoadSample(const modIT_t &file, const uint32_t i);
 
 	virtual ~ModuleSample() noexcept = default;
@@ -351,18 +353,19 @@ public:
 	uint16_t GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }
 };
 
-class ModuleInstrument : public ModuleAllocator
+class ModuleInstrument
 {
 private:
 	const uint32_t _id;
 
 protected:
-	uint8_t SampleMapping[240];
+	uint8_t SampleMapping[240]{};
 
 	ModuleInstrument(const uint32_t id) noexcept : _id{id} { }
 
 public:
-	static ModuleInstrument *LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion);
+	static std::unique_ptr<ModuleInstrument> LoadInstrument(const modIT_t &file,
+		const uint32_t i, const uint16_t FormatVersion);
 
 	std::pair<uint8_t, uint8_t> mapNote(const uint8_t note) noexcept;
 	virtual ~ModuleInstrument() noexcept = default;
@@ -384,18 +387,18 @@ class ModuleOldInstrument final : public ModuleInstrument
 {
 private:
 	std::unique_ptr<char []> FileName;
-	uint8_t Flags;
-	uint16_t FadeOut;
-	uint8_t NNA;
-	uint8_t DNC;
-	uint16_t TrackerVersion;
-	uint8_t nSamples;
+	uint8_t Flags{};
+	uint16_t FadeOut{};
+	uint8_t NNA{};
+	uint8_t DNC{};
+	uint16_t TrackerVersion{};
+	uint8_t nSamples{};
 	std::unique_ptr<char []> Name;
-	std::unique_ptr<ModuleEnvelope> Envelope;
+	std::unique_ptr<ModuleEnvelope> Envelope{};
 
 public:
 	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
-	~ModuleOldInstrument() = default;
+	~ModuleOldInstrument() final = default;
 
 	uint16_t GetFadeOut() const noexcept override final;
 	bool GetEnvEnabled(envelopeType_t env) const noexcept override final;
@@ -415,24 +418,24 @@ class ModuleNewInstrument final : public ModuleInstrument
 {
 private:
 	std::unique_ptr<char []> FileName;
-	uint8_t NNA;
-	uint8_t DCT;
-	uint8_t DNA;
-	uint16_t FadeOut;
-	uint8_t PPS;
-	uint8_t PPC;
-	uint8_t Volume;
-	uint8_t Panning;
-	uint8_t RandVolume;
-	uint8_t RandPanning;
-	uint16_t TrackerVersion;
-	uint8_t nSamples;
+	uint8_t NNA{};
+	uint8_t DCT{};
+	uint8_t DNA{};
+	uint16_t FadeOut{};
+	uint8_t PPS{};
+	uint8_t PPC{};
+	uint8_t Volume{};
+	uint8_t Panning{};
+	uint8_t RandVolume{};
+	uint8_t RandPanning{};
+	uint16_t TrackerVersion{};
+	uint8_t nSamples{};
 	std::unique_ptr<char []> Name;
-	std::array<std::unique_ptr<ModuleEnvelope>, static_cast<size_t>(envelopeType_t::count)> Envelopes;
+	std::array<std::unique_ptr<ModuleEnvelope>, static_cast<size_t>(envelopeType_t::count)> Envelopes{};
 
 public:
 	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
-	~ModuleNewInstrument() = default;
+	~ModuleNewInstrument() final = default;
 
 	uint16_t GetFadeOut() const noexcept override final;
 	bool GetEnvEnabled(envelopeType_t env) const noexcept override final;

@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include <substrate/utility>
 #include "genericModule.h"
 
-ModuleInstrument *ModuleInstrument::LoadInstrument(const modIT_t &file, const uint32_t i, const uint16_t FormatVersion)
+using substrate::make_unique;
+
+constexpr static std::array<char, 4> itInstrumentMagic{{'I', 'M', 'P', 'I'}};
+
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+std::unique_ptr<ModuleInstrument> ModuleInstrument::LoadInstrument(const modIT_t &file, const uint32_t i,
+	const uint16_t FormatVersion)
 {
-	if (FormatVersion < 0x0200)
-		return new ModuleOldInstrument(file, i);
+	if (FormatVersion < 0x0200U)
+		return make_unique<ModuleOldInstrument>(file, i);
 	else
-		return new ModuleNewInstrument(file, i);
+		return make_unique<ModuleNewInstrument>(file, i);
 }
 
 std::pair<uint8_t, uint8_t> ModuleInstrument::mapNote(const uint8_t note) noexcept
@@ -15,7 +22,7 @@ std::pair<uint8_t, uint8_t> ModuleInstrument::mapNote(const uint8_t note) noexce
 		return {note, 0};
 	else if (!note || note > 120)
 		return {250, 0}; // If we get an out of range value, return an invalid note.
-	const uint8_t entry = (note - 1) << 1U;
+	const uint8_t entry = (note - 1U) << 1U;
 	uint8_t mappedNote = SampleMapping[entry];
 	const uint8_t mappedSample = SampleMapping[entry + 1];
 	if (mappedNote >= 128 && mappedNote < 254)
@@ -25,21 +32,21 @@ std::pair<uint8_t, uint8_t> ModuleInstrument::mapNote(const uint8_t note) noexce
 	return {mappedNote, mappedSample};
 }
 
-ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
+ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument{i},
+	FileName{make_unique<char []>(13)}, Name{make_unique<char []>(27)}
 {
-	uint8_t LoopBegin, LoopEnd;
-	uint8_t SusLoopBegin, SusLoopEnd;
-	uint8_t Const;
-	char DontCare[6];
-	std::array<char, 4> magic;
+	uint8_t LoopBegin{};
+	uint8_t LoopEnd{};
+	uint8_t SusLoopBegin{};
+	uint8_t SusLoopEnd{};
+	uint8_t Const{};
+	char DontCare[6]{};
+	std::array<char, 4> magic{};
 	const fd_t &fd = file.fd();
 
 	if (!fd.read(magic) ||
 		strncmp(magic.data(), "IMPI", 4) != 0)
 		throw ModuleLoaderError(E_BAD_IT);
-
-	FileName = makeUnique<char []>(13);
-	Name = makeUnique<char []>(27);
 
 	if (!FileName || !Name ||
 		!fd.read(FileName, 12) ||
@@ -69,7 +76,7 @@ ModuleOldInstrument::ModuleOldInstrument(const modIT_t &file, const uint32_t i) 
 	if (Const != 0 || NNA > 3 || DNC > 1)
 		throw ModuleLoaderError(E_BAD_IT);
 
-	Envelope = makeUnique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
+	Envelope = make_unique<ModuleEnvelope>(file, Flags, LoopBegin, LoopEnd, SusLoopBegin, SusLoopEnd);
 }
 
 uint16_t ModuleOldInstrument::GetFadeOut() const noexcept { return FadeOut; }
@@ -94,18 +101,16 @@ ModuleEnvelope &ModuleOldInstrument::GetEnvelope(const envelopeType_t env) const
 	return *Envelope;
 }
 
-ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument(i)
+ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) : ModuleInstrument{i},
+	FileName{make_unique<char []>(13)}, Name{make_unique<char []>(27)}
 {
-	uint8_t Const;
-	char DontCare[6];
-	std::array<char, 4> magic;
+	uint8_t Const{};
+	char DontCare[6]{};
+	std::array<char, 4> magic{};
 	const fd_t &fd = file.fd();
 
-	if (!fd.read(magic) || memcmp(magic.data(), "IMPI", 4))
+	if (!fd.read(magic) || magic != itInstrumentMagic)
 		throw ModuleLoaderError(E_BAD_IT);
-
-	FileName = makeUnique<char []>(13);
-	Name = makeUnique<char []>(27);
 
 	if (!FileName || !Name ||
 		!fd.read(FileName, 12) ||
@@ -138,8 +143,8 @@ ModuleNewInstrument::ModuleNewInstrument(const modIT_t &file, const uint32_t i) 
 
 	FadeOut <<= 6U;
 	Volume >>= 1U; // XXX: This seems like a bug..
-	for (uint8_t env{0}; env < static_cast<uint8_t>(envelopeType_t::count); ++env)
-		Envelopes[env] = makeUnique<ModuleEnvelope>(file, static_cast<envelopeType_t>(env));
+	for (size_t env{0}; env < Envelopes.size(); ++env)
+		Envelopes[env] = make_unique<ModuleEnvelope>(file, static_cast<envelopeType_t>(env));
 }
 
 uint16_t ModuleNewInstrument::GetFadeOut() const noexcept { return FadeOut; }
@@ -205,6 +210,7 @@ ModuleEnvelope::ModuleEnvelope(const modIT_t &file, const envelopeType_t env) : 
 	}
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 ModuleEnvelope::ModuleEnvelope(const modIT_t &, const uint8_t flags, const uint8_t loopBegin,
 	const uint8_t loopEnd, const uint8_t susLoopBegin, const uint8_t susLoopEnd) noexcept :
 	Type{envelopeType_t::volume}, Flags{flags}, nNodes{}, LoopBegin{loopBegin}, LoopEnd{loopEnd},
