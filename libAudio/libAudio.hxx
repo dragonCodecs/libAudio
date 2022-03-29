@@ -251,18 +251,24 @@ struct mp3_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	struct encoderContext_t;
+	std::unique_ptr<decoderContext_t> decoderCtx;
+	std::unique_ptr<encoderContext_t> encoderCtx;
 
 	libAUDIO_NO_DISCARD(bool readMetadata() noexcept);
 
 public:
-	mp3_t(fd_t &&fd) noexcept;
+	mp3_t(fd_t &&fd, audioModeRead_t) noexcept;
+	mp3_t(fd_t &&fd, audioModeWrite_t) noexcept;
 	static mp3_t *openR(const char *const fileName) noexcept;
+	static mp3_t *openW(const char *const fileName) noexcept;
 	static bool isMP3(const char *const fileName) noexcept;
 	static bool isMP3(const int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
+	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
+	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
+	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 

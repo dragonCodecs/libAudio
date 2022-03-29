@@ -1,71 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include <limits>
 
-#include <mad.h>
-#include <id3tag.h>
-
-#include "libAudio.h"
-#include "libAudio.hxx"
+#include "mp3.hxx"
 #include "string.hxx"
 
 /*!
  * @internal
- * @file loadMP3.cpp
+ * @file loadMP3.cxx
  * @brief The implementation of the MP3 decoder API
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
- * @date 2010-2020
+ * @author Rachel Mant <git@dragonmux.network>
+ * @date 2010-2022
  */
-
-struct mp3_t::decoderContext_t final
-{
-	/*!
-	 * @internal
-	 * The MP3 stream handle
-	 */
-	mad_stream stream;
-	/*!
-	 * @internal
-	 * The MP3 frame handle
-	 */
-	mad_frame frame;
-	/*!
-	 * @internal
-	 * The MP3 audio synthesis handle
-	 */
-	mad_synth synth;
-	/*!
-	 * @internal
-	 * The internal input data buffer
-	 */
-	std::array<uint8_t, 8192> inputBuffer;
-	/*!
-	 * @internal
-	 * The internal decoded data buffer
-	 */
-	uint8_t playbackBuffer[8192];
-	/*!
-	 * @internal
-	 * A flag indicating if we have yet to decode this MP3's initial frame
-	 */
-	bool initialFrame;
-	/*!
-	 * @internal
-	 * A count giving the amount of decoded PCM which has been used with
-	 * the current values stored in buffer
-	 */
-	uint16_t samplesUsed;
-	/*!
-	 * @internal
-	 * The end-of-file flag
-	 */
-	bool eof;
-
-	decoderContext_t();
-	~decoderContext_t() noexcept;
-	libAUDIO_NO_DISCARD(bool readData(const fd_t &fd) noexcept);
-	libAUDIO_NO_DISCARD(int32_t decodeFrame(const fd_t &fd) noexcept);
-	libAUDIO_NO_DISCARD(uint32_t parseXingHeader() noexcept);
-};
 
 namespace libAudio
 {
@@ -88,7 +33,7 @@ namespace libAudio
 			if (value <= -MAD_F_ONE)
 				return limits::min();
 
-			value = value >> (MAD_F_FRACBITS - 15);
+			value = value >> (MAD_F_FRACBITS - 15U);
 			return int16_t(value);
 		}
 	}
@@ -96,8 +41,9 @@ namespace libAudio
 
 using namespace libAudio;
 
-mp3_t::mp3_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::mp3, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
-mp3_t::decoderContext_t::decoderContext_t() : stream{}, frame{}, synth{}, inputBuffer{}, playbackBuffer{},
+mp3_t::mp3_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t{audioType_t::mp3, std::move(fd)},
+	decoderCtx{makeUnique<decoderContext_t>()} { }
+mp3_t::decoderContext_t::decoderContext_t() noexcept : stream{}, frame{}, synth{}, inputBuffer{}, playbackBuffer{},
 	initialFrame{true}, samplesUsed{0}, eof{false}
 {
 	mad_stream_init(&stream);
@@ -204,7 +150,7 @@ uint64_t decodeIntTag(const id3_tag *tags, const char *tag) noexcept
 bool mp3_t::readMetadata() noexcept
 {
 	fd_t fileDesc = fd().dup();
-	auto &ctx = *context();
+	auto &ctx = *decoderContext();
 	fileInfo_t &info = fileInfo();
 	id3_file *const file = id3_file_fdopen(fileDesc, ID3_FILE_MODE_READONLY);
 	const id3_tag *const tags = id3_file_tag(file);
@@ -253,10 +199,10 @@ bool mp3_t::readMetadata() noexcept
  */
 mp3_t *mp3_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<mp3_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{makeUnique<mp3_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isMP3(file->_fd) || !file->readMetadata())
 		return nullptr;
-	auto &ctx = *file->context();
+	auto &ctx = *file->decoderContext();
 	const fileInfo_t &info = file->fileInfo();
 
 	if (!ExternalPlayback)
@@ -344,7 +290,7 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset = 0;
 	const fileInfo_t &info = fileInfo();
-	auto &ctx = *context();
+	auto &ctx = *decoderContext();
 
 	while (offset < length && !ctx.eof)
 	{

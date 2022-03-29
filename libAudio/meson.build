@@ -11,6 +11,7 @@ libAAC = [cxx.find_library('faac'), cxx.find_library('faad')]
 libMP4v2 = cxx.find_library('mp4v2')
 libMAD = cxx.find_library('mad')
 libID3Tag = cxx.find_library('id3tag')
+libLAME = cxx.find_library('mp3lame')
 maths = cxx.find_library('m', required: false)
 
 if not cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
@@ -67,10 +68,10 @@ genericModuleSrcs = [
 
 libAudioSrcs = [
 	'loadAudio.cpp', 'loadOggVorbis.cpp', 'loadWAV.cpp', 'loadAAC.cpp', 'loadM4A.cpp',
-	'loadMP3.cpp', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp',
+	'loadMP3.cxx', 'loadMPC.cpp', 'loadFLAC.cpp', 'loadWavPack.cpp', 'fixedPoint/fixedPoint.cpp',
 	genericModuleSrcs, 'loadOggOpus.cxx', 'oggCommon.cxx',
 	'saveAudio.cpp', 'saveOggVorbis.cpp', 'saveOggOpus.cxx', 'saveFLAC.cpp',
-	'saveM4A.cpp', 'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx',
+	'saveM4A.cpp', 'saveMP3.cxx', 'openAL.cxx', 'openALPlayback.cxx', 'playback.cxx',
 	'console.cxx', extraSrcs
 ]
 
@@ -79,7 +80,8 @@ libAudioLibrary = shared_library(
 	libAudioSrcs,
 	dependencies: [
 		threading, libOpenAL, libOGG, libVorbis, libFLAC, libWavPack, libMPC,
-		libAAC, libMP4v2, libMAD, libID3Tag, libOpus, extraDeps, maths, substrate
+		libAAC, libMP4v2, libMAD, libID3Tag, libLAME, libOpus, extraDeps, maths,
+		substrate
 	],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO', extraArgs],
 	include_directories: includes,
