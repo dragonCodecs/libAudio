@@ -26,7 +26,7 @@ namespace libAudio
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
 			if (bytes > 0)
 			{
-				const ssize_t result = fd.write(buffer, bytes);
+				const auto result = fd.write(buffer, bytes, nullptr);
 				if (result == -1)
 					return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 				else if (size_t(result) == bytes)
@@ -45,7 +45,7 @@ namespace libAudio
 		FLAC__StreamEncoderSeekStatus seek(const FLAC__StreamEncoder *, uint64_t offset, void *ctx)
 		{
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-			const off_t result = fd.seek(offset, SEEK_SET);
+			const auto result = fd.seek(offset, SEEK_SET);
 			if (result == -1 || uint64_t(result) != offset)
 				return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
 			return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
@@ -62,7 +62,7 @@ namespace libAudio
 		FLAC__StreamEncoderTellStatus tell(const FLAC__StreamEncoder *, uint64_t *offset, void *ctx)
 		{
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-			const off_t pos = fd.tell();
+			const auto pos = fd.tell();
 			if (pos == -1)
 				return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
 			*offset = pos;
