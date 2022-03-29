@@ -55,7 +55,7 @@ namespace libAudio
 		FLAC__StreamDecoderSeekStatus seek(const FLAC__StreamDecoder *, uint64_t offset, void *ctx)
 		{
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-			const off_t result = fd.seek(offset, SEEK_SET);
+			const auto result = fd.seek(offset, SEEK_SET);
 			if (result == -1 || uint64_t(result) != offset)
 				return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
 			return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
@@ -73,7 +73,7 @@ namespace libAudio
 		FLAC__StreamDecoderTellStatus tell(const FLAC__StreamDecoder *, uint64_t *offset, void *ctx)
 		{
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-			const off_t pos = fd.tell();
+			const auto pos = fd.tell();
 			if (pos == -1)
 				return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
 			*offset = uint64_t(pos);
@@ -91,7 +91,7 @@ namespace libAudio
 		FLAC__StreamDecoderLengthStatus length(const FLAC__StreamDecoder *, uint64_t *len, void *ctx)
 		{
 			const fd_t &fd = static_cast<audioFile_t *>(ctx)->fd();
-			const off_t length = fd.length();
+			const auto length = fd.length();
 			if (length == -1)
 				return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 			*len = uint64_t(length);
