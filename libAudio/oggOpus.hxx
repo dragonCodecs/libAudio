@@ -34,7 +34,7 @@ struct oggOpus_t::decoderContext_t final
 
 /*!
  * @internal
- * Internal structure for holding the encoding context for a given Ogg/Vorbis file
+ * Internal structure for holding the encoding context for a given Ogg|Opus file
  */
 struct oggOpus_t::encoderContext_t final
 {
