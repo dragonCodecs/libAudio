@@ -172,7 +172,7 @@ libAUDIO_API void audioDefaultLevel(const float level);
 // Write (Encode)
 libAUDIO_API void *audioOpenW(const char *fileName, const uint32_t audioType);
 libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
-libAUDIO_API int64_t audioWriteBuffer(void *audioFile, void *const buffer, int64_t length);
+libAUDIO_API int64_t audioWriteBuffer(void *audioFile, const void *const buffer, int64_t length);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 // cppcoreguidelines-avoid-non-const-global-variables
