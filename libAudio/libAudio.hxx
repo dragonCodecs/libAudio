@@ -270,6 +270,8 @@ public:
 
 	using audioFile_t::fileInfo;
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 
 struct moduleFile_t : public audioFile_t
