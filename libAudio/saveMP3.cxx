@@ -11,7 +11,7 @@
 
 mp3_t::mp3_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::mp3, std::move(fd)},
 	encoderCtx{makeUnique<encoderContext_t>()} { }
-mp3_t::encoderContext_t::encoderContext_t() noexcept : encoder{lame_init()}
+mp3_t::encoderContext_t::encoderContext_t() noexcept : encoder{lame_init()}, lameFrameOffset{}
 {
 	lame_set_brate(encoder, 320);
 }
@@ -40,6 +40,7 @@ void *mp3OpenW(const char *fileName) { return mp3_t::openW(fileName); }
  */
 bool mp3_t::fileInfo(const fileInfo_t &info)
 {
+	const auto &file{fd()};
 	auto &ctx = *encoderContext();
 	lame_set_num_channels(ctx.encoder, info.channels);
 	lame_set_in_samplerate(ctx.encoder, static_cast<int>(info.bitRate));
@@ -57,8 +58,14 @@ bool mp3_t::fileInfo(const fileInfo_t &info)
 		id3tag_set_album(ctx.encoder, info.album.get());
 	for (const auto &comment : info.other)
 		id3tag_set_comment(ctx.encoder, comment.get());
-
+	id3tag_add_v2(ctx.encoder);
 	lame_init_params(ctx.encoder);
+	const auto id3v2Length{lame_get_id3v2_tag(ctx.encoder, nullptr, 0)};
+	auto id3v2Data{substrate::make_unique<unsigned char []>(id3v2Length)};
+	lame_get_id3v2_tag(ctx.encoder, id3v2Data.get(), id3v2Length);
+	if (!file.write(id3v2Data, id3v2Length))
+		return false;
+	ctx.lameFrameOffset = static_cast<substrate::off_t>(id3v2Length);
 	fileInfo() = info;
 	return true;
 }
@@ -75,22 +82,36 @@ int64_t mp3_t::writeBuffer(const void *const bufferPtr, const int64_t length)
 	const fileInfo_t &info = fileInfo();
 	auto &ctx = *encoderContext();
 	if (length <= 0)
+	{
+		int32_t result{};
+		std::array<unsigned char, 7200> encoderBuffer{};
+		do
+		{
+			result = lame_encode_flush(ctx.encoder, encoderBuffer.data(), encoderBuffer.size());
+			if (result > 0 && !file.write(encoderBuffer.data(), result))
+				break;
+		}
+		while (result > 0);
+		result = lame_get_lametag_frame(ctx.encoder, encoderBuffer.data(), encoderBuffer.size());
+		if (file.seek(ctx.lameFrameOffset, SEEK_SET) == ctx.lameFrameOffset)
+			[[maybe_unused]] const auto _{file.write(encoderBuffer.data(), result)};
 		return length;
+	}
 	else if (info.bitsPerSample != 16)
 		return -3; // LAME can't encode non-16-bit sample data.. V_V
 	const auto sampleCount{uint64_t(length) / (uint64_t(info.channels) * (info.bitsPerSample / 8U))};
 	const auto *const sampleBuffer{static_cast<const short *>(bufferPtr)};
-	const auto resultLength{sampleCount + (sampleCount / 4U) + 7200U};
-	auto resultBuffer{substrate::make_unique<unsigned char []>(resultLength)};
-	const auto amount{lame_encode_buffer_interleaved(ctx.encoder, const_cast<short *>(sampleBuffer), sampleCount,
-		resultBuffer.get(), resultLength)};
-	if (amount >= 0)
+	const auto encodedLength{sampleCount + (sampleCount / 4U) + 7200U};
+	auto encoderBuffer{substrate::make_unique<unsigned char []>(encodedLength)};
+	const auto result{lame_encode_buffer_interleaved(ctx.encoder, const_cast<short *>(sampleBuffer), sampleCount,
+		encoderBuffer.get(), encodedLength)};
+	if (result >= 0)
 	{
-		if (!file.write(resultBuffer, amount))
+		if (!file.write(encoderBuffer, result))
 			return -1;
 	}
 	else
-		return amount;
+		return result;
 	return length;
 }
 

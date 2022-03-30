@@ -75,6 +75,11 @@ struct mp3_t::encoderContext_t final
 	 * The MP3 LAME encoder state
 	 */
 	lame_t encoder;
+	/*!
+	 * @internal
+	 * Offset for start of the LAME frame
+	 */
+	substrate::off_t lameFrameOffset;
 
 	encoderContext_t() noexcept;
 	~encoderContext_t() noexcept;
