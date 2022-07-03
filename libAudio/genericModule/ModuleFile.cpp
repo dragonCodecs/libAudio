@@ -409,20 +409,20 @@ void ModuleFile::aonLoadPCM(const fd_t &fd)
 	}
 }
 
-uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, uint8_t bits)
+uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, size_t bits)
 {
 	uint32_t ret = 0;
 	if (bits > 0)
 	{
-		for (uint8_t i = 0; i < bits; i++)
+		for (size_t i = 0; i < bits; ++i)
 		{
 			if (buffLen == 0)
 			{
 				fd.read(buff);
 				buffLen = 8;
 			}
-			ret |= (buff & 1) << i;
-			buff >>= 1;
+			ret |= (buff & 1U) << i;
+			buff >>= 1U;
 			buffLen--;
 		}
 	}
