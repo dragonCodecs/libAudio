@@ -8,7 +8,7 @@ executable(
 	'libAudio',
 	playerSrcs,
 	cpp_args: playerDefs,
-	dependencies: libAudio,
+	dependencies: [libAudio, substrate],
 	gnu_symbol_visibility: 'inlineshidden',
 	install: true
 )
