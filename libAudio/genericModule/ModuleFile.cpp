@@ -620,12 +620,12 @@ void itUnpackPCM16(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, bool del
 }
 
 template<typename T>
-void stereoInterleave(T *pcmIn, T *pcmOut, uint32_t Length)
+void stereoInterleave(T *pcmIn, T *pcmOut, size_t length)
 {
-	for (uint32_t i = 0; i < Length; i++)
+	for (size_t i = 0; i < length; ++i)
 	{
-		pcmOut[(i << 1) + 0] = pcmIn[i];
-		pcmOut[(i << 1) + 1] = pcmIn[i + Length];
+		pcmOut[(i << 1U) + 0U] = pcmIn[i];
+		pcmOut[(i << 1U) + 1U] = pcmIn[i + length];
 	}
 }
 
