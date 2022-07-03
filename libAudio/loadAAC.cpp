@@ -311,10 +311,8 @@ bool aac_t::isAAC(const int32_t fd) noexcept
 		return false;
 	// Detect an ADTS header:
 	aacSig[1] &= 0xF6;
-	if (aacSig[0] != 0xFF || aacSig[1] != 0xF0)
-		return false;
 	// not going to bother detecting ADIF yet..
-	return true;
+	return aacSig[0] == 0xFF && aacSig[1] == 0xF0;
 }
 
 /*!
