@@ -623,19 +623,19 @@ template<> void itUnpackPCM<uint16_t>(ModuleSample *sample, uint16_t *PCM, const
 
 template<typename T> void fixSign(T *const pcm, const size_t length);
 
-template<> void fixSign(uint8_t *const pcm, const size_t length)
+template<> void fixSign<uint8_t>(uint8_t *const pcm, const size_t length)
 {
 	for (size_t i = 0; i < length; ++i)
 		pcm[i] ^= 0x80U;
 }
 
-template<> void fixSign(uint16_t *const pcm, const size_t length)
+template<> void fixSign<uint16_t>(uint16_t *const pcm, const size_t length)
 {
 	for (size_t i = 0; i < length; ++i)
 		pcm[i] ^= 0x8000U;
 }
 
-template<typename T> void stereoInterleave(T *pcmIn, T *pcmOut, size_t length)
+template<typename T> void stereoInterleave(T *pcmIn, T *pcmOut, const size_t length)
 {
 	for (size_t i = 0; i < length; ++i)
 	{
@@ -665,7 +665,7 @@ template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint
 	else if (!fd.read(pcm, Length))
 		throw ModuleLoaderError{E_BAD_IT};
 	if (!(Sample->Packing & 0x01U))
-		fixSign(pcm, Length);
+		fixSign(pcm.get(), Length);
 	if (Sample->GetStereo())
 	{
 		auto outBuff = makeUnique<T []>(Length);
