@@ -662,7 +662,7 @@ template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint
 		if (Sample->GetStereo())
 			itUnpackPCM(Sample, pcm.get() + Sample->GetLength(), fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04U);
 	}
-	else if (!fd.read(p_PCM[i], Length))
+	else if (!fd.read(pcm, Length))
 		throw ModuleLoaderError{E_BAD_IT};
 	if (!(Sample->Packing & 0x01U))
 		fixSign(pcm, Length);
