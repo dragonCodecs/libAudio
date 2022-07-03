@@ -147,8 +147,8 @@ inline samplePair_t monoLinearSample(const int8_t *const buffer, const uint32_t 
 inline samplePair_t monoLinearSample(const int16_t *const buffer, const uint32_t position) noexcept
 {
 	const auto positionLow{uint8_t(position >> 8U)};
-	const auto firstSample{monoLinearSample(buffer, position).first};
-	const auto secondSample{monoLinearSample(buffer, position + (1U << 16U)).first};
+	const auto firstSample{monoSample(buffer, position).first};
+	const auto secondSample{monoSample(buffer, position + (1U << 16U)).first};
 	const auto sample{firstSample + ((positionLow * (secondSample - firstSample)) >> 9U)};
 	return {sample, sample};
 }
