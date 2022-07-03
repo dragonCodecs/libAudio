@@ -431,14 +431,16 @@ uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, size_t
 
 void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool deltaComp)
 {
-	uint8_t buff, buffLen, bitWidth = 9;
-	int8_t delta = 0, adjDelta = 0;
-	uint32_t blockLen = 0, i = 0, Length;
+	uint8_t buff = 0;
+	uint8_t buffLen = 0;
+	uint8_t bitWidth = 9;
+	int8_t delta = 0;
+	int8_t adjDelta = 0;
+	uint32_t blockLen = 0;
+	auto Length = sample->GetLength();
 
-	Length = sample->GetLength();
-	while (Length != 0)
+	for (size_t i = 0; Length != 0; )
 	{
-		uint32_t j, offs = 0;
 		if (blockLen == 0)
 		{
 			blockLen = 0x8000;
@@ -449,31 +451,40 @@ void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool delta
 			delta = 0;
 			adjDelta = 0;
 		}
-		j = blockLen;
-		if (j > Length)
-			j = Length;
+
+		const auto j
+		{
+			[&]()
+			{
+				if (blockLen > Length)
+					return Length;
+				return blockLen;
+			}()
+		};
+
+		uint32_t offs = 0;
 		do
 		{
-			uint16_t bits = uint16_t(itBitstreamRead(buff, buffLen, fd, bitWidth));
+			auto bits = itBitstreamRead(buff, buffLen, fd, bitWidth) & 0x0000FFFFU;
 			if (fd.isEOF())
 				return;
 			if (bitWidth < 7)
 			{
-				uint16_t special = 1 << (bitWidth - 1);
+				uint16_t special = 1U << (bitWidth - 1U);
 				if (bits == special)
 				{
-					const uint8_t bits = itBitstreamRead(buff, buffLen, fd, 3) + 1;
+					const auto bits = itBitstreamRead(buff, buffLen, fd, 3) + 1U;
 					if (bits < bitWidth)
 						bitWidth = bits;
 					else
-						bitWidth = bits + 1;
+						bitWidth = bits + 1U;
 					continue;
 				}
 			}
 			else if (bitWidth < 9)
 			{
-				uint16_t special1 = (0xFF >> (9 - bitWidth)) + 4;
-				uint16_t special2 = special1 - 8;
+				uint16_t special1 = (0xFFU >> (9U - bitWidth)) + 4U;
+				uint16_t special2 = special1 - 8U;
 				if (bits > special2 && bits <= special1)
 				{
 					bits -= special2;
@@ -497,7 +508,7 @@ void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool delta
 			if (bitWidth < 8)
 			{
 				uint8_t shift = 8 - bitWidth;
-				bits = ((int8_t)(bits << shift)) >> shift;
+				bits = int8_t(bits << shift) >> shift;
 			}
 			delta += bits;
 			adjDelta += delta;
