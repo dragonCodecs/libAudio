@@ -429,7 +429,9 @@ uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, size_t
 	return ret;
 }
 
-void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool deltaComp)
+template<typename T> void itUnpackPCM(ModuleSample *sample, T *PCM, const fd_t &fd, bool deltaComp);
+
+template<> void itUnpackPCM<uint8_t>(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, const bool deltaComp)
 {
 	uint8_t buff = 0;
 	uint8_t buffLen = 0;
@@ -524,7 +526,7 @@ void itUnpackPCM8(ModuleSample *sample, uint8_t *PCM, const fd_t &fd, bool delta
 	}
 }
 
-void itUnpackPCM16(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, bool deltaComp)
+template<> void itUnpackPCM<uint16_t>(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, const bool deltaComp)
 {
 	uint8_t buff = 0;
 	uint8_t buffLen = 0;
@@ -532,7 +534,7 @@ void itUnpackPCM16(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, bool del
 	int16_t delta = 0;
 	int16_t adjDelta = 0;
 	uint32_t blockLen = 0;
-	auto Length = sample->GetLength();// >> 1U;
+	auto Length = sample->GetLength();
 
 	for (size_t i = 0; Length != 0; )
 	{
