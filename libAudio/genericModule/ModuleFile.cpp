@@ -635,8 +635,9 @@ void ModuleFile::itLoadPCM(const fd_t &fd)
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		const auto Sample = static_cast<ModuleSampleNative *>(p_Samples[i]);
-		uint32_t Length = p_Samples[i]->GetLength() << ((Sample->Get16Bit() ? 1 : 0) + (Sample->GetStereo() ? 1 : 0));
-		if ((Sample->Flags & 0x01) == 0)
+		const size_t Length = p_Samples[i]->GetLength() <<
+			((Sample->Get16Bit() ? 1U : 0U) + (Sample->GetStereo() ? 1U : 0U));
+		if ((Sample->Flags & 0x01U) == 0)
 		{
 			p_PCM[i] = nullptr;
 			continue;
@@ -644,7 +645,7 @@ void ModuleFile::itLoadPCM(const fd_t &fd)
 		p_PCM[i] = new uint8_t[Length];
 		if (fd.seek(Sample->SamplePos, SEEK_SET) != Sample->SamplePos)
 			throw ModuleLoaderError(E_BAD_IT);
-		if ((Sample->Flags & 0x08) != 0)
+		if ((Sample->Flags & 0x08U) != 0)
 		{
 			if (Sample->Get16Bit())
 				itUnpackPCM16(Sample, reinterpret_cast<uint16_t *>(p_PCM[i]), fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
@@ -653,25 +654,24 @@ void ModuleFile::itLoadPCM(const fd_t &fd)
 		}
 		else if (!fd.read(p_PCM[i], Length))
 			throw ModuleLoaderError(E_BAD_IT);
-		if ((Sample->Packing & 0x01) == 0)
+		if ((Sample->Packing & 0x01U) == 0)
 		{
-			uint32_t j;
 			if (Sample->Get16Bit())
 			{
-				uint16_t *pcm = (uint16_t *)p_PCM[i];
-				for (j = 0; j < (Length >> 1); j++)
-					pcm[j] ^= 0x8000;
+				auto *pcm = reinterpret_cast<uint16_t *>(p_PCM[i]);
+				for (size_t j = 0; j < (Length >> 1U); j++)
+					pcm[j] ^= 0x8000U;
 			}
 			else
 			{
 				uint8_t *pcm = p_PCM[i];
-				for (j = 0; j < Length; j++)
-					pcm[j] ^= 0x80;
+				for (size_t j = 0; j < Length; j++)
+					pcm[j] ^= 0x80U;
 			}
 		}
 		if (Sample->GetStereo())
 		{
-			uint8_t *outBuff = new uint8_t[Length];
+			auto *outBuff = new uint8_t[Length];
 			if (Sample->Get16Bit())
 				stereoInterleave(reinterpret_cast<uint16_t *>(p_PCM[i]), reinterpret_cast<uint16_t *>(outBuff), p_Samples[i]->GetLength());
 			else
