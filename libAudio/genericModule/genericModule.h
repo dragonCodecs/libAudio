@@ -681,6 +681,8 @@ private:
 	void DeinitMixer();
 	friend struct channel_t;
 
+	template<typename T> void itLoadPCMSample(const fd_t &fd, uint32_t i);
+
 public:
 	ModuleFile(const modMOD_t &file);
 	ModuleFile(const modS3M_t &file);

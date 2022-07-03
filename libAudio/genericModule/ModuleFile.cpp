@@ -619,8 +619,21 @@ void itUnpackPCM16(ModuleSample *sample, uint16_t *PCM, const fd_t &fd, bool del
 	}
 }
 
-template<typename T>
-void stereoInterleave(T *pcmIn, T *pcmOut, size_t length)
+template<typename T> void fixSign(T *const pcm, const size_t length);
+
+template<> void fixSign(uint8_t *const pcm, const size_t length)
+{
+	for (size_t i = 0; i < length; ++i)
+		pcm[i] ^= 0x80U;
+}
+
+template<> void fixSign(uint16_t *const pcm, const size_t length)
+{
+	for (size_t i = 0; i < length; ++i)
+		pcm[i] ^= 0x8000U;
+}
+
+template<typename T> void stereoInterleave(T *pcmIn, T *pcmOut, size_t length)
 {
 	for (size_t i = 0; i < length; ++i)
 	{
@@ -629,56 +642,47 @@ void stereoInterleave(T *pcmIn, T *pcmOut, size_t length)
 	}
 }
 
+template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint32_t i)
+{
+	auto *const Sample = dynamic_cast<ModuleSampleNative *>(p_Samples[i]);
+	const size_t Length = p_Samples[i]->GetLength() << (Sample->GetStereo() ? 1U : 0U);
+	if ((Sample->Flags & 0x01U) == 0)
+	{
+		p_PCM[i] = nullptr;
+		return;
+	}
+	auto pcm = makeUnique<T []>(Length);
+	if (fd.seek(Sample->SamplePos, SEEK_SET) != Sample->SamplePos)
+		throw ModuleLoaderError{E_BAD_IT};
+	if (Sample->Flags & 0x08U)
+	{
+		itUnpackPCM(Sample, pcm.get(), fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04U);
+		if (Sample->GetStereo())
+			itUnpackPCM(Sample, pcm.get() + Sample->GetLength(), fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04U);
+	}
+	else if (!fd.read(p_PCM[i], Length))
+		throw ModuleLoaderError{E_BAD_IT};
+	if (!(Sample->Packing & 0x01U))
+		fixSign(pcm, Length);
+	if (Sample->GetStereo())
+	{
+		auto outBuff = makeUnique<T []>(Length);
+		stereoInterleave(pcm.get(), outBuff.get(), p_Samples[i]->GetLength());
+		p_PCM[i] = reinterpret_cast<uint8_t *>(outBuff.release());
+	}
+	else
+		p_PCM[i] = reinterpret_cast<uint8_t *>(pcm.release());
+}
+
 void ModuleFile::itLoadPCM(const fd_t &fd)
 {
 	p_PCM = new uint8_t *[p_Header->nSamples];
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
-		const auto Sample = static_cast<ModuleSampleNative *>(p_Samples[i]);
-		const size_t Length = p_Samples[i]->GetLength() <<
-			((Sample->Get16Bit() ? 1U : 0U) + (Sample->GetStereo() ? 1U : 0U));
-		if ((Sample->Flags & 0x01U) == 0)
-		{
-			p_PCM[i] = nullptr;
-			continue;
-		}
-		p_PCM[i] = new uint8_t[Length];
-		if (fd.seek(Sample->SamplePos, SEEK_SET) != Sample->SamplePos)
-			throw ModuleLoaderError(E_BAD_IT);
-		if ((Sample->Flags & 0x08U) != 0)
-		{
-			if (Sample->Get16Bit())
-				itUnpackPCM16(Sample, reinterpret_cast<uint16_t *>(p_PCM[i]), fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
-			else
-				itUnpackPCM8(Sample, p_PCM[i], fd, p_Header->FormatVersion > 214 && Sample->Packing & 0x04);
-		}
-		else if (!fd.read(p_PCM[i], Length))
-			throw ModuleLoaderError(E_BAD_IT);
-		if ((Sample->Packing & 0x01U) == 0)
-		{
-			if (Sample->Get16Bit())
-			{
-				auto *pcm = reinterpret_cast<uint16_t *>(p_PCM[i]);
-				for (size_t j = 0; j < (Length >> 1U); j++)
-					pcm[j] ^= 0x8000U;
-			}
-			else
-			{
-				uint8_t *pcm = p_PCM[i];
-				for (size_t j = 0; j < Length; j++)
-					pcm[j] ^= 0x80U;
-			}
-		}
-		if (Sample->GetStereo())
-		{
-			auto *outBuff = new uint8_t[Length];
-			if (Sample->Get16Bit())
-				stereoInterleave(reinterpret_cast<uint16_t *>(p_PCM[i]), reinterpret_cast<uint16_t *>(outBuff), p_Samples[i]->GetLength());
-			else
-				stereoInterleave(p_PCM[i], outBuff, p_Samples[i]->GetLength());
-			delete [] p_PCM[i];
-			p_PCM[i] = outBuff;
-		}
+		if (p_Samples[i]->Get16Bit())
+			itLoadPCMSample<uint16_t>(fd, i);
+		else
+			itLoadPCMSample<uint8_t>(fd, i);
 	}
 }
 
