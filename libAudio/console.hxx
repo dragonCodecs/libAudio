@@ -7,6 +7,7 @@
 #include <array>
 #include <type_traits>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <cstring>
 #include "libAudio.h"
@@ -62,6 +63,8 @@ namespace libAudio
 			template<typename T> void write(const std::unique_ptr<T []> &value) const noexcept { write(value.get()); }
 			void write(const std::string &value) const noexcept
 				{ write(value.data(), value.length()); }
+			void write(const std::string_view &value) const noexcept
+				{ write(value.data(), value.length()); }
 			template<typename T, typename = enableIf<isBaseOf<printable_t, T>::value>>
 				void write(T &&printable) const noexcept { printable(*this); }
 			template<typename T, typename = enableIf<isScalar<T>::value>>
@@ -104,6 +107,9 @@ namespace libAudio
 
 			template<typename... T> libAUDIO_CLSMAYBE_API void debug(T &&...values) const noexcept
 				{ _debug(); write(outputStream, std::forward<T>(values)...); }
+
+			template<typename... T> libAUDIO_CLSMAYBE_API void output(T &&...values) const noexcept
+				{ write(outputStream, std::forward<T>(values)...); }
 
 			void dumpBuffer();
 		};
