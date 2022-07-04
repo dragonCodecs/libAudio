@@ -341,12 +341,6 @@ ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : 
 		C4Speed /= 2;*/
 	VibratoRate <<= 1U;
 
-	// if (Flags & 0x02)
-	// {
-	// 	Length >>= 1U;
-	// 	LoopStart >>= 1U;
-	// 	LoopEnd >>= 1U;
-	// }
 	// If looping not enabled, zero the Loop fields
 	if (!(Flags & 0x10U))
 		LoopStart = LoopEnd = 0U;
