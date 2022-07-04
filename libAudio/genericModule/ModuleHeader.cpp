@@ -24,7 +24,7 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 		!fd.read(&nOrders, 1) ||
 		!fd.read(&RestartPos, 1) ||
 		!fd.read(Orders.get(), 128))
-		throw ModuleLoaderError(E_BAD_MOD);
+		throw ModuleLoaderError{E_BAD_MOD};
 
 	// Defaults
 	nSamples = 31;
@@ -91,7 +91,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 		!fd.read(dontCare) ||
 		!fd.read(Special) ||
 		!fd.read(ChannelSettings, 32))
-		throw ModuleLoaderError(E_BAD_S3M);
+		throw ModuleLoaderError{E_BAD_S3M};
 
 	if (Name[27] != 0)
 		Name[28] = 0;
@@ -104,7 +104,7 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 
 	if (Const != 0x1AU || Type != 16 || FormatVersion > 2 || FormatVersion == 0 ||
 		memcmp(magic.data(), "SCRM", 4) != 0)
-		throw ModuleLoaderError(E_BAD_S3M);
+		throw ModuleLoaderError{E_BAD_S3M};
 
 	Orders = make_unique<uint8_t []>(nOrders);
 	SamplePtrs = make_managed<uint16_t []>(nSamples);
@@ -113,20 +113,19 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 		!fd.read(Orders.get(), nOrders) ||
 		!fd.read(SamplePtrs.get(), static_cast<size_t>(nSamples) * 2U) ||
 		!fd.read(PatternPtrs.get(), static_cast<size_t>(nPatterns) * 2U))
-		throw ModuleLoaderError(E_BAD_S3M);
+		throw ModuleLoaderError{E_BAD_S3M};
 
 	// Panning?
 	if (dontCare[1] == 0xFCU)
 	{
-		uint8_t i;
 		Panning = make_unique<uint16_t []>(32);
 		if (!Panning)
-			throw ModuleLoaderError(E_BAD_S3M);
-		for (i = 0; i < 32; i++)
+			throw ModuleLoaderError{E_BAD_S3M};
+		for (size_t i = 0; i < 32U; ++i)
 		{
 			uint8_t value{};
 			if (!fd.read(value))
-				throw ModuleLoaderError(E_BAD_S3M);
+				throw ModuleLoaderError{E_BAD_S3M};
 			else if (value & 0x20U)
 				Panning[i] = ((value & 0x0FU) << 4U) | (value & 0x0FU);
 			else
@@ -158,7 +157,7 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 		fd.seek(1040, SEEK_SET) != 1040 ||
 		!fd.read(Orders, nOrders) ||
 		fd.seek(48, SEEK_SET) != 48)
-		throw ModuleLoaderError(E_BAD_STM);
+		throw ModuleLoaderError{E_BAD_STM};
 
 	InitialSpeed >>= 4U;
 	nPatterns = patternCount_;
@@ -191,21 +190,21 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		!fd.read(blockName) ||
 		memcmp(blockName.data(), "NAME", 4) != 0 ||
 		!fd.readBE(blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	nChannels = magic1[3] - '0';
 	Name = make_unique<char []>(blockLen + 1);
 	if (!Name ||
 		!fd.read(Name, blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	Name[blockLen] = 0;
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "AUTH", 4) != 0 ||
 		!fd.readBE(blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	Author = make_unique<char []>(blockLen + 1);
 	if (!Author ||
 		!fd.read(Author, blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	Author[blockLen] = 0;
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "DATE", 4) != 0 ||
@@ -214,12 +213,12 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		!fd.read(blockName) ||
 		memcmp(blockName.data(), "RMRK", 4) != 0 ||
 		!fd.readBE(blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	else if (blockLen)
 	{
 		Remark = make_unique<char []>(blockLen + 1);
 		if (!fd.read(Remark, blockLen))
-			throw ModuleLoaderError(E_BAD_AON);
+			throw ModuleLoaderError{E_BAD_AON};
 		Remark[blockLen] = 0;
 	}
 	else
@@ -231,10 +230,10 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		blockLen != 4 ||
 		Const != 0x34 ||
 		!fd.read(Const))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	nOrders = Const;
 	if (!fd.read(Const))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	RestartPos = Const;
 	if (!fd.read(Const) ||
 		// Skip over the arpeggio table..
@@ -242,38 +241,38 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		memcmp(blockName.data(), "ARPG", 4) != 0 ||
 		!fd.readBE(blockLen) ||
 		blockLen != 64)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	for (size_t i{}; i < 16; ++i)
 	{
 		for (size_t j{}; j < 4; ++j)
 		{
 			if (!fd.read(ArpTable[i][j]))
-				throw ModuleLoaderError(E_BAD_AON);
+				throw ModuleLoaderError{E_BAD_AON};
 		}
 	}
 	if (ArpTable[0][0] != 0 || ArpTable[0][1] != 0 ||
 		ArpTable[0][2] != 0 || ArpTable[0][3] != 0)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	else if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "PLST", 4) != 0 ||
 		!fd.readBE(blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	// If odd number of orders
 	if ((nOrders & 1U) != 0)
 		// Get rid of the fill byte from the count
 		blockLen--;
 	Orders = make_unique<uint8_t []>(nOrders);
 	if (blockLen != nOrders || !Orders)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	for (uint16_t i = 0; i < nOrders; i++)
 	{
 		if (!fd.read(Orders[i]))
-			throw ModuleLoaderError(E_BAD_AON);
+			throw ModuleLoaderError{E_BAD_AON};
 	}
 	// If odd read length, read the fill byte
 	if ((blockLen & 1U) != 0 &&
 		!fd.read(Const))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 }
 
 #ifdef ENABLE_FC1x
@@ -294,7 +293,7 @@ ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}
 		!fd.read(VolumeLength) ||
 		!fd.read(SampleOffs) ||
 		!fd.read(SampleLength))
-		throw ModuleLoaderError(E_BAD_FC1x);
+		throw ModuleLoaderError{E_BAD_FC1x};
 }
 #endif
 
@@ -309,7 +308,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 
 	if (!fd.read(magic) ||
 		strncmp(magic.data(), "IMPM", 4) != 0)
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	Name = make_unique<char []>(27);
 	Panning = make_unique<uint16_t []>(64);
@@ -335,7 +334,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		!fd.read(msgLength) ||
 		!fd.readLE(MessageOffs) ||
 		!fd.read(dontCare))
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	if (Name[25] != 0)
 		Name[26] = 0;
@@ -346,7 +345,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 	{
 		uint8_t value{};
 		if (!fd.read(value))
-			throw ModuleLoaderError(E_BAD_IT);
+			throw ModuleLoaderError{E_BAD_IT};
 		Panning[i] = value;
 	}
 
@@ -363,7 +362,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		!fd.read(InstrumentPtrs, static_cast<size_t>(nInstruments) * 4U) ||
 		!fd.read(SamplePtrs, static_cast<size_t>(nSamples) * 4U) ||
 		!fd.read(PatternPtrs, static_cast<size_t>(nPatterns) * 4U))
-		throw ModuleLoaderError(E_BAD_IT);
+		throw ModuleLoaderError{E_BAD_IT};
 
 	Flags = 0;
 	if (songFlags & 0x0008U)
@@ -380,7 +379,7 @@ ModuleHeader::ModuleHeader(const modIT_t &file) : ModuleHeader{}
 		Remark = make_unique<char []>(msgLength + 1);
 		if (fd.seek(MessageOffs, SEEK_SET) != MessageOffs ||
 			!fd.read(Remark, msgLength))
-			throw ModuleLoaderError(E_BAD_IT);
+			throw ModuleLoaderError{E_BAD_IT};
 		Remark[msgLength] = 0;
 	}
 }
