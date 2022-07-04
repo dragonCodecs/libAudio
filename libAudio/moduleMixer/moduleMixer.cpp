@@ -1367,7 +1367,7 @@ bool ModuleFile::AdvanceTick()
 
 uint32_t channel_t::GetSampleCount(uint32_t samples)
 {
-	uint32_t deltaHi, deltaLo, maxSamples, sampleCount;
+	uint32_t maxSamples, sampleCount;
 	uint32_t loopStart = ((Flags & CHN_LOOP) != 0 ? LoopStart : 0);
 	int16dot16 nextIncrement = increment;
 	if (samples == 0 || increment.iValue == 0 || Length == 0)
@@ -1380,9 +1380,9 @@ uint32_t channel_t::GetSampleCount(uint32_t samples)
 	{
 		if (increment.iValue < 0)
 		{
-			int delta = ((loopStart - Pos) << 16U) - (PosLo & 0xFFFFU);
+			const auto delta = static_cast<int32_t>(((loopStart - Pos) << 16U) - (PosLo & 0xFFFFU));
 			Pos = loopStart + (delta >> 16U);
-			PosLo = delta & 0xFFFFU;
+			PosLo = static_cast<uint16_t>(delta);
 			if (Pos < loopStart || Pos >= (loopStart + Length) / 2)
 			{
 				Pos = loopStart;
@@ -1390,26 +1390,30 @@ uint32_t channel_t::GetSampleCount(uint32_t samples)
 			}
 			nextIncrement.iValue = -nextIncrement.iValue;
 			increment.iValue = nextIncrement.iValue;
-			if ((Flags & CHN_LOOP) == 0 || Pos >= Length)
+			Flags &= ~CHN_FPINGPONG;
+			if (!(Flags & CHN_LOOP) || Pos >= Length)
 			{
 				Pos = Length;
 				PosLo = 0;
 				return 0;
 			}
 		}
+		else if (Pos & 0x80000000U)
+			Pos = 0;
 	}
 	else if (Pos >= Length)
 	{
-		if ((Flags & CHN_LOOP) == 0)
+		if (!(Flags & CHN_LOOP))
 			return 0;
-		if ((Flags & CHN_LPINGPONG) != 0)
+		if (Flags & CHN_LPINGPONG)
 		{
-			uint32_t delta = ((~PosLo) & 0xFFFFU) + 1U;
 			if (nextIncrement.iValue > 0)
 			{
 				nextIncrement.iValue = -nextIncrement.iValue;
 				increment.iValue = nextIncrement.iValue;
 			}
+			Flags |= CHN_FPINGPONG;
+			const uint32_t delta = ((~PosLo) & 0xFFFFU) + 1U;
 			Pos -= ((Pos - Length) << 1U) + (delta >> 16U);
 			PosLo = delta & 0xFFFFU;
 			if (Pos <= LoopStart || Pos >= Length)
@@ -1443,23 +1447,23 @@ uint32_t channel_t::GetSampleCount(uint32_t samples)
 		maxSamples = 2;
 	if (samples > maxSamples)
 		samples = maxSamples;
-	deltaHi = nextIncrement.Value.Hi * (samples - 1U);
-	deltaLo = nextIncrement.Value.Lo * (samples - 1U);
+	const uint32_t deltaHi = nextIncrement.Value.Hi * (samples - 1U);
+	const uint32_t deltaLo = nextIncrement.Value.Lo * (samples - 1U);
 	if (increment.iValue < 0)
 	{
-		uint32_t posDest = Pos - deltaHi - ((deltaLo - PosLo) >> 16U);
-		if (posDest & 0x80000000U || posDest < loopStart)
+		const uint32_t posDest = Pos - deltaHi - ((deltaLo - PosLo) >> 16U);
+		if ((posDest & 0x80000000U) || posDest < loopStart)
 		{
-			sampleCount = (((Pos - loopStart) << 16U) + PosLo) / nextIncrement.iValue;
+			sampleCount = (((Pos - loopStart) << 16U) + PosLo - 1) / nextIncrement.iValue;
 			++sampleCount;
 		}
 	}
 	else
 	{
-		uint32_t posDest = Pos + deltaHi + ((deltaLo + PosLo) >> 16U);
+		const uint32_t posDest = Pos + deltaHi + ((deltaLo + PosLo) >> 16U);
 		if (posDest >= Length)
 		{
-			sampleCount = (((Length - Pos) << 16U) - PosLo) / nextIncrement.iValue;
+			sampleCount = (((Length - Pos) << 16U) - PosLo - 1) / nextIncrement.iValue;
 			++sampleCount;
 		}
 	}
