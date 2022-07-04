@@ -1413,7 +1413,7 @@ uint32_t channel_t::GetSampleCount(uint32_t samples)
 				increment.iValue = nextIncrement.iValue;
 			}
 			Flags |= CHN_FPINGPONG;
-			const uint32_t delta = ((~PosLo) & 0xFFFFU) + 1U;
+			const uint32_t delta = ((~PosLo + 1U) & 0xFFFFU);
 			Pos -= ((Pos - Length) << 1U) + (delta >> 16U);
 			PosLo = delta & 0xFFFFU;
 			if (Pos <= LoopStart || Pos >= Length)
