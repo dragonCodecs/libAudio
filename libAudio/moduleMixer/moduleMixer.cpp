@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #define _USE_MATH_DEFINES
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <malloc.h>
-#include <math.h>
+#include <cmath>
+#include <string_view>
 
 #include "../libAudio.h"
 #include "../libAudio.hxx"
@@ -14,6 +15,9 @@
 #include "mixFunctions.h"
 #include "mixFunctionTables.h"
 #include "frequencyTables.h"
+#include "../console.hxx"
+
+using namespace std::literals::string_view_literals;
 
 uint32_t Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 {
@@ -1415,7 +1419,7 @@ uint32_t channel_t::GetSampleCount(uint32_t samples)
 		{
 			if (increment.iValue < 0) // Theory says this is imposible..
 			{
-				printf("This should not happen\n");
+				console.error("This should not happen"sv);
 				nextIncrement.iValue = -nextIncrement.iValue;
 				increment.iValue = nextIncrement.iValue;
 			}
