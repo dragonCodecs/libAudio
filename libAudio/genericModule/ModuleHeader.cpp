@@ -11,6 +11,8 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 {
 	constexpr const uint32_t seekOffset = (30 * 31) + 130;
 	std::array<char, 4> magic{};
+	uint8_t orders_{};
+	uint8_t restartPos_{};
 	const fd_t &fd = file.fd();
 
 	Name = make_unique<char []>(21);
@@ -21,11 +23,13 @@ ModuleHeader::ModuleHeader(const modMOD_t &file) : ModuleHeader{}
 		fd.seek(seekOffset, SEEK_CUR) != (seekOffset + 20) ||
 		!fd.read(magic) ||
 		fd.seek(-134, SEEK_CUR) != (seekOffset - 130 + 20) ||
-		!fd.read(&nOrders, 1) ||
-		!fd.read(&RestartPos, 1) ||
+		!fd.read(orders_) ||
+		!fd.read(restartPos_) ||
 		!fd.read(Orders.get(), 128))
 		throw ModuleLoaderError{E_BAD_MOD};
 
+	nOrders = orders_;
+	RestartPos = restartPos_;
 	// Defaults
 	nSamples = 31;
 	nChannels = 4;
@@ -77,19 +81,19 @@ ModuleHeader::ModuleHeader(const modS3M_t &file) : ModuleHeader{}
 		!fd.read(Const) ||
 		!fd.read(Type) ||
 		!fd.read<2>(dontCare) ||
-		!fd.read(nOrders) ||
-		!fd.read(nSamples) ||
-		!fd.read(nPatterns) ||
-		!fd.read(rawFlags) ||
-		!fd.read(CreationVersion) ||
-		!fd.read(FormatVersion) ||
+		!fd.readLE(nOrders) ||
+		!fd.readLE(nSamples) ||
+		!fd.readLE(nPatterns) ||
+		!fd.readLE(rawFlags) ||
+		!fd.readLE(CreationVersion) ||
+		!fd.readLE(FormatVersion) ||
 		!fd.read(magic) ||
 		!fd.read(GlobalVolume) ||
 		!fd.read(InitialSpeed) ||
 		!fd.read(InitialTempo) ||
 		!fd.read(MasterVolume) ||
 		!fd.read(dontCare) ||
-		!fd.read(Special) ||
+		!fd.readLE(Special) ||
 		!fd.read(ChannelSettings, 32))
 		throw ModuleLoaderError{E_BAD_S3M};
 
@@ -149,7 +153,7 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 		!fd.read(magic) ||
 		strncmp(magic.data(), "!Scream!\x1A", 9) != 0 ||
 		!fd.read(Type) || Type != 2 ||
-		!fd.read(FormatVersion) ||
+		!fd.readLE(FormatVersion) ||
 		!fd.read(InitialSpeed) ||
 		!fd.read(patternCount_) ||
 		!fd.read(GlobalVolume) ||
