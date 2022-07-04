@@ -263,19 +263,22 @@ ModuleFile::~ModuleFile()
 
 	DeinitMixer();
 
-	if (ModuleType != MODULE_AON)
+	if (ModuleType != MODULE_AON && p_Header)
 		nPCM = p_Header->nSamples;
 	for (i = 0; i < nPCM; i++)
 		delete [] p_PCM[i];
 	delete [] p_PCM;
-	for (i = 0; i < p_Header->nPatterns; i++)
-		delete p_Patterns[i];
-	delete [] p_Patterns;
-	for (i = 0; i < p_Header->nInstruments; i++)
-		delete p_Instruments[i];
-	delete [] p_Instruments;
-	for (i = 0; i < p_Header->nSamples; i++)
-		delete p_Samples[i];
+	if (p_Header)
+	{
+		for (i = 0; i < p_Header->nPatterns; i++)
+			delete p_Patterns[i];
+		delete [] p_Patterns;
+		for (i = 0; i < p_Header->nInstruments; i++)
+			delete p_Instruments[i];
+		delete [] p_Instruments;
+		for (i = 0; i < p_Header->nSamples; i++)
+			delete p_Samples[i];
+	}
 	delete [] p_Samples;
 	delete p_Header;
 }
