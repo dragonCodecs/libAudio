@@ -262,14 +262,11 @@ int64_t aac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		return -2;
 	while (offset < length && !ctx.eof)
 	{
-		if (ctx.samplesUsed == ctx.sampleCount)
+		if (ctx.samplesUsed == ctx.sampleCount &&!nextFrame())
 		{
-			if (!nextFrame())
-			{
-				if (!ctx.eof)
-					return offset;
-				continue;
-			}
+			if (!ctx.eof)
+				return offset;
+			continue;
 		}
 		uint8_t *const decodeBuffer = ctx.decodeBuffer;
 
