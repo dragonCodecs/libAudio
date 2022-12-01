@@ -34,10 +34,9 @@ namespace libAudio
 				const bool result = fd.read(buffer, *bytes, *bytes);
 				if (!result && !fd.isEOF())
 					return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
-				else if (!result)
+				if (!result)
 					return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
-				else
-					return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+				return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 			}
 
 			return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
@@ -215,8 +214,8 @@ namespace libAudio
 		 * @note Implemented as a no-operation due to how the rest of the decoder is structured
 		 */
 		void error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *) noexcept { }
-	} // End: namespace flac
-} // End: namespace libAudio
+	} // namespace flac
+} // namespace libAudio
 
 using namespace libAudio;
 
@@ -243,11 +242,11 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
 	FLAC__stream_decoder_set_metadata_respond(ctx.streamDecoder, FLAC__METADATA_TYPE_STREAMINFO);
 	FLAC__stream_decoder_set_metadata_respond(ctx.streamDecoder, FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
-	std::array<char, 4> sig;
-	if (!fd.read(sig) ||
-		fd.seek(0, SEEK_SET) != 0)
+	std::array<char, 4> sig{};
+	if (!fd.read(sig) || fd.seek(0, SEEK_SET) != 0)
 		return nullptr;
-	else if (memcmp(sig.data(), "OggS", sig.size()) == 0)
+
+	if (memcmp(sig.data(), "OggS", sig.size()) == 0)
 		FLAC__stream_decoder_init_ogg_stream(ctx.streamDecoder, flac::read, flac::seek,
 			flac::tell, flac::length, flac::eof, flac::data, flac::metadata, flac::error,
 			file.get());
@@ -296,7 +295,7 @@ FLAC__StreamDecoderState flac_t::decoderContext_t::nextFrame() noexcept
  */
 int64_t flac_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
-	const auto buffer = static_cast<char *>(bufferPtr);
+	auto *const buffer = static_cast<char *>(bufferPtr);
 	uint32_t filled = 0;
 	auto &ctx = *decoderContext();
 	while (filled < length)
@@ -351,7 +350,7 @@ bool flac_t::isFLAC(const int32_t fd) noexcept
 		(memcmp(flacSig, "fLaC", 4) != 0 &&
 		memcmp(flacSig, "OggS", 4) != 0))
 		return false;
-	else if (memcmp(flacSig, "OggS", 4) == 0)
+	if (memcmp(flacSig, "OggS", 4) == 0)
 	{
 		ogg_packet header;
 		return isOgg(fd, header) && ::isFLAC(header);
