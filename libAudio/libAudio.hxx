@@ -9,8 +9,8 @@
  * @date 2016-2020
  */
 
-#ifdef _WINDOWS
 #include <cstring>
+#ifdef _WINDOWS
 #define strncasecmp strnicmp
 #define strcasecmp stricmp
 #endif
