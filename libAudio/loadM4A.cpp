@@ -36,14 +36,15 @@ namespace libAudio
 		 * @param file \c FILE handle for the MP4 file as a void pointer
 		 * @param pos Possition into the file to which to seek to
 		 */
-		int seek(void *file, int64_t pos)
+		int seek(void *filePtr, int64_t pos)
 		{
+			auto *const file = static_cast<FILE *>(filePtr);
 #ifdef _WINDOWS
-			return (_fseeki64((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+			return (_fseeki64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
 #elif defined(__arm__) || defined(__aarch64__)
-			return fseeko((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
+			return fseeko(file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
 #else
-			return (fseeko64((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+			return (fseeko64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
 #endif
 		}
 
@@ -55,9 +56,10 @@ namespace libAudio
 		 * @param bufferLen A 64-bit integer giving how much data should be read from the file
 		 * @param read A 64-bit integer count returning how much data was actually read
 		 */
-		int read(void *file, void *buffer, int64_t bufferLen, int64_t *read, int64_t)
+		int read(void *filePtr, void *buffer, int64_t bufferLen, int64_t *read, int64_t)
 		{
-			size_t ret = fread(buffer, 1, size_t(bufferLen), (FILE *)file);
+			auto *const file = static_cast<FILE *>(filePtr);
+			size_t ret = fread(buffer, 1, size_t(bufferLen), file);
 			if (ret == 0 && bufferLen != 0)
 				return TRUE;
 			*read = ret;
@@ -72,9 +74,10 @@ namespace libAudio
 		 * @param bufferLen A 64-bit integer giving how much data is to be written to the file
 		 * @param written A 64-bit integer count returning how much data was actually written
 		 */
-		int write(void *file, const void *buffer, int64_t bufferLen, int64_t *written, int64_t)
+		int write(void *filePtr, const void *buffer, int64_t bufferLen, int64_t *written, int64_t)
 		{
-			if (fwrite(buffer, 1, size_t(bufferLen), (FILE *)file) != size_t(bufferLen))
+			auto *const file = static_cast<FILE *>(filePtr);
+			if (fwrite(buffer, 1, size_t(bufferLen), file) != size_t(bufferLen))
 				return TRUE;
 			*written = bufferLen;
 			return FALSE;
@@ -85,7 +88,7 @@ namespace libAudio
 		 * Internal function used to close the MP4 file after I/O is complete
 		 * @param file \c FILE handle for the MP4 file as a void pointer
 		 */
-		int close(void *file) { return fclose((FILE *)file) != 0; }
+		int close(void *file) { return fclose(static_cast<FILE *>(file)) != 0; }
 
 		/*!
 		 * @internal
