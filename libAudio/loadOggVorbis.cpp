@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include <string>
+#include <string_view>
 
 #include "oggVorbis.hxx"
 #include "string.hxx"
 
-inline std::string operator ""_s(const char *const str, const size_t len) noexcept
-	{ return {str, len}; }
+using namespace std::literals::string_view_literals;
 
 /*!
  * @internal
@@ -49,7 +48,7 @@ namespace libAudio
 			tell
 		};
 
-		bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string &tag) noexcept
+		bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string_view &tag) noexcept
 		{
 			const bool result = !strncasecmp(value, tag.data(), tag.size());
 			if (result)
@@ -62,9 +61,9 @@ namespace libAudio
 			for (int i = 0; i < tags.comments; ++i)
 			{
 				const char *const value = tags.user_comments[i];
-				if (!maybeCopyComment(info.title, value, "title="_s) &&
-					!maybeCopyComment(info.artist, value, "artist="_s) &&
-					!maybeCopyComment(info.album, value, "album="_s))
+				if (!maybeCopyComment(info.title, value, "title="sv) &&
+					!maybeCopyComment(info.artist, value, "artist="sv) &&
+					!maybeCopyComment(info.album, value, "album="sv))
 				{
 					std::unique_ptr<char []> other;
 					copyComment(other, value);
