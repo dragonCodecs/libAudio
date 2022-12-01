@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include <cstdio>
-#include <malloc.h>
 #include <algorithm>
 
 #include "m4a.hxx"
