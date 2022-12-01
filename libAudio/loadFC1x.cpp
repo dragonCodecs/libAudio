@@ -3,6 +3,12 @@
 #include "genericModule/genericModule.h"
 #include "console.hxx"
 
+namespace libAudio::fc1x
+{
+	constexpr static std::array<char, 4> magicSMOD{{'S', 'M', 'O', 'D'}};
+	constexpr static std::array<char, 4> magicFC14{{'F', 'C', '1', '4'}};
+}
+
 modFC1x_t::modFC1x_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleFC1x, std::move(fd)} { }
 
 modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
@@ -38,12 +44,11 @@ bool isFC1x(const char *fileName) { return modFC1x_t::isFC1x(fileName); }
 
 bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 {
-	char fc1xMagic[4];
+	std::array<char, 4> fc1xMagic;
 	if (fd == -1 ||
-		read(fd, fc1xMagic, 4) != 4 ||
+		read(fd, fc1xMagic.data(), fc1xMagic.size()) != fc1xMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		(memcmp(fc1xMagic, "SMOD", 4) != 0 &&
-		memcmp(fc1xMagic, "FC14", 4) != 0))
+		(fc1xMagic != libAudio::fc1x::magicSMOD && fc1xMagic != libAudio::fc1x::magicFC14))
 		return false;
 	return true;
 }
