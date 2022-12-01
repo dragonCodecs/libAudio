@@ -3,6 +3,11 @@
 #include "genericModule/genericModule.h"
 #include "console.hxx"
 
+namespace libAudio::it
+{
+	constexpr static std::array<char, 4> magic{{'I', 'M', 'P', 'M'}};
+}
+
 modIT_t::modIT_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleIT, std::move(fd)} { }
 
 modIT_t *modIT_t::openR(const char *const fileName) noexcept
@@ -39,11 +44,11 @@ bool isIT(const char *fileName) { return modIT_t::isIT(fileName); }
 
 bool modIT_t::isIT(const int32_t fd) noexcept
 {
-	char itSig[4];
+	std::array<char, 4> itMagic;
 	if (fd == -1 ||
-		read(fd, itSig, 4) != 4 ||
+		read(fd, itMagic.data(), itMagic.size()) != itMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(itSig, "IMPM", 4) != 0)
+		itMagic != libAudio::it::magic)
 		return false;
 	return true;
 }
