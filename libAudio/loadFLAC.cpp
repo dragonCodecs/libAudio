@@ -257,6 +257,8 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
 			flac::length, flac::eof, flac::data, flac::metadata, flac::error, file.get());
 
 	FLAC__stream_decoder_process_until_end_of_metadata(ctx.streamDecoder);
+	if (!ctx.buffer) // This indicates that no StreamInfo block was present, rendering the file unplayable
+		return nullptr;
 	return file.release();
 }
 
