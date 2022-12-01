@@ -124,6 +124,8 @@ namespace libAudio
 			auto &ctx = *file.decoderContext();
 			int16_t *PCM = reinterpret_cast<int16_t *>(ctx.buffer.get());
 			const uint8_t channels = file.fileInfo().channels;
+			if (!channels)
+				return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 			const uint8_t sampleShift = ctx.sampleShift;
 			uint32_t len = frame->header.blocksize;
 			if (len > (ctx.bufferLen / channels))
