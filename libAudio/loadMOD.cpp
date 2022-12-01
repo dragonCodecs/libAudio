@@ -1,7 +1,27 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include <string_view>
+
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
 #include "console.hxx"
+
+using namespace std::literals::string_view_literals;
+
+namespace libAudio::mod
+{
+	constexpr static std::array<char, 4> modMagicMKOrig{{'M', '.', 'K', '.'}};
+	constexpr static std::array<char, 4> modMagicMKMorePatternsPT2_3{{'M', '!', 'K', '!'}};
+	constexpr static std::array<char, 4> modMagicMKAlt{{'M', '&', 'K', '!'}};
+	constexpr static std::array<char, 4> modMagicNewTracker{{'N', '.', 'T', '.'}};
+	constexpr static std::array<char, 4> modMagicCD81{{'C', 'D', '8', '1'}};
+	constexpr static std::array<char, 4> modMagicOktamed{{'O', 'K', 'T', 'A'}};
+	constexpr static std::array<char, 3> modMagicStartrekker{{'F', 'L', 'T'}};
+	constexpr static std::array<char, 3> modMagicChn{{'C', 'H', 'N'}};
+	constexpr static std::array<char, 2> modMagicCh{{'C', 'H'}};
+	constexpr static std::array<char, 3> modMagicTDZ{{'T', 'D', 'Z'}};
+	constexpr static std::array<char, 4> modMagic16Channel{{'1', '6', 'C', 'N'}};
+	constexpr static std::array<char, 4> modMagic32Channel{{'3', '2', 'C', 'N'}};
+} // namespace libAudio::mod
 
 modMOD_t::modMOD_t(fd_t &&fd) noexcept : moduleFile_t(audioType_t::moduleIT, std::move(fd)) { }
 
@@ -39,30 +59,38 @@ bool isMOD(const char *fileName) { return modMOD_t::isMOD(fileName); }
 bool modMOD_t::isMOD(const int32_t fd) noexcept
 {
 	constexpr const uint32_t seekOffset = (30 * 31) + 150;
-	char MODMagic[4];
+	std::array<char, 4> modMagic;
 	if (fd == -1 ||
 		lseek(fd, seekOffset, SEEK_SET) != seekOffset ||
-		read(fd, MODMagic, 4) != 4 ||
+		read(fd, modMagic.data(), modMagic.size()) != modMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0)
 		return false;
 	return
-		memcmp(MODMagic, "M.K.", 4) == 0 ||
-		memcmp(MODMagic, "M!K!", 4) == 0 ||
-		memcmp(MODMagic, "M&K!", 4) == 0 ||
-		memcmp(MODMagic, "N.T.", 4) == 0 ||
-		memcmp(MODMagic, "CD81", 4) == 0 ||
-		memcmp(MODMagic, "OKTA", 4) == 0 ||
-		(memcmp(MODMagic, "FLT", 3) == 0 &&
-		MODMagic[3] >= '4' && MODMagic[3] <= '9') ||
-		(memcmp(MODMagic + 1, "CHN", 3) == 0 &&
-		MODMagic[0] >= '4' && MODMagic[0] <= '9') ||
-		(memcmp(MODMagic + 2, "CH", 2) == 0 &&
-		(MODMagic[0] == '1' || MODMagic[0] == '2' || MODMagic[0] == '3') &&
-		MODMagic[1] >= '0' && MODMagic[1] <= '9') ||
-		(memcmp(MODMagic, "TDZ", 3) == 0 &&
-		MODMagic[3] >= '4' && MODMagic[3] <= '9') ||
-		memcmp(MODMagic, "16CN", 4) == 0 ||
-		memcmp(MODMagic, "32CN", 4) == 0;
+		modMagic == libAudio::mod::modMagicMKOrig ||
+		modMagic == libAudio::mod::modMagicMKMorePatternsPT2_3 ||
+		modMagic == libAudio::mod::modMagicMKAlt ||
+		modMagic == libAudio::mod::modMagicNewTracker ||
+		modMagic == libAudio::mod::modMagicCD81 ||
+		modMagic == libAudio::mod::modMagicOktamed ||
+		(
+			memcmp(modMagic.data(), libAudio::mod::modMagicStartrekker.data(),
+				libAudio::mod::modMagicStartrekker.size()) == 0 &&
+			modMagic[3] >= '4' && modMagic[3] <= '9'
+		) ||
+		(
+			memcmp(modMagic.data() + 1, libAudio::mod::modMagicChn.data(), libAudio::mod::modMagicChn.size()) == 0 &&
+			modMagic[0] >= '4' && modMagic[0] <= '9'
+		) ||
+		(
+			memcmp(modMagic.data() + 2, libAudio::mod::modMagicCh.data(), libAudio::mod::modMagicCh.size()) == 0 &&
+			modMagic[0] >= '1' && modMagic[0] <= '3' && modMagic[1] >= '0' && modMagic[1] <= '9'
+		) ||
+		(
+			memcmp(modMagic.data(), libAudio::mod::modMagicTDZ.data(), libAudio::mod::modMagicTDZ.size()) == 0 &&
+			modMagic[3] >= '4' && modMagic[3] <= '9'
+		) ||
+		modMagic == libAudio::mod::modMagic16Channel ||
+		modMagic == libAudio::mod::modMagic32Channel;
 	// Probbaly not a MOD, but just as likely with the above tests that it is..
 	// so we can't do old ProTracker MODs with 15 samples and can't take the auto-detect tests 100% seriously.
 }
