@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include <cstdio>
-
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
+#include "console.hxx"
 
 modIT_t::modIT_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleIT, std::move(fd)} { }
 
@@ -20,7 +19,7 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 	try { ctx.mod = makeUnique<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
-		printf("%s\n", e.error());
+		console.error(e.error());
 		return nullptr;
 	}
 	info.title = ctx.mod->title();
