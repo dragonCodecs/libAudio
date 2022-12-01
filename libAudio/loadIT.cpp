@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include <stdio.h>
+#include <cstdio>
 
 #include "libAudio.h"
 #include "genericModule/genericModule.h"
