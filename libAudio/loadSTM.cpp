@@ -3,6 +3,11 @@
 #include "genericModule/genericModule.h"
 #include "console.hxx"
 
+namespace libAudio::stm
+{
+	constexpr static std::array<char, 9> magic{{'!', 'S', 'c', 'r', 'e', 'a', 'm', '!', '\x1A'}};
+}
+
 modSTM_t::modSTM_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleSTM, std::move(fd)} { }
 
 modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
@@ -39,12 +44,12 @@ bool isSTM(const char *fileName) { return modSTM_t::isSTM(fileName); }
 bool modSTM_t::isSTM(const int32_t fd) noexcept
 {
 	constexpr uint32_t offset = 20;
-	char STMMagic[9];
+	std::array<char, 9> stmMagic;
 	if (fd == -1 ||
 		lseek(fd, offset, SEEK_SET) != offset ||
-		read(fd, STMMagic, 9) != 9 ||
+		read(fd, stmMagic.data(), stmMagic.size()) != stmMagic.size()||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(STMMagic, "!Scream!\x1A", 9) != 0)
+		stmMagic != libAudio::stm::magic)
 		return false;
 	else
 		return true;
