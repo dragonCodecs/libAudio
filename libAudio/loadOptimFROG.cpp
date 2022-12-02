@@ -91,6 +91,8 @@ namespace libAudio::optimFROG
 		tell,
 		seek
 	};
+
+	constexpr static std::array<char, 4> magic{{'O', 'F', 'R', ' '}};
 } // namespace libAudio::optimFROG
 
 using namespace libAudio;
@@ -182,11 +184,11 @@ bool isOptimFROG(const char *fileName) { return optimFROG_t::isOptimFROG(fileNam
 
 bool optimFROG_t::isOptimFROG(const int32_t fd) noexcept
 {
-	char ofgSig[4];
+	std::array<char, 4> optimFrogMagic;
 	if (fd == -1 ||
-		read(fd, ofgSig, 4) != 4 ||
+		read(fd, optimFrogMagic.data(), optimFrogMagic.size()) != optimFrogMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(ofgSig, "OFR ", 4) != 0)
+		optimFrogMagic != libAudio::optimFROG::magic)
 		return false;
 	return true;
 }
