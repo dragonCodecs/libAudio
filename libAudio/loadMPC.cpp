@@ -283,12 +283,11 @@ bool isMPC(const char *fileName) { return mpc_t::isMPC(fileName); }
 bool mpc_t::isMPC(const int32_t fd) noexcept
 {
 	std::array<char, 3> mpcMagic;
-	if (fd == -1 ||
-		read(fd, mpcMagic.data(), mpcMagic.size()) != mpcMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		(mpcMagic != libAudio::mpc::mpPlusMagic && mpcMagic != libAudio::mpc::mpcMagic))
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		read(fd, mpcMagic.data(), mpcMagic.size()) == mpcMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		(mpcMagic == libAudio::mpc::mpPlusMagic || mpcMagic == libAudio::mpc::mpcMagic);
 }
 
 /*!
