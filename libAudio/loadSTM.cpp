@@ -56,7 +56,5 @@ bool modSTM_t::isSTM(const int32_t fd) noexcept
 bool modSTM_t::isSTM(const char *const fileName) noexcept
 {
 	fd_t file{fileName, O_RDONLY | O_NOCTTY};
-	if (!file.valid())
-		return false;
-	return isSTM(file);
+	return file.valid() && isSTM(file);
 }

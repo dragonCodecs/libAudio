@@ -69,7 +69,5 @@ bool modAON_t::isAON(const int32_t fd) noexcept
 bool modAON_t::isAON(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isAON(file);
+	return file.valid() && isAON(file);
 }

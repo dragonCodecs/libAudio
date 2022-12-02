@@ -159,7 +159,5 @@ bool oggOpus_t::isOggOpus(const int32_t fd) noexcept
 bool oggOpus_t::isOggOpus(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isOggOpus(file);
+	return file.valid() && isOggOpus(file);
 }

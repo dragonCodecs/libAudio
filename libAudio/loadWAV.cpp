@@ -370,7 +370,5 @@ bool wav_t::isWAV(const int32_t fd) noexcept
 bool wav_t::isWAV(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isWAV(file);
+	return file.valid() && isWAV(file);
 }

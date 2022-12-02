@@ -372,7 +372,5 @@ bool flac_t::isFLAC(const int32_t fd) noexcept
 bool flac_t::isFLAC(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isFLAC(file);
+	return file.valid() && isFLAC(file);
 }

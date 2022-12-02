@@ -324,7 +324,5 @@ bool aac_t::isAAC(const int32_t fd) noexcept
 bool aac_t::isAAC(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isAAC(file);
+	return file.valid() && isAAC(file);
 }

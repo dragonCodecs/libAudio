@@ -325,7 +325,5 @@ bool m4a_t::isM4A(const int32_t fd) noexcept
 bool m4a_t::isM4A(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isM4A(file);
+	return file.valid() && isM4A(file);
 }

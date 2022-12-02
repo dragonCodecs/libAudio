@@ -189,7 +189,5 @@ bool oggVorbis_t::isOggVorbis(const int32_t fd) noexcept
 bool oggVorbis_t::isOggVorbis(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isOggVorbis(file);
+	return file.valid() && isOggVorbis(file);
 }

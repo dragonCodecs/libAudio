@@ -55,7 +55,5 @@ bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 bool modFC1x_t::isFC1x(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isFC1x(file);
+	return file.valid() && isFC1x(file);
 }

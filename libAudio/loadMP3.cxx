@@ -390,7 +390,5 @@ bool mp3_t::isMP3(const int32_t fd) noexcept
 bool mp3_t::isMP3(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isMP3(file);
+	return file.valid() && isMP3(file);
 }

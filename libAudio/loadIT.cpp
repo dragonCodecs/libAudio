@@ -55,7 +55,5 @@ bool modIT_t::isIT(const int32_t fd) noexcept
 bool modIT_t::isIT(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isIT(file);
+	return file.valid() && isIT(file);
 }

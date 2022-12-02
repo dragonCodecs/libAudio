@@ -302,7 +302,5 @@ bool mpc_t::isMPC(const int32_t fd) noexcept
 bool mpc_t::isMPC(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isMPC(file);
+	return file.valid() && isMPC(file);
 }

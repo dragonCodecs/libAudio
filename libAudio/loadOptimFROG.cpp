@@ -195,7 +195,5 @@ bool optimFROG_t::isOptimFROG(const int32_t fd) noexcept
 bool optimFROG_t::isOptimFROG(const char *const fileName) noexcept
 {
 	fd_t file{fileName, O_RDONLY | O_NOCTTY};
-	if (!file.valid())
-		return false;
-	return isOptimFROG(file);
+	return file.valid() && isOptimFROG(file);
 }

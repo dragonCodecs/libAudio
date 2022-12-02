@@ -94,7 +94,5 @@ bool sndh_t::isSNDH(const int32_t fd) noexcept
 bool sndh_t::isSNDH(const char *const fileName) noexcept
 {
 	fd_t file{fileName, O_RDONLY | O_NOCTTY};
-	if (!file.valid())
-		return false;
-	return isSNDH(file);
+	return file.valid() && isSNDH(file);
 }

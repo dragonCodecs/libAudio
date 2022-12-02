@@ -321,7 +321,5 @@ bool wavPack_t::isWavPack(const int32_t fd) noexcept
 bool wavPack_t::isWavPack(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isWavPack(file);
+	return file.valid() && isWavPack(file);
 }

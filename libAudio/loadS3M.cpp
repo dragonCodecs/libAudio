@@ -44,8 +44,8 @@ bool isS3M(const char *fileName) { return modS3M_t::isS3M(fileName); }
 
 bool modS3M_t::isS3M(const int32_t fd) noexcept
 {
-	constexpr const uint32_t seekOffset1 = 28;
-	constexpr const uint32_t seekOffset2 = seekOffset1 + 16;
+	constexpr static size_t seekOffset1 = 28;
+	constexpr static size_t seekOffset2 = seekOffset1 + 16;
 	char s3mMagic1;
 	std::array<char, 4> s3mMagic2;
 	return
@@ -62,7 +62,5 @@ bool modS3M_t::isS3M(const int32_t fd) noexcept
 bool modS3M_t::isS3M(const char *const fileName) noexcept
 {
 	fd_t file{fileName, O_RDONLY | O_NOCTTY};
-	if (!file.valid())
-		return false;
-	return isS3M(file);
+	return file.valid() && isS3M(file);
 }

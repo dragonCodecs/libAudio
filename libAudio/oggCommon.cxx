@@ -7,6 +7,7 @@
 #include "oggCommon.hxx"
 
 using substrate::fd_t;
+constexpr static std::array<char, 4> oggMagic{{'O', 'g', 'g', 'S'}};
 
 inline bool clonePacketData(ogg_packet &packet) noexcept try
 {
@@ -35,7 +36,7 @@ bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 	if (fd == -1 ||
 		read(fd, header.data(), uint32_t(header.size())) != header.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(header.data(), "OggS", 4) != 0)
+		!std::equal(oggMagic.begin(), oggMagic.end(), header.cbegin()))
 		return false;
 	// The following rash of call puke pulls apart the first Ogg page we
 	// just read from the file and populates headerPacket with the resulting

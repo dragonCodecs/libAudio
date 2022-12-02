@@ -97,7 +97,5 @@ bool modMOD_t::isMOD(const int32_t fd) noexcept
 bool modMOD_t::isMOD(const char *const fileName) noexcept
 {
 	fd_t file(fileName, O_RDONLY | O_NOCTTY);
-	if (!file.valid())
-		return false;
-	return isMOD(file);
+	return file.valid() && isMOD(file);
 }
