@@ -2,18 +2,25 @@
 #include "libAudio.h"
 #include "libAudio.hxx"
 
-bool isSID(const char *fileName)
+namespace libAudio::sid
 {
-	FILE *f_SID = fopen(fileName, "rb");
-	char SIDMagic[4];
-	if (f_SID == NULL)
-		return false;
+	constexpr static std::array<char, 4> psidMagic{{'P', 'S', 'I', 'D'}};
+}
 
-	fread(&SIDMagic, 1, 4, f_SID);
-	fclose(f_SID);
+bool isSID(const char *fileName) { return sid_t::isSID(fileName); }
 
-	if (strncmp(SIDMagic, "PSID", 4) == 0)
-		return true;
-	else
-		return false;
+bool sid_t::isSID(const int32_t fd) noexcept
+{
+	std::array<char, 4> sidMagic;
+	return
+		fd != -1 &&
+		read(fd, sidMagic.data(), sidMagic.size()) == sidMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		sidMagic == libAudio::sid::psidMagic;
+}
+
+bool sid_t::isSID(const char *const fileName) noexcept
+{
+	fd_t file{fileName, O_RDONLY | O_NOCTTY};
+	return file.valid() && isSID(file);
 }

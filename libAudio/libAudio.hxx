@@ -52,7 +52,8 @@ enum class audioType_t : uint8_t
 	moduleAON = 16,
 	moduleFC1x = 17,
 	oggOpus = 18,
-	sndh = 19
+	sndh = 19,
+	sid = 20
 };
 
 using fileIs_t = bool (*)(const char *);
@@ -390,6 +391,23 @@ public:
 	static sndh_t *openR(const char *const fileName) noexcept;
 	static bool isSNDH(const char *const fileName) noexcept;
 	static bool isSNDH(const int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return ctx.get(); }
+	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+};
+
+struct sid_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> ctx;
+
+public:
+	sid_t(fd_t &&fd) noexcept;
+	static sid_t *openR(const char *const fileName) noexcept;
+	static bool isSID(const char *const fileName) noexcept;
+	static bool isSID(const int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
