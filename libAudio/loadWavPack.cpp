@@ -160,6 +160,8 @@ namespace libAudio::wavPack
 		const fd_t &file = *static_cast<fd_t *>(filePtr);
 		return file.tell() != -1;
 	}
+
+	constexpr static std::array<char, 4> magic{{'w', 'v', 'p', 'k'}};
 } // namespace libAudio::wavPack
 
 using namespace libAudio;
@@ -299,11 +301,11 @@ bool isWavPack(const char *fileName) { return wavPack_t::isWavPack(fileName); }
  */
 bool wavPack_t::isWavPack(const int32_t fd) noexcept
 {
-	char wavPackSig[4];
+	std::array<char, 4> wavPackMagic;
 	if (fd == -1 ||
-		read(fd, wavPackSig, 4) != 4 ||
+		read(fd, wavPackMagic.data(), wavPackMagic.size()) != wavPackMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(wavPackSig, "wvpk", 4) != 0)
+		wavPackMagic != libAudio::wavPack::magic)
 		return false;
 	return true;
 }
