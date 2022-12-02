@@ -48,17 +48,15 @@ bool modS3M_t::isS3M(const int32_t fd) noexcept
 	constexpr const uint32_t seekOffset2 = seekOffset1 + 16;
 	char s3mMagic1;
 	std::array<char, 4> s3mMagic2;
-	if (fd == -1 ||
-		lseek(fd, seekOffset1, SEEK_SET) != seekOffset1 ||
-		read(fd, &s3mMagic1, 1) != 1 ||
-		lseek(fd, seekOffset2, SEEK_SET) != seekOffset2 ||
-		read(fd, s3mMagic2.data(), s3mMagic2.size()) != s3mMagic2.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		s3mMagic1 != libAudio::s3m::s3mMagic1 ||
-		s3mMagic2 != libAudio::s3m::s3mMagic2)
-		return false;
-	else
-		return true;
+	return
+		fd != -1 &&
+		lseek(fd, seekOffset1, SEEK_SET) == seekOffset1 &&
+		read(fd, &s3mMagic1, 1) == 1 &&
+		lseek(fd, seekOffset2, SEEK_SET) == seekOffset2 &&
+		read(fd, s3mMagic2.data(), s3mMagic2.size()) == s3mMagic2.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		s3mMagic1 == libAudio::s3m::s3mMagic1 &&
+		s3mMagic2 == libAudio::s3m::s3mMagic2;
 }
 
 bool modS3M_t::isS3M(const char *const fileName) noexcept
