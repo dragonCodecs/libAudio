@@ -14,65 +14,62 @@ using namespace std::literals::string_view_literals;
  * @date 2010-2020
  */
 
-namespace libAudio
+namespace libAudio::oggVorbis
 {
-	namespace oggVorbis
+	size_t read(void *buffer, size_t size, size_t count, void *filePtr)
 	{
-		size_t read(void *buffer, size_t size, size_t count, void *filePtr)
-		{
-			const auto file = static_cast<const oggVorbis_t *>(filePtr);
-			size_t bytes = 0;
-			const bool result = file->fd().read(buffer, size * count, bytes);
-			if (result)
-				return bytes;
-			return 0;
-		}
+		const auto file = static_cast<const oggVorbis_t *>(filePtr);
+		size_t bytes = 0;
+		const bool result = file->fd().read(buffer, size * count, bytes);
+		if (result)
+			return bytes;
+		return 0;
+	}
 
-		int seek(void *filePtr, int64_t offset, int whence)
-		{
-			const auto file = static_cast<const oggVorbis_t *>(filePtr);
-			return int(file->fd().seek(offset, whence));
-		}
+	int seek(void *filePtr, int64_t offset, int whence)
+	{
+		const auto file = static_cast<const oggVorbis_t *>(filePtr);
+		return int(file->fd().seek(offset, whence));
+	}
 
-		long tell(void *filePtr)
-		{
-			const auto file = static_cast<const oggVorbis_t *>(filePtr);
-			return long(file->fd().tell());
-		}
+	long tell(void *filePtr)
+	{
+		const auto file = static_cast<const oggVorbis_t *>(filePtr);
+		return long(file->fd().tell());
+	}
 
-		constexpr static ov_callbacks callbacks
-		{
-			read,
-			seek,
-			nullptr, // We intentionally don't allow vorbisfile to close the file on us.
-			tell
-		};
+	constexpr static ov_callbacks callbacks
+	{
+		read,
+		seek,
+		nullptr, // We intentionally don't allow vorbisfile to close the file on us.
+		tell
+	};
 
-		bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string_view &tag) noexcept
-		{
-			const bool result = !strncasecmp(value, tag.data(), tag.size());
-			if (result)
-				copyComment(dst, value + tag.size());
-			return result;
-		}
+	bool maybeCopyComment(std::unique_ptr<char []> &dst, const char *const value, const std::string_view &tag) noexcept
+	{
+		const bool result = !strncasecmp(value, tag.data(), tag.size());
+		if (result)
+			copyComment(dst, value + tag.size());
+		return result;
+	}
 
-		void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
+	void copyComments(fileInfo_t &info, const vorbis_comment &tags) noexcept
+	{
+		for (int i = 0; i < tags.comments; ++i)
 		{
-			for (int i = 0; i < tags.comments; ++i)
+			const char *const value = tags.user_comments[i];
+			if (!maybeCopyComment(info.title, value, "title="sv) &&
+				!maybeCopyComment(info.artist, value, "artist="sv) &&
+				!maybeCopyComment(info.album, value, "album="sv))
 			{
-				const char *const value = tags.user_comments[i];
-				if (!maybeCopyComment(info.title, value, "title="sv) &&
-					!maybeCopyComment(info.artist, value, "artist="sv) &&
-					!maybeCopyComment(info.album, value, "album="sv))
-				{
-					std::unique_ptr<char []> other;
-					copyComment(other, value);
-					info.other.emplace_back(std::move(other));
-				}
+				std::unique_ptr<char []> other;
+				copyComment(other, value);
+				info.other.emplace_back(std::move(other));
 			}
 		}
 	}
-}
+} // namespace libAudio::oggVorbis
 
 using namespace libAudio;
 
