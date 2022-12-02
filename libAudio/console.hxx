@@ -52,8 +52,8 @@ namespace libAudio
 		public:
 			constexpr consoleStream_t() noexcept : fd{-1}, _tty{false} { }
 			consoleStream_t(const int32_t desc) noexcept : fd{desc} { checkTTY(); }
-			bool valid() const noexcept { return fd != -1; }
-			bool isTTY() const noexcept { return _tty; }
+			[[nodiscard]] bool valid() const noexcept { return fd != -1; }
+			[[nodiscard]] bool isTTY() const noexcept { return _tty; }
 
 			void write(const void *const buffer, const size_t bufferLen) const noexcept;
 			void write(const char *const value) const noexcept;
