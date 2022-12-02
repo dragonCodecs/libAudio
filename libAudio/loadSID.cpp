@@ -2,10 +2,27 @@
 #include "libAudio.h"
 #include "libAudio.hxx"
 
+/*!
+ * @internal
+ * Internal structure for holding the decoding context for a given SID file
+ */
+struct sid_t::decoderContext_t final
+{
+};
+
 namespace libAudio::sid
 {
 	constexpr static std::array<char, 4> psidMagic{{'P', 'S', 'I', 'D'}};
 }
+
+sid_t::sid_t(fd_t &&fd) noexcept : audioFile_taudioType_t::sid, std::move(fd)} { }
+
+sid_t *sid_t::openR(const char *const fileName) noexcept
+{
+	return nullptr;
+}
+
+int64_t sid_t::fillBuffer(void *const, const uint32_t) { return -1; }
 
 bool isSID(const char *fileName) { return sid_t::isSID(fileName); }
 
