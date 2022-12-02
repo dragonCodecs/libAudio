@@ -102,6 +102,10 @@ namespace libAudio::loadM4A
 		write,
 		close
 	};
+
+	constexpr static std::array<char, 4> typeMagic{{'f', 't', 'y', 'p'}};
+	constexpr static std::array<char, 4> mp4Magic{{'m', 'p', '4', '2'}};
+	constexpr static std::array<char, 4> m4aMagic{{'M', '4', 'A', ' '}};
 } // namespace libAudio::m4a
 
 using namespace libAudio;
@@ -296,16 +300,17 @@ bool isM4A(const char *fileName) { return m4a_t::isM4A(fileName); }
  */
 bool m4a_t::isM4A(const int32_t fd) noexcept
 {
-	char length[4], typeSig[4], fileType[4];
-	if (fd == -1 ||
-		read(fd, length, 4) != 4 ||
-		read(fd, typeSig, 4) != 4 ||
-		read(fd, fileType, 4) != 4 ||
-		memcmp(typeSig, "ftyp", 4) != 0 ||
-		(memcmp(fileType, "M4A ", 4) != 0 &&
-		memcmp(fileType, "mp42", 4) != 0))
-		return false;
-	return true;
+	std::array<char, 4> length;
+	std::array<char, 4> typeMagic;
+	std::array<char, 4> fileMagic;
+	return
+		fd != -1 &&
+		read(fd, length.data(), length.size()) == length.size() &&
+		read(fd, typeMagic.data(), typeMagic.size()) == typeMagic.size() &&
+		read(fd, fileMagic.data(), fileMagic.size()) == fileMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		typeMagic == libAudio::loadM4A::typeMagic &&
+		(fileMagic == libAudio::loadM4A::m4aMagic || fileMagic == libAudio::loadM4A::mp4Magic);
 }
 
 /*!
