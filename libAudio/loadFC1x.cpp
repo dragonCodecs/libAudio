@@ -45,12 +45,11 @@ bool isFC1x(const char *fileName) { return modFC1x_t::isFC1x(fileName); }
 bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 {
 	std::array<char, 4> fc1xMagic;
-	if (fd == -1 ||
-		read(fd, fc1xMagic.data(), fc1xMagic.size()) != fc1xMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		(fc1xMagic != libAudio::fc1x::magicSMOD && fc1xMagic != libAudio::fc1x::magicFC14))
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		read(fd, fc1xMagic.data(), fc1xMagic.size()) == fc1xMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		(fc1xMagic == libAudio::fc1x::magicSMOD || fc1xMagic == libAudio::fc1x::magicFC14);
 }
 
 bool modFC1x_t::isFC1x(const char *const fileName) noexcept
