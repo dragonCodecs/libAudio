@@ -56,15 +56,14 @@ bool modAON_t::isAON(const int32_t fd) noexcept
 {
 	std::array<char, 4> aonMagic1;
 	std::array<char, 42> aonMagic2;
-	if (fd == -1 ||
-		read(fd, aonMagic1.data(), aonMagic1.size()) != aonMagic1.size() ||
-		read(fd, aonMagic2.data(), aonMagic2.size()) != aonMagic2.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		!std::equal(libAudio::aon::magic1.begin(), libAudio::aon::magic1.end(), aonMagic1.cbegin()) ||
-		(aonMagic1[3] != '4' && aonMagic1[3] != '8') ||
-		aonMagic2 != libAudio::aon::magic2)
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		read(fd, aonMagic1.data(), aonMagic1.size()) == aonMagic1.size() &&
+		read(fd, aonMagic2.data(), aonMagic2.size()) == aonMagic2.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		std::equal(libAudio::aon::magic1.begin(), libAudio::aon::magic1.end(), aonMagic1.cbegin()) &&
+		(aonMagic1[3] == '4' || aonMagic1[3] == '8') &&
+		aonMagic2 == libAudio::aon::magic2;
 }
 
 bool modAON_t::isAON(const char *const fileName) noexcept
