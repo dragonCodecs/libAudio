@@ -153,6 +153,9 @@ namespace libAudio::mpc
 		const auto file = static_cast<mpc_t *>(reader->data);
 		return file->fd().tell() != -1;
 	}
+
+	constexpr static std::array<char, 3> mpcMagic{{'M', 'P', 'C'}};
+	constexpr static std::array<char, 3> mpPlusMagic{{'M', 'P', '+'}};
 } // namespace libAudio::mpc
 
 using namespace libAudio;
@@ -279,12 +282,11 @@ bool isMPC(const char *fileName) { return mpc_t::isMPC(fileName); }
  */
 bool mpc_t::isMPC(const int32_t fd) noexcept
 {
-	char mpcSig[3];
+	std::array<char, 3> mpcMagic;
 	if (fd == -1 ||
-		read(fd, mpcSig, 3) != 3 ||
+		read(fd, mpcMagic.data(), mpcMagic.size()) != mpcMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		(memcmp(mpcSig, "MP+", 3) != 0 &&
-		memcmp(mpcSig, "MPC", 3) != 0))
+		(mpcMagic != libAudio::mpc::mpPlusMagic && mpcMagic != libAudio::mpc::mpcMagic))
 		return false;
 	return true;
 }
