@@ -45,12 +45,11 @@ bool isIT(const char *fileName) { return modIT_t::isIT(fileName); }
 bool modIT_t::isIT(const int32_t fd) noexcept
 {
 	std::array<char, 4> itMagic;
-	if (fd == -1 ||
-		read(fd, itMagic.data(), itMagic.size()) != itMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		itMagic != libAudio::it::magic)
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		read(fd, itMagic.data(), itMagic.size()) == itMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		itMagic == libAudio::it::magic;
 }
 
 bool modIT_t::isIT(const char *const fileName) noexcept
