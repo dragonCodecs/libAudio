@@ -11,40 +11,37 @@
  * @date 2019-2021
  */
 
-namespace libAudio
+namespace libAudio::oggOpus
 {
-	namespace oggOpus
+	int read(void *const filePtr, unsigned char *buffer, const int bufferLen)
 	{
-		int read(void *const filePtr, unsigned char *buffer, const int bufferLen)
-		{
-			const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
-			size_t bytes{0};
-			if (file->fd().read(buffer, bufferLen, bytes))
-				return int(bytes);
-			return -1;
-		}
+		const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
+		size_t bytes{0};
+		if (file->fd().read(buffer, bufferLen, bytes))
+			return int(bytes);
+		return -1;
+	}
 
-		int seek(void *const filePtr, const opus_int64 offset, const int whence)
-		{
-			const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
-			return file->fd().seek(offset, whence) >= 0 ? 0 : -1;
-		}
+	int seek(void *const filePtr, const opus_int64 offset, const int whence)
+	{
+		const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
+		return file->fd().seek(offset, whence) >= 0 ? 0 : -1;
+	}
 
-		opus_int64 tell(void *const filePtr)
-		{
-			const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
-			return file->fd().tell();
-		}
+	opus_int64 tell(void *const filePtr)
+	{
+		const auto *const file{static_cast<const oggOpus_t *>(filePtr)};
+		return file->fd().tell();
+	}
 
-		constexpr static OpusFileCallbacks callbacks
-		{
-			read,
-			seek,
-			tell,
-			nullptr // We intentionally don't allow opusfile to close the file on us.
-		};
-	} // namespace oggOpus
-} // namespace libAudio
+	constexpr static OpusFileCallbacks callbacks
+	{
+		read,
+		seek,
+		tell,
+		nullptr // We intentionally don't allow opusfile to close the file on us.
+	};
+} // namespace libAudio::oggOpus
 
 using namespace libAudio;
 
