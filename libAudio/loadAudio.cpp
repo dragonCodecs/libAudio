@@ -42,6 +42,10 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 	,
 	{isSNDH, sndhOpenR}
 #endif
+#ifdef ENABLE_SID
+	,
+	{isSID, sidOpenR}
+#endif
 };
 
 /*!
