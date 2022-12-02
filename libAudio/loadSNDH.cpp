@@ -12,13 +12,14 @@
  * @date 2019-2020
  */
 
+using namespace std::literals::string_view_literals;
+
 struct sndh_t::decoderContext_t final
 {
 	uint8_t buffer[8192];
 };
 
 using libAudio::console::asHex_t;
-using libAudio::console::operator ""_s;
 
 sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)}, ctx{makeUnique<decoderContext_t>()} { }
 
@@ -38,22 +39,22 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	sndhLoader_t loader{file->_fd}; //, file->context()
 
 	auto &entryPoints = loader.entryPoints();
-	console.debug("Read SNDH entry points"_s);
-	console.debug(" -> init = "_s, asHex_t<8, '0'>{entryPoints.init}, ", exit = "_s,
-		asHex_t<8, '0'>{entryPoints.exit}, ", play = "_s, asHex_t<8, '0'>{entryPoints.play});
+	console.debug("Read SNDH entry points"sv);
+	console.debug(" -> init = "sv, asHex_t<8, '0'>{entryPoints.init}, ", exit = "sv,
+		asHex_t<8, '0'>{entryPoints.exit}, ", play = "sv, asHex_t<8, '0'>{entryPoints.play});
 	auto &metadata = loader.metadata();
-	console.debug("Read SNDH metadata"_s);
-	console.debug(" -> title: "_s, metadata.title);
-	console.debug(" -> composer: "_s, metadata.artist);
-	console.debug(" -> converter: "_s, metadata.converter);
-	console.debug(" -> using timer "_s, metadata.timer, " at "_s, metadata.timerFrequency, "Hz"_s);
+	console.debug("Read SNDH metadata"sv);
+	console.debug(" -> title: "sv, metadata.title);
+	console.debug(" -> composer: "sv, metadata.artist);
+	console.debug(" -> converter: "sv, metadata.converter);
+	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 
 	loadFileInfo(info, metadata);
 	return file.release();
 }
 catch (const std::exception &)
 {
-	console.error("Failed to load SNDH file"_s);
+	console.error("Failed to load SNDH file"sv);
 	return nullptr;
 }
 
