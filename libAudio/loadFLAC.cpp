@@ -214,6 +214,9 @@ namespace libAudio::flac
 	 * @note Implemented as a no-operation due to how the rest of the decoder is structured
 	 */
 	void error(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus, void *) noexcept { }
+
+	constexpr static std::array<char, 4> flacMagic{{'f', 'L', 'a', 'C'}};
+	constexpr static std::array<char, 4> oggMagic{{'O', 'g', 'g', 'S'}};
 } // namespace libAudio::flac
 
 using namespace libAudio;
@@ -344,19 +347,17 @@ bool isFLAC(const char *fileName) { return flac_t::isFLAC(fileName); }
  */
 bool flac_t::isFLAC(const int32_t fd) noexcept
 {
-	char flacSig[4];
+	std::array<char, 4> flacMagic;
 	if (fd == -1 ||
-		read(fd, flacSig, 4) != 4 ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		(memcmp(flacSig, "fLaC", 4) != 0 &&
-		memcmp(flacSig, "OggS", 4) != 0))
+		read(fd, flacMagic.data(), flacMagic.size()) != flacMagic.size() ||
+		lseek(fd, 0, SEEK_SET) != 0)
 		return false;
-	if (memcmp(flacSig, "OggS", 4) == 0)
+	if (flacMagic == libAudio::flac::oggMagic)
 	{
 		ogg_packet header;
 		return isOgg(fd, header) && ::isFLAC(header);
 	}
-	return true;
+	return flacMagic == libAudio::flac::flacMagic;
 }
 
 /*!
