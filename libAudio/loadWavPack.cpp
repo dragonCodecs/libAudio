@@ -67,103 +67,100 @@ struct wavPack_t::decoderContext_t final
 	static fd_t wvcFile(std::string &fileName) noexcept;
 };
 
-namespace libAudio
+namespace libAudio::wavPack
 {
-	namespace wavPack
+	/*!
+	 * @internal
+	 * \c read() is the internal read callback for WavPack file decoding.
+	 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+	 * @param filePtr \c FILE handle for the WavPack file as a void pointer
+	 * @param buffer The buffer to read into
+	 * @param length The number of bytes to read into the buffer
+	 * @return The return result of \c read()
+	 */
+	int32_t read(void *filePtr, void *buffer, int32_t length)
 	{
-		/*!
-		 * @internal
-		 * \c read() is the internal read callback for WavPack file decoding.
-		 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
-		 * @param filePtr \c FILE handle for the WavPack file as a void pointer
-		 * @param buffer The buffer to read into
-		 * @param length The number of bytes to read into the buffer
-		 * @return The return result of \c read()
-		 */
-		int32_t read(void *filePtr, void *buffer, int32_t length)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return int32_t(file.read(buffer, length, nullptr));
-		}
-
-		/*!
-		 * @internal
-		 * \c tell() is the internal read possition callback for WavPack file decoding.
-		 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
-		 * @param filePtr \c FILE handle for the WavPack file as a void pointer
-		 * @return An integer giving the read possition of the file in bytes
-		 */
-		int64_t tell(void *filePtr)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.tell();
-		}
-
-		/*!
-		 * @internal
-		 * \c seekAbs() is the internal absolute seek callback for WavPack file decoding.
-		 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
-		 * @param filePtr \c FILE handle for the WavPack file as a void pointer
-		 * @param offset The offset through the file to which to seek to
-		 * @return A truth value giving if the seek succeeded or not
-		 */
-		int seekAbs(void *filePtr, int64_t offset)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.seek(offset, SEEK_SET) != offset;
-		}
-
-		/*!
-		 * @internal
-		 * \c seekRel() is the internal any-place (relative) seek callback for WavPack file decoding.
-		 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
-		 * @param filePtr \c FILE handle for the WavPack file as a void pointer
-		 * @param offset The offset through the file to which to seek to
-		 * @param mode The mode (location in the file) identifier to base the seek on
-		 * @return A truth value giving if the seek succeeded or not
-		 */
-		int seekRel(void *filePtr, int64_t offset, int mode)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.seek(offset, mode) == -1;
-		}
-
-		int ungetc(void *filePtr, int)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return int(file.seek(-1, SEEK_CUR));
-		}
-
-		/*!
-		 * @internal
-		 * \c len() is the internal file length callback for WavPack file decoding.
-		 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
-		 * @param filePtr \c FILE handle for the WavPack file as a void pointer
-		 * @return An integer giving the length of the file in bytes
-		 */
-		int64_t length(void *filePtr)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.length();
-		}
-
-		/*!
-		 * @internal
-		 * \c canSeek() is the internal callback for determining if a WavPack file being
-		 * decoded can be seeked on or not. \n This does two things: \n
-		 * - It prevents nasty things from happening on Windows thanks to the run-time mess there
-		 * - It uses \c lseek() as a no-operation to determine if we can seek or not.
-		 *
-		 * @param filePtr \c FILE handle for the WavPack file as a void pointer
-		 * @return A truth value giving if seeking can work or not
-		 */
-		int canSeek(void *filePtr)
-		{
-			const fd_t &file = *static_cast<fd_t *>(filePtr);
-			return file.tell() != -1;
-		}
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return int32_t(file.read(buffer, length, nullptr));
 	}
-}
+
+	/*!
+	 * @internal
+	 * \c tell() is the internal read possition callback for WavPack file decoding.
+	 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+	 * @param filePtr \c FILE handle for the WavPack file as a void pointer
+	 * @return An integer giving the read possition of the file in bytes
+	 */
+	int64_t tell(void *filePtr)
+	{
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return file.tell();
+	}
+
+	/*!
+	 * @internal
+	 * \c seekAbs() is the internal absolute seek callback for WavPack file decoding.
+	 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+	 * @param filePtr \c FILE handle for the WavPack file as a void pointer
+	 * @param offset The offset through the file to which to seek to
+	 * @return A truth value giving if the seek succeeded or not
+	 */
+	int seekAbs(void *filePtr, int64_t offset)
+	{
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return file.seek(offset, SEEK_SET) != offset;
+	}
+
+	/*!
+	 * @internal
+	 * \c seekRel() is the internal any-place (relative) seek callback for WavPack file decoding.
+	 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+	 * @param filePtr \c FILE handle for the WavPack file as a void pointer
+	 * @param offset The offset through the file to which to seek to
+	 * @param mode The mode (location in the file) identifier to base the seek on
+	 * @return A truth value giving if the seek succeeded or not
+	 */
+	int seekRel(void *filePtr, int64_t offset, int mode)
+	{
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return file.seek(offset, mode) == -1;
+	}
+
+	int ungetc(void *filePtr, int)
+	{
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return int(file.seek(-1, SEEK_CUR));
+	}
+
+	/*!
+	 * @internal
+	 * \c len() is the internal file length callback for WavPack file decoding.
+	 * This prevents nasty things from happening on Windows thanks to the run-time mess there.
+	 * @param filePtr \c FILE handle for the WavPack file as a void pointer
+	 * @return An integer giving the length of the file in bytes
+	 */
+	int64_t length(void *filePtr)
+	{
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return file.length();
+	}
+
+	/*!
+	 * @internal
+	 * \c canSeek() is the internal callback for determining if a WavPack file being
+	 * decoded can be seeked on or not. \n This does two things: \n
+	 * - It prevents nasty things from happening on Windows thanks to the run-time mess there
+	 * - It uses \c lseek() as a no-operation to determine if we can seek or not.
+	 *
+	 * @param filePtr \c FILE handle for the WavPack file as a void pointer
+	 * @return A truth value giving if seeking can work or not
+	 */
+	int canSeek(void *filePtr)
+	{
+		const fd_t &file = *static_cast<fd_t *>(filePtr);
+		return file.tell() != -1;
+	}
+} // namespace libAudio::wavPack
 
 using namespace libAudio;
 
