@@ -38,11 +38,11 @@ long OptimFROG_FillBuffer(void *ofrgFile, void *OutBuffer, uint32_t nOutBufferLe
 
 namespace libAudio::optimFROG
 {
-	condition_t close(void *const) { return 1; }
+	condition_t close(void *) { return 1; }
 
 	sInt32_t read(void *const filePtr, void *const buffer, const uInt32_t count)
 	{
-		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		const auto *const file{static_cast<const optimFROG_t *>(filePtr)};
 		size_t bytes{0};
 		const auto result{file->fd().read(buffer, count, bytes)};
 		if (result)
@@ -52,31 +52,31 @@ namespace libAudio::optimFROG
 
 	condition_t isEOF(void *const filePtr)
 	{
-		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		const auto *const file{static_cast<const optimFROG_t *>(filePtr)};
 		return file->fd().isEOF() ? C_TRUE : C_FALSE;
 	}
 
 	condition_t seekable(void *const filePtr)
 	{
-		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		const auto *const file{static_cast<const optimFROG_t *>(filePtr)};
 		return file->fd().seek(0, SEEK_CUR) == -1 && errno == ESPIPE ? C_FALSE : C_TRUE;
 	}
 
 	sInt64_t length(void *const filePtr)
 	{
-		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		const auto *const file{static_cast<const optimFROG_t *>(filePtr)};
 		return file->fd().length();
 	}
 
 	sInt64_t tell(void *const filePtr)
 	{
-		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		const auto *const file{static_cast<const optimFROG_t *>(filePtr)};
 		return file->fd().tell();
 	}
 
 	condition_t seek(void *const filePtr, const sInt64_t offset)
 	{
-		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		const auto *const file{static_cast<const optimFROG_t *>(filePtr)};
 		return file->fd().seek(offset, SEEK_SET) == offset ? C_TRUE : C_FALSE;
 	}
 
@@ -147,7 +147,7 @@ void *optimFROGOpenR(const char *fileName) { return optimFROG_t::openR(fileName)
  */
 int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 {
-	const auto buffer = static_cast<uint8_t *>(bufferPtr);
+	auto *const buffer = static_cast<uint8_t *>(bufferPtr);
 	uint32_t offset{0};
 	const fileInfo_t &info = fileInfo();
 	auto &ctx = *context();
@@ -161,7 +161,7 @@ int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 		const auto result{OptimFROG_read(ctx.decoder, buffer + offset, samples, C_TRUE)};
 		if (result == -1)
 			return -1;
-		else if (size_t(result) < samples)
+		if (size_t(result) < samples)
 			ctx.eof = true;
 		offset += result * stride;
 	}
