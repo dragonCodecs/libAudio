@@ -34,6 +34,8 @@ namespace libAudio::mp3
 		value = value >> (MAD_F_FRACBITS - 15U);
 		return int16_t(value);
 	}
+
+	constexpr static std::array<char, 3> id3Magic{{'I', 'D', '3'}};
 } // namespace libAudio::mp3
 
 using namespace libAudio;
@@ -351,7 +353,7 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
  */
 bool isMP3(const char *fileName) { return mp3_t::isMP3(fileName); }
 
-inline uint16_t asUint16(uint8_t *value) noexcept
+inline uint16_t asUint16(const std::array<uint8_t, 2> &value) noexcept
 	{ return (uint16_t{value[0]} << 8) | value[1]; }
 
 /*!
@@ -365,15 +367,14 @@ inline uint16_t asUint16(uint8_t *value) noexcept
  */
 bool mp3_t::isMP3(const int32_t fd) noexcept
 {
-	char id3[3];
-	uint8_t mp3Sig[2];
+	std::array<char, 3> id3Magic;
+	std::array<uint8_t, 2> mp3Magic;
 	if (fd == -1 ||
-		read(fd, id3, 3) != 3 ||
+		read(fd, id3Magic.data(), id3Magic.size()) != id3Magic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		read(fd, mp3Sig, 2) != 2 ||
+		read(fd, mp3Magic.data(), mp3Magic.size()) != mp3Magic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		(memcmp(id3, "ID3", 3) != 0 &&
-		asUint16(mp3Sig) != 0xFFFB))
+		(id3Magic != libAudio::mp3::id3Magic && asUint16(mp3Magic) != 0xFFFB))
 		return false;
 	return true;
 }
