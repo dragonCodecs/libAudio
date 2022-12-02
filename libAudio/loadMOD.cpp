@@ -73,20 +73,19 @@ bool modMOD_t::isMOD(const int32_t fd) noexcept
 		modMagic == libAudio::mod::modMagicCD81 ||
 		modMagic == libAudio::mod::modMagicOktamed ||
 		(
-			memcmp(modMagic.data(), libAudio::mod::modMagicStartrekker.data(),
-				libAudio::mod::modMagicStartrekker.size()) == 0 &&
-			modMagic[3] >= '4' && modMagic[3] <= '9'
+			std::equal(libAudio::mod::modMagicStartrekker.begin(), libAudio::mod::modMagicStartrekker.end(),
+				modMagic.cbegin()) && modMagic[3] >= '4' && modMagic[3] <= '9'
 		) ||
 		(
-			memcmp(modMagic.data() + 1, libAudio::mod::modMagicChn.data(), libAudio::mod::modMagicChn.size()) == 0 &&
+			std::equal(libAudio::mod::modMagicChn.begin(), libAudio::mod::modMagicChn.end(), modMagic.cbegin() + 1) &&
 			modMagic[0] >= '4' && modMagic[0] <= '9'
 		) ||
 		(
-			memcmp(modMagic.data() + 2, libAudio::mod::modMagicCh.data(), libAudio::mod::modMagicCh.size()) == 0 &&
+			std::equal(libAudio::mod::modMagicCh.begin(), libAudio::mod::modMagicCh.end(), modMagic.cbegin() + 2) &&
 			modMagic[0] >= '1' && modMagic[0] <= '3' && modMagic[1] >= '0' && modMagic[1] <= '9'
 		) ||
 		(
-			memcmp(modMagic.data(), libAudio::mod::modMagicTDZ.data(), libAudio::mod::modMagicTDZ.size()) == 0 &&
+			std::equal(libAudio::mod::modMagicTDZ.begin(), libAudio::mod::modMagicTDZ.end(), modMagic.cbegin()) &&
 			modMagic[3] >= '4' && modMagic[3] <= '9'
 		) ||
 		modMagic == libAudio::mod::modMagic16Channel ||
