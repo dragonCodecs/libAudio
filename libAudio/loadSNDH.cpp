@@ -8,7 +8,7 @@
  * @internal
  * @file loadSNDH.cpp
  * @brief The implementation of the SNDH decoder API
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2019-2020
  */
 

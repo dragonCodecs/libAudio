@@ -7,7 +7,7 @@
  * @internal
  * @file loadOggOpus.cxx
  * @brief The implementation of the Ogg|Opus decoder API
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2019-2021
  */
 

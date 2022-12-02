@@ -6,7 +6,7 @@
  * @internal
  * @file libAudio_Common.cpp
  * @brief libAudio's old common routines
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2019
  */
 #ifdef _WINDOWS

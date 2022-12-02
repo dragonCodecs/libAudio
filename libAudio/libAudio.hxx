@@ -5,7 +5,7 @@
 /*!
  * @file libAudio.hxx
  * @brief C++ API header for use by external programs
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2016-2020
  */
 

@@ -5,7 +5,7 @@
 /*!
  * @file libAudio.h
  * @brief C API header for use by external programs
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2009-2020
  */
 

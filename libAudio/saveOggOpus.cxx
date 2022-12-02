@@ -7,7 +7,7 @@
  * @internal
  * @file saveOggVorbis.cpp
  * @brief The implementation of the Ogg|Opus encoder API
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2021
  */
 

@@ -8,7 +8,7 @@
  * @internal
  * @file loadM4A.cpp
  * @brief The implementation of the M4A/MP4 decoder API
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2009-2020
  */
 

@@ -10,7 +10,7 @@
  * @file loadAAC.cpp
  * @brief The implementation of the AAC decoder API
  * @note Not to be confused with the M4A/MP4 decoder
- * @author Rachel Mant <dx-mon@users.sourceforge.net>
+ * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2020
  */
 
