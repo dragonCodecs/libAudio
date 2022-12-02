@@ -302,12 +302,11 @@ bool isWavPack(const char *fileName) { return wavPack_t::isWavPack(fileName); }
 bool wavPack_t::isWavPack(const int32_t fd) noexcept
 {
 	std::array<char, 4> wavPackMagic;
-	if (fd == -1 ||
-		read(fd, wavPackMagic.data(), wavPackMagic.size()) != wavPackMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		wavPackMagic != libAudio::wavPack::magic)
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		read(fd, wavPackMagic.data(), wavPackMagic.size()) == wavPackMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		wavPackMagic == libAudio::wavPack::magic;
 }
 
 /*!
