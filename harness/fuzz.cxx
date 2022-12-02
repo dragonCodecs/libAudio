@@ -3,6 +3,7 @@
 #include <array>
 
 #include <libAudio.h>
+#include "../libAudio/console.hxx"
 
 std::array<char, 8192> buffer{};
 
@@ -10,6 +11,7 @@ int main(int32_t argc, char **argv)
 {
 	if (argc < 2)
 		return -1;
+	console = {stdout, stderr};
 	ExternalPlayback = 1;
 
 	for (int32_t i = 1; i < argc; ++i)
