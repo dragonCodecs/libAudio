@@ -12,32 +12,29 @@
  * @date 2010-2022
  */
 
-namespace libAudio
+namespace libAudio::mp3
 {
-	namespace mp3
+	/*!
+	 * @internal
+	 * This function applies a simple conversion algorithm to convert the input
+	 * fixed-point MAD sample to a short for playback
+	 * @param value The fixed point sample to convert
+	 * @return The converted fixed point sample
+	 * @bug This function applies no noise shaping or dithering
+	 *   So the output is sub-par to what it could be. FIXME!
+	 */
+	inline int16_t fixedToInt16(mad_fixed_t value)
 	{
-		/*!
-		 * @internal
-		 * This function applies a simple conversion algorithm to convert the input
-		 * fixed-point MAD sample to a short for playback
-		 * @param value The fixed point sample to convert
-		 * @return The converted fixed point sample
-		 * @bug This function applies no noise shaping or dithering
-		 *   So the output is sub-par to what it could be. FIXME!
-		 */
-		inline int16_t fixedToInt16(mad_fixed_t value)
-		{
-			using limits = std::numeric_limits<int16_t>;
-			if (value >= MAD_F_ONE)
-				return limits::max();
-			if (value <= -MAD_F_ONE)
-				return limits::min();
+		using limits = std::numeric_limits<int16_t>;
+		if (value >= MAD_F_ONE)
+			return limits::max();
+		if (value <= -MAD_F_ONE)
+			return limits::min();
 
-			value = value >> (MAD_F_FRACBITS - 15U);
-			return int16_t(value);
-		}
+		value = value >> (MAD_F_FRACBITS - 15U);
+		return int16_t(value);
 	}
-}
+} // namespace libAudio::mp3
 
 using namespace libAudio;
 
