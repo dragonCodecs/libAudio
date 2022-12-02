@@ -57,8 +57,14 @@ wav_t::decoderContext_t::decoderContext_t() noexcept : inputBuffer{}, bytesAvail
 	bytesUsed{0}, playbackBuffer{}, offsetDataLength{0}, compression{0}, bitsPerSample{0},
 	floatData{false} { }
 
-constexpr std::array<char, 4> waveFormatChunk{'f', 'm', 't', ' '};
-constexpr std::array<char, 4> waveDataChunk{'d', 'a', 't', 'a'};
+namespace libAudio::wave
+{
+	constexpr std::array<char, 4> formatChunk{{'f', 'm', 't', ' '}};
+	constexpr std::array<char, 4> dataChunk{{'d', 'a', 't', 'a'}};
+
+	constexpr std::array<char, 4> riffMagic{{'R', 'I', 'F', 'F'}};
+	constexpr std::array<char, 4> waveMagic{{'W', 'A', 'V', 'E'}};
+} // namespace libAudio::wave
 
 bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 {
@@ -137,7 +143,7 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 		!fd.readLE(chunkLength) ||
 		chunkLength > (fileSize - 8) ||
 		fd.seek(4, SEEK_CUR) != 12 ||
-		!file->skipToChunk(waveFormatChunk))
+		!file->skipToChunk(libAudio::wave::formatChunk))
 		return nullptr;
 	off_t offset = fd.tell();
 	if (offset == -1 ||
@@ -155,7 +161,7 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 			return nullptr;
 	}
 
-	if (!file->skipToChunk(waveDataChunk) ||
+	if (!file->skipToChunk(libAudio::wave::dataChunk) ||
 		!fd.readLE(chunkLength) ||
 		(offset = fd.tell()) == -1 ||
 		chunkLength > (fileSize - offset) ||
@@ -340,14 +346,15 @@ bool isWAV(const char *fileName) { return wav_t::isWAV(fileName); }
  */
 bool wav_t::isWAV(const int32_t fd) noexcept
 {
-	char riffSig[4], waveSig[4];
+	std::array<char, 4> riffMagic;
+	std::array<char, 4> waveMagic;
 	if (fd == -1 ||
-		read(fd, riffSig, 4) != 4 ||
+		read(fd, riffMagic.data(), riffMagic.size()) != riffMagic.size() ||
 		lseek(fd, 4, SEEK_CUR) != 8 ||
-		read(fd, waveSig, 4) != 4 ||
+		read(fd, waveMagic.data(), waveMagic.size()) != waveMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(riffSig, "RIFF", 4) != 0 ||
-		memcmp(waveSig, "WAVE", 4) != 0)
+		riffMagic != libAudio::wave::riffMagic ||
+		waveMagic != libAudio::wave::waveMagic)
 		return false;
 	return true;
 }
