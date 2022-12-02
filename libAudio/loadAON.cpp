@@ -3,6 +3,17 @@
 #include "genericModule/genericModule.h"
 #include "console.hxx"
 
+namespace libAudio::aon
+{
+	constexpr static std::array<char, 3> magic1{{'A', 'O', 'N'}};
+	constexpr static std::array<char, 42> magic2{{
+		'a', 'r', 't', 'o', 'f', 'n', 'o', 'i', 's', 'e', ' ', 'b',
+		'y', ' ', 'b', 'a', 's', 't', 'i', 'a', 'n', ' ', 's', 'p',
+		'i', 'e', 'g', 'e', 'l', '(', 't', 'w', 'i', 'c', 'e', '/',
+		'l', 'e', 'g', 'o', ')'
+	}};
+}
+
 modAON_t::modAON_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleAON, std::move(fd)} { }
 
 modAON_t *modAON_t::openR(const char *const fileName) noexcept
@@ -43,14 +54,15 @@ bool isAON(const char *fileName) { return modAON_t::isAON(fileName); }
 
 bool modAON_t::isAON(const int32_t fd) noexcept
 {
-	char aonMagic1[4], aonMagic2[42];
+	std::array<char, 4> aonMagic1;
+	std::array<char, 42> aonMagic2;
 	if (fd == -1 ||
-		read(fd, aonMagic1, 4) != 4 ||
-		read(fd, aonMagic2, 42) != 42 ||
+		read(fd, aonMagic1.data(), aonMagic1.size()) != aonMagic1.size() ||
+		read(fd, aonMagic2.data(), aonMagic2.size()) != aonMagic2.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
-		memcmp(aonMagic1, "AON", 3) != 0 ||
-		memcmp(aonMagic2, "artofnoise by bastian spiegel (twice/lego)", 42) != 0 ||
-		(aonMagic1[3] != '4' && aonMagic1[3] != '8'))
+		memcmp(aonMagic1.data(), libAudio::aon::magic1.data(), libAudio::aon::magic1.size()) != 0 ||
+		(aonMagic1[3] != '4' && aonMagic1[3] != '8') ||
+		aonMagic2 != libAudio::aon::magic2)
 		return false;
 	return true;
 }
