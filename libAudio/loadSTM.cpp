@@ -45,13 +45,12 @@ bool modSTM_t::isSTM(const int32_t fd) noexcept
 {
 	constexpr uint32_t offset = 20;
 	std::array<char, 9> stmMagic;
-	if (fd == -1 ||
-		lseek(fd, offset, SEEK_SET) != offset ||
-		read(fd, stmMagic.data(), stmMagic.size()) != stmMagic.size()||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		stmMagic != libAudio::stm::magic)
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		lseek(fd, offset, SEEK_SET) == offset &&
+		read(fd, stmMagic.data(), stmMagic.size()) == stmMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		stmMagic == libAudio::stm::magic;
 }
 
 bool modSTM_t::isSTM(const char *const fileName) noexcept
