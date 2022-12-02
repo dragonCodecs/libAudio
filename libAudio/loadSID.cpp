@@ -15,7 +15,7 @@ namespace libAudio::sid
 	constexpr static std::array<char, 4> psidMagic{{'P', 'S', 'I', 'D'}};
 }
 
-sid_t::sid_t(fd_t &&fd) noexcept : audioFile_taudioType_t::sid, std::move(fd)} { }
+sid_t::sid_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sid, std::move(fd)} { }
 
 sid_t *sid_t::openR(const char *const fileName) noexcept
 {
