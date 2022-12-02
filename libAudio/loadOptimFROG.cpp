@@ -185,12 +185,11 @@ bool isOptimFROG(const char *fileName) { return optimFROG_t::isOptimFROG(fileNam
 bool optimFROG_t::isOptimFROG(const int32_t fd) noexcept
 {
 	std::array<char, 4> optimFrogMagic;
-	if (fd == -1 ||
-		read(fd, optimFrogMagic.data(), optimFrogMagic.size()) != optimFrogMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		optimFrogMagic != libAudio::optimFROG::magic)
-		return false;
-	return true;
+	return
+		fd != -1 ||
+		read(fd, optimFrogMagic.data(), optimFrogMagic.size()) == optimFrogMagic.size() ||
+		lseek(fd, 0, SEEK_SET) == 0 ||
+		optimFrogMagic == libAudio::optimFROG::magic;
 }
 
 bool optimFROG_t::isOptimFROG(const char *const fileName) noexcept
