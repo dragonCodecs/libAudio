@@ -134,6 +134,12 @@ libAUDIO_API void *wavPackOpenR(const char *fileName);
 libAUDIO_API bool isSNDH(const char *fileName);
 libAUDIO_API void *sndhOpenR(const char *fileName);
 
+#ifdef ENABLE_SID
+// SID API
+libAUDIO_API bool isSID(const char *fileName);
+libAUDIO_API void *sidOpenR(const char *fileName);
+#endif
+
 #ifdef ENABLE_OptimFROG
 // OptimFROG API
 libAUDIO_API bool isOptimFROG(const char *fileName);

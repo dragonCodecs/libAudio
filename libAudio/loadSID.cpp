@@ -22,6 +22,8 @@ sid_t *sid_t::openR(const char *const fileName) noexcept
 	return nullptr;
 }
 
+void *sidOpenR(const char *fileName) { return sid_t::openR(fileName); }
+
 int64_t sid_t::fillBuffer(void *const, const uint32_t) { return -1; }
 
 bool isSID(const char *fileName) { return sid_t::isSID(fileName); }
