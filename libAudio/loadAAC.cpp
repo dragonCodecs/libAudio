@@ -301,15 +301,15 @@ bool isAAC(const char *fileName) { return aac_t::isAAC(fileName); }
  */
 bool aac_t::isAAC(const int32_t fd) noexcept
 {
-	uint8_t aacSig[2];
+	std::array<uint8_t, 2> aacMagic;
 	if (fd == -1 ||
-		read(fd, aacSig, 2) != 2 ||
+		read(fd, aacMagic.data(), aacMagic.size()) != aacMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0)
 		return false;
 	// Detect an ADTS header:
-	aacSig[1] &= 0xF6;
+	aacMagic[1] &= 0xF6;
 	// not going to bother detecting ADIF yet..
-	return aacSig[0] == 0xFF && aacSig[1] == 0xF0;
+	return aacMagic[0] == 0xFF && aacMagic[1] == 0xF0;
 }
 
 /*!
