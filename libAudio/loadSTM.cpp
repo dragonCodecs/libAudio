@@ -51,8 +51,7 @@ bool modSTM_t::isSTM(const int32_t fd) noexcept
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		stmMagic != libAudio::stm::magic)
 		return false;
-	else
-		return true;
+	return true;
 }
 
 bool modSTM_t::isSTM(const char *const fileName) noexcept
