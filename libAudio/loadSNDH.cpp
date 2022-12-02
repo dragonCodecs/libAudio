@@ -21,6 +21,12 @@ struct sndh_t::decoderContext_t final
 
 using libAudio::console::asHex_t;
 
+namespace libAudio::sndh
+{
+	constexpr static std::array<char, 4> icePackMagic{{'I', 'C', 'E', '!'}};
+	constexpr static std::array<char, 4> sndhMagic{{'S', 'N', 'D', 'H'}};
+}
+
 sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)}, ctx{makeUnique<decoderContext_t>()} { }
 
 void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
@@ -71,17 +77,18 @@ bool isSNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
 
 bool sndh_t::isSNDH(const int32_t fd) noexcept
 {
-	char icePackSig[4], sndhSig[4];
+	std::array<char, 4> icePackMagic;
+	std::array<char, 4> sndhMagic;
 	if (fd == -1 ||
-		read(fd, icePackSig, 4) != 4 ||
+		read(fd, icePackMagic.data(), icePackMagic.size()) != icePackMagic.size() ||
 		lseek(fd, 8, SEEK_CUR) != 12 ||
-		read(fd, sndhSig, 4) != 4 ||
+		read(fd, sndhMagic.data(), sndhMagic.size()) != sndhMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		// All packed SNDH files begin with "ICE!" and this is the test
 		// that the Linux/Unix Magic Numbers system does too, so
 		// it will always work. All unpacked SNDH files start with 'SDNH' at offset 12.
-		!(//memcmp(icePackSig, "ICE!", 4) == 0 ||
-		memcmp(sndhSig, "SNDH", 4) == 0))
+		(//icePackMagic != libAudio::sndh::icePackMagic &&
+		sndhMagic != libAudio::sndh::sndhMagic))
 		return false;
 	return true;
 }
