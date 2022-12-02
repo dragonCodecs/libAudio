@@ -79,18 +79,16 @@ bool sndh_t::isSNDH(const int32_t fd) noexcept
 {
 	std::array<char, 4> icePackMagic;
 	std::array<char, 4> sndhMagic;
-	if (fd == -1 ||
-		read(fd, icePackMagic.data(), icePackMagic.size()) != icePackMagic.size() ||
-		lseek(fd, 8, SEEK_CUR) != 12 ||
-		read(fd, sndhMagic.data(), sndhMagic.size()) != sndhMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
+	return
+		fd != -1 &&
+		read(fd, icePackMagic.data(), icePackMagic.size()) == icePackMagic.size() &&
+		lseek(fd, 8, SEEK_CUR) == 12 &&
+		read(fd, sndhMagic.data(), sndhMagic.size()) == sndhMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
 		// All packed SNDH files begin with "ICE!" and this is the test
 		// that the Linux/Unix Magic Numbers system does too, so
 		// it will always work. All unpacked SNDH files start with 'SDNH' at offset 12.
-		(//icePackMagic != libAudio::sndh::icePackMagic &&
-		sndhMagic != libAudio::sndh::sndhMagic))
-		return false;
-	return true;
+		(/*icePackMagic == libAudio::sndh::icePackMagic ||*/ sndhMagic == libAudio::sndh::sndhMagic);
 }
 
 bool sndh_t::isSNDH(const char *const fileName) noexcept
