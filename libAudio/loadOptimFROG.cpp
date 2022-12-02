@@ -36,65 +36,62 @@ struct optimFROG_t::decoderContext_t final
 
 long OptimFROG_FillBuffer(void *ofrgFile, void *OutBuffer, uint32_t nOutBufferLen);
 
-namespace libAudio
+namespace libAudio::optimFROG
 {
-	namespace optimFROG
+	condition_t close(void *const) { return 1; }
+
+	sInt32_t read(void *const filePtr, void *const buffer, const uInt32_t count)
 	{
-		condition_t close(void *const) { return 1; }
+		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		size_t bytes{0};
+		const auto result{file->fd().read(buffer, count, bytes)};
+		if (result)
+			return bytes;
+		return -1;
+	}
 
-		sInt32_t read(void *const filePtr, void *const buffer, const uInt32_t count)
-		{
-			const auto file{static_cast<const optimFROG_t *>(filePtr)};
-			size_t bytes{0};
-			const auto result{file->fd().read(buffer, count, bytes)};
-			if (result)
-				return bytes;
-			return -1;
-		}
+	condition_t isEOF(void *const filePtr)
+	{
+		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		return file->fd().isEOF() ? C_TRUE : C_FALSE;
+	}
 
-		condition_t isEOF(void *const filePtr)
-		{
-			const auto file{static_cast<const optimFROG_t *>(filePtr)};
-			return file->fd().isEOF() ? C_TRUE : C_FALSE;
-		}
+	condition_t seekable(void *const filePtr)
+	{
+		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		return file->fd().seek(0, SEEK_CUR) == -1 && errno == ESPIPE ? C_FALSE : C_TRUE;
+	}
 
-		condition_t seekable(void *const filePtr)
-		{
-			const auto file{static_cast<const optimFROG_t *>(filePtr)};
-			return file->fd().seek(0, SEEK_CUR) == -1 && errno == ESPIPE ? C_FALSE : C_TRUE;
-		}
+	sInt64_t length(void *const filePtr)
+	{
+		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		return file->fd().length();
+	}
 
-		sInt64_t length(void *const filePtr)
-		{
-			const auto file{static_cast<const optimFROG_t *>(filePtr)};
-			return file->fd().length();
-		}
+	sInt64_t tell(void *const filePtr)
+	{
+		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		return file->fd().tell();
+	}
 
-		sInt64_t tell(void *const filePtr)
-		{
-			const auto file{static_cast<const optimFROG_t *>(filePtr)};
-			return file->fd().tell();
-		}
+	condition_t seek(void *const filePtr, const sInt64_t offset)
+	{
+		const auto file{static_cast<const optimFROG_t *>(filePtr)};
+		return file->fd().seek(offset, SEEK_SET) == offset ? C_TRUE : C_FALSE;
+	}
 
-		condition_t seek(void *const filePtr, const sInt64_t offset)
-		{
-			const auto file{static_cast<const optimFROG_t *>(filePtr)};
-			return file->fd().seek(offset, SEEK_SET) == offset ? C_TRUE : C_FALSE;
-		}
-
-		// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-		static ReadInterface readCallbacks
-		{
-			close,
-			read,
-			isEOF,
-			seekable,
-			length,
-			tell,
-			seek
-		};
-	} // namespace optimFROG
-} // namespace libAudio
+	// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+	static ReadInterface readCallbacks
+	{
+		close,
+		read,
+		isEOF,
+		seekable,
+		length,
+		tell,
+		seek
+	};
+} // namespace libAudio::optimFROG
 
 using namespace libAudio;
 
