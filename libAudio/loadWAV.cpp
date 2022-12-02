@@ -348,15 +348,14 @@ bool wav_t::isWAV(const int32_t fd) noexcept
 {
 	std::array<char, 4> riffMagic;
 	std::array<char, 4> waveMagic;
-	if (fd == -1 ||
-		read(fd, riffMagic.data(), riffMagic.size()) != riffMagic.size() ||
-		lseek(fd, 4, SEEK_CUR) != 8 ||
-		read(fd, waveMagic.data(), waveMagic.size()) != waveMagic.size() ||
-		lseek(fd, 0, SEEK_SET) != 0 ||
-		riffMagic != libAudio::wave::riffMagic ||
-		waveMagic != libAudio::wave::waveMagic)
-		return false;
-	return true;
+	return
+		fd != -1 &&
+		read(fd, riffMagic.data(), riffMagic.size()) == riffMagic.size() &&
+		lseek(fd, 4, SEEK_CUR) == 8 &&
+		read(fd, waveMagic.data(), waveMagic.size()) == waveMagic.size() &&
+		lseek(fd, 0, SEEK_SET) == 0 &&
+		riffMagic == libAudio::wave::riffMagic &&
+		waveMagic == libAudio::wave::waveMagic;
 }
 
 /*!
