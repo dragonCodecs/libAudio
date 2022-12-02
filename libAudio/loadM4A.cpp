@@ -12,100 +12,97 @@
  * @date 2009-2020
  */
 
-namespace libAudio
+namespace libAudio::loadM4A
 {
-	namespace loadM4A
+	/*!
+	 * @internal
+	 * Internal function used to open the MP4 file for reading
+	 * @param fileName The name of the file to open
+	 * @param mode The \c MP4FileMode in which to open the file. We ensure this has
+	 *    to be FILEMODE_CREATE for our purposes
+	 */
+	void *openR(const char *fileName, MP4FileMode mode)
 	{
-		/*!
-		 * @internal
-		 * Internal function used to open the MP4 file for reading
-		 * @param fileName The name of the file to open
-		 * @param mode The \c MP4FileMode in which to open the file. We ensure this has
-		 *    to be FILEMODE_CREATE for our purposes
-		 */
-		void *openR(const char *fileName, MP4FileMode mode)
-		{
-			if (mode != FILEMODE_READ)
-				return nullptr;
-			return fopen(fileName, "rb");
-		}
-
-		/*!
-		 * @internal
-		 * Internal function used to seek in the MP4 file
-		 * @param file \c FILE handle for the MP4 file as a void pointer
-		 * @param pos Possition into the file to which to seek to
-		 */
-		int seek(void *filePtr, int64_t pos)
-		{
-			auto *const file = static_cast<FILE *>(filePtr);
-#ifdef _WINDOWS
-			return (_fseeki64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-#elif defined(__arm__) || defined(__aarch64__)
-			return fseeko(file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
-#else
-			return (fseeko64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-#endif
-		}
-
-		/*!
-		 * @internal
-		 * Internal function used to read from the MP4 file
-		 * @param file \c FILE handle for the MP4 file as a void pointer
-		 * @param buffer A typeless buffer to which the read data should be written
-		 * @param bufferLen A 64-bit integer giving how much data should be read from the file
-		 * @param read A 64-bit integer count returning how much data was actually read
-		 */
-		int read(void *filePtr, void *buffer, int64_t bufferLen, int64_t *read, int64_t)
-		{
-			auto *const file = static_cast<FILE *>(filePtr);
-			size_t ret = fread(buffer, 1, size_t(bufferLen), file);
-			if (ret == 0 && bufferLen != 0)
-				return TRUE;
-			*read = ret;
-			return FALSE;
-		}
-
-		/*!
-		 * @internal
-		 * Internal function used to write data to the MP4 file
-		 * @param file \c FILE handle for the MP4 file as a void pointer
-		 * @param buffer A typeless buffer holding the data to be written, which must also not become modified
-		 * @param bufferLen A 64-bit integer giving how much data is to be written to the file
-		 * @param written A 64-bit integer count returning how much data was actually written
-		 */
-		int write(void *filePtr, const void *buffer, int64_t bufferLen, int64_t *written, int64_t)
-		{
-			auto *const file = static_cast<FILE *>(filePtr);
-			if (fwrite(buffer, 1, size_t(bufferLen), file) != size_t(bufferLen))
-				return TRUE;
-			*written = bufferLen;
-			return FALSE;
-		}
-
-		/*!
-		 * @internal
-		 * Internal function used to close the MP4 file after I/O is complete
-		 * @param file \c FILE handle for the MP4 file as a void pointer
-		 */
-		int close(void *file) { return fclose(static_cast<FILE *>(file)) != 0; }
-
-		/*!
-		 * @internal
-		 * Structure holding pointers to the \c MP4Dec* functions given in this file.
-		 * Used in the initialising of the MP4v2 file reader as a set of callbacks so
-		 * as to prevent run-time issues on Windows.
-		 */
-		constexpr static MP4FileProvider ioFunctions =
-		{
-			openR,
-			seek,
-			read,
-			write,
-			close
-		};
+		if (mode != FILEMODE_READ)
+			return nullptr;
+		return fopen(fileName, "rb");
 	}
-}
+
+	/*!
+	 * @internal
+	 * Internal function used to seek in the MP4 file
+	 * @param file \c FILE handle for the MP4 file as a void pointer
+	 * @param pos Possition into the file to which to seek to
+	 */
+	int seek(void *filePtr, int64_t pos)
+	{
+		auto *const file = static_cast<FILE *>(filePtr);
+#ifdef _WINDOWS
+		return (_fseeki64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#elif defined(__arm__) || defined(__aarch64__)
+		return fseeko(file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
+#else
+		return (fseeko64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#endif
+	}
+
+	/*!
+	 * @internal
+	 * Internal function used to read from the MP4 file
+	 * @param file \c FILE handle for the MP4 file as a void pointer
+	 * @param buffer A typeless buffer to which the read data should be written
+	 * @param bufferLen A 64-bit integer giving how much data should be read from the file
+	 * @param read A 64-bit integer count returning how much data was actually read
+	 */
+	int read(void *filePtr, void *buffer, int64_t bufferLen, int64_t *read, int64_t)
+	{
+		auto *const file = static_cast<FILE *>(filePtr);
+		size_t ret = fread(buffer, 1, size_t(bufferLen), file);
+		if (ret == 0 && bufferLen != 0)
+			return TRUE;
+		*read = ret;
+		return FALSE;
+	}
+
+	/*!
+	 * @internal
+	 * Internal function used to write data to the MP4 file
+	 * @param file \c FILE handle for the MP4 file as a void pointer
+	 * @param buffer A typeless buffer holding the data to be written, which must also not become modified
+	 * @param bufferLen A 64-bit integer giving how much data is to be written to the file
+	 * @param written A 64-bit integer count returning how much data was actually written
+	 */
+	int write(void *filePtr, const void *buffer, int64_t bufferLen, int64_t *written, int64_t)
+	{
+		auto *const file = static_cast<FILE *>(filePtr);
+		if (fwrite(buffer, 1, size_t(bufferLen), file) != size_t(bufferLen))
+			return TRUE;
+		*written = bufferLen;
+		return FALSE;
+	}
+
+	/*!
+	 * @internal
+	 * Internal function used to close the MP4 file after I/O is complete
+	 * @param file \c FILE handle for the MP4 file as a void pointer
+	 */
+	int close(void *file) { return fclose(static_cast<FILE *>(file)) != 0; }
+
+	/*!
+	 * @internal
+	 * Structure holding pointers to the \c MP4Dec* functions given in this file.
+	 * Used in the initialising of the MP4v2 file reader as a set of callbacks so
+	 * as to prevent run-time issues on Windows.
+	 */
+	constexpr static MP4FileProvider ioFunctions =
+	{
+		openR,
+		seek,
+		read,
+		write,
+		close
+	};
+} // namespace libAudio::m4a
 
 using namespace libAudio;
 
