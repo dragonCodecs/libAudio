@@ -19,9 +19,9 @@ sndhDepacker_t::sndhDepacker_t(const fd_t &file)
 	{
 		if (fileLength > maxFileLength)
 			throw std::exception{};
-		_data = substrate::make_unique<char []>(fileLength);
-		std::memcpy(_data.get(), magic.data(), magic.size());
-		if (!file.read(_data.get() + 4, fileLength - 4))
+		_data = {fileLength};
+		std::memcpy(_data.data(), icePackMagic.data(), icePackMagic.size());
+		if (!file.read(_data.data() + 4, fileLength - 4))
 			throw std::exception{};
 		return;
 	}
@@ -35,14 +35,15 @@ sndhDepacker_t::sndhDepacker_t(const fd_t &file)
 		unpackedLength > maxFileLength)
 		throw std::exception{};
 
-	_data = substrate::make_unique<char []>(unpackedLength);
+	_data = {unpackedLength};
 	if (!depack(file))
 	{
-		_data.reset();
+		_data = {};
 		throw std::exception{};
 	}
 }
 
-bool sndhDepacker_t::depack(const fd_t &file) noexcept
+bool sndhDepacker_t::depack(const fd_t &) noexcept
 {
+	return true;
 }
