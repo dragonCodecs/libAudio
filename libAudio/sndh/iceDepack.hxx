@@ -59,6 +59,8 @@ public:
 		return seek(offset, SEEK_CUR) == currentOffset + offset;
 	}
 
+	[[nodiscard]] size_t length() const noexcept { return _data.length(); }
+
 	[[nodiscard]] bool read(void *const value, const size_t valueLen) noexcept
 	{
 		if (_offset + valueLen > _data.size())

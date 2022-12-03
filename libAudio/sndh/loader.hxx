@@ -39,7 +39,7 @@ private:
 	sndhEntryPoints_t _entryPoints;
 	sndhMetadata_t _metadata;
 
-	bool readMeta(const fd_t &file);
+	bool readMeta();
 
 public:
 	sndhLoader_t(const fd_t &file);
