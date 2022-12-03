@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include <cstring>
 #include <string>
 #include <type_traits>
@@ -22,9 +23,13 @@ constexpr std::array<char, 4> typeYear{'Y', 'E', 'A', 'R'};
 constexpr std::array<char, 4> typeTime{'T', 'I', 'M', 'E'};
 constexpr std::array<char, 4> typeEnd{'H', 'D', 'N', 'S'};
 
-template<typename T, size_t sizeA, size_t sizeB, typename = typename std::enable_if<sizeA != sizeB>::type>
-	bool operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
-	{ return memcmp(a.data(), b.data(), std::min(sizeA, sizeB)) == 0; }
+template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeB < sizeA, bool>
+	operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
+	{ return std::equal(b.begin(), b.end(), a.begin()); }
+
+template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeA < sizeB, bool>
+	operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
+	{ return std::equal(a.begin(), a.end(), b.begin()); }
 
 sndhLoader_t::sndhLoader_t(const fd_t &file) : _entryPoints{}, _metadata{}
 {
