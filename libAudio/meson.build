@@ -36,7 +36,7 @@ if extraFormats.contains('optimFROG')
 	extraDeps += dependency('optimfrog')
 endif
 if extraFormats.contains('sndh')
-	extraSrcs += ['loadSNDH.cpp', 'sndh/loader.cxx']
+	extraSrcs += ['loadSNDH.cpp', 'sndh/loader.cxx', 'sndh/iceDepack.cxx']
 	extraArgs += '-DENABLE_SNDH'
 endif
 if extraFormats.contains('sid')
