@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef SNDH_LOADER_HXX
 #define SNDH_LOADER_HXX
 
@@ -6,6 +7,7 @@
 #include <vector>
 #include <substrate/fd>
 #include <substrate/fixed_vector>
+#include "iceDepack.hxx"
 
 using substrate::fd_t;
 using substrate::fixedVector_t;
@@ -33,6 +35,7 @@ struct sndhMetadata_t final
 struct sndhLoader_t
 {
 private:
+	sndhDepacker_t _data;
 	sndhEntryPoints_t _entryPoints;
 	sndhMetadata_t _metadata;
 

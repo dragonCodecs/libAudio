@@ -31,13 +31,13 @@ template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeA < sizeB,
 	operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
 	{ return std::equal(a.begin(), a.end(), b.begin()); }
 
-sndhLoader_t::sndhLoader_t(const fd_t &file) : _entryPoints{}, _metadata{}
+sndhLoader_t::sndhLoader_t(const fd_t &file) : _data{file}, _entryPoints{}, _metadata{}
 {
 	std::array<char, 4> magic{};
-	if (!file.readBE(_entryPoints.init) ||
-		!file.readBE(_entryPoints.exit) ||
-		!file.readBE(_entryPoints.play) ||
-		!file.read(magic) ||
+	if (!_data.readBE(_entryPoints.init) ||
+		!_data.readBE(_entryPoints.exit) ||
+		!_data.readBE(_entryPoints.play) ||
+		!_data.read(magic) ||
 		magic != typeHeader ||
 		!readMeta(file))
 		throw std::exception{};
