@@ -42,6 +42,19 @@ public:
 	}
 
 private:
+	[[nodiscard]] bool getBit()
+	{
+		uint16_t result = (workingData & 0xffU) << 1U;
+		if (!(result & 0xffU))
+		{
+			result >>= 8U;
+			result += (crunchedData[--inputOffset] << 1U);
+		}
+		workingData &= 0xff00U;
+		workingData |= result & 0xffU;
+		return result >> 8U;
+	}
+
 	void decrunchBytes()
 	{
 	}
