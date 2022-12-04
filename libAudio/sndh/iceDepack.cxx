@@ -55,6 +55,31 @@ private:
 		return result >> 8U;
 	}
 
+	[[nodiscard]] uint32_t getBits(uint16_t bits)
+	{
+		uint32_t data = workingData;
+		uint32_t result = 0;
+
+		for (uint16_t bit = 0; bit <= bits; ++bit)
+		{
+			data &= 0xffU;
+			data <<= 1U;
+
+			if (!uint8_t(data))
+			{
+				const uint8_t byte{crunchedData[--inputOffset]};
+				data >>= 8U;
+				data += byte << 1U;
+			}
+			result += result;
+			result += data >> 8U;
+		}
+
+		workingData &= 0xff00U;
+		workingData |= data & 0xffU;
+		return result;
+	}
+
 	void decrunchBytes()
 	{
 	}
