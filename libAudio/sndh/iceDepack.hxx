@@ -72,29 +72,19 @@ public:
 
 	template<typename T> bool read(T &value) noexcept
 		{ return read(&value, sizeof(T)); }
-	template<typename T> bool write(const T &value) noexcept
-		{ return write(&value, sizeof(T)); }
 	template<typename T> bool read(std::unique_ptr<T> &value) noexcept
 		{ return read(value.get(), sizeof(T)); }
 	template<typename T> bool read(const std::unique_ptr<T> &value) noexcept
 		{ return read(value.get(), sizeof(T)); }
-	template<typename T> bool write(const std::unique_ptr<T> &value) noexcept
-		{ return write(value.get(), sizeof(T)); }
 	// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
 	template<typename T> bool read(const std::unique_ptr<T []> &value, const size_t valueCount) noexcept
 		{ return read(value.get(), sizeof(T) * valueCount); }
 	// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-	template<typename T> bool write(const std::unique_ptr<T []> &value, const size_t valueCount) noexcept
-		{ return write(value.get(), sizeof(T) * valueCount); }
 	template<typename T, size_t N> bool read(std::array<T, N> &value) noexcept
 		{ return read(value.data(), sizeof(T) * N); }
-	template<typename T, size_t N> bool write(const std::array<T, N> &value) noexcept
-		{ return write(value.data(), sizeof(T) * N); }
 
 	template<typename T> bool read(const fixedVector_t<T> &value) const noexcept
 		{ return read(value.data(), sizeof(T) * value.size()); }
-	template<typename T> bool write(const fixedVector_t<T> &value) const noexcept
-		{ return write(value.data(), sizeof(T) * value.size()); }
 
 	template<size_t length, typename T, size_t N> bool read(std::array<T, N> &value) noexcept
 	{
