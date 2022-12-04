@@ -1,11 +1,34 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include <substrate/units>
+#include <substrate/span>
 #include "iceDepack.hxx"
+#include "console.hxx"
 
 using substrate::operator ""_MiB;
+using substrate::span;
 
 constexpr static std::array<char, 4> magic{{'I', 'C', 'E', '!'}};
 constexpr static size_t maxFileLength{4_MiB};
+
+struct decrunchingError_t : std::exception
+{
+	const char *what() const noexcept override { return "Error while decrunching and unpacking file"; }
+};
+
+struct decruncher_t
+{
+private:
+	const fixedVector_t<uint8_t> crunchedData;
+	std::span<uint8_t> decrunchedData;
+
+public:
+	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{file.length() - 12}, decrunchedData{data}
+	{
+		if (!crunchedData.valid() ||
+			!file.read(crunchedData.data(), crunchedData.size()))
+			throw decrunchingError_t{};
+	}
+};
 
 sndhDepacker_t::sndhDepacker_t(const fd_t &file)
 {
@@ -43,7 +66,13 @@ sndhDepacker_t::sndhDepacker_t(const fd_t &file)
 	}
 }
 
-bool sndhDepacker_t::depack(const fd_t &) noexcept
+bool sndhDepacker_t::depack(const fd_t &file) noexcept try
 {
+	decruncher_t decruncher{file, {reinterpret_cast<uint8_t *>(_data.data()), _data.size()}};
 	return true;
+}
+catch (const decrunchingError_t &error)
+{
+	console.error(error.what());
+	return false;
 }
