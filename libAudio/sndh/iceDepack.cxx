@@ -15,11 +15,20 @@ struct decrunchingError_t : std::exception
 	const char *what() const noexcept override { return "Error while decrunching and unpacking file"; }
 };
 
-constexpr static auto directTable
+struct byteBlock_t
 {
-	substrate::make_array<uint32_t>({
-		0x7fff000eU, 0x00ff0007U, 0x00070002U, 0x00030001U, 0x00030001U,
-		0x0000010DU, 0x0000000EU, 0x00000007U, 0x00000004U, 0x00000001U,
+	uint16_t bits;
+	uint16_t mask;
+};
+
+constexpr static auto chunkTable
+{
+	substrate::make_array<byteBlock_t>({
+		{14U, 0x7fffU},
+		{7U, 0x00ffU},
+		{2U, 0x0007U},
+		{1U, 0x0003U},
+		{1U, 0x0003U}
 	})
 };
 
@@ -43,6 +52,8 @@ private:
 	size_t outputOffset{};
 	uint16_t workingData{};
 
+	uint16_t unpackMask;
+
 public:
 	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{file.length() - 12}, decrunchedData{data}
 	{
@@ -56,6 +67,9 @@ public:
 		inputOffset = crunchedData.size();
 		outputOffset = decrunchedData.size();
 		workingData = crunchedData[--inputOffset];
+
+		unpackMask = uint16_t(outputOffset);
+
 		decrunchBytes();
 	}
 
@@ -100,6 +114,29 @@ private:
 
 	void decrunchBytes()
 	{
+	}
+
+	void copyBytes()
+	{
+		uint32_t count = 1;
+		if (getBit())
+		{
+			size_t i = 0;
+			for (; i < 5; ++i)
+			{
+				const uint32_t value = directTable[4U - i];
+				count = getBits(value);
+				const uint32_t mask = (value >> 16U) | 0xffff0000U;
+				// store mask?
+				if ((mask ^ count) & 0xffffU)
+					break;
+			}
+			count += directTable[9U - i] + 1U;
+		}
+
+		outputOffset -= count;
+		inputOffset -= count;
+		std::memcpy(decrunchedData.data() + outputOffset, crunchedData.data() + inputOffset, count);
 	}
 };
 
