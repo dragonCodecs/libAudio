@@ -21,12 +21,29 @@ private:
 	const fixedVector_t<uint8_t> crunchedData;
 	std::span<uint8_t> decrunchedData;
 
+	size_t inputOffset{};
+	size_t outputOffset{};
+	uint16_t workingData{};
+
 public:
 	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{file.length() - 12}, decrunchedData{data}
 	{
 		if (!crunchedData.valid() ||
 			!file.read(crunchedData.data(), crunchedData.size()))
 			throw decrunchingError_t{};
+	}
+
+	void decrunch()
+	{
+		inputOffset = crunchedData.size();
+		outputOffset = decrunchedData.size();
+		workingData = crunchedData[--inputOffset];
+		decrunchBytes();
+	}
+
+private:
+	void decrunchBytes()
+	{
 	}
 };
 
@@ -69,6 +86,7 @@ sndhDepacker_t::sndhDepacker_t(const fd_t &file)
 bool sndhDepacker_t::depack(const fd_t &file) noexcept try
 {
 	decruncher_t decruncher{file, {reinterpret_cast<uint8_t *>(_data.data()), _data.size()}};
+	decruncher.decrunch();
 	return true;
 }
 catch (const decrunchingError_t &error)
