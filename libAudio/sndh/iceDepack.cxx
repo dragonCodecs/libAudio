@@ -140,6 +140,33 @@ private:
 		std::memcpy(decrunchedData.data() + outputOffset, crunchedData.data() + inputOffset, count);
 	}
 
+	void unpackBytes(int32_t offset, const uint32_t count)
+	{
+		const size_t inputOffset = outputOffset + offset;
+		outputOffset -= count;
+		std::memcpy(decrunchedData.data() + outputOffset, decrunchedData.data() + inputOffset, count);
+	}
+
+	void unpackFromOffset()
+	{
+		size_t i = 0;
+		for (; i < 4; ++i)
+		{
+			if (!getBit())
+				break;
+		}
+
+		uint32_t lengthAdjustment = 0;
+		const uint16_t bits = lengthTable[4 - i];
+		if (!(bits & 0x8000U))
+			lengthAdjustment = getBits(bits);
+
+		uint32_t length = lengthTable[9 - i] + lengthAdjustment + 1U;
+		const int16_t offset = length > 1 ? offsetFromTable(length - 1U) : offsetFromCalculation();
+		unpackMask = 0xffffU;
+		unpackBytes(offset, length + 1);
+	}
+
 	int16_t offsetFromTable(const uint32_t length)
 	{
 		size_t i = 0;
