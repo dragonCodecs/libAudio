@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef SYS_TYPES__H
 #define SYS_TYPES__H
 
