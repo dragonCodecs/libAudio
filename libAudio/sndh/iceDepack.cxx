@@ -66,7 +66,15 @@ public:
 		outputOffset = decrunchedData.size();
 		workingData = crunchedData[--inputOffset];
 
-		decrunchBytes();
+		while (outputOffset)
+		{
+			if (getBit())
+				copyBytes();
+			if (!outputOffset)
+				break;
+			unpackFromOffset();
+		}
+
 		if (getBit())
 			unshuffle(getBit() ? getBits(15) : 0x0f9fU);
 	}
@@ -108,18 +116,6 @@ private:
 		workingData &= 0xff00U;
 		workingData |= data & 0xffU;
 		return result;
-	}
-
-	void decrunchBytes()
-	{
-		while (outputOffset)
-		{
-			if (getBit())
-				copyBytes();
-			if (!outputOffset)
-				break;
-			unpackFromOffset();
-		}
 	}
 
 	void copyBytes()
