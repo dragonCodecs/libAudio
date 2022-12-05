@@ -24,16 +24,16 @@ struct byteBlock_t
 constexpr static auto chunkTable
 {
 	substrate::make_array<byteBlock_t>({
-		{14U, 0x7fffU},
-		{7U, 0x00ffU},
-		{2U, 0x0007U},
 		{1U, 0x0003U},
-		{1U, 0x0003U}
+		{1U, 0x0003U},
+		{2U, 0x0007U},
+		{7U, 0x00ffU},
+		{14U, 0x7fffU}
 	})
 };
 
 constexpr static auto extraBytes
-	{substrate::make_array<uint16_t>({270U, 15U, 8U, 5U, 2U})};
+	{substrate::make_array<uint16_t>({2U, 5U, 8U, 15U, 270U})};
 
 constexpr static auto lengthTable
 	{substrate::make_array<int8_t>({9, 1, 0, -1, -1, 8, 4, 2, 1, 0})};
@@ -124,14 +124,13 @@ private:
 			size_t i = 0;
 			for (; i < 5; ++i)
 			{
-				const uint32_t value = directTable[4U - i];
-				count = getBits(value);
-				const uint32_t mask = (value >> 16U) | 0xffff0000U;
-				// store mask?
-				if ((mask ^ count) & 0xffffU)
+				const auto chunk = chunkTable[i];
+				count = getBits(chunk.bits);
+				unpackMask = chunk.mask;
+				if ((chunk.mask ^ count) & 0xffffU)
 					break;
 			}
-			count += directTable[9U - i] + 1U;
+			count += i < 5 ? extraBytes[i] : 1U;
 		}
 
 		outputOffset -= count;
