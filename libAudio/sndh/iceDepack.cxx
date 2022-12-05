@@ -52,9 +52,6 @@ private:
 	size_t outputOffset{};
 	uint16_t workingData{};
 
-	uint16_t unpackMask{};
-	uint16_t unpackAdjustment{};
-
 public:
 	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{file.length() - 12}, decrunchedData{data}
 	{
@@ -68,9 +65,6 @@ public:
 		inputOffset = crunchedData.size();
 		outputOffset = decrunchedData.size();
 		workingData = crunchedData[--inputOffset];
-
-		unpackMask = uint16_t(outputOffset);
-		unpackAdjustment = 0;
 
 		decrunchBytes();
 	}
@@ -136,7 +130,6 @@ private:
 			{
 				const auto chunk = chunkTable[i];
 				count = getBits(chunk.bits);
-				unpackMask = chunk.mask;
 				if ((chunk.mask ^ count) & 0xffffU)
 					break;
 			}
@@ -171,7 +164,6 @@ private:
 
 		uint32_t length = lengthTable[9 - i] + lengthAdjustment + 1U;
 		const int16_t offset = length > 1 ? offsetFromTable(length - 1U) : offsetFromCalculation();
-		unpackMask = 0xffffU;
 		unpackBytes(offset, length + 1);
 	}
 
@@ -183,7 +175,6 @@ private:
 			if (!getBit())
 				break;
 		}
-		unpackAdjustment = 2 - i;
 		int32_t offset = getBits(int16_t{int8Offsets[2 - i]});
 		offset += int16Offsets[4 - i];
 		if (offset < 0)
@@ -201,7 +192,6 @@ private:
 			adjustment = 63;
 		}
 		int32_t offset = getBits(bits);
-		unpackAdjustment = adjustment;
 		return offset + adjustment;
 	}
 };
