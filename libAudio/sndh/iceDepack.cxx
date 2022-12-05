@@ -67,6 +67,8 @@ public:
 		workingData = crunchedData[--inputOffset];
 
 		decrunchBytes();
+		if (getBit())
+			unshuffle(getBit() ? getBits(15) : 0x0f9fU);
 	}
 
 private:
@@ -195,6 +197,42 @@ private:
 		}
 		int32_t offset = getBits(bits);
 		return offset + adjustment;
+	}
+
+	void unshuffle(uint16_t blocks)
+	{
+		auto *data = decrunchedData.data() + decrunchedData.size();
+		for (uint16_t i = 0; i < blocks; ++i)
+		{
+			std::array<uint16_t, 4> state{};
+			for (size_t j = 0; j < 4; ++j)
+			{
+				data -= 2;
+				auto chunk{uint16_t((data[0] << 8U) | data[1])};
+
+				for (size_t k = 0; k < 4; ++k)
+				{
+					const size_t shift = ((3U - j) * 4U) + k;
+					state[3] |= (chunk & 1U) << shift;
+					chunk >>= 1U;
+					state[2] |= (chunk & 1U) << shift;
+					chunk >>= 1U;
+					state[1] |= (chunk & 1U) << shift;
+					chunk >>= 1U;
+					state[0] |= (chunk & 1U) << shift;
+					chunk >>= 1U;
+				}
+			}
+
+			data[0] = state[0] >> 8U;
+			data[1] = uint8_t(state[0]);
+			data[2] = state[1] >> 8U;
+			data[3] = uint8_t(state[1]);
+			data[4] = state[2] >> 8U;
+			data[5] = uint8_t(state[2]);
+			data[6] = state[3] >> 8U;
+			data[7] = uint8_t(state[3]);
+		}
 	}
 };
 
