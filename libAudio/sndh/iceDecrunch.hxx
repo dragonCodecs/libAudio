@@ -10,7 +10,7 @@
 using substrate::fd_t;
 using substrate::fixedVector_t;
 
-struct sndhDepacker_t final
+struct sndhDecruncher_t final
 {
 private:
 	fixedVector_t<char> _data{};
@@ -19,7 +19,7 @@ private:
 	bool depack(const fd_t &file) noexcept;
 
 public:
-	sndhDepacker_t(const fd_t &file);
+	sndhDecruncher_t(const fd_t &file);
 	[[nodiscard]] bool valid() const noexcept { return _data.valid(); }
 
 	size_t seek(const off_t offset, const int32_t whence) noexcept

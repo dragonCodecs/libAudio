@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include <substrate/units>
 #include <substrate/span>
-#include "iceDepack.hxx"
+#include "iceDecrunch.hxx"
 #include "console.hxx"
 
 using substrate::operator ""_MiB;
@@ -232,7 +232,7 @@ private:
 	}
 };
 
-sndhDepacker_t::sndhDepacker_t(const fd_t &file)
+sndhDecruncher_t::sndhDecruncher_t(const fd_t &file)
 {
 	std::array<char, 4> icePackMagic;
 	if (!file.read(icePackMagic))
@@ -268,7 +268,7 @@ sndhDepacker_t::sndhDepacker_t(const fd_t &file)
 	}
 }
 
-bool sndhDepacker_t::depack(const fd_t &file) noexcept try
+bool sndhDecruncher_t::depack(const fd_t &file) noexcept try
 {
 	decruncher_t decruncher{file, {reinterpret_cast<uint8_t *>(_data.data()), _data.size()}};
 	decruncher.decrunch();

@@ -43,7 +43,7 @@ sndhLoader_t::sndhLoader_t(const fd_t &file) : _data{file}, _entryPoints{}, _met
 		throw std::exception{};
 }
 
-std::string readString(sndhDepacker_t &file)
+std::string readString(sndhDecruncher_t &file)
 {
 	std::string result{};
 	char value{-1};
@@ -56,13 +56,13 @@ std::string readString(sndhDepacker_t &file)
 	return result;
 }
 
-void readString(sndhDepacker_t &file, std::unique_ptr<char []> &dst)
+void readString(sndhDecruncher_t &file, std::unique_ptr<char []> &dst)
 {
 	const std::string result{readString(file)};
 	copyComment(dst, result.data());
 }
 
-uint16_t readFrequency(sndhDepacker_t &file, const char *const prefix)
+uint16_t readFrequency(sndhDecruncher_t &file, const char *const prefix)
 {
 	if (!prefix[0] || !isNumber(prefix[0]))
 		throw std::exception{};
