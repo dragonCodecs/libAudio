@@ -3,7 +3,7 @@ project(
 	'libAudio',
 	'cpp',
 	default_options: [
-		'cpp_std=c++11',
+		'cpp_std=c++17',
 		'warning_level=3',
 		'buildtype=release',
 		'strip=true',
