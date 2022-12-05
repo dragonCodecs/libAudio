@@ -91,7 +91,7 @@ private:
 
 	[[nodiscard]] uint32_t getBits(uint16_t bits)
 	{
-		uint32_t data = workingData;
+		uint16_t data = workingData;
 		uint32_t result = 0;
 
 		for (uint16_t bit = 0; bit <= bits; ++bit)
@@ -105,7 +105,7 @@ private:
 				data >>= 8U;
 				data += byte << 1U;
 			}
-			result += result;
+			result <<= 1U;
 			result += data >> 8U;
 		}
 
@@ -152,7 +152,7 @@ private:
 	{
 		const size_t inputOffset = outputOffset + offset;
 		outputOffset -= count;
-		std::memcpy(decrunchedData.data() + outputOffset, decrunchedData.data() + inputOffset, count);
+		std::memmove(decrunchedData.data() + outputOffset, decrunchedData.data() + inputOffset, count);
 	}
 
 	void unpackFromOffset()
