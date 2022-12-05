@@ -52,7 +52,8 @@ private:
 	size_t outputOffset{};
 	uint16_t workingData{};
 
-	uint16_t unpackMask;
+	uint16_t unpackMask{};
+	uint16_t unpackAdjustment{};
 
 public:
 	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{file.length() - 12}, decrunchedData{data}
@@ -69,6 +70,7 @@ public:
 		workingData = crunchedData[--inputOffset];
 
 		unpackMask = uint16_t(outputOffset);
+		unpackAdjustment = 0;
 
 		decrunchBytes();
 	}
@@ -136,6 +138,36 @@ private:
 		outputOffset -= count;
 		inputOffset -= count;
 		std::memcpy(decrunchedData.data() + outputOffset, crunchedData.data() + inputOffset, count);
+	}
+
+	int16_t offsetFromTable(const uint32_t length)
+	{
+		size_t i = 0;
+		for (; i < 2; ++i)
+		{
+			if (!getBit())
+				break;
+		}
+		unpackAdjustment = 2 - i;
+		int32_t offset = getBits(int16_t{int8Offsets[2 - i]});
+		offset += int16Offsets[4 - i];
+		if (offset < 0)
+			offset -= length;
+		return offset;
+	}
+
+	int16_t offsetFromCalculation()
+	{
+		uint8_t bits = 5U;
+		int8_t adjustment = -1;
+		if (getBit())
+		{
+			bits = 8U;
+			adjustment = 63;
+		}
+		int32_t offset = getBits(bits);
+		unpackAdjustment = adjustment;
+		return offset + adjustment;
 	}
 };
 
