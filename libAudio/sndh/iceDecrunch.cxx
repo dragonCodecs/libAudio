@@ -141,11 +141,11 @@ private:
 
 	void unpackBytes(int32_t offset, const uint32_t count)
 	{
-		size_t fromOffset = outputOffset + offset + count;
-		size_t toOffset = outputOffset;
-		for (uint32_t i = 0; i < count; ++i)
-			decrunchedData[--toOffset] = decrunchedData[--fromOffset];
-		outputOffset = toOffset;
+		const size_t fromOffset = outputOffset + offset + count;
+		const size_t toOffset = outputOffset;
+		for (uint32_t i = 1; i <= count; ++i)
+			decrunchedData[toOffset - i] = decrunchedData[fromOffset - i];
+		outputOffset -= count;
 	}
 
 	void unpackFromOffset()
