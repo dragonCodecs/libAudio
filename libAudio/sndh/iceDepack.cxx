@@ -116,6 +116,14 @@ private:
 
 	void decrunchBytes()
 	{
+		while (outputOffset)
+		{
+			if (getBit())
+				copyBytes();
+			if (!outputOffset)
+				break;
+			unpackFromOffset();
+		}
 	}
 
 	void copyBytes()
