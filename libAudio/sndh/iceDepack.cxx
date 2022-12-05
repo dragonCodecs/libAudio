@@ -15,6 +15,24 @@ struct decrunchingError_t : std::exception
 	const char *what() const noexcept override { return "Error while decrunching and unpacking file"; }
 };
 
+constexpr static auto directTable
+{
+	substrate::make_array<uint32_t>({
+		0x7fff000eU, 0x00ff0007U, 0x00070002U, 0x00030001U, 0x00030001U,
+		0x0000010DU, 0x0000000EU, 0x00000007U, 0x00000004U, 0x00000001U,
+	})
+};
+
+constexpr static auto extraBytes
+	{substrate::make_array<uint16_t>({270U, 15U, 8U, 5U, 2U})};
+
+constexpr static auto lengthTable
+	{substrate::make_array<int8_t>({9, 1, 0, -1, -1, 8, 4, 2, 1, 0})};
+constexpr static auto int8Offsets
+	{substrate::make_array<int8_t>({11, 4, 7, 0, 1, 31, -1, -1, 0, 31})};
+constexpr static auto int16Offsets
+	{substrate::make_array<int16_t>({2820, 1792, 287, -1, 31})};
+
 struct decruncher_t
 {
 private:
