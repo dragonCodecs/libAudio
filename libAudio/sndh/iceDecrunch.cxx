@@ -12,7 +12,7 @@ constexpr static size_t maxFileLength{4_MiB};
 
 struct decrunchingError_t : std::exception
 {
-	const char *what() const noexcept override { return "Error while decrunching and unpacking file"; }
+	const char *what() const noexcept override { return "Error while decrunching file"; }
 };
 
 struct byteBlock_t
@@ -53,7 +53,7 @@ private:
 	uint16_t workingData{};
 
 public:
-	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{file.length() - 12}, decrunchedData{data}
+	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{size_t(file.length()) - 12U}, decrunchedData{data}
 	{
 		if (!crunchedData.valid() ||
 			!file.read(crunchedData.data(), crunchedData.size()))
