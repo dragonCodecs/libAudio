@@ -3,6 +3,7 @@
 #include <string>
 #include <type_traits>
 #include "loader.hxx"
+#include "atariASCII.hxx"
 #include "../conversions.hxx"
 #include "../string.hxx"
 
@@ -46,12 +47,12 @@ sndhLoader_t::sndhLoader_t(const fd_t &file) : _data{file}, _entryPoints{}, _met
 std::string readString(sndhDecruncher_t &file)
 {
 	std::string result{};
-	char value{-1};
+	uint8_t value{255};
 	while (value != 0)
 	{
 		if (!file.read(value))
 			throw std::exception{};
-		result += value;
+		result += atariChars[value];
 	}
 	return result;
 }
