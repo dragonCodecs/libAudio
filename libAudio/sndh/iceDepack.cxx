@@ -122,7 +122,7 @@ private:
 
 	void copyBytes()
 	{
-		uint32_t count = 1;
+		uint16_t count = 1;
 		if (getBit())
 		{
 			size_t i = 0;
@@ -143,9 +143,11 @@ private:
 
 	void unpackBytes(int32_t offset, const uint32_t count)
 	{
-		const size_t inputOffset = outputOffset + offset;
-		outputOffset -= count;
-		std::memmove(decrunchedData.data() + outputOffset, decrunchedData.data() + inputOffset, count);
+		size_t fromOffset = outputOffset + offset + count;
+		size_t toOffset = outputOffset;
+		for (uint32_t i = 0; i < count; ++i)
+			decrunchedData[--toOffset] = decrunchedData[--fromOffset];
+		outputOffset = toOffset;
 	}
 
 	void unpackFromOffset()
