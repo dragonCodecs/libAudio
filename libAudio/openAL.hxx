@@ -7,6 +7,8 @@
 #ifdef _WINDOWS
 #include <al.h>
 #include <alc.h>
+#elif defined(__APPLE__)
+#include <OpenAL.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>

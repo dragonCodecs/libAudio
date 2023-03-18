@@ -47,6 +47,13 @@ if target_machine.system() == 'windows'
 	)
 endif
 
+if target_machine.system() == 'darwin'
+	add_project_arguments(
+		'-mmacosx-version-min=10.14',
+		language: 'cpp'
+	)
+endif
+
 if cxx.get_id() == 'msvc'
 	add_project_arguments(
 		'-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1',
