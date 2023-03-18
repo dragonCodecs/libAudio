@@ -3,15 +3,12 @@
 #define _USE_MATH_DEFINES
 #include <cstdio>
 #include <cstdlib>
-#include <malloc.h>
 #include <cmath>
 #include <string_view>
 
-#include "../libAudio.h"
 #include "../libAudio.hxx"
 #include "../genericModule/genericModule.h"
 
-#include "waveTables.h"
 #include "moduleMixer.h"
 #include "mixFunctions.h"
 #include "mixFunctionTables.h"
