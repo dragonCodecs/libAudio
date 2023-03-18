@@ -21,9 +21,9 @@ using substrate::managedPtr_t;
 |*   the relationships!!   *|
 \***************************/
 
-class ModuleFile;
+struct ModuleFile;
 struct channel_t;
-class ModuleSample;
+struct ModuleSample;
 struct pattern_t;
 
 using stringPtr_t = std::unique_ptr<char []>;
@@ -139,7 +139,7 @@ private:
 
 private:
 	uint8_t nChannels{};
-	friend class ModuleFile;
+	friend struct ModuleFile;
 	friend struct channel_t;
 	ModuleHeader() noexcept;
 
@@ -205,7 +205,7 @@ public:
 	virtual bool GetPanned() = 0;
 };
 
-class ModuleSampleNative final : public ModuleSample
+struct ModuleSampleNative final : public ModuleSample
 {
 private:
 	std::unique_ptr<char []> Name;
@@ -230,7 +230,7 @@ private:
 	uint8_t VibratoRate;
 	uint32_t SusLoopBegin;
 	uint32_t SusLoopEnd;
-	friend class ModuleFile;
+	friend struct ModuleFile;
 
 public:
 	ModuleSampleNative(const modMOD_t &file, const uint32_t i);
@@ -264,7 +264,7 @@ public:
 	bool GetPanned() final { return DefaultPan & 0x80U; }
 };
 
-class ModuleSampleAdlib final : public ModuleSample
+struct ModuleSampleAdlib final : public ModuleSample
 {
 private:
 	char *FileName;
@@ -476,7 +476,7 @@ private:
 
 	inline uint8_t modPeriodToNoteIndex(const uint16_t period) noexcept;
 	void translateMODEffect(const uint8_t effect, const uint8_t param) noexcept;
-	friend class ModuleFile;
+	friend struct ModuleFile;
 	friend struct channel_t;
 
 public:
