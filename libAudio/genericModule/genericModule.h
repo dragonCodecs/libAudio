@@ -354,7 +354,7 @@ public:
 struct ModuleInstrument
 {
 private:
-	const uint32_t _id;
+	uint32_t _id;
 
 protected:
 	// NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
