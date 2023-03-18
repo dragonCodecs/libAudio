@@ -1,0 +1,182 @@
+name: Build Linux
+
+on:
+  push:
+    branches-ignore:
+      - 'coverityScan'
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    name: '${{ matrix.os.id }} (${{ matrix.compiler }})'
+    runs-on: ${{ matrix.os.id }}
+    strategy:
+      matrix:
+        os:
+          - { id: ubuntu-20.04, name: focal }
+        compiler:
+          - 'clang-9'
+          - 'clang-10'
+          - 'clang-11'
+          - 'clang-12'
+          - 'clang-13'
+          - 'clang-14'
+          - 'clang-15'
+          - 'gcc-7'
+          - 'gcc-8'
+          - 'gcc-9'
+          - 'gcc-10'
+          - 'gcc-11'
+        include:
+          - os: { id: ubuntu-18.04, name: bionic }
+            compiler: 'clang-6.0'
+          - os: { id: ubuntu-18.04, name: bionic }
+            compiler: 'clang-7'
+          - os: { id: ubuntu-18.04, name: bionic }
+            compiler: 'clang-8'
+          ## GCC6 cannot handle constexpr-ness of mmap_t
+          ## See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66297
+          # - os: { id: ubuntu-18.04, name: bionic }
+          #   compiler: 'gcc-6'
+        coverage: [false, true]
+      fail-fast: false
+    steps:
+      - name: Runtime environment
+        shell: bash
+        env:
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "PKG_CONFIG_PATH=\"$HOME/.local/lib/x86_64-linux-gnu/pkgconfig\"" >> $GITHUB_ENV
+          echo "GITHUB_WORKSPACE=`pwd`" >> $GITHUB_ENV
+      - name: Coverage environment
+        if: github.repository == 'dragonmux/libAudio'
+        run: |
+          echo "COVERAGE=1" >> $GITHUB_ENV
+          echo "BUILD_OPTS=-Db_coverage=true --buildtype=debug -Db_lto=false" >> $GITHUB_ENV
+      - name: Setup GCC
+        if: startsWith(matrix.compiler, 'gcc')
+        shell: bash
+        run: |
+          CXX=${CC/#gcc/g++}
+          sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install $CC $CXX
+          echo "CC=$CC" >> $GITHUB_ENV
+          echo "CXX=$CXX" >> $GITHUB_ENV
+          if [ ! -z "$COVERAGE" ] ; then echo "GCOV=${CC/#gcc/gcov}" >> $GITHUB_ENV ; fi
+        env:
+          CC: ${{ matrix.compiler }}
+      - name: Setup Clang
+        if: startsWith(matrix.compiler, 'clang')
+        shell: bash
+        run: |
+          wget https://apt.llvm.org/llvm-snapshot.gpg.key
+          sudo apt-key add llvm-snapshot.gpg.key
+          rm llvm-snapshot.gpg.key
+          sudo apt-add-repository "deb https://apt.llvm.org/${{ matrix.os.name }}/ llvm-toolchain-${{ matrix.os.name }}${CC/#clang/} main"
+          sudo apt-get update
+          sudo apt-get install $CC llvm gcovr
+          CXX=${CC/#clang/clang++}
+          echo "CC=$CC" >> $GITHUB_ENV
+          echo "CXX=$CXX" >> $GITHUB_ENV
+          if [ ! -z "$COVERAGE" ] ; then echo "GCOV=/usr/lib/${CC/#clang/llvm}/bin/llvm-cov gcov" >> $GITHUB_ENV; fi
+        env:
+          CC: ${{ matrix.compiler }}
+        working-directory: ${{ runner.temp }}
+      - name: Add coverage dependency
+        if: matrix.compiler == 'clang-14'
+        shell: bash
+        run: |
+          apt download libclang-rt-14-dev
+          PACKAGE=$(find . -name 'libclang-rt-14*.deb')
+          sudo dpkg --install --force-breaks $PACKAGE
+        working-directory: ${{ runner.temp }}
+      - name: Checkout libAudio
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: Checkout public deps
+        shell: bash
+        run: |
+          git submodule init deps/substrate
+          git submodule update --depth 1
+      - name: Compute libmp4v2 ref
+        run: echo "MP4V2_REF=$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )" >> $GITHUB_ENV
+      - name: Checkout libmp4v2
+        uses: actions/checkout@v3
+        with:
+          repository: dragonmux/mp4v2
+          token: ${{ secrets.MP4V2_TOKEN }}
+          path: deps/mp4v2
+          ref: ${{ env.MP4V2_REF }}
+          lfs: true
+      - name: Checkout crunch
+        uses: actions/checkout@v3
+        with:
+          repository: dragonmux/crunch
+          path: deps/crunch
+          #ref: TODO: need to feed what version of crunch to use in here..
+          lfs: true
+          submodules: true
+      - name: Setup Meson + Ninja
+        shell: bash
+        run: |
+          sudo python3 -m pip install --upgrade pip setuptools wheel
+          sudo python3 -m pip install meson ninja
+        working-directory: ${{ runner.temp }}
+      - name: Version tools
+        shell: bash
+        run: |
+          $CC --version
+          $CXX --version
+          if [ ! -z "$COVERAGE" ]; then echo $GCOV --version; fi
+          meson --version
+          ninja --version
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get install libopenal-dev libogg-dev libvorbis-dev libopus-dev libopusfile-dev \
+            libflac-dev libwavpack-dev libmpcdec-dev libfaac-dev libfaad-dev libmad0-dev libid3tag0-dev
+        #  libgl-dev qtbase5-dev
+      - name: Install libmp4v2
+        shell: bash
+        run: |
+          meson build --prefix=/usr
+          meson compile -C build
+          sudo meson install -C build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/mp4v2
+      - name: Install crunch
+        shell: bash
+        run: |
+          meson build --prefix=/usr $BUILD_OPTS
+          meson compile -C build
+          sudo meson install -C build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/crunch
+      - name: Configure
+        run: meson build --prefix=$HOME/.local $BUILD_OPTS
+      - name: Build
+        run: meson compile -C build
+      - name: Test
+        run: meson test -C build
+      - name: Install
+        run: meson install -C build
+      # Codecov no longer parses gcov files automatically
+      - name: Prepare coverage files
+        if: success() && github.repository == 'dragonmux/libAudio'
+        shell: bash
+        run: |
+          cd build
+          find . -type f -name '*.gcda' -exec $GCOV -p {} + > /dev/null
+      - name: Coverage prep
+        if: success() && github.repository == 'dragonmux/libAudio'
+        run: gcovr -r .. -x coverage.xml --gcov-executable "$GCOV" -e ../deps -e ../test
+      - name: Codecov
+        if: success() && github.repository == 'dragonmux/libAudio'
+        uses: codecov/codecov-action@v3
