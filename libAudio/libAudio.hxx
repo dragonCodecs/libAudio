@@ -327,6 +327,7 @@ public:
 	static bool isIT(const int32_t fd) noexcept;
 };
 
+#ifdef ENABLE_AON
 struct modAON_t final : public moduleFile_t
 {
 public:
@@ -336,6 +337,7 @@ public:
 	static bool isAON(const char *const fileName) noexcept;
 	static bool isAON(const int32_t fd) noexcept;
 };
+#endif
 
 struct modFC1x_t final : public moduleFile_t
 {

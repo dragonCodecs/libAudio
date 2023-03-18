@@ -25,8 +25,10 @@ ModuleSample *ModuleSample::LoadSample(const modS3M_t &file, const uint32_t i)
 ModuleSample *ModuleSample::LoadSample(const modSTM_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
+#ifdef ENABLE_AON
 ModuleSample *ModuleSample::LoadSample(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths)
 	{ return new ModuleSampleNative(file, i, Name, pcmLengths); }
+#endif
 
 ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
@@ -170,6 +172,7 @@ ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) :
 		Volume = 64U;
 }
 
+#ifdef ENABLE_AON
 ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, char *name, const uint32_t *const pcmLengths) : ModuleSample(i, 1), Name(name)
 {
 	uint8_t Type, ID;
@@ -285,6 +288,7 @@ ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, c
 	VibratoRate = 0;
 	InstrVol = 64;
 }
+#endif
 
 ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : ModuleSample(i, 1),
 	Name{makeUnique<char []>(27)}, FineTune{}, FileName{makeUnique<char []>(13)}, SampleFlags{}

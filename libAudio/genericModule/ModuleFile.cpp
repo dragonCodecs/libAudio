@@ -107,6 +107,7 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleFile{MODULE_STM}
 // http://www.tigernt.com/onlineDoc/68000.pdf
 // http://eab.abime.net/showthread.php?t=21516
 // ftp://ftp.modland.com/pub/documents/format_documentation/Art%20Of%20Noise%20(.aon).txt
+#ifdef ENABLE_AON
 ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 {
 	std::array<char, 4> blockName{};
@@ -186,6 +187,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 	MinPeriod = 56;
 	MaxPeriod = 7040;
 }
+#endif // ENABLE_AON
 
 #ifdef ENABLE_FC1x
 ModuleFile::ModuleFile(const modFC1x_t &file) : ModuleFile{MODULE_FC1x}

@@ -151,6 +151,7 @@ pattern_t::pattern_t(const modSTM_t &file) : pattern_t(4, 64, E_BAD_STM)
 	}
 }
 
+#ifdef ENABLE_AON
 pattern_t::pattern_t(const modAON_t &file, const uint32_t channels) : pattern_t{channels, 64, E_BAD_AON}
 {
 	using arithUInt = substrate::promoted_type_t<uint8_t>;
@@ -182,6 +183,7 @@ pattern_t::pattern_t(const modAON_t &file, const uint32_t channels) : pattern_t{
 		}
 	}
 }
+#endif
 
 inline bool readInc(uint8_t &var, uint16_t &i, const uint16_t len, const fd_t &fd) noexcept
 {

@@ -178,6 +178,7 @@ ModuleHeader::ModuleHeader(const modSTM_t &file) : ModuleHeader{}
 	nChannels = 4;
 }
 
+#ifdef ENABLE_AON
 ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 {
 	std::array<char, 4> magic1{};
@@ -279,6 +280,7 @@ ModuleHeader::ModuleHeader(const modAON_t &file) : ModuleHeader{}
 		!fd.read(Const))
 		throw ModuleLoaderError{E_BAD_AON};
 }
+#endif // ENABLE_AON
 
 #ifdef ENABLE_FC1x
 ModuleHeader::ModuleHeader(const modFC1x_t &file) : ModuleHeader{}

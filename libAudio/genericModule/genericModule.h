@@ -147,7 +147,9 @@ public:
 	ModuleHeader(const modMOD_t &file);
 	ModuleHeader(const modS3M_t &file);
 	ModuleHeader(const modSTM_t &file);
+#ifdef ENABLE_AON
 	ModuleHeader(const modAON_t &file);
+#endif
 #ifdef ENABLE_FC1x
 	ModuleHeader(const modFC1x_t &file);
 #endif
@@ -172,8 +174,10 @@ public:
 	static ModuleSample *LoadSample(const modMOD_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(const modS3M_t &file, const uint32_t i);
 	static ModuleSample *LoadSample(const modSTM_t &file, const uint32_t i);
+#ifdef ENABLE_AON
 	static ModuleSample *LoadSample(const modAON_t &file, const uint32_t i,
 		char *Name, const uint32_t *const pcmLengths);
+#endif
 	static ModuleSample *LoadSample(const modIT_t &file, const uint32_t i);
 
 	virtual ~ModuleSample() noexcept = default;
@@ -232,7 +236,9 @@ public:
 	ModuleSampleNative(const modMOD_t &file, const uint32_t i);
 	ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t Type);
 	ModuleSampleNative(const modSTM_t &file, const uint32_t i);
+#ifdef ENABLE_AON
 	ModuleSampleNative(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths);
+#endif
 	ModuleSampleNative(const modIT_t &file, const uint32_t i);
 	~ModuleSampleNative() noexcept = default;
 
@@ -507,7 +513,9 @@ public:
 	pattern_t(const modMOD_t &file, const uint32_t channels);
 	pattern_t(const modS3M_t &file, const uint32_t channels);
 	pattern_t(const modSTM_t &file);
+#ifdef ENABLE_AON
 	pattern_t(const modAON_t &file, const uint32_t channels);
+#endif
 	pattern_t(const modIT_t &file, const uint32_t channels);
 
 	const fixedVector_t<commandPtr_t> &commands() const { return _commands; }
@@ -688,7 +696,9 @@ public:
 	ModuleFile(const modMOD_t &file);
 	ModuleFile(const modS3M_t &file);
 	ModuleFile(const modSTM_t &file);
+#ifdef ENABLE_AON
 	ModuleFile(const modAON_t &file);
+#endif
 #ifdef ENABLE_FC1x
 	ModuleFile(const modFC1x_t &file);
 #endif
