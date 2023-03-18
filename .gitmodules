@@ -49,3 +49,6 @@
 [submodule "deps/substrate"]
 	path = deps/substrate
 	url = https://github.com/bad-alloc-heavy-industries/substrate
+[submodule "deps/libopusenc"]
+	path = deps/libopusenc
+	url = https://gitlab.xiph.org/xiph/libopusenc.git

@@ -160,14 +160,10 @@ jobs:
       - name: Install libopusfile
         shell: msys2 {0}
         run: |
-          libtoolize -icf
-          aclocal -I m4
-          autoheader
-          automake -ac
-          autoconf
-          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps --disable-examples
-          make -j $CPU_COUNT
-          make install
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -DOP_DISABLE_EXAMPLES:BOOL=OFF -DOP_DISABLE_DOCS:BOOL=OFF -G Ninja
+          ninja
+          ninja install
         working-directory: ${{ github.workspace }}/deps/opus
       - name: Install libflac
         shell: bash
