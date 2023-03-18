@@ -14,12 +14,22 @@
 
 const std::map<fileIs_t, fileOpenR_t> loaders
 {
+#ifdef ENABLE_VORBIS
 	{isOggVorbis, oggVorbisOpenR},
+#endif
+#ifdef ENABLE_FLAC
 	{isFLAC, flacOpenR},
+#endif
 	{isWAV, wavOpenR},
+#ifdef ENABLE_M4A
 	{isM4A, m4aOpenR},
+#endif
+#ifdef ENABLE_AAC
 	{isAAC, aacOpenR},
+#endif
+#ifdef ENABLE_MP3
 	{isMP3, mp3OpenR},
+#endif
 	{isIT, itOpenR},
 	{isMOD, modOpenR},
 	{isS3M, s3mOpenR},
@@ -36,9 +46,15 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 #ifdef ENABLE_WMA
 	{isWMA, wmaOpenR},
 #endif
+#ifdef ENABLE_MUSEPACK
 	{isMPC, mpcOpenR},
+#endif
+#ifdef ENABLE_WAVPACK
 	{isWavPack, wavPackOpenR},
+#endif
+#ifdef ENABLE_OPUS
 	{isOggOpus, oggOpusOpenR}
+#endif
 #ifdef ENABLE_SNDH
 	,
 	{isSNDH, sndhOpenR}

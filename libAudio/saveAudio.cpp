@@ -14,11 +14,21 @@
 
 const std::map<uint32_t, fileOpenW_t> writers
 {
+#ifdef ENABLE_VORBIS
 	{AUDIO_OGG_VORBIS, oggVorbisOpenW},
+#endif
+#ifdef ENABLE_OPUS
 	{AUDIO_OGG_OPUS, oggOpusOpenW},
+#endif
+#ifdef ENABLE_FLAC
 	{AUDIO_FLAC, flacOpenW},
+#endif
+#ifdef ENABLE_M4A
 	{AUDIO_MP4, m4aOpenW},
+#endif
+#ifdef ENABLE_MP3
 	{AUDIO_MP3, mp3OpenW},
+#endif
 };
 
 /*!

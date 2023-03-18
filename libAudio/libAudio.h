@@ -12,6 +12,7 @@
 
 #include <stdint.h> // NOLINT(modernize-deprecated-headers,hicpp-deprecated-headers)
 #include "fileInfo.hxx"
+#include "libAudioConfig.h"
 
 #ifdef _WINDOWS
 	#ifdef libAUDIO
@@ -62,38 +63,50 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion_Rev 2
 
+#ifdef ENABLE_VORBIS
 // Ogg|Vorbis API
 libAUDIO_API bool isOggVorbis(const char *fileName);
 libAUDIO_API void *oggVorbisOpenR(const char *fileName);
 libAUDIO_API void *oggVorbisOpenW(const char *fileName);
+#endif
 
+#ifdef ENABLE_OPUS
 // Ogg|Opus API
 libAUDIO_API bool isOggOpus(const char *fileName);
 libAUDIO_API void *oggOpusOpenR(const char *fileName);
 libAUDIO_API void *oggOpusOpenW(const char *fileName);
+#endif
 
+#ifdef ENABLE_FLAC
 // FLAC API
 libAUDIO_API bool isFLAC(const char *fileName);
 libAUDIO_API void *flacOpenR(const char *fileName);
 libAUDIO_API void *flacOpenW(const char *fileName);
+#endif
 
 // WAV(E) API
 libAUDIO_API bool isWAV(const char *fileName);
 libAUDIO_API void *wavOpenR(const char *fileName);
 
+#ifdef ENABLE_M4A
 // M4A API
 libAUDIO_API bool isM4A(const char *fileName);
 libAUDIO_API void *m4aOpenR(const char *fileName);
 libAUDIO_API void *m4aOpenW(const char *fileName);
+#endif
 
+#ifdef ENABLE_AAC
 // AAC API
 libAUDIO_API bool isAAC(const char *fileName);
 libAUDIO_API void *aacOpenR(const char *fileName);
+#endif
 
+#ifdef ENABLE_MP3
 // MP3 API
 libAUDIO_API bool isMP3(const char *fileName);
 libAUDIO_API void *mp3OpenR(const char *fileName);
 libAUDIO_API void *mp3OpenW(const char *fileName);
+#endif
 
 // IT API
 libAUDIO_API bool isIT(const char *fileName);
@@ -123,17 +136,23 @@ libAUDIO_API bool isFC1x(const char *fileName);
 libAUDIO_API void *fc1xOpenR(const char *fileName);
 #endif
 
+#ifdef ENABLE_MUSEPACK
 // MPC API
 libAUDIO_API bool isMPC(const char *fileName);
 libAUDIO_API void *mpcOpenR(const char *fileName);
+#endif
 
+#ifdef ENABLE_WAVPACK
 // WavPack API
 libAUDIO_API bool isWavPack(const char *fileName);
 libAUDIO_API void *wavPackOpenR(const char *fileName);
+#endif
 
+#ifdef ENABLE_SNDH
 // SNDH API
 libAUDIO_API bool isSNDH(const char *fileName);
 libAUDIO_API void *sndhOpenR(const char *fileName);
+#endif
 
 #ifdef ENABLE_SID
 // SID API

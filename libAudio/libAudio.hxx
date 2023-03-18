@@ -108,6 +108,7 @@ public:
 	audioFile_t &operator =(const audioFile_t &) = delete;
 };
 
+#ifdef ENABLE_VORBIS
 struct oggVorbis_t final : public audioFile_t
 {
 private:
@@ -132,7 +133,9 @@ public:
 	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
+#endif // ENABLE_VORBIS
 
+#ifdef ENABLE_OPUS
 struct oggOpus_t final : public audioFile_t
 {
 private:
@@ -157,7 +160,9 @@ public:
 	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
+#endif // ENABLE_OPUS
 
+#ifdef ENABLE_FLAC
 struct flac_t final : public audioFile_t
 {
 private:
@@ -182,6 +187,7 @@ public:
 	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
+#endif // ENABLE_FLAC
 
 struct wav_t final : public audioFile_t
 {
@@ -204,6 +210,7 @@ public:
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
 
+#ifdef ENABLE_M4A
 struct m4a_t final : public audioFile_t
 {
 private:
@@ -248,7 +255,9 @@ public:
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
+#endif // ENABLE_AAC
 
+#ifdef ENABLE_MP3
 struct mp3_t final : public audioFile_t
 {
 private:
@@ -275,6 +284,7 @@ public:
 	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
+#endif // ENABLE_MP3
 
 struct moduleFile_t : public audioFile_t
 {
@@ -339,6 +349,7 @@ public:
 };
 #endif
 
+#ifdef ENABLE_FC1x
 struct modFC1x_t final : public moduleFile_t
 {
 public:
@@ -348,7 +359,9 @@ public:
 	static bool isFC1x(const char *const fileName) noexcept;
 	static bool isFC1x(const int32_t fd) noexcept;
 };
+#endif
 
+#ifdef ENABLE_MUSEPACK
 struct mpc_t final : public audioFile_t
 {
 private:
@@ -365,7 +378,9 @@ public:
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
+#endif // ENABLE_MUSEPACK
 
+#ifdef ENABLE_WAVPACK
 struct wavPack_t final : public audioFile_t
 {
 private:
@@ -382,7 +397,9 @@ public:
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
+#endif // ENABLE_WAVPACK
 
+#ifdef ENABLE_SNDH
 struct sndh_t final : public audioFile_t
 {
 private:
@@ -399,7 +416,9 @@ public:
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
+#endif
 
+#ifdef ENABLE_SID
 struct sid_t final : public audioFile_t
 {
 private:
@@ -416,7 +435,9 @@ public:
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
+#endif // ENABLE_SID
 
+#ifdef ENABLE_OptimFROG
 struct optimFROG_t final : public audioFile_t
 {
 private:
@@ -433,5 +454,6 @@ public:
 
 	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
 };
+#endif // ENABLE_OptimFROG
 
 #endif /*LIBAUDIO_HXX*/
