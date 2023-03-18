@@ -231,7 +231,7 @@ inline void rampStereo(const channel_t &channel, int32_t *const buffer,
 }
 
 template<typename T> inline void sampleLoop(channel_t &channel, int32_t *begin, const int32_t *const end,
-	const sampleFn_t<T> sample, const storeFn_t store) noexcept
+	sampleFn_t<T> sample, storeFn_t store) noexcept
 {
 	auto position{channel.PosLo};
 	const auto increment{channel.increment.iValue};
@@ -255,7 +255,7 @@ template<typename T> inline void sampleLoop(channel_t &channel, int32_t *begin, 
 }
 
 template<typename T> inline void sampleFilterLoop(channel_t &channel, int32_t *begin, const int32_t *const end,
-	const sampleFn_t<T> sample, const storeFn_t store) noexcept
+	sampleFn_t<T> sample, storeFn_t store) noexcept
 {
 	auto position{channel.PosLo};
 	const auto increment{channel.increment.iValue};
