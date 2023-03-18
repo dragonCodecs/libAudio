@@ -24,16 +24,16 @@
 	url = https://github.com/markjeee/libmad
 [submodule "deps/libmpc"]
 	path = deps/libmpc
-	url = git@github.com:DX-MON/libmpc
+	url = git@github.com:dragonmux/libmpc
 [submodule "deps/libreplaygain"]
 	path = deps/libreplaygain
-	url = git@github.com:DX-MON/libreplaygain
+	url = git@github.com:dragonmux/libreplaygain
 [submodule "deps/libcuefile"]
 	path = deps/libcuefile
-	url = git@github.com:DX-MON/libcuefile
+	url = git@github.com:dragonmux/libcuefile
 [submodule "deps/mp4v2"]
 	path = deps/mp4v2
-	url = git@github.com:DX-MON/mp4v2
+	url = git@github.com:dragonmux/mp4v2
 [submodule "deps/openal-soft"]
 	path = deps/openal-soft
 	url = git://repo.or.cz/openal-soft.git
