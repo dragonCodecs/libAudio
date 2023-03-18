@@ -2,14 +2,15 @@
 libAudio
 ========
 
-[![C++ CI](https://github.com/DX-MON/libAudio/workflows/C++%20CI/badge.svg)](https://github.com/DX-MON/libAudio/actions)
-[![codecov](https://codecov.io/gh/DX-MON/libAudio/branch/master/graph/badge.svg?token=Q4GadidCzX)](https://codecov.io/gh/DX-MON/libAudio)
+[![Linux CI](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml/badge.svg)](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml)
+[![Windows CI](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml/badge.svg)](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml)
+[![codecov](https://codecov.io/gh/dragonmux/libAudio/branch/main/graph/badge.svg?token=Q4GadidCzX)](https://codecov.io/gh/dragonmux/libAudio)
 
 ## Getting started
 
 After cloning the repository, you will need to run `git submodule init --update` to pull all dependencies for a build.
 
-libAudio is built using Meson + Ninja and is designed and tested for Meson 0.48+.
+libAudio is built using Meson + Ninja and is designed and tested for Meson 0.56+.
 For general use, this means running
 ```
 meson build
