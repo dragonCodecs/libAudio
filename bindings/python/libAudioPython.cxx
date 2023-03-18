@@ -130,7 +130,7 @@ void cppTypeDealloc(PyObject *self) noexcept
 	{ self->ob_type->tp_free(self); }
 
 const static PyCFunctionWithKeywords pyAudioFilePlay = pyAudioFile_t::play;
-const static PyCFunctionWithKeywords pyAudioFileMode = pyAudioFile_t::mode;
+// const static PyCFunctionWithKeywords pyAudioFileMode = pyAudioFile_t::mode;
 const static PyCFunctionWithKeywords pyAudioFilePlaybackVolume = pyAudioFile_t::playbackVolume;
 static auto pyAudioFileFuncs{substrate::make_array<PyMethodDef>(
 {
