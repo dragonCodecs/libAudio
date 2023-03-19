@@ -71,7 +71,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/substrate deps/ogg deps/vorbis deps/opus deps/opusfile deps/flac deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag
+          git submodule init deps/substrate deps/ogg deps/vorbis deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -165,18 +165,6 @@ jobs:
           ninja
           ninja install
         working-directory: ${{ github.workspace }}/deps/opus
-      - name: Install libflac
-        shell: bash
-        run: |
-          mkdir -p build
-          cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release \
-            -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
-          ninja
-          ninja install
-          mv $HOME/deps/{share/pkgconfig/flac*.pc,lib/pkgconfig}
-          rm -rf $HOME/deps/share
-        working-directory: ${{ github.workspace }}/deps/flac
       - name: Install WavPack
         shell: bash
         run: |
