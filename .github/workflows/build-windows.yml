@@ -71,7 +71,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/ogg deps/vorbis deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/libid3tag
+          git submodule init deps/ogg deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/libid3tag
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -124,30 +124,6 @@ jobs:
           meson --version
           ninja --version
         working-directory: ${{ runner.temp }}
-      - name: Install libogg
-        shell: msys2 {0}
-        run: |
-          libtoolize -icf
-          aclocal -I m4
-          autoheader
-          automake -ac
-          autoconf
-          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps
-          make -j $CPU_COUNT
-          make install
-        working-directory: ${{ github.workspace }}/deps/ogg
-      - name: Install libvorbis
-        shell: msys2 {0}
-        run: |
-          libtoolize -icf
-          aclocal -I .
-          autoheader
-          automake -ac
-          autoconf
-          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi" ./configure --prefix=$HOME/deps
-          make -j $CPU_COUNT
-          make install
-        working-directory: ${{ github.workspace }}/deps/vorbis
       - name: Install libopus
         shell: bash
         run: |
