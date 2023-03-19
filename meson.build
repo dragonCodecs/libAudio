@@ -23,7 +23,9 @@ substrate = subproject(
 	required: true,
 	version: '>=0.0.1',
 	default_options: [
-		'build_tests=false'
+		'build_tests=false',
+		'cpp_std=c++17',
+		'-mmacosx-version-min=10.14',
 	]
 ).get_variable(
 	'substrate_dep'

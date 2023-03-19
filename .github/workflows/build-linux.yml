@@ -102,11 +102,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           lfs: true
-      - name: Checkout public deps
-        shell: bash
-        run: |
-          git submodule init deps/substrate
-          git submodule update --depth 1
       - name: Compute libmp4v2 ref
         run: echo "MP4V2_REF=$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )" >> $GITHUB_ENV
       - name: Checkout libmp4v2
