@@ -71,7 +71,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/ogg deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/libid3tag
+          git submodule init deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/libid3tag
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash

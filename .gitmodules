@@ -4,9 +4,6 @@
 [submodule "deps/faad2"]
 	path = deps/faad2
 	url = https://github.com/knik0/faad2
-[submodule "deps/ogg"]
-	path = deps/ogg
-	url = https://github.com/xiph/ogg
 [submodule "deps/faac"]
 	path = deps/faac
 	url = https://github.com/knik0/faac
