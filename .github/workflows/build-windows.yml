@@ -213,10 +213,7 @@ jobs:
         working-directory: ${{ github.workspace }}/deps/mp4v2
       - name: Install libmad
         shell: bash
-        # We override the generator with vcpkg. It's cheaper.
         run: |
-          curl -O -L 
-          https://github.com/microsoft/vcpkg/raw/ffe7360e0f5ba62f98b620575294ecb9d8a02980/ports/libmad/CMakeLists.txt
           mkdir -p build
           cd build
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
@@ -224,18 +221,13 @@ jobs:
           ninja install
         working-directory: ${{ github.workspace }}/deps/libmad
       - name: Install libid3tag
-        shell: msys2 {0}
+        shell: bash
         run: |
-          touch NEWS AUTHORS ChangeLog
-          WANT_AUTOMAKE=latest libtoolize -icf
-          WANT_AUTOMAKE=latest aclocal -I . -I m4
-          autoheader
-          WANT_AUTOMAKE=latest automake -ac
-          autoconf
-          CC=cl LD=link AR=ar CFLAGS="-O2 -Ob2 -Oi -I${{ github.workspace }}/deps/libid3tag/msvc++" \
-            LDFLAGS="-no-undefined -MD" ./configure --prefix=$HOME/deps --disable-shared --enable-static
-          make -j $CPU_COUNT
-          make install
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
+          ninja
+          ninja install
         working-directory: ${{ github.workspace }}/deps/libid3tag
       - name: Configure
         shell: cmd

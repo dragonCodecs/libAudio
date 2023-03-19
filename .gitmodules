@@ -7,12 +7,6 @@
 [submodule "deps/faac"]
 	path = deps/faac
 	url = https://github.com/knik0/faac
-[submodule "deps/libid3tag"]
-	path = deps/libid3tag
-	url = https://github.com/markjeee/libid3tag
-[submodule "deps/libmad"]
-	path = deps/libmad
-	url = https://github.com/markjeee/libmad
 [submodule "deps/libmpc"]
 	path = deps/libmpc
 	url = git@github.com:dragonmux/libmpc
@@ -37,3 +31,9 @@
 [submodule "deps/libopusenc"]
 	path = deps/libopusenc
 	url = https://gitlab.xiph.org/xiph/libopusenc.git
+[submodule "deps/libmad"]
+	path = deps/libmad
+	url = https://codeberg.org/tenacityteam/libmad
+[submodule "deps/libid3tag"]
+	path = deps/libid3tag
+	url = https://codeberg.org/tenacityteam/libid3tag
