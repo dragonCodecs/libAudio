@@ -71,7 +71,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/ogg deps/vorbis deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag
+          git submodule init deps/ogg deps/vorbis deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/libid3tag
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -247,15 +247,6 @@ jobs:
           ninja
           ninja install
         working-directory: ${{ github.workspace }}/deps/libmad
-      - name: Install zlib
-        shell: msys2 {0}
-        run: |
-          nmake -f win32/Makefile.msc
-          cp zlib1.dll $HOME/deps/bin
-          cp zdll.lib $HOME/deps/lib
-          cp $HOME/deps/lib/z{dll,}.lib
-          cp zconf.h zlib.h $HOME/deps/include
-        working-directory: ${{ github.workspace }}/deps/zlib
       - name: Install libid3tag
         shell: msys2 {0}
         run: |
