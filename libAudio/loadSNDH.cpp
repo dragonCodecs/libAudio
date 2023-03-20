@@ -89,7 +89,7 @@ bool sndh_t::isSNDH(const int32_t fd) noexcept
 		// All packed SNDH files begin with "ICE!" and this is the test
 		// that the Linux/Unix Magic Numbers system does too, so
 		// it will always work. All unpacked SNDH files start with 'SDNH' at offset 12.
-		(/*icePackMagic == libAudio::sndh::icePackMagic ||*/ sndhMagic == libAudio::sndh::sndhMagic);
+		(icePackMagic == libAudio::sndh::icePackMagic || sndhMagic == libAudio::sndh::sndhMagic);
 }
 
 bool sndh_t::isSNDH(const char *const fileName) noexcept
