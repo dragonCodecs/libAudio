@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2020-2023 Rachel Mant <git@dragonmux.network>
 #ifndef INTERFACE__HXX
 #define INTERFACE__HXX
 

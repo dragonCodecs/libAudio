@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2020-2023 Rachel Mant <git@dragonmux.network>
 #include <memory>
 #include <substrate/utility>
 #include "interface.hxx"
