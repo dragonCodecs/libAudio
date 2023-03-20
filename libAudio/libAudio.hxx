@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2016-2023 Rachel Mant <git@dragonmux.network>
 #ifndef LIBAUDIO_HXX
 #define LIBAUDIO_HXX
 

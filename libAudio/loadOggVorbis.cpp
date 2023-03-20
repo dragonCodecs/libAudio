@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2009-2023 Rachel Mant <git@dragonmux.network>
 #include <string_view>
 
 #include "oggVorbis.hxx"

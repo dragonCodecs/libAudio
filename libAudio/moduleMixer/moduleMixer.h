@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2010-2023 Rachel Mant <git@dragonmux.network>
 #ifndef libAudio_moduleMixer__H
 #define libAudio_moduleMixer__H
 

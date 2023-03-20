@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2010-2023 Rachel Mant <git@dragonmux.network>
 // Standard mixing functions
 #ifndef LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H
 #define LIBAUDIO_MODULEMIXER_MIXFUNCTIONS_H 1

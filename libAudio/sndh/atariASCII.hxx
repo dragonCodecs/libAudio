@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2022-2023 Rachel Mant <git@dragonmux.network>
 #ifndef SNDH_ATARI_ASCII_HXX
 #define SNDH_ATARI_ASCII_HXX
 

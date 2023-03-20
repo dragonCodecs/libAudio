@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
+# SPDX-FileCopyrightText: 2017-2023 Rachel Mant <git@dragonmux.network>
 include $(call my-dir)/*/Android.mk
 #SRC_WMA = loadWMA.cpp
 SRC_WMA =

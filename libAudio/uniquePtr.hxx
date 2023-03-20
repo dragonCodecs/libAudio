@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2019-2023 Rachel Mant <git@dragonmux.network>
 #ifndef UNIQUE_PTR_HXX
 #define UNIQUE_PTR_HXX
 

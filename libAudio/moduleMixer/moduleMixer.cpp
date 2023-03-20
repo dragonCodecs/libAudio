@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2010-2023 Rachel Mant <git@dragonmux.network>
 #define _USE_MATH_DEFINES
 #include <cstdio>
 #include <cstdlib>

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2021-2023 Rachel Mant <git@dragonmux.network>
 #include <random>
 #include <limits>
 #include "oggOpus.hxx"

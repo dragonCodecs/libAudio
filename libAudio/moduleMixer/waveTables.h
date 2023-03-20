@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2012-2023 Rachel Mant <git@dragonmux.network>
 #ifndef __waveTables_H__
 #define __waveTables_H__
 

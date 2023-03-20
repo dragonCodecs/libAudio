@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2012-2023 Rachel Mant <git@dragonmux.network>
 #include "genericModule.h"
 
 void command_t::translateMODEffect(const uint8_t cmd, const uint8_t param) noexcept
