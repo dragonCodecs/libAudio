@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-FileCopyrightText: 2018-2023 Rachel Mant <git@dragonmux.network>
 playerSrcs = ['player.cxx']
 playerDefs = []
 if get_option('streaming')
