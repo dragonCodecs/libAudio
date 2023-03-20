@@ -35,3 +35,6 @@ WMA*/Debug
 WMA*/Release
 
 .vscode
+
+deps
+!deps/*.wrap
