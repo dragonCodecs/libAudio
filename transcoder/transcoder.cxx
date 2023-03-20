@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: 2019-2023 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
 #include <map>
 #include <string>
