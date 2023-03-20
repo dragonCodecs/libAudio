@@ -146,9 +146,10 @@ jobs:
       - name: Install MusePack
         if: github.repository == 'dragonmux/libAudio'
         run: |
-          meson setup build --prefix=$HOME/deps
-          meson compile -C build
-          meson install -C build
+          New-Item build -ItemType Directory
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
+          cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/libmpc
       - name: Install faac
         # We override the generator with vcpkg. It's cheaper.
