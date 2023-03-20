@@ -13,7 +13,7 @@ confData = configuration_data()
 extraFormats = get_option('extra_formats')
 
 requiresVorbis = extraFormats.contains('vorbis')
-libOGG = dependency('ogg', required: requiresVorbis, allow_fallback: true, disabler: true)
+libOgg = dependency('ogg', required: requiresVorbis, allow_fallback: true, disabler: true)
 libVorbis = dependency('vorbis', required: requiresVorbis, allow_fallback: true, disabler: true)
 libVorbisFile = dependency('vorbisfile', required: requiresVorbis, allow_fallback: true, disabler: true)
 libVorbisEnc = dependency('vorbisenc', required: requiresVorbis, allow_fallback: true, disabler: true)
@@ -55,20 +55,20 @@ extraSrcs = []
 extraDeps = []
 includes = include_directories('.')
 
-if libOGG.found() and libOpus.found() and libOpusFile.found() and libOpusEnc.found()
+if libOgg.found() and libOpus.found() and libOpusFile.found() and libOpusEnc.found()
 	extraSrcs += ['loadOggOpus.cxx', 'saveOggOpus.cxx',]
 	confData.set10('ENABLE_OPUS', true)
 	extraDeps += [libOpus, libOpusFile, libOpusEnc,]
 endif
 
-if libOGG.found() and libVorbis.found() and libVorbisFile.found() and libVorbisEnc.found()
+if libOgg.found() and libVorbis.found() and libVorbisFile.found() and libVorbisEnc.found()
 	message('Enabling support for Vorbis')
 	extraSrcs += ['loadOggVorbis.cpp', 'saveOggVorbis.cpp',]
 	confData.set10('ENABLE_VORBIS', true)
 	extraDeps += [libVorbis, libVorbisFile, libVorbisEnc,]
 endif
 
-if libOGG.found() and libFLAC.found()
+if libOgg.found() and libFLAC.found()
 	message('Enabling support for FLAC')
 	extraSrcs += ['loadFLAC.cpp', 'saveFLAC.cpp',]
 	confData.set10('ENABLE_FLAC', true)
@@ -78,7 +78,7 @@ endif
 if confData.has('ENABLE_VORBIS') or confData.has('ENABLE_OPUS') or confData.has('ENABLE_FLAC')
 	message('Enabling support for OGG container')
 	extraSrcs += ['oggCommon.cxx']
-	extraDeps += libOGG
+	extraDeps += libOgg
 endif
 
 if libMPC.found()
