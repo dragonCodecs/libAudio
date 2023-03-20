@@ -2,3 +2,6 @@
 url = https://github.com/bad-alloc-heavy-industries/substrate.git
 revision = head
 clone-recursive = false
+
+[provide]
+substrate = substrate_dep

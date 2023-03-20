@@ -18,20 +18,14 @@ project(
 
 cxx = meson.get_compiler('cpp')
 debug = get_option('debug')
-substrate = subproject(
+substrate = dependency(
 	'substrate',
 	required: true,
 	version: '>=0.0.1',
 	default_options: [
 		'build_tests=false',
 		'cpp_std=c++17',
-		'-mmacosx-version-min=10.14',
 	]
-).get_variable(
-	'substrate_dep'
-).partial_dependency(
-	compile_args: true,
-	includes: true
 )
 substrateDir = meson.current_source_dir() / 'deps/substrate'
 
@@ -45,13 +39,6 @@ if target_machine.system() == 'windows'
 	add_project_arguments(
 		'-D_WINDOWS',
 		'-wd5030',
-		language: 'cpp'
-	)
-endif
-
-if target_machine.system() == 'darwin'
-	add_project_arguments(
-		'-mmacosx-version-min=10.14',
 		language: 'cpp'
 	)
 endif
