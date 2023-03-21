@@ -32,7 +32,7 @@ jobs:
         env:
           WORKSPACE: ${{ github.workspace }}
         run: |
-          "$env:HOMEPATH/.local/bin" >> $env:GITHUB_PATH
+          Add-Content $env:GITHUB_PATH "$HOME/.local/bin"
           "GITHUB_WORKSPACE=$(pwd)" >> $env:GITHUB_ENV
       - name: Setup compiler
         uses: ilammy/msvc-dev-cmd@v1
@@ -54,7 +54,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag deps/openal-soft
+          git submodule init deps/pkgconf deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag deps/openal-soft
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -97,6 +97,15 @@ jobs:
           python3 -m pip install --upgrade pip setuptools wheel
           python3 -m pip install meson ninja
         working-directory: ${{ runner.temp }}
+      - name: Setup pkgconf
+        run: |
+          meson setup build --prefix=$HOME/.local -Dtests=disabled
+          meson compile -C build
+          meson install -C build
+          "PKG_CONFIG=$(where.exe pkgconf.exe)" >> $env:GITHUB_ENV
+          Remove-Item $(where.exe pkg-config.bat)
+          Remove-Item $(where.exe pkg-config)
+        working-directory:  ${{ github.workspace }}/deps/pkgconf
       - name: Version tools
         run: |
           cl /Bv
@@ -104,6 +113,7 @@ jobs:
           cmake --version
           meson --version
           ninja --version
+          & "$env:PKG_CONFIG" --version
       - name: Install libopus
         run: |
           New-Item build -ItemType Directory -Force
@@ -208,6 +218,8 @@ jobs:
         working-directory: ${{ github.workspace }}/deps/openal-soft
       - name: Configure
         run: meson setup build --prefix=$HOME/.local
+        env:
+          PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
       - name: Build
         run: meson compile -C build
       - name: Test
