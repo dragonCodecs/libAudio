@@ -90,7 +90,9 @@ endif
 subdir('test', if_found: crunchMake)
 if not meson.is_subproject()
 	subdir('harness')
-	subdir('bindings')
+	if get_option('bindings')
+		subdir('bindings')
+	endif
 	if get_option('spectrometer')
 		subdir('spectrometer')
 	endif

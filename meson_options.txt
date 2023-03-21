@@ -4,4 +4,5 @@ option('extra_formats', type: 'array', choices: [
 ], value: [])
 
 option('spectrometer', type: 'boolean', value: false)
+option('bindings', type: 'boolean', value: true)
 option('streaming', type: 'boolean', value: false)
