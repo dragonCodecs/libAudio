@@ -59,7 +59,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/pkgconf deps/opus deps/opusfile deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag deps/openal-soft
+          git submodule init deps/pkgconf deps/opus deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag deps/openal-soft
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -124,13 +124,6 @@ jobs:
           New-Item build -ItemType Directory -Force
           cd build
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
-          cmake --build . --target install --parallel
-        working-directory: ${{ github.workspace }}/deps/opus
-      - name: Install libopusfile
-        run: |
-          New-Item build -ItemType Directory -Force
-          cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -DOP_DISABLE_EXAMPLES:BOOL=OFF -DOP_DISABLE_DOCS:BOOL=OFF -G Ninja
           cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/opus
       - name: Install WavPack
