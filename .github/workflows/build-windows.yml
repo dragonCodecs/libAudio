@@ -32,8 +32,8 @@ jobs:
         env:
           WORKSPACE: ${{ github.workspace }}
         run: |
-          echo "$HOME\\.local\\bin" >> $GITHUB_PATH
-          echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
+          "$env:HOMEPATH/.local/bin" >> $env:GITHUB_PATH
+          "GITHUB_WORKSPACE=$(pwd)" >> $env:GITHUB_ENV
       - name: Setup compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
