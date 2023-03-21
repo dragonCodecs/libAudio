@@ -140,13 +140,6 @@ jobs:
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DWAVPACK_BUILD_WINAMP_PLUGIN:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON -DWAVPACK_BUILD_COOLEDIT_PLUGIN:BOOL=OFF -G Ninja
           cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/WavPack
-      - name: Install MusePack
-        if: github.repository == 'dragonmux/libAudio'
-        run: |
-          meson setup build --prefix=$HOME/deps
-          meson compile -C build
-          meson install -C build
-        working-directory: ${{ github.workspace }}/deps/libmpc
       - name: Install faac
         # We override the generator with vcpkg. It's cheaper.
         run: |
@@ -214,6 +207,8 @@ jobs:
         if: github.repository == 'dragonmux/libAudio'
         run: |
           Remove-Item -Recurse build
+          Remove-Item deps/libcuefile.wrap
+          Remove-Item deps/libreplaygain.wrap
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
