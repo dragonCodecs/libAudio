@@ -38,6 +38,3 @@ WMA*/Release
 
 deps
 !deps/*.wrap
-!deps/libmpc
-!deps/libcuefile
-!deps/libreplaygain
