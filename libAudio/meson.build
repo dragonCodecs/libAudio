@@ -53,7 +53,7 @@ endif
 
 extraSrcs = []
 extraDeps = []
-includes = include_directories('.')
+includes = [include_directories('.')]
 
 if libOgg.found() and libOpus.found() and libOpusFile.found() and libOpusEnc.found()
 	extraSrcs += ['loadOggOpus.cxx', 'saveOggOpus.cxx',]
