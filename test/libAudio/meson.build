@@ -32,12 +32,21 @@ foreach test : libAudioTests
 		build_by_default: true
 	)
 
-	test(
-		test,
-		crunchpp,
-		args: [test],
-		workdir: meson.current_build_dir()
-	)
+	if cxx.get_id() == 'msvc' and coverage
+		test(
+			test,
+			coverageRunner,
+			args: coverageArgs + ['cobertura:crunch-none-coverage.xml', '--', crunchpp, test],
+			workdir: meson.current_build_dir()
+		)
+	else
+		test(
+			test,
+			crunchpp,
+			args: [test],
+			workdir: meson.current_build_dir()
+		)
+	endif
 endforeach
 
 subdir('fixedPoint')

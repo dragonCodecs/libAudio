@@ -60,6 +60,28 @@ substrateDir = meson.current_source_dir() / 'deps/substrate'
 
 crunchMake = find_program('crunchMake', required: false)
 
+coverage = get_option('b_coverage')
+
+if target_machine.system() == 'windows'
+	# if MSVC, b_coverage will always return false because
+	# Meson doesn't officially support coverage
+	if cxx.get_id() == 'msvc' and get_option('buildtype') == 'debug'
+		coverageRunner = find_program('OpenCppCoverage', required: false)
+
+		if coverageRunner.found()
+			message('Enabling coverage under MSVC')
+			coverageArgs = [
+				'--sources', '@0@\\libAudio\\*'.format(meson.current_source_dir()),
+				'--sources', '@0@\\test\\*'.format(meson.current_source_dir()),
+				'--sources', '@0@\\*'.format(meson.current_build_dir()),
+				'--modules', meson.current_build_dir(),
+				'--export_type'
+			]
+			coverage = true
+		endif
+	endif
+endif
+
 subdir('libAudio')
 if not meson.is_subproject()
 	subdir('player')

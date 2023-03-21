@@ -2,7 +2,7 @@ crunchpp = find_program('crunch++')
 libcrunchpp = dependency('crunch++')
 
 commandExtra = ['-I' + substrateDir]
-if get_option('b_coverage')
+if coverage
 	commandExtra += ['--coverage']
 endif
 if get_option('debug')
