@@ -18,16 +18,6 @@ project(
 
 cxx = meson.get_compiler('cpp')
 debug = get_option('debug')
-substrate = dependency(
-	'substrate',
-	required: true,
-	version: '>=0.0.1',
-	default_options: [
-		'build_tests=false',
-		'cpp_std=c++17',
-	]
-)
-substrateDir = meson.current_source_dir() / 'deps/substrate'
 
 add_project_arguments(
 	cxx.get_supported_arguments(
@@ -44,11 +34,11 @@ if target_machine.system() == 'windows'
 endif
 
 if cxx.get_id() == 'msvc'
-	add_project_arguments(
+	add_global_arguments(
 		'-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1',
 		'-D_CRT_NONSTDC_NO_WARNINGS=1',
 		'-D_CRT_SECURE_NO_WARNINGS',
-		language: 'cpp'
+		language: ['c', 'cpp']
 	)
 elif (cxx.get_id() == 'gcc' or cxx.get_id() == 'clang') and not debug
 	add_project_arguments(
@@ -56,6 +46,17 @@ elif (cxx.get_id() == 'gcc' or cxx.get_id() == 'clang') and not debug
 		language: 'cpp'
 	)
 endif
+
+substrate = dependency(
+	'substrate',
+	required: true,
+	version: '>=0.0.1',
+	default_options: [
+		'build_tests=false',
+		'cpp_std=c++17',
+	]
+)
+substrateDir = meson.current_source_dir() / 'deps/substrate'
 
 crunchMake = find_program('crunchMake', required: false)
 

@@ -4,10 +4,7 @@
 #define OPEN_AL_HXX
 
 #include <cstdint>
-#ifdef _WINDOWS
-#include <al.h>
-#include <alc.h>
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 #include <OpenAL.h>
 #else
 #include <AL/al.h>
