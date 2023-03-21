@@ -34,6 +34,9 @@ jobs:
         run: |
           Add-Content $env:GITHUB_PATH "$HOME/.local/bin"
           "GITHUB_WORKSPACE=$(pwd)" >> $env:GITHUB_ENV
+          "PKG_CONFIG_PATH=$HOME/deps/lib/pkgconfig,$HOME/deps/share/pkgconfig" >> $env:GITHUB_ENV
+          "CMAKE_PREFIX_PATH=$HOME/deps" >> $env:GITHUB_ENV
+          "PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1" >> $env:GITHUB_ENV
       - name: Setup compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
@@ -218,8 +221,6 @@ jobs:
         working-directory: ${{ github.workspace }}/deps/openal-soft
       - name: Configure
         run: meson setup build --prefix=$HOME/.local
-        env:
-          PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
       - name: Build
         run: meson compile -C build
       - name: Test
