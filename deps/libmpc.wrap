@@ -1,0 +1,7 @@
+[wrap-git]
+url = git@github.com:dragonmux/libmpc
+revision = head
+clone-recursive = false
+
+[provide]
+mpcdec = libmpcdec_dep

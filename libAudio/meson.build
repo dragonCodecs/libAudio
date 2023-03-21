@@ -27,7 +27,10 @@ requiresFlac = extraFormats.contains('flac')
 libFLAC = dependency('flac', required: requiresFlac, allow_fallback: true, disabler: true)
 
 requiresMusepack = extraFormats.contains('musepack')
-libMPC = cxx.find_library('mpcdec', required: requiresMusepack, disabler: true)
+libMPC = cxx.find_library('mpcdec', required: false)
+if not libMPC.found()
+	libMPC = dependency('mpcdec', required: requiresMusepack, allow_fallback: true, disabler: true)
+endif
 
 requiresWavpack = extraFormats.contains('wavpack')
 libWavPack = dependency('wavpack', version: '>=5.0.0', required: requiresWavpack, allow_fallback: true, disabler: true)
