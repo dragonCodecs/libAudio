@@ -22,7 +22,7 @@ constexpr static std::array<int8_t, 64> rampDownTable
 	-68, -72, -76, -80, -84, -88, -92, -96, -100, -104, -108, -112, -116, -120, -124, -128
 }};
 
-constexpr static std::array<int8_t, 64> SquareTable
+constexpr static std::array<int8_t, 64> squareTable
 {{
 	127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
 	127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127,

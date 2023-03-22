@@ -15,7 +15,7 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 		if (type == 1)
 			result = (rampDownTable[tremoloPos] * depth) >> 8U;
 		else if (type == 2)
-			result = (SquareTable[tremoloPos] * depth) >> 8U;
+			result = (squareTable[tremoloPos] * depth) >> 8U;
 		else if (type == 3)
 			result = (RandomTable[tremoloPos] * depth) >> 8U;
 		else
@@ -197,7 +197,7 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 			if (type == 1)
 				return rampDownTable[position];
 			else if (type == 2)
-				return SquareTable[position];
+				return squareTable[position];
 			else if (type == 3)
 				return RandomTable[position];
 			else
@@ -303,7 +303,7 @@ void channel_t::applyPanbrello() noexcept
 			if (type == 1)
 				return rampDownTable[position];
 			else if (type == 2)
-				return SquareTable[position];
+				return squareTable[position];
 			else if (type == 3)
 				return RandomTable[position];
 			else
