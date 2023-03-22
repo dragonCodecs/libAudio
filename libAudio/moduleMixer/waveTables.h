@@ -14,7 +14,7 @@ constexpr static std::array<int8_t, 64> sinusTable
 	-127, -126, -125, -122, -117, -112, -106, -98, -90, -81, -71, -60, -49, -37, -25, -12
 }};
 
-constexpr static std::array<int8_t, 64> RampDownTable
+constexpr static std::array<int8_t, 64> rampDownTable
 {{
 	124, 120, 116, 112, 108, 104, 100, 96, 92, 88, 84, 80, 76, 72, 68, 64,
 	60, 56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4, 0,
