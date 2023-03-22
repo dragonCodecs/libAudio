@@ -1,0 +1,6 @@
+[wrap-file]
+directory = OptimFROG_Win_x64_5100
+source_url = https://github.com/dragonCodecs/optimfrog-sdk/releases/download/v5.100/OptimFROG_Win_x64_5100.tar.gz
+source_filename = OptimFROG_Win_x64_5100.tar.gz
+source_hash = 03caeb212a23a07cf08ce48ccaf6a1dfcc7d4df1c7191baf1a6ab36943c839d4
+patch_directory = optimfrog-win-x64

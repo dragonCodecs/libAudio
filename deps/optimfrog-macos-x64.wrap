@@ -1,0 +1,6 @@
+[wrap-file]
+directory = OptimFROG_OSX_x64_5100
+source_url = https://github.com/dragonCodecs/optimfrog-sdk/releases/download/v5.100/OptimFROG_OSX_x64_5100.tar.gz
+source_filename = OptimFROG_OSX_x64_5100.tar.gz
+source_hash = b1b285008e900c3ea67e14e63efd85bf659a691b24c1814a5a398aa48ba55842
+patch_directory = optimfrog-macos-x64

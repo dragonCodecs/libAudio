@@ -92,6 +92,18 @@ if not cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
 	error('Could not find the required function MP4CreateProvider() from libmp4v2')
 endif
 
+requiresOptimFROG = extraFormats.contains('optimfrog')
+optimFROGFallback = []
+if target_machine.system() == 'linux' and target_machine.cpu_family() == 'x86_64'
+	optimFROGFallback += ['optimfrog-linux-x64']
+elif target_machine.system() == 'darwin' and target_machine.cpu_family() == 'x86_64'
+	optimFROGFallback += ['optimfrog-macos-x64']
+elif target_machine.system() == 'windows' and target_machine.cpu_family() == 'x86_64' and cxx.get_argument_syntax() == 'msvc'
+	optimFROGFallback += ['optimfrog-win-x64']
+endif
+
+libOptimFROG = dependency('optimfrog', required: requiresOptimFROG, fallback: optimFROGFallback)
+
 extraSrcs = []
 extraDeps = []
 includes = [include_directories('.')]
@@ -158,11 +170,11 @@ if extraFormats.contains('wma')
 	extraSrcs += 'loadWMA.cpp'
 	confData.set10('ENABLE_WMA', true)
 endif
-if extraFormats.contains('optimFROG')
+if libOptimFROG.found()
 	message('Enabling support for OptimFROG')
 	extraSrcs += 'loadOptimFROG.cpp'
 	confData.set10('ENABLE_OptimFROG', true)
-	extraDeps += dependency('optimfrog')
+	extraDeps += [libOptimFROG]
 endif
 if extraFormats.contains('sndh')
 	message('Enabling support for SNDH')

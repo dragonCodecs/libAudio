@@ -1,0 +1,6 @@
+[wrap-file]
+directory = OptimFROG_Linux_x64_5100
+source_url = https://github.com/dragonCodecs/optimfrog-sdk/releases/download/v5.100/OptimFROG_Linux_x64_5100.tar.gz
+source_filename = OptimFROG_Linux_x64_5100.tar.gz
+source_hash = eedee2325efa6bc633c80c28334766ea51ef681e0efe6c4ff3cc319e60713347
+patch_directory = optimfrog-linux-x64
