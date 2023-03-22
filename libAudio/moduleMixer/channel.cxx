@@ -19,7 +19,7 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 		else if (type == 3)
 			result = (RandomTable[tremoloPos] * depth) >> 8U;
 		else
-			result = (SinusTable[tremoloPos] * depth) >> 8U;
+			result = (sinusTable[tremoloPos] * depth) >> 8U;
 	}
 	if (module.ticks() > startTick)
 		tremoloPos = uint32_t(tremoloPos + tremoloSpeed) & 0x3FU;
@@ -201,7 +201,7 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 			else if (type == 3)
 				return RandomTable[position];
 			else
-				return SinusTable[position];
+				return sinusTable[position];
 		}(vibratoType & 3U, vibratoPosition)};
 		const bool oldSfx = module.typeIs<MODULE_IT>() && module.useOldEffects();
 		const uint8_t depthShift = oldSfx ? 7 : 6;
@@ -307,7 +307,7 @@ void channel_t::applyPanbrello() noexcept
 			else if (type == 3)
 				return RandomTable[position];
 			else
-				return SinusTable[position];
+				return sinusTable[position];
 		}(panbrelloType & 0x03U, ((panbrelloPosition + 16U) >> 2U) & 0x3FU)};
 		panbrelloPosition += panbrelloSpeed;
 		panning += (delta * panbrelloDepth + 2U) >> 3U;

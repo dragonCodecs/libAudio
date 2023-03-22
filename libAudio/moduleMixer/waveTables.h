@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <array>
 
-constexpr static std::array<int8_t, 64> SinusTable
+constexpr static std::array<int8_t, 64> sinusTable
 {{
 	0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
 	127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
