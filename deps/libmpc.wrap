@@ -1,5 +1,5 @@
 [wrap-git]
-url = git@github.com:dragonmux/libmpc
+url = https://github.com/dragonmux/libmpc
 revision = head
 clone-recursive = false
 
