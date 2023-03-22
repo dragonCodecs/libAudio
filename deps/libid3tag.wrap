@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/libid3tag.git
+revision = head
+clone-recursive = false
+
+[provide]
+id3tag = id3tag_dep

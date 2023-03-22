@@ -59,7 +59,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/pkgconf deps/opus deps/WavPack deps/faac deps/faad2 deps/libmad deps/zlib deps/libid3tag deps/openal-soft
+          git submodule init deps/pkgconf deps/opus deps/WavPack deps/faac deps/faad2 deps/libmad deps/openal-soft
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -167,20 +167,6 @@ jobs:
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
           cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/libmad
-      - name: Install zlib
-        run: |
-          New-Item build -ItemType Directory -Force
-          cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
-          cmake --build . --target install --parallel
-        working-directory: ${{ github.workspace }}/deps/zlib
-      - name: Install libid3tag
-        run: |
-          New-Item build -ItemType Directory -Force
-          cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
-          cmake --build . --target install --parallel
-        working-directory: ${{ github.workspace }}/deps/libid3tag
       - name: Configure
         run: meson setup build --prefix=$HOME/.local
       - name: Build
