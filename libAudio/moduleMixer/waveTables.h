@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2012-2023 Rachel Mant <git@dragonmux.network>
-#ifndef __waveTables_H__
-#define __waveTables_H__
+#ifndef libAudio_waveTables_H
+#define libAudio_waveTables_H
 
 #include <cstdint>
 #include <array>
@@ -61,4 +61,4 @@ constexpr static std::array<int8_t, 256> FT2VibratoTable
 	26, 24, 23, 22, 20, 19, 17, 16, 14, 12, 11, 9, 8, 6, 5, 3, 2
 }};
 
-#endif /*__waveTables_H__*/
+#endif /*libAudio_waveTables_H*/
