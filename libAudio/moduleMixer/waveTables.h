@@ -33,7 +33,7 @@ constexpr static std::array<int8_t, 64> squareTable
 // Temp. table. Will rewrite this via using a randomisation
 // function to generate 64 signed char datapoints. Table will
 // have it's pointer stored inside the MixerState
-constexpr static std::array<int8_t, 64> RandomTable
+constexpr static std::array<int8_t, 64> randomTable
 {{
 	98, -127, -43, 88, 102, 41, -65, -94, 125, 20, -71, -86, -70, -32, -16, -96,
 	17, 72, 107, -5, 116, -69, -62, -40, 10, -61, 65, 109, -18, -38, -13, -76,

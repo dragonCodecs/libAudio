@@ -17,7 +17,7 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 		else if (type == 2)
 			result = (squareTable[tremoloPos] * depth) >> 8U;
 		else if (type == 3)
-			result = (RandomTable[tremoloPos] * depth) >> 8U;
+			result = (randomTable[tremoloPos] * depth) >> 8U;
 		else
 			result = (sinusTable[tremoloPos] * depth) >> 8U;
 	}
@@ -199,7 +199,7 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 			else if (type == 2)
 				return squareTable[position];
 			else if (type == 3)
-				return RandomTable[position];
+				return randomTable[position];
 			else
 				return sinusTable[position];
 		}(vibratoType & 3U, vibratoPosition)};
@@ -259,7 +259,7 @@ int16_t channel_t::applyAutoVibrato(const ModuleFile &module, const uint32_t per
 				return ((0x40U - (position >> 1U)) & 0x7FU) - 0x40;
 			else if (type == 4) // Random
 			{
-				auto result = RandomTable[position & 0x3FU];
+				auto result = randomTable[position & 0x3FU];
 				++position;
 				return result;
 			}
@@ -305,7 +305,7 @@ void channel_t::applyPanbrello() noexcept
 			else if (type == 2)
 				return squareTable[position];
 			else if (type == 3)
-				return RandomTable[position];
+				return randomTable[position];
 			else
 				return sinusTable[position];
 		}(panbrelloType & 0x03U, ((panbrelloPosition + 16U) >> 2U) & 0x3FU)};
