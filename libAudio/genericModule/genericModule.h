@@ -47,18 +47,18 @@ constexpr static inline uint32_t E_BAD_AON{4U};
 constexpr static inline uint32_t E_BAD_FC1x{5U};
 constexpr static inline uint32_t E_BAD_IT{6U};
 
-#define FILE_FLAGS_AMIGA_SLIDES		0x01U
-#define FILE_FLAGS_AMIGA_LIMITS		0x02U
-#define FILE_FLAGS_FAST_SLIDES		0x04U
-#define FILE_FLAGS_LINEAR_SLIDES	0x08U
-#define FILE_FLAGS_OLD_IT_EFFECTS	0x10U
+constexpr static inline uint16_t FILE_FLAGS_AMIGA_SLIDES{0x01U};
+constexpr static inline uint16_t FILE_FLAGS_AMIGA_LIMITS{0x02U};
+constexpr static inline uint16_t FILE_FLAGS_FAST_SLIDES{0x04U};
+constexpr static inline uint16_t FILE_FLAGS_LINEAR_SLIDES{0x08U};
+constexpr static inline uint16_t FILE_FLAGS_OLD_IT_EFFECTS{0x10U};
 
-#define SAMPLE_FLAGS_LOOP			0x01U
-#define SAMPLE_FLAGS_STEREO			0x02U
-#define SAMPLE_FLAGS_16BIT			0x04U
-#define SAMPLE_FLAGS_LPINGPONG		0x08U
-#define SAMPLE_FLAGS_LREVERSE		0x10U
-#define SAMPLE_FLAGS_SUSTAINLOOP	0x20U
+constexpr static inline uint8_t SAMPLE_FLAGS_LOOP{0x01U};
+constexpr static inline uint8_t SAMPLE_FLAGS_STEREO{0x02U};
+constexpr static inline uint8_t SAMPLE_FLAGS_16BIT{0x04U};
+constexpr static inline uint8_t SAMPLE_FLAGS_LPINGPONG{0x08U};
+constexpr static inline uint8_t SAMPLE_FLAGS_LREVERSE{0x10U};
+constexpr static inline uint8_t SAMPLE_FLAGS_SUSTAINLOOP{0x20U};
 
 enum class envelopeType_t : uint8_t
 {
