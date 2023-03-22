@@ -264,7 +264,7 @@ int16_t channel_t::applyAutoVibrato(const ModuleFile &module, const uint32_t per
 				return result;
 			}
 			else
-				return FT2VibratoTable[position];
+				return ft2VibratoTable[position];
 		}(sample.GetVibratoType(), autoVibratoPos)};
 		int16_t vibrato = (delta * autoVibratoDepth) >> 8U;
 		if (module.ModuleType == MODULE_IT)

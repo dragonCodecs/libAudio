@@ -41,7 +41,7 @@ constexpr static std::array<int8_t, 64> randomTable
 	42, -34, 89, -4, -51, -72, 21, -29, 112, 123, 84, -101, -92, 98, -54, -95
 }};
 
-constexpr static std::array<int8_t, 256> FT2VibratoTable
+constexpr static std::array<int8_t, 256> ft2VibratoTable
 {{
 	0, -2, -3, -5, -6, -8, -9, -11, -12, -14, -16, -17, -19, -20, -22, -23,
 	-24, -26, -27, -29, -30, -32, -33, -34, -36, -37, -38, -39, -41, -42,
