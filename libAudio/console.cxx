@@ -9,7 +9,7 @@
 #include <stringapiset.h>
 #include <fcntl.h>
 #include <io.h>
-#include <substrate/utils>
+#include <substrate/utility>
 
 using substrate::make_unique_nothrow;
 #endif
