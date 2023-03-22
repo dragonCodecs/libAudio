@@ -23,10 +23,13 @@
 #include "libAudio.h"
 
 #if __has_cpp_attribute(nodiscard) || __cplusplus >= 201402L
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #	define libAUDIO_NO_DISCARD(x) [[nodiscard]] x
 #elif defined(__GNUC__)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #	define libAUDIO_NO_DISCARD(x) x __attribute__((warn_unused_result))
 #else
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #	define libAUDIO_NO_DISCARD(x) x
 #endif
 
