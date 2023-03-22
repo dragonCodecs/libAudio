@@ -5,22 +5,22 @@
 
 #include "../fixedPoint/fixedPoint.h"
 
-#define CHN_LOOP			0x0001U
-#define CHN_TREMOLO			0x0002U
-#define CHN_ARPEGGIO		0x0004U
-#define CHN_VIBRATO			0x0008U
-#define CHN_VOLUMERAMP		0x0010U
-#define CHN_FASTVOLRAMP		0x0020U
-#define CHN_PORTAMENTO		0x0040U
-#define CHN_GLISSANDO		0x0080U
-#define CHN_TREMOR			0x0100U
-#define CHN_PANBRELLO		0x0200U
-#define CHN_NOTEOFF			0x0400U
-#define CHN_NOTEFADE		0x0800U
-#define CHN_LPINGPONG		0x1000U
-#define CHN_FPINGPONG		0x2000U
-#define CHN_SURROUND		0x4000U
-#define CHN_SUSTAINLOOP		0x8000U
+constexpr static inline uint16_t CHN_LOOP{0x0001U};
+constexpr static inline uint16_t CHN_TREMOLO{0x0002U};
+constexpr static inline uint16_t CHN_ARPEGGIO{0x0004U};
+constexpr static inline uint16_t CHN_VIBRATO{0x0008U};
+constexpr static inline uint16_t CHN_VOLUMERAMP{0x0010U};
+constexpr static inline uint16_t CHN_FASTVOLRAMP{0x0020U};
+constexpr static inline uint16_t CHN_PORTAMENTO{0x0040U};
+constexpr static inline uint16_t CHN_GLISSANDO{0x0080U};
+constexpr static inline uint16_t CHN_TREMOR{0x0100U};
+constexpr static inline uint16_t CHN_PANBRELLO{0x0200U};
+constexpr static inline uint16_t CHN_NOTEOFF{0x0400U};
+constexpr static inline uint16_t CHN_NOTEFADE{0x0800U};
+constexpr static inline uint16_t CHN_LPINGPONG{0x1000U};
+constexpr static inline uint16_t CHN_FPINGPONG{0x2000U};
+constexpr static inline uint16_t CHN_SURROUND{0x4000U};
+constexpr static inline uint16_t CHN_SUSTAINLOOP{0x8000U};
 
 template<typename T> inline void clipInt(T &num, const T min, const T max)
 {
