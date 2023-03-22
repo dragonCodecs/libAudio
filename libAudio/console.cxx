@@ -9,7 +9,9 @@
 #include <stringapiset.h>
 #include <fcntl.h>
 #include <io.h>
-#include "uniquePtr.hxx"
+#include <substrate/utils>
+
+using substrate::make_unique_nothrow;
 #endif
 #include "console.hxx"
 
@@ -45,7 +47,7 @@ void consoleStream_t::write(const char *const value) const noexcept
 		const size_t valueLen = charTraits::length(value);
 		const size_t stringLen = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS,
 			value, int(valueLen), nullptr, 0);
-		auto string = makeUnique<wchar_t []>(stringLen);
+		auto string = make_unique_nothrow<wchar_t []>(stringLen);
 		if (!string)
 			return;
 		MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED | MB_USEGLYPHCHARS, value, int(valueLen),
