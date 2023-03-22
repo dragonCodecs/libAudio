@@ -33,19 +33,19 @@ using stringPtr_t = std::unique_ptr<char []>;
 
 constexpr static inline size_t mixBufferSize{512U};
 
-#define MODULE_MOD		1U
-#define MODULE_S3M		2U
-#define MODULE_STM		3U
-#define MODULE_AON		4U
-#define MODULE_FC1x		5U
-#define MODULE_IT		6U
+constexpr static inline uint8_t MODULE_MOD{1U};
+constexpr static inline uint8_t MODULE_S3M{2U};
+constexpr static inline uint8_t MODULE_STM{3U};
+constexpr static inline uint8_t MODULE_AON{4U};
+constexpr static inline uint8_t MODULE_FC1x{5U};
+constexpr static inline uint8_t MODULE_IT{6U};
 
-#define E_BAD_MOD		1U
-#define E_BAD_S3M		2U
-#define E_BAD_STM		3U
-#define E_BAD_AON		4U
-#define E_BAD_FC1x		5U
-#define E_BAD_IT		6U
+constexpr static inline uint32_t E_BAD_MOD{1U};
+constexpr static inline uint32_t E_BAD_S3M{2U};
+constexpr static inline uint32_t E_BAD_STM{3U};
+constexpr static inline uint32_t E_BAD_AON{4U};
+constexpr static inline uint32_t E_BAD_FC1x{5U};
+constexpr static inline uint32_t E_BAD_IT{6U};
 
 #define FILE_FLAGS_AMIGA_SLIDES		0x01U
 #define FILE_FLAGS_AMIGA_LIMITS		0x02U
@@ -71,10 +71,10 @@ enum class envelopeType_t : uint8_t
 class ModuleLoaderError : std::exception
 {
 private:
-	const uint32_t Error;
+	const uint32_t _error;
 
 public:
-	ModuleLoaderError(const uint32_t Error);
+	ModuleLoaderError(uint32_t error);
 	const char *GetError() const noexcept { return error(); }
 	const char *error() const noexcept;
 	const char *what() const noexcept final { return error(); }

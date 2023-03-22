@@ -697,13 +697,11 @@ void ModuleFile::itLoadPCM(const fd_t &fd)
 	}
 }
 
-#undef ModuleLoaderError
-
-ModuleLoaderError::ModuleLoaderError(uint32_t error) : Error(error) { }
+ModuleLoaderError::ModuleLoaderError(const uint32_t error) : _error(error) { }
 
 const char *ModuleLoaderError::error() const noexcept
 {
-	switch (Error)
+	switch (_error)
 	{
 		case E_BAD_MOD:
 			return "Bad ProTracker Module";
