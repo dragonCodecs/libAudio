@@ -35,23 +35,23 @@ protected:
 
 	audioPlayer_t(playback_t &_player) noexcept : player{_player},
 		state{playState_t::stopped}, stateMutex{} { }
-	int64_t refillBuffer() const noexcept;
-	uint8_t *buffer() const noexcept;
-	uint32_t bufferLength() const noexcept;
-	uint8_t bitsPerSample() const noexcept;
-	uint32_t bitRate() const noexcept;
-	uint8_t channels() const noexcept;
-	std::chrono::nanoseconds sleepTime() const noexcept;
-	playbackMode_t mode() const noexcept;
-	bool isPlaying() const noexcept;
+	[[nodiscard]] int64_t refillBuffer() const noexcept;
+	[[nodiscard]] uint8_t *buffer() const noexcept;
+	[[nodiscard]] uint32_t bufferLength() const noexcept;
+	[[nodiscard]] uint8_t bitsPerSample() const noexcept;
+	[[nodiscard]] uint32_t bitRate() const noexcept;
+	[[nodiscard]] uint8_t channels() const noexcept;
+	[[nodiscard]] std::chrono::nanoseconds sleepTime() const noexcept;
+	[[nodiscard]] playbackMode_t mode() const noexcept;
+	[[nodiscard]] bool isPlaying() const noexcept;
 
 public:
 	virtual ~audioPlayer_t() = default;
 	virtual void play() = 0;
 	virtual void pause() = 0;
 	virtual void stop() = 0;
-	bool mode(const playbackMode_t _mode) noexcept;
-	virtual void volume(const float level) noexcept = 0;
+	bool mode(playbackMode_t _mode) noexcept;
+	virtual void volume(float level) noexcept = 0;
 
 	audioPlayer_t(const audioPlayer_t &) noexcept = delete;
 	audioPlayer_t(audioPlayer_t &&) noexcept = delete;
@@ -78,16 +78,16 @@ protected:
 	friend struct audioPlayer_t;
 
 public:
-	playback_t(void *const audioFile, const fileFillBuffer_t fillBuffer, uint8_t *const buffer,
-		const uint32_t bufferLength, const fileInfo_t &fileInfo);
+	playback_t(void *audioFile, fileFillBuffer_t fillBuffer, uint8_t *buffer,
+		uint32_t bufferLength, const fileInfo_t &fileInfo);
 	playback_t(playback_t &&) noexcept = default;
 	playback_t &operator =(playback_t &&) noexcept = default;
 	~playback_t() noexcept = default;
-	bool mode(const playbackMode_t mode) noexcept;
+	bool mode(playbackMode_t mode) noexcept;
 	void play();
 	void pause();
 	void stop();
-	void volume(const float level) noexcept;
+	void volume(float level) noexcept;
 
 	playback_t(const playback_t &) noexcept = delete;
 	playback_t &operator =(const playback_t &) noexcept = delete;
