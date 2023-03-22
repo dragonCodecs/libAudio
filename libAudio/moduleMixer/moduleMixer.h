@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2010-2023 Rachel Mant <git@dragonmux.network>
-#ifndef libAudio_moduleMixer__H
-#define libAudio_moduleMixer__H
+#ifndef libAudio_moduleMixer_H
+#define libAudio_moduleMixer_H
 
 #include "../fixedPoint/fixedPoint.h"
 
@@ -143,4 +143,4 @@ inline uint32_t fineLinearSlideDown(uint32_t period, uint8_t slide)
 	return ((period * ((fixed64_t(slide, 0, -1) / c4) / c192).pow2() * c65535) + c32768) / c65536;
 }
 
-#endif /*libAudio_moduleMixer__H*/
+#endif /*libAudio_moduleMixer_H*/
