@@ -16,9 +16,6 @@
 [submodule "deps/openal-soft"]
 	path = deps/openal-soft
 	url = git://repo.or.cz/openal-soft.git
-[submodule "deps/opusfile"]
-	path = deps/opusfile
-	url = https://github.com/xiph/opusfile.git
 [submodule "deps/opus"]
 	path = deps/opus
 	url = https://github.com/xiph/opus.git

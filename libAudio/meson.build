@@ -97,6 +97,7 @@ extraDeps = []
 includes = [include_directories('.')]
 
 if libOgg.found() and libOpus.found() and libOpusFile.found() and libOpusEnc.found()
+	message('Enabling support for Opus')
 	extraSrcs += ['loadOggOpus.cxx', 'saveOggOpus.cxx',]
 	confData.set10('ENABLE_OPUS', true)
 	extraDeps += [libOpus, libOpusFile, libOpusEnc,]

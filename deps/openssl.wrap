@@ -1,0 +1,15 @@
+[wrap-file]
+directory = openssl-1.1.1t
+node_version = v16.19.1
+source_url = https://www.openssl.org/source/openssl-1.1.1t.tar.gz
+source_filename = openssl-1.1.1t.tar.gz
+source_hash = 8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b
+patch_filename = openssl_1.1.1t-3_patch.zip
+patch_url = https://github.com/amyspark/wrapdb/releases/download/openssl_1.1.1t-3/openssl_1.1.1t-3_patch.zip
+patch_hash = ffb0f8c637d8c6a4b7b6d5f7fb1ad634852727d78deb736e949f8e26726a9602
+
+[provide]
+libcrypto = libcrypto_dep
+libssl = libssl_dep
+openssl = openssl_dep
+

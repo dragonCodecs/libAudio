@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/opusfile.git
+revision = head
+clone-recursive = false
+
+[provide]
+opusfile = opusfile_dep
+opusurl = opusurl_dep
