@@ -4,16 +4,18 @@
 #include <string.h>
 
 #include <substrate/fd>
-#include "uniquePtr.hxx"
+#include <substrate/utility>
 #include "oggCommon.hxx"
 
 using substrate::fd_t;
+using substrate::make_unique;
+
 constexpr static std::array<char, 4> oggMagic{{'O', 'g', 'g', 'S'}};
 
 inline bool clonePacketData(ogg_packet &packet) noexcept try
 {
 	unsigned char *data = packet.packet;
-	packet.packet = makeUniqueT<unsigned char []>(packet.bytes).release();
+	packet.packet = make_unique<unsigned char []>(packet.bytes).release();
 	memcpy(packet.packet, data, packet.bytes);
 	return packet.packet;
 }
