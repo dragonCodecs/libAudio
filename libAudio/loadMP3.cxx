@@ -4,7 +4,6 @@
 
 #include "mp3.hxx"
 #include "string.hxx"
-#include "uniquePtr.hxx"
 
 /*!
  * @internal
@@ -57,6 +56,8 @@ mp3_t::decoderContext_t::decoderContext_t() noexcept : stream{}, frame{}, synth{
 constexpr uint32_t mp3Xing = ('X' << 24) | ('i' << 16) | ('n' << 8) | 'g';
 constexpr uint32_t mp3Info = ('I' << 24) | ('n' << 16) | ('f' << 8) | 'o';
 constexpr uint32_t mp3XingFrames = 0x00000001;
+
+struct freeDelete final { void operator ()(void *ptr) noexcept { free(ptr); } };
 
 uint32_t mp3_t::decoderContext_t::parseXingHeader() noexcept
 {
