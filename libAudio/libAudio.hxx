@@ -61,7 +61,7 @@ using fileOpenR_t = void *(*)(const char *);
 using fileOpenW_t = void *(*)(const char *);
 
 const fileInfo_t *audioFileInfo(void *audioFile);
-bool audioFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
+bool audioFileInfo(void *audioFile, const fileInfo_t *fileInfo);
 libAUDIO_CXX_API std::vector<std::string> audioOutputDevices();
 libAUDIO_CXX_API bool audioDefaultDevice(const std::string &device) noexcept;
 libAUDIO_CXX_API const std::string &audioDefaultDevice() noexcept;
@@ -72,10 +72,12 @@ struct audioModeWrite_t { };
 struct libAUDIO_CLSMAYBE_API audioFile_t
 {
 protected:
+// NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
 	audioType_t _type{};
 	fileInfo_t _fileInfo{};
 	fd_t _fd{};
 	std::unique_ptr<playback_t> _player{};
+// NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type{type}, _fd{std::move(fd)} { }
 
@@ -83,10 +85,10 @@ public:
 	audioFile_t(audioFile_t &&) = default;
 	virtual ~audioFile_t() noexcept = default;
 	audioFile_t &operator =(audioFile_t &&) = default;
-	static audioFile_t *openR(const char *const fileName) noexcept;
-	static audioFile_t *openW(const char *const fileName) noexcept;
-	static bool isAudio(const char *const fileName) noexcept;
-	static bool isAudio(const int32_t fd) noexcept;
+	static audioFile_t *openR(const char *fileName) noexcept;
+	static audioFile_t *openW(const char *fileName) noexcept;
+	static bool isAudio(const char *fileName) noexcept;
+	static bool isAudio(int32_t fd) noexcept;
 	const fileInfo_t &fileInfo() const noexcept { return _fileInfo; }
 	fileInfo_t &fileInfo() noexcept { return _fileInfo; }
 	audioType_t type() const noexcept { return _type; }
@@ -94,11 +96,11 @@ public:
 	void fd(fd_t &&fd) noexcept { _fd.swap(fd); }
 	void player(std::unique_ptr<playback_t> &&player) noexcept { _player = std::move(player); }
 
-	libAUDIO_CLS_API virtual int64_t fillBuffer(void *const buffer, const uint32_t length) = 0;
-	libAUDIO_CLS_API virtual int64_t writeBuffer(const void *const buffer, const int64_t length);
+	libAUDIO_CLS_API virtual int64_t fillBuffer(void *buffer, uint32_t length) = 0;
+	libAUDIO_CLS_API virtual int64_t writeBuffer(const void *buffer, int64_t length);
 	libAUDIO_CLS_API virtual bool fileInfo(const fileInfo_t &fileInfo);
-	libAUDIO_CLS_API bool playbackMode(const playbackMode_t mode) noexcept;
-	libAUDIO_CLS_API void playbackVolume(const float level) noexcept;
+	libAUDIO_CLS_API bool playbackMode(playbackMode_t mode) noexcept;
+	libAUDIO_CLS_API void playbackVolume(float level) noexcept;
 	libAUDIO_CLS_API void play();
 	libAUDIO_CLS_API void pause();
 	libAUDIO_CLS_API void stop();
@@ -119,17 +121,17 @@ private:
 public:
 	oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept;
 	oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept;
-	static oggVorbis_t *openR(const char *const fileName) noexcept;
-	static oggVorbis_t *openW(const char *const fileName) noexcept;
-	static bool isOggVorbis(const char *const fileName) noexcept;
-	static bool isOggVorbis(const int32_t fd) noexcept;
+	static oggVorbis_t *openR(const char *fileName) noexcept;
+	static oggVorbis_t *openW(const char *fileName) noexcept;
+	static bool isOggVorbis(const char *fileName) noexcept;
+	static bool isOggVorbis(int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
+	int64_t writeBuffer(const void *buffer, int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 #endif // ENABLE_VORBIS
@@ -146,17 +148,17 @@ private:
 public:
 	oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept;
 	oggOpus_t(fd_t &&fd, audioModeWrite_t) noexcept;
-	static oggOpus_t *openR(const char *const fileName) noexcept;
-	static oggOpus_t *openW(const char *const fileName) noexcept;
-	static bool isOggOpus(const char *const fileName) noexcept;
-	static bool isOggOpus(const int32_t fd) noexcept;
+	static oggOpus_t *openR(const char *fileName) noexcept;
+	static oggOpus_t *openW(const char *fileName) noexcept;
+	static bool isOggOpus(const char *fileName) noexcept;
+	static bool isOggOpus(int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
+	int64_t writeBuffer(const void *buffer, int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 #endif // ENABLE_OPUS
@@ -173,17 +175,17 @@ private:
 public:
 	flac_t(fd_t &&fd, audioModeRead_t) noexcept;
 	flac_t(fd_t &&fd, audioModeWrite_t) noexcept;
-	static flac_t *openR(const char *const fileName) noexcept;
-	static flac_t *openW(const char *const fileName) noexcept;
-	static bool isFLAC(const char *const fileName) noexcept;
-	static bool isFLAC(const int32_t fd) noexcept;
+	static flac_t *openR(const char *fileName) noexcept;
+	static flac_t *openW(const char *fileName) noexcept;
+	static bool isFLAC(const char *fileName) noexcept;
+	static bool isFLAC(int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
+	int64_t writeBuffer(const void *buffer, int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 #endif // ENABLE_FLAC
@@ -200,13 +202,13 @@ private:
 public:
 	wav_t() noexcept;
 	wav_t(fd_t &&fd) noexcept;
-	static wav_t *openR(const char *const fileName) noexcept;
-	static bool isWAV(const char *const fileName) noexcept;
-	static bool isWAV(const int32_t fd) noexcept;
+	static wav_t *openR(const char *fileName) noexcept;
+	static bool isWAV(const char *fileName) noexcept;
+	static bool isWAV(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 
 #ifdef ENABLE_M4A
@@ -221,17 +223,17 @@ private:
 public:
 	m4a_t(fd_t &&fd, audioModeRead_t) noexcept;
 	m4a_t(fd_t &&fd, audioModeWrite_t) noexcept;
-	static m4a_t *openR(const char *const fileName) noexcept;
-	static m4a_t *openW(const char *const fileName) noexcept;
-	static bool isM4A(const char *const fileName) noexcept;
-	static bool isM4A(const int32_t fd) noexcept;
+	static m4a_t *openR(const char *fileName) noexcept;
+	static m4a_t *openW(const char *fileName) noexcept;
+	static bool isM4A(const char *fileName) noexcept;
+	static bool isM4A(int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
+	int64_t writeBuffer(const void *buffer, int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 	void fetchTags() noexcept;
 };
@@ -246,13 +248,13 @@ private:
 
 public:
 	aac_t(fd_t &&fd) noexcept;
-	static aac_t *openR(const char *const fileName) noexcept;
-	static bool isAAC(const char *const fileName) noexcept;
-	static bool isAAC(const int32_t fd) noexcept;
+	static aac_t *openR(const char *fileName) noexcept;
+	static bool isAAC(const char *fileName) noexcept;
+	static bool isAAC(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif // ENABLE_AAC
 
@@ -270,17 +272,17 @@ private:
 public:
 	mp3_t(fd_t &&fd, audioModeRead_t) noexcept;
 	mp3_t(fd_t &&fd, audioModeWrite_t) noexcept;
-	static mp3_t *openR(const char *const fileName) noexcept;
-	static mp3_t *openW(const char *const fileName) noexcept;
-	static bool isMP3(const char *const fileName) noexcept;
-	static bool isMP3(const int32_t fd) noexcept;
+	static mp3_t *openR(const char *fileName) noexcept;
+	static mp3_t *openW(const char *fileName) noexcept;
+	static bool isMP3(const char * fileName) noexcept;
+	static bool isMP3(int32_t fd) noexcept;
 	decoderContext_t *decoderContext() const noexcept { return decoderCtx.get(); }
 	encoderContext_t *encoderContext() const noexcept { return encoderCtx.get(); }
 	bool valid() const noexcept { return (bool(decoderCtx) || bool(encoderCtx)) && _fd.valid(); }
 
 	using audioFile_t::fileInfo;
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
-	int64_t writeBuffer(const void *const buffer, const int64_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
+	int64_t writeBuffer(const void *buffer, int64_t length) final;
 	bool fileInfo(const fileInfo_t &fileInfo) final;
 };
 #endif // ENABLE_MP3
@@ -297,43 +299,43 @@ public:
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 
 struct modMOD_t final : public moduleFile_t
 {
 public:
 	modMOD_t(fd_t &&fd) noexcept;
-	static modMOD_t *openR(const char *const fileName) noexcept;
-	static bool isMOD(const char *const fileName) noexcept;
-	static bool isMOD(const int32_t fd) noexcept;
+	static modMOD_t *openR(const char *fileName) noexcept;
+	static bool isMOD(const char *fileName) noexcept;
+	static bool isMOD(int32_t fd) noexcept;
 };
 
 struct modS3M_t final : public moduleFile_t
 {
 public:
 	modS3M_t(fd_t &&fd) noexcept;
-	static modS3M_t *openR(const char *const fileName) noexcept;
-	static bool isS3M(const char *const fileName) noexcept;
-	static bool isS3M(const int32_t fd) noexcept;
+	static modS3M_t *openR(const char *fileName) noexcept;
+	static bool isS3M(const char *fileName) noexcept;
+	static bool isS3M(int32_t fd) noexcept;
 };
 
 struct modSTM_t final : public moduleFile_t
 {
 public:
 	modSTM_t(fd_t &&fd) noexcept;
-	static modSTM_t *openR(const char *const fileName) noexcept;
-	static bool isSTM(const char *const fileName) noexcept;
-	static bool isSTM(const int32_t fd) noexcept;
+	static modSTM_t *openR(const char *fileName) noexcept;
+	static bool isSTM(const char *fileName) noexcept;
+	static bool isSTM(int32_t fd) noexcept;
 };
 
 struct modIT_t final : public moduleFile_t
 {
 public:
 	modIT_t(fd_t &&fd) noexcept;
-	static modIT_t *openR(const char *const fileName) noexcept;
-	static bool isIT(const char *const fileName) noexcept;
-	static bool isIT(const int32_t fd) noexcept;
+	static modIT_t *openR(const char *fileName) noexcept;
+	static bool isIT(const char *fileName) noexcept;
+	static bool isIT(int32_t fd) noexcept;
 };
 
 #ifdef ENABLE_AON
@@ -342,9 +344,9 @@ struct modAON_t final : public moduleFile_t
 public:
 	modAON_t() noexcept;
 	modAON_t(fd_t &&fd) noexcept;
-	static modAON_t *openR(const char *const fileName) noexcept;
-	static bool isAON(const char *const fileName) noexcept;
-	static bool isAON(const int32_t fd) noexcept;
+	static modAON_t *openR(const char *fileName) noexcept;
+	static bool isAON(const char *fileName) noexcept;
+	static bool isAON(int32_t fd) noexcept;
 };
 #endif
 
@@ -354,9 +356,9 @@ struct modFC1x_t final : public moduleFile_t
 public:
 	modFC1x_t() noexcept;
 	modFC1x_t(fd_t &&fd) noexcept;
-	static modFC1x_t *openR(const char *const fileName) noexcept;
-	static bool isFC1x(const char *const fileName) noexcept;
-	static bool isFC1x(const int32_t fd) noexcept;
+	static modFC1x_t *openR(const char *fileName) noexcept;
+	static bool isFC1x(const char *fileName) noexcept;
+	static bool isFC1x(int32_t fd) noexcept;
 };
 #endif
 
@@ -369,13 +371,13 @@ private:
 
 public:
 	mpc_t(fd_t &&fd) noexcept;
-	static mpc_t *openR(const char *const fileName) noexcept;
-	static bool isMPC(const char *const fileName) noexcept;
-	static bool isMPC(const int32_t fd) noexcept;
+	static mpc_t *openR(const char *fileName) noexcept;
+	static bool isMPC(const char *fileName) noexcept;
+	static bool isMPC(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif // ENABLE_MUSEPACK
 
@@ -388,13 +390,13 @@ private:
 
 public:
 	wavPack_t(fd_t &&fd, const char *const fileName) noexcept;
-	static wavPack_t *openR(const char *const fileName) noexcept;
-	static bool isWavPack(const char *const fileName) noexcept;
-	static bool isWavPack(const int32_t fd) noexcept;
+	static wavPack_t *openR(const char *fileName) noexcept;
+	static bool isWavPack(const char *fileName) noexcept;
+	static bool isWavPack(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif // ENABLE_WAVPACK
 
@@ -407,13 +409,13 @@ private:
 
 public:
 	sndh_t(fd_t &&fd) noexcept;
-	static sndh_t *openR(const char *const fileName) noexcept;
-	static bool isSNDH(const char *const fileName) noexcept;
-	static bool isSNDH(const int32_t fd) noexcept;
+	static sndh_t *openR(const char *fileName) noexcept;
+	static bool isSNDH(const char *fileName) noexcept;
+	static bool isSNDH(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif
 
@@ -426,13 +428,13 @@ private:
 
 public:
 	sid_t(fd_t &&fd) noexcept;
-	static sid_t *openR(const char *const fileName) noexcept;
-	static bool isSID(const char *const fileName) noexcept;
-	static bool isSID(const int32_t fd) noexcept;
+	static sid_t *openR(const char *fileName) noexcept;
+	static bool isSID(const char *fileName) noexcept;
+	static bool isSID(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif // ENABLE_SID
 
@@ -445,13 +447,13 @@ private:
 
 public:
 	optimFROG_t(fd_t &&fd) noexcept;
-	static optimFROG_t *openR(const char *const fileName) noexcept;
-	static bool isOptimFROG(const char *const fileName) noexcept;
-	static bool isOptimFROG(const int32_t fd) noexcept;
+	static optimFROG_t *openR(const char *fileName) noexcept;
+	static bool isOptimFROG(const char *fileName) noexcept;
+	static bool isOptimFROG(int32_t fd) noexcept;
 	decoderContext_t *context() const noexcept { return ctx.get(); }
 	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
 
-	int64_t fillBuffer(void *const buffer, const uint32_t length) final;
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif // ENABLE_OptimFROG
 
