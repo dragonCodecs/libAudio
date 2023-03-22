@@ -1,11 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2009-2023 Rachel Mant <git@dragonmux.network>
-#if 0
-#ifdef strncasecmp
-#undef strncasecmp
-#endif
-#endif
-
 #include "m4a.hxx"
 
 /*!
