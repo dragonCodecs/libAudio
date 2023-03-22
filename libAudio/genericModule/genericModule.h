@@ -31,7 +31,7 @@ using stringPtr_t = std::unique_ptr<char []>;
 
 #include "effects.h"
 
-#define MIXBUFFERSIZE		512
+constexpr static inline size_t mixBufferSize{512U};
 
 #define MODULE_MOD		1U
 #define MODULE_S3M		2U
@@ -651,7 +651,7 @@ private:
 	uint16_t globalVolume;
 	uint8_t globalVolumeSlide;
 	uint8_t PatternDelay, FrameDelay;
-	int32_t MixBuffer[MIXBUFFERSIZE * 2];
+	int32_t MixBuffer[mixBufferSize * 2];
 	int DCOffsR, DCOffsL;
 
 	constexpr ModuleFile(uint8_t moduleType) noexcept;

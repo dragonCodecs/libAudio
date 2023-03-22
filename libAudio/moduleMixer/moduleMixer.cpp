@@ -1601,8 +1601,8 @@ int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 				Max = Mixed;
 		}
 		Count = SamplesToMix;
-		if (Count > MIXBUFFERSIZE)
-			Count = MIXBUFFERSIZE;
+		if (Count > mixBufferSize)
+			Count = mixBufferSize;
 		if (Count > (Max - Mixed))
 			Count = (Max - Mixed);
 		if (Count == 0)
