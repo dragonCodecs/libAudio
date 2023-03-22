@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <mutex>
 #include <chrono>
+#include <substrate/utility>
 #include "fileInfo.hxx"
-#include "uniquePtr.hxx"
 
 enum class playState_t : uint8_t
 {
