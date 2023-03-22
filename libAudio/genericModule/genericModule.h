@@ -71,13 +71,12 @@ enum class envelopeType_t : uint8_t
 class ModuleLoaderError : std::exception
 {
 private:
-	const uint32_t _error;
+	uint32_t _error;
 
 public:
 	ModuleLoaderError(uint32_t error);
-	const char *GetError() const noexcept { return error(); }
-	const char *error() const noexcept;
-	const char *what() const noexcept final { return error(); }
+	[[nodiscard]] const char *error() const noexcept;
+	[[nodiscard]] const char *what() const noexcept final { return error(); }
 };
 
 class ModuleHeader final
@@ -167,43 +166,42 @@ private:
 	uint32_t _id;
 
 protected:
-	constexpr ModuleSample(const uint32_t id, const uint8_t type) noexcept :
-		_type{type}, _id{id} { }
+	constexpr ModuleSample(const uint32_t id, const uint8_t type) noexcept : _type{type}, _id{id} { }
 	void resetID(const uint32_t id) noexcept { _id = id; }
 
 public:
-	static ModuleSample *LoadSample(const modMOD_t &file, const uint32_t i);
-	static ModuleSample *LoadSample(const modS3M_t &file, const uint32_t i);
-	static ModuleSample *LoadSample(const modSTM_t &file, const uint32_t i);
+	static ModuleSample *LoadSample(const modMOD_t &file, uint32_t i);
+	static ModuleSample *LoadSample(const modS3M_t &file, uint32_t i);
+	static ModuleSample *LoadSample(const modSTM_t &file, uint32_t i);
 #ifdef ENABLE_AON
-	static ModuleSample *LoadSample(const modAON_t &file, const uint32_t i,
+	static ModuleSample *LoadSample(const modAON_t &file, uint32_t i,
 		char *Name, const uint32_t *const pcmLengths);
 #endif
-	static ModuleSample *LoadSample(const modIT_t &file, const uint32_t i);
+	static ModuleSample *LoadSample(const modIT_t &file, uint32_t i);
 
 	virtual ~ModuleSample() noexcept = default;
-	uint8_t GetType() const noexcept { return _type; }
-	uint32_t id() const noexcept { return _id; }
-	virtual uint32_t GetLength() = 0;
-	virtual uint32_t GetLoopStart() = 0;
-	virtual uint32_t GetLoopEnd() = 0;
-	virtual uint32_t GetSustainLoopBegin() = 0;
-	virtual uint32_t GetSustainLoopEnd() = 0;
-	virtual uint8_t GetFineTune() = 0;
-	virtual uint32_t GetC4Speed() = 0;
-	virtual uint8_t GetVolume() = 0;
-	virtual uint8_t GetSampleVolume() = 0;
-	virtual uint8_t GetVibratoSpeed() = 0;
-	virtual uint8_t GetVibratoDepth() = 0;
-	virtual uint8_t GetVibratoType() = 0;
-	virtual uint8_t GetVibratoRate() = 0;
-	virtual uint16_t GetPanning() = 0;
-	virtual bool Get16Bit() = 0;
-	virtual bool GetStereo() = 0;
-	virtual bool GetLooped() = 0;
-	virtual bool GetSustainLooped() = 0;
-	virtual bool GetBidiLoop() = 0;
-	virtual bool GetPanned() = 0;
+	[[nodiscard]] uint8_t GetType() const noexcept { return _type; }
+	[[nodiscard]] uint32_t id() const noexcept { return _id; }
+	[[nodiscard]] virtual uint32_t GetLength() = 0;
+	[[nodiscard]] virtual uint32_t GetLoopStart() = 0;
+	[[nodiscard]] virtual uint32_t GetLoopEnd() = 0;
+	[[nodiscard]] virtual uint32_t GetSustainLoopBegin() = 0;
+	[[nodiscard]] virtual uint32_t GetSustainLoopEnd() = 0;
+	[[nodiscard]] virtual uint8_t GetFineTune() = 0;
+	[[nodiscard]] virtual uint32_t GetC4Speed() = 0;
+	[[nodiscard]] virtual uint8_t GetVolume() = 0;
+	[[nodiscard]] virtual uint8_t GetSampleVolume() = 0;
+	[[nodiscard]] virtual uint8_t GetVibratoSpeed() = 0;
+	[[nodiscard]] virtual uint8_t GetVibratoDepth() = 0;
+	[[nodiscard]] virtual uint8_t GetVibratoType() = 0;
+	[[nodiscard]] virtual uint8_t GetVibratoRate() = 0;
+	[[nodiscard]] virtual uint16_t GetPanning() = 0;
+	[[nodiscard]] virtual bool Get16Bit() = 0;
+	[[nodiscard]] virtual bool GetStereo() = 0;
+	[[nodiscard]] virtual bool GetLooped() = 0;
+	[[nodiscard]] virtual bool GetSustainLooped() = 0;
+	[[nodiscard]] virtual bool GetBidiLoop() = 0;
+	[[nodiscard]] virtual bool GetPanned() = 0;
 };
 
 struct ModuleSampleNative final : public ModuleSample
@@ -234,35 +232,35 @@ private:
 	friend struct ModuleFile;
 
 public:
-	ModuleSampleNative(const modMOD_t &file, const uint32_t i);
-	ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t Type);
-	ModuleSampleNative(const modSTM_t &file, const uint32_t i);
+	ModuleSampleNative(const modMOD_t &file, uint32_t i);
+	ModuleSampleNative(const modS3M_t &file, uint32_t i, uint8_t Type);
+	ModuleSampleNative(const modSTM_t &file, uint32_t i);
 #ifdef ENABLE_AON
-	ModuleSampleNative(const modAON_t &file, const uint32_t i, char *Name, const uint32_t *const pcmLengths);
+	ModuleSampleNative(const modAON_t &file, uint32_t i, char *Name, const uint32_t *pcmLengths);
 #endif
-	ModuleSampleNative(const modIT_t &file, const uint32_t i);
+	ModuleSampleNative(const modIT_t &file, uint32_t i);
 	~ModuleSampleNative() noexcept = default;
 
-	uint32_t GetLength() final { return Length; }
-	uint32_t GetLoopStart() final { return LoopStart; }
-	uint32_t GetLoopEnd() final { return LoopEnd; }
-	uint32_t GetSustainLoopBegin() final { return SusLoopBegin; }
-	uint32_t GetSustainLoopEnd() final { return SusLoopEnd; }
-	uint8_t GetFineTune() final { return FineTune; }
-	uint32_t GetC4Speed() final { return C4Speed; }
-	uint8_t GetVolume() final { return Volume << 1U; }
-	uint8_t GetSampleVolume() final { return InstrVol; }
-	uint8_t GetVibratoSpeed() final { return VibratoSpeed; }
-	uint8_t GetVibratoDepth() final { return VibratoDepth; }
-	uint8_t GetVibratoType() final { return VibratoType; }
-	uint8_t GetVibratoRate() final { return VibratoRate; }
-	uint16_t GetPanning() final { return uint16_t(DefaultPan & 0x7FU) << 2; }
-	bool Get16Bit() final;
-	bool GetStereo() final;
-	bool GetLooped() final;
-	bool GetSustainLooped() final;
-	bool GetBidiLoop() final;
-	bool GetPanned() final { return DefaultPan & 0x80U; }
+	[[nodiscard]] uint32_t GetLength() final { return Length; }
+	[[nodiscard]] uint32_t GetLoopStart() final { return LoopStart; }
+	[[nodiscard]] uint32_t GetLoopEnd() final { return LoopEnd; }
+	[[nodiscard]] uint32_t GetSustainLoopBegin() final { return SusLoopBegin; }
+	[[nodiscard]] uint32_t GetSustainLoopEnd() final { return SusLoopEnd; }
+	[[nodiscard]] uint8_t GetFineTune() final { return FineTune; }
+	[[nodiscard]] uint32_t GetC4Speed() final { return C4Speed; }
+	[[nodiscard]] uint8_t GetVolume() final { return Volume << 1U; }
+	[[nodiscard]] uint8_t GetSampleVolume() final { return InstrVol; }
+	[[nodiscard]] uint8_t GetVibratoSpeed() final { return VibratoSpeed; }
+	[[nodiscard]] uint8_t GetVibratoDepth() final { return VibratoDepth; }
+	[[nodiscard]] uint8_t GetVibratoType() final { return VibratoType; }
+	[[nodiscard]] uint8_t GetVibratoRate() final { return VibratoRate; }
+	[[nodiscard]] uint16_t GetPanning() final { return uint16_t(DefaultPan & 0x7FU) << 2U; }
+	[[nodiscard]] bool Get16Bit() final;
+	[[nodiscard]] bool GetStereo() final;
+	[[nodiscard]] bool GetLooped() final;
+	[[nodiscard]] bool GetSustainLooped() final;
+	[[nodiscard]] bool GetBidiLoop() final;
+	[[nodiscard]] bool GetPanned() final { return DefaultPan & 0x80U; }
 };
 
 struct ModuleSampleAdlib final : public ModuleSample
@@ -287,29 +285,29 @@ private:
 	char *Name;
 
 public:
-	ModuleSampleAdlib(const modS3M_t &file, const uint32_t i, const uint8_t Type);
+	ModuleSampleAdlib(const modS3M_t &file, uint32_t i, uint8_t Type);
 	~ModuleSampleAdlib();
 
-	uint32_t GetLength() final;
-	uint32_t GetLoopStart() final;
-	uint32_t GetLoopEnd() final;
-	uint32_t GetSustainLoopBegin() final;
-	uint32_t GetSustainLoopEnd() final;
-	uint8_t GetFineTune() final;
-	uint32_t GetC4Speed() final;
-	uint8_t GetVolume() final;
-	uint8_t GetSampleVolume() final;
-	uint8_t GetVibratoSpeed() final;
-	uint8_t GetVibratoDepth() final;
-	uint8_t GetVibratoType() final;
-	uint8_t GetVibratoRate() final;
-	uint16_t GetPanning() final;
-	bool Get16Bit() final;
-	bool GetStereo() final;
-	bool GetLooped() final;
-	bool GetSustainLooped() final;
-	bool GetBidiLoop() final;
-	bool GetPanned() final;
+	[[nodiscard]] uint32_t GetLength() final;
+	[[nodiscard]] uint32_t GetLoopStart() final;
+	[[nodiscard]] uint32_t GetLoopEnd() final;
+	[[nodiscard]] uint32_t GetSustainLoopBegin() final;
+	[[nodiscard]] uint32_t GetSustainLoopEnd() final;
+	[[nodiscard]] uint8_t GetFineTune() final;
+	[[nodiscard]] uint32_t GetC4Speed() final;
+	[[nodiscard]] uint8_t GetVolume() final;
+	[[nodiscard]] uint8_t GetSampleVolume() final;
+	[[nodiscard]] uint8_t GetVibratoSpeed() final;
+	[[nodiscard]] uint8_t GetVibratoDepth() final;
+	[[nodiscard]] uint8_t GetVibratoType() final;
+	[[nodiscard]] uint8_t GetVibratoRate() final;
+	[[nodiscard]] uint16_t GetPanning() final;
+	[[nodiscard]] bool Get16Bit() final;
+	[[nodiscard]] bool GetStereo() final;
+	[[nodiscard]] bool GetLooped() final;
+	[[nodiscard]] bool GetSustainLooped() final;
+	[[nodiscard]] bool GetBidiLoop() final;
+	[[nodiscard]] bool GetPanned() final;
 };
 
 #pragma pack(push, 1)
@@ -333,23 +331,23 @@ private:
 	std::array<envelopeNode_t, 25> Nodes;
 
 public:
-	ModuleEnvelope(const modIT_t &file, const envelopeType_t env);
-	ModuleEnvelope(const modIT_t &file, const uint8_t Flags, const uint8_t LoopBegin,
-		const uint8_t LoopEnd, const uint8_t SusLoopBegin, const uint8_t SusLoopEnd) noexcept;
-	uint8_t Apply(const uint16_t Tick) noexcept;
-	bool GetEnabled() const noexcept { return Flags & 0x01U; }
-	bool GetLooped() const noexcept { return Flags & 0x02U; }
-	bool GetSustained() const noexcept { return Flags & 0x04U; }
-	bool GetCarried() const noexcept { return Flags & 0x08U; }
-	bool IsFilter() const noexcept { return Flags & 0x80U; }
-	bool HasNodes() const noexcept { return nNodes; }
-	bool IsAtEnd(const uint16_t currentTick) const noexcept { return currentTick > GetLastTick(); }
-	bool IsZeroLoop() const noexcept { return LoopEnd == LoopBegin; }
-	uint16_t GetLoopBegin() const noexcept { return Nodes[LoopBegin].Tick; }
-	uint16_t GetLoopEnd() const noexcept { return Nodes[LoopEnd].Tick; }
-	uint16_t GetSustainBegin() const noexcept { return Nodes[SusLoopBegin].Tick; }
-	uint16_t GetSustainEnd() const noexcept { return Nodes[SusLoopBegin].Tick; }
-	uint16_t GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }
+	ModuleEnvelope(const modIT_t &file, envelopeType_t env);
+	ModuleEnvelope(const modIT_t &file, uint8_t Flags, uint8_t LoopBegin, uint8_t LoopEnd,
+		uint8_t SusLoopBegin, uint8_t SusLoopEnd) noexcept;
+	[[nodiscard]] uint8_t Apply(uint16_t Tick) noexcept;
+	[[nodiscard]] bool GetEnabled() const noexcept { return Flags & 0x01U; }
+	[[nodiscard]] bool GetLooped() const noexcept { return Flags & 0x02U; }
+	[[nodiscard]] bool GetSustained() const noexcept { return Flags & 0x04U; }
+	[[nodiscard]] bool GetCarried() const noexcept { return Flags & 0x08U; }
+	[[nodiscard]] bool IsFilter() const noexcept { return Flags & 0x80U; }
+	[[nodiscard]] bool HasNodes() const noexcept { return nNodes; }
+	[[nodiscard]] bool IsAtEnd(const uint16_t currentTick) const noexcept { return currentTick > GetLastTick(); }
+	[[nodiscard]] bool IsZeroLoop() const noexcept { return LoopEnd == LoopBegin; }
+	[[nodiscard]] uint16_t GetLoopBegin() const noexcept { return Nodes[LoopBegin].Tick; }
+	[[nodiscard]] uint16_t GetLoopEnd() const noexcept { return Nodes[LoopEnd].Tick; }
+	[[nodiscard]] uint16_t GetSustainBegin() const noexcept { return Nodes[SusLoopBegin].Tick; }
+	[[nodiscard]] uint16_t GetSustainEnd() const noexcept { return Nodes[SusLoopBegin].Tick; }
+	[[nodiscard]] uint16_t GetLastTick() const noexcept { return Nodes[nNodes - 1].Tick; }
 };
 
 struct ModuleInstrument
@@ -369,23 +367,23 @@ public:
 	ModuleInstrument &operator =(const ModuleInstrument &) noexcept = delete;
 	ModuleInstrument &operator =(ModuleInstrument &&) noexcept = default;
 
-	static std::unique_ptr<ModuleInstrument> LoadInstrument(const modIT_t &file,
-		const uint32_t i, const uint16_t FormatVersion);
+	[[nodiscard]] static std::unique_ptr<ModuleInstrument>
+		LoadInstrument(const modIT_t &file, uint32_t i, uint16_t FormatVersion);
 
-	std::pair<uint8_t, uint8_t> mapNote(const uint8_t note) noexcept;
-	virtual ~ModuleInstrument() noexcept = default;
-	virtual uint16_t GetFadeOut() const noexcept = 0;
-	virtual bool GetEnvEnabled(envelopeType_t env) const noexcept = 0;
-	virtual bool GetEnvLooped(envelopeType_t env) const noexcept = 0;
-	virtual bool GetEnvCarried(envelopeType_t env) const noexcept = 0;
-	virtual ModuleEnvelope &GetEnvelope(envelopeType_t env) const = 0;
-	virtual bool IsPanned() const noexcept = 0;
-	virtual bool HasVolume() const noexcept = 0;
-	virtual uint8_t GetPanning() const noexcept = 0;
-	virtual uint8_t GetVolume() const noexcept = 0;
-	virtual uint8_t GetNNA() const noexcept = 0;
-	virtual uint8_t GetDCT() const noexcept = 0;
-	virtual uint8_t GetDNA() const noexcept = 0;
+	[[nodiscard]] std::pair<uint8_t, uint8_t> mapNote(uint8_t note) noexcept;
+	[[nodiscard]] virtual ~ModuleInstrument() noexcept = default;
+	[[nodiscard]] virtual uint16_t GetFadeOut() const noexcept = 0;
+	[[nodiscard]] virtual bool GetEnvEnabled(envelopeType_t env) const noexcept = 0;
+	[[nodiscard]] virtual bool GetEnvLooped(envelopeType_t env) const noexcept = 0;
+	[[nodiscard]] virtual bool GetEnvCarried(envelopeType_t env) const noexcept = 0;
+	[[nodiscard]] virtual ModuleEnvelope &GetEnvelope(envelopeType_t env) const = 0;
+	[[nodiscard]] virtual bool IsPanned() const noexcept = 0;
+	[[nodiscard]] virtual bool HasVolume() const noexcept = 0;
+	[[nodiscard]] virtual uint8_t GetPanning() const noexcept = 0;
+	[[nodiscard]] virtual uint8_t GetVolume() const noexcept = 0;
+	[[nodiscard]] virtual uint8_t GetNNA() const noexcept = 0;
+	[[nodiscard]] virtual uint8_t GetDCT() const noexcept = 0;
+	[[nodiscard]] virtual uint8_t GetDNA() const noexcept = 0;
 };
 
 struct ModuleOldInstrument final : public ModuleInstrument
@@ -402,25 +400,25 @@ private:
 	std::unique_ptr<ModuleEnvelope> Envelope{};
 
 public:
-	ModuleOldInstrument(const modIT_t &file, const uint32_t i);
+	ModuleOldInstrument(const modIT_t &file, uint32_t i);
 	ModuleOldInstrument(const ModuleOldInstrument &) noexcept = delete;
 	ModuleOldInstrument(ModuleOldInstrument &&) noexcept = default;
 	~ModuleOldInstrument() final = default;
 	ModuleOldInstrument &operator =(const ModuleOldInstrument &) noexcept = delete;
 	ModuleOldInstrument &operator =(ModuleOldInstrument &&) noexcept = default;
 
-	uint16_t GetFadeOut() const noexcept final;
-	bool GetEnvEnabled(envelopeType_t env) const noexcept final;
-	bool GetEnvLooped(envelopeType_t env) const noexcept final;
-	bool GetEnvCarried(envelopeType_t env) const noexcept final;
-	ModuleEnvelope &GetEnvelope(envelopeType_t env) const final;
-	bool IsPanned() const noexcept final;
-	bool HasVolume() const noexcept final;
-	uint8_t GetPanning() const noexcept final;
-	uint8_t GetVolume() const noexcept final;
-	uint8_t GetNNA() const noexcept final;
-	uint8_t GetDCT() const noexcept final;
-	uint8_t GetDNA() const noexcept final;
+	[[nodiscard]] uint16_t GetFadeOut() const noexcept final;
+	[[nodiscard]] bool GetEnvEnabled(envelopeType_t env) const noexcept final;
+	[[nodiscard]] bool GetEnvLooped(envelopeType_t env) const noexcept final;
+	[[nodiscard]] bool GetEnvCarried(envelopeType_t env) const noexcept final;
+	[[nodiscard]] ModuleEnvelope &GetEnvelope(envelopeType_t env) const final;
+	[[nodiscard]] bool IsPanned() const noexcept final;
+	[[nodiscard]] bool HasVolume() const noexcept final;
+	[[nodiscard]] uint8_t GetPanning() const noexcept final;
+	[[nodiscard]] uint8_t GetVolume() const noexcept final;
+	[[nodiscard]] uint8_t GetNNA() const noexcept final;
+	[[nodiscard]] uint8_t GetDCT() const noexcept final;
+	[[nodiscard]] uint8_t GetDNA() const noexcept final;
 };
 
 struct ModuleNewInstrument final : public ModuleInstrument
@@ -443,25 +441,25 @@ private:
 	std::array<std::unique_ptr<ModuleEnvelope>, static_cast<size_t>(envelopeType_t::count)> Envelopes{};
 
 public:
-	ModuleNewInstrument(const modIT_t &file, const uint32_t i);
+	ModuleNewInstrument(const modIT_t &file, uint32_t i);
 	ModuleNewInstrument(const ModuleNewInstrument &) noexcept = delete;
 	ModuleNewInstrument(ModuleNewInstrument &&) noexcept = default;
 	~ModuleNewInstrument() final = default;
 	ModuleNewInstrument &operator =(const ModuleNewInstrument &) noexcept = delete;
 	ModuleNewInstrument &operator =(ModuleNewInstrument &&) noexcept = default;
 
-	uint16_t GetFadeOut() const noexcept final;
-	bool GetEnvEnabled(envelopeType_t env) const noexcept final;
-	bool GetEnvLooped(envelopeType_t env) const noexcept final;
-	bool GetEnvCarried(envelopeType_t env) const noexcept final;
-	ModuleEnvelope &GetEnvelope(envelopeType_t env) const final;
-	bool IsPanned() const noexcept final;
-	bool HasVolume() const noexcept final;
-	uint8_t GetPanning() const noexcept final;
-	uint8_t GetVolume() const noexcept final;
-	uint8_t GetNNA() const noexcept final;
-	uint8_t GetDCT() const noexcept final;
-	uint8_t GetDNA() const noexcept final;
+	[[nodiscard]] uint16_t GetFadeOut() const noexcept final;
+	[[nodiscard]] bool GetEnvEnabled(envelopeType_t env) const noexcept final;
+	[[nodiscard]] bool GetEnvLooped(envelopeType_t env) const noexcept final;
+	[[nodiscard]] bool GetEnvCarried(envelopeType_t env) const noexcept final;
+	[[nodiscard]] ModuleEnvelope &GetEnvelope(envelopeType_t env) const final;
+	[[nodiscard]] bool IsPanned() const noexcept final;
+	[[nodiscard]] bool HasVolume() const noexcept final;
+	[[nodiscard]] uint8_t GetPanning() const noexcept final;
+	[[nodiscard]] uint8_t GetVolume() const noexcept final;
+	[[nodiscard]] uint8_t GetNNA() const noexcept final;
+	[[nodiscard]] uint8_t GetDCT() const noexcept final;
+	[[nodiscard]] uint8_t GetDNA() const noexcept final;
 };
 
 struct command_t final
@@ -475,8 +473,8 @@ private:
 	uint8_t Param{};
 	uint8_t ArpIndex{};
 
-	inline uint8_t modPeriodToNoteIndex(const uint16_t period) noexcept;
-	void translateMODEffect(const uint8_t effect, const uint8_t param) noexcept;
+	inline uint8_t modPeriodToNoteIndex(uint16_t period) noexcept;
+	void translateMODEffect(uint8_t effect, uint8_t param) noexcept;
 	friend struct ModuleFile;
 	friend struct channel_t;
 
@@ -508,19 +506,19 @@ private:
 	fixedVector_t<commandPtr_t> _commands;
 	uint16_t _rows;
 
-	pattern_t(const uint32_t _channels, const uint16_t rows, const uint32_t type);
+	pattern_t(uint32_t _channels, uint16_t rows, uint32_t type);
 
 public:
-	pattern_t(const modMOD_t &file, const uint32_t channels);
-	pattern_t(const modS3M_t &file, const uint32_t channels);
+	pattern_t(const modMOD_t &file, uint32_t channels);
+	pattern_t(const modS3M_t &file, uint32_t channels);
 	pattern_t(const modSTM_t &file);
 #ifdef ENABLE_AON
-	pattern_t(const modAON_t &file, const uint32_t channels);
+	pattern_t(const modAON_t &file, uint32_t channels);
 #endif
-	pattern_t(const modIT_t &file, const uint32_t channels);
+	pattern_t(const modIT_t &file, uint32_t channels);
 
-	const fixedVector_t<commandPtr_t> &commands() const { return _commands; }
-	uint16_t rows() const noexcept { return _rows; }
+	[[nodiscard]] const fixedVector_t<commandPtr_t> &commands() const { return _commands; }
+	[[nodiscard]] uint16_t rows() const noexcept { return _rows; }
 };
 
 struct int16dot16_t
@@ -595,7 +593,7 @@ public:
 	void noteChange(ModuleFile &module, uint8_t note, bool handlePorta = false);
 	void noteCut(ModuleFile &module, uint32_t tick) noexcept;
 	void noteOff() noexcept;
-	int32_t patternLoop(const uint8_t param, const uint16_t row) noexcept;
+	[[nodiscard]] int32_t patternLoop(uint8_t param, uint16_t row) noexcept;
 	void portamentoUp(const ModuleFile &module, uint8_t param) noexcept;
 	void portamentoDown(const ModuleFile &module, uint8_t param) noexcept;
 	void finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept;
@@ -607,19 +605,18 @@ public:
 	void panbrello(uint8_t param);
 	void channelVolumeSlide(const ModuleFile &module, uint8_t param) noexcept;
 	void sampleVolumeSlide(const ModuleFile &module, uint8_t param);
-	void fineSampleVolumeSlide(const ModuleFile &module, uint8_t param,
-		uint16_t (*op)(const uint16_t, const uint8_t)) noexcept;
+	void fineSampleVolumeSlide(const ModuleFile &module, uint8_t param, uint16_t (*op)(uint16_t, uint8_t)) noexcept;
 	void panningSlide(const ModuleFile &module, uint8_t param);
 	void ChannelEffect(uint8_t param);
 
-	int16_t applyTremolo(const ModuleFile &module, uint16_t volume) noexcept;
-	uint16_t applyTremor(const ModuleFile &module, uint16_t volume) noexcept;
-	uint16_t applyNoteFade(uint16_t volume) noexcept;
-	uint16_t applyVolumeEnvelope(const ModuleFile &module, uint16_t volume) noexcept;
+	[[nodiscard]] int16_t applyTremolo(const ModuleFile &module, uint16_t volume) noexcept;
+	[[nodiscard]] uint16_t applyTremor(const ModuleFile &module, uint16_t volume) noexcept;
+	[[nodiscard]] uint16_t applyNoteFade(uint16_t volume) noexcept;
+	[[nodiscard]] uint16_t applyVolumeEnvelope(const ModuleFile &module, uint16_t volume) noexcept;
 	void applyPanningEnvelope() noexcept;
-	uint32_t applyPitchEnvelope(uint32_t period) noexcept;
-	int16_t applyVibrato(const ModuleFile &module, uint32_t period) noexcept;
-	int16_t applyAutoVibrato(const ModuleFile &module, uint32_t period, int8_t &fractionalPeriod) noexcept;
+	[[nodiscard]] uint32_t applyPitchEnvelope(uint32_t period) noexcept;
+	[[nodiscard]] int16_t applyVibrato(const ModuleFile &module, uint32_t period) noexcept;
+	[[nodiscard]] int16_t applyAutoVibrato(const ModuleFile &module, uint32_t period, int8_t &fractionalPeriod) noexcept;
 	void applyPanbrello() noexcept;
 
 	// Channel mixing processing
@@ -662,19 +659,18 @@ private:
 	void ProcessS3MExtended(channel_t *channel);
 
 	// Processing functions
-	bool AdvanceTick();
-	bool Tick();
-	bool ProcessEffects();
+	[[nodiscard]] bool AdvanceTick();
+	[[nodiscard]] bool Tick();
+	[[nodiscard]] bool ProcessEffects();
 	void processEffects(channel_t &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump);
 	void ResetChannelPanning();
-	void SampleChange(channel_t &channel, const uint32_t sample, const bool doPortamento);
+	void SampleChange(channel_t &channel, uint32_t sample, bool doPortamento);
 	void ReloadSample(channel_t &channel);
 	void HandleNNA(channel_t *channel, uint32_t sample, uint8_t note);
-	uint8_t FindFreeNNAChannel() const;
-	bool handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
-		const int16_t positionJump) noexcept;
-	uint32_t GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed);
-	uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t PeriodFrac);
+	[[nodiscard]] uint8_t FindFreeNNAChannel() const;
+	[[nodiscard]] bool handleNavigationEffects(int32_t patternLoopRow, int16_t breakRow, int16_t positionJump) noexcept;
+	[[nodiscard]] uint32_t GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed);
+	[[nodiscard]] uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t PeriodFrac);
 
 	// Mixing functions
 	inline void FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples);
@@ -710,30 +706,30 @@ public:
 	ModuleFile &operator =(const ModuleFile &) noexcept = delete;
 	ModuleFile &operator =(ModuleFile &&) noexcept = default;
 
-	stringPtr_t title() const noexcept;
-	stringPtr_t author() const noexcept;
-	stringPtr_t remark() const noexcept;
-	uint8_t channels() const noexcept;
+	[[nodiscard]] stringPtr_t title() const noexcept;
+	[[nodiscard]] stringPtr_t author() const noexcept;
+	[[nodiscard]] stringPtr_t remark() const noexcept;
+	[[nodiscard]] uint8_t channels() const noexcept;
 	void InitMixer(fileInfo_t &info);
-	int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
+	[[nodiscard]] int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 
-	uint32_t ticks() const noexcept { return TickCount; }
-	uint32_t speed() const noexcept { return MusicSpeed; }
-	uint32_t tempo() const noexcept { return MusicTempo; }
-	uint32_t minimumPeriod() const noexcept { return MinPeriod; }
-	uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
-	uint16_t totalSamples() const noexcept { return p_Header->nSamples; }
-	uint16_t totalInstruments() const noexcept { return p_Header->nInstruments; }
-	ModuleSample *sample(uint16_t index) const noexcept
+	[[nodiscard]] uint32_t ticks() const noexcept { return TickCount; }
+	[[nodiscard]] uint32_t speed() const noexcept { return MusicSpeed; }
+	[[nodiscard]] uint32_t tempo() const noexcept { return MusicTempo; }
+	[[nodiscard]] uint32_t minimumPeriod() const noexcept { return MinPeriod; }
+	[[nodiscard]] uint32_t maximumPeriod() const noexcept { return MaxPeriod; }
+	[[nodiscard]] uint16_t totalSamples() const noexcept { return p_Header->nSamples; }
+	[[nodiscard]] uint16_t totalInstruments() const noexcept { return p_Header->nInstruments; }
+	[[nodiscard]] ModuleSample *sample(uint16_t index) const noexcept
 		{ return index && index <= totalSamples() ? p_Samples[index - 1] : nullptr; }
 
-	template<uint32_t type> bool typeIs() const noexcept { return ModuleType == type; }
-	template<uint32_t type, uint32_t... types> typename std::enable_if<sizeof...(types) != 0, bool>::type
+	template<uint32_t type> [[nodiscard]] bool typeIs() const noexcept { return ModuleType == type; }
+	template<uint32_t type, uint32_t... types> [[nodiscard]] typename std::enable_if<sizeof...(types) != 0, bool>::type
 		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 
-	bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
-	bool hasFastSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_FAST_SLIDES; }
-	bool useOldEffects() const noexcept { return p_Header->Flags & FILE_FLAGS_OLD_IT_EFFECTS; }
+	[[nodiscard]] bool hasLinearSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_LINEAR_SLIDES; }
+	[[nodiscard]] bool hasFastSlides() const noexcept { return p_Header->Flags & FILE_FLAGS_FAST_SLIDES; }
+	[[nodiscard]] bool useOldEffects() const noexcept { return p_Header->Flags & FILE_FLAGS_OLD_IT_EFFECTS; }
 };
 
 struct moduleFile_t::decoderContext_t
