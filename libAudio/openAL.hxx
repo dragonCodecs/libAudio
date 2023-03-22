@@ -15,7 +15,7 @@
 #endif
 #include <atomic>
 #include <string>
-#include "uniquePtr.hxx"
+#include <substrate/utility>
 
 struct alContext_t final
 {
@@ -27,7 +27,7 @@ private:
 
 protected:
 	alContext_t() noexcept;
-	friend std::unique_ptr<alContext_t> makeUniqueT<alContext_t>();
+	friend std::unique_ptr<alContext_t> substrate::make_unique<alContext_t>();
 	void swap(alContext_t &) noexcept;
 
 public:

@@ -14,7 +14,7 @@ alContext_t *alContext_t::ensure() noexcept
 	{
 		if (defaultDevice_.empty())
 			defaultDevice_ = std::string{al::alcGetString(nullptr, ALC_DEFAULT_DEVICE_SPECIFIER)};
-		alContext = makeUniqueT<alContext_t>();
+		alContext = substrate::make_unique<alContext_t>();
 	}
 	alContext->makeCurrent();
 	alGetError();
