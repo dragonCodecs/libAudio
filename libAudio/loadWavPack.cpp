@@ -6,6 +6,7 @@
 #include <wavpack/wavpack.h>
 #endif
 #include <string>
+#include <substrate/utility>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
@@ -17,6 +18,8 @@
  * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2020
  */
+
+using substrate::make_unique_nothrow;
 
 struct wavPack_t::decoderContext_t final
 {
@@ -167,8 +170,8 @@ namespace libAudio::wavPack
 
 using namespace libAudio;
 
-wavPack_t::wavPack_t(fd_t &&fd, const char *const fileName) noexcept : audioFile_t(audioType_t::wavPack, std::move(fd)),
-	ctx(makeUnique<decoderContext_t>(fileName)) { }
+wavPack_t::wavPack_t(fd_t &&fd, const char *const fileName) noexcept : audioFile_t{audioType_t::wavPack, std::move(fd)},
+	ctx{make_unique_nothrow<decoderContext_t>(fileName)} { }
 wavPack_t::decoderContext_t::decoderContext_t(std::string fileName) noexcept : decoder{nullptr}, playbackBuffer{},
 	decodeBuffer{}, sampleCount{0}, samplesUsed{0}, eof{false}, wvcFileFD{wvcFile(fileName)}, callbacks{wavPack::read,
 		nullptr, wavPack::tell, wavPack::seekAbs, wavPack::seekRel, wavPack::ungetc, wavPack::length, wavPack::canSeek,
@@ -185,7 +188,7 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
 	const uint32_t length = WavpackGetTagItem(decoder, tag, nullptr, 0);
 	if (length)
 	{
-		auto result = makeUnique<char []>(length + 1);
+		auto result = make_unique_nothrow<char []>(length + 1);
 		if (!result)
 			return nullptr;
 		WavpackGetTagItem(decoder, tag, result.get(), length + 1);
@@ -202,7 +205,7 @@ std::unique_ptr<char []> wavPack_t::decoderContext_t::readTag(const char *const 
  */
 wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<wavPack_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, fileName)};
+	auto file{make_unique_nothrow<wavPack_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, fileName)};
 	if (!file || !file->valid() || !isWavPack(file->_fd))
 		return nullptr;
 	fd_t &fileDesc = const_cast<fd_t &>(file->fd());
@@ -220,7 +223,7 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 	info.title = ctx.readTag("title");
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

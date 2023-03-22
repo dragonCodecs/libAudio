@@ -10,8 +10,10 @@
  * @date 2022
  */
 
+using substrate::make_unique_nothrow;
+
 mp3_t::mp3_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::mp3, std::move(fd)},
-	encoderCtx{makeUnique<encoderContext_t>()} { }
+	encoderCtx{make_unique_nothrow<encoderContext_t>()} { }
 mp3_t::encoderContext_t::encoderContext_t() noexcept : encoder{lame_init()}, lameFrameOffset{}
 {
 	lame_set_brate(encoder, 320);
@@ -19,8 +21,14 @@ mp3_t::encoderContext_t::encoderContext_t() noexcept : encoder{lame_init()}, lam
 
 mp3_t *mp3_t::openW(const char *const fileName) noexcept
 {
-	auto file{makeUnique<mp3_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
-		audioModeWrite_t{})};
+	auto file
+	{
+		make_unique_nothrow<mp3_t>
+		(
+			fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
+			audioModeWrite_t{}
+		)
+	};
 	if (!file || !file->valid())
 		return nullptr;
 	return file.release();

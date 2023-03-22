@@ -4,6 +4,8 @@
 #include "genericModule/genericModule.h"
 #include "console.hxx"
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio::fc1x
 {
 	constexpr static std::array<char, 4> magicSMOD{{'S', 'M', 'O', 'D'}};
@@ -14,7 +16,7 @@ modFC1x_t::modFC1x_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleFC1x,
 
 modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<modFC1x_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{make_unique_nothrow<modFC1x_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isFC1x(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();
@@ -22,7 +24,7 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
-	try { ctx.mod = makeUnique<ModuleFile>(*file); }
+	try { ctx.mod = make_unique_nothrow<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
 		console.error(e.error());
@@ -34,7 +36,7 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
 	return file.release();

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2009-2023 Rachel Mant <git@dragonmux.network>
 #include <limits>
 
+#include <substrate/utility>
 #include "libAudio.h"
 #include "libAudio.hxx"
 
@@ -12,6 +13,8 @@
  * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2020
  */
+
+using substrate::make_unique_nothrow;
 
 /*!
  * @internal
@@ -53,7 +56,7 @@ private:
 };
 
 wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd)),
-	ctx(makeUnique<decoderContext_t>()) { }
+	ctx(make_unique_nothrow<decoderContext_t>()) { }
 wav_t::decoderContext_t::decoderContext_t() noexcept : inputBuffer{}, bytesAvailable{0},
 	bytesUsed{0}, playbackBuffer{}, offsetDataLength{0}, compression{0}, bitsPerSample{0},
 	floatData{false} { }
@@ -130,7 +133,7 @@ bool wav_t::readFormat() noexcept
  */
 wav_t *wav_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<wav_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{make_unique_nothrow<wav_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isWAV(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();
@@ -174,7 +177,7 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 	ctx.offsetDataLength = chunkLength + fd.tell();
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

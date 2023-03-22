@@ -6,6 +6,8 @@
 #include <vorbis/vorbisfile.h>
 #include <vorbis/vorbisenc.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 #include "oggCommon.hxx"

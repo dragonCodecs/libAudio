@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2012-2023 Rachel Mant <git@dragonmux.network>
-#include <substrate/utility>
 #include <substrate/promotion_helpers>
 #include "genericModule.h"
 
 using substrate::make_unique;
+using substrate::make_unique_nothrow;
 
 static const uint16_t Periods[60] =
 {
@@ -34,7 +34,7 @@ pattern_t::pattern_t(const modMOD_t &file, const uint32_t channels) : pattern_t{
 			std::array<uint8_t, 4> data{};
 			if (row == 0)
 			{
-				_commands[channel] = makeUnique<command_t []>(_rows);
+				_commands[channel] = make_unique_nothrow<command_t []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError{E_BAD_MOD};
 			}
@@ -56,7 +56,7 @@ pattern_t::pattern_t(const modS3M_t &file, const uint32_t channels) : pattern_t{
 
 	for (uint32_t i = 0; i < channels; ++i)
 	{
-		_commands[i] = makeUnique<command_t []>(_rows);
+		_commands[i] = make_unique_nothrow<command_t []>(_rows);
 		if (!_commands[i])
 			throw ModuleLoaderError{E_BAD_S3M};
 	}
@@ -125,7 +125,7 @@ pattern_t::pattern_t(const modSTM_t &file) : pattern_t(4, 64, E_BAD_STM)
 		{
 			if (row == 0)
 			{
-				_commands[channel] = makeUnique<command_t []>(_rows);
+				_commands[channel] = make_unique_nothrow<command_t []>(_rows);
 				if (!_commands[channel])
 					throw ModuleLoaderError{E_BAD_STM};
 			}
@@ -210,7 +210,7 @@ pattern_t::pattern_t(const modIT_t &file, const uint32_t channels) : Channels{ch
 
 	for (size_t channel = 0; channel < channels; ++channel)
 	{
-		_commands[channel] = makeUnique<command_t []>(_rows);
+		_commands[channel] = make_unique_nothrow<command_t []>(_rows);
 		if (!_commands[channel])
 			throw ModuleLoaderError{E_BAD_IT};
 	}

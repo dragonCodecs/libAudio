@@ -4,6 +4,8 @@
 #include <algorithm>
 #include "genericModule.h"
 
+using substrate::make_unique_nothrow;
+
 constexpr std::array<char, 4> s3mSampleMagic{{'S', 'C', 'R', 'S'}};
 
 ModuleSample *ModuleSample::LoadSample(const modMOD_t &file, const uint32_t i)
@@ -34,9 +36,9 @@ ModuleSample *ModuleSample::LoadSample(const modIT_t &file, const uint32_t i)
 	{ return new ModuleSampleNative(file, i); }
 
 ModuleSampleNative::ModuleSampleNative(const modMOD_t &file, const uint32_t i) : ModuleSample(i, 1),
-	Name{makeUnique<char []>(23)}, Length{}, InstrVol{64U}, LoopStart{}, LoopEnd{}, FileName{}, SamplePos{},
-	Packing{}, Flags{}, SampleFlags{}, C4Speed{8363U}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
-	VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
+	Name{make_unique_nothrow<char []>(23)}, Length{}, InstrVol{64U}, LoopStart{}, LoopEnd{}, FileName{},
+	SamplePos{}, Packing{}, Flags{}, SampleFlags{}, C4Speed{8363U}, DefaultPan{}, VibratoSpeed{},
+	VibratoDepth{}, VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
 {
 	const auto &fd{file.fd()};
 	uint16_t length16{};
@@ -77,9 +79,9 @@ bool readLE24b(const fd_t &fd, uint32_t &dest) noexcept
 }
 
 ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, const uint8_t type) :
-	ModuleSample(i, type), Name{makeUnique<char []>(29)}, FineTune{}, InstrVol{64U},
-	FileName{makeUnique<char []>(13)}, SampleFlags{}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{},
-	VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
+	ModuleSample(i, type), Name{make_unique_nothrow<char []>(29)}, FineTune{}, InstrVol{64U},
+	FileName{make_unique_nothrow<char []>(13)}, SampleFlags{}, DefaultPan{}, VibratoSpeed{},
+	VibratoDepth{}, VibratoType{}, VibratoRate{}, SusLoopBegin{}, SusLoopEnd{}
 {
 	const auto &fd{file.fd()};
 	std::array<uint8_t, 12> dontCare{};
@@ -122,7 +124,7 @@ ModuleSampleNative::ModuleSampleNative(const modS3M_t &file, const uint32_t i, c
 }
 
 ModuleSampleNative::ModuleSampleNative(const modSTM_t &file, const uint32_t i) : ModuleSample(i, 1),
-	Name{makeUnique<char []>(13)}, FineTune{}, InstrVol{64}, FileName{}, SamplePos{}, Packing{},
+	Name{make_unique_nothrow<char []>(13)}, FineTune{}, InstrVol{64}, FileName{}, SamplePos{}, Packing{},
 	Flags{}, SampleFlags{}, DefaultPan{}, VibratoSpeed{}, VibratoDepth{}, VibratoType{}, VibratoRate{},
 	SusLoopBegin{}, SusLoopEnd{}
 {
@@ -291,7 +293,8 @@ ModuleSampleNative::ModuleSampleNative(const modAON_t &file, const uint32_t i, c
 #endif
 
 ModuleSampleNative::ModuleSampleNative(const modIT_t &file, const uint32_t i) : ModuleSample(i, 1),
-	Name{makeUnique<char []>(27)}, FineTune{}, FileName{makeUnique<char []>(13)}, SampleFlags{}
+	Name{make_unique_nothrow<char []>(27)}, FineTune{}, FileName{make_unique_nothrow<char []>(13)},
+	SampleFlags{}
 {
 	const auto &fd{file.fd()};
 	uint8_t _const{};

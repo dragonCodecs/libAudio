@@ -20,7 +20,6 @@
 #include <substrate/fd>
 #include "fileInfo.hxx"
 #include "playback.hxx"
-#include "uniquePtr.hxx"
 #include "libAudio.h"
 
 #if __has_cpp_attribute(nodiscard) || __cplusplus >= 201402L

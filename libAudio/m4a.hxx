@@ -10,6 +10,7 @@
 
 #include "libAudio.h"
 #include "libAudio.hxx"
+#include "string.hxx"
 
 /*!
  * @internal

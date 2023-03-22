@@ -10,6 +10,8 @@
  * @date 2010-2020
  */
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio
 {
 	namespace saveM4A
@@ -105,14 +107,20 @@ namespace libAudio
 using namespace libAudio;
 
 m4a_t::m4a_t(fd_t &&fd, audioModeWrite_t) noexcept :
-	audioFile_t(audioType_t::m4a, std::move(fd)), encoderCtx{makeUnique<encoderContext_t>()} { }
+	audioFile_t{audioType_t::m4a, std::move(fd)}, encoderCtx{make_unique_nothrow<encoderContext_t>()} { }
 m4a_t::encoderContext_t::encoderContext_t() : encoder{nullptr}, mp4Stream{nullptr}, track{MP4_INVALID_TRACK_ID},
 	inputSamples{}, outputBytes{}, valid{true} { }
 
 m4a_t *m4a_t::openW(const char *const fileName) noexcept
 {
-	auto file{makeUnique<m4a_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
-		audioModeWrite_t{})};
+	auto file
+	{
+		make_unique_nothrow<m4a_t>
+		(
+			fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
+			audioModeWrite_t{}
+		)
+	};
 	if (!file || !file->valid())
 		return nullptr;
 	auto &ctx = *file->encoderContext();
@@ -149,7 +157,7 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 	ctx.encoder = faacEncOpen(info.bitRate, info.channels, &ctx.inputSamples, &ctx.outputBytes);
 	if (!ctx.encoder)
 		return false;
-	ctx.buffer = makeUnique<uint8_t []>(ctx.outputBytes);
+	ctx.buffer = make_unique_nothrow<uint8_t []>(ctx.outputBytes);
 	if (!ctx.buffer)
 		return ctx.valid = false;
 

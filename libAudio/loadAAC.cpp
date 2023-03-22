@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <neaacdec.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 
@@ -14,6 +16,8 @@
  * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2020
  */
+
+using substrate::make_unique_nothrow;
 
 /*!
  * @internal
@@ -71,7 +75,8 @@ struct aac_t::decoderContext_t final
 	~decoderContext_t() noexcept;
 };
 
-aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::aac, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
+aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::aac, std::move(fd)},
+	ctx{make_unique_nothrow<decoderContext_t>()} { }
 aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, sampleCount{0},
 	samplesUsed{0}, decodeBuffer{nullptr}, playbackBuffer{} { }
 
@@ -83,7 +88,7 @@ aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false
  */
 aac_t *aac_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<aac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{make_unique_nothrow<aac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isAAC(file->_fd))
 		return nullptr;
 
@@ -107,7 +112,7 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 	info.bitsPerSample = 16;
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 
@@ -220,7 +225,7 @@ uint8_t *aac_t::nextFrame() noexcept
 	}
 	stream.skip(18);
 	const uint16_t FrameLength = uint16_t(stream.value(13));
-	std::unique_ptr<uint8_t []> buffer = makeUnique<uint8_t []>(FrameLength);
+	std::unique_ptr<uint8_t []> buffer = make_unique_nothrow<uint8_t []>(FrameLength);
 	memcpy(buffer.get(), frameHeader.data(), frameHeader.size());
 	if (!file.read(buffer.get() + ADTS_MAX_SIZE, FrameLength - ADTS_MAX_SIZE) ||
 		file.isEOF())

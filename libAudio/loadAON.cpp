@@ -4,6 +4,8 @@
 #include "genericModule/genericModule.h"
 #include "console.hxx"
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio::aon
 {
 	constexpr static std::array<char, 3> magic1{{'A', 'O', 'N'}};
@@ -19,7 +21,7 @@ modAON_t::modAON_t(fd_t &&fd) noexcept : moduleFile_t{audioType_t::moduleAON, st
 
 modAON_t *modAON_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{make_unique_nothrow<modAON_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isAON(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();
@@ -28,7 +30,7 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 	info.bitRate = 44100;
 	info.bitsPerSample = 16;
 	info.channels = 2;
-	try { ctx.mod = makeUnique<ModuleFile>(*file); }
+	try { ctx.mod = make_unique_nothrow<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
 		console.error(e.error());
@@ -44,7 +46,7 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 		ctx.mod->InitMixer(info);
 	}
 	return file.release();

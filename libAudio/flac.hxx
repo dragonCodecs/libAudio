@@ -5,6 +5,8 @@
 
 #include <FLAC/all.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 

@@ -6,6 +6,7 @@
 #include <substrate/fixed_vector>
 #include <substrate/managed_ptr>
 #include "../libAudio.hxx"
+#include "../string.hxx"
 #include <array>
 #include <exception>
 

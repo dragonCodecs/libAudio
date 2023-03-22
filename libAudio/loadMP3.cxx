@@ -4,6 +4,7 @@
 
 #include "mp3.hxx"
 #include "string.hxx"
+#include "uniquePtr.hxx"
 
 /*!
  * @internal
@@ -12,6 +13,8 @@
  * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2022
  */
+
+using substrate::make_unique_nothrow;
 
 namespace libAudio::mp3
 {
@@ -42,7 +45,7 @@ namespace libAudio::mp3
 using namespace libAudio;
 
 mp3_t::mp3_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t{audioType_t::mp3, std::move(fd)},
-	decoderCtx{makeUnique<decoderContext_t>()} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 mp3_t::decoderContext_t::decoderContext_t() noexcept : stream{}, frame{}, synth{}, inputBuffer{}, playbackBuffer{},
 	initialFrame{true}, samplesUsed{0}, eof{false}
 {
@@ -199,14 +202,14 @@ bool mp3_t::readMetadata() noexcept
  */
 mp3_t *mp3_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<mp3_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	auto file{make_unique_nothrow<mp3_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isMP3(file->_fd) || !file->readMetadata())
 		return nullptr;
 	auto &ctx = *file->decoderContext();
 	const fileInfo_t &info = file->fileInfo();
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

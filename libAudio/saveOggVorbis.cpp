@@ -12,8 +12,11 @@
  * @date 2010-2020
  */
 
+using substrate::make_unique_nothrow;
+
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept :
-	audioFile_t(audioType_t::oggVorbis, std::move(fd)), encoderCtx(makeUnique<encoderContext_t>()) { }
+	audioFile_t{audioType_t::oggVorbis, std::move(fd)},
+	encoderCtx{make_unique_nothrow<encoderContext_t>()} { }
 oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : encoderState{}, blockState{},
 	streamState{}, vorbisInfo{}, eos{false}
 {
@@ -24,8 +27,14 @@ oggVorbis_t::encoderContext_t::encoderContext_t() noexcept : encoderState{}, blo
 
 oggVorbis_t *oggVorbis_t::openW(const char *const fileName) noexcept
 {
-	auto file{makeUnique<oggVorbis_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
-		audioModeWrite_t{})};
+	auto file
+	{
+		make_unique_nothrow<oggVorbis_t>
+		(
+			fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
+			audioModeWrite_t{}
+		)
+	};
 	if (!file || !file->valid())
 		return nullptr;
 	return file.release();

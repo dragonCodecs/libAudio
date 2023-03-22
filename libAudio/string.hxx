@@ -3,7 +3,23 @@
 #ifndef STRING_HXX
 #define STRING_HXX
 
-#include "uniquePtr.hxx"
+#include <cstring>
+#include <substrate/utility>
+
+inline std::unique_ptr<char []> stringDup(const char *const str)
+{
+	if (!str)
+		return nullptr;
+	const size_t length = strlen(str) + 1;
+	auto result = substrate::make_unique_nothrow<char []>(length);
+	if (!result)
+		return nullptr;
+	strncpy(result.get(), str, length);
+	return result;
+}
+
+inline std::unique_ptr<char []> stringDup(const std::unique_ptr<char []> &str)
+	{ return stringDup(str.get()); }
 
 inline size_t stringsLength(const char *const part) noexcept { return strlen(part); }
 template<typename... Args> inline size_t stringsLength(const char *const part, Args &&...args) noexcept
@@ -27,7 +43,7 @@ template<typename... Args> inline std::unique_ptr<char []> stringsConcat(std::un
 }
 
 template<typename... Args> inline std::unique_ptr<char []> stringConcat(const char *const part, Args &&...args) noexcept
-	{ return stringsConcat(makeUnique<char []>(stringsLength(part, args...) + 1), 0, part, args...); }
+	{ return stringsConcat(substrate::make_unique_nothrow<char []>(stringsLength(part, args...) + 1), 0, part, args...); }
 
 inline void copyComment(std::unique_ptr<char []> &dst, const char *const src) noexcept
 	{ dst = !dst ? stringConcat(src) : stringConcat(dst.get(), " / ", src); }

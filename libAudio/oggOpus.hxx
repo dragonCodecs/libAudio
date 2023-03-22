@@ -6,6 +6,8 @@
 #include <opusfile.h>
 #include <opusenc.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 #include "oggCommon.hxx"

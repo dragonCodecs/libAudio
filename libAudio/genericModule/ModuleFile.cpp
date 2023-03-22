@@ -2,7 +2,10 @@
 // SPDX-FileCopyrightText: 2012-2023 Rachel Mant <git@dragonmux.network>
 #include "genericModule.h"
 
-moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t(type, std::move(fd)), ctx(makeUnique<decoderContext_t>()) { }
+using substrate::make_unique_nothrow;
+
+moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t{type, std::move(fd)},
+	ctx{make_unique_nothrow<decoderContext_t>()} { }
 
 constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType{moduleType}, p_Header{nullptr},
 	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},
@@ -156,7 +159,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 		blockLen != 0x0100)
 		throw ModuleLoaderError(E_BAD_AON);
 
-	lengthPCM = makeUnique<uint32_t []>(64);
+	lengthPCM = make_unique_nothrow<uint32_t []>(64);
 	for (i = 0, SampleLengths = 0; i < 64; i++)
 	{
 		if (!fd.readBE(lengthPCM[i]))
@@ -659,7 +662,7 @@ template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint
 		p_PCM[i] = nullptr;
 		return;
 	}
-	auto pcm = makeUnique<T []>(Length);
+	auto pcm = make_unique_nothrow<T []>(Length);
 	if (fd.seek(Sample->SamplePos, SEEK_SET) != Sample->SamplePos)
 		throw ModuleLoaderError{E_BAD_IT};
 	if (Sample->Flags & 0x08U)
@@ -674,7 +677,7 @@ template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint
 		fixSign(pcm.get(), Length);
 	if (Sample->GetStereo())
 	{
-		auto outBuff = makeUnique<T []>(Length);
+		auto outBuff = make_unique_nothrow<T []>(Length);
 		stereoInterleave(pcm.get(), outBuff.get(), p_Samples[i]->GetLength());
 		p_PCM[i] = reinterpret_cast<uint8_t *>(outBuff.release());
 	}

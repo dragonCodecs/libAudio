@@ -14,6 +14,8 @@
  * @date 2009-2020
  */
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio::flac
 {
 	/*!
@@ -172,10 +174,10 @@ namespace libAudio::flac
 				else
 					ctx.sampleShift = 0;
 				ctx.bufferLen = streamInfo.channels * streamInfo.max_blocksize;
-				ctx.buffer = makeUnique<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
+				ctx.buffer = make_unique_nothrow<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
 				info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
 				if (!ExternalPlayback && ctx.buffer != nullptr)
-					file.player(makeUnique<playback_t>(audioFile, audioFillBuffer, ctx.playbackBuffer, 16384, info));
+					file.player(make_unique_nothrow<playback_t>(audioFile, audioFillBuffer, ctx.playbackBuffer, 16384, info));
 				break;
 			}
 			case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -222,8 +224,8 @@ namespace libAudio::flac
 
 using namespace libAudio;
 
-flac_t::flac_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::flac, std::move(fd)),
-	decoderCtx{makeUnique<decoderContext_t>()} { }
+flac_t::flac_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 flac_t::decoderContext_t::decoderContext_t() noexcept : streamDecoder{FLAC__stream_decoder_new()},
 	buffer{}, bufferLen{0}, playbackBuffer{}, sampleShift{0}, bytesRemain{0}, bytesAvail{0} { }
 
@@ -235,7 +237,7 @@ flac_t::decoderContext_t::decoderContext_t() noexcept : streamDecoder{FLAC__stre
  */
 flac_t *flac_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	auto file{make_unique_nothrow<flac_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isFLAC(file->_fd))
 		return nullptr;
 	const fd_t &fd = file->fd();

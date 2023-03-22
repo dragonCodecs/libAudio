@@ -10,6 +10,8 @@
  * @date 2010-2019
  */
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio
 {
 	namespace flac
@@ -75,7 +77,7 @@ namespace libAudio
 using namespace libAudio;
 
 flac_t::flac_t(fd_t &&fd, audioModeWrite_t) noexcept : audioFile_t{audioType_t::flac, std::move(fd)},
-	encoderCtx{makeUnique<encoderContext_t>()} { }
+	encoderCtx{make_unique_nothrow<encoderContext_t>()} { }
 flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stream_encoder_new()},
 	encoderBuffer{}, metadata{}
 {
@@ -85,7 +87,7 @@ flac_t::encoderContext_t::encoderContext_t() noexcept : streamEncoder{FLAC__stre
 
 flac_t *flac_t::openW(const char *const fileName) noexcept
 {
-	auto file = makeUnique<flac_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
+	auto file = make_unique_nothrow<flac_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
 		audioModeWrite_t{});
 	if (!file || !file->valid())
 		return nullptr;

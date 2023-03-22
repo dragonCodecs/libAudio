@@ -12,6 +12,8 @@
  * @date 2021
  */
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio
 {
 	namespace oggOpus
@@ -49,12 +51,13 @@ namespace libAudio
 using namespace libAudio;
 
 oggOpus_t::oggOpus_t(fd_t &&fd, audioModeWrite_t) noexcept :
-	audioFile_t(audioType_t::oggOpus, std::move(fd)), encoderCtx(makeUnique<encoderContext_t>()) { }
+	audioFile_t{audioType_t::oggOpus, std::move(fd)},
+	encoderCtx{make_unique_nothrow<encoderContext_t>()} { }
 oggOpus_t::encoderContext_t::encoderContext_t() noexcept : encoder{} { }
 
 oggOpus_t *oggOpus_t::openW(const char *const fileName) noexcept
 {
-	auto file{makeUnique<oggOpus_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
+	auto file{make_unique_nothrow<oggOpus_t>(fd_t{fileName, O_RDWR | O_CREAT | O_TRUNC, substrate::normalMode},
 		audioModeWrite_t{})};
 	if (!file || !file->valid())
 		return nullptr;

@@ -12,6 +12,8 @@
  * @date 2019-2021
  */
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio::oggOpus
 {
 	int read(void *const filePtr, unsigned char *buffer, const int bufferLen)
@@ -46,8 +48,8 @@ namespace libAudio::oggOpus
 
 using namespace libAudio;
 
-oggOpus_t::oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::oggOpus, std::move(fd)),
-	decoderCtx{makeUnique<decoderContext_t>()} { }
+oggOpus_t::oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t{audioType_t::oggOpus, std::move(fd)},
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
 /*!
@@ -58,7 +60,7 @@ oggOpus_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBu
  */
 oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	auto file{make_unique_nothrow<oggOpus_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isOggOpus(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();
@@ -77,7 +79,7 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 	//OpusTags *tags = op_tags(ctx.decoder, -1);
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

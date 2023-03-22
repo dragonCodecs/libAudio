@@ -8,6 +8,7 @@
 
 #include "../libAudio.hxx"
 #include "../genericModule/genericModule.h"
+#include "../console.hxx"
 
 #include "moduleMixer.h"
 #include "mixFunctions.h"

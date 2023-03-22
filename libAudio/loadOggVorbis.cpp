@@ -6,6 +6,7 @@
 #include "string.hxx"
 
 using namespace std::literals::string_view_literals;
+using substrate::make_unique_nothrow;
 
 /*!
  * @internal
@@ -75,7 +76,8 @@ namespace libAudio::oggVorbis
 using namespace libAudio;
 
 oggVorbis_t::oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept :
-	audioFile_t(audioType_t::oggVorbis, std::move(fd)), decoderCtx(makeUnique<decoderContext_t>()) { }
+	audioFile_t{audioType_t::oggVorbis, std::move(fd)},
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playbackBuffer{}, eof{false} { }
 
 /*!
@@ -86,7 +88,7 @@ oggVorbis_t::decoderContext_t::decoderContext_t() noexcept : decoder{}, playback
  */
 oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<oggVorbis_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	auto file{make_unique_nothrow<oggVorbis_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isOggVorbis(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();
@@ -105,7 +107,7 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 	oggVorbis::copyComments(info, *ov_comment(&ctx.decoder, -1));
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

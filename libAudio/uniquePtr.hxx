@@ -39,21 +39,6 @@ template<typename T> inline typename makeUnique_<T>::arrayType makeUniqueT(const
 
 template<typename T, typename... args_t> inline typename makeUnique_<T>::invalidType makeUniqueT(args_t &&...) noexcept = delete;
 
-inline std::unique_ptr<char []> stringDup(const char *const str)
-{
-	if (!str)
-		return nullptr;
-	const size_t length = strlen(str) + 1;
-	auto result = makeUnique<char []>(length);
-	if (!result)
-		return nullptr;
-	strncpy(result.get(), str, length);
-	return result;
-}
-
-inline std::unique_ptr<char []> stringDup(const std::unique_ptr<char []> &str)
-	{ return stringDup(str.get()); }
-
 struct freeDelete final { void operator ()(void *ptr) noexcept { free(ptr); } };
 
 #endif /*UNIQUE_PTR_HXX*/

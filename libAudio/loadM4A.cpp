@@ -13,6 +13,8 @@
  * @date 2009-2020
  */
 
+using substrate::make_unique_nothrow;
+
 namespace libAudio::loadM4A
 {
 	/*!
@@ -111,8 +113,8 @@ namespace libAudio::loadM4A
 
 using namespace libAudio;
 
-m4a_t::m4a_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t(audioType_t::m4a, std::move(fd)),
-	decoderCtx{makeUnique<decoderContext_t>()} { }
+m4a_t::m4a_t(fd_t &&fd, audioModeRead_t) noexcept : audioFile_t{audioType_t::m4a, std::move(fd)},
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 m4a_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, mp4Stream{nullptr},
 	track{MP4_INVALID_TRACK_ID}, frameCount{0}, currentFrame{0}, sampleCount{0}, samplesUsed{0},
 	samples{nullptr}, eof{false}, playbackBuffer{} { }
@@ -184,7 +186,7 @@ void m4a_t::fetchTags() noexcept
  */
 m4a_t *m4a_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
+	auto file{make_unique_nothrow<m4a_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isM4A(file->_fd))
 		return nullptr;
 	auto &ctx = *file->decoderContext();
@@ -197,7 +199,7 @@ m4a_t *m4a_t::openR(const char *const fileName) noexcept
 	file->fetchTags();
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

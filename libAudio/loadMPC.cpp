@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <mpc/mpcdec.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 
@@ -13,6 +15,8 @@
  * @author Rachel Mant <git@dragonmux.network>
  * @date 2010-2020
  */
+
+using substrate::make_unique_nothrow;
 
 struct mpc_t::decoderContext_t final
 {
@@ -161,8 +165,8 @@ namespace libAudio::mpc
 
 using namespace libAudio;
 
-mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::musePack, std::move(fd)),
-	ctx(makeUnique<decoderContext_t>()) { }
+mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::musePack, std::move(fd)},
+	ctx{make_unique_nothrow<decoderContext_t>()} { }
 mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{}, playbackBuffer{},
 	samplesUsed{0}, callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 
@@ -174,7 +178,7 @@ mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamI
  */
 mpc_t *mpc_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<mpc_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{make_unique_nothrow<mpc_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isMPC(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();
@@ -191,7 +195,7 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
 	info.totalTime = ctx.streamInfo.samples / info.bitRate;
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
 	return file.release();
 }
 

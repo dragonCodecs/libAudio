@@ -7,6 +7,8 @@
 #include <id3tag.h>
 #include <lame/lame.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 

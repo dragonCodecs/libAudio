@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2020-2023 Rachel Mant <git@dragonmux.network>
+#include <substrate/utility>
 #include "libAudio.h"
 #include "libAudio.hxx"
 #include "console.hxx"
@@ -14,6 +15,7 @@
  */
 
 using namespace std::literals::string_view_literals;
+using substrate::make_unique_nothrow;
 
 struct sndh_t::decoderContext_t final
 {
@@ -28,7 +30,8 @@ namespace libAudio::sndh
 	constexpr static std::array<char, 4> sndhMagic{{'S', 'N', 'D', 'H'}};
 }
 
-sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)}, ctx{makeUnique<decoderContext_t>()} { }
+sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)},
+	ctx{make_unique_nothrow<decoderContext_t>()} { }
 
 void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {
@@ -38,7 +41,7 @@ void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 
 sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 {
-	std::unique_ptr<sndh_t> file{makeUnique<sndh_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	std::unique_ptr<sndh_t> file{make_unique_nothrow<sndh_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isSNDH(file->_fd))
 		return nullptr;
 	//auto &ctx = *file->context();
