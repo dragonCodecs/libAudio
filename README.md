@@ -3,7 +3,7 @@ libAudio
 ========
 
 [![Linux CI](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml/badge.svg)](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml)
-[![Windows CI](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml/badge.svg)](https://github.com/dragonmux/libAudio/actions/workflows/build-linux.yml)
+[![Windows CI](https://github.com/dragonmux/libAudio/actions/workflows/build-windows.yml/badge.svg)](https://github.com/dragonmux/libAudio/actions/workflows/build-windows.yml)
 [![codecov](https://codecov.io/gh/dragonmux/libAudio/branch/main/graph/badge.svg?token=Q4GadidCzX)](https://codecov.io/gh/dragonmux/libAudio)
 
 ## Getting started
