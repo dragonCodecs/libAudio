@@ -46,7 +46,7 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 	if (ToPlayback)
 	{
 		if (!ExternalPlayback)
-			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 		ctx.mod->InitMixer(info);
 	}
 	return file.release();

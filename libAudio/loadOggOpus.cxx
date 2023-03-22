@@ -79,7 +79,7 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 	//OpusTags *tags = op_tags(ctx.decoder, -1);
 
 	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
 }
 

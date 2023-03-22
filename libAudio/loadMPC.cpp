@@ -195,7 +195,7 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
 	info.totalTime = ctx.streamInfo.samples / info.bitRate;
 
 	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
 }
 

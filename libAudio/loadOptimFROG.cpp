@@ -125,7 +125,7 @@ optimFROG_t *optimFROG_t::openR(const char *const fileName) noexcept
 	info.totalTime = ofgInfo.length_ms / 1000;
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192, info));
+		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
 }
 
