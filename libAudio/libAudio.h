@@ -184,9 +184,9 @@ libAUDIO_API void *wmaOpenR(const char *fileName);
 libAUDIO_API int audioCloseFile(void *audioFile);
 
 // Read (Decode)
-libAUDIO_API void *audioOpenR(const char *const fileName);
+libAUDIO_API void *audioOpenR(const char *fileName);
 libAUDIO_API const fileInfo_t *audioGetFileInfo(void *audioFile);
-libAUDIO_API int64_t audioFillBuffer(void *audioFile, void *const buffer, const uint32_t length);
+libAUDIO_API int64_t audioFillBuffer(void *audioFile, void *buffer, uint32_t length);
 
 // Playback
 libAUDIO_API void audioPlay(void *audioFile);
@@ -194,12 +194,12 @@ libAUDIO_API void audioPause(void *audioFile);
 libAUDIO_API void audioStop(void *audioFile);
 libAUDIO_API bool isAudio(const char *fileName);
 
-libAUDIO_API void audioDefaultLevel(const float level);
+libAUDIO_API void audioDefaultLevel(float level);
 
 // Write (Encode)
-libAUDIO_API void *audioOpenW(const char *fileName, const uint32_t audioType);
-libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *const fileInfo);
-libAUDIO_API int64_t audioWriteBuffer(void *audioFile, const void *const buffer, int64_t length);
+libAUDIO_API void *audioOpenW(const char *fileName, uint32_t audioType);
+libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *fileInfo);
+libAUDIO_API int64_t audioWriteBuffer(void *audioFile, const void *buffer, int64_t length);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 // cppcoreguidelines-avoid-non-const-global-variables
