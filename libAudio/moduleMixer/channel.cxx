@@ -396,16 +396,19 @@ int32_t channel_t::patternLoop(const uint8_t param, const uint16_t row) noexcept
 
 void channel_t::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 {
+	if (!param && module.typeIs<MODULE_MOD>())
+		return;
+
 	if (param)
 		portamento = param;
 	else
 		param = portamento;
-	if (!Period)
-		return;
+
 	const auto command = param & 0xF0U;
 	if (module.typeIs<MODULE_S3M, MODULE_STM, MODULE_IT>() && command >= 0xE0U)
 	{
-		if (param & 0x0FU)
+		param &= 0x0fU;
+		if (param)
 		{
 			if (command == 0xF0U)
 				finePortamentoUp(module, param);
@@ -414,8 +417,10 @@ void channel_t::portamentoUp(const ModuleFile &module, uint8_t param) noexcept
 		}
 		return;
 	}
-	if (module.ticks() > startTick || module.speed() == 1)
+	if (module.ticks() > startTick)// || module.speed() == 1)
 	{
+		if (!Period)
+			return;
 		if (module.hasLinearSlides())// && module.typeIs<MODULE_XM>())
 		{
 			uint32_t oldPeriod = Period;
@@ -510,7 +515,7 @@ inline void channel_t::extraFinePortamentoUp(const ModuleFile &module, uint8_t p
 {
 	if (module.ticks() == startTick && Period && param)
 	{
-		if (module.hasLinearSlides())
+		if (module.hasLinearSlides())// && !module.typeIs<MODULE_XM>())
 			Period = fineLinearSlideDown(Period, param & 0x0FU);
 		else
 			Period -= param;
