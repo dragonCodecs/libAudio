@@ -10,8 +10,8 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 	int16_t result{};
 	if (volume)
 	{
-		uint8_t type = tremoloType & 0x03U;
-		uint8_t depth = tremoloDepth << 4U;
+		const uint8_t type = tremoloType & 0x03U;
+		const uint16_t depth = tremoloDepth << 4U;
 		if (type == 1)
 			result = (rampDownTable[tremoloPos] * depth) >> 8U;
 		else if (type == 2)
@@ -29,13 +29,20 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t volume) noexcept
 {
 	uint16_t result{};
-	uint8_t duration = (tremor >> 4U) + (tremor & 0x0FU) + 2U;
-	uint8_t onTime = (tremor >> 4U) + 1U;
-	uint8_t count = tremorCount;
-	if (count > duration)
-		count = 0;
 	if (module.ticks() || module.typeIs<MODULE_S3M>())
 	{
+		const uint8_t onTime = (tremor >> 4U) + 1U;
+		const uint8_t count
+		{
+			[=](const uint8_t duration) noexcept -> uint8_t
+			{
+				const uint8_t count{tremorCount};
+				if (count > duration)
+					return 0;
+				return count;
+			}(onTime + (tremor & 0x0FU) + 1U)
+		};
+
 		if (count > onTime)
 			result = volume;
 		tremorCount = count + 1;
