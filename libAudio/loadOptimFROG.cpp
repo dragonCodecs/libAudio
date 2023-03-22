@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2009-2023 Rachel Mant <git@dragonmux.network>
 #include <OptimFROG/OptimFROG.h>
 
+#include <substrate/utility>
+
 #include "libAudio.h"
 #include "libAudio.hxx"
 
@@ -12,6 +14,8 @@
  * @author Rachel Mant <git@dragonmux.network>
  * @date 2009-2021
  */
+
+using substrate::make_unique_nothrow;
 
 /*!
  * @internal
@@ -99,13 +103,13 @@ namespace libAudio::optimFROG
 using namespace libAudio;
 
 optimFROG_t::optimFROG_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::optimFROG, std::move(fd)},
-	ctx{makeUnique<decoderContext_t>()} { }
+	ctx{make_unique_nothrow<decoderContext_t>()} { }
 optimFROG_t::decoderContext_t::decoderContext_t() noexcept : decoder{OptimFROG_createInstance()},
 	playbackBuffer{}, eof{false} { }
 
 optimFROG_t *optimFROG_t::openR(const char *const fileName) noexcept
 {
-	auto file{makeUnique<optimFROG_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
+	auto file{make_unique_nothrow<optimFROG_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isOptimFROG(file->_fd))
 		return nullptr;
 	auto &ctx = *file->context();
@@ -125,7 +129,7 @@ optimFROG_t *optimFROG_t::openR(const char *const fileName) noexcept
 	info.totalTime = ofgInfo.length_ms / 1000;
 
 	if (!ExternalPlayback)
-		file->player(makeUnique<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
 }
 
