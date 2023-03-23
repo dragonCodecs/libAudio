@@ -71,9 +71,10 @@ if not libMPC.found()
 endif
 
 requiresWavpack = extraFormats.contains('wavpack')
-libWavPack = dependency('wavpack', version: '>=5.0.0', required: requiresWavpack, allow_fallback: true, disabler: true)
-if not cxx.has_function('WavpackOpenFileInputEx64', dependencies: libWavPack)
-	error('Could not find the required function WavpackOpenFileInputEx64() from libwavpack')
+libWavPack = dependency('wavpack', version: '>=5.0.0', required: requiresWavpack, allow_fallback: true)
+
+if libWavPack.found() and libWavPack.type_name() != 'internal'
+	cxx.has_header_symbol('wavpack/wavpack.h', 'WavpackOpenFileInputEx64', dependencies: libWavPack, required: true)
 endif
 
 requiresMP3 = extraFormats.contains('mp3')
@@ -146,6 +147,9 @@ if libWavPack.found()
 	message('Enabling support for WavPack')
 	extraSrcs += ['loadWavPack.cpp',]
 	confData.set10('ENABLE_WAVPACK', true)
+	if libWavPack.type_name() == 'internal'
+		confData.set10('USE_MESON_WAVPACK', true)
+	endif
 	extraDeps += libWavPack
 endif
 

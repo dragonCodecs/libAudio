@@ -1,6 +1,3 @@
-[submodule "deps/WavPack"]
-	path = deps/WavPack
-	url = https://github.com/dbry/WavPack
 [submodule "deps/faad2"]
 	path = deps/faad2
 	url = https://github.com/knik0/faad2

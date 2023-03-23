@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2009-2023 Rachel Mant <git@dragonmux.network>
-#ifdef _WINDOWS
-#include <wavpack.h>
-#else
-#include <wavpack/wavpack.h>
-#endif
+
 #include <string>
 #include <substrate/utility>
 
 #include "libAudio.h"
 #include "libAudio.hxx"
+
+#ifdef USE_MESON_WAVPACK
+#include <wavpack.h>
+#else
+#include <wavpack/wavpack.h>
+#endif
 
 /*!
  * @internal

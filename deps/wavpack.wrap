@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/WavPack.git
+revision = head
+clone-recursive = false
+
+[provide]
+wavpack = wavpack_dep
