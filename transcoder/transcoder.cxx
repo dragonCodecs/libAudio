@@ -54,8 +54,8 @@ int usage(const char *const program) noexcept
 void printInfo(const char *const fileName, const fileInfo_t &info) noexcept
 {
 	console.info("Input file '", fileName, "', TotalTime: ", asTime_t{info.totalTime()},
-		", Sample Rate: ", info.bitRate(), "Hz, Title: ", info.title, ", Artist: ", info.artist,
-		", Album: ", info.album, ", Channels: ", info.channels());
+		", Sample Rate: ", info.bitRate(), "Hz, Title: ", info.title(), ", Artist: ", info.artist(),
+		", Album: ", info.album(), ", Channels: ", info.channels());
 }
 
 void printStatus(const uint32_t loops, const fileInfo_t &info) noexcept

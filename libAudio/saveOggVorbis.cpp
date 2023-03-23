@@ -70,12 +70,12 @@ vorbis_comment copyComments(const fileInfo_t &info) noexcept
 {
 	vorbis_comment tags;
 	vorbis_comment_init(&tags);
-	if (info.title)
-		vorbis_comment_add_tag(&tags, "Title", info.title.get());
-	if (info.artist)
-		vorbis_comment_add_tag(&tags, "Artist", info.artist.get());
-	if (info.album)
-		vorbis_comment_add_tag(&tags, "Album", info.album.get());
+	if (info.title())
+		vorbis_comment_add_tag(&tags, "Title", info.title());
+	if (info.artist())
+		vorbis_comment_add_tag(&tags, "Artist", info.artist());
+	if (info.album())
+		vorbis_comment_add_tag(&tags, "Album", info.album());
 	for (const auto &other : info.other)
 		vorbis_comment_add(&tags, other.get());
 	return tags;

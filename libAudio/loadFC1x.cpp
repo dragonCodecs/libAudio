@@ -30,7 +30,7 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 		console.error(e.error());
 		return nullptr;
 	}
-	info.title = ctx.mod->title();
+	info.title(ctx.mod->title());
 	info.channels(ctx.mod->channels());
 
 	if (ToPlayback)

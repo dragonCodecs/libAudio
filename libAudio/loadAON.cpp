@@ -36,8 +36,8 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 		console.error(e.error());
 		return nullptr;
 	}
-	info.title = ctx.mod->title();
-	info.artist = ctx.mod->author();
+	info.title(ctx.mod->title());
+	info.artist(ctx.mod->author());
 	auto remark = ctx.mod->remark();
 	if (remark)
 		info.other.emplace_back(std::move(remark));

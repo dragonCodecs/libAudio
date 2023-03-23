@@ -111,9 +111,6 @@ void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const 
 	FLAC__metadata_object_vorbiscomment_append_comment(metadata, entry, false);
 }
 
-void writeComment(FLAC__StreamMetadata *metadata, const char *const name, const std::unique_ptr<char []> &value)
-	{ writeComment(metadata, name, value.get()); }
-
 /*!
  * This function sets the \c FileInfo structure for a FLAC file being encoded
  * @param flacFile A pointer to a file opened with \c flacOpenW()
@@ -140,9 +137,9 @@ bool flac_t::fileInfo(const fileInfo_t &info)
 		FLAC__metadata_object_vorbiscomment_append_comment(ctx.metadata[0], entry, true);
 	}
 
-	writeComment(ctx.metadata[0], "Album", info.album);
-	writeComment(ctx.metadata[0], "Artist", info.artist);
-	writeComment(ctx.metadata[0], "Title", info.title);
+	writeComment(ctx.metadata[0], "Album", info.album());
+	writeComment(ctx.metadata[0], "Artist", info.artist());
+	writeComment(ctx.metadata[0], "Title", info.title());
 	FLAC__stream_encoder_set_metadata(ctx.streamEncoder, ctx.metadata.data(), uint32_t(ctx.metadata.size()));
 	FLAC__stream_encoder_init_stream(ctx.streamEncoder, flac::write, flac::seek,
 		flac::tell, nullptr, this);

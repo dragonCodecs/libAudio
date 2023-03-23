@@ -30,8 +30,8 @@ modIT_t *modIT_t::openR(const char *const fileName) noexcept
 		console.error(e.error());
 		return nullptr;
 	}
-	info.title = ctx.mod->title();
-	info.artist = ctx.mod->author();
+	info.title(ctx.mod->title());
+	info.artist(ctx.mod->author());
 
 	if (ToPlayback)
 	{

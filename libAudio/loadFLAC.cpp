@@ -187,11 +187,11 @@ namespace libAudio::flac
 				{
 					const auto comment = reinterpret_cast<const char *>(comments.comments[i].entry);
 					if (strncasecmp(comment, "title=", 6) == 0)
-						copyComment(info.title, comment + 6);
+						copyComment(info.titlePtr(), comment + 6);
 					else if (strncasecmp(comment, "artist=", 7) == 0)
-						copyComment(info.artist, comment + 7);
+						copyComment(info.artistPtr(), comment + 7);
 					else if (strncasecmp(comment, "album=", 6) == 0)
-						copyComment(info.album, comment + 6);
+						copyComment(info.albumPtr(), comment + 6);
 #ifndef __arm__
 					else
 					{

@@ -44,7 +44,7 @@ modMOD_t *modMOD_t::openR(const char *const fileName) noexcept
 		console.error(e.error());
 		return nullptr;
 	}
-	info.title = ctx.mod->title();
+	info.title(ctx.mod->title());
 
 	if (ToPlayback)
 	{

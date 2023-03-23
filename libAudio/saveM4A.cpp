@@ -166,12 +166,12 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 	//p_AF->MaxInSamp / info->channels, MP4_MPEG4_AUDIO_TYPE);
 	MP4SetAudioProfileLevel(ctx.mp4Stream, 0x0F);
 
-	if (info.album)
-		MP4TagsSetAlbum(tags, info.album.get());
-	if (info.artist)
-		MP4TagsSetArtist(tags, info.artist.get());
-	if (info.title)
-		MP4TagsSetName(tags, info.title.get());
+	if (info.album())
+		MP4TagsSetAlbum(tags, info.album());
+	if (info.artist())
+		MP4TagsSetArtist(tags, info.artist());
+	if (info.title())
+		MP4TagsSetName(tags, info.title());
 	MP4TagsSetEncodingTool(tags, "libAudio " libAudioVersion);
 	MP4TagsStore(tags, ctx.mp4Stream);
 	MP4TagsFree(tags);

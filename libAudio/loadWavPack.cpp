@@ -220,9 +220,9 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 	info.channels(WavpackGetNumChannels(ctx.decoder));
 	info.bitsPerSample(WavpackGetBitsPerSample(ctx.decoder));
 	info.bitRate(WavpackGetSampleRate(ctx.decoder));
-	info.album = ctx.readTag("album");
-	info.artist = ctx.readTag("artist");
-	info.title = ctx.readTag("title");
+	info.album(ctx.readTag("album"));
+	info.artist(ctx.readTag("artist"));
+	info.title(ctx.readTag("title"));
 
 	if (!ExternalPlayback)
 		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));

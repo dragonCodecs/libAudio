@@ -160,9 +160,9 @@ bool mp3_t::readMetadata() noexcept
 	const id3_tag *const tags = id3_file_tag(file);
 
 	info.totalTime(decodeIntTag(tags, "TLEN") / 1000U);
-	info.album = copyTag(tags, ID3_FRAME_ALBUM);
-	info.artist = copyTag(tags, ID3_FRAME_ARTIST);
-	info.title = copyTag(tags, ID3_FRAME_TITLE);
+	info.album(copyTag(tags, ID3_FRAME_ALBUM));
+	info.artist(copyTag(tags, ID3_FRAME_ARTIST));
+	info.title(copyTag(tags, ID3_FRAME_TITLE));
 	cloneComments(tags, ID3_FRAME_COMMENT, info.other);
 
 	int64_t seekOffset = tags->paddedsize;

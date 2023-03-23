@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 		}
 
 		console.info("File '", argv[i], "', TotalTime: ", asTime_t{info->totalTime()}, ", Sample Rate: ", info->bitRate(),
-			"Hz, Title: ", info->title, ", Artist: ", info->artist, ", Album: ", info->album, ", Channels: ",
+			"Hz, Title: ", info->title(), ", Artist: ", info->artist(), ", Album: ", info->album(), ", Channels: ",
 			info->channels());
 #if STREAMING
 		writeNowPlaying(argv[i], info->title.get());

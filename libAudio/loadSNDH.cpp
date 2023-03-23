@@ -35,8 +35,8 @@ sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd
 
 void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {
-	info.title.swap(metadata.title);
-	info.artist.swap(metadata.artist);
+	info.title(std::move(metadata.title));
+	info.artist(std::move(metadata.artist));
 }
 
 sndh_t *sndh_t::openR(const char *const fileName) noexcept try

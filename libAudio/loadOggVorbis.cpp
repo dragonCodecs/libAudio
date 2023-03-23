@@ -61,9 +61,9 @@ namespace libAudio::oggVorbis
 		for (int i = 0; i < tags.comments; ++i)
 		{
 			const char *const value = tags.user_comments[i];
-			if (!maybeCopyComment(info.title, value, "title="sv) &&
-				!maybeCopyComment(info.artist, value, "artist="sv) &&
-				!maybeCopyComment(info.album, value, "album="sv))
+			if (!maybeCopyComment(info.titlePtr(), value, "title="sv) &&
+				!maybeCopyComment(info.artistPtr(), value, "artist="sv) &&
+				!maybeCopyComment(info.albumPtr(), value, "album="sv))
 			{
 				std::unique_ptr<char []> other;
 				copyComment(other, value);

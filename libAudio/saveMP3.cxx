@@ -59,12 +59,12 @@ bool mp3_t::fileInfo(const fileInfo_t &info)
 		lame_set_mode(ctx.encoder, MPEG_mode::JOINT_STEREO);
 
 	id3tag_init(ctx.encoder);
-	if (info.title)
-		id3tag_set_title(ctx.encoder, info.title.get());
-	if (info.artist)
-		id3tag_set_artist(ctx.encoder, info.artist.get());
-	if (info.album)
-		id3tag_set_album(ctx.encoder, info.album.get());
+	if (info.title())
+		id3tag_set_title(ctx.encoder, info.title());
+	if (info.artist())
+		id3tag_set_artist(ctx.encoder, info.artist());
+	if (info.album())
+		id3tag_set_album(ctx.encoder, info.album());
 	for (const auto &comment : info.other)
 		id3tag_set_comment(ctx.encoder, comment.get());
 	id3tag_add_v2(ctx.encoder);

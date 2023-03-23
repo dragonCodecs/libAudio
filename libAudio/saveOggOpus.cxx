@@ -35,12 +35,12 @@ namespace libAudio
 		OggOpusComments *copyComments(const fileInfo_t &info) noexcept
 		{
 			OggOpusComments *tags{ope_comments_create()};
-			if (info.title)
-				ope_comments_add(tags, "Title", info.title.get());
-			if (info.artist)
-				ope_comments_add(tags, "Artist", info.artist.get());
-			if (info.album)
-				ope_comments_add(tags, "Album", info.album.get());
+			if (info.title())
+				ope_comments_add(tags, "Title", info.title());
+			if (info.artist())
+				ope_comments_add(tags, "Artist", info.artist());
+			if (info.album())
+				ope_comments_add(tags, "Album", info.album());
 			for (const auto &other : info.other)
 				ope_comments_add_string(tags, other.get());
 			return tags;

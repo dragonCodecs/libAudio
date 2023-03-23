@@ -167,9 +167,9 @@ void m4a_t::fetchTags() noexcept
 	auto &ctx = *decoderContext();
 	MP4TagsFetch(tags, ctx.mp4Stream);
 
-	info.album = stringDup(tags->album);
-	info.artist = stringDup(tags->artist ? tags->artist : tags->albumArtist);
-	info.title = stringDup(tags->name);
+	info.album(stringDup(tags->album));
+	info.artist(stringDup(tags->artist ? tags->artist : tags->albumArtist));
+	info.title(stringDup(tags->name));
 	if (tags->comments)
 		info.other.emplace_back(stringDup(tags->comments));
 
