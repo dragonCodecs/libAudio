@@ -271,7 +271,7 @@ libAudioLibrary = shared_library(
 	install: true,
 	version: meson.project_version()
 )
-libAudioInclude = meson.current_source_dir()
+libAudioIncludes = [meson.current_source_dir(), meson.current_build_dir()]
 
 libAudio = declare_dependency(
 	include_directories: include_directories('.'),

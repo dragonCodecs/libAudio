@@ -40,17 +40,13 @@ public:
 	fileInfo_t(const fileInfo_t &) = delete;
 
 	[[nodiscard]] uint64_t totalTime() const noexcept { return _totalTime; }
-	[[nodiscard]] void totalTime(const uint64_t totalTime) noexcept
-		{ _totalTime = totalTime; }
+	void totalTime(const uint64_t totalTime) noexcept { _totalTime = totalTime; }
 	[[nodiscard]] uint32_t bitsPerSample() const noexcept { return _bitsPerSample; }
-	[[nodiscard]] void bitsPerSample(const uint32_t bitsPerSample) noexcept
-		{ _bitsPerSample = bitsPerSample; }
+	void bitsPerSample(const uint32_t bitsPerSample) noexcept { _bitsPerSample = bitsPerSample; }
 	[[nodiscard]] uint32_t bitRate() const noexcept { return _bitRate; }
-	[[nodiscard]] void bitRate(const uint32_t bitRate) noexcept
-		{ _bitRate = bitRate; }
+	void bitRate(const uint32_t bitRate) noexcept { _bitRate = bitRate; }
 	[[nodiscard]] uint8_t channels() const noexcept { return _channels; }
-	[[nodiscard]] void channels(const uint8_t channels) noexcept
-		{ _channels = channels; }
+	void channels(const uint8_t channels) noexcept { _channels = channels; }
 };
 
 #endif /*FILE_INFO_HXX*/

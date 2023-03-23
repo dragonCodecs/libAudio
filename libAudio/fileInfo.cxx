@@ -10,21 +10,21 @@ uint64_t audioFileTotalTime(const fileInfo_t *const fileInfo)
 	return fileInfo->totalTime();
 }
 
-uint32_t audioFileBitsPerSample(const fileInfo_t *fileInfo)
+uint32_t audioFileBitsPerSample(const fileInfo_t *const fileInfo)
 {
 	if (!fileInfo)
 		return 0U;
 	return fileInfo->bitsPerSample();
 }
 
-uint32_t audioFileBitRate(const fileInfo_t *fileInfo)
+uint32_t audioFileBitRate(const fileInfo_t *const fileInfo)
 {
 	if (!fileInfo)
 		return 0U;
 	return fileInfo->bitRate();
 }
 
-uint8_t audioFileChannels(const fileInfo_t *fileInfo)
+uint8_t audioFileChannels(const fileInfo_t *const fileInfo)
 {
 	if (!fileInfo)
 		return 0U;

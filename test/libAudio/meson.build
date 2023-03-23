@@ -1,5 +1,5 @@
 libAudioTests = [
-	'testFixedVector', 'testFD', 'testString'
+	'testFixedVector', 'testFD', 'testString', 'testFileInfo'
 ]
 
 testHelpers = static_library(
@@ -15,7 +15,13 @@ testObjectMap = {
 	'testFixedVector': {'test': ['fixedVector.cxx']},
 	'testFD': {'test': ['fd.cxx']},
 	'testString': {'test': ['string.cxx']},
+	'testFileInfo': {'libAudio': ['fileInfo.cxx']},
 }
+
+testIncludes = []
+foreach include : libAudioIncludes
+	testIncludes += '-I@0@'.format(include)
+endforeach
 
 foreach test : libAudioTests
 	map = testObjectMap.get(test, {})
@@ -25,8 +31,8 @@ foreach test : libAudioTests
 	custom_target(
 		test,
 		command: [
-			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude
-		] + commandExtra + testLibs,
+			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@'
+		] + testIncludes + commandExtra + testLibs,
 		input: [test + '.cxx'] + libAudioObjs + testObjs,
 		output: test + '.so',
 		build_by_default: true

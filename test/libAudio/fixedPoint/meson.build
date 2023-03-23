@@ -11,8 +11,8 @@ foreach test : fixedPointTests
 	custom_target(
 		test,
 		command: [
-			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@', '-I' + libAudioInclude
-		] + commandExtra,
+			crunchMake, '-s', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@'
+		] + testIncludes + commandExtra,
 		input: [test + '.cxx', fixedPointObj],
 		output: test + '.so',
 		build_by_default: true
