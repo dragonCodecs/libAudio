@@ -1,9 +1,6 @@
 [submodule "deps/faad2"]
 	path = deps/faad2
 	url = https://github.com/knik0/faad2
-[submodule "deps/faac"]
-	path = deps/faac
-	url = https://github.com/knik0/faac
 [submodule "deps/libmpc"]
 	path = deps/libmpc
 	url = git@github.com:dragonmux/libmpc

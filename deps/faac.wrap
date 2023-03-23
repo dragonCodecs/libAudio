@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/faac.git
+revision = head
+clone-recursive = false
+
+[provide]
+faac = faac_dep

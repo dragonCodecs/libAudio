@@ -87,7 +87,10 @@ endif
 
 requiresAAC = extraFormats.contains('aac')
 libMP4v2 = cxx.find_library('mp4v2', required: requiresAAC, disabler: true)
-libFAAC = cxx.find_library('faac', required: requiresAAC, disabler: true)
+libFAAC = cxx.find_library('faac', required: false)
+if not libFAAC.found()
+	libFAAC = dependency('faac', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
+endif
 libFAAD = cxx.find_library('faad', required: requiresAAC, disabler: true)
 if not cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
 	error('Could not find the required function MP4CreateProvider() from libmp4v2')
