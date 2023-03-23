@@ -99,11 +99,11 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 		return nullptr;
 
 	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
-	info.bitRate = vorbisInfo.rate;
-	info.channels = vorbisInfo.channels;
-	info.bitsPerSample = 16;
+	info.bitRate(vorbisInfo.rate);
+	info.channels(vorbisInfo.channels);
+	info.bitsPerSample(16U);
 	if (ov_seekable(&ctx.decoder))
-		info.totalTime = uint64_t(ov_time_total(&ctx.decoder, -1));
+		info.totalTime(ov_time_total(&ctx.decoder, -1));
 	oggVorbis::copyComments(info, *ov_comment(&ctx.decoder, -1));
 
 	if (!ExternalPlayback)
@@ -140,7 +140,7 @@ int64_t oggVorbis_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	while (offset < length && !ctx.eof)
 	{
 		const long result = ov_read(&ctx.decoder, buffer + offset, length - offset,
-			0, info.bitsPerSample / 8, 1, nullptr);
+			0, info.bitsPerSample() / 8U, 1, nullptr);
 		if (result > 0)
 			offset += uint32_t(result);
 		else if (result == OV_HOLE || result == OV_EBADLINK)

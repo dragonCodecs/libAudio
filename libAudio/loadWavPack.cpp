@@ -217,9 +217,9 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 	ctx.decoder = WavpackOpenFileInputEx64(&ctx.callbacks, &fileDesc,
 		ctx.wvcFile(), nullptr, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
-	info.channels = WavpackGetNumChannels(ctx.decoder);
-	info.bitsPerSample = WavpackGetBitsPerSample(ctx.decoder);
-	info.bitRate = WavpackGetSampleRate(ctx.decoder);
+	info.channels(WavpackGetNumChannels(ctx.decoder));
+	info.bitsPerSample(WavpackGetBitsPerSample(ctx.decoder));
+	info.bitRate(WavpackGetSampleRate(ctx.decoder));
 	info.album = ctx.readTag("album");
 	info.artist = ctx.readTag("artist");
 	info.title = ctx.readTag("title");
@@ -269,13 +269,13 @@ int64_t wavPack_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	while (offset < length && !ctx.eof)
 	{
 		if (ctx.samplesUsed == ctx.sampleCount)
-			ctx.nextFrame(info.channels);
+			ctx.nextFrame(info.channels());
 
 		auto playbackBuffer = reinterpret_cast<int16_t *>(buffer + offset);
-		uint32_t count = ctx.samplesUsed * info.channels, index = 0;
-		for (uint32_t i = ctx.samplesUsed; i < ctx.sampleCount; i += info.channels)
+		uint32_t count = ctx.samplesUsed * info.channels(), index = 0;
+		for (uint32_t i = ctx.samplesUsed; i < ctx.sampleCount; i += info.channels())
 		{
-			for (uint8_t channel = 0; channel < info.channels; ++channel)
+			for (uint8_t channel = 0; channel < info.channels(); ++channel)
 				playbackBuffer[index++] = int16_t(ctx.decodeBuffer[count++]);
 		}
 		ctx.samplesUsed += index;

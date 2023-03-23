@@ -92,7 +92,7 @@ bool oggVorbis_t::fileInfo(const fileInfo_t &info)
 	auto &ctx = *encoderContext();
 	ogg_packet packetHeader, packetComments, packetMode;
 
-	vorbis_encode_init_vbr(&ctx.vorbisInfo, info.channels, info.bitRate, 0.75F);
+	vorbis_encode_init_vbr(&ctx.vorbisInfo, info.channels(), info.bitRate(), 0.75F);
 	vorbis_encode_setup_init(&ctx.vorbisInfo);
 
 	vorbis_analysis_init(&ctx.encoderState, &ctx.vorbisInfo);
@@ -116,13 +116,13 @@ template<typename T> uint32_t fillFrame(oggVorbis_t &file, const void *const buf
 {
 	const fileInfo_t &info = file.fileInfo();
 	auto &ctx = *file.encoderContext();
-	const uint32_t sampleCount = length / (sizeof(T) * info.channels);
+	const uint32_t sampleCount = length / (sizeof(T) * info.channels());
 	const auto encoderBuffer = vorbis_analysis_buffer(&ctx.encoderState, sampleCount);
 	const auto buffer = static_cast<const T *>(bufferPtr);
 	using limits = std::numeric_limits<T>;
 	for (uint32_t index = 0, i = 0; i < sampleCount; ++i)
 	{
-		for (uint8_t channel = 0; channel < info.channels; ++channel)
+		for (uint8_t channel = 0; channel < info.channels(); ++channel)
 			encoderBuffer[channel][i] = float(buffer[index++]) / limits::max();
 	}
 	return sampleCount;
@@ -143,9 +143,9 @@ int64_t oggVorbis_t::writeBuffer(const void *const bufferPtr, const int64_t rawL
 	if (rawLength <= 0)
 		return rawLength;
 	const uint32_t length = uint32_t(rawLength);
-	if (info.bitsPerSample == 8)
+	if (info.bitsPerSample() == 8U)
 		sampleCount = fillFrame<int8_t>(*this, bufferPtr, length);
-	else if (info.bitsPerSample == 16)
+	else if (info.bitsPerSample() == 16U)
 		sampleCount = fillFrame<int16_t>(*this, bufferPtr, length);
 
 	vorbis_analysis_wrote(&ctx.encoderState, sampleCount);

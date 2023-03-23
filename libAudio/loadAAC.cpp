@@ -107,9 +107,9 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 	config->outputFormat = FAAD_FMT_16BIT;
 	NeAACDecSetConfiguration(ctx.decoder, config);
 
-	info.bitRate = bitRate;
-	info.channels = channels;
-	info.bitsPerSample = 16;
+	info.bitRate(bitRate);
+	info.channels(channels);
+	info.bitsPerSample(16U);
 
 	if (!ExternalPlayback)
 		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
@@ -243,7 +243,7 @@ uint8_t *aac_t::nextFrame() noexcept
 		ctx.samplesUsed = 0;
 		return nullptr;
 	}
-	const uint8_t sampleBytes = fileInfo().bitsPerSample / 8;
+	const uint8_t sampleBytes = fileInfo().bitsPerSample() / 8;
 	ctx.sampleCount = FI.samples * sampleBytes;
 	ctx.samplesUsed = 0;
 	return ctx.decodeBuffer;

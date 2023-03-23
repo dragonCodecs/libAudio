@@ -6,6 +6,7 @@
 #include <substrate/fd>
 // XXX: This header actually needs installing and the current header mess figured out + fixed.
 #include "../libAudio/console.hxx"
+#include "../libAudio/fileInfo.hxx"
 
 using libAudio::console::asTime_t;
 
@@ -56,9 +57,9 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		console.info("File '", argv[i], "', TotalTime: ", asTime_t{info->totalTime}, ", Sample Rate: ", info->bitRate,
+		console.info("File '", argv[i], "', TotalTime: ", asTime_t{info->totalTime()}, ", Sample Rate: ", info->bitRate(),
 			"Hz, Title: ", info->title, ", Artist: ", info->artist, ", Album: ", info->album, ", Channels: ",
-			info->channels);
+			info->channels());
 #if STREAMING
 		writeNowPlaying(argv[i], info->title.get());
 #endif

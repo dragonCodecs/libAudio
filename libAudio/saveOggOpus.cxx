@@ -86,8 +86,8 @@ bool oggOpus_t::fileInfo(const fileInfo_t &info)
 		return false;
 	int result{};
 
-	ctx.encoder = ope_encoder_create_callbacks(&oggOpus::callbacks, this, tags, info.bitRate,
-		info.channels, 0, &result);
+	ctx.encoder = ope_encoder_create_callbacks(&oggOpus::callbacks, this, tags, info.bitRate(),
+		info.channels(), 0, &result);
 	// the above call takes a copy, so we have to clean up
 	ope_comments_destroy(tags);
 	if (result != OPE_OK)
@@ -114,10 +114,10 @@ int64_t oggOpus_t::writeBuffer(const void *const bufferPtr, const int64_t length
 	auto &ctx = *encoderContext();
 	if (length <= 0)
 		return length;
-	else if (info.bitsPerSample != 16)
+	else if (info.bitsPerSample() != 16U)
 		return -3; // Opus can't encode non-16-bit sample data.. V_V
 	// Convert length into samples per channel
-	const auto sampleCount{uint64_t(length) / (uint64_t(info.channels) * (info.bitsPerSample / 8U))};
+	const auto sampleCount{uint64_t(length) / (uint64_t(info.channels()) * (info.bitsPerSample() / 8U))};
 	const auto *const buffer{static_cast<const int16_t *>(bufferPtr)};
 	const auto result{ope_encoder_write(ctx.encoder, buffer, sampleCount)};
 	if (result == OPE_OK)

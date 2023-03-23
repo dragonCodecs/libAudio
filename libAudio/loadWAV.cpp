@@ -108,19 +108,22 @@ bool wav_t::readFormat() noexcept
 	const fd_t &file = fd();
 	std::array<char, 6> unused;
 	uint16_t channels;
+	uint32_t bitRate;
 
 	if (!file.readLE(ctx.compression) ||
 		!file.readLE(channels) ||
-		!file.readLE(info.bitRate) ||
+		!file.readLE(bitRate) ||
 		!file.read(unused) ||
 		!file.readLE(ctx.bitsPerSample) ||
 		!channels ||
-		!info.bitRate ||
+		!bitRate ||
 		!ctx.bitsPerSample ||
 		(ctx.bitsPerSample % 8))
 		return false;
-	info.channels = channels;
-	info.bitsPerSample = mapBPS(ctx.bitsPerSample);
+
+	info.bitRate(bitRate);
+	info.channels(channels);
+	info.bitsPerSample(mapBPS(ctx.bitsPerSample));
 	ctx.floatData = ctx.compression == 3;
 	return true;
 }
@@ -171,9 +174,16 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 		chunkLength > (fileSize - offset) ||
 		fd.isEOF())
 		return nullptr;
-	info.totalTime = chunkLength / info.channels;
-	info.totalTime /= ctx.bitsPerSample / 8;
-	info.totalTime /= info.bitRate;
+
+	info.totalTime
+	(
+		[&]()
+		{
+			uint64_t totalTime = chunkLength / info.channels();
+			totalTime /= ctx.bitsPerSample / 8U;
+			return totalTime / info.bitRate();
+		}()
+	);
 	ctx.offsetDataLength = chunkLength + fd.tell();
 
 	if (!ExternalPlayback)

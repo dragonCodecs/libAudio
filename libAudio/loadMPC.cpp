@@ -189,10 +189,10 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
 	ctx.frameInfo.buffer = ctx.buffer;
 	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
 
-	info.bitsPerSample = ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate;
-	info.bitRate = ctx.streamInfo.sample_freq;
-	info.channels = ctx.streamInfo.channels;
-	info.totalTime = ctx.streamInfo.samples / info.bitRate;
+	info.bitsPerSample(ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate);
+	info.bitRate(ctx.streamInfo.sample_freq);
+	info.channels(ctx.streamInfo.channels);
+	info.totalTime(ctx.streamInfo.samples / info.bitRate());
 
 	if (!ExternalPlayback)
 		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
@@ -233,17 +233,17 @@ int64_t mpc_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 		int16_t *playbackBuffer = reinterpret_cast<int16_t *>(ctx.playbackBuffer + offset);
 		uint32_t count = 0;
-		const uint32_t sampleOffset = ctx.samplesUsed * info.channels;
+		const uint32_t sampleOffset = ctx.samplesUsed * info.channels();
 		for (uint32_t index = 0, i = ctx.samplesUsed; i < ctx.frameInfo.samples; ++i)
 		{
 			playbackBuffer[index] = mpc::floatToInt16(ctx.frameInfo.buffer[sampleOffset + index]);
 			++index;
-			if (info.channels == 2)
+			if (info.channels() == 2)
 			{
 				playbackBuffer[index] = mpc::floatToInt16(ctx.frameInfo.buffer[sampleOffset + index]);
 				++index;
 			}
-			count += sizeof(int16_t) * info.channels;
+			count += sizeof(int16_t) * info.channels();
 
 			if ((offset + count) >= length)
 			{

@@ -121,12 +121,12 @@ optimFROG_t *optimFROG_t::openR(const char *const fileName) noexcept
 	OptimFROG_Info ofgInfo{};
 	if (!OptimFROG_getInfo(ctx.decoder, &ofgInfo))
 		return nullptr;
-	info.channels = ofgInfo.channels;
-	info.bitRate = ofgInfo.samplerate;
-	info.bitsPerSample = ofgInfo.bitspersample;
-	if (info.bitsPerSample > 16)
-		info.bitsPerSample = 16;
-	info.totalTime = ofgInfo.length_ms / 1000;
+	info.channels(ofgInfo.channels);
+	info.bitRate(ofgInfo.samplerate);
+	info.bitsPerSample(ofgInfo.bitspersample);
+	if (info.bitsPerSample() > 16U)
+		info.bitsPerSample(16U);
+	info.totalTime(ofgInfo.length_ms / 1000);
 
 	if (!ExternalPlayback)
 		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
@@ -156,7 +156,7 @@ int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 	uint32_t offset{0};
 	const fileInfo_t &info = fileInfo();
 	auto &ctx = *context();
-	const uint32_t stride{info.channels * (info.bitsPerSample / 8U)};
+	const uint32_t stride{info.channels() * (info.bitsPerSample() / 8U)};
 
 	if (ctx.eof)
 		return -2;

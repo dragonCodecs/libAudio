@@ -51,9 +51,9 @@ bool mp3_t::fileInfo(const fileInfo_t &info)
 {
 	const auto &file{fd()};
 	auto &ctx = *encoderContext();
-	lame_set_num_channels(ctx.encoder, info.channels);
-	lame_set_in_samplerate(ctx.encoder, static_cast<int>(info.bitRate));
-	if (info.channels == 1)
+	lame_set_num_channels(ctx.encoder, info.channels());
+	lame_set_in_samplerate(ctx.encoder, static_cast<int>(info.bitRate()));
+	if (info.channels() == 1U)
 		lame_set_mode(ctx.encoder, MPEG_mode::MONO);
 	else
 		lame_set_mode(ctx.encoder, MPEG_mode::JOINT_STEREO);
@@ -106,9 +106,9 @@ int64_t mp3_t::writeBuffer(const void *const bufferPtr, const int64_t length)
 			[[maybe_unused]] const auto _{file.write(encoderBuffer.data(), result)};
 		return length;
 	}
-	else if (info.bitsPerSample != 16)
+	else if (info.bitsPerSample() != 16U)
 		return -3; // LAME can't encode non-16-bit sample data.. V_V
-	const auto sampleCount{uint64_t(length) / (uint64_t(info.channels) * (info.bitsPerSample / 8U))};
+	const auto sampleCount{uint64_t(length) / (uint64_t(info.channels()) * (info.bitsPerSample() / 8U))};
 	const auto *const sampleBuffer{static_cast<const short *>(bufferPtr)};
 	const auto encodedLength{sampleCount + (sampleCount / 4U) + 7200U};
 	auto encoderBuffer{substrate::make_unique<unsigned char []>(encodedLength)};

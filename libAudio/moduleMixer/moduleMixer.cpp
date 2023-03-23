@@ -39,9 +39,9 @@ int64_t moduleFile_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 
 void ModuleFile::InitMixer(fileInfo_t &info)
 {
-	MixSampleRate = info.bitRate;
-	MixChannels = info.channels;
-	MixBitsPerSample = info.bitsPerSample;
+	MixSampleRate = info.bitRate();
+	MixChannels = info.channels();
+	MixBitsPerSample = info.bitsPerSample();
 	MusicSpeed = p_Header->InitialSpeed;
 	MusicTempo = p_Header->InitialTempo;
 	TickCount = MusicSpeed;

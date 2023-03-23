@@ -22,8 +22,8 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 	auto &ctx = *file->context();
 	fileInfo_t &info = file->fileInfo();
 
-	info.bitRate = 44100;
-	info.bitsPerSample = 16;
+	info.bitRate(44100U);
+	info.bitsPerSample(16U);
 	try { ctx.mod = make_unique_nothrow<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{
@@ -31,7 +31,7 @@ modFC1x_t *modFC1x_t::openR(const char *const fileName) noexcept
 		return nullptr;
 	}
 	info.title = ctx.mod->title();
-	info.channels = ctx.mod->channels();
+	info.channels(ctx.mod->channels());
 
 	if (ToPlayback)
 	{

@@ -71,11 +71,11 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 	if (!ctx.decoder)
 		return nullptr;
 
-	info.channels = 2;
-	info.bitRate = 48000;
-	info.bitsPerSample = 16;
+	info.channels(2U);
+	info.bitRate(48000U);
+	info.bitsPerSample(16U);
 	if (op_seekable(ctx.decoder))
-		info.totalTime = op_pcm_total(ctx.decoder, -1) / 48000;
+		info.totalTime(op_pcm_total(ctx.decoder, -1) / 48000U);
 	//OpusTags *tags = op_tags(ctx.decoder, -1);
 
 	if (!ExternalPlayback)

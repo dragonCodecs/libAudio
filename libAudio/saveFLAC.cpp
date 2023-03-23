@@ -125,9 +125,9 @@ bool flac_t::fileInfo(const fileInfo_t &info)
 	auto &ctx = *encoderContext();
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 
-	FLAC__stream_encoder_set_channels(ctx.streamEncoder, info.channels);
-	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, info.bitsPerSample);
-	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, info.bitRate);
+	FLAC__stream_encoder_set_channels(ctx.streamEncoder, info.channels());
+	FLAC__stream_encoder_set_bits_per_sample(ctx.streamEncoder, info.bitsPerSample());
+	FLAC__stream_encoder_set_sample_rate(ctx.streamEncoder, info.bitRate());
 
 	ctx.metadata = {
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT),
@@ -184,16 +184,16 @@ int64_t flac_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength
 		const uint32_t samplesMax = (length - offset) / sizeof(int16_t);
 		const uint32_t sampleCount = std::min(uint32_t(ctx.encoderBuffer.size()), samplesMax);
 		const auto samples = buffer + offset;
-		const uint8_t bytesPerSample = info.bitsPerSample / 8;
+		const uint8_t bytesPerSample = info.bitsPerSample() / 8U;
 
-		if (info.bitsPerSample == 8)
+		if (info.bitsPerSample() == 8)
 			ctx.fillFrame(reinterpret_cast<const int8_t *>(samples), sampleCount);
 		else
 			ctx.fillFrame(reinterpret_cast<const int16_t *>(samples), sampleCount);
 		offset += sampleCount * bytesPerSample;
 
 		if (!FLAC__stream_encoder_process_interleaved(ctx.streamEncoder,
-			ctx.encoderBuffer.data(), sampleCount / info.channels))
+			ctx.encoderBuffer.data(), sampleCount / info.channels()))
 			break;
 	}
 

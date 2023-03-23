@@ -151,18 +151,18 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 {
 	auto &ctx = *encoderContext();
 	const MP4Tags *tags = MP4TagsAlloc();
-	if (!tags || info.bitsPerSample != 16)
+	if (!tags || info.bitsPerSample() != 16U)
 		return false;
 
-	ctx.encoder = faacEncOpen(info.bitRate, info.channels, &ctx.inputSamples, &ctx.outputBytes);
+	ctx.encoder = faacEncOpen(info.bitRate(), info.channels(), &ctx.inputSamples, &ctx.outputBytes);
 	if (!ctx.encoder)
 		return false;
 	ctx.buffer = make_unique_nothrow<uint8_t []>(ctx.outputBytes);
 	if (!ctx.buffer)
 		return ctx.valid = false;
 
-	MP4SetTimeScale(ctx.mp4Stream, info.bitRate);
-	ctx.track = MP4AddAudioTrack(ctx.mp4Stream, info.bitRate, 1024);
+	MP4SetTimeScale(ctx.mp4Stream, info.bitRate());
+	ctx.track = MP4AddAudioTrack(ctx.mp4Stream, info.bitRate(), 1024U);
 	//p_AF->MaxInSamp / info->channels, MP4_MPEG4_AUDIO_TYPE);
 	MP4SetAudioProfileLevel(ctx.mp4Stream, 0x0F);
 

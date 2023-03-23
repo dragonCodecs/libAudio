@@ -124,7 +124,7 @@ namespace libAudio::flac
 		const flac_t &file = *static_cast<flac_t *>(audioFile);
 		auto &ctx = *file.decoderContext();
 		int16_t *PCM = reinterpret_cast<int16_t *>(ctx.buffer.get());
-		const uint8_t channels = file.fileInfo().channels;
+		const uint8_t channels = file.fileInfo().channels();
 		if (!channels)
 			return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 		const uint8_t sampleShift = ctx.sampleShift;
@@ -137,7 +137,7 @@ namespace libAudio::flac
 			for (uint8_t j = 0; j < channels; j++)
 				PCM[(i * channels) + j] = int16_t(buffers[j][i] >> sampleShift);
 		}
-		ctx.bytesAvail = len * channels * (file.fileInfo().bitsPerSample / 8);
+		ctx.bytesAvail = len * channels * (file.fileInfo().bitsPerSample() / 8U);
 		ctx.bytesRemain = ctx.bytesAvail;
 
 		return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -163,19 +163,19 @@ namespace libAudio::flac
 			case FLAC__METADATA_TYPE_STREAMINFO:
 			{
 				const FLAC__StreamMetadata_StreamInfo &streamInfo = metadata->data.stream_info;
-				info.channels = streamInfo.channels;
-				info.bitRate = streamInfo.sample_rate;
-				info.bitsPerSample = streamInfo.bits_per_sample;
-				if (info.bitsPerSample == 24)
+				info.channels(streamInfo.channels);
+				info.bitRate(streamInfo.sample_rate);
+				info.bitsPerSample(streamInfo.bits_per_sample);
+				if (info.bitsPerSample() == 24U)
 				{
-					info.bitsPerSample = 16;
+					info.bitsPerSample(16U);
 					ctx.sampleShift = 8;
 				}
 				else
 					ctx.sampleShift = 0;
 				ctx.bufferLen = streamInfo.channels * streamInfo.max_blocksize;
 				ctx.buffer = make_unique_nothrow<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
-				info.totalTime = streamInfo.total_samples / streamInfo.sample_rate;
+				info.totalTime(streamInfo.total_samples / streamInfo.sample_rate);
 				if (!ExternalPlayback && ctx.buffer != nullptr)
 					file.player(make_unique_nothrow<playback_t>(audioFile, audioFillBuffer, ctx.playbackBuffer, 16384U, info));
 				break;

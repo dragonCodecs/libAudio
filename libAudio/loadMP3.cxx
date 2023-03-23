@@ -159,7 +159,7 @@ bool mp3_t::readMetadata() noexcept
 	id3_file *const file = id3_file_fdopen(fileDesc, ID3_FILE_MODE_READONLY);
 	const id3_tag *const tags = id3_file_tag(file);
 
-	info.totalTime = decodeIntTag(tags, "TLEN") / 1000;
+	info.totalTime(decodeIntTag(tags, "TLEN") / 1000U);
 	info.album = copyTag(tags, ID3_FRAME_ALBUM);
 	info.artist = copyTag(tags, ID3_FRAME_ARTIST);
 	info.title = copyTag(tags, ID3_FRAME_TITLE);
@@ -185,12 +185,12 @@ bool mp3_t::readMetadata() noexcept
 		mad_timer_t songLength = ctx.frame.header.duration;
 		mad_timer_multiply(&songLength, frameCount);
 		const uint64_t totalTime = mad_timer_count(songLength, MAD_UNITS_SECONDS);
-		if (!info.totalTime || info.totalTime != totalTime)
-			info.totalTime = totalTime;
+		if (!info.totalTime() || info.totalTime() != totalTime)
+			info.totalTime(totalTime);
 	}
-	info.bitRate = ctx.frame.header.samplerate;
-	info.bitsPerSample = 16;
-	info.channels = (ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1 : 2);
+	info.bitRate(ctx.frame.header.samplerate);
+	info.bitsPerSample(16U);
+	info.channels(ctx.frame.header.mode == MAD_MODE_SINGLE_CHANNEL ? 1U : 2U);
 
 	return true;
 }
@@ -325,9 +325,9 @@ int64_t mp3_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		for (uint16_t index = 0, i = ctx.samplesUsed; i < ctx.synth.pcm.length; ++i)
 		{
 			playbackBuffer[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[0][i]);
-			if (info.channels == 2)
+			if (info.channels() == 2)
 				playbackBuffer[index++] = mp3::fixedToInt16(ctx.synth.pcm.samples[1][i]);
-			count += sizeof(int16_t) * info.channels;
+			count += sizeof(int16_t) * info.channels();
 
 			if ((offset + count) >= length)
 			{

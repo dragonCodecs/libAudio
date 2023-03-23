@@ -147,8 +147,8 @@ void m4a_t::decoderContext_t::aacTrack(fileInfo_t &fileInfo) noexcept
 		unsigned char channels = 0;
 		if (NeAACDecInit2(decoder, buffer, bufferLen, &sampleRate, &channels))
 			return finish(); // Return having cleaned up, rather than crash
-		fileInfo.bitRate = sampleRate;
-		fileInfo.channels = channels;
+		fileInfo.bitRate(sampleRate);
+		fileInfo.channels(channels);
 		MP4Free(buffer);
 
 		NeAACDecConfiguration *const config = NeAACDecGetCurrentConfiguration(decoder);
@@ -173,9 +173,9 @@ void m4a_t::fetchTags() noexcept
 	if (tags->comments)
 		info.other.emplace_back(stringDup(tags->comments));
 
-	info.bitsPerSample = 16;
+	info.bitsPerSample(16U);
 	const uint32_t timescale = MP4GetTrackTimeScale(ctx.mp4Stream, ctx.track);
-	info.totalTime = MP4GetTrackDuration(ctx.mp4Stream, ctx.track) / timescale;
+	info.totalTime(MP4GetTrackDuration(ctx.mp4Stream, ctx.track) / timescale);
 }
 
 /*!

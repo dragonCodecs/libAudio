@@ -21,9 +21,9 @@ modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
 	auto &ctx = *file->context();
 	fileInfo_t &info = file->fileInfo();
 
-	info.bitRate = 44100;
-	info.bitsPerSample = 16;
-	info.channels = 2;
+	info.bitRate(44100U);
+	info.bitsPerSample(16U);
+	info.channels(2U);
 	try { ctx.mod = make_unique_nothrow<ModuleFile>(*file); }
 	catch (const ModuleLoaderError &e)
 	{

@@ -11,7 +11,6 @@
  */
 
 #include <stdint.h> // NOLINT(modernize-deprecated-headers,hicpp-deprecated-headers)
-#include "fileInfo.hxx"
 #include "libAudioConfig.h"
 
 #ifdef _WINDOWS
@@ -62,6 +61,8 @@
 #define libAudioVersion_Minor 5
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion_Rev 2
+
+struct fileInfo_t;
 
 #ifdef ENABLE_VORBIS
 // Ogg|Vorbis API
