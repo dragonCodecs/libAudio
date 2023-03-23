@@ -202,6 +202,11 @@ libAUDIO_API void *audioOpenW(const char *fileName, uint32_t audioType);
 libAUDIO_API bool audioSetFileInfo(void *audioFile, const fileInfo_t *fileInfo);
 libAUDIO_API int64_t audioWriteBuffer(void *audioFile, const void *buffer, int64_t length);
 
+libAUDIO_API uint64_t audioFileTotalTime(const fileInfo_t *fileInfo);
+libAUDIO_API uint32_t audioFileBitsPerSample(const fileInfo_t *fileInfo);
+libAUDIO_API uint32_t audioFileBitRate(const fileInfo_t *fileInfo);
+libAUDIO_API uint8_t audioFileChannels(const fileInfo_t *fileInfo);
+
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 // cppcoreguidelines-avoid-non-const-global-variables
 libAUDIO_API uint8_t ExternalPlayback;

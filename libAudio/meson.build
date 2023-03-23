@@ -244,10 +244,11 @@ genericModuleSrcs = [
 ]
 
 libAudioSrcs = [
-	'loadAudio.cpp', 
+	'loadAudio.cpp',
+	'saveAudio.cpp',
+	'fileInfo.cxx',
 	'loadWAV.cpp',
 	'fixedPoint/fixedPoint.cpp',
-	'saveAudio.cpp',
 	'openAL.cxx',
 	'openALPlayback.cxx',
 	'playback.cxx',
