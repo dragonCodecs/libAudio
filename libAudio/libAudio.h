@@ -206,6 +206,9 @@ libAUDIO_API uint64_t audioFileTotalTime(const fileInfo_t *fileInfo);
 libAUDIO_API uint32_t audioFileBitsPerSample(const fileInfo_t *fileInfo);
 libAUDIO_API uint32_t audioFileBitRate(const fileInfo_t *fileInfo);
 libAUDIO_API uint8_t audioFileChannels(const fileInfo_t *fileInfo);
+libAUDIO_API const char *audioFileTitle(const fileInfo_t *fileInfo);
+libAUDIO_API const char *audioFileArtist(const fileInfo_t *fileInfo);
+libAUDIO_API const char *audioFileAlbum(const fileInfo_t *fileInfo);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 // cppcoreguidelines-avoid-non-const-global-variables

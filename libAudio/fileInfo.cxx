@@ -30,3 +30,24 @@ uint8_t audioFileChannels(const fileInfo_t *const fileInfo)
 		return 0U;
 	return fileInfo->channels();
 }
+
+const char *audioFileTitle(const fileInfo_t *const fileInfo)
+{
+	if (!fileInfo)
+		return nullptr;
+	return fileInfo->title();
+}
+
+const char *audioFileArtist(const fileInfo_t *const fileInfo)
+{
+	if (!fileInfo)
+		return nullptr;
+	return fileInfo->artist();
+}
+
+const char *audioFileAlbum(const fileInfo_t *const fileInfo)
+{
+	if (!fileInfo)
+		return nullptr;
+	return fileInfo->album();
+}
