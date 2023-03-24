@@ -44,12 +44,12 @@ jobs:
         with:
           arch: x86_64
       - name: Install OpenCppCoverage
-        if: github.repository == 'dragonmux/libAudio'
+        if: github.repository == 'dragonCodecs/libAudio'
         uses: crazy-max/ghaction-chocolatey@v2.1.0
         with:
           args: install OpenCppCoverage
       - name: Setup OpenCppCoverage
-        if: github.repository == 'dragonmux/libAudio'
+        if: github.repository == 'dragonCodecs/libAudio'
         run: |
           echo "C:\Program Files\OpenCppCoverage" >> $GITHUB_PATH
       - name: Checkout libAudio
@@ -65,7 +65,7 @@ jobs:
         shell: bash
         run: echo "MP4V2_REF=$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )" >> $GITHUB_ENV
       - name: Checkout libmp4v2
-        if: github.repository == 'dragonmux/libAudio'
+        if: github.repository == 'dragonCodecs/libAudio'
         uses: actions/checkout@v3
         with:
           repository: dragonmux/mp4v2
@@ -103,7 +103,7 @@ jobs:
           cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/opus
       - name: Install libmp4v2
-        if: github.repository == 'dragonmux/libAudio'
+        if: github.repository == 'dragonCodecs/libAudio'
         run: |
           meson setup build --prefix=$HOME/deps --warnlevel=1
           meson compile -C build
@@ -118,7 +118,7 @@ jobs:
       - name: Install
         run: meson install -C build
       - name: Run coverage build
-        if: github.repository == 'dragonmux/libAudio'
+        if: github.repository == 'dragonCodecs/libAudio'
         run: |
           Remove-Item -Recurse build
           Remove-Item deps/libcuefile.wrap
@@ -127,7 +127,7 @@ jobs:
           meson compile -C build
           meson test -C build
       - name: Codecov
-        if: success() && github.repository == 'dragonmux/libAudio'
+        if: success() && github.repository == 'dragonCodecs/libAudio'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
