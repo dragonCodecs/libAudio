@@ -73,30 +73,6 @@ jobs:
           path: deps/mp4v2
           ref: ${{ env.MP4V2_REF }}
           lfs: true
-      - name: Checkout MusePack
-        if: github.repository == 'dragonmux/libAudio'
-        uses: actions/checkout@v3
-        with:
-          repository: dragonmux/libmpc
-          token: ${{ secrets.MPC_TOKEN }}
-          path: deps/libmpc
-          lfs: true
-      - name: Checkout libcuefile
-        if: github.repository == 'dragonmux/libAudio'
-        uses: actions/checkout@v3
-        with:
-          repository: dragonmux/libcuefile
-          token: ${{ secrets.MPC_TOKEN }}
-          path: deps/libmpc/deps/libcuefile
-          lfs: true
-      - name: Checkout libreplaygain
-        if: github.repository == 'dragonmux/libAudio'
-        uses: actions/checkout@v3
-        with:
-          repository: dragonmux/libreplaygain
-          token: ${{ secrets.MPC_TOKEN }}
-          path: deps/libmpc/deps/libreplaygain
-          lfs: true
       - name: Setup Meson + Ninja
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
