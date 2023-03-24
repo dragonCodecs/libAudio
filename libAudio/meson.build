@@ -94,7 +94,10 @@ libFAAC = cxx.find_library('faac', required: false)
 if not libFAAC.found()
 	libFAAC = dependency('faac', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
 endif
-libFAAD = cxx.find_library('faad', required: requiresAAC, disabler: true)
+libFAAD = cxx.find_library('faad', required: false)
+if not libFAAD.found()
+	libFAAD = dependency('faad2', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
+endif
 if not cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
 	error('Could not find the required function MP4CreateProvider() from libmp4v2')
 endif
