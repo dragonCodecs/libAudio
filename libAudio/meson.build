@@ -79,7 +79,10 @@ endif
 
 requiresMP3 = extraFormats.contains('mp3')
 libID3Tag = dependency('id3tag', required: requiresMP3, allow_fallback: true, disabler: true)
-libMAD = cxx.find_library('mad', required: requiresMP3, disabler: true)
+libMAD = cxx.find_library('mad', required: false)
+if not libMAD.found()
+	libMAD = dependency('mad', version: '>=0.16.3', required: requiresMP3, allow_fallback: true)
+endif
 libLAME = dependency('mp3lame', required: requiresMP3, allow_fallback: true)
 if not libLAME.found()
 	libLAME = cxx.find_library('mp3lame', required: false)

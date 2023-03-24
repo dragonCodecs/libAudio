@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/libmad.git
+revision = head
+clone-recursive = false
+
+[provide]
+mad = mad_dep

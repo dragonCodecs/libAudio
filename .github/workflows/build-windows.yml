@@ -59,7 +59,7 @@ jobs:
       - name: Checkout public deps
         shell: bash
         run: |
-          git submodule init deps/pkgconf deps/opus deps/faad2 deps/libmad deps/openal-soft
+          git submodule init deps/pkgconf deps/opus deps/faad2 deps/openal-soft
           git submodule update --depth 1
       - name: Compute libmp4v2 ref
         shell: bash
@@ -142,13 +142,6 @@ jobs:
           meson compile -C build
           meson install -C build
         working-directory: ${{ github.workspace }}/deps/mp4v2
-      - name: Install libmad
-        run: |
-          New-Item build -ItemType Directory -Force
-          cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
-          cmake --build . --target install --parallel
-        working-directory: ${{ github.workspace }}/deps/libmad
       - name: Configure
         run: meson setup build --prefix=$HOME/.local
       - name: Build

@@ -16,9 +16,6 @@
 [submodule "deps/libopusenc"]
 	path = deps/libopusenc
 	url = https://gitlab.xiph.org/xiph/libopusenc.git
-[submodule "deps/libmad"]
-	path = deps/libmad
-	url = https://codeberg.org/tenacityteam/libmad
 [submodule "deps/pkgconf"]
 	path = deps/pkgconf
 	url = https://github.com/pkgconf/pkgconf.git
