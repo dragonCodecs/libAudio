@@ -38,12 +38,12 @@ namespace libAudio
 		*/
 		int seek(void *file, int64_t pos)
 		{
-		#ifdef _WINDOWS
+		#if defined(_WIN32)
 			return (_fseeki64((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-		#elif defined(__arm__) || defined(__aarch64__)
-			return fseeko((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
-		#else
+		#elif defined(HAVE_FSEEKO64)
 			return (fseeko64((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+		#else
+			return fseeko((FILE *)file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
 		#endif
 		}
 

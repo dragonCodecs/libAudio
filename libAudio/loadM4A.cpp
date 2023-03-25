@@ -40,12 +40,12 @@ namespace libAudio::loadM4A
 	int seek(void *filePtr, int64_t pos)
 	{
 		auto *const file = static_cast<FILE *>(filePtr);
-#ifdef _WINDOWS
+#if defined(_WIN32)
 		return (_fseeki64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
-#elif defined(__arm__) || defined(__aarch64__)
-		return fseeko(file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
-#else
+#elif defined(HAVE_FSEEKO64)
 		return (fseeko64(file, pos, SEEK_SET) == 0 ? FALSE : TRUE);
+#else
+		return fseeko(file, pos, SEEK_SET) == 0 ? FALSE : TRUE;
 #endif
 	}
 

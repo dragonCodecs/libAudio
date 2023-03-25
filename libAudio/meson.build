@@ -219,6 +219,10 @@ if extraFormats.contains('ra')
 	confData.set10('ENABLE_RA', true)
 endif
 
+if cxx.has_header_symbol('stdio.h', 'fseeko64')
+	confData.set10('HAVE_FSEEKO64', true)
+endif
+
 if target_machine.system() == 'windows'
 	includes += include_directories('windows')
 endif
