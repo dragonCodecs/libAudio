@@ -91,9 +91,7 @@ jobs:
           cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/opus
       - name: Install libopusenc
-        # We override the generator with vcpkg. It's cheaper.
         run: |
-          curl -O -L https://github.com/microsoft/vcpkg/raw/b81bc3a83fdbdffe80325eeabb2ec735a1f3c29d/ports/libopusenc/CMakeLists.txt
           New-Item build -ItemType Directory -Force
           cd build
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja

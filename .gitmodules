@@ -3,10 +3,10 @@
 	url = git://repo.or.cz/openal-soft.git
 [submodule "deps/opus"]
 	path = deps/opus
-	url = https://github.com/xiph/opus.git
+	url = https://github.com/dragonCodecs/opus.git
 [submodule "deps/libopusenc"]
 	path = deps/libopusenc
-	url = https://gitlab.xiph.org/xiph/libopusenc.git
+	url = https://github.com/dragonCodecs/libopusenc.git
 [submodule "deps/pkgconf"]
 	path = deps/pkgconf
 	url = https://github.com/pkgconf/pkgconf.git
