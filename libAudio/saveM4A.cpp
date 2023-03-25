@@ -125,7 +125,7 @@ m4a_t *m4a_t::openW(const char *const fileName) noexcept
 		return nullptr;
 	auto &ctx = *file->encoderContext();
 
-	ctx.mp4Stream = MP4CreateProvider(fileName, &saveM4A::ioFunctions, MP4_DETAILS_ERROR);// | MP4_DETAILS_WRITE_ALL);
+	ctx.mp4Stream = MP4CreateProvider(fileName, &saveM4A::ioFunctions);
 
 	return file.release();
 }

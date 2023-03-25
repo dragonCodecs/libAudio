@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/mp4v2.git
+revision = head
+clone-recursive = false
+
+[provide]
+mp4v2 = mp4v2_dep

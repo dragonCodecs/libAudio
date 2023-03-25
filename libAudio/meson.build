@@ -89,7 +89,10 @@ if not libLAME.found()
 endif
 
 requiresAAC = extraFormats.contains('aac')
-libMP4v2 = cxx.find_library('mp4v2', required: requiresAAC, disabler: true)
+libMP4v2 = cxx.find_library('mp4v2', required: false)
+if not libMP4v2.found()
+	libMP4v2 = dependency('mp4v2', version: '>=2.1.2', required: requiresAAC, allow_fallback: true)
+endif
 libFAAC = cxx.find_library('faac', required: false)
 if not libFAAC.found()
 	libFAAC = dependency('faac', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
@@ -98,8 +101,9 @@ libFAAD = cxx.find_library('faad', required: false)
 if not libFAAD.found()
 	libFAAD = dependency('faad2', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
 endif
-if not cxx.has_function('MP4CreateProvider', dependencies: libMP4v2)
-	error('Could not find the required function MP4CreateProvider() from libmp4v2')
+
+if libMP4v2.found() and libMP4v2.type_name() != 'internal'
+	cxx.has_header_symbol('mp4v2/file.h', 'MP4CreateProvider', dependencies: libMP4v2, required: true)
 endif
 
 requiresOptimFROG = extraFormats.contains('optimfrog')

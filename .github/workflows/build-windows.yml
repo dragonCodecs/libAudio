@@ -61,18 +61,6 @@ jobs:
         run: |
           git submodule init deps/pkgconf deps/opus deps/openal-soft
           git submodule update --depth 1
-      - name: Compute libmp4v2 ref
-        shell: bash
-        run: echo "MP4V2_REF=$(git submodule status | grep deps/mp4v2 | awk '{print $1}' | tr -d '-' )" >> $GITHUB_ENV
-      - name: Checkout libmp4v2
-        if: github.repository == 'dragonCodecs/libAudio'
-        uses: actions/checkout@v3
-        with:
-          repository: dragonmux/mp4v2
-          token: ${{ secrets.MP4V2_TOKEN }}
-          path: deps/mp4v2
-          ref: ${{ env.MP4V2_REF }}
-          lfs: true
       - name: Setup Meson + Ninja
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
@@ -102,13 +90,6 @@ jobs:
           cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/deps -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_SHARED_LIBS:BOOL=ON -G Ninja
           cmake --build . --target install --parallel
         working-directory: ${{ github.workspace }}/deps/opus
-      - name: Install libmp4v2
-        if: github.repository == 'dragonCodecs/libAudio'
-        run: |
-          meson setup build --prefix=$HOME/deps --warnlevel=1
-          meson compile -C build
-          meson install -C build
-        working-directory: ${{ github.workspace }}/deps/mp4v2
       - name: Configure
         run: meson setup build --prefix=$HOME/.local
       - name: Build
