@@ -1,12 +1,6 @@
 [submodule "deps/openal-soft"]
 	path = deps/openal-soft
 	url = git://repo.or.cz/openal-soft.git
-[submodule "deps/opus"]
-	path = deps/opus
-	url = https://github.com/dragonCodecs/opus.git
-[submodule "deps/libopusenc"]
-	path = deps/libopusenc
-	url = https://github.com/dragonCodecs/libopusenc.git
 [submodule "deps/pkgconf"]
 	path = deps/pkgconf
 	url = https://github.com/pkgconf/pkgconf.git

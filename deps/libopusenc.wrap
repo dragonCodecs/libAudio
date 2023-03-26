@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/libopusenc.git
+revision = head
+clone-recursive = false
+
+[provide]
+libopusenc = libopusenc_dep

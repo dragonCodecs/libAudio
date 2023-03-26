@@ -58,9 +58,8 @@ libVorbisFile = dependency('vorbisfile', required: requiresVorbis, allow_fallbac
 libVorbisEnc = dependency('vorbisenc', required: requiresVorbis, allow_fallback: true, disabler: true)
 
 requiresOpus = extraFormats.contains('opus')
-libOpus = dependency('opus', required: requiresOpus, allow_fallback: true, disabler: true)
-libOpusFile = dependency('opusfile', required: requiresOpus, allow_fallback: true, disabler: true)
-libOpusEnc = dependency('libopusenc', required: requiresOpus, allow_fallback: true, disabler: true)
+libOpusFile = dependency('opusfile', required: requiresOpus, allow_fallback: true)
+libOpusEnc = dependency('libopusenc', required: requiresOpus, allow_fallback: true)
 
 requiresFlac = extraFormats.contains('flac')
 libFLAC = dependency('flac', required: requiresFlac, allow_fallback: true, disabler: true)
@@ -123,11 +122,11 @@ extraSrcs = []
 extraDeps = []
 includes = [include_directories('.')]
 
-if libOgg.found() and libOpus.found() and libOpusFile.found() and libOpusEnc.found()
+if libOgg.found() and libOpusFile.found() and libOpusEnc.found()
 	message('Enabling support for Opus')
 	extraSrcs += ['loadOggOpus.cxx', 'saveOggOpus.cxx',]
 	confData.set10('ENABLE_OPUS', true)
-	extraDeps += [libOpus, libOpusFile, libOpusEnc,]
+	extraDeps += [libOpusFile, libOpusEnc,]
 endif
 
 if libOgg.found() and libVorbis.found() and libVorbisFile.found() and libVorbisEnc.found()
