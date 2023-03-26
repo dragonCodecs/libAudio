@@ -84,9 +84,9 @@ libMAD = cxx.find_library('mad', required: false)
 if not libMAD.found()
 	libMAD = dependency('mad', version: '>=0.16.3', required: requiresMP3, allow_fallback: true)
 endif
-libLAME = dependency('mp3lame', required: requiresMP3, allow_fallback: true)
+libLAME = cxx.find_library('mp3lame', required: false)
 if not libLAME.found()
-	libLAME = cxx.find_library('mp3lame', required: false)
+	libLAME = dependency('mp3lame', version: '>= 3.100', required: requiresMP3, allow_fallback: true)
 endif
 
 requiresAAC = extraFormats.contains('aac')
