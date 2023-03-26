@@ -36,5 +36,7 @@ WMA*/Release
 
 .vscode
 
-deps
+deps/*
+deps/packagecache
+!deps/packagefiles
 !deps/*.wrap
