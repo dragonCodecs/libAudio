@@ -11,6 +11,7 @@ if not libOpenAL.found()
 	openALOptions = cmake.subproject_options()
 	# OpenAL can NOT be built with c++17 -- see almalloc.cpp
 	openALOptions.set_override_option('cpp_std', 'c++14')
+	openALOptions.set_override_option('strip', 'false')
 	# Disable Git because Meson somehow gets confused with the
 	# custom version generator
 	openALOptions.add_cmake_defines({
