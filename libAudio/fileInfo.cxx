@@ -3,6 +3,13 @@
 #include "libAudio.h"
 #include "fileInfo.hxx"
 
+[[nodiscard]] const char *fileInfo_t::otherComment(size_t index) const noexcept
+{
+	if (index >= _other.size())
+		return nullptr;
+	return _other[index].get();
+}
+
 uint64_t audioFileTotalTime(const fileInfo_t *const fileInfo)
 {
 	if (!fileInfo)

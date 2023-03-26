@@ -76,8 +76,8 @@ vorbis_comment copyComments(const fileInfo_t &info) noexcept
 		vorbis_comment_add_tag(&tags, "Artist", info.artist());
 	if (info.album())
 		vorbis_comment_add_tag(&tags, "Album", info.album());
-	for (const auto &other : info.other)
-		vorbis_comment_add(&tags, other.get());
+	for (const auto &comment : info.other())
+		vorbis_comment_add(&tags, comment.get());
 	return tags;
 }
 

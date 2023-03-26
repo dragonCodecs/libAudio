@@ -130,7 +130,7 @@ bool flac_t::fileInfo(const fileInfo_t &info)
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT),
 		FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)
 	};
-	for (const auto &comment : info.other)
+	for (const auto &comment : info.other())
 	{
 		entry.entry = reinterpret_cast<uint8_t *>(comment.get());
 		entry.length = uint32_t(strlen(comment.get()));

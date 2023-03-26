@@ -171,7 +171,7 @@ void m4a_t::fetchTags() noexcept
 	info.artist(stringDup(tags->artist ? tags->artist : tags->albumArtist));
 	info.title(stringDup(tags->name));
 	if (tags->comments)
-		info.other.emplace_back(stringDup(tags->comments));
+		info.addOtherComment(stringDup(tags->comments));
 
 	info.bitsPerSample(16U);
 	const uint32_t timescale = MP4GetTrackTimeScale(ctx.mp4Stream, ctx.track);

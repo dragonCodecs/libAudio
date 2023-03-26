@@ -197,7 +197,7 @@ namespace libAudio::flac
 					{
 						std::unique_ptr<char []> other;
 						copyComment(other, comment);
-						info.other.emplace_back(std::move(other));
+						info.addOtherComment(std::move(other));
 					}
 #endif
 				}

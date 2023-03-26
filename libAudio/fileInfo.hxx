@@ -18,8 +18,7 @@ private:
 	std::unique_ptr<char []> _title{};
 	std::unique_ptr<char []> _artist{};
 	std::unique_ptr<char []> _album{};
-public:
-	std::vector<std::unique_ptr<char []>> other{};
+	std::vector<std::unique_ptr<char []>> _other{};
 
 public:
 	fileInfo_t() noexcept = default;
@@ -57,7 +56,12 @@ public:
 	[[nodiscard]] const char *album() const noexcept { return _album.get(); }
 	[[nodiscard]] std::unique_ptr<char []> &albumPtr() noexcept { return _album; }
 	void album(std::unique_ptr<char []> &&album) noexcept { _album = std::move(album); }
-	//[[nodiscard]] const char *other() const noexcept { return _other; }
+
+	[[nodiscard]] const std::vector<std::unique_ptr<char []>> &other() const noexcept { return _other; }
+	[[nodiscard]] size_t otherCommentsCount() const noexcept { return _other.size(); }
+	[[nodiscard]] const char *otherComment(size_t index) const noexcept;
+	void addOtherComment(std::unique_ptr<char []> &&comment) noexcept
+		{ _other.emplace_back(std::move(comment)); }
 };
 
 #endif /*FILE_INFO_HXX*/

@@ -109,7 +109,7 @@ std::unique_ptr<char []> copyTag(const id3_tag *tags, const char *tag) noexcept
 	return result;
 }
 
-bool cloneComments(const id3_tag *tags, const char *tag, std::vector<std::unique_ptr<char []>> &comments) noexcept
+bool cloneComments(const id3_tag *tags, const char *tag, fileInfo_t &info) noexcept
 {
 	const id3_frame *frame = id3_tag_findframe(tags, tag, 0);
 	if (!frame)
@@ -128,7 +128,7 @@ bool cloneComments(const id3_tag *tags, const char *tag, std::vector<std::unique
 			continue;
 		std::unique_ptr<char []> value;
 		copyComment(value, reinterpret_cast<char *>(str.get()));
-		comments.emplace_back(std::move(value));
+		info.addOtherComment(std::move(value));
 	}
 	return true;
 }
@@ -163,7 +163,7 @@ bool mp3_t::readMetadata() noexcept
 	info.album(copyTag(tags, ID3_FRAME_ALBUM));
 	info.artist(copyTag(tags, ID3_FRAME_ARTIST));
 	info.title(copyTag(tags, ID3_FRAME_TITLE));
-	cloneComments(tags, ID3_FRAME_COMMENT, info.other);
+	cloneComments(tags, ID3_FRAME_COMMENT, info);
 
 	int64_t seekOffset = tags->paddedsize;
 	id3_file_close(file);

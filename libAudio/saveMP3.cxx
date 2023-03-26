@@ -65,7 +65,7 @@ bool mp3_t::fileInfo(const fileInfo_t &info)
 		id3tag_set_artist(ctx.encoder, info.artist());
 	if (info.album())
 		id3tag_set_album(ctx.encoder, info.album());
-	for (const auto &comment : info.other)
+	for (const auto &comment : info.other())
 		id3tag_set_comment(ctx.encoder, comment.get());
 	id3tag_add_v2(ctx.encoder);
 	lame_init_params(ctx.encoder);

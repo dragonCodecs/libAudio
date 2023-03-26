@@ -67,7 +67,7 @@ namespace libAudio::oggVorbis
 			{
 				std::unique_ptr<char []> other;
 				copyComment(other, value);
-				info.other.emplace_back(std::move(other));
+				info.addOtherComment(std::move(other));
 			}
 		}
 	}

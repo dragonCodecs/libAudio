@@ -40,7 +40,7 @@ modAON_t *modAON_t::openR(const char *const fileName) noexcept
 	info.artist(ctx.mod->author());
 	auto remark = ctx.mod->remark();
 	if (remark)
-		info.other.emplace_back(std::move(remark));
+		info.addOtherComment(std::move(remark));
 	//info.channels = ctx.mod->channels();
 
 	if (ToPlayback)

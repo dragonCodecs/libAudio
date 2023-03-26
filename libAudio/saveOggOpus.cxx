@@ -41,8 +41,8 @@ namespace libAudio
 				ope_comments_add(tags, "Artist", info.artist());
 			if (info.album())
 				ope_comments_add(tags, "Album", info.album());
-			for (const auto &other : info.other)
-				ope_comments_add_string(tags, other.get());
+			for (const auto &comment : info.other())
+				ope_comments_add_string(tags, comment.get());
 			return tags;
 		}
 	} // namespace oggOpus
