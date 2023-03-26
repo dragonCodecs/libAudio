@@ -58,3 +58,17 @@ const char *audioFileAlbum(const fileInfo_t *const fileInfo)
 		return nullptr;
 	return fileInfo->album();
 }
+
+size_t audioFileOtherCommentsCount(const fileInfo_t *fileInfo)
+{
+	if (!fileInfo)
+		return 0;
+	return fileInfo->otherCommentsCount();
+}
+
+const char *audioFileOtherComment(const fileInfo_t *fileInfo, size_t index)
+{
+	if (!fileInfo)
+		return nullptr;
+	return fileInfo->otherComment(index);
+}

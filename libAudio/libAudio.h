@@ -10,7 +10,10 @@
  * @date 2009-2020
  */
 
-#include <stdint.h> // NOLINT(modernize-deprecated-headers,hicpp-deprecated-headers)
+// NOLINTNEXTLINE(modernize-deprecated-headers,hicpp-deprecated-headers)
+#include <stdint.h>
+// NOLINTNEXTLINE(modernize-deprecated-headers,hicpp-deprecated-headers)
+#include <stddef.h>
 #include "libAudioConfig.h"
 
 #ifdef _WINDOWS
@@ -209,6 +212,8 @@ libAUDIO_API uint8_t audioFileChannels(const fileInfo_t *fileInfo);
 libAUDIO_API const char *audioFileTitle(const fileInfo_t *fileInfo);
 libAUDIO_API const char *audioFileArtist(const fileInfo_t *fileInfo);
 libAUDIO_API const char *audioFileAlbum(const fileInfo_t *fileInfo);
+libAUDIO_API size_t audioFileOtherCommentsCount(const fileInfo_t *fileInfo);
+libAUDIO_API const char *audioFileOtherComment(const fileInfo_t *fileInfo, size_t index);
 
 // Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
 // cppcoreguidelines-avoid-non-const-global-variables
