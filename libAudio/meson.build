@@ -104,7 +104,7 @@ if not libFAAD.found()
 endif
 
 if libMP4v2.found() and libMP4v2.type_name() != 'internal'
-	cxx.has_header_symbol('mp4v2/file.h', 'MP4CreateProvider', dependencies: libMP4v2, required: true)
+	cxx.has_header_symbol('mp4v2/mp4v2.h', 'MP4CreateProvider', dependencies: libMP4v2, required: true)
 endif
 
 requiresOptimFROG = extraFormats.contains('optimfrog')
