@@ -32,13 +32,13 @@ public:
 	fileInfo_t(const fileInfo_t &) = delete;
 
 	[[nodiscard]] uint64_t totalTime() const noexcept;
-	void totalTime(const uint64_t totalTime) noexcept;
+	void totalTime(uint64_t totalTime) noexcept;
 	[[nodiscard]] uint32_t bitsPerSample() const noexcept;
-	void bitsPerSample(const uint32_t bitsPerSample) noexcept;
+	void bitsPerSample(uint32_t bitsPerSample) noexcept;
 	[[nodiscard]] uint32_t bitRate() const noexcept;
-	void bitRate(const uint32_t bitRate) noexcept;
+	void bitRate(uint32_t bitRate) noexcept;
 	[[nodiscard]] uint8_t channels() const noexcept;
-	void channels(const uint8_t channels) noexcept;
+	void channels(uint8_t channels) noexcept;
 
 	[[nodiscard]] const char *title() const noexcept;
 	[[nodiscard]] std::unique_ptr<char []> &titlePtr() noexcept;
