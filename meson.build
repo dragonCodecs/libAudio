@@ -13,7 +13,8 @@ project(
 	],
 	version: '0.5.2',
 	meson_version: '>= 0.56',
-	subproject_dir: 'deps'
+	subproject_dir: 'deps',
+	license: 'BSD-3-Clause'
 )
 
 cxx = meson.get_compiler('cpp')

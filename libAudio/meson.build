@@ -259,6 +259,27 @@ libAudioConfigHeader = configure_file(
 	configuration : confData,
 )
 
+if target_machine.system() == 'windows'
+	windows = import('windows')
+
+	rcCfg = configuration_data()
+	rcCfg.set('VERSION', '@0@,0'.format(meson.project_version().replace('.', ',')))
+	rcCfg.set_quoted('DESCRIPTION', meson.project_name())
+	rcCfg.set_quoted('FILENAME', 'libAudio.dll')
+	rcCfg.set_quoted('VERSION_STRING', meson.project_version())
+	rcCfg.set_quoted('NAME', meson.project_name())
+	rcCfg.set_quoted('COMPANY', 'https://github.com/dragonCodecs/libAudio')
+	rcCfg.set_quoted('COPYRIGHT', 'Copyright (c) 2009-2023 Rachel Mant @0@'.format(meson.project_license()))
+
+	libAudioResource = configure_file(
+		input: 'libAudio.rc.in',
+		output: 'libAudio.rc',
+		configuration: rcCfg
+	)
+
+	extraSrcs += windows.compile_resources(libAudioResource)
+endif
+
 libAudioLibrary = shared_library(
 	'libAudio',
 	genericModuleSrcs + libAudioSrcs + extraSrcs,
