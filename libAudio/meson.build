@@ -223,6 +223,10 @@ if cxx.has_header_symbol('stdio.h', 'fseeko64')
 	confData.set10('HAVE_FSEEKO64', true)
 endif
 
+if not cxx.has_header('AL/al.h', dependencies: libOpenAL)
+	confData.set10('USE_CMAKE_OPENAL', true)
+endif
+
 if target_machine.system() == 'windows'
 	includes += include_directories('windows')
 endif

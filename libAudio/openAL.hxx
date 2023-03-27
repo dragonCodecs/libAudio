@@ -3,9 +3,14 @@
 #ifndef OPEN_AL_HXX
 #define OPEN_AL_HXX
 
+#include <libAudioConfig.h>
+
 #include <cstdint>
 #if defined(__APPLE__)
 #include <OpenAL.h>
+#elif defined(USE_CMAKE_OPENAL)
+#include <al.h>
+#include <alc.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
