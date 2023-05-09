@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # SPDX-FileCopyrightText: 2020-2023 Rachel Mant <git@dragonmux.network>
 pythonDep = python.dependency()
-if not pythonDep.found()
+if not pythonDep.found() or not cxx.has_header('Python.h', dependencies: pythonDep)
 	subdir_done()
 endif
 
