@@ -223,8 +223,10 @@ if cxx.has_header_symbol('stdio.h', 'fseeko64')
 	confData.set10('HAVE_FSEEKO64', true)
 endif
 
-if not cxx.has_header('AL/al.h', dependencies: libOpenAL)
-	confData.set10('USE_CMAKE_OPENAL', true)
+if libOpenAL.type_name() != 'internal'
+	if not cxx.has_header('AL/al.h', dependencies: libOpenAL)
+		confData.set10('USE_CMAKE_OPENAL', true)
+	endif
 endif
 
 if cxx.get_id() == 'msvc'
