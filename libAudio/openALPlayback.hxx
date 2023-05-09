@@ -32,7 +32,7 @@ public:
 	void play() final;
 	void pause() final;
 	void stop() final;
-	void volume(const float level) noexcept final;
+	void volume(float level) noexcept final;
 
 	openALPlayback_t(const openALPlayback_t &) noexcept = delete;
 	openALPlayback_t(openALPlayback_t &&) noexcept = delete;
