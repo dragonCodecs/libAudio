@@ -8,6 +8,12 @@
 #include <vector>
 #include "libAudio.h"
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+//  needs to have dll-interface to be used by clients of struct 'fileInfo_t'
+#pragma warning(disable:4251)
+#endif
+
 struct libAUDIO_CLS_API fileInfo_t final
 {
 private:
@@ -55,5 +61,9 @@ public:
 	[[nodiscard]] const char *otherComment(size_t index) const noexcept;
 	void addOtherComment(std::unique_ptr<char []> &&comment) noexcept;
 };
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #endif /*FILE_INFO_HXX*/
