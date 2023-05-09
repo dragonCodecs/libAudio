@@ -227,7 +227,7 @@ if not cxx.has_header('AL/al.h', dependencies: libOpenAL)
 	confData.set10('USE_CMAKE_OPENAL', true)
 endif
 
-if target_machine.system() == 'windows'
+if cxx.get_id() == 'msvc'
 	includes += include_directories('windows')
 endif
 

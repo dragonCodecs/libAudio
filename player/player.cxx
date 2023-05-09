@@ -16,6 +16,7 @@ inline std::string operator""_s(const char *const str, const size_t len)
 #endif
 
 #ifdef _WINDOWS
+#include <crtdbg.h>
 void invalidHandler(const wchar_t *, const wchar_t *, const wchar_t *, const uint32_t, const uintptr_t) { }
 #endif
 

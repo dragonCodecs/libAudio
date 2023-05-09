@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2019-2023 Rachel Mant <git@dragonmux.network>
 #include <algorithm>
-#include <exception>
+#include <stdexcept>
 #include "libAudio.h"
 #include "libAudio.hxx"
 #include "openALPlayback.hxx"

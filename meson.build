@@ -29,7 +29,6 @@ add_project_arguments(
 if target_machine.system() == 'windows'
 	add_project_arguments(
 		'-D_WINDOWS',
-		'-wd5030',
 		language: 'cpp'
 	)
 endif
@@ -39,6 +38,7 @@ if cxx.get_id() == 'msvc'
 		'-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1',
 		'-D_CRT_NONSTDC_NO_WARNINGS=1',
 		'-D_CRT_SECURE_NO_WARNINGS',
+		'-wd5030',
 		language: ['c', 'cpp']
 	)
 elif (cxx.get_id() == 'gcc' or cxx.get_id() == 'clang') and not debug

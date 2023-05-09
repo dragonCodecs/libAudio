@@ -20,7 +20,9 @@
 	#ifdef libAUDIO
 		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllexport)
-		#pragma warning (disable : 4996)
+		#ifdef _MSC_VER
+			#pragma warning (disable : 4996)
+		#endif
 	#else
 		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllimport)
