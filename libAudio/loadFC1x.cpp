@@ -50,7 +50,7 @@ bool modFC1x_t::isFC1x(const int32_t fd) noexcept
 	std::array<char, 4> fc1xMagic;
 	return
 		fd != -1 &&
-		read(fd, fc1xMagic.data(), fc1xMagic.size()) == fc1xMagic.size() &&
+		static_cast<size_t>(read(fd, fc1xMagic.data(), fc1xMagic.size())) == fc1xMagic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		(fc1xMagic == libAudio::fc1x::magicSMOD || fc1xMagic == libAudio::fc1x::magicFC14);
 }

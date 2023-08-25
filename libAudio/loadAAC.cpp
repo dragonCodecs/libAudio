@@ -309,7 +309,7 @@ bool aac_t::isAAC(const int32_t fd) noexcept
 {
 	std::array<uint8_t, 2> aacMagic;
 	if (fd == -1 ||
-		read(fd, aacMagic.data(), aacMagic.size()) != aacMagic.size() ||
+		static_cast<size_t>(read(fd, aacMagic.data(), aacMagic.size())) != aacMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0)
 		return false;
 	// Detect an ADTS header:

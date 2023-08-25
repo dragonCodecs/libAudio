@@ -34,7 +34,7 @@ bool sid_t::isSID(const int32_t fd) noexcept
 	std::array<char, 4> sidMagic;
 	return
 		fd != -1 &&
-		read(fd, sidMagic.data(), sidMagic.size()) == sidMagic.size() &&
+		static_cast<size_t>(read(fd, sidMagic.data(), sidMagic.size())) == sidMagic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		sidMagic == libAudio::sid::psidMagic;
 }

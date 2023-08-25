@@ -290,7 +290,7 @@ bool mpc_t::isMPC(const int32_t fd) noexcept
 	std::array<char, 3> mpcMagic;
 	return
 		fd != -1 &&
-		read(fd, mpcMagic.data(), mpcMagic.size()) == mpcMagic.size() &&
+		static_cast<size_t>(read(fd, mpcMagic.data(), mpcMagic.size())) == mpcMagic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		(mpcMagic == libAudio::mpc::mpPlusMagic || mpcMagic == libAudio::mpc::mpcMagic);
 }

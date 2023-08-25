@@ -64,7 +64,7 @@ bool modMOD_t::isMOD(const int32_t fd) noexcept
 	std::array<char, 4> modMagic;
 	if (fd == -1 ||
 		lseek(fd, seekOffset, SEEK_SET) != seekOffset ||
-		read(fd, modMagic.data(), modMagic.size()) != modMagic.size() ||
+		static_cast<size_t>(read(fd, modMagic.data(), modMagic.size())) != modMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0)
 		return false;
 	return

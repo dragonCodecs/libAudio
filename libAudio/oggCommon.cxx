@@ -37,7 +37,7 @@ bool isOgg(const int32_t fd, ogg_packet &headerPacket) noexcept
 {
 	std::array<unsigned char, 79> header{};
 	if (fd == -1 ||
-		read(fd, header.data(), uint32_t(header.size())) != header.size() ||
+		static_cast<size_t>(read(fd, header.data(), uint32_t(header.size()))) != header.size() ||
 		lseek(fd, 0, SEEK_SET) != 0 ||
 		!std::equal(oggMagic.begin(), oggMagic.end(), header.cbegin()))
 		return false;

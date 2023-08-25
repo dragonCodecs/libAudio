@@ -85,9 +85,9 @@ bool sndh_t::isSNDH(const int32_t fd) noexcept
 	std::array<char, 4> sndhMagic;
 	return
 		fd != -1 &&
-		read(fd, icePackMagic.data(), icePackMagic.size()) == icePackMagic.size() &&
+		static_cast<size_t>(read(fd, icePackMagic.data(), icePackMagic.size())) == icePackMagic.size() &&
 		lseek(fd, 8, SEEK_CUR) == 12 &&
-		read(fd, sndhMagic.data(), sndhMagic.size()) == sndhMagic.size() &&
+		static_cast<size_t>(read(fd, sndhMagic.data(), sndhMagic.size())) == sndhMagic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		// All packed SNDH files begin with "ICE!" and this is the test
 		// that the Linux/Unix Magic Numbers system does too, so

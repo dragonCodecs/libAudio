@@ -51,7 +51,7 @@ bool modSTM_t::isSTM(const int32_t fd) noexcept
 	return
 		fd != -1 &&
 		lseek(fd, offset, SEEK_SET) == offset &&
-		read(fd, stmMagic.data(), stmMagic.size()) == stmMagic.size() &&
+		static_cast<size_t>(read(fd, stmMagic.data(), stmMagic.size())) == stmMagic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		stmMagic == libAudio::stm::magic;
 }

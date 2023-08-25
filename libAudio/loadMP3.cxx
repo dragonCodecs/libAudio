@@ -376,9 +376,9 @@ bool mp3_t::isMP3(const int32_t fd) noexcept
 	std::array<uint8_t, 2> mp3Magic;
 	return
 		fd != -1 &&
-		read(fd, id3Magic.data(), id3Magic.size()) == id3Magic.size() &&
+		static_cast<size_t>(read(fd, id3Magic.data(), id3Magic.size())) == id3Magic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
-		read(fd, mp3Magic.data(), mp3Magic.size()) == mp3Magic.size() &&
+		static_cast<size_t>(read(fd, mp3Magic.data(), mp3Magic.size())) == mp3Magic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		(id3Magic == libAudio::mp3::id3Magic || asUint16(mp3Magic) == 0xFFFB);
 }

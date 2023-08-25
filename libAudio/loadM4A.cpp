@@ -308,9 +308,9 @@ bool m4a_t::isM4A(const int32_t fd) noexcept
 	std::array<char, 4> fileMagic;
 	return
 		fd != -1 &&
-		read(fd, length.data(), length.size()) == length.size() &&
-		read(fd, typeMagic.data(), typeMagic.size()) == typeMagic.size() &&
-		read(fd, fileMagic.data(), fileMagic.size()) == fileMagic.size() &&
+		static_cast<size_t>(read(fd, length.data(), length.size())) == length.size() &&
+		static_cast<size_t>(read(fd, typeMagic.data(), typeMagic.size())) == typeMagic.size() &&
+		static_cast<size_t>(read(fd, fileMagic.data(), fileMagic.size())) == fileMagic.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&
 		typeMagic == libAudio::loadM4A::typeMagic &&
 		(fileMagic == libAudio::loadM4A::m4aMagic || fileMagic == libAudio::loadM4A::mp4Magic);
