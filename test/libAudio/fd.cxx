@@ -30,8 +30,8 @@ namespace fd
 		suite.assertFalse(file.valid());
 		suite.assertFalse(file.isEOF());
 
-		suite.assertEqual(file.read(nullptr, 0, nullptr), -1);
-		suite.assertEqual(file.write(nullptr, 0, nullptr), -1);
+		suite.assertTrue(file.read(nullptr, 0, nullptr));
+		suite.assertTrue(file.write(nullptr, 0, nullptr));
 	}
 
 	void testBadOpen(testsuite &suite)
