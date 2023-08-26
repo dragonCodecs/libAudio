@@ -1,3 +1,4 @@
+#include <array>
 #include <crunch++.h>
 #include <substrate/fixed_vector>
 #include <testFixedVector.hxx>
