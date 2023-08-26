@@ -427,7 +427,8 @@ uint32_t itBitstreamRead(uint8_t &buff, uint8_t &buffLen, const fd_t &fd, size_t
 		{
 			if (buffLen == 0)
 			{
-				fd.read(buff);
+				if (!fd.read(buff))
+					throw ModuleLoaderError{E_BAD_IT};
 				buffLen = 8;
 			}
 			ret |= (buff & 1U) << i;

@@ -38,7 +38,8 @@ pattern_t::pattern_t(const modMOD_t &file, const uint32_t channels) : pattern_t{
 				if (!_commands[channel])
 					throw ModuleLoaderError{E_BAD_MOD};
 			}
-			fd.read(data);
+			if (!fd.read(data))
+				throw ModuleLoaderError{E_BAD_MOD};
 			_commands[channel][row].setMODData(data);
 		}
 	}
