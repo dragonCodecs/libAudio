@@ -102,3 +102,108 @@ jobs:
           directory: ./build/meson-logs/
           files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  build-macos-homebrew:
+    # Apple LLD is unable to link GCC < 11 generated object files.
+    # https://stackoverflow.com/questions/73714336/xcode-update-to-version-2395-ld-compile-problem-occurs-computedatomcount-m
+    # rdar://FB11369327
+    name: '${{ matrix.os }} (homebrew, ${{ matrix.compiler }})'
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        os:
+          - macos-11
+        compiler:
+          - gcc@10
+          - gcc@11
+          - gcc@12
+          - gcc@13
+      fail-fast: false
+    steps:
+      - name: Runtime environment
+        env:
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "GITHUB_WORKSPACE=`pwd`" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig" >> $GITHUB_ENV
+      - name: Setup compiler
+        if: github.repository == 'dragonCodecs/libAudio'
+        run: |
+          brew install ${{ matrix.compiler }} gcovr
+          CC=${COMPILER/@/-}
+          CXX=${CC/#gcc/g++}
+          echo "CC=$CC" >> $GITHUB_ENV
+          echo "CXX=$CXX" >> $GITHUB_ENV
+          echo "GCOV=${CC/#gcc/gcov}" >> $GITHUB_ENV
+        env:
+          COMPILER: ${{ matrix.compiler }}
+      - name: Checkout libAudio
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: Checkout crunch
+        uses: actions/checkout@v3
+        with:
+          repository: dragonmux/crunch
+          path: deps/crunch
+          #ref: TODO: need to feed what version of crunch to use in here..
+          lfs: true
+          submodules: true
+      - name: Setup Meson + Ninja
+        run: |
+          brew install meson ninja
+        working-directory: ${{ runner.temp }}
+      - name: Version tools
+        run: |
+          cc --version  || true
+          ld --version || true
+          gcov --version || true
+          meson --version
+          ninja --version
+      - name: Install crunch
+        shell: bash
+        run: |
+          meson build --prefix=$HOME/.local -Dsubstrate:default_library=static -Db_lto=false $BUILD_OPTS
+          meson compile -C build
+          meson install -C build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/crunch
+      - name: Install dependencies
+        shell: bash
+        run: |
+          brew install libogg libvorbis opus opusfile libopusenc flac wavpack musepack \
+            faac faad2 mad libid3tag
+      - name: Configure
+         # GCC on macOS cannot do LTO for now due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111635
+        run: meson setup build --prefix=$HOME/.local -Db_lto=false $BUILD_OPTS
+      - name: Build
+        run: meson compile -C build
+      - name: Test
+        run: meson test -C build
+      - name: Install
+        run: meson install -C build
+      - name: Run coverage build
+        if: github.repository == 'dragonCodecs/libAudio'
+        run: |
+          rm -rf build
+          meson setup build --prefix=$HOME/.local -Db_lto=false -Db_coverage=true --buildtype=debug
+          meson compile -C build
+          meson test -C build
+          ninja -C build coverage-xml
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs-${{ matrix.os }}-homebrew-${{ matrix.compiler }}
+          path: ${{ github.workspace }}/build/meson-logs/*
+          retention-days: 5
+      - name: Codecov
+        if: success() && github.repository == 'dragonCodecs/libAudio'
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./build/meson-logs/
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
