@@ -47,7 +47,7 @@ bool isIT(const char *fileName) { return modIT_t::isIT(fileName); }
 
 bool modIT_t::isIT(const int32_t fd) noexcept
 {
-	std::array<char, 4> itMagic;
+	std::array<char, 4> itMagic{};
 	return
 		fd != -1 &&
 		static_cast<size_t>(read(fd, itMagic.data(), itMagic.size())) == itMagic.size() &&

@@ -307,7 +307,7 @@ bool isWavPack(const char *fileName) { return wavPack_t::isWavPack(fileName); }
  */
 bool wavPack_t::isWavPack(const int32_t fd) noexcept
 {
-	std::array<char, 4> wavPackMagic;
+	std::array<char, 4> wavPackMagic{};
 	return
 		fd != -1 &&
 		static_cast<size_t>(read(fd, wavPackMagic.data(), wavPackMagic.size())) == wavPackMagic.size() &&

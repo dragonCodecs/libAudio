@@ -303,9 +303,9 @@ bool isM4A(const char *fileName) { return m4a_t::isM4A(fileName); }
  */
 bool m4a_t::isM4A(const int32_t fd) noexcept
 {
-	std::array<char, 4> length;
-	std::array<char, 4> typeMagic;
-	std::array<char, 4> fileMagic;
+	std::array<char, 4> length{};
+	std::array<char, 4> typeMagic{};
+	std::array<char, 4> fileMagic{};
 	return
 		fd != -1 &&
 		static_cast<size_t>(read(fd, length.data(), length.size())) == length.size() &&

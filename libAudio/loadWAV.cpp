@@ -360,8 +360,8 @@ bool isWAV(const char *fileName) { return wav_t::isWAV(fileName); }
  */
 bool wav_t::isWAV(const int32_t fd) noexcept
 {
-	std::array<char, 4> riffMagic;
-	std::array<char, 4> waveMagic;
+	std::array<char, 4> riffMagic{};
+	std::array<char, 4> waveMagic{};
 	return
 		fd != -1 &&
 		static_cast<size_t>(read(fd, riffMagic.data(), riffMagic.size())) == riffMagic.size() &&

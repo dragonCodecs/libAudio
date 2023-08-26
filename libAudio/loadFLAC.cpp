@@ -350,7 +350,7 @@ bool isFLAC(const char *fileName) { return flac_t::isFLAC(fileName); }
  */
 bool flac_t::isFLAC(const int32_t fd) noexcept
 {
-	std::array<char, 4> flacMagic;
+	std::array<char, 4> flacMagic{};
 	if (fd == -1 ||
 		static_cast<size_t>(read(fd, flacMagic.data(), flacMagic.size())) != flacMagic.size() ||
 		lseek(fd, 0, SEEK_SET) != 0)

@@ -372,8 +372,8 @@ inline uint16_t asUint16(const std::array<uint8_t, 2> &value) noexcept
  */
 bool mp3_t::isMP3(const int32_t fd) noexcept
 {
-	std::array<char, 3> id3Magic;
-	std::array<uint8_t, 2> mp3Magic;
+	std::array<char, 3> id3Magic{};
+	std::array<uint8_t, 2> mp3Magic{};
 	return
 		fd != -1 &&
 		static_cast<size_t>(read(fd, id3Magic.data(), id3Magic.size())) == id3Magic.size() &&

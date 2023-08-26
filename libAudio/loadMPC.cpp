@@ -287,7 +287,7 @@ bool isMPC(const char *fileName) { return mpc_t::isMPC(fileName); }
  */
 bool mpc_t::isMPC(const int32_t fd) noexcept
 {
-	std::array<char, 3> mpcMagic;
+	std::array<char, 3> mpcMagic{};
 	return
 		fd != -1 &&
 		static_cast<size_t>(read(fd, mpcMagic.data(), mpcMagic.size())) == mpcMagic.size() &&
