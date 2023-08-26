@@ -118,7 +118,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: logs-${{ matrix.os }}-${{ matrix.compiler }}
+          name: logs-${{ matrix.os.id }}-${{ matrix.compiler }}
           path: ${{ github.workspace }}/build/meson-logs/*
           retention-days: 5
       - name: Codecov
