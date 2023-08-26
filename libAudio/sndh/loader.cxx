@@ -48,8 +48,8 @@ sndhLoader_t::sndhLoader_t(const fd_t &file) : _data{file}, _entryPoints{}, _met
 std::string readString(sndhDecruncher_t &file)
 {
 	std::string result{};
-	uint8_t value{255};
-	while (value != 0)
+	uint8_t value{255U};
+	while (value != 0U)
 	{
 		if (!file.read(value))
 			throw std::exception{};
