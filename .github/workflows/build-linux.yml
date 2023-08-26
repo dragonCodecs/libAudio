@@ -114,6 +114,13 @@ jobs:
           cd build
           find . -type f -name '*.gcda' -exec $GCOV -p {} + > /dev/null
           gcovr -r .. -x -o coverage.xml --gcov-executable "$GCOV" -e ../deps -e ../test
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs-${{ matrix.os }}-${{ matrix.compiler }}
+          path: ${{ github.workspace }}/build/meson-logs/*
+          retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
         uses: codecov/codecov-action@v3
