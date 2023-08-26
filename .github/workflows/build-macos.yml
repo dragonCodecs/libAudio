@@ -83,6 +83,7 @@ jobs:
       - name: Run coverage build
         if: github.repository == 'dragonCodecs/libAudio'
         run: |
+          rm -f deps/{libcuefile,libreplaygain}.wrap
           rm -rf build
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
@@ -188,6 +189,7 @@ jobs:
       - name: Run coverage build
         if: github.repository == 'dragonCodecs/libAudio'
         run: |
+          rm -f deps/{libcuefile,libreplaygain}.wrap
           rm -rf build
           meson setup build --prefix=$HOME/.local -Db_lto=false -Db_coverage=true --buildtype=debug
           meson compile -C build
