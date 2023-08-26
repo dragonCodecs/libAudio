@@ -11,7 +11,7 @@ project(
 		'b_ndebug=if-release',
 		'b_lto=true'
 	],
-	version: '0.5.2',
+	version: '0.6.0',
 	meson_version: '>= 0.56',
 	subproject_dir: 'deps',
 	license: 'BSD-3-Clause'

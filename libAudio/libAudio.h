@@ -59,13 +59,13 @@
 #endif
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define libAudioVersion "0.5.2"
+#define libAudioVersion "0.6.0"
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion_Major 0
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define libAudioVersion_Minor 5
+#define libAudioVersion_Minor 6
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define libAudioVersion_Rev 2
+#define libAudioVersion_Rev 0
 
 struct fileInfo_t;
 
