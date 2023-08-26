@@ -168,6 +168,10 @@ jobs:
           $GCOV --version
           meson --version
           ninja --version
+      - name: Install dependencies
+        run: |
+          pacboy -S --noconfirm openal:p libogg:p libvorbis:p opus:p opusfile:p libopusenc:p flac:p \
+            wavpack:p libmpcdec:p faac:p faad2:p libmad:p libid3tag:p
       - name: Configure
         run: meson setup build --prefix=$HOME/.local $BUILD_OPTS
       - name: Build
