@@ -91,7 +91,7 @@ jobs:
       - name: Install crunch
         shell: bash
         run: |
-          meson build --prefix=/usr $BUILD_OPTS
+          meson build --prefix=/usr -Dsubstrate:default_library=static $BUILD_OPTS
           meson compile -C build
           sudo meson install -C build
         working-directory: ${{ env.GITHUB_WORKSPACE }}/deps/crunch
