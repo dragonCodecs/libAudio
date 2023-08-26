@@ -315,7 +315,7 @@ void ModuleFile::modLoadPCM(const fd_t &fd)
 		{
 			p_PCM[i] = new uint8_t[Length];
 			if (!fd.read(p_PCM[i], Length))
-				throw ModuleLoaderError(E_BAD_MOD);
+				throw ModuleLoaderError{E_BAD_MOD};
 			// TODO: This is hard, ok? MPT does wierd stuff here on memory buffers.
 			// The decompression loop is now correct, as is the memory allocation.
 			// However, I do not think the seek is correct, nor some of the length compensation code.
@@ -361,7 +361,7 @@ void ModuleFile::s3mLoadPCM(const fd_t &fd)
 			p_PCM[i] = new uint8_t[length];
 			if (fd.seek(offset, SEEK_SET) != offset ||
 				!fd.read(p_PCM[i], length))
-				throw ModuleLoaderError(E_BAD_S3M);
+				throw ModuleLoaderError{E_BAD_S3M};
 			if (p_Header->FormatVersion == 2)
 			{
 				if (p_Samples[i]->Get16Bit())
@@ -394,7 +394,7 @@ void ModuleFile::stmLoadPCM(const fd_t &fd)
 			p_PCM[i] = new uint8_t[length];
 			if (!fd.read(p_PCM[i], length) ||
 				!fd.seekRel(length % 16))
-				throw ModuleLoaderError(E_BAD_STM);
+				throw ModuleLoaderError{E_BAD_STM};
 		}
 		else
 			p_PCM[i] = nullptr;
@@ -410,8 +410,8 @@ void ModuleFile::aonLoadPCM(const fd_t &fd)
 		if (Length != 0)
 		{
 			p_PCM[i] = new uint8_t[Length];
-			if (fd.read(p_PCM[i], Length))
-				throw ModuleLoaderError(E_BAD_AON);
+			if (!fd.read(p_PCM[i], Length))
+				throw ModuleLoaderError{E_BAD_AON};
 		}
 		else
 			p_PCM[i] = nullptr;
