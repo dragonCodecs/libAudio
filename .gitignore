@@ -34,6 +34,7 @@ libAudio/fixedPoint/tests/TestLinearSlideUp
 WMA*/Debug
 WMA*/Release
 
+.cache
 .vscode
 
 deps/*
