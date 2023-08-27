@@ -1,6 +1,6 @@
 [submodule "deps/openal-soft"]
 	path = deps/openal-soft
-	url = git://repo.or.cz/openal-soft.git
+	url = https://github.com/kcat/openal-soft.git
 [submodule "deps/pkgconf"]
 	path = deps/pkgconf
 	url = https://github.com/pkgconf/pkgconf.git
