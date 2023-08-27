@@ -6,7 +6,7 @@
 #include <libAudioConfig.h>
 
 #include <cstdint>
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(USE_CMAKE_OPENAL)
 #include <OpenAL.h>
 #elif defined(USE_CMAKE_OPENAL)
 #include <al.h>

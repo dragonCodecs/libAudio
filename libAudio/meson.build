@@ -3,10 +3,40 @@
 
 # Required dependencies
 threading = dependency('threads')
-libOpenAL = dependency('openal', required: target_machine.system() != 'windows')
+if host_machine.system() == 'darwin'
+	if cxx.get_id() == 'clang'
+		libOpenAL = dependency('openal', method: 'extraframework', required: true)
+	else
+		# GCC cannot find frameworks properly
+		# https://github.com/mesonbuild/meson/issues/12160
+		libOpenALDep = dependency('openal', method: 'cmake', required: true, modules: ['OpenAL::OpenAL'])
+		# OpenAL-soft is also broken on Homebrew GCC, as it never enables OBJCXX for the Core Audio backend
+		# The easy fix is to reuse CMake's work and prod GCC a bit
+		libOpenAL = declare_dependency(
+			# not links or link_args as Meson thinks the framework folder /is/ the library
+			dependencies: libOpenALDep.partial_dependency(includes: true,  compile_args: true),
+			# this is a system framework so no -F flag necessary
+			compile_args: ['-framework', 'OpenAL'],
+			link_args: ['-framework', 'OpenAL'],
+		)
+		assert(cxx.has_header('OpenAL.h', dependencies: libOpenAL))
+	endif
+else
+	libOpenAL = dependency('openal', required: host_machine.system() != 'windows')
+endif
 
 if not libOpenAL.found()
 	cmake = import('cmake')
+
+	# CMake and Meson don't have a common minimum OSX deployment version
+	if host_machine.system() == 'darwin'
+		minOSXVersion = cxx.get_define('__MAC_OS_X_VERSION_MIN_REQUIRED', prefix: '#include <Availability.h>')
+		if minOSXVersion != ''
+			minOSXVersion = run_command(python, '-c', 'from sys import argv; x = argv[1]; s = "0"; min = x[2:4].lstrip(s); min = min if min else s; print(f"{x[0:2]}.{min}")', minOSXVersion, check: true).stdout().strip()
+		endif
+	else
+		minOSXVersion = ''
+	endif
 
 	openALOptions = cmake.subproject_options()
 	# OpenAL can NOT be built with c++17 -- see almalloc.cpp
@@ -22,22 +52,23 @@ if not libOpenAL.found()
 		'ALSOFT_INSTALL_CONFIG': false,
 		'ALSOFT_INSTALL_HRTF_DATA': false,
 		'ALSOFT_INSTALL_AMBDEC_PRESETS': false,
-		'ALSOFT_BACKEND_ALSA': false,
+		'ALSOFT_BACKEND_ALSA': host_machine.system() == 'linux',
 		'ALSOFT_BACKEND_OSS': false,
-		'ALSOFT_BACKEND_SOLARIS': false,
+		'ALSOFT_BACKEND_SOLARIS': host_machine.system() == 'sunos',
 		'ALSOFT_BACKEND_SNDIO': false,
 		'ALSOFT_BACKEND_PORTAUDIO': false,
-		'ALSOFT_BACKEND_PULSEAUDIO': false,
-		'ALSOFT_BACKEND_COREAUDIO': false,
+		'ALSOFT_BACKEND_PULSEAUDIO': host_machine.system() == 'linux',
+		'ALSOFT_BACKEND_COREAUDIO': host_machine.system() == 'darwin',
 		'ALSOFT_BACKEND_JACK': false,
 		'ALSOFT_BACKEND_OPENSL': false,
 		'ALSOFT_BACKEND_WAVE': true,
 		'ALSOFT_BACKEND_WINMM': false,
-		'ALSOFT_BACKEND_DSOUND': true,
+		'ALSOFT_BACKEND_DSOUND': ['windows', 'cygwin'].contains(host_machine.system()),
 		'ALSOFT_BACKEND_WASAPI': false,
 		'ALSOFT_CPUEXT_NEON': false,
 		'CMAKE_DISABLE_FIND_PACKAGE_WindowsSDK': true,
 		'CMAKE_DISABLE_FIND_PACKAGE_Git': true,
+		'CMAKE_OSX_DEPLOYMENT_TARGET': minOSXVersion,
 	})
 
 	libOpenAL = cmake.subproject('openal-soft', options: openALOptions, required: true).dependency('OpenAL')

@@ -18,6 +18,8 @@ project(
 )
 
 cxx = meson.get_compiler('cpp')
+python = import('python')
+python = python.find_installation('python3', required: host_machine.system() == 'darwin')
 debug = get_option('debug')
 
 add_project_arguments(
