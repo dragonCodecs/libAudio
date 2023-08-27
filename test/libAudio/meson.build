@@ -31,7 +31,7 @@ foreach test : libAudioTests
 	custom_target(
 		test,
 		command: [
-			crunchMake, '-s', '-std=c++17', '-z', 'defs', '@INPUT@', '-o', '@OUTPUT@'
+			crunchMake, '-s', '@INPUT@', '-o', '@OUTPUT@'
 		] + testIncludes + commandExtra + testLibs,
 		input: [test + '.cxx'] + libAudioObjs + testObjs,
 		output: test + '.so',
