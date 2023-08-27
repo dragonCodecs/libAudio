@@ -121,22 +121,26 @@ libOptimFROG = dependency('optimfrog', required: requiresOptimFROG, fallback: op
 extraSrcs = []
 extraDeps = []
 includes = [include_directories('.')]
+formats = {}
 
-if libOgg.found() and libOpusFile.found() and libOpusEnc.found()
+formats += {'Opus': libOgg.found() and libOpusFile.found() and libOpusEnc.found()}
+if formats['Opus']
 	message('Enabling support for Opus')
 	extraSrcs += ['loadOggOpus.cxx', 'saveOggOpus.cxx',]
 	confData.set10('ENABLE_OPUS', true)
 	extraDeps += [libOpusFile, libOpusEnc,]
 endif
 
-if libOgg.found() and libVorbis.found() and libVorbisFile.found() and libVorbisEnc.found()
+formats += {'Vorbis': libOgg.found() and libVorbis.found() and libVorbisFile.found() and libVorbisEnc.found()}
+if formats['Vorbis']
 	message('Enabling support for Vorbis')
 	extraSrcs += ['loadOggVorbis.cpp', 'saveOggVorbis.cpp',]
 	confData.set10('ENABLE_VORBIS', true)
 	extraDeps += [libVorbis, libVorbisFile, libVorbisEnc,]
 endif
 
-if libOgg.found() and libFLAC.found()
+formats += {'FLAC': libOgg.found() and libFLAC.found()}
+if formats['FLAC']
 	message('Enabling support for FLAC')
 	extraSrcs += ['loadFLAC.cpp', 'saveFLAC.cpp',]
 	confData.set10('ENABLE_FLAC', true)
@@ -149,14 +153,16 @@ if confData.has('ENABLE_VORBIS') or confData.has('ENABLE_OPUS') or confData.has(
 	extraDeps += libOgg
 endif
 
-if libMPC.found()
+formats += {'Musepack': libMPC.found()}
+if formats['Musepack']
 	message('Enabling support for Musepack')
 	extraSrcs += ['loadMPC.cpp',]
 	confData.set10('ENABLE_MUSEPACK', true)
 	extraDeps += libMPC
 endif
 
-if libWavPack.found()
+formats += {'WavPack': libWavPack.found()}
+if formats['WavPack']
 	message('Enabling support for WavPack')
 	extraSrcs += ['loadWavPack.cpp',]
 	confData.set10('ENABLE_WAVPACK', true)
@@ -166,7 +172,8 @@ if libWavPack.found()
 	extraDeps += libWavPack
 endif
 
-if libID3Tag.found() and libMAD.found() and libLAME.found()
+formats += {'MP3': libID3Tag.found() and libMAD.found() and libLAME.found()}
+if formats['MP3']
 	message('Enabling support for MP3')
 	extraSrcs += ['loadMP3.cxx', 'saveMP3.cxx',]
 	confData.set10('ENABLE_MP3', true)
@@ -174,7 +181,11 @@ if libID3Tag.found() and libMAD.found() and libLAME.found()
 endif
 
 # TODO: decouple M4A from the AAC encoder
-if libMP4v2.found() and libFAAC.found() and libFAAD.found()
+formats += {
+	'AAC': libFAAD.found(),
+	'M4A': libMP4v2.found() and libFAAC.found() and libFAAD.found()
+}
+if formats['M4A']
 	message('Enabling support for AAC')
 	extraSrcs += ['loadM4A.cpp', 'loadAAC.cpp', 'saveM4A.cpp',]
 	confData.set10('ENABLE_M4A', true)
@@ -182,38 +193,45 @@ if libMP4v2.found() and libFAAC.found() and libFAAD.found()
 	extraDeps += [libMP4v2, libFAAC, libFAAD,]
 endif
 
-if extraFormats.contains('wma')
+formats += {'WMA': extraFormats.contains('wma')}
+if formats['WMA']
 	message('Enabling support for Windows Media Audio')
 	extraSrcs += 'loadWMA.cpp'
 	confData.set10('ENABLE_WMA', true)
 endif
-if libOptimFROG.found()
+formats += {'OptimFROG': libOptimFROG.found()}
+if formats['OptimFROG']
 	message('Enabling support for OptimFROG')
 	extraSrcs += 'loadOptimFROG.cpp'
 	confData.set10('ENABLE_OptimFROG', true)
 	extraDeps += [libOptimFROG]
 endif
-if extraFormats.contains('sndh')
+formats += {'SNDH': extraFormats.contains('sndh')}
+if formats['SNDH']
 	message('Enabling support for SNDH')
 	extraSrcs += ['loadSNDH.cpp', 'sndh/loader.cxx', 'sndh/iceDecrunch.cxx']
 	confData.set10('ENABLE_SNDH', true)
 endif
-if extraFormats.contains('sid')
+formats += {'SID': extraFormats.contains('sid')}
+if formats['SID']
 	message('Enabling support for SID')
 	extraSrcs += 'loadSID.cpp'
 	confData.set10('ENABLE_SID', true)
 endif
-if extraFormats.contains('aon')
+formats += {'AON': extraFormats.contains('aon')}
+if formats['AON']
 	message('Enabling support for AON')
 	extraSrcs += 'loadAON.cpp'
 	confData.set10('ENABLE_AON', true)
 endif
-if extraFormats.contains('fc1x')
+formats += {'FC1x': extraFormats.contains('fc1x')}
+if formats['FC1x']
 	message('Enabling support for FC1x')
 	extraSrcs += 'loadFC1x.cpp'
 	confData.set10('ENABLE_FC1x', true)
 endif
-if extraFormats.contains('ra')
+formats += {'Real Audio': extraFormats.contains('ra')}
+if formats['Real Audio']
 	message('Enabling support for RealAudio')
 	extraSrcs += 'loadRealAudio.cpp'
 	confData.set10('ENABLE_RA', true)
@@ -233,6 +251,14 @@ if cxx.get_id() == 'msvc'
 	includes += include_directories('windows')
 endif
 
+formats += {
+	'MOD': true,
+	'S3M': true,
+	'STM': true,
+	'IT': true,
+	'WAV': true,
+}
+
 genericModuleSrcs = [
 	'genericModule/ModuleFile.cpp',
 	'genericModule/ModuleHeader.cpp',
@@ -245,7 +271,7 @@ genericModuleSrcs = [
 	'loadMOD.cpp',
 	'loadS3M.cpp',
 	'loadSTM.cpp',
-	'loadIT.cpp'
+	'loadIT.cpp',
 ]
 
 libAudioSrcs = [
@@ -285,6 +311,11 @@ if target_machine.system() == 'windows'
 
 	extraSrcs += windows.compile_resources(libAudioResource)
 endif
+
+summary(
+	formats,
+	section: 'Formats'
+)
 
 libAudioLibrary = shared_library(
 	'libAudio',
