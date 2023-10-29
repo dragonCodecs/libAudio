@@ -88,7 +88,7 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
-          ninja -C build coverage-xml
+          gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@v3
@@ -194,7 +194,7 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_lto=false -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
-          ninja -C build coverage-xml
+          gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml --gcov-executable "$GCOV" -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@v3
