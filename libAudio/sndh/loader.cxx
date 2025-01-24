@@ -92,7 +92,7 @@ uint16_t readFrequency(sndhDecruncher_t &file, const char *const prefix)
 
 bool sndhLoader_t::readMeta()
 {
-	std::array<char, 4> tagType{};
+	std::array<char, 4U> tagType{};
 	while (tagType != typeEnd)
 	{
 		if (!_data.read(tagType))
@@ -134,6 +134,10 @@ bool sndhLoader_t::readMeta()
 					return false;
 			}
 		}
+		// If none of the above tags matched, we're in a SNDH v1.1 file and came to the end of the header
+		else if (tagType != typeEnd)
+			// Put the non-header data back and get out of here
+			return _data.seekRel(-4);
 	}
 	return true;
 }
