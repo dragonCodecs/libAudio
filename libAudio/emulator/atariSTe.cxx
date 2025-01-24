@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
-#include <substrate/units>
 #include "atariSTe.hxx"
 #include "ram.hxx"
-
-using namespace substrate;
+#include "unitsHelpers.hxx"
 
 atariSTe_t::atariSTe_t() noexcept
 {
