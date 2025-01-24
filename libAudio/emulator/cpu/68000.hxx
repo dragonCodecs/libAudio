@@ -27,11 +27,12 @@ struct motorola68000_t
 {
 private:
 	memoryMap_t<uint32_t> &_peripherals;
+	uint64_t clockFrequency;
 
 	// There are 8 data registers, 7 address registers, 2 stack pointers,
 	// a program counter and a status register in a m68k
-	std::array<uint32_t, 8> d;
-	std::array<uint32_t, 7> a;
+	std::array<uint32_t, 8U> d;
+	std::array<uint32_t, 7U> a;
 	uint32_t systemStackPointer;
 	uint32_t userStackPointer;
 	uint32_t programCounter;
@@ -39,7 +40,7 @@ private:
 	substrate::bitFlags_t<uint16_t, m68kStatusBits_t> status{m68kStatusBits_t::supervisor};
 
 public:
-	motorola68000_t(memoryMap_t<uint32_t> &peripherals) noexcept;
+	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint64_t clockFreq) noexcept;
 };
 
 #endif /*EMULATOR_CPU_68000_HXX*/

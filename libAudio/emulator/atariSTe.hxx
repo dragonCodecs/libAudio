@@ -5,12 +5,13 @@
 
 #include "memoryMap.hxx"
 #include "cpu/68000.hxx"
+#include "unitsHelpers.hxx"
 
 // M68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.
 struct atariSTe_t : memoryMap_t<uint32_t>
 {
 private:
-	motorola68000_t cpu{*this};
+	motorola68000_t cpu{*this, 8_MHz};
 
 public:
 	atariSTe_t() noexcept;
