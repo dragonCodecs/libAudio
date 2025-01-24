@@ -29,26 +29,24 @@ public:
 		if (whence == SEEK_SET)
 		{
 			if (offset < 0 || static_cast<size_t>(offset) > length)
-				return false;
+				return _offset;
 			_offset = offset;
 		}
 		else if (whence == SEEK_CUR)
 		{
 			const off_t newOffset{static_cast<off_t>(_offset) + offset};
 			if (static_cast<size_t>(newOffset) > length || newOffset < 0)
-				return false;
+				return _offset;
 			_offset += offset;
 		}
 		else if (whence == SEEK_END)
 		{
 			const off_t newOffset{static_cast<off_t>(length) - offset};
 			if (static_cast<size_t>(newOffset) > length || newOffset < 0)
-				return false;
+				return _offset;
 			_offset = length - offset;
 		}
-		else
-			return false;
-		return true;
+		return _offset;
 	}
 
 	[[nodiscard]] bool head() noexcept { return seek(0, SEEK_SET) == 0; }
