@@ -240,7 +240,13 @@ endif
 formats += {'SNDH': extraFormats.contains('sndh')}
 if formats['SNDH']
 	message('Enabling support for SNDH')
-	extraSrcs += ['loadSNDH.cpp', 'sndh/loader.cxx', 'sndh/iceDecrunch.cxx']
+	extraSrcs += [
+		'loadSNDH.cpp',
+		'sndh/loader.cxx',
+		'sndh/iceDecrunch.cxx',
+		'emulator/atariSTe.cxx',
+		'emulator/cpu/68000.cxx',
+	]
 	confData.set10('ENABLE_SNDH', true)
 endif
 formats += {'SID': extraFormats.contains('sid')}
