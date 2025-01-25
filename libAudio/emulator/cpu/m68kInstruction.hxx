@@ -4,6 +4,7 @@
 #define EMULATOR_CPU_M68K_INSTRUCTION_HXX
 
 #include <cstdint>
+#include <substrate/flags>
 
 enum class instruction_t
 {
@@ -214,12 +215,22 @@ enum class instruction_t
 	ftwotox,
 };
 
+enum class operationFlags_t
+{
+	memoryNotRegister, // Operation is on memory, not a register
+	registerNotImmediate, // Operation uses rx as immediate not register
+};
+
 struct decodedOperation_t
 {
 	instruction_t operation;
-	bool rm{false}; // Memory/~Register
 	uint8_t rx{0U};
 	uint8_t ry{0U};
+	substrate::bitFlags_t<uint8_t, operationFlags_t> flags{};
+	uint8_t operationSize{0U};
+	uint8_t opMode{0U};
+	uint8_t mode{0U};
+	uint8_t trailingBytes{0U};
 };
 
 #endif /*EMULATOR_CPU_M68K_INSTRUCTION_HXX*/
