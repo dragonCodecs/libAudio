@@ -7,6 +7,7 @@
 #include <array>
 #include <substrate/flags>
 #include "../memoryMap.hxx"
+#include "m68kInstruction.hxx"
 
 enum class m68kStatusBits_t
 {
@@ -54,6 +55,8 @@ private:
 	// Likewise, 8-15 - see M68000PRM pg17, §1.2.3.3; and 3-7 - see M68000PRM pg18, §1.2.3.4
 	uint32_t fpStatus;
 	uint32_t fpInstructionAddress;
+
+	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;
 
 public:
 	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint64_t clockFreq) noexcept;
