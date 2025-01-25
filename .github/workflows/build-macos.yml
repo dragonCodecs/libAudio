@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build-macos:
-    name: '${{ matrix.os }}'
+    name: '${{ matrix.os }} (Apple Clang)'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -27,6 +27,8 @@ jobs:
         build_opts:
           - ''
         include:
+          # static+LTO forced build to uncover any potential symbols issues with Mach-O
+          # single test to save runners as they are scarse and should validate all possible configurations
           - os: macos-latest
             build_opts: '-Db_lto=true -Ddefault_library=static'
       fail-fast: false
@@ -39,11 +41,11 @@ jobs:
           echo "GITHUB_WORKSPACE=`pwd`" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig" >> $GITHUB_ENV
       - name: Checkout libAudio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
       - name: Checkout crunch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: dragonmux/crunch
           path: deps/crunch
@@ -88,17 +90,17 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
-          gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
+          ninja -C build coverage-xml
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: logs-${{ matrix.os }}
+          name: logs-${{ matrix.os }}-appleclang
           path: ${{ github.workspace }}/build/meson-logs/*
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           directory: ./build/meson-logs/
           files: coverage.xml
@@ -134,7 +136,7 @@ jobs:
       - name: Setup compiler
         if: github.repository == 'dragonCodecs/libAudio'
         run: |
-          brew install ${{ matrix.compiler }} gcovr
+          brew install ${{ matrix.compiler }}
           CC=${COMPILER/@/-}
           CXX=${CC/#gcc/g++}
           echo "CC=$CC" >> $GITHUB_ENV
@@ -143,26 +145,26 @@ jobs:
         env:
           COMPILER: ${{ matrix.compiler }}
       - name: Checkout libAudio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
       - name: Checkout crunch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: dragonmux/crunch
           path: deps/crunch
           #ref: TODO: need to feed what version of crunch to use in here..
           lfs: true
           submodules: true
-      - name: Setup Meson + Ninja
+      - name: Setup Meson + Ninja + gcovr
         run: |
-          brew install meson ninja
+          brew install meson ninja gcovr
         working-directory: ${{ runner.temp }}
       - name: Version tools
         run: |
-          cc --version  || true
-          ld --version || true
-          gcov --version || true
+          $CC --version
+          $CXX --version
+          $GCOV --version
           meson --version
           ninja --version
       - name: Install crunch
@@ -194,17 +196,17 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_lto=false -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
-          gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml --gcov-executable "$GCOV" -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
+          ninja -C build coverage-xml
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs-${{ matrix.os }}-homebrew-${{ matrix.compiler }}
           path: ${{ github.workspace }}/build/meson-logs/*
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           directory: ./build/meson-logs/
           files: coverage.xml
