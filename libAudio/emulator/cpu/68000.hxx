@@ -35,11 +35,12 @@ private:
 	memoryMap_t<uint32_t> &_peripherals;
 	uint64_t clockFrequency;
 
-	// There are 8 data registers, 7 address registers, 2 stack pointers,
+	// There are 8 data registers, 7 address registers, 3 stack pointers,
 	// a program counter and a status register in a m68k
 	std::array<uint32_t, 8U> d;
 	std::array<uint32_t, 7U> a;
 	uint32_t systemStackPointer;
+	uint32_t interruptStackPointer;
 	uint32_t userStackPointer;
 	uint32_t programCounter;
 	// By default the system starts up in supervisor (system) mode
