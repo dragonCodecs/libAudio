@@ -82,7 +82,7 @@ jobs:
           sudo python3 -m pip install --upgrade pip setuptools wheel
       - name: Setup Meson + Ninja + gcovr
         run: |
-          python3 -m pip install --break-system-packages --user meson ninja gcovr
+          sudo python3 -m pip install --break-system-packages meson ninja gcovr
         working-directory: ${{ runner.temp }}
       - name: Version tools
         run: |
