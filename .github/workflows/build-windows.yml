@@ -45,7 +45,7 @@ jobs:
           arch: x86_64
       - name: Install OpenCppCoverage
         if: github.repository == 'dragonCodecs/libAudio'
-        uses: crazy-max/ghaction-chocolatey@v2.1.0
+        uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: install OpenCppCoverage
       - name: Setup OpenCppCoverage
@@ -53,7 +53,7 @@ jobs:
         run: |
           echo "C:\Program Files\OpenCppCoverage" >> $GITHUB_PATH
       - name: Checkout libAudio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
       - name: Checkout public deps
@@ -100,12 +100,20 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            ${{ github.workspace }}/build/meson-logs
+            ${{ github.workspace }}/build/test
+          retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
 
   build-windows-msys2:
     name: '${{ matrix.os }} (${{ matrix.sys }})'
@@ -147,7 +155,7 @@ jobs:
         run: |
           echo "GCOV=llvm-cov gcov" >> $GITHUB_ENV
       - name: Checkout libAudio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
       - name: Checkout public deps
@@ -190,14 +198,14 @@ jobs:
           ninja -C build coverage-xml
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs-${{ matrix.os }}-${{ matrix.sys }}
           path: ${{ github.workspace }}/build/meson-logs/*
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           directory: ./build/meson-logs/
           files: coverage.xml
