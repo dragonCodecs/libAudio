@@ -84,6 +84,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(uint16_t insn) const noexc
 					{operationFlags_t::memoryNotRegister},
 					uint8_t((insn & sizeMask) >> sizeShift),
 				};
+		case 0xb108U:
+		case 0xb148U:
+		case 0xb188U:
+			return
+			{
+				instruction_t::cmpm,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{operationFlags_t::memoryNotRegister},
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
 	}
 	return {instruction_t::illegal};
 }
