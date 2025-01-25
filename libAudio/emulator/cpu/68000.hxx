@@ -23,6 +23,12 @@ enum class m68kStatusBits_t
 	trace = 15U,
 };
 
+struct fpuReg_t
+{
+	uint64_t mantisa;
+	uint16_t exponent;
+};
+
 struct motorola68000_t
 {
 private:
@@ -38,6 +44,15 @@ private:
 	uint32_t programCounter;
 	// By default the system starts up in supervisor (system) mode
 	substrate::bitFlags_t<uint16_t, m68kStatusBits_t> status{m68kStatusBits_t::supervisor};
+
+	// There are then 8 FPU registers, a control register, a status register, and an instruction address register
+	std::array<fpuReg_t, 8U> fp;
+	// This needs to be a bitFlags_t. See M68000PRM pg16, §1.2.2.2
+	uint16_t fpControl;
+	// Bits 24-27 are a bitFlags_t too - see M68000PRM pg17, §1.2.3.1
+	// Likewise, 8-15 - see M68000PRM pg17, §1.2.3.3; and 3-7 - see M68000PRM pg18, §1.2.3.4
+	uint32_t fpStatus;
+	uint32_t fpInstructionAddress;
 
 public:
 	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint64_t clockFreq) noexcept;
