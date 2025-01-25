@@ -39,8 +39,9 @@ jobs:
         if: startsWith(matrix.compiler, 'gcc')
         run: |
           CXX=${CC/#gcc/g++}
+          sudo apt-add-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install $CC $CXX gcovr
+          sudo apt-get install $CC $CXX
           echo "CC=$CC" >> $GITHUB_ENV
           echo "CXX=$CXX" >> $GITHUB_ENV
           echo "GCOV=${CC/#gcc/gcov}" >> $GITHUB_ENV
@@ -49,8 +50,12 @@ jobs:
       - name: Setup Clang
         if: startsWith(matrix.compiler, 'clang')
         run: |
+          wget https://apt.llvm.org/llvm-snapshot.gpg.key
+          sudo apt-key add llvm-snapshot.gpg.key
+          rm llvm-snapshot.gpg.key
+          sudo apt-add-repository "deb https://apt.llvm.org/${{ matrix.os.name }}/ llvm-toolchain-${{ matrix.os.name }}${CC/#clang/} main"
           sudo apt-get update
-          sudo apt-get install $CC llvm gcovr
+          sudo apt-get install $CC
           CXX=${CC/#clang/clang++}
           echo "CC=$CC" >> $GITHUB_ENV
           echo "CXX=$CXX" >> $GITHUB_ENV
@@ -59,21 +64,25 @@ jobs:
           CC: ${{ matrix.compiler }}
         working-directory: ${{ runner.temp }}
       - name: Checkout libAudio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
       - name: Checkout crunch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: dragonmux/crunch
           path: deps/crunch
           #ref: TODO: need to feed what version of crunch to use in here..
           lfs: true
           submodules: true
-      - name: Setup Meson + Ninja
+      - name: Upgrade pip + wheel
+        if: matrix.os.name == 'jammy'
+        shell: bash
         run: |
           sudo python3 -m pip install --upgrade pip setuptools wheel
-          sudo python3 -m pip install meson ninja
+      - name: Setup Meson + Ninja + gcovr
+        run: |
+          python3 -m pip install --break-system-packages --user meson ninja gcovr
         working-directory: ${{ runner.temp }}
       - name: Version tools
         run: |
@@ -111,18 +120,18 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
-          cd build
-          find . -type f -name '*.gcda' -exec $GCOV -p {} + > /dev/null
-          gcovr -r .. -x -o coverage.xml --gcov-executable "$GCOV" -e ../deps -e ../test
+          ninja -C build coverage-xml
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs-${{ matrix.os.id }}-${{ matrix.compiler }}
           path: ${{ github.workspace }}/build/meson-logs/*
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
+          directory: ./build/meson-logs/
+          files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
