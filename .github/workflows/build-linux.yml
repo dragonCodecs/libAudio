@@ -55,7 +55,7 @@ jobs:
           rm llvm-snapshot.gpg.key
           sudo apt-add-repository "deb https://apt.llvm.org/${{ matrix.os.name }}/ llvm-toolchain-${{ matrix.os.name }}${CC/#clang/} main"
           sudo apt-get update
-          sudo apt-get install $CC
+          sudo apt-get install $CC llvm
           CXX=${CC/#clang/clang++}
           echo "CC=$CC" >> $GITHUB_ENV
           echo "CXX=$CXX" >> $GITHUB_ENV
@@ -120,7 +120,7 @@ jobs:
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
-          ninja -C build coverage-xml
+          gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@v4
