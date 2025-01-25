@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
-#ifndef EMULATOR_CPU_68000_HXX
-#define EMULATOR_CPU_68000_HXX
+#ifndef EMULATOR_CPU_M68K_HXX
+#define EMULATOR_CPU_M68K_HXX
 
 #include <cstdint>
 #include <array>
@@ -59,4 +59,4 @@ public:
 	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint64_t clockFreq) noexcept;
 };
 
-#endif /*EMULATOR_CPU_68000_HXX*/
+#endif /*EMULATOR_CPU_M68K_HXX*/

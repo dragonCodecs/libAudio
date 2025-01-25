@@ -4,7 +4,7 @@
 #define EMULATOR_ATARI_STE_HXX
 
 #include "memoryMap.hxx"
-#include "cpu/68000.hxx"
+#include "cpu/m68k.hxx"
 #include "unitsHelpers.hxx"
 
 // M68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.

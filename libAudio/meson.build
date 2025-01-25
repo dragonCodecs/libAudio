@@ -245,7 +245,7 @@ if formats['SNDH']
 		'sndh/loader.cxx',
 		'sndh/iceDecrunch.cxx',
 		'emulator/atariSTe.cxx',
-		'emulator/cpu/68000.cxx',
+		'emulator/cpu/m68k.cxx',
 	]
 	confData.set10('ENABLE_SNDH', true)
 endif
