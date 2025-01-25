@@ -12,8 +12,13 @@
 
 #include <cstring>
 #ifdef _WINDOWS
+// MSYS2's UCRT64 and MinGW64 environments define these appropriately for us
+#ifndef strncasecmp
 #define strncasecmp strnicmp
+#endif
+#ifndef strcasecmp
 #define strcasecmp stricmp
+#endif
 #endif
 
 #include <cstdint>
