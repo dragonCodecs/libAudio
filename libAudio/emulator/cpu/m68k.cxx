@@ -20,6 +20,56 @@ motorola68000_t::motorola68000_t(memoryMap_t<uint32_t> &peripherals, const uint6
 
 decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const noexcept
 {
+	// Decode instructions that have exact matches
+	switch (insn)
+	{
+		case 0x023cU:
+			return
+			{
+				instruction_t::andi,
+				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x0a3cU:
+			return
+			{
+				instruction_t::eori,
+				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x49fcU:
+			return {instruction_t::illegal};
+		case 0x4e71U:
+			return {instruction_t::nop};
+		case 0x003cU:
+			return
+			{
+				instruction_t::ori,
+				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x4e74U:
+			return
+			{
+				instruction_t::rtd,
+				0U, 0U, {}, 0U, 0U, 0U,
+				2U, // 16-bit displacement follows
+			};
+		case 0x4e77U:
+			return {instruction_t::rtr};
+		case 0x4e75U:
+			return {instruction_t::rts};
+		case 0x4e76U:
+			return {instruction_t::trapv};
+	}
+
+	// Decode instructions that use the `insn Ry, Rx` basic form
 	switch (insn & insnMask)
 	{
 		case 0xc100U:
