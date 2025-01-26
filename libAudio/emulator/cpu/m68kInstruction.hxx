@@ -57,7 +57,7 @@ enum class instruction_t
 	_and,
 	andi,
 	eor,
-	eroi,
+	eori,
 	_not,
 	_or,
 	ori,
