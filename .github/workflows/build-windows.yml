@@ -190,9 +190,10 @@ jobs:
         run: meson install -C build
       - name: Run coverage build
         if: github.repository == 'dragonCodecs/libAudio'
+        # We explicitly turn LTO off here for libmp4v2 because with it on, the build fails spectacularly
         run: |
           rm -rf build
-          meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
+          meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug -Dmp4v2:b_lto=false
           meson compile -C build
           meson test -C build
           ninja -C build coverage-xml
