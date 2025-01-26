@@ -120,7 +120,20 @@ if not libLAME.found()
 endif
 
 requiresAAC = extraFormats.contains('aac')
-libMP4v2 = cxx.find_library('mp4v2', required: false)
+# Try and find libMP4v2 if we're not forcing fallback here
+if 'mp4v2' not in get_option('force_fallback_for')
+	libMP4v2 = cxx.find_library('mp4v2', required: false)
+else
+	libMP4v2 = disabler()
+endif
+if libMP4v2.found()
+	# If we found a suitable library on the system, check that MP4CreateProvder() is present
+	if not cxx.has_header_symbol('mp4v2/mp4v2.h', 'MP4CreateProvider', dependencies: libMP4v2)
+		# It was not, so turn this into a disabler so we use the fallback
+		libMP4v2 = disabler()
+	endif
+endif
+# If we either didn't find the library, or it was unstuiable.. use our fallback dependency
 if not libMP4v2.found()
 	libMP4v2 = dependency('mp4v2', version: '>=2.1.2', required: requiresAAC, allow_fallback: true)
 endif
@@ -131,10 +144,6 @@ endif
 libFAAD = cxx.find_library('faad', required: false)
 if not libFAAD.found()
 	libFAAD = dependency('faad2', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
-endif
-
-if libMP4v2.found() and libMP4v2.type_name() != 'internal'
-	cxx.has_header_symbol('mp4v2/mp4v2.h', 'MP4CreateProvider', dependencies: libMP4v2, required: true)
 endif
 
 requiresOptimFROG = extraFormats.contains('optimfrog')
