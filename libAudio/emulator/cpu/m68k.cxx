@@ -308,6 +308,22 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
+		case 0x8180U:
+		case 0x8188U:
+			return
+			{
+				instruction_t::unpk,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & rmMask)
+						return {operationFlags_t::memoryNotRegister};
+					return {};
+				}(),
+				0U, 0U, 0U,
+				2U, // 16-bit adjustment extension follows
+			};
 	}
 	return {instruction_t::illegal};
 }
