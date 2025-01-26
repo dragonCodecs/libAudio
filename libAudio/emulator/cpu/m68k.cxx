@@ -166,6 +166,148 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
+		case 0x0101U:
+		case 0x0141U:
+		case 0x0181U:
+		case 0x01c1U:
+			return
+			{
+				instruction_t::movep,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{operationFlags_t::memoryNotRegister},
+				// Extract whether we're working with a u16 or a u32
+				uint8_t((insn & 0x0040U) ? 4U : 2U),
+				// Extract the operation direction information
+				uint8_t((insn & 0x0080U) >> 7U),
+				0U,
+				2U, // 16-bit displacement follows
+			};
+		case 0x8140U:
+		case 0x8148U:
+			return
+			{
+				instruction_t::pack,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & rmMask)
+						return {operationFlags_t::memoryNotRegister};
+					return {};
+				}(),
+				0U, 0U, 0U,
+				2U, // 16-bit adjustment extension follows
+			};
+		case 0xe018U:
+		case 0xe038U:
+		case 0xe058U:
+		case 0xe078U:
+		case 0xe098U:
+		case 0xe0b8U:
+			return
+			{
+				instruction_t::ror,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & irMask)
+						return {operationFlags_t::registerNotImmediate};
+					return {};
+				}(),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0xe118U:
+		case 0xe138U:
+		case 0xe158U:
+		case 0xe178U:
+		case 0xe198U:
+		case 0xe1b8U:
+			return
+			{
+				instruction_t::rol,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & irMask)
+						return {operationFlags_t::registerNotImmediate};
+					return {};
+				}(),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0xe010U:
+		case 0xe030U:
+		case 0xe050U:
+		case 0xe070U:
+		case 0xe090U:
+		case 0xe0b0U:
+			return
+			{
+				instruction_t::roxr,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & irMask)
+						return {operationFlags_t::registerNotImmediate};
+					return {};
+				}(),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0xe110U:
+		case 0xe130U:
+		case 0xe150U:
+		case 0xe170U:
+		case 0xe190U:
+		case 0xe1b0U:
+			return
+			{
+				instruction_t::roxl,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & irMask)
+						return {operationFlags_t::registerNotImmediate};
+					return {};
+				}(),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0x8100U:
+		case 0x8108U:
+			return
+			{
+				instruction_t::sbcd,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & rmMask)
+						return {operationFlags_t::memoryNotRegister};
+					return {};
+				}(),
+			};
+		case 0x9100U:
+		case 0x9108U:
+		case 0x9140U:
+		case 0x9148U:
+		case 0x9180U:
+		case 0x9188U:
+			return
+			{
+				instruction_t::subx,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				[&]() -> decltype(decodedOperation_t::flags)
+				{
+					if (insn & rmMask)
+						return {operationFlags_t::memoryNotRegister};
+					return {};
+				}(),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
 	}
 	return {instruction_t::illegal};
 }
