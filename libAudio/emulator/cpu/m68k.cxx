@@ -12,6 +12,8 @@ constexpr static uint16_t sizeMask{0x00c0U};
 constexpr static size_t sizeShift{6U};
 constexpr static uint16_t conditionMask{0x0f00U};
 constexpr static size_t conditionShift{8U};
+constexpr static uint16_t eaModeMask{0x0038U};
+constexpr static size_t eaModeShift{3U};
 
 motorola68000_t::motorola68000_t(memoryMap_t<uint32_t> &peripherals, const uint64_t clockFreq) noexcept :
 	_peripherals{peripherals}, clockFrequency{clockFreq}
@@ -375,5 +377,68 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit adjustment extension follows
 			};
 	}
+
+	// Decode instructions that use the effective address form
+	switch (insn & insnMaskEA)
+	{
+		case 0xd000U:
+		case 0xd040U:
+		case 0xd080U:
+		case 0xd100U:
+		case 0xd140U:
+		case 0xd180U:
+			return
+			{
+				instruction_t::add,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				// Extract the operation direction information
+				uint8_t((insn & 0x0100U) >> 8U),
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xd0c0U:
+		case 0xd1c0U:
+			return
+			{
+				instruction_t::adda,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				// Decode whether 16- or 32-bit operation
+				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		// XXX: These 3 won't ever actually match due to masking.. need to deal with ADDI specially.
+		case 0x0600U:
+		case 0x0640U:
+		case 0x0680U:
+			return
+			{
+				instruction_t::addi,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x5000U:
+		case 0x5040U:
+		case 0x5080U:
+			return
+			{
+				instruction_t::addq,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+	}
+
 	return {instruction_t::illegal};
 }
