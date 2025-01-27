@@ -4,6 +4,7 @@
 
 constexpr static uint16_t insnMask{0xf1f8U};
 constexpr static uint16_t insnMaskEA{0xf1c0U};
+constexpr static uint16_t insnMaskEANoReg{0xffc0U};
 constexpr static size_t regXShift{9U};
 constexpr static uint16_t regMask{0x0007U};
 constexpr static uint16_t rmMask{0x0008U};
@@ -411,20 +412,6 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
-		// XXX: These 3 won't ever actually match due to masking.. need to deal with ADDI specially.
-		case 0x0600U:
-		case 0x0640U:
-		case 0x0680U:
-			return
-			{
-				instruction_t::addi,
-				0U,
-				uint8_t(insn & regMask),
-				{},
-				uint8_t((insn & sizeMask) >> sizeShift),
-				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
-			};
 		case 0x5000U:
 		case 0x5040U:
 		case 0x5080U:
@@ -438,7 +425,74 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0xc000U:
+		case 0xc040U:
+		case 0xc080U:
+		case 0xc100U:
+		case 0xc140U:
+		case 0xc180U:
+			return
+			{
+				instruction_t::_and,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				// Extract the operation direction information
+				uint8_t((insn & 0x0100U) >> 8U),
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
+	// Decode instructions that use the effective address form without an Rx register
+	switch (insn & insnMaskEANoReg)
+	{
+		case 0x0600U:
+		case 0x0640U:
+		case 0x0680U:
+			return
+			{
+				instruction_t::addi,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x0200U:
+		case 0x0240U:
+		case 0x0280U:
+			return
+			{
+				instruction_t::andi,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xe0c0U:
+			return
+			{
+				instruction_t::asl,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xe1c0U:
+			return
+			{
+				instruction_t::asr,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+	}
 	return {instruction_t::illegal};
 }
