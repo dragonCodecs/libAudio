@@ -663,6 +663,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0xc1c0U:
+			return
+			{
+				instruction_t::muls,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xc0c0U:
+			return
+			{
+				instruction_t::mulu,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -1021,6 +1041,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0400U) >> 10U),
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit register list mask follows
+			};
+		case 0x4c00U:
+			return
+			{
+				instruction_t::muls_mulu,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit Dh - Dl follows, bit 11 determines of MULS (1) or MULU (0)
 			};
 	}
 

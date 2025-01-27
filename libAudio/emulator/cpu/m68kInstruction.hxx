@@ -214,6 +214,7 @@ enum class instruction_t
 	// Instructions determined by a bit in their trailing bytes
 	divsl_divul,
 	chk2_cmp2,
+	muls_mulu,
 };
 
 enum class operationFlags_t
