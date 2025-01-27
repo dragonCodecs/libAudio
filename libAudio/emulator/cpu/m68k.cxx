@@ -5,6 +5,8 @@
 constexpr static uint16_t insnMask{0xf1f8U};
 constexpr static uint16_t insnMaskEA{0xf1c0U};
 constexpr static uint16_t insnMaskEANoReg{0xffc0U};
+constexpr static uint16_t insnMaskVector{0xfff8U};
+constexpr static uint16_t insnMaskDisplacement{0xff00U};
 constexpr static size_t regXShift{9U};
 constexpr static uint16_t regMask{0x0007U};
 constexpr static uint16_t rmMask{0x0008U};
@@ -15,6 +17,8 @@ constexpr static uint16_t conditionMask{0x0f00U};
 constexpr static size_t conditionShift{8U};
 constexpr static uint16_t eaModeMask{0x0038U};
 constexpr static size_t eaModeShift{3U};
+constexpr static uint16_t vectorMask{0x0007U};
+constexpr static uint16_t displacementMask{0x00ffU};
 
 motorola68000_t::motorola68000_t(memoryMap_t<uint32_t> &peripherals, const uint64_t clockFreq) noexcept :
 	_peripherals{peripherals}, clockFrequency{clockFreq}
@@ -622,6 +626,42 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit {offset:width} follows
+			};
+	}
+
+	// Decode instructions that specify only a vector field
+	switch (insn & insnMaskVector)
+	{
+		case 0x4848U:
+			return
+			{
+				instruction_t::bkpt,
+				uint8_t(insn & vectorMask),
+			};
+	}
+
+	// Decode instructions that specify an 8-bit displacement
+	switch (insn & insnMaskDisplacement)
+	{
+		case 0x6000U:
+			return
+			{
+				instruction_t::bra,
+				uint8_t(insn & displacementMask),
+				0U,
+				{},
+				0U, 0U, 0U,
+				[](const uint8_t displacement) -> uint8_t
+				{
+					// There are two special displacement values. A displacement of 0 means a 16-bit one follows
+					if (displacement == 0x00U)
+						return 2U;
+					// A displacement value of 255 means a 32-bit one follows
+					if (displacement == 0xffU)
+						return 4U;
+					// Otherwise nothing follows.
+					return 0U;
+				}(insn & displacementMask),
 			};
 	}
 	return {instruction_t::illegal};
