@@ -466,6 +466,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x01c0U:
+			return
+			{
+				instruction_t::bset,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x0100U:
+			return
+			{
+				instruction_t::btst,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -627,6 +647,39 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit {offset:width} follows
 			};
+		case 0x08c0U:
+			return
+			{
+				instruction_t::bset,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit bit number follows (8 bits used)
+			};
+		case 0x0800U:
+			return
+			{
+				instruction_t::btst,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit bit number follows (8 bits used)
+			};
+		case 0x06c0:
+			return
+			{
+				instruction_t::callm,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit argument count follows (8 bits used)
+			};
 	}
 
 	// Decode instructions that specify only a vector field
@@ -647,6 +700,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::bra,
+				uint8_t(insn & displacementMask),
+				0U,
+				{},
+				0U, 0U, 0U,
+				[](const uint8_t displacement) -> uint8_t
+				{
+					// There are two special displacement values. A displacement of 0 means a 16-bit one follows
+					if (displacement == 0x00U)
+						return 2U;
+					// A displacement value of 255 means a 32-bit one follows
+					if (displacement == 0xffU)
+						return 4U;
+					// Otherwise nothing follows.
+					return 0U;
+				}(insn & displacementMask),
+			};
+		case 0x6100U:
+			return
+			{
+				instruction_t::bsr,
 				uint8_t(insn & displacementMask),
 				0U,
 				{},

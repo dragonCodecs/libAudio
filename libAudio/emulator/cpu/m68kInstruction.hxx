@@ -97,6 +97,7 @@ enum class instruction_t
 	unpk,
 
 	// Flow control instructions
+	callm,
 	bcc,
 	fbcc,
 	dbcc,
