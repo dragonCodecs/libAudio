@@ -220,7 +220,7 @@ enum class operationFlags_t
 {
 	memoryNotRegister, // Operation is on memory, not a register
 	immediateNotRegister, // Operation uses rx as immediate not register
-	registerNotImmediate, // Operation uses rx as immediate not register
+	postincrement, // Operation is post-increment mode
 };
 
 struct decodedOperation_t

@@ -1053,6 +1053,32 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U, 0U,
 				4U, // 32-bit displayment follows
 			};
+		case 0xf620U:
+			return
+			{
+				instruction_t::move16,
+				uint8_t(insn & regMask),
+				0U,
+				{operationFlags_t::postincrement},
+				0U, 0U, 0U,
+				2U, // 16-bit instruction continuation follows, containing Ay
+			};
+		case 0xf600U:
+		case 0xf608U:
+		case 0xf610U:
+		case 0xf618U:
+			return
+			{
+				instruction_t::move16,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U,
+				// Extract out the operation mode
+				uint8_t((insn & 0x0018U) >> 3U),
+				0U,
+				4U, // 32-bit absolute address follows
+			};
 	}
 
 	// Decode instructions that specify an 8-bit displacement
