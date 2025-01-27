@@ -1005,6 +1005,23 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x4880U:
+		case 0x48c0U:
+		case 0x4c80U:
+		case 0x4cc0U:
+			return
+			{
+				instruction_t::movem,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				// Extract whether the registers should be moved as u16's or u32's
+				uint8_t((insn & 0x0040U) ? 4U : 2U),
+				// Extract out the transfer direction
+				uint8_t((insn & 0x0400U) >> 10U),
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit register list mask follows
+			};
 	}
 
 	// Decode instructions that specify only a vector or register field
@@ -1144,6 +1161,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Extract out both destination and source mode bits
 				uint8_t((insn & 0x01f8U) >> 3U),
 			};
+	}
+
+	// Decode moveq - special case
+	if ((insn & 0xf100U) == 0x7000U)
+	{
+		return
+		{
+			instruction_t::moveq,
+			uint8_t((insn >> regXShift) & regMask),
+			uint8_t(insn & 0x00ffU),
+		};
 	}
 	return {instruction_t::illegal};
 }
