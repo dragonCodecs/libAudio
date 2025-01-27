@@ -442,6 +442,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0100U) >> 8U),
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x0140U:
+			return
+			{
+				instruction_t::bchg,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x0180U:
+			return
+			{
+				instruction_t::bclr,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -492,6 +512,116 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x0840U:
+			return
+			{
+				instruction_t::bchg,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit bit number follows (8 bits used)
+			};
+		case 0x0880U:
+			return
+			{
+				instruction_t::bclr,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit bit number follows (8 bits used)
+			};
+		case 0xeac0U:
+			return
+			{
+				instruction_t::bfchg,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width} follows
+			};
+		case 0xecc0U:
+			return
+			{
+				instruction_t::bfclr,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width} follows
+			};
+		case 0xebc0U:
+			return
+			{
+				instruction_t::bfexts,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width}, Dn follows
+			};
+		case 0xe9c0U:
+			return
+			{
+				instruction_t::bfextu,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width}, Dn follows
+			};
+		case 0xedc0U:
+			return
+			{
+				instruction_t::bfffo,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width}, Dn follows
+			};
+		case 0xefc0U:
+			return
+			{
+				instruction_t::bfins,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit Dn, {offset:width} follows
+			};
+		case 0xeec0U:
+			return
+			{
+				instruction_t::bfset,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width} follows
+			};
+		case 0xe8c0U:
+			return
+			{
+				instruction_t::bftst,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit {offset:width} follows
 			};
 	}
 	return {instruction_t::illegal};
