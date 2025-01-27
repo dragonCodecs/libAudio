@@ -7,6 +7,7 @@ constexpr static uint16_t insnMaskEA{0xf1c0U};
 constexpr static uint16_t insnMaskEANoReg{0xffc0U};
 constexpr static uint16_t insnMaskVectorReg{0xfff8U};
 constexpr static uint16_t insnMaskDisplacement{0xff00U};
+constexpr static uint16_t insnMaskSizeOnly{0xf000U};
 constexpr static size_t regXShift{9U};
 constexpr static uint16_t regMask{0x0007U};
 constexpr static uint16_t rmMask{0x0008U};
@@ -649,6 +650,19 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x2020U:
+		case 0x3020U:
+			return
+			{
+				instruction_t::movea,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				// Extract whether this is a u16 or u32 operation
+				uint8_t((insn & 0x1000U) ? 2U : 4U),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -961,6 +975,36 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x42c0U:
+			return
+			{
+				instruction_t::move,
+				8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x44c0U:
+			return
+			{
+				instruction_t::move,
+				uint8_t(insn & regMask),
+				8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x40c0U:
+			return
+			{
+				instruction_t::move,
+				9U, // 9 is a special register number (not otherwise valid) indicating SR.
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that specify only a vector or register field
@@ -1053,6 +1097,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 					// Otherwise nothing follows.
 					return 0U;
 				}(insn & displacementMask),
+			};
+	}
+
+	// Decode move - special case
+	switch (insn & insnMaskSizeOnly)
+	{
+		case 0x1000U:
+		case 0x3000U:
+		case 0x2000U:
+			return
+			{
+				instruction_t::move,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				// Extract out whether we're to do a u8, u16 or u32 move
+				uint8_t((insn & 0x3000U) >> 12U),
+				0U,
+				// Extract out both destination and source mode bits
+				uint8_t((insn & 0x01f8U) >> 3U),
 			};
 	}
 	return {instruction_t::illegal};
