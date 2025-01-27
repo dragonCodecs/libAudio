@@ -37,9 +37,7 @@ enum class instruction_t
 	cmpi,
 	cmpm,
 	divs,
-	divsl,
 	divu,
-	divul,
 	ext,
 	extb,
 	muls,
@@ -214,6 +212,7 @@ enum class instruction_t
 	ftwotox,
 
 	// Instructions determined by a bit in their trailing bytes
+	divsl_divul,
 	chk2_cmp2,
 };
 

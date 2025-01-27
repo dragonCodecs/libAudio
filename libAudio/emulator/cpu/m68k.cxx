@@ -606,6 +606,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit coprocessor condition follows
 			};
+		case 0x81c0U:
+			return
+			{
+				instruction_t::divs,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x80c0U:
+			return
+			{
+				instruction_t::divu,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -853,6 +873,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x4c40U:
+			return
+			{
+				instruction_t::divsl_divul,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit Dr:Dq follows, bit 11 determines if DIVSL (1) or DIVUL (0)
 			};
 	}
 
