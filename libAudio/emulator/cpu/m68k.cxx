@@ -5,7 +5,7 @@
 constexpr static uint16_t insnMask{0xf1f8U};
 constexpr static uint16_t insnMaskEA{0xf1c0U};
 constexpr static uint16_t insnMaskEANoReg{0xffc0U};
-constexpr static uint16_t insnMaskVector{0xfff8U};
+constexpr static uint16_t insnMaskVectorReg{0xfff8U};
 constexpr static uint16_t insnMaskDisplacement{0xff00U};
 constexpr static size_t regXShift{9U};
 constexpr static uint16_t regMask{0x0007U};
@@ -626,6 +626,19 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0xb100U:
+		case 0xb140U:
+		case 0xb180U:
+			return
+			{
+				instruction_t::eor,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -885,16 +898,46 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit Dr:Dq follows, bit 11 determines if DIVSL (1) or DIVUL (0)
 			};
+		case 0x0a00U:
+		case 0x0a40U:
+		case 0x0a80U:
+			return
+			{
+				instruction_t::eori,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
-	// Decode instructions that specify only a vector field
-	switch (insn & insnMaskVector)
+	// Decode instructions that specify only a vector or register field
+	switch (insn & insnMaskVectorReg)
 	{
 		case 0x4848U:
 			return
 			{
 				instruction_t::bkpt,
 				uint8_t(insn & vectorMask),
+			};
+		case 0x4880U:
+		case 0x48c0U:
+			return
+			{
+				instruction_t::ext,
+				uint8_t(insn & regMask),
+				0U,
+				{},
+				// Decode whether this is a i8 or i16 we're sign extending (to i16 and i32 respectively)
+				uint8_t((insn & 0x0040U) ? 2U : 1U),
+			};
+		case 0x49c0U:
+			return
+			{
+				instruction_t::extb,
+				uint8_t(insn & regMask),
 			};
 	}
 
