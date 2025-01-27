@@ -506,6 +506,32 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0xb000U:
+		case 0xb040U:
+		case 0xb080U:
+			return
+			{
+				instruction_t::cmp,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xb0c0U:
+		case 0xb1c0U:
+			return
+			{
+				instruction_t::cmpa,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				// Decode whether 16- or 32-bit operation
+				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -719,14 +745,14 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x04c0U:
 			return
 			{
-				instruction_t::chk2,
+				instruction_t::chk2_cmp2,
 				0U,
 				uint8_t(insn & regMask),
 				{operationFlags_t::registerNotImmediate},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
-				2U, // 16-bit Rn follows
+				2U, // 16-bit Rn follows, bit 11 determines if chk2 (1) or cmp2 (0)
 			};
 		case 0x4200U:
 		case 0x4240U:
@@ -734,6 +760,19 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::clr,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x0c00U:
+		case 0x0c40U:
+		case 0x0c80U:
+			return
+			{
+				instruction_t::cmpi,
 				0U,
 				uint8_t(insn & regMask),
 				{},

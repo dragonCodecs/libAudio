@@ -36,7 +36,6 @@ enum class instruction_t
 	cmpa,
 	cmpi,
 	cmpm,
-	cmp2,
 	divs,
 	divsl,
 	divu,
@@ -127,7 +126,6 @@ enum class instruction_t
 	stop,
 	bkpt,
 	chk,
-	chk2,
 	illegal,
 	trap,
 	trapcc,
@@ -214,6 +212,9 @@ enum class instruction_t
 	ftanh,
 	ftentox,
 	ftwotox,
+
+	// Instructions determined by a bit in their trailing bytes
+	chk2_cmp2,
 };
 
 enum class operationFlags_t
