@@ -39,6 +39,14 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				1U, 0U, 0U,
 				2U, // 16-bit immediate follows (8 bits used)
 			};
+		case 0x0cfeU:
+		case 0x0efeU:
+			return
+			{
+				instruction_t::cas2,
+				0U, 0U, {}, 0U, 0U, 0U,
+				4U, // 32-bit Dc1:Dc2, Du1:Du2, (Rn1):(Rn2) follows
+			};
 		case 0x0a3cU:
 			return
 			{
@@ -679,6 +687,20 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit argument count follows (8 bits used)
+			};
+		case 0x0ac0U:
+		case 0x0cc0U:
+		case 0x0ec0U:
+			return
+			{
+				instruction_t::cas,
+				0U,
+				uint8_t(insn & regMask),
+				{operationFlags_t::registerNotImmediate},
+				uint8_t((insn & 0x0600U) >> 9U),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit Dc, Du follows
 			};
 	}
 
