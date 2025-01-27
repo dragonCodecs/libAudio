@@ -219,6 +219,7 @@ enum class instruction_t
 enum class operationFlags_t
 {
 	memoryNotRegister, // Operation is on memory, not a register
+	immediateNotRegister, // Operation uses rx as immediate not register
 	registerNotImmediate, // Operation uses rx as immediate not register
 };
 

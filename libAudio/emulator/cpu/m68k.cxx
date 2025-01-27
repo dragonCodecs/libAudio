@@ -135,7 +135,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -154,7 +154,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -244,7 +244,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -263,7 +263,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -315,7 +315,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -334,7 +334,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -353,7 +353,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -372,7 +372,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::registerNotImmediate};
+						return {operationFlags_t::immediateNotRegister};
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
@@ -469,7 +469,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::addq,
 				uint8_t((insn >> regXShift) & regMask),
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
@@ -720,7 +720,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::bchg,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit bit number follows (8 bits used)
@@ -731,7 +731,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::bclr,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit bit number follows (8 bits used)
@@ -742,7 +742,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::bfchg,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit {offset:width} follows
@@ -753,7 +753,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::bfclr,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit {offset:width} follows
@@ -830,7 +830,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::bset,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit bit number follows (8 bits used)
@@ -841,7 +841,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::btst,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit bit number follows (8 bits used)
@@ -852,7 +852,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::callm,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit argument count follows (8 bits used)
@@ -865,7 +865,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::cas,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
@@ -879,7 +879,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::chk2_cmp2,
 				0U,
 				uint8_t(insn & regMask),
-				{operationFlags_t::registerNotImmediate},
+				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
