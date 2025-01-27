@@ -169,6 +169,42 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
+		case 0xf048U:
+			return
+			{
+				instruction_t::cpdbcc,
+				// Coprocessor ID
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U, 0U,
+				4U, // 16-bit coprocessor condition and 16-bit displacement follows
+			};
+		case 0xf078U:
+			return
+			{
+				instruction_t::cptrapcc,
+				// Coprocessor ID
+				uint8_t((insn >> regXShift) & regMask),
+				0U,
+				{},
+				0U,
+				uint8_t(insn & regMask),
+				0U,
+				uint8_t
+				(
+					[](const uint8_t opmode)
+					{
+						if (opmode == 2U)
+							return 2U; // Instruction followed by 1 operand u16
+						if (opmode == 3U)
+							return 4U; // Instruction followed by 2 operand u16's
+						if (opmode == 4U)
+							return 0U; // Instruction followed by no operand u16's
+						throw std::exception{}; // Illegal instruction - better handling TBD
+					}(insn & regMask) + 2U
+				), // 16-bit coprocessor condition follows
+			};
 		case 0x50c8U:
 		case 0x51c8U:
 			return
@@ -531,6 +567,44 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xf080U:
+		case 0xf0c0U:
+			return
+			{
+				instruction_t::cpbcc,
+				// Coprocessor ID
+				uint8_t((insn >> regXShift) & regMask),
+				// Coprocessor Condition
+				uint8_t(insn & 0x003fU),
+				{},
+				0U, 0U, 0U,
+				// Decode whether this is a 16- or 32-bit displacement that follows
+				uint8_t((insn & 0x0040U) ? 4U : 2U),
+			};
+		case 0xf000U:
+			return
+			{
+				instruction_t::cpgen,
+				// Coprocessor ID
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit coprocessor command follows
+			};
+		case 0xf040U:
+			return
+			{
+				instruction_t::cpscc,
+				// Coprocessor ID
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+				2U, // 16-bit coprocessor condition follows
 			};
 	}
 
