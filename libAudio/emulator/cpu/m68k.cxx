@@ -1132,6 +1132,56 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x4840U:
+			return
+			{
+				instruction_t::pea,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xe6c0U:
+			return
+			{
+				instruction_t::ror,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xe7c0U:
+			return
+			{
+				instruction_t::rol,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xe4cU:
+			return
+			{
+				instruction_t::roxr,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0xe5cU:
+			return
+			{
+				instruction_t::roxl,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that specify only a vector or register field
