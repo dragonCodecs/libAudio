@@ -108,6 +108,7 @@ enum class instruction_t
 	nop,
 	fnop,
 	rtd,
+	rtm,
 	rtr,
 	rts,
 	tst,
