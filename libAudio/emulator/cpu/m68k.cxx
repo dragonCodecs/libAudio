@@ -1046,12 +1046,48 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::muls_mulu,
-				uint8_t((insn >> regXShift) & regMask),
+				0U,
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 				2U, // 16-bit Dh - Dl follows, bit 11 determines of MULS (1) or MULU (0)
+			};
+		case 0x4800U:
+			return
+			{
+				instruction_t::nbcd,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x4400U:
+		case 0x4440U:
+		case 0x4480U:
+			return
+			{
+				instruction_t::neg,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x4000U:
+		case 0x4040U:
+		case 0x4080U:
+			return
+			{
+				instruction_t::negx,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
 	}
 
