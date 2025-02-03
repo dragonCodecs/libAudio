@@ -683,6 +683,23 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				uint8_t((insn & eaModeMask) >> eaModeShift),
 			};
+		case 0x8000U:
+		case 0x8040U:
+		case 0x8080U:
+		case 0x8100U:
+		case 0x8140U:
+		case 0x8180U:
+			return
+			{
+				instruction_t::_or,
+				uint8_t((insn >> regXShift) & regMask),
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				// Extract the operation direction information
+				uint8_t((insn & 0x0100U) >> 8U),
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -1082,6 +1099,32 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::negx,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x4600U:
+		case 0x4640U:
+		case 0x4680U:
+			return
+			{
+				instruction_t::_not,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				uint8_t((insn & eaModeMask) >> eaModeShift),
+			};
+		case 0x0000U:
+		case 0x0040U:
+		case 0x0080U:
+			return
+			{
+				instruction_t::ori,
 				0U,
 				uint8_t(insn & regMask),
 				{},
