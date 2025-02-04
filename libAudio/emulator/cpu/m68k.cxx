@@ -428,6 +428,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			};
 	}
 
+	// Extract out the effecetive addressing mode
+	const auto eaMode{uint8_t((insn & eaModeMask) >> eaModeShift)};
+
 	// Decode instructions that use the effective address form
 	switch (insn & insnMaskEA)
 	{
@@ -446,7 +449,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & sizeMask) >> sizeShift),
 				// Extract the operation direction information
 				uint8_t((insn & 0x0100U) >> 8U),
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xd0c0U:
 		case 0xd1c0U:
@@ -459,7 +462,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Decode whether 16- or 32-bit operation
 				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x5000U:
 		case 0x5040U:
@@ -472,7 +475,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xc000U:
 		case 0xc040U:
@@ -489,7 +492,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & sizeMask) >> sizeShift),
 				// Extract the operation direction information
 				uint8_t((insn & 0x0100U) >> 8U),
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0140U:
 			return
@@ -499,7 +502,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0180U:
 			return
@@ -509,7 +512,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x01c0U:
 			return
@@ -519,7 +522,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0100U:
 			return
@@ -529,7 +532,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4100U:
 		case 0x4180U:
@@ -541,7 +544,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & 0x0180U) >> 7U),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xb000U:
 		case 0xb040U:
@@ -554,7 +557,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xb0c0U:
 		case 0xb1c0U:
@@ -567,7 +570,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Decode whether 16- or 32-bit operation
 				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xf080U:
 		case 0xf0c0U:
@@ -592,7 +595,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit coprocessor command follows
 			};
 		case 0xf040U:
@@ -604,7 +607,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit coprocessor condition follows
 			};
 		case 0x81c0U:
@@ -615,7 +618,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x80c0U:
 			return
@@ -625,7 +628,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xb100U:
 		case 0xb140U:
@@ -638,7 +641,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x41c0U:
 			return
@@ -648,7 +651,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x2020U:
 		case 0x3020U:
@@ -661,7 +664,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Extract whether this is a u16 or u32 operation
 				uint8_t((insn & 0x1000U) ? 2U : 4U),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xc1c0U:
 			return
@@ -671,7 +674,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xc0c0U:
 			return
@@ -681,7 +684,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x8000U:
 		case 0x8040U:
@@ -698,7 +701,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & sizeMask) >> sizeShift),
 				// Extract the operation direction information
 				uint8_t((insn & 0x0100U) >> 8U),
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 	}
 
@@ -716,7 +719,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0200U:
 		case 0x0240U:
@@ -729,7 +732,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe0c0U:
 			return
@@ -739,7 +742,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe1c0U:
 			return
@@ -749,7 +752,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0840U:
 			return
@@ -759,7 +762,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0x0880U:
@@ -770,7 +773,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0xeac0U:
@@ -781,7 +784,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width} follows
 			};
 		case 0xecc0U:
@@ -792,7 +795,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width} follows
 			};
 		case 0xebc0U:
@@ -803,7 +806,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width}, Dn follows
 			};
 		case 0xe9c0U:
@@ -814,7 +817,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width}, Dn follows
 			};
 		case 0xedc0U:
@@ -825,7 +828,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width}, Dn follows
 			};
 		case 0xefc0U:
@@ -836,7 +839,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit Dn, {offset:width} follows
 			};
 		case 0xeec0U:
@@ -847,7 +850,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width} follows
 			};
 		case 0xe8c0U:
@@ -858,7 +861,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit {offset:width} follows
 			};
 		case 0x08c0U:
@@ -869,7 +872,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0x0800U:
@@ -880,7 +883,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0x06c0:
@@ -891,7 +894,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit argument count follows (8 bits used)
 			};
 		case 0x0ac0U:
@@ -905,7 +908,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit Dc, Du follows
 			};
 		case 0x00c0U:
@@ -919,7 +922,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit Rn follows, bit 11 determines if chk2 (1) or cmp2 (0)
 			};
 		case 0x4200U:
@@ -933,7 +936,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0c00U:
 		case 0x0c40U:
@@ -946,7 +949,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4c40U:
 			return
@@ -956,7 +959,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit Dr:Dq follows, bit 11 determines if DIVSL (1) or DIVUL (0)
 			};
 		case 0x0a00U:
@@ -970,7 +973,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4ec0U:
 			return
@@ -980,7 +983,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4e80U:
 			return
@@ -990,7 +993,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe2c0U:
 			return
@@ -1000,7 +1003,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe3c0U:
 			return
@@ -1010,7 +1013,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x42c0U:
 			return
@@ -1020,7 +1023,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x44c0U:
 			return
@@ -1030,7 +1033,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				8U, // 8 is a special register number (not otherwise valid) indicating CCR.
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x40c0U:
 			return
@@ -1040,7 +1043,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4880U:
 		case 0x48c0U:
@@ -1056,7 +1059,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0040U) ? 4U : 2U),
 				// Extract out the transfer direction
 				uint8_t((insn & 0x0400U) >> 10U),
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit register list mask follows
 			};
 		case 0x4c00U:
@@ -1067,7 +1070,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 				2U, // 16-bit Dh - Dl follows, bit 11 determines of MULS (1) or MULU (0)
 			};
 		case 0x4800U:
@@ -1078,7 +1081,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4400U:
 		case 0x4440U:
@@ -1091,7 +1094,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4000U:
 		case 0x4040U:
@@ -1104,7 +1107,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4600U:
 		case 0x4640U:
@@ -1117,7 +1120,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x0000U:
 		case 0x0040U:
@@ -1130,7 +1133,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0x4840U:
 			return
@@ -1140,7 +1143,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe6c0U:
 			return
@@ -1150,7 +1153,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe7c0U:
 			return
@@ -1160,7 +1163,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe4cU:
 			return
@@ -1170,7 +1173,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 		case 0xe5cU:
 			return
@@ -1180,7 +1183,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				{},
 				0U, 0U,
-				uint8_t((insn & eaModeMask) >> eaModeShift),
+				eaMode,
 			};
 	}
 
