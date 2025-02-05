@@ -1577,11 +1577,28 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x1000U:
 		case 0x3000U:
 		case 0x2000U:
+		{
+			// Extract out the effective addressing mode for the source
+			const auto srcEAMode{uint8_t((insn & eaModeMask) >> eaModeShift)};
+			const auto srcEAReg{uint8_t(insn & regMask)};
+			// MOVE is allowed all valid modes for the source
+			if (srcEAMode == 7U && srcEAReg > 4U)
+				break;
+			// Extract out the effective addressing mode for the destination
+			const auto dstEAMode{uint8_t((insn & 0x01c0U) >> 6U)};
+			const auto dstEAReg{uint8_t((insn >> regXShift) & regMask)};
+			// MOVE is not allowed with a destination address register
+			if (dstEAMode == 1U)
+				break;
+			// MOVE is not allowed with `#<data>` mode or PC-rel destination data register usage,
+			// only u16 and u32 indirect mode 7
+			if (dstEAMode == 7U && !(dstEAReg == 0U || dstEAReg == 1U))
+				break;
 			return
 			{
 				instruction_t::move,
-				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				dstEAReg,
+				srcEAReg,
 				{},
 				// Extract out whether we're to do a u8, u16 or u32 move
 				uint8_t((insn & 0x3000U) >> 12U),
@@ -1589,6 +1606,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Extract out both destination and source mode bits
 				uint8_t((insn & 0x01f8U) >> 3U),
 			};
+		}
 	}
 
 	// Decode moveq - special case
