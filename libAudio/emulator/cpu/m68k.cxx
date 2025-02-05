@@ -747,6 +747,49 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0f00U) >> 8U),
 				eaMode,
 			};
+		case 0x9000U:
+		case 0x9040U:
+		case 0x9080U:
+		case 0x9100U:
+		case 0x9140U:
+		case 0x9180U:
+			return
+			{
+				instruction_t::sub,
+				uint8_t((insn >> regXShift) & regMask),
+				eaReg,
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				// Extract the operation direction information
+				uint8_t((insn & 0x0100U) >> 8U),
+				eaMode,
+			};
+		case 0x90c0U:
+		case 0x91c0U:
+			return
+			{
+				instruction_t::suba,
+				uint8_t((insn >> regXShift) & regMask),
+				eaReg,
+				{},
+				// Decode whether 16- or 32-bit operation
+				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
+				0U,
+				eaMode,
+			};
+		case 0x5100U:
+		case 0x5140U:
+		case 0x5180U:
+			return
+			{
+				instruction_t::subq,
+				uint8_t((insn >> regXShift) & regMask),
+				eaReg,
+				{operationFlags_t::immediateNotRegister},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				eaMode,
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
@@ -1244,6 +1287,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaReg,
 				{},
 				0U, 0U,
+				eaMode,
+			};
+
+		case 0x0400U:
+		case 0x0440U:
+		case 0x0480U:
+			// SUBI is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// SUBI is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
+			return
+			{
+				instruction_t::subi,
+				0U,
+				eaReg,
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
 				eaMode,
 			};
 	}
