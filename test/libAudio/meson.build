@@ -56,3 +56,4 @@ foreach test : libAudioTests
 endforeach
 
 subdir('fixedPoint')
+subdir('emulator')
