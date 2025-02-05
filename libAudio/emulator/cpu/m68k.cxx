@@ -526,6 +526,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x0100U:
+			// BTST is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BTST doesn't use a couple of the mode 7 modes
+			if (eaMode == 7U && (eaReg == 5U || eaReg == 6U || eaReg == 7U))
+				break;
 			return
 			{
 				instruction_t::btst,
