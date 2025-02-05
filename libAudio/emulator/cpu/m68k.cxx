@@ -63,6 +63,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			};
 		case 0x49fcU:
 			return {instruction_t::illegal};
+		case 0x4e7aU:
+		case 0x4e7bU:
+			return
+			{
+				instruction_t::movec,
+				0U, 0U,
+				{},
+				0U,
+				// Extract out the transfer direction
+				uint8_t(insn & 0x0001U),
+			};
 		case 0x4e71U:
 			return {instruction_t::nop};
 		case 0x003cU:
@@ -1199,7 +1210,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				9U, // 9 is a special register number (not otherwise valid) indicating SR.
 				eaReg,
 				{},
-				0U, 0U,
+				0U, 0U, // Move from SR
+				eaMode,
+			};
+		case 0x46c0U:
+			return
+			{
+				instruction_t::move,
+				9U, // 9 is a special register number (not otherwise valid) indicating SR.
+				eaReg,
+				{},
+				0U, 1U, // Move to SR
 				eaMode,
 			};
 		case 0x4880U:
@@ -1218,6 +1239,25 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0400U) >> 10U),
 				eaMode,
 				2U, // 16-bit register list mask follows
+			};
+		case 0x0e00U:
+		case 0x0e40U:
+		case 0x0e80U:
+			// MOVES is not allowed  with direct register usage
+			if (eaMode == 0U || eaMode == 1U)
+				break;
+			// MOVES is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
+			return
+			{
+				instruction_t::moves,
+				0U,
+				eaReg,
+				{},
+				uint8_t((insn & sizeMask) >> sizeShift),
+				0U,
+				eaMode,
 			};
 		case 0x4c00U:
 			return
@@ -1441,6 +1481,18 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0018U) >> 3U),
 				0U,
 				4U, // 32-bit absolute address follows
+			};
+		case 0x4e60U:
+		case 0x4e68U:
+			return
+			{
+				instruction_t::move,
+				10U, // 10 is a special register number (not otherwise valid) indicating USP
+				uint8_t(insn & regMask),
+				{},
+				0U,
+				// Extract out the transfer direction
+				uint8_t((insn & 0x0008U) >> 3U),
 			};
 		case 0x06c0U:
 		case 0x06c8U:
