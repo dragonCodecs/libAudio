@@ -2774,7 +2774,7 @@ private:
 		// Run through all 65536 possible instruction values and check they decode properly.
 		for (const auto &[insn, decodedOperation] : substrate::indexedIterator_t{instructionMap})
 		{
-			if (insn == 2560U)
+			if (insn == 2752U)
 				break;
 			assertTrue(cpu.decodeInstruction(insn) == decodedOperation);
 		}
