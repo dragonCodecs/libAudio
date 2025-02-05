@@ -237,4 +237,17 @@ struct decodedOperation_t
 	uint8_t trailingBytes{0U};
 };
 
+constexpr inline bool operator ==(const decodedOperation_t a, const decodedOperation_t b) noexcept
+{
+	return
+		a.operation == b.operation &&
+		a.rx == b.rx &&
+		a.ry == b.ry &&
+		a.flags == b.flags &&
+		a.operationSize == b.operationSize &&
+		a.opMode == b.opMode &&
+		a.mode == b.mode &&
+		a.trailingBytes == b.trailingBytes;
+}
+
 #endif /*EMULATOR_CPU_M68K_INSTRUCTION_HXX*/
