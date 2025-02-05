@@ -1049,9 +1049,10 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x00c0U:
 		case 0x02c0U:
 		case 0x04c0U:
-			// Only non-altering indirection modes are allowed
+			// Only non-altering indirection modes are allowed for CHK2/CMP2
 			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
 				break;
+			// CHK2/CMP2 is not allowed with `#<data>` mode 7
 			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
 				break;
 			return
@@ -1081,6 +1082,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x0c00U:
 		case 0x0c40U:
 		case 0x0c80U:
+			// CMPI is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// CMPI is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::cmpi,
