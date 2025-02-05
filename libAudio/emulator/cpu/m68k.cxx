@@ -40,6 +40,15 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				1U, 0U, 0U,
 				2U, // 16-bit immediate follows (8 bits used)
 			};
+		case 0x027cU:
+			return
+			{
+				instruction_t::andi,
+				0U, 9U, // 9 is a special register number (not otherwise valid) indicating SR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows
+			};
 		case 0x0cfcU:
 		case 0x0efcU:
 			return
