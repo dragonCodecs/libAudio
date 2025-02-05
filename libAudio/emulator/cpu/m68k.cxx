@@ -301,10 +301,10 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
-		case 0x0101U:
-		case 0x0141U:
-		case 0x0181U:
-		case 0x01c1U:
+		case 0x0108U:
+		case 0x0148U:
+		case 0x0188U:
+		case 0x01c8U:
 			return
 			{
 				instruction_t::movep,
