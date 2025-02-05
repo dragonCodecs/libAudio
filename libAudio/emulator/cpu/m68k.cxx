@@ -40,12 +40,16 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				1U, 0U, 0U,
 				2U, // 16-bit immediate follows (8 bits used)
 			};
-		case 0x0cfeU:
-		case 0x0efeU:
+		case 0x0cfcU:
+		case 0x0efcU:
 			return
 			{
 				instruction_t::cas2,
-				0U, 0U, {}, 0U, 0U, 0U,
+				0U, 0U,
+				{},
+				// Extract whether this is a u16 or u32 operation
+				uint8_t((insn & 0x0200U) ? 4U : 2U),
+				0U, 0U,
 				4U, // 32-bit Dc1:Dc2, Du1:Du2, (Rn1):(Rn2) follows
 			};
 		case 0x0a3cU:
