@@ -728,6 +728,25 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn & 0x0100U) >> 8U),
 				eaMode,
 			};
+		case 0x50c0U:
+		case 0x58c0U:
+			// Scc is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// Scc is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
+			return
+			{
+				instruction_t::scc,
+				0U,
+				eaReg,
+				{},
+				0U,
+				// Extract the operation condition code
+				uint8_t((insn & 0x0f00U) >> 8U),
+				eaMode,
+			};
 	}
 
 	// Decode instructions that use the effective address form without an Rx register
