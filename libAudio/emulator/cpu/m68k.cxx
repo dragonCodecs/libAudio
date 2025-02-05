@@ -854,6 +854,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x0840U:
+			// BCHG is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BCHG is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::bchg,
@@ -865,6 +871,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0x0880U:
+			// BCLR is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BCLR is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::bclr,
@@ -964,6 +976,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit {offset:width} follows
 			};
 		case 0x08c0U:
+			// BSET is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BSET is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::bset,
@@ -975,6 +993,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0x0800U:
+			// BTST is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BTST is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::btst,
@@ -990,7 +1014,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
 				break;
 			// CALLM is not allowed with `#<data>` mode 7
-			if (eaMode == 7U && (eaReg & 0x04U) != 0U)
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
 				break;
 			return
 			{
