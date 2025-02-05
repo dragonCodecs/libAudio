@@ -430,6 +430,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 
 	// Extract out the effecetive addressing mode
 	const auto eaMode{uint8_t((insn & eaModeMask) >> eaModeShift)};
+	const auto eaReg{uint8_t(insn & regMask)};
 
 	// Decode instructions that use the effective address form
 	switch (insn & insnMaskEA)
@@ -444,7 +445,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::add,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				// Extract the operation direction information
@@ -457,7 +458,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::adda,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				// Decode whether 16- or 32-bit operation
 				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
@@ -471,7 +472,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::addq,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -487,7 +488,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::_and,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				// Extract the operation direction information
@@ -499,7 +500,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bchg,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -509,7 +510,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bclr,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -519,7 +520,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bset,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -529,7 +530,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::btst,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -540,7 +541,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::chk,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & 0x0180U) >> 7U),
 				0U,
@@ -553,7 +554,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::cmp,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -565,7 +566,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::cmpa,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				// Decode whether 16- or 32-bit operation
 				uint8_t((insn & 0x01c0U) == 0x00c0U ? 2U : 4U),
@@ -592,7 +593,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::cpgen,
 				// Coprocessor ID
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -604,7 +605,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::cpscc,
 				// Coprocessor ID
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -615,7 +616,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::divs,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -625,7 +626,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::divu,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -637,7 +638,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::eor,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -648,7 +649,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::lea,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -659,7 +660,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::movea,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				// Extract whether this is a u16 or u32 operation
 				uint8_t((insn & 0x1000U) ? 2U : 4U),
@@ -671,7 +672,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::muls,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -681,7 +682,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::mulu,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -696,7 +697,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::_or,
 				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				// Extract the operation direction information
@@ -715,7 +716,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::addi,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -728,7 +729,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::andi,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -739,7 +740,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::asl,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -749,7 +750,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::asr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -759,7 +760,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bchg,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -770,7 +771,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bclr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -781,7 +782,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfchg,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -792,7 +793,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfclr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -803,7 +804,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfexts,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -814,7 +815,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfextu,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -825,7 +826,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfffo,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -836,7 +837,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfins,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -847,7 +848,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bfset,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -858,7 +859,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bftst,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -869,7 +870,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::bset,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -880,7 +881,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::btst,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -891,7 +892,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::callm,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				0U, 0U,
 				eaMode,
@@ -904,7 +905,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::cas,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
@@ -918,7 +919,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::chk2_cmp2,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{operationFlags_t::immediateNotRegister},
 				uint8_t((insn & 0x0600U) >> 9U),
 				0U,
@@ -932,7 +933,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::clr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -945,7 +946,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::cmpi,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -956,7 +957,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::divsl_divul,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -969,7 +970,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::eori,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -980,7 +981,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::jmp,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -990,7 +991,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::jsr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1000,7 +1001,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::lsr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1010,7 +1011,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::lsl,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1020,7 +1021,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::move,
 				8U, // 8 is a special register number (not otherwise valid) indicating CCR.
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1029,7 +1030,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::move,
-				uint8_t(insn & regMask),
+				eaReg,
 				8U, // 8 is a special register number (not otherwise valid) indicating CCR.
 				{},
 				0U, 0U,
@@ -1040,7 +1041,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::move,
 				9U, // 9 is a special register number (not otherwise valid) indicating SR.
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1053,7 +1054,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::movem,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				// Extract whether the registers should be moved as u16's or u32's
 				uint8_t((insn & 0x0040U) ? 4U : 2U),
@@ -1067,7 +1068,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::muls_mulu,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1078,7 +1079,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::nbcd,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1090,7 +1091,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::neg,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -1103,7 +1104,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::negx,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -1116,7 +1117,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::_not,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -1129,7 +1130,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::ori,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 				0U,
@@ -1140,7 +1141,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::pea,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1150,7 +1151,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::ror,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1160,7 +1161,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::rol,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1170,7 +1171,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::roxr,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
@@ -1180,7 +1181,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::roxl,
 				0U,
-				uint8_t(insn & regMask),
+				eaReg,
 				{},
 				0U, 0U,
 				eaMode,
