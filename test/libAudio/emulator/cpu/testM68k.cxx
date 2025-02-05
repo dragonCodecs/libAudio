@@ -134,7 +134,7 @@ constexpr std::array<decodedOperation_t, 65536U> instructionMap
 	{instruction_t::ori, 0U, 1U, {}, 1U, 0U, 7U},
 	{instruction_t::illegal},
 	{instruction_t::illegal},
-	{instruction_t::illegal}, // XXX: Should be ORI to SR
+	{instruction_t::ori, 0U, 9U, {}, 1U, 0U, 0U, 2U},
 	{instruction_t::illegal},
 	{instruction_t::illegal},
 	{instruction_t::illegal},
