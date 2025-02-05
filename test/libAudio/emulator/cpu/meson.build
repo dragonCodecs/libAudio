@@ -1,6 +1,10 @@
-cpuTests = [
+cpuTests = []
+
+if formats['SNDH']
+cpuTests += [
 	'testM68k'
 ]
+endif
 
 testObjectMap = {
 	'testM68k': {'libAudio': ['emulator/cpu/m68k.cxx']},
