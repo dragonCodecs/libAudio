@@ -915,6 +915,11 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x00c0U:
 		case 0x02c0U:
 		case 0x04c0U:
+			// Only non-altering indirection modes are allowed
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
+				break;
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::chk2_cmp2,
