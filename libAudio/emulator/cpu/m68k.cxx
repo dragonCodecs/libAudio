@@ -986,6 +986,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit bit number follows (8 bits used)
 			};
 		case 0x06c0:
+			// CALLM is not allowed with direct register usage, or with register modification
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
+				break;
+			// CALLM is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x04U) != 0U)
+				break;
 			return
 			{
 				instruction_t::callm,
