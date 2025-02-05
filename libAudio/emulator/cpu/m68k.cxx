@@ -496,6 +496,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x0140U:
+			// BCHG is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BCHG uses only the u16 and u32 indirect modes for mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::bchg,
@@ -506,6 +512,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x0180U:
+			// BCLR is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BCLR uses only the u16 and u32 indirect modes for mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::bclr,
@@ -516,6 +528,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x01c0U:
+			// BSET is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// BSET uses only the u16 and u32 indirect modes for mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::bset,
