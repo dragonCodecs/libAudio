@@ -1090,6 +1090,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x4a00U:
 		case 0x4a40U:
 		case 0x4a80U:
+			// TST is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::tst,
