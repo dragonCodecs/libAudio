@@ -1196,16 +1196,20 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				4U, // 32-bit absolute address follows
 			};
 		case 0x4e60U:
+			// MOVE to USP
+			return
+			{
+				instruction_t::move,
+				uint8_t(insn & regMask),
+				10U, // 10 is a special register number (not otherwise valid) indicating USP
+			};
 		case 0x4e68U:
+			// MOVE from USP
 			return
 			{
 				instruction_t::move,
 				10U, // 10 is a special register number (not otherwise valid) indicating USP
 				uint8_t(insn & regMask),
-				{},
-				0U,
-				// Extract out the transfer direction
-				uint8_t((insn & 0x0008U) >> 3U),
 			};
 		case 0x06c0U:
 		case 0x06c8U:
