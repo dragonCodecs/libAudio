@@ -1232,6 +1232,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::trap,
 				uint8_t(insn & 0x000fU),
 			};
+		case 0x4e58U:
+			return
+			{
+				instruction_t::unlk,
+				uint8_t(insn & regMask),
+			};
 	}
 
 	// Decode instructions that specify an 8-bit displacement
