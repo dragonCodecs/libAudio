@@ -1727,7 +1727,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				1U, 0U, 0U,
 				2U, // 16-bit immediate follows (8 bits used)
 			};
-		case 0x49fcU:
+		case 0x4afcU:
 			return {instruction_t::illegal};
 		case 0x4e7aU:
 		case 0x4e7bU:
