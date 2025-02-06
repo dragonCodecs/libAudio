@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include "m68k.hxx"
 
-constexpr static uint16_t insnMask{0xf1f8U};
+constexpr static uint16_t insnMaskSimpleRegs{0xf1f8U};
 constexpr static uint16_t insnMaskEA{0xf1c0U};
 constexpr static uint16_t insnMaskEANoReg{0xffc0U};
 constexpr static uint16_t insnMaskVectorReg{0xfff8U};
@@ -1077,6 +1077,16 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				eaMode,
 			};
+		case 0x4ac0U:
+			return
+			{
+				instruction_t::tas,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+			};
 	}
 
 	// Decode instructions that specify only a vector or register field
@@ -1180,6 +1190,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			{
 				instruction_t::swap,
 				uint8_t(insn & regMask),
+			};
+		case 0x4e40U:
+			return
+			{
+				instruction_t::trap,
+				uint8_t(insn & vectorMask),
 			};
 	}
 
@@ -1285,7 +1301,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 	}
 
 	// Decode instructions that use the `insn Ry, Rx` basic form
-	switch (insn & insnMask)
+	switch (insn & insnMaskSimpleRegs)
 	{
 		case 0xc100U:
 		case 0xc108U:
@@ -1608,6 +1624,26 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 					return {};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0xa0f8U:
+		case 0xa1f8U:
+			return
+			{
+				instruction_t::trapcc,
+				0U, 0U,
+				{},
+				0U,
+				// Extract the operation condition code
+				uint8_t((insn & 0x0f00U) >> 8U),
+				0U,
+				[](const uint8_t opMode) -> uint8_t
+				{
+					if (opMode == 2U)
+						return 2U; // u16 operand follows
+					if (opMode == 3U)
+						return 4U; // u32 operand follows
+					return 0U; // No operand follows
+				}(insn & regMask),
 			};
 		case 0x8180U:
 		case 0x8188U:
