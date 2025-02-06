@@ -711,8 +711,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				eaMode,
 			};
-		case 0x2020U:
-		case 0x3020U:
+		case 0x2040U:
+		case 0x3040U:
 			return
 			{
 				instruction_t::movea,
