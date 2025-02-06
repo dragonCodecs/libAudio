@@ -28,96 +28,6 @@ motorola68000_t::motorola68000_t(memoryMap_t<uint32_t> &peripherals, const uint6
 
 decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const noexcept
 {
-	// Decode instructions that have exact matches
-	switch (insn)
-	{
-		case 0x023cU:
-			return
-			{
-				instruction_t::andi,
-				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
-				{},
-				1U, 0U, 0U,
-				2U, // 16-bit immediate follows (8 bits used)
-			};
-		case 0x027cU:
-			return
-			{
-				instruction_t::andi,
-				0U, 9U, // 9 is a special register number (not otherwise valid) indicating SR.
-				{},
-				1U, 0U, 0U,
-				2U, // 16-bit immediate follows
-			};
-		case 0x0cfcU:
-		case 0x0efcU:
-			return
-			{
-				instruction_t::cas2,
-				0U, 0U,
-				{},
-				// Extract whether this is a u16 or u32 operation
-				uint8_t((insn & 0x0200U) ? 4U : 2U),
-				0U, 0U,
-				4U, // 32-bit Dc1:Dc2, Du1:Du2, (Rn1):(Rn2) follows
-			};
-		case 0x0a3cU:
-			return
-			{
-				instruction_t::eori,
-				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
-				{},
-				1U, 0U, 0U,
-				2U, // 16-bit immediate follows (8 bits used)
-			};
-		case 0x49fcU:
-			return {instruction_t::illegal};
-		case 0x4e7aU:
-		case 0x4e7bU:
-			return
-			{
-				instruction_t::movec,
-				0U, 0U,
-				{},
-				0U,
-				// Extract out the transfer direction
-				uint8_t(insn & 0x0001U),
-			};
-		case 0x4e71U:
-			return {instruction_t::nop};
-		case 0x003cU:
-			return
-			{
-				instruction_t::ori,
-				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
-				{},
-				1U, 0U, 0U,
-				2U, // 16-bit immediate follows (8 bits used)
-			};
-		case 0x007cU:
-			return
-			{
-				instruction_t::ori,
-				0U, 9U, // 8 is a special register number (not otherwise valid) indicating SR.
-				{},
-				1U, 0U, 0U,
-				2U, // 16-bit immediate follows
-			};
-		case 0x4e74U:
-			return
-			{
-				instruction_t::rtd,
-				0U, 0U, {}, 0U, 0U, 0U,
-				2U, // 16-bit displacement follows
-			};
-		case 0x4e77U:
-			return {instruction_t::rtr};
-		case 0x4e75U:
-			return {instruction_t::rts};
-		case 0x4e76U:
-			return {instruction_t::trapv};
-	}
-
 	// Decode instructions that use the `insn Ry, Rx` basic form
 	switch (insn & insnMask)
 	{
@@ -1708,6 +1618,96 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			uint8_t((insn >> regXShift) & regMask),
 			uint8_t(insn & 0x00ffU),
 		};
+	}
+
+	// Decode instructions that have exact matches
+	switch (insn)
+	{
+		case 0x023cU:
+			return
+			{
+				instruction_t::andi,
+				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x027cU:
+			return
+			{
+				instruction_t::andi,
+				0U, 9U, // 9 is a special register number (not otherwise valid) indicating SR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows
+			};
+		case 0x0cfcU:
+		case 0x0efcU:
+			return
+			{
+				instruction_t::cas2,
+				0U, 0U,
+				{},
+				// Extract whether this is a u16 or u32 operation
+				uint8_t((insn & 0x0200U) ? 4U : 2U),
+				0U, 0U,
+				4U, // 32-bit Dc1:Dc2, Du1:Du2, (Rn1):(Rn2) follows
+			};
+		case 0x0a3cU:
+			return
+			{
+				instruction_t::eori,
+				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x49fcU:
+			return {instruction_t::illegal};
+		case 0x4e7aU:
+		case 0x4e7bU:
+			return
+			{
+				instruction_t::movec,
+				0U, 0U,
+				{},
+				0U,
+				// Extract out the transfer direction
+				uint8_t(insn & 0x0001U),
+			};
+		case 0x4e71U:
+			return {instruction_t::nop};
+		case 0x003cU:
+			return
+			{
+				instruction_t::ori,
+				0U, 8U, // 8 is a special register number (not otherwise valid) indicating CCR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x007cU:
+			return
+			{
+				instruction_t::ori,
+				0U, 9U, // 8 is a special register number (not otherwise valid) indicating SR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows
+			};
+		case 0x4e74U:
+			return
+			{
+				instruction_t::rtd,
+				0U, 0U, {}, 0U, 0U, 0U,
+				2U, // 16-bit displacement follows
+			};
+		case 0x4e77U:
+			return {instruction_t::rtr};
+		case 0x4e75U:
+			return {instruction_t::rts};
+		case 0x4e76U:
+			return {instruction_t::trapv};
 	}
 	return {instruction_t::illegal};
 }
