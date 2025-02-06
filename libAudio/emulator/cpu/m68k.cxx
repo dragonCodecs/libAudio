@@ -1117,6 +1117,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x4200U:
 		case 0x4240U:
 		case 0x4280U:
+			// CLR is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// CLR is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::clr,
