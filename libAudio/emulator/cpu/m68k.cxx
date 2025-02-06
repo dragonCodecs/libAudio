@@ -1595,6 +1595,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Extract the data-or-address bit for what flavour the register in ry is
 				uint8_t((insn & 0x0008U) >> 3U),
 			};
+		case 0x4840U:
+			return
+			{
+				instruction_t::swap,
+				uint8_t(insn & regMask),
+			};
 	}
 
 	// Decode instructions that specify an 8-bit displacement
