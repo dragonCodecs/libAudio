@@ -606,7 +606,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t((insn >> regXShift) & regMask),
 				eaReg,
 				{},
-				uint8_t((insn & 0x0180U) >> 7U),
+				uint8_t((insn & 0x080U) ? 2U : 4U),
 				0U,
 				eaMode,
 			};
