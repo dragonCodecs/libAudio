@@ -1428,6 +1428,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x4840U:
+			// PEA is not allowed with direct register usage, or with register modification
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
+				break;
+			// PEA is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::pea,
