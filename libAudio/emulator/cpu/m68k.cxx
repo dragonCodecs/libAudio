@@ -1457,7 +1457,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U, 0U,
 				2U, // 16-bit displayment follows
 			};
-		case 0x4801U:
+		case 0x4808U:
 			return
 			{
 				instruction_t::link,
