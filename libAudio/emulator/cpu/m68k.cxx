@@ -1226,10 +1226,11 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 			};
 		case 0x4e40U:
+		case 0x4e48U:
 			return
 			{
 				instruction_t::trap,
-				uint8_t(insn & vectorMask),
+				uint8_t(insn & 0x000fU),
 			};
 	}
 
