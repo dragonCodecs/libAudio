@@ -1336,6 +1336,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit Dh - Dl follows, bit 11 determines of MULS (1) or MULU (0)
 			};
 		case 0x4800U:
+			// NBCD is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// NBCD is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::nbcd,
