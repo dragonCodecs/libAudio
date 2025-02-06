@@ -1601,7 +1601,14 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				srcEAReg,
 				{},
 				// Extract out whether we're to do a u8, u16 or u32 move
-				uint8_t((insn & 0x3000U) >> 12U),
+				[](const uint8_t size) -> uint8_t
+				{
+					if (size == 1U)
+						return 1U; // u8 move
+					if (size == 3U)
+						return 2U; // u16 move
+					return 4U; // u32 move
+				}((insn & 0x3000U) >> 12U),
 				0U,
 				// Extract out both destination and source mode bits
 				uint8_t((insn & 0x01f8U) >> 3U),
