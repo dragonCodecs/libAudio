@@ -1263,17 +1263,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				9U, // 9 is a special register number (not otherwise valid) indicating SR.
 				eaReg,
 				{},
-				0U, 0U, // Move from SR
+				0U, 0U,
 				eaMode,
 			};
 		case 0x46c0U:
 			return
 			{
 				instruction_t::move,
-				9U, // 9 is a special register number (not otherwise valid) indicating SR.
 				eaReg,
+				9U, // 9 is a special register number (not otherwise valid) indicating SR.
 				{},
-				0U, 1U, // Move to SR
+				0U, 0U,
 				eaMode,
 			};
 		case 0x4880U:
