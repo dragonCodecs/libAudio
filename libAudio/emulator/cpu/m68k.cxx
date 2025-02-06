@@ -1261,7 +1261,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x0e00U:
 		case 0x0e40U:
 		case 0x0e80U:
-			// MOVES is not allowed  with direct register usage
+			// MOVES is not allowed with direct register usage
 			if (eaMode == 0U || eaMode == 1U)
 				break;
 			// MOVES is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
@@ -1314,6 +1314,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x4000U:
 		case 0x4040U:
 		case 0x4080U:
+			// NEGX is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// NEGX is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::negx,
