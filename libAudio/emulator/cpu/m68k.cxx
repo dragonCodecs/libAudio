@@ -713,6 +713,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			};
 		case 0x2040U:
 		case 0x3040U:
+			// MOVEA is allowed all valid modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::movea,
