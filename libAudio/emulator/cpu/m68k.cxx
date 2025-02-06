@@ -594,6 +594,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			};
 		case 0x4100U:
 		case 0x4180U:
+			// CHK is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// CHK is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::chk,
