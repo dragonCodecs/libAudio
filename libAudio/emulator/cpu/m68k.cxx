@@ -1734,8 +1734,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::cas2,
-				0U, 0U,
-				{},
+				0U, 0U, {},
 				// Extract whether this is a u16 or u32 operation
 				uint8_t((insn & 0x0200U) ? 4U : 2U),
 				0U, 0U,
@@ -1757,9 +1756,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::movec,
-				0U, 0U,
-				{},
-				0U,
+				0U, 0U, {}, 0U,
 				// Extract out the transfer direction
 				uint8_t(insn & 0x0001U),
 			};
@@ -1792,10 +1789,19 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U, {}, 0U, 0U, 0U,
 				2U, // 16-bit displacement follows
 			};
+		case 0x4e73U:
+			return {instruction_t::rte};
 		case 0x4e77U:
 			return {instruction_t::rtr};
 		case 0x4e75U:
 			return {instruction_t::rts};
+		case 0x4e72U:
+			return
+			{
+				instruction_t::stop,
+				0U, 0U, {}, 0U, 0U, 0U,
+				2U, // 16-bit SR value follows
+			};
 		case 0x4e76U:
 			return {instruction_t::trapv};
 	}
