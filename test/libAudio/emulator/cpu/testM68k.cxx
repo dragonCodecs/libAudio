@@ -18506,6 +18506,22 @@ constexpr std::array<decodedOperation_t, 65536U> instructionMap
 	{instruction_t::illegal},
 	{instruction_t::illegal},
 	{instruction_t::illegal},
+	{instruction_t::swap, 0U},
+	{instruction_t::swap, 1U},
+	{instruction_t::swap, 2U},
+	{instruction_t::swap, 3U},
+	{instruction_t::swap, 4U},
+	{instruction_t::swap, 5U},
+	{instruction_t::swap, 6U},
+	{instruction_t::swap, 7U},
+	{instruction_t::bkpt, 0U},
+	{instruction_t::bkpt, 1U},
+	{instruction_t::bkpt, 2U},
+	{instruction_t::bkpt, 3U},
+	{instruction_t::bkpt, 4U},
+	{instruction_t::bkpt, 5U},
+	{instruction_t::bkpt, 6U},
+	{instruction_t::bkpt, 7U},
 }};
 
 class testM68k final : public testsuite, memoryMap_t<uint32_t>
