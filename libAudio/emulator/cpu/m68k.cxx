@@ -757,6 +757,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x4ec0U:
+			// Only non-altering indirection modes are allowed for JMP
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
+				break;
+			// JMP is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::jmp,
