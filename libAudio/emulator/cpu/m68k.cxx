@@ -348,7 +348,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x50c0U:
-		case 0x58c0U:
+		case 0x51c0U:
 			// Scc is not allowed with address registers
 			if (eaMode == 1U)
 				break;
