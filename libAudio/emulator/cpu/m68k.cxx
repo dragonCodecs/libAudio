@@ -1264,6 +1264,41 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 	// Decode instructions that specify an 8-bit displacement
 	switch (insn & insnMaskDisplacement)
 	{
+		case 0x6200U:
+		case 0x6300U:
+		case 0x6400U:
+		case 0x6500U:
+		case 0x6600U:
+		case 0x6700U:
+		case 0x6800U:
+		case 0x6900U:
+		case 0x6a00U:
+		case 0x6b00U:
+		case 0x6c00U:
+		case 0x6d00U:
+		case 0x6e00U:
+		case 0x6f00U:
+			return
+			{
+				instruction_t::bcc,
+				uint8_t(insn & displacementMask),
+				0U,
+				{},
+				0U,
+				uint8_t((insn & conditionMask) >> conditionShift),
+				0U,
+				[](const uint8_t displacement) -> uint8_t
+				{
+					// There are two special displacement values. A displacement of 0 means a 16-bit one follows
+					if (displacement == 0x00U)
+						return 2U;
+					// A displacement value of 255 means a 32-bit one follows
+					if (displacement == 0xffU)
+						return 4U;
+					// Otherwise nothing follows.
+					return 0U;
+				}(insn & displacementMask),
+			};
 		case 0x6000U:
 			return
 			{
