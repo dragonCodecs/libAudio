@@ -20098,6 +20098,14 @@ constexpr std::array<decodedOperation_t, 65536U> instructionMap
 	{instruction_t::rts},
 	{instruction_t::trapv},
 	{instruction_t::rtr},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::movec, 0U, 0U, {}, 0U, 0U},
+	{instruction_t::movec, 0U, 0U, {}, 0U, 1U},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
 }};
 
 class testM68k final : public testsuite, memoryMap_t<uint32_t>
@@ -20110,7 +20118,7 @@ private:
 		// Run through all 65536 possible instruction values and check they decode properly.
 		for (const auto &[insn, decodedOperation] : substrate::indexedIterator_t{instructionMap})
 		{
-			if (insn == 20088U)
+			if (insn == 20096U)
 				break;
 			assertTrue(cpu.decodeInstruction(insn) == decodedOperation);
 		}
