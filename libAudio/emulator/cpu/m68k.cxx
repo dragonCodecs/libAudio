@@ -1691,6 +1691,11 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			};
 		case 0x50f8U:
 		case 0x51f8U:
+		{
+			const auto opMode{uint8_t(insn & regMask)};
+			// Only 3 of the opmode combinations are valid for this instruction
+			if (opMode != 2U && opMode != 3U && opMode != 4U)
+				break;
 			return
 			{
 				instruction_t::trapcc,
@@ -1700,15 +1705,16 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Extract the operation condition code
 				uint8_t((insn & 0x0f00U) >> 8U),
 				0U,
-				[](const uint8_t opMode) -> uint8_t
+				[&]() -> uint8_t
 				{
 					if (opMode == 2U)
 						return 2U; // u16 operand follows
 					if (opMode == 3U)
 						return 4U; // u32 operand follows
 					return 0U; // No operand follows
-				}(insn & regMask),
+				}(),
 			};
+		}
 		case 0x8180U:
 		case 0x8188U:
 			return
