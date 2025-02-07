@@ -1689,8 +1689,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
-		case 0xa0f8U:
-		case 0xa1f8U:
+		case 0x50f8U:
+		case 0x51f8U:
 			return
 			{
 				instruction_t::trapcc,
