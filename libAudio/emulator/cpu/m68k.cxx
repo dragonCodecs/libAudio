@@ -362,8 +362,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaReg,
 				{},
 				0U,
-				// Extract the operation condition code
-				uint8_t((insn & 0x0f00U) >> 8U),
+				uint8_t((insn & conditionMask) >> conditionShift),
 				eaMode,
 			};
 		case 0x9000U:
@@ -1489,10 +1488,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			return
 			{
 				instruction_t::dbcc,
-				uint8_t((insn & conditionMask) >> conditionShift),
+				0U,
 				uint8_t(insn & regMask),
 				{},
-				0U, 0U, 0U,
+				0U,
+				uint8_t((insn & conditionMask) >> conditionShift),
+				0U,
 				2U, // 16-bit displacement follows
 			};
 		case 0xc140U:
