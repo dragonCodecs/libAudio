@@ -767,6 +767,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x4e80U:
+			// Only non-altering indirection modes are allowed for JSR
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)
+				break;
+			// JSR is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::jsr,
