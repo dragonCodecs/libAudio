@@ -256,6 +256,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0x80c0U:
+			// DIVU is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// DIVU is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::divu,
