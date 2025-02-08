@@ -49418,6 +49418,22 @@ constexpr std::array<decodedOperation_t, 65536U> instructionMap
 	{instruction_t::illegal},
 	{instruction_t::illegal},
 	{instruction_t::illegal},
+	{instruction_t::abcd, 0U, 0U, {}},
+	{instruction_t::abcd, 0U, 1U, {}},
+	{instruction_t::abcd, 0U, 2U, {}},
+	{instruction_t::abcd, 0U, 3U, {}},
+	{instruction_t::abcd, 0U, 4U, {}},
+	{instruction_t::abcd, 0U, 5U, {}},
+	{instruction_t::abcd, 0U, 6U, {}},
+	{instruction_t::abcd, 0U, 7U, {}},
+	{instruction_t::abcd, 0U, 0U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 1U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 2U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 3U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 4U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 5U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 6U, {operationFlags_t::memoryNotRegister}},
+	{instruction_t::abcd, 0U, 7U, {operationFlags_t::memoryNotRegister}},
 }};
 
 class testM68k final : public testsuite, memoryMap_t<uint32_t>
@@ -49430,7 +49446,7 @@ private:
 		// Run through all 65536 possible instruction values and check they decode properly.
 		for (const auto &[insn, decodedOperation] : substrate::indexedIterator_t{instructionMap})
 		{
-			if (insn == 49344U)
+			if (insn == 49424)
 				break;
 			assertTrue(cpu.decodeInstruction(insn) == decodedOperation);
 		}
