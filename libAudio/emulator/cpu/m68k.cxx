@@ -199,6 +199,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			};
 		case 0xb0c0U:
 		case 0xb1c0U:
+			// CMPA is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::cmpa,
