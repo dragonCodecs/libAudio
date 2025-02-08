@@ -88,6 +88,27 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0xc100U:
 		case 0xc140U:
 		case 0xc180U:
+			// If the effective address target is used only as a source operand
+			if ((insn & 0x0100U) == 0U)
+			{
+				// AND is not allowed with address registers
+				if (eaMode == 1U)
+					break;
+				// AND is allowed all valid mode 7 modes
+				if (eaMode == 7U && eaReg > 4U)
+					break;
+			}
+			// Otherwise if it's a target, the requirements are much stricter
+			else
+			{
+				// AND is not allowed with direct register usage
+				if (eaMode == 0U || eaMode == 1U)
+					break;
+				// SUB is not allowed with `#<data>` mode or PC-rel data register usage,
+				// only u16 and u32 indirect mode 7
+				if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+					break;
+			}
 			return
 			{
 				instruction_t::_and,
@@ -373,7 +394,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			// Otherwise if it's a target, the requirements are much stricter
 			else
 			{
-				// OR is not allowed with direct register usage, or with register modification
+				// OR is not allowed with direct register usage
 				if (eaMode == 0U || eaMode == 1U)
 					break;
 				// OR is not allowed with `#<data>` mode or PC-rel data register usage,
@@ -426,7 +447,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			// Otherwise if it's a target, the requirements are much stricter
 			else
 			{
-				// SUB is not allowed with direct register usage, or with register modification
+				// SUB is not allowed with direct register usage
 				if (eaMode == 0U || eaMode == 1U)
 					break;
 				// SUB is not allowed with `#<data>` mode or PC-rel data register usage,
