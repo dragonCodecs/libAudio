@@ -184,6 +184,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0xb000U:
 		case 0xb040U:
 		case 0xb080U:
+			// CMP is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::cmp,
