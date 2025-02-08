@@ -246,6 +246,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit coprocessor condition follows
 			};
 		case 0x81c0U:
+			// DIVS is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// DIVS is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::divs,
