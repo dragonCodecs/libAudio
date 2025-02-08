@@ -404,6 +404,24 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x9100U:
 		case 0x9140U:
 		case 0x9180U:
+			// If the effective address target is used only as a source operand
+			if ((insn & 0x0100U) == 0U)
+			{
+				// SUB is allowed all valid mode 7 modes
+				if (eaMode == 7U && eaReg > 4U)
+					break;
+			}
+			// Otherwise if it's a target, the requirements are much stricter
+			else
+			{
+				// SUB is not allowed with direct register usage, or with register modification
+				if (eaMode == 0U || eaMode == 1U)
+					break;
+				// SUB is not allowed with `#<data>` mode or PC-rel data register usage,
+				// only u16 and u32 indirect mode 7
+				if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+					break;
+			}
 			return
 			{
 				instruction_t::sub,
