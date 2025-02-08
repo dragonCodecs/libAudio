@@ -1625,8 +1625,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit displacement follows
 			};
 		case 0xc140U:
-		case 0xc141U:
-		case 0xc181U:
+		case 0xc148U:
+		case 0xc188U:
 			return
 			{
 				instruction_t::exg,
@@ -1635,7 +1635,7 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				0U,
 				// Extract out the operating mode
-				uint8_t((insn & 0x00f8U) >> 2U),
+				uint8_t((insn & 0x00f8U) >> 3U),
 			};
 		case 0xe001U:
 		case 0xe021U:
