@@ -356,6 +356,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0xc1c0U:
+			// MULS is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// MULS is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
 			return
 			{
 				instruction_t::muls,
