@@ -1210,7 +1210,13 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				eaMode,
 			};
-		case 0xe4cU:
+		case 0xe4c0U:
+			// ROXR is not allowed with direct register usage
+			if (eaMode == 0U || eaMode == 1U)
+				break;
+			// ROXR is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::roxr,
