@@ -1664,12 +1664,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Extract out the operating mode
 				uint8_t((insn & 0x00f8U) >> 3U),
 			};
-		case 0xe001U:
-		case 0xe021U:
-		case 0xe041U:
-		case 0xe061U:
-		case 0xe081U:
-		case 0xe0a1U:
+		case 0xe008U:
+		case 0xe028U:
+		case 0xe048U:
+		case 0xe068U:
+		case 0xe088U:
+		case 0xe0a8U:
 			return
 			{
 				instruction_t::lsr,
