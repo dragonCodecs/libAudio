@@ -1683,12 +1683,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
-		case 0xe101U:
-		case 0xe121U:
-		case 0xe141U:
-		case 0xe161U:
-		case 0xe181U:
-		case 0xe1a1U:
+		case 0xe108U:
+		case 0xe128U:
+		case 0xe148U:
+		case 0xe168U:
+		case 0xe188U:
+		case 0xe1a8U:
 			return
 			{
 				instruction_t::lsl,
