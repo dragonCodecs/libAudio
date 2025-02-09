@@ -42,6 +42,24 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0xd100U:
 		case 0xd140U:
 		case 0xd180U:
+			// If the effective address target is used only as a source operand
+			if ((insn & 0x0100U) == 0U)
+			{
+				// ADD is allowed all valid modes
+				if (eaMode == 7U && eaReg > 4U)
+					break;
+			}
+			// Otherwise if it's a target, the requirements are much stricter
+			else
+			{
+				// ADD is not allowed with direct register usage
+				if (eaMode == 0U || eaMode == 1U)
+					break;
+				// ADD is not allowed with `#<data>` mode or PC-rel data register usage,
+				// only u16 and u32 indirect mode 7
+				if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+					break;
+			}
 			return
 			{
 				instruction_t::add,
