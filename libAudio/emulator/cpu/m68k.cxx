@@ -575,6 +575,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0xe0c0U:
+			// ASL is not allowed with direct register usage
+			if (eaMode == 0U || eaMode == 1U)
+				break;
+			// ASL is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::asl,
