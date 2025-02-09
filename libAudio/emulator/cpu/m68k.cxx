@@ -674,6 +674,12 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				2U, // 16-bit {offset:width}, Dn follows
 			};
 		case 0xe9c0U:
+			// BFEXTU is not allowed with address registers, or with register modification
+			if (eaMode == 1U || eaMode == 3U || eaMode == 4U)
+				break;
+			// BFEXTU is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
 			return
 			{
 				instruction_t::bfextu,
