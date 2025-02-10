@@ -1238,6 +1238,23 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 				2U, // 16-bit instruction continuation follows
 			};
+		case 0xf100U:
+			// PSAVE is not allowed with direct register usage, or with post-inc register modification
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U)
+				break;
+			// PSAVE is not allowed with `#<data>` mode or PC-rel data register usage,
+			// only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
+			return
+			{
+				instruction_t::psave,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+			};
 		case 0xe6c0U:
 			// ROR is not allowed with direct register usage
 			if (eaMode == 0U || eaMode == 1U)
