@@ -255,32 +255,6 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				eaMode,
 			};
-		case 0xf080U:
-		case 0xf0c0U:
-			return
-			{
-				instruction_t::cpbcc,
-				// Coprocessor ID
-				uint8_t((insn >> regXShift) & regMask),
-				// Coprocessor Condition
-				uint8_t(insn & 0x003fU),
-				{},
-				0U, 0U, 0U,
-				// Decode whether this is a 16- or 32-bit displacement that follows
-				uint8_t((insn & 0x0040U) ? 4U : 2U),
-			};
-		case 0xf040U:
-			return
-			{
-				instruction_t::cpscc,
-				// Coprocessor ID
-				uint8_t((insn >> regXShift) & regMask),
-				eaReg,
-				{},
-				0U, 0U,
-				eaMode,
-				2U, // 16-bit coprocessor condition follows
-			};
 		case 0x81c0U:
 			// DIVS is not allowed with address registers
 			if (eaMode == 1U)
@@ -1227,6 +1201,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 			};
 		case 0xf000U:
+		case 0xf040U:
+		case 0xf080U:
+		case 0xf0c0U:
 			// P* instruction is allowed all valid mode 7 modes
 			if (eaMode == 7U && eaReg > 4U)
 				break;
@@ -1236,7 +1213,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				eaReg,
 				{},
-				0U, 0U,
+				0U,
+				// Extract which block of privileged instructions this one belongs to
+				uint8_t((insn & 0x00c0U) >> 6U),
 				eaMode,
 				2U, // 16-bit instruction continuation follows
 			};
