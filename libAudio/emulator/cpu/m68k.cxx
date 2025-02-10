@@ -1207,6 +1207,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			// P* instruction is allowed all valid mode 7 modes
 			if (eaMode == 7U && eaReg > 4U)
 				break;
+			// Filter out PDBcc
+			if ((insn & 0x00c0U) == 0x0040U && eaMode == 1U)
+				break;
 			return
 			{
 				instruction_t::privileged,
@@ -1424,6 +1427,16 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::move,
 				10U, // 10 is a special register number (not otherwise valid) indicating USP
 				uint8_t(insn & regMask),
+			};
+		case 0xf048U:
+			return
+			{
+				instruction_t::pdbcc,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U, 0U,
+				4U, // 16-bit instruction continuation + 16-bit displacement follows
 			};
 		case 0x06c0U:
 		case 0x06c8U:
