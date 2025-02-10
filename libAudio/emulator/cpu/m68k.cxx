@@ -1215,6 +1215,22 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				uint8_t((insn & 0x0040U) == 0U ? 2U : 4U),
 			};
+		case 0xf140U:
+			// PRESTORE is not allowed with direct register usage, or with pre-dec register modification
+			if (eaMode == 0U || eaMode == 1U || eaMode == 4U)
+				break;
+			// PRESTORE is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
+			return
+			{
+				instruction_t::prestore,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+			};
 		case 0xf000U:
 		case 0xf040U:
 			// P* instruction is allowed all valid mode 7 modes
