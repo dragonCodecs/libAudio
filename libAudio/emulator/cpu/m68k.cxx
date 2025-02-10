@@ -1767,17 +1767,6 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
-		case 0xf048U:
-			return
-			{
-				instruction_t::cpdbcc,
-				// Coprocessor ID
-				uint8_t((insn >> regXShift) & regMask),
-				uint8_t(insn & regMask),
-				{},
-				0U, 0U, 0U,
-				4U, // 16-bit coprocessor condition and 16-bit displacement follows
-			};
 		case 0x50c8U:
 		case 0x51c8U:
 			return
