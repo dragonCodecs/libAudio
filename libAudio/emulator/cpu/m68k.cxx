@@ -1210,6 +1210,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 			// Filter out PDBcc
 			if ((insn & 0x00c0U) == 0x0040U && eaMode == 1U)
 				break;
+			// filter out PTRAPcc
+			if ((insn & 0x00c0U) == 0x0040U && eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
 			return
 			{
 				instruction_t::privileged,
@@ -1438,6 +1441,32 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U, 0U,
 				4U, // 16-bit instruction continuation + 16-bit displacement follows
 			};
+		case 0xf078U:
+		{
+			const auto opmode{uint8_t(insn & regMask)};
+			if (opmode != 2U && opmode != 3U && opmode != 4U)
+				break;
+			return
+			{
+				instruction_t::ptrapcc,
+				0U, 0U,
+				{},
+				0U,
+				opmode,
+				0U,
+				uint8_t
+				(
+					[&]()
+					{
+						if (opmode == 2U)
+							return 2U; // Instruction followed by 1 operand u16
+						if (opmode == 3U)
+							return 4U; // Instruction followed by 2 operand u16's
+						return 0U; // Instruction followed by no operand u16's
+					}() + 2U
+				), // 16-bit coprocessor condition follows
+			};
+		}
 		case 0x06c0U:
 		case 0x06c8U:
 			return
@@ -1702,31 +1731,6 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				0U, 0U, 0U,
 				4U, // 16-bit coprocessor condition and 16-bit displacement follows
-			};
-		case 0xf078U:
-			return
-			{
-				instruction_t::cptrapcc,
-				// Coprocessor ID
-				uint8_t((insn >> regXShift) & regMask),
-				0U,
-				{},
-				0U,
-				uint8_t(insn & regMask),
-				0U,
-				uint8_t
-				(
-					[](const uint8_t opmode)
-					{
-						if (opmode == 2U)
-							return 2U; // Instruction followed by 1 operand u16
-						if (opmode == 3U)
-							return 4U; // Instruction followed by 2 operand u16's
-						if (opmode == 4U)
-							return 0U; // Instruction followed by no operand u16's
-						throw std::exception{}; // Illegal instruction - better handling TBD
-					}(insn & regMask) + 2U
-				), // 16-bit coprocessor condition follows
 			};
 		case 0x50c8U:
 		case 0x51c8U:
