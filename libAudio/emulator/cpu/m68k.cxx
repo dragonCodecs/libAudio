@@ -269,18 +269,6 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				// Decode whether this is a 16- or 32-bit displacement that follows
 				uint8_t((insn & 0x0040U) ? 4U : 2U),
 			};
-		case 0xf000U:
-			return
-			{
-				instruction_t::cpgen,
-				// Coprocessor ID
-				uint8_t((insn >> regXShift) & regMask),
-				eaReg,
-				{},
-				0U, 0U,
-				eaMode,
-				2U, // 16-bit coprocessor command follows
-			};
 		case 0xf040U:
 			return
 			{
@@ -1237,6 +1225,20 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				0U, 0U,
 				eaMode,
+			};
+		case 0xf000U:
+			// P* instruction is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
+			return
+			{
+				instruction_t::privileged,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+				2U, // 16-bit instruction continuation follows
 			};
 		case 0xe6c0U:
 			// ROR is not allowed with direct register usage
