@@ -1200,10 +1200,23 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				eaMode,
 			};
-		case 0xf000U:
-		case 0xf040U:
 		case 0xf080U:
 		case 0xf0c0U:
+			// Only condition codes up to (and including) 0x0f are valid
+			if (eaMode != 0U && eaMode != 1U)
+				break;
+			return
+			{
+				instruction_t::pbcc,
+				0U, 0U,
+				{},
+				0U,
+				uint8_t((eaMode << 3U) | eaReg),
+				0U,
+				uint8_t((insn & 0x0040U) == 0U ? 2U : 4U),
+			};
+		case 0xf000U:
+		case 0xf040U:
 			// P* instruction is allowed all valid mode 7 modes
 			if (eaMode == 7U && eaReg > 4U)
 				break;
