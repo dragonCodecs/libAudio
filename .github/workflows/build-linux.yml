@@ -63,6 +63,10 @@ jobs:
         env:
           CC: ${{ matrix.compiler }}
         working-directory: ${{ runner.temp }}
+      - name: Remove old LLVM plugins
+        if: matrix.compiler == 'clang'
+        run: |
+          sudo apt purge llvm-{12,13,14,15}-linker-tools || true
       - name: Checkout libAudio
         uses: actions/checkout@v4
         with:
