@@ -217,6 +217,7 @@ enum class instruction_t
 	chk2_cmp2,
 	muls_mulu,
 	privileged,
+	tbls_tblu,
 };
 
 enum class operationFlags_t

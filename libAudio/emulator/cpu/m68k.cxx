@@ -1371,6 +1371,24 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				eaMode,
 			};
+		case 0xf800U:
+			// TBLU/TBLS is not allowed with address registers, or with post-inc register modification
+			if (eaMode == 1U || eaMode == 3U)
+				break;
+			// TBLU/TBLS is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
+			return
+			{
+				instruction_t::tbls_tblu,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+				2U, // 16-bit instruction continuation follows, containing Dx, Dyn, size.
+				// Bit 8 determines DReg (0) vs TLB (1), bit 11 determines TLBS (1) vs TBLU (0)
+			};
 		case 0x4a00U:
 		case 0x4a40U:
 		case 0x4a80U:
