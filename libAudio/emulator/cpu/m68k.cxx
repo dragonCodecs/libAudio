@@ -935,6 +935,22 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 				2U, // 16-bit instruction continuation follows
 			};
+		case 0xf340U:
+			// FRESTORE is not allowed with direct register usage, or with pre-dec register modification
+			if (eaMode == 0U || eaMode == 1U || eaMode == 4U)
+				break;
+			// FRESTORE is not allowed with `#<data>` mode 7
+			if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+				break;
+			return
+			{
+				instruction_t::frestore,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+			};
 		case 0xf300U:
 			// FSAVE is not allowed with direct register usage, or with post-inc register modification
 			if (eaMode == 0U || eaMode == 1U || eaMode == 3U)
