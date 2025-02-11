@@ -1571,6 +1571,17 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::pflusha,
 				uint8_t(insn & regMask),
 			};
+		case 0xf548U:
+		case 0xf568U:
+			return
+			{
+				instruction_t::ptest,
+				uint8_t(insn & regMask),
+				0U,
+				{},
+				0U,
+				uint8_t((insn & 0x0020U) >> 5U), // Extract read vs write
+			};
 		case 0xf078U:
 		{
 			const auto opmode{uint8_t(insn & regMask)};

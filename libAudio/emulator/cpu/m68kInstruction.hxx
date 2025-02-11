@@ -154,7 +154,7 @@ enum class instruction_t
 	// MMU instructions
 	pbcc,
 	pdbcc,
-	pfflusha,
+	pflusha,
 	pflush,
 	pflushn,
 	pflushan,
