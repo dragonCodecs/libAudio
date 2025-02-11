@@ -26,7 +26,7 @@ jobs:
           - { id: ubuntu-24.04, name: noble }
         compiler:
           - 'gcc'
-          - 'clang'
+          - 'clang-18' # Use a specific version for now as the packaging on the snapshots got messed up again
       fail-fast: false
     steps:
       - name: Runtime environment
