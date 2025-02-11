@@ -1574,6 +1574,16 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::extb,
 				uint8_t(insn & regMask),
 			};
+		case 0xf248U:
+			return
+			{
+				instruction_t::fdbcc,
+				0U,
+				uint8_t(insn & regMask),
+				{},
+				0U, 0U, 0U,
+				4U, // 16-bit instruction continuation + 16-bit displacement follows
+			};
 		case 0x4e50U:
 			return
 			{
