@@ -918,7 +918,24 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				0U, 0U,
 				eaMode,
-				2U,
+				2U, // 16-bit instruction continuation follows
+			};
+		case 0xf240U:
+			// FScc instruction is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// FScc is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
+			return
+			{
+				instruction_t::fscc,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+				2U, // 16-bits follow (5 bits used) for conditional predicate
 			};
 		case 0x4ec0U:
 			// Only non-altering indirection modes are allowed for JMP
