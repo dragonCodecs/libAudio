@@ -903,6 +903,21 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				eaMode,
 			};
+		case 0xf280U:
+		case 0xf2c0U:
+			// Only condition codes up to (and including) 0x1f are valid
+			if ((eaMode & 0x4U) != 0U)
+				break;
+			return
+			{
+				instruction_t::fbcc,
+				0U, 0U,
+				{},
+				0U,
+				uint8_t((eaMode << 3U) | eaReg), // Rebuild the condition code
+				0U,
+				uint8_t((insn & 0x0040U) == 0U ? 2U : 4U), // 16- or 32-bit of displacement follows
+			};
 		case 0xf200U:
 			// F* instruction is not allowed with address registers
 			if (eaMode == 1U)
@@ -1245,9 +1260,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U,
 				{},
 				0U,
-				uint8_t((eaMode << 3U) | eaReg),
+				uint8_t((eaMode << 3U) | eaReg), // Rebuild the condition code
 				0U,
-				uint8_t((insn & 0x0040U) == 0U ? 2U : 4U),
+				uint8_t((insn & 0x0040U) == 0U ? 2U : 4U), // 16- or 32-bit of displacement follows
 			};
 		case 0xf140U:
 			// PRESTORE is not allowed with direct register usage, or with pre-dec register modification
