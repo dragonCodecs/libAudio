@@ -935,6 +935,22 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				eaMode,
 				2U, // 16-bit instruction continuation follows
 			};
+		case 0xf300U:
+			// FSAVE is not allowed with direct register usage, or with post-inc register modification
+			if (eaMode == 0U || eaMode == 1U || eaMode == 3U)
+				break;
+			// FSAVE is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+				break;
+			return
+			{
+				instruction_t::fsave,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+			};
 		case 0xf240U:
 			// FScc instruction is not allowed with address registers
 			if (eaMode == 1U)
