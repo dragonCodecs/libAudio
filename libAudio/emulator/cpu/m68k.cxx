@@ -903,6 +903,23 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U,
 				eaMode,
 			};
+		case 0xf200U:
+			// F* instruction is not allowed with address registers
+			if (eaMode == 1U)
+				break;
+			// F* instruction is allowed all valid mode 7 modes
+			if (eaMode == 7U && eaReg > 4U)
+				break;
+			return
+			{
+				instruction_t::fpu,
+				0U,
+				eaReg,
+				{},
+				0U, 0U,
+				eaMode,
+				2U,
+			};
 		case 0x4ec0U:
 			// Only non-altering indirection modes are allowed for JMP
 			if (eaMode == 0U || eaMode == 1U || eaMode == 3U || eaMode == 4U)

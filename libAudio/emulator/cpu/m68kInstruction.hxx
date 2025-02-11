@@ -218,6 +218,7 @@ enum class instruction_t
 	muls_mulu,
 	privileged,
 	tbls_tblu,
+	fpu,
 };
 
 enum class operationFlags_t
