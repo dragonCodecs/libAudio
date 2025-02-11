@@ -1584,6 +1584,32 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U, 0U,
 				4U, // 16-bit instruction continuation + 16-bit displacement follows
 			};
+		case 0xf278U:
+		{
+			const auto opmode{uint8_t(insn & regMask)};
+			if (opmode != 2U && opmode != 3U && opmode != 4U)
+				break;
+			return
+			{
+				instruction_t::ftrapcc,
+				0U, 0U,
+				{},
+				0U,
+				opmode,
+				0U,
+				uint8_t
+				(
+					[&]()
+					{
+						if (opmode == 2U)
+							return 2U; // Instruction followed by 1 operand u16
+						if (opmode == 3U)
+							return 4U; // Instruction followed by 2 operand u16's
+						return 0U; // Instruction followed by no operand u16's
+					}() + 2U // 16-bit conditionial predicate (5 bits used) follows
+				),
+			};
+		}
 		case 0x4e50U:
 			return
 			{
