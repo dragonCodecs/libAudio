@@ -62506,6 +62506,38 @@ constexpr std::array<decodedOperation_t, 65536U> instructionMap
 	{instruction_t::cinva, 5U, 0U},
 	{instruction_t::cinva, 6U, 0U},
 	{instruction_t::cinva, 7U, 0U},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::illegal},
+	{instruction_t::cpushl, 0U, 0U},
+	{instruction_t::cpushl, 1U, 0U},
+	{instruction_t::cpushl, 2U, 0U},
+	{instruction_t::cpushl, 3U, 0U},
+	{instruction_t::cpushl, 4U, 0U},
+	{instruction_t::cpushl, 5U, 0U},
+	{instruction_t::cpushl, 6U, 0U},
+	{instruction_t::cpushl, 7U, 0U},
+	{instruction_t::cpushp, 0U, 0U},
+	{instruction_t::cpushp, 1U, 0U},
+	{instruction_t::cpushp, 2U, 0U},
+	{instruction_t::cpushp, 3U, 0U},
+	{instruction_t::cpushp, 4U, 0U},
+	{instruction_t::cpushp, 5U, 0U},
+	{instruction_t::cpushp, 6U, 0U},
+	{instruction_t::cpushp, 7U, 0U},
+	{instruction_t::cpusha, 0U, 0U},
+	{instruction_t::cpusha, 1U, 0U},
+	{instruction_t::cpusha, 2U, 0U},
+	{instruction_t::cpusha, 3U, 0U},
+	{instruction_t::cpusha, 4U, 0U},
+	{instruction_t::cpusha, 5U, 0U},
+	{instruction_t::cpusha, 6U, 0U},
+	{instruction_t::cpusha, 7U, 0U},
 }};
 
 class testM68k final : public testsuite, memoryMap_t<uint32_t>
@@ -62518,7 +62550,7 @@ private:
 		// Run through all 65536 possible instruction values and check they decode properly.
 		for (const auto &[insn, decodedOperation] : substrate::indexedIterator_t{instructionMap})
 		{
-			if (insn == 62496U)
+			if (insn == 62528U)
 				break;
 			assertTrue(cpu.decodeInstruction(insn) == decodedOperation);
 		}
