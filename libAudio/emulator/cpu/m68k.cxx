@@ -1428,6 +1428,36 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				uint8_t(insn & regMask),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
+		case 0xf428U:
+		case 0xf468U:
+		case 0xf4a8U:
+		case 0xf4e8U:
+			return
+			{
+				instruction_t::cpushl,
+				uint8_t(insn & regMask),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0xf430U:
+		case 0xf470U:
+		case 0xf4b0U:
+		case 0xf4f0U:
+			return
+			{
+				instruction_t::cpushp,
+				uint8_t(insn & regMask),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
+		case 0xf438U:
+		case 0xf478U:
+		case 0xf4b8U:
+		case 0xf4f8U:
+			return
+			{
+				instruction_t::cpusha,
+				uint8_t(insn & regMask),
+				uint8_t((insn & sizeMask) >> sizeShift),
+			};
 		case 0x4880U:
 		case 0x48c0U:
 			return
