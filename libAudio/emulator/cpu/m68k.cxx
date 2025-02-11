@@ -1547,6 +1547,30 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				0U, 0U, 0U,
 				4U, // 16-bit instruction continuation + 16-bit displacement follows
 			};
+		case 0xf500U:
+			return
+			{
+				instruction_t::pflushn,
+				uint8_t(insn & regMask),
+			};
+		case 0xf508U:
+			return
+			{
+				instruction_t::pflush,
+				uint8_t(insn & regMask),
+			};
+		case 0xf510U:
+			return
+			{
+				instruction_t::pflushan,
+				uint8_t(insn & regMask),
+			};
+		case 0xf518U:
+			return
+			{
+				instruction_t::pflusha,
+				uint8_t(insn & regMask),
+			};
 		case 0xf078U:
 		{
 			const auto opmode{uint8_t(insn & regMask)};
