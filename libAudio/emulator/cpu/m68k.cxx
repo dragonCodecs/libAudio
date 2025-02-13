@@ -2398,6 +2398,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchLEA(instruction);
 		case instruction_t::movem:
 			return dispatchMOVEM(instruction);
+		case instruction_t::scc:
+			return dispatchScc(instruction);
 		case instruction_t::tst:
 			return dispatchTST(instruction);
 	}
@@ -2876,6 +2878,34 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 	// Get done and mark out how many cycles this took
 	// XXX: Need to take into account the EA mode fully.. between 12 and 20 cycles extra depending on mode.
 	return {true, false, 4U * copied};
+}
+
+stepResult_t motorola68000_t::dispatchScc(const decodedOperation_t &insn) noexcept
+{
+	// Figure out what state the condition for this instruction is in
+	const bool state{checkCondition(insn.opMode)};
+	// Turn that into either all-highs (true) or lows (false) and write it to the EA specified
+	writeEffectiveAddress(insn.mode, insn.ry, uint8_t(state ? UINT8_MAX : 0U));
+
+	// Get done and mark how many cycles this took
+	return
+	{
+		true, false,
+		[&]() -> size_t
+		{
+			// If this was a write to a register
+			if (insn.mode == 0U)
+			{
+				// And we wrote a true
+				if (state)
+					return 6U;
+				// Othewise we wrote a false
+				return 4U;
+			}
+			// Everything else is constant access time
+			return 8U;
+		}()
+	};
 }
 
 stepResult_t motorola68000_t::dispatchTST(const decodedOperation_t &insn) noexcept
