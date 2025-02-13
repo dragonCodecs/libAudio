@@ -69,6 +69,8 @@ private:
 	[[nodiscard]] uint32_t computeIndirect(uint32_t baseAddress) noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept;
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
+	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
+	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
 
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBSR(const decodedOperation_t &insn) noexcept;
@@ -81,7 +83,7 @@ public:
 	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;
-	uint32_t readProgramCounter() const noexcept;
+	[[nodiscard]] uint32_t readProgramCounter() const noexcept;
 	[[nodiscard]] stepResult_t step() noexcept;
 
 	// Not actually part of the public interface, just necessary to be exposed for testing

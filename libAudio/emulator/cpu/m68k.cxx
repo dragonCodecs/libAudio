@@ -2363,10 +2363,20 @@ void motorola68000_t::executeFrom(const uint32_t entryAddress, const uint32_t st
 	}
 }
 
+uint32_t &motorola68000_t::dataRegister(const size_t reg) noexcept
+	{ return d.at(reg); }
+
+uint32_t &motorola68000_t::addrRegister(const size_t reg) noexcept
+{
+	if (reg == 7U)
+		return activeStackPointer();
+	return a.at(reg);
+}
+
 void motorola68000_t::writeDataRegister(const size_t reg, const uint32_t value) noexcept
-	{ d.at(reg) = value; }
+	{ dataRegister(reg) = value; }
 void motorola68000_t::writeAddrRegister(const size_t reg, const uint32_t value) noexcept
-	{ a.at(reg) = value; }
+	{ addrRegister(reg) = value; }
 uint32_t motorola68000_t::readProgramCounter() const noexcept { return programCounter; }
 
 stepResult_t motorola68000_t::step() noexcept
@@ -2560,26 +2570,26 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg, siz
 			return a[reg];
 		case 3U: // (An)+
 		{
-			const auto ptr{a[reg]};
-			a[reg] = ptr + operandSize;
+			const auto ptr{addrRegister(reg)};
+			addrRegister(reg) = ptr + operandSize;
 			return ptr;
 		}
 		case 4U: // -(An)
 		{
-			const auto ptr{a[reg] - operandSize};
-			a[reg] = ptr;
+			const auto ptr{addrRegister(reg) - operandSize};
+			addrRegister(reg) = ptr;
 			return ptr;
 		}
 		case 5U: // (d16,An)
 		{
 			const auto displacement{_peripherals.readAddress<int16_t>(programCounter)};
 			programCounter += 2U;
-			return a[reg] + displacement;
+			return addrRegister(reg) + displacement;
 		}
 		case 6U:
 			// (d8,An,Xn.SIZE*SCALE), (bd,An,Xn.SIZE*SCALE),
 			// ([bd,An],Xn.SIZE*SCALE,od), and ([bd,An,Xn.SIZE*SCALE].od)
-			return computeIndirect(a[reg]);
+			return computeIndirect(addrRegister(reg));
 		case 7U: // PC-rel and absolute modes
 			switch (reg)
 			{
@@ -2704,17 +2714,17 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 				if (isPredecrement)
 				{
 					if (idx < 8U)
-						return a[7U - idx];
+						return addrRegister(7U - idx);
 					else
-						return d[7U - (idx - 8U)];
+						return dataRegister(7U - (idx - 8U));
 				}
 				// Otherwise, if it's any other mode, it's d0-d7, then a0-a7
 				else
 				{
 					if (idx < 8U)
-						return d[idx];
+						return dataRegister(idx);
 					else
-						return a[idx - 8U];
+						return addrRegister(idx - 8U);
 				}
 			}()
 		};
