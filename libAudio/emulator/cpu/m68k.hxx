@@ -67,6 +67,7 @@ private:
 	[[nodiscard]] int16_t readIndex(uint16_t extension) const noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg) noexcept;
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;
 
 public:
 	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint32_t clockFreq) noexcept;

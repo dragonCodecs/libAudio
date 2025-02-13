@@ -2379,6 +2379,8 @@ stepResult_t motorola68000_t::step() noexcept
 	{
 		case instruction_t::bra:
 			return dispatchBRA(instruction);
+		case instruction_t::lea:
+			return dispatchLEA(instruction);
 	}
 
 	return {false, false, 34U};
@@ -2549,4 +2551,12 @@ stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexce
 	// Now we have a displacement, update the program counter and get done
 	programCounter += displacement;
 	return {true, false, 10U};
+}
+
+stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexcept
+{
+	// Determine the effective address that would be accessed by this instruction
+	// and then write it to the indicated address register from the instruction
+	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.rx));
+	return {true, false, 0U};
 }
