@@ -68,6 +68,7 @@ private:
 	[[nodiscard]] int32_t readExtraDisplacement(uint8_t displacementSize) noexcept;
 	[[nodiscard]] uint32_t computeIndirect(uint32_t baseAddress) noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept;
+	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept;
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
@@ -89,5 +90,12 @@ public:
 	// Not actually part of the public interface, just necessary to be exposed for testing
 	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;
 };
+
+extern template int8_t motorola68000_t::readEffectiveAddress<int8_t>(uint8_t mode, uint8_t reg) noexcept;
+extern template uint8_t motorola68000_t::readEffectiveAddress<uint8_t>(uint8_t mode, uint8_t reg) noexcept;
+extern template int16_t motorola68000_t::readEffectiveAddress<int16_t>(uint8_t mode, uint8_t reg) noexcept;
+extern template uint16_t motorola68000_t::readEffectiveAddress<uint16_t>(uint8_t mode, uint8_t reg) noexcept;
+extern template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg) noexcept;
+extern template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg) noexcept;
 
 #endif /*EMULATOR_CPU_M68K_HXX*/

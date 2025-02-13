@@ -2621,6 +2621,26 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg, siz
 	return UINT32_MAX;
 }
 
+template<typename T> T motorola68000_t::readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept
+{
+	switch (mode)
+	{
+		case 0U: // Dn
+			return static_cast<T>(dataRegister(reg));
+		case 1U: // An
+			return static_cast<T>(addrRegister(reg));
+		default:
+			return _peripherals.readAddress<T>(computeEffectiveAddress(mode, reg, sizeof(T)));
+	}
+}
+
+template int8_t motorola68000_t::readEffectiveAddress<int8_t>(uint8_t mode, uint8_t reg) noexcept;
+template uint8_t motorola68000_t::readEffectiveAddress<uint8_t>(uint8_t mode, uint8_t reg) noexcept;
+template int16_t motorola68000_t::readEffectiveAddress<int16_t>(uint8_t mode, uint8_t reg) noexcept;
+template uint16_t motorola68000_t::readEffectiveAddress<uint16_t>(uint8_t mode, uint8_t reg) noexcept;
+template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg) noexcept;
+template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg) noexcept;
+
 uint32_t &motorola68000_t::activeStackPointer() noexcept
 {
 	// XXX: Need to deal with interrupt contexts and the interrupt stack pointer..
