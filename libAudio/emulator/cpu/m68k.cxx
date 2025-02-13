@@ -2368,3 +2368,8 @@ void motorola68000_t::writeDataRegister(const size_t reg, const uint32_t value) 
 void motorola68000_t::writeAddrRegister(const size_t reg, const uint32_t value) noexcept
 	{ d.at(reg) = value; }
 uint32_t motorola68000_t::readProgramCounter() const noexcept { return programCounter; }
+
+stepResult_t motorola68000_t::step() noexcept
+{
+	return {false, false, 0U};
+}

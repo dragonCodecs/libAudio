@@ -30,6 +30,13 @@ struct fpuReg_t
 	uint16_t exponent;
 };
 
+struct stepResult_t
+{
+	bool validInsn;
+	bool trap;
+	size_t cyclesTaken;
+};
+
 struct motorola68000_t final
 {
 private:
@@ -63,6 +70,7 @@ public:
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;
 	uint32_t readProgramCounter() const noexcept;
+	[[nodiscard]] stepResult_t step() noexcept;
 
 	// Not actually part of the public interface, just necessary to be exposed for testing
 	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;
