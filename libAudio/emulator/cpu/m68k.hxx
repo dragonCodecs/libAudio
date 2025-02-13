@@ -69,6 +69,7 @@ private:
 	[[nodiscard]] uint32_t computeIndirect(uint32_t baseAddress) noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept;
 	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept;
+	template<typename T> void writeEffectiveAddress(uint8_t mode, uint8_t reg, T value) noexcept;
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
 	[[nodiscard]] int32_t readImmediateDisplacement(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] bool checkCondition(uint8_t condition) const noexcept;
@@ -102,5 +103,12 @@ extern template int16_t motorola68000_t::readEffectiveAddress<int16_t>(uint8_t m
 extern template uint16_t motorola68000_t::readEffectiveAddress<uint16_t>(uint8_t mode, uint8_t reg) noexcept;
 extern template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg) noexcept;
 extern template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg) noexcept;
+
+extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int8_t value) noexcept;
+extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint8_t value) noexcept;
+extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int16_t value) noexcept;
+extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint16_t value) noexcept;
+extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int32_t value) noexcept;
+extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint32_t value) noexcept;
 
 #endif /*EMULATOR_CPU_M68K_HXX*/

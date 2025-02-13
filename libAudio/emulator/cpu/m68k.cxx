@@ -2646,6 +2646,30 @@ template uint16_t motorola68000_t::readEffectiveAddress<uint16_t>(uint8_t mode, 
 template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg) noexcept;
 template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg) noexcept;
 
+template<typename T>
+	void motorola68000_t::writeEffectiveAddress(const uint8_t mode, const uint8_t reg, const T value) noexcept
+{
+	switch (mode)
+	{
+		case 0U: // Dn
+			dataRegister(reg) = value;
+			break;
+		case 1U: // An
+			addrRegister(reg) = value;
+			break;
+		default:
+			_peripherals.writeAddress<T>(computeEffectiveAddress(mode, reg, sizeof(T)), value);
+			break;
+	}
+}
+
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int8_t value) noexcept;
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint8_t value) noexcept;
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int16_t value) noexcept;
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint16_t value) noexcept;
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int32_t value) noexcept;
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint32_t value) noexcept;
+
 uint32_t &motorola68000_t::activeStackPointer() noexcept
 {
 	// XXX: Need to deal with interrupt contexts and the interrupt stack pointer..
