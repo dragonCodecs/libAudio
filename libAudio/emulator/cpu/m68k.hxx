@@ -68,7 +68,10 @@ private:
 	[[nodiscard]] int32_t readExtraDisplacement(uint8_t displacementSize) noexcept;
 	[[nodiscard]] uint32_t computeIndirect(uint32_t baseAddress) noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg) noexcept;
+	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
+
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchBSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;
 
 public:

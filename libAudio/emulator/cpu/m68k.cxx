@@ -2379,6 +2379,8 @@ stepResult_t motorola68000_t::step() noexcept
 	{
 		case instruction_t::bra:
 			return dispatchBRA(instruction);
+		case instruction_t::bsr:
+			return dispatchBSR(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
 	}
@@ -2607,8 +2609,17 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noe
 	return UINT32_MAX;
 }
 
+uint32_t &motorola68000_t::activeStackPointer() noexcept
+{
+	// XXX: Need to deal with interrupt contexts and the interrupt stack pointer..
+	if (status.includes(m68kStatusBits_t::supervisor))
+		return systemStackPointer;
+	return userStackPointer;
+}
+
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
 {
+	// Extract the displacement for this instruction
 	const auto displacement
 	{
 		[&]() -> int32_t
@@ -2626,6 +2637,32 @@ stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexce
 	// Now we have a displacement, update the program counter and get done
 	programCounter += displacement;
 	return {true, false, 10U};
+}
+
+stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexcept
+{
+	// Extract the displacement for this instruction
+	const auto displacement
+	{
+		[&]() -> int32_t
+		{
+			// If the branch includes the displacement in the instruction itself, extract and sign extend it
+			if (insn.trailingBytes == 0U)
+				return int8_t(insn.rx);
+			// If the branch is for a 16-bit displacement, extract, and sign-extend it
+			if (insn.trailingBytes == 2U)
+				return _peripherals.readAddress<int16_t>(programCounter);
+			// Otherwise, extract a 32-bit displacement
+			return _peripherals.readAddress<int32_t>(programCounter);
+		}()
+	};
+	// Now we have the displacement, calculate the post-instruction program counter, and push it to stack
+	auto &stackPointer{activeStackPointer()};
+	stackPointer -= 4;
+	_peripherals.writeAddress(stackPointer, programCounter + insn.trailingBytes);
+	// Now update the program counter to the new execution address and get done
+	programCounter += displacement;
+	return {true, false, 18U};
 }
 
 stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexcept
