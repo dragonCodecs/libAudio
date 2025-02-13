@@ -73,6 +73,7 @@ protected:
 	// Use 16 buckets at minimum.
 	std::unordered_map<memoryRange_t<address_t>, std::unique_ptr<peripheral_t<address_t>>> addressMap{16U};
 
+public:
 	template<typename value_t> value_t readAddress(const address_t address) const noexcept
 	{
 		// Try to find a peripheral mapped for the address
