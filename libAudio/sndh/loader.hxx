@@ -45,10 +45,10 @@ private:
 
 public:
 	sndhLoader_t(const fd_t &file);
-	[[noexcept]] const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
-	[[noexcept]] sndhMetadata_t &metadata() noexcept { return _metadata; }
-	[[noexcept]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }
-	[[noexcept]] bool copyToRAM(atariSTe_t &emulator) noexcept;
+	[[nodiscard]] const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
+	[[nodiscard]] sndhMetadata_t &metadata() noexcept { return _metadata; }
+	[[nodiscard]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }
+	[[nodiscard]] bool copyToRAM(atariSTe_t &emulator) noexcept;
 };
 
 #endif /*SNDH_LOADER_HXX*/
