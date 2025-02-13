@@ -2424,6 +2424,112 @@ int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
 	return INT16_MAX;
 }
 
+uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noexcept
+{
+	switch (mode)
+	{
+		case 2U: // (An)
+			return a[reg];
+		case 3U: // (An)+
+			const auto ptr{a[reg] + 4U};
+			a[reg] = ptr;
+			return ptr;
+		case 4U: // -(An)
+			const auto ptr{a[reg] - 4U};
+			a[reg] = ptr;
+			return ptr;
+		case 5U: // (d16,An)
+		{
+			const auto displacement{_peripherals.readAddress<int16_t>(programCounter)};
+			programCounter += 2U;
+			return a[reg] + displacement;
+		}
+		case 6U: // (d8,An,Xn.SIZE*SCALE) and (bd,An,Xn.SIZE*SCALE)
+		{
+			const auto extra{_peripherals.readAddress<uint16_t>(programCounter)};
+			programCounter += 2U;
+			// Determine which extension mode we're in
+			if (extra & 0x0100U)
+			{
+				// Figure out what do for the base displacement
+				const auto baseDisplacement
+				{
+					[&]() -> int32_t
+					{
+						// If it's suppressed, make it 0
+						if (extra & 0x0080U)
+							return 0U;
+						// Otherwise, determine how many bytes follow
+						switch (extra & 0x0030U)
+						{
+							case 0x0020U: // s16 displacement follows
+							{
+								const auto result{_peripherals.readAddress<int16_t>(programCounter)};
+								programCounter += 2U;
+								return result;
+							}
+							case 0x003U: // s32 displacement follows
+							{
+								const auto result{_peripherals.readAddress<int32_t>(programCounter)};
+								programCounter += 4U;
+								return result;
+							}
+							default:
+								// No displacement follows (or we got the reserved size)
+								return 0U;
+						}
+					}()
+				};
+				// Now the index, which can also be suppressed
+				const auto index{(extra & 0x0040U) ? 0 : readIndex(extra)};
+
+				// TODO: deal with outer displacement..????
+
+				return a[reg] + baseDisplacement + index;
+			}
+			else
+			{
+				const auto index{readIndex(extra)};
+				const auto displacement{int8_t(extra)};
+				return a[reg] + displacement + index;
+			}
+		}
+		case 7U: // PC-rel and absolute modes
+			switch (reg)
+			{
+				case 0U: // (xxx).W
+				{
+					const auto ptr{_peripherals.readAddress<int16_t>(programCounter)};
+					programCounter += 2U;
+					return static_cast<uint32_t>(int32_t{ptr});
+				}
+				case 1U: // (xxx).L
+				{
+					const auto ptr{_peripherals.readAddress<int32_t>(programCounter)};
+					programCounter += 4U;
+					return static_cast<uint32_t>(ptr);
+				}
+				case 2U: // (d16,PC)
+				{
+					const auto ptr{_peripherals.readAddress<int32_t>(programCounter) + programCounter};
+					programCounter += 2U;
+					return ptr;
+				}
+				case 3U: // (d8,PC,Xn.SIZE*SCALE)
+				{
+					const auto extra{_peripherals.readAddress<uint16_t>(programCounter)};
+					const auto index{readIndex(extra)};
+					const auto displacement{int8_t(extra)};
+					const auto ptr{programCounter + displacement + index};
+					programCounter += 2U;
+					return ptr;
+				}
+			}
+	}
+	// Shouldn't be able to get here, but just in case..
+	return UINT32_MAX;
+}
+
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
 {
 	const auto displacement
