@@ -2550,7 +2550,7 @@ uint32_t motorola68000_t::computeIndirect(const uint32_t baseAddress) noexcept
 	}
 }
 
-uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noexcept
+uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept
 {
 	switch (mode)
 	{
@@ -2558,13 +2558,13 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noe
 			return a[reg];
 		case 3U: // (An)+
 		{
-			const auto ptr{a[reg] + 4U};
-			a[reg] = ptr;
+			const auto ptr{a[reg]};
+			a[reg] = ptr + operandSize;
 			return ptr;
 		}
 		case 4U: // -(An)
 		{
-			const auto ptr{a[reg] - 4U};
+			const auto ptr{a[reg] - operandSize};
 			a[reg] = ptr;
 			return ptr;
 		}
@@ -2669,6 +2669,6 @@ stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexce
 {
 	// Determine the effective address that would be accessed by this instruction
 	// and then write it to the indicated address register from the instruction
-	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.ry));
+	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.ry, 0U));
 	return {true, false, 0U};
 }
