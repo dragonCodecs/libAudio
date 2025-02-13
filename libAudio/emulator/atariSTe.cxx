@@ -23,7 +23,29 @@ bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
 {
 	stRAM_t &systemRAM{*dynamic_cast<stRAM_t *>(addressMap[{0x000000U, 0x800000U}].get())};
 	// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
-	auto destination{systemRAM.subspan(0x000600, data.length())};
+	auto destination{systemRAM.subspan(0x000600U, data.length())};
 	// Now make sure we're at the start of the data and copy it all in
 	return data.head() && data.read(destination);
+}
+
+bool atariSTe_t::init(const uint16_t subtune) noexcept
+{
+	// Set up the calling context
+	writeAddress<uint32_t>(0x800000U - 4U, 0xffffffffU);
+	cpu.writeDataRegister(0U, subtune);
+	// And that we're going to run from the init entrypoint
+	cpu.executeFrom(0x000600U, 0x800000U - 4U);
+	// Now run till we RTS and hit the sentinel program counter state
+	while (true)
+	{
+		// Try and run another instruction
+		const auto result{cpu.step()};
+		// Check that something bad didn't happen
+		if (result.trap || !result.validInsn)
+			return false;
+		// Check for the sentinel program counter value
+		if (cpu.readProgramCounter() == 0xffffffffU)
+			break;
+	}
+	return true;
 }
