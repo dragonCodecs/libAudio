@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
+#include <substrate/index_sequence>
 #include "m68k.hxx"
 
 constexpr static uint16_t insnMaskSimpleRegs{0xf1f8U};
@@ -2395,6 +2396,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchLEA(instruction);
 		case instruction_t::movem:
 			return dispatchMOVEM(instruction);
+		case instruction_t::tst:
+			return dispatchTST(instruction);
 	}
 
 	return {false, false, 34U};
@@ -2782,5 +2785,36 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 
 	// Get done and mark out how many cycles this took
 	// XXX: Need to take into account the EA mode fully.. between 12 and 20 cycles extra depending on mode.
-	return {true, false, 4 * copied};
+	return {true, false, 4U * copied};
+}
+
+stepResult_t motorola68000_t::dispatchTST(const decodedOperation_t &insn) noexcept
+{
+	// Get the value to test (sign-extended to make negative testing easier)
+	const auto value
+	{
+		[&]() -> int32_t
+		{
+			if (insn.operationSize == 0U)
+				return readEffectiveAddress<int8_t>(insn.mode, insn.ry);
+			if (insn.operationSize == 1U)
+				return readEffectiveAddress<int16_t>(insn.mode, insn.ry);
+			return readEffectiveAddress<int32_t>(insn.mode, insn.ry);
+		}()
+	};
+	// Clear flags that are always cleared
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Check if the value is zero
+	if (value == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if the value is negative
+	if (value < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+
+	// Get done and mark how many cycles this took
+	return {true, false, 4U};
 }
