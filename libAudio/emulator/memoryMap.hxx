@@ -6,6 +6,9 @@
 #include <memory>
 #include <unordered_map>
 #include <substrate/span>
+#include <substrate/buffer_utils>
+
+using namespace substrate::buffer_utils;
 
 template<typename address_t> struct memoryRange_t
 {
@@ -82,9 +85,13 @@ protected:
 				const auto relativeAddress{mapping.relative(address)};
 				std::array<uint8_t, sizeof(value_t)> value{};
 				// Read the data associated with that address in the peripheral
-				peripheral.readAddress(relativeAddress, value);
+				peripheral->readAddress(relativeAddress, value);
 
 				// Now we have data, convert it endian-appropriately to a value_t
+				if constexpr (sizeof(value_t) == 1U)
+					return static_cast<value_t>(value[0]);
+				else
+					return readBE<value_t>(value);
 			}
 		}
 
@@ -104,9 +111,13 @@ protected:
 				const auto relativeAddress{mapping.relative(address)};
 				std::array<uint8_t, sizeof(value_t)> value{};
 				// Convert the data to write in an endian-appropriate manner from a value_t
+				if constexpr (sizeof(value_t) == 1U)
+					value[0] = static_cast<uint8_t>(data);
+				else
+					writeBE(data, value);
 
 				// Now write the data to the peripheral and get done
-				peripheral.writeAddress(relativeAddress, value);
+				peripheral->writeAddress(relativeAddress, value);
 				break;
 			}
 		}
