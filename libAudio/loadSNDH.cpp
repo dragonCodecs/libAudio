@@ -5,6 +5,7 @@
 #include "libAudio.hxx"
 #include "console.hxx"
 #include "sndh/loader.hxx"
+#include "emulator/atariSTe.hxx"
 
 /*!
  * @internal
@@ -20,6 +21,7 @@ using substrate::make_unique_nothrow;
 struct sndh_t::decoderContext_t final
 {
 	uint8_t buffer[8192];
+	atariSTe_t emulator{};
 };
 
 using libAudio::console::asHex_t;
@@ -44,9 +46,9 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	std::unique_ptr<sndh_t> file{make_unique_nothrow<sndh_t>(fd_t{fileName, O_RDONLY | O_NOCTTY})};
 	if (!file || !file->valid() || !isSNDH(file->_fd))
 		return nullptr;
-	//auto &ctx = *file->context();
+	auto &ctx = *file->context();
 	fileInfo_t &info = file->fileInfo();
-	sndhLoader_t loader{file->_fd}; //, file->context()
+	sndhLoader_t loader{file->_fd};
 
 	auto &entryPoints = loader.entryPoints();
 	console.debug("Read SNDH entry points"sv);
@@ -60,6 +62,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 
 	loadFileInfo(info, metadata);
+	loader.copyToRAM(ctx.emulator);
 	return file.release();
 }
 catch (const std::exception &)
