@@ -63,6 +63,9 @@ private:
 	uint32_t fpStatus;
 	uint32_t fpInstructionAddress;
 
+	// Instruction dispatch/execution functions
+	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
+
 public:
 	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint32_t clockFreq) noexcept;
 

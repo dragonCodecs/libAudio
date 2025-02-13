@@ -2371,5 +2371,36 @@ uint32_t motorola68000_t::readProgramCounter() const noexcept { return programCo
 
 stepResult_t motorola68000_t::step() noexcept
 {
-	return {false, false, 0U};
+	// Start by fetching a uint16_t for the instruction and trying to decode it
+	auto instruction{decodeInstruction(_peripherals.readAddress<uint16_t>(programCounter))};
+	programCounter += 2U;
+	// Now we have an instruction to run, try to dispatch it
+	switch (instruction.operation)
+	{
+		case instruction_t::bra:
+			return dispatchBRA(instruction);
+	}
+
+	return {false, false, 34U};
+}
+
+stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
+{
+	const auto displacement
+	{
+		[&]() -> int32_t
+		{
+			// If the branch includes the displacement in the instruction itself, extract and sign extend it
+			if (insn.trailingBytes == 0U)
+				return int8_t(insn.rx);
+			// If the branch is for a 16-bit displacement, extract, and sign-extend it
+			if (insn.trailingBytes == 2U)
+				return _peripherals.readAddress<int16_t>(programCounter);
+			// Otherwise, extract a 32-bit displacement
+			return _peripherals.readAddress<int32_t>(programCounter);
+		}()
+	};
+	// Now we have a displacement, update the program counter and get done
+	programCounter += displacement;
+	return {true, false, 10U};
 }
