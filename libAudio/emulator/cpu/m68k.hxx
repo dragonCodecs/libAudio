@@ -76,6 +76,7 @@ private:
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
 
+	[[nodiscard]] stepResult_t dispatchBcc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;

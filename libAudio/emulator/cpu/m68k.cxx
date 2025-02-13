@@ -2388,6 +2388,8 @@ stepResult_t motorola68000_t::step() noexcept
 	// Now we have an instruction to run, try to dispatch it
 	switch (instruction.operation)
 	{
+		case instruction_t::bcc:
+			return dispatchBcc(instruction);
 		case instruction_t::bra:
 			return dispatchBRA(instruction);
 		case instruction_t::bsr:
@@ -2713,6 +2715,33 @@ bool motorola68000_t::checkCondition(const uint8_t condition) const noexcept
 	}
 	// Impossible, but just in case
 	return false;
+}
+
+stepResult_t motorola68000_t::dispatchBcc(const decodedOperation_t &insn) noexcept
+{
+	// Extract the displacement for this instruction
+	const auto displacement{readImmediateDisplacement(insn)};
+	// Determine if the branch condition is met
+	const auto branch{checkCondition(insn.opMode)};
+	// If we should branch, update the program counter with the displacement
+	if (branch)
+		programCounter += displacement;
+	// Otherwise, update it with the size of the displacement to get past the trailing bytes
+	else
+		programCounter += insn.trailingBytes;
+	// Get done and figure out how long this took
+	return
+	{
+		true, false,
+		[&]() -> size_t
+		{
+			if (branch) // If the branch is taken, it's a constant amount
+				return 10U;
+			if (insn.trailingBytes == 0U) // If it is not taken, and there are no trailing bytes
+				return 8U;
+			return 12U; // If it is not taken and there are trailing bytes
+		}()
+	};
 }
 
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
