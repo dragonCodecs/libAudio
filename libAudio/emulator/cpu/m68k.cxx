@@ -2346,3 +2346,19 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 	}
 	return {instruction_t::illegal};
 }
+
+void motorola68000_t::executeFrom(const uint32_t entryAddress, const uint32_t stackTop, const bool asUser) noexcept
+{
+	// Copy in the new program counter value, and set up the stack pointer and CPU state
+	programCounter = entryAddress;
+	if (asUser)
+	{
+		userStackPointer = stackTop;
+		status.clear(m68kStatusBits_t::supervisor);
+	}
+	else
+	{
+		systemStackPointer = stackTop;
+		status.set(m68kStatusBits_t::supervisor);
+	}
+}

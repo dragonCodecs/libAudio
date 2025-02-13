@@ -59,6 +59,8 @@ private:
 public:
 	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint32_t clockFreq) noexcept;
 
+	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
+
 	// Not actually part of the public interface, just necessary to be exposed for testing
 	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;
 };
