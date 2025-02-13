@@ -61,8 +61,15 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	console.debug(" -> converter: "sv, metadata.converter);
 	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 
+	// Copy the metadata for this SNDH into the fileInfo_t, and then copy the decrunched SNDH into emulator memory
 	loadFileInfo(info, metadata);
-	loader.copyToRAM(ctx.emulator);
+	if (!loader.copyToRAM(ctx.emulator) ||
+		// Having done this, set up to play the first subtune in the file
+		!ctx.emulator.init(0U))
+	{
+		console.error("Error while setting up emulator for SNDH file"sv);
+		return nullptr;
+	}
 	return file.release();
 }
 catch (const std::exception &)
