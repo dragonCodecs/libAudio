@@ -2362,3 +2362,9 @@ void motorola68000_t::executeFrom(const uint32_t entryAddress, const uint32_t st
 		status.set(m68kStatusBits_t::supervisor);
 	}
 }
+
+void motorola68000_t::writeDataRegister(const size_t reg, const uint32_t value) noexcept
+	{ d.at(reg) = value; }
+void motorola68000_t::writeAddrRegister(const size_t reg, const uint32_t value) noexcept
+	{ d.at(reg) = value; }
+uint32_t motorola68000_t::readProgramCounter() const noexcept { return programCounter; }
