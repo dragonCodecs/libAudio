@@ -2593,7 +2593,7 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noe
 				}
 				case 2U: // (d16,PC)
 				{
-					const auto ptr{_peripherals.readAddress<int32_t>(programCounter) + programCounter};
+					const auto ptr{_peripherals.readAddress<int16_t>(programCounter) + programCounter};
 					programCounter += 2U;
 					return ptr;
 				}
@@ -2632,6 +2632,6 @@ stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexce
 {
 	// Determine the effective address that would be accessed by this instruction
 	// and then write it to the indicated address register from the instruction
-	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.rx));
+	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.ry));
 	return {true, false, 0U};
 }
