@@ -10,10 +10,10 @@
 #include <substrate/span>
 #include "memoryMap.hxx"
 
-template<typename address_t, size_t size> struct ram_t : peripheral_t<address_t>
+template<typename address_t, size_t size> struct ram_t final : public peripheral_t<address_t>
 {
 private:
-	std::array<uint8_t, size> memory;
+	std::array<uint8_t, size> memory{};
 
 	void readAddress(address_t address, substrate::span<uint8_t> data) const noexcept override
 	{
@@ -28,6 +28,13 @@ private:
 	}
 
 public:
+	ram_t() noexcept = default;
+	ram_t(const ram_t &) = default;
+	ram_t(ram_t &&) = default;
+	ram_t &operator =(const ram_t &) = default;
+	ram_t &operator =(ram_t &&) = default;
+	~ram_t() noexcept override = default;
+
 	substrate::span<uint8_t> subspan(const size_t offset = 0U, const size_t length = SIZE_MAX) noexcept
 		{ return substrate::span{memory}.subspan(offset, length); }
 };

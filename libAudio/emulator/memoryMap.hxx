@@ -48,6 +48,18 @@ namespace std
 
 template<typename address_t> struct peripheral_t
 {
+private:
+	peripheral_t(const peripheral_t &) = delete;
+	peripheral_t(peripheral_t &&) = delete;
+	peripheral_t &operator =(const peripheral_t &) = delete;
+	peripheral_t &operator =(peripheral_t &&) = delete;
+
+protected:
+	peripheral_t() noexcept = default;
+
+public:
+	virtual ~peripheral_t() noexcept = default;
+
 	virtual void readAddress(address_t address, substrate::span<uint8_t> data) const noexcept = 0;
 	virtual void writeAddress(address_t address, const substrate::span<uint8_t> &data) noexcept = 0;
 };
