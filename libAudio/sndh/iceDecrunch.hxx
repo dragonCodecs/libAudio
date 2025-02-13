@@ -7,6 +7,7 @@
 #include <array>
 #include <substrate/fd>
 #include <substrate/fixed_vector>
+#include <substrate/span>
 
 using substrate::fd_t;
 using substrate::fixedVector_t;
@@ -84,6 +85,9 @@ public:
 
 	template<typename T> bool read(const fixedVector_t<T> &value) const noexcept
 		{ return read(value.data(), sizeof(T) * value.size()); }
+
+	template<typename T, size_t N> bool read(substrate::span<T, N> &value) const noexcept
+		{ return read(value.data(), value.size_bytes()); }
 
 	template<size_t length, typename T, size_t N> bool read(std::array<T, N> &value) noexcept
 	{
