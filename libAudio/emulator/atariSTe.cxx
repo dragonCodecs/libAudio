@@ -3,9 +3,27 @@
 #include "atariSTe.hxx"
 #include "ram.hxx"
 #include "unitsHelpers.hxx"
+#include "sndh/iceDecrunch.hxx"
+
+using stRAM_t = ram_t<uint32_t, 8_MiB>;
 
 atariSTe_t::atariSTe_t() noexcept
 {
 	// Build the system memory map
-	addressMap[{0x000000, 0x080000}] = std::make_unique<ram_t<uint32_t, 512_KiB>>();
+	addressMap[{0x000000U, 0x800000U}] = std::make_unique<stRAM_t>();
+	// TODO: TOS ROM needs to go at 0xe00000U, it is in a 1MiB window
+	// Cartridge ROM at 0xfa0000, 128KiB
+	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
+	// PSG at 0xff8800
+	// sound DMA at 0xff8900
+}
+
+// Copy the contents of a decrunched SNDH into the ST's RAM
+bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
+{
+	stRAM_t &systemRAM{*dynamic_cast<stRAM_t *>(addressMap[{0x000000U, 0x800000U}].get())};
+	// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
+	auto destination{systemRAM.subspan(0x000600, data.length())};
+	// Now make sure we're at the start of the data and copy it all in
+	return data.head() && data.read(destination);
 }

@@ -141,3 +141,7 @@ bool sndhLoader_t::readMeta()
 	}
 	return true;
 }
+
+// Defer copying the SNDH data to the Atari ST's RAM to the emulation itself
+bool sndhLoader_t::copyToRAM(atariSTe_t &emulator) noexcept
+	{ return emulator.copyToRAM(_data); }

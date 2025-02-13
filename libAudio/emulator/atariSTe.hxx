@@ -6,6 +6,7 @@
 #include "memoryMap.hxx"
 #include "cpu/m68k.hxx"
 #include "unitsHelpers.hxx"
+#include "sndh/iceDecrunch.hxx"
 
 // M68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.
 struct atariSTe_t : memoryMap_t<uint32_t>
@@ -15,6 +16,8 @@ private:
 
 public:
 	atariSTe_t() noexcept;
+
+	[[noexcept]] bool copyToRAM(sndhDecruncher_t &data) noexcept;
 };
 
 #endif /*EMULATOR_ATARI_STE_HXX*/

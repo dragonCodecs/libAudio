@@ -9,6 +9,7 @@
 #include <substrate/fd>
 #include <substrate/fixed_vector>
 #include "iceDecrunch.hxx"
+#include "emulator/atariSTe.hxx"
 
 using substrate::fd_t;
 using substrate::fixedVector_t;
@@ -44,9 +45,10 @@ private:
 
 public:
 	sndhLoader_t(const fd_t &file);
-	const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
-	sndhMetadata_t &metadata() noexcept { return _metadata; }
-	const sndhMetadata_t &metadata() const noexcept { return _metadata; }
+	[[noexcept]] const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
+	[[noexcept]] sndhMetadata_t &metadata() noexcept { return _metadata; }
+	[[noexcept]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }
+	[[noexcept]] bool copyToRAM(atariSTe_t &emulator) noexcept;
 };
 
 #endif /*SNDH_LOADER_HXX*/
