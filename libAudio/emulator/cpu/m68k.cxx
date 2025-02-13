@@ -2447,7 +2447,7 @@ int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
 	return INT16_MAX;
 }
 
-int32_t motorola68000_t::readExtraDisplacement(uint8_t displacementSize) noexcept
+int32_t motorola68000_t::readExtraDisplacement(const uint8_t displacementSize) noexcept
 {
 	switch (displacementSize)
 	{
@@ -2569,7 +2569,7 @@ uint32_t motorola68000_t::computeIndirect(const uint32_t baseAddress) noexcept
 	}
 }
 
-uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept
+uint32_t motorola68000_t::computeEffectiveAddress(const uint8_t mode, const uint8_t reg, const size_t operandSize) noexcept
 {
 	switch (mode)
 	{
@@ -2628,7 +2628,7 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg, siz
 	return UINT32_MAX;
 }
 
-template<typename T> T motorola68000_t::readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept
+template<typename T> T motorola68000_t::readEffectiveAddress(const uint8_t mode, const uint8_t reg) noexcept
 {
 	switch (mode)
 	{
