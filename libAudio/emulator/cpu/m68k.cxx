@@ -2652,23 +2652,22 @@ uint32_t &motorola68000_t::activeStackPointer() noexcept
 	return userStackPointer;
 }
 
+int32_t motorola68000_t::readImmediateDisplacement(const decodedOperation_t &insn) noexcept
+{
+	// If the branch includes the displacement in the instruction itself, extract and sign extend it
+	if (insn.trailingBytes == 0U)
+		return int8_t(insn.rx);
+	// If the branch is for a 16-bit displacement, extract, and sign-extend it
+	if (insn.trailingBytes == 2U)
+		return _peripherals.readAddress<int16_t>(programCounter);
+	// Otherwise, extract a 32-bit displacement
+	return _peripherals.readAddress<int32_t>(programCounter);
+}
+
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
 {
 	// Extract the displacement for this instruction
-	const auto displacement
-	{
-		[&]() -> int32_t
-		{
-			// If the branch includes the displacement in the instruction itself, extract and sign extend it
-			if (insn.trailingBytes == 0U)
-				return int8_t(insn.rx);
-			// If the branch is for a 16-bit displacement, extract, and sign-extend it
-			if (insn.trailingBytes == 2U)
-				return _peripherals.readAddress<int16_t>(programCounter);
-			// Otherwise, extract a 32-bit displacement
-			return _peripherals.readAddress<int32_t>(programCounter);
-		}()
-	};
+	const auto displacement{readImmediateDisplacement(insn)};
 	// Now we have a displacement, update the program counter and get done
 	programCounter += displacement;
 	return {true, false, 10U};
@@ -2677,20 +2676,7 @@ stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexce
 stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexcept
 {
 	// Extract the displacement for this instruction
-	const auto displacement
-	{
-		[&]() -> int32_t
-		{
-			// If the branch includes the displacement in the instruction itself, extract and sign extend it
-			if (insn.trailingBytes == 0U)
-				return int8_t(insn.rx);
-			// If the branch is for a 16-bit displacement, extract, and sign-extend it
-			if (insn.trailingBytes == 2U)
-				return _peripherals.readAddress<int16_t>(programCounter);
-			// Otherwise, extract a 32-bit displacement
-			return _peripherals.readAddress<int32_t>(programCounter);
-		}()
-	};
+	const auto displacement{readImmediateDisplacement(insn)};
 	// Now we have the displacement, calculate the post-instruction program counter, and push it to stack
 	auto &stackPointer{activeStackPointer()};
 	stackPointer -= 4;

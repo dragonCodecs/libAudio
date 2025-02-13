@@ -70,6 +70,8 @@ private:
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept;
 	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept;
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
+	[[nodiscard]] int32_t readImmediateDisplacement(const decodedOperation_t &insn) noexcept;
+
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
 
