@@ -2664,6 +2664,57 @@ int32_t motorola68000_t::readImmediateDisplacement(const decodedOperation_t &ins
 	return _peripherals.readAddress<int32_t>(programCounter);
 }
 
+bool motorola68000_t::checkCondition(const uint8_t condition) const noexcept
+{
+	switch (condition)
+	{
+		case 0x0U: // T
+			return true;
+		case 0x1U: // F
+			return false;
+		case 0x2U: // HI
+			return status.excludes(m68kStatusBits_t::carry, m68kStatusBits_t::zero);
+		case 0x3U: // LS
+			return status.includes(m68kStatusBits_t::carry) || status.includes(m68kStatusBits_t::zero);
+		case 0x4U: // CC
+			return status.excludes(m68kStatusBits_t::carry);
+		case 0x5U: // CS
+			return status.includes(m68kStatusBits_t::carry);
+		case 0x6U: // NE
+			return status.excludes(m68kStatusBits_t::zero);
+		case 0x7U: // EQ
+			return status.includes(m68kStatusBits_t::zero);
+		case 0x8U: // VC
+			return status.excludes(m68kStatusBits_t::overflow);
+		case 0x9U: // VS
+			return status.includes(m68kStatusBits_t::overflow);
+		case 0xaU: // PL
+			return status.excludes(m68kStatusBits_t::negative);
+		case 0xbU: // MI
+			return status.includes(m68kStatusBits_t::negative);
+		case 0xcU: // GE
+			return
+				status.includes(m68kStatusBits_t::negative, m68kStatusBits_t::overflow) ||
+				status.excludes(m68kStatusBits_t::negative, m68kStatusBits_t::overflow);
+		case 0xdU: // LT
+			return
+				(status.includes(m68kStatusBits_t::negative) && status.excludes(m68kStatusBits_t::overflow)) ||
+				(status.excludes(m68kStatusBits_t::negative) && status.includes(m68kStatusBits_t::overflow));
+		case 0xeU: // GT
+			return
+				(status.includes(m68kStatusBits_t::negative, m68kStatusBits_t::overflow) ||
+				status.excludes(m68kStatusBits_t::negative, m68kStatusBits_t::overflow)) &&
+				status.excludes(m68kStatusBits_t::zero);
+		case 0xfU: // LE
+			return
+				status.includes(m68kStatusBits_t::zero) ||
+				(status.includes(m68kStatusBits_t::negative) && status.excludes(m68kStatusBits_t::overflow)) ||
+				(status.excludes(m68kStatusBits_t::negative) && status.includes(m68kStatusBits_t::overflow));
+	}
+	// Impossible, but just in case
+	return false;
+}
+
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
 {
 	// Extract the displacement for this instruction
