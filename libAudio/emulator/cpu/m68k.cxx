@@ -2384,6 +2384,46 @@ stepResult_t motorola68000_t::step() noexcept
 	return {false, false, 34U};
 }
 
+int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
+{
+	// Get the index value that will be used
+	const auto index
+	{
+		[&](const bool needsExtending) -> int32_t
+		{
+			// Extract out the register value that will be used to construct this index
+			const auto value
+			{
+				[&]()
+				{
+					// Determine data or address, then extract that register's value
+					if (extension & 0x8000U)
+						return a[(extension & 0x7000U) >> 12U];
+					return d[(extension & 0x7000U) >> 12U];
+				}()
+			};
+			// Fix up anything that we need to fix up
+			if (needsExtending)
+				return static_cast<int16_t>(value);
+			return static_cast<int32_t>(value);
+		}((extension & 0x0800U) == 0U)
+	};
+	// Extract what scaling it needs, and dispatch
+	switch (extension & 0x0600U)
+	{
+		case 0x0000U: // * 1
+			return index;
+		case 0x0200U: // * 2
+			return index * 2U;
+		case 0x0400U: // * 4
+			return index * 4U;
+		case 0x0600U: // * 8
+			return index * 8;
+	}
+	// We can't actually get here.. but just incase
+	return INT16_MAX;
+}
+
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
 {
 	const auto displacement

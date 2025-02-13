@@ -64,6 +64,7 @@ private:
 	uint32_t fpInstructionAddress;
 
 	// Instruction dispatch/execution functions
+	[[nodiscard]] int16_t readIndex(uint16_t extension) const noexcept;
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
 
 public:
