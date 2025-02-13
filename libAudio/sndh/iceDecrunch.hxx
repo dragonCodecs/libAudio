@@ -83,10 +83,10 @@ public:
 	template<typename T, size_t N> bool read(std::array<T, N> &value) noexcept
 		{ return read(value.data(), sizeof(T) * N); }
 
-	template<typename T> bool read(const fixedVector_t<T> &value) const noexcept
+	template<typename T> bool read(const fixedVector_t<T> &value) noexcept
 		{ return read(value.data(), sizeof(T) * value.size()); }
 
-	template<typename T, size_t N> bool read(substrate::span<T, N> &value) const noexcept
+	template<typename T, size_t N> bool read(substrate::span<T, N> value) noexcept
 		{ return read(value.data(), value.size_bytes()); }
 
 	template<size_t length, typename T, size_t N> bool read(std::array<T, N> &value) noexcept
