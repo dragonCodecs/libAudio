@@ -24,7 +24,7 @@ private:
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t>{}
 	{
-		//addressMap[{0x000000, 0x080000}] = std::make_unique<ram_t<uint32_t, 512_KiB>>();
+		addressMap[{0x000000U, 0x800000U}] = std::make_unique<ram_t<uint32_t, 8_MiB>>();
 	}
 
 	void registerTests() final
