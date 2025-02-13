@@ -2383,6 +2383,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBSR(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
+		case instruction_t::movem:
+			return dispatchMOVEM(instruction);
 	}
 
 	return {false, false, 34U};
@@ -2671,4 +2673,84 @@ stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexce
 	// and then write it to the indicated address register from the instruction
 	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.ry, 0U));
 	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noexcept
+{
+	// Extract the list of registers to move
+	const auto registerList{_peripherals.readAddress<uint16_t>(programCounter)};
+	programCounter += 2U;
+	// Figure out where to move the registers to
+	auto address{computeEffectiveAddress(insn.mode, insn.ry, insn.operationSize)};
+	// Determine whether we're in postincrement mode or not
+	const auto isPostincrement{insn.mode == 3U};
+	// Determine whether we're in predecrement mode or not
+	const auto isPredecrement{insn.mode == 4U};
+	// Keep a tally of the number of registers transferred
+	size_t copied{0U};
+	// Loop through all 16 possible register slots
+	for (const auto idx : substrate::indexSequence_t{16U})
+	{
+		// Check if this register should be moved or not
+		if ((registerList & (1U << idx)) == 0U)
+			break; // Skip this one then
+
+		// Determine which register to move
+		auto &reg
+		{
+			[&]() -> uint32_t &
+			{
+				// If it's predecrement, the whole lot is backwards - a7-a0, then d7-d0
+				if (isPredecrement)
+				{
+					if (idx < 8U)
+						return a[7U - idx];
+					else
+						return d[7U - (idx - 8U)];
+				}
+				// Otherwise, if it's any other mode, it's d0-d7, then a0-a7
+				else
+				{
+					if (idx < 8U)
+						return d[idx];
+					else
+						return a[idx - 8U];
+				}
+			}()
+		};
+
+		// Determine transfer direction (1 = mem -> reg, 0 = reg -> mem)
+		if (insn.opMode)
+		{
+			const auto value
+			{
+				[&]() -> int32_t
+				{
+					if (insn.operationSize == 2U)
+						return _peripherals.readAddress<int16_t>(address);
+					return _peripherals.readAddress<int32_t>(address);
+				}()
+			};
+			reg = static_cast<uint32_t>(value);
+		}
+		else
+		{
+			if (insn.operationSize == 2U)
+				_peripherals.writeAddress(address, uint16_t(reg));
+			else
+				_peripherals.writeAddress(address, reg);
+		}
+
+		// Now update the address for the next transfer
+		if ((isPredecrement || isPostincrement) && idx != 15U)
+			address = computeEffectiveAddress(insn.mode, insn.ry, insn.operationSize);
+		else
+			address += insn.operationSize;
+
+		++copied;
+	}
+
+	// Get done and mark out how many cycles this took
+	// XXX: Need to take into account the EA mode fully.. between 12 and 20 cycles extra depending on mode.
+	return {true, false, 4 * copied};
 }
