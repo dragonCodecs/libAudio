@@ -2426,7 +2426,29 @@ int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
 	return INT16_MAX;
 }
 
-int32_t motorola68000_t::computeIndirectDisplacement() noexcept
+int32_t motorola68000_t::readExtraDisplacement(uint8_t displacementSize) noexcept
+{
+	switch (displacementSize)
+	{
+		case 2U: // s16 displacement follows
+		{
+			const auto result{_peripherals.readAddress<int16_t>(programCounter)};
+			programCounter += 2U;
+			return result;
+		}
+		case 3U: // s32 displacement follows
+		{
+			const auto result{_peripherals.readAddress<int32_t>(programCounter)};
+			programCounter += 4U;
+			return result;
+		}
+		default:
+			// No displacement follows (or we got the reserved size)
+			return 0U;
+	}
+}
+
+uint32_t motorola68000_t::computeIndirect(const uint32_t baseAddress) noexcept
 {
 	const auto extra{_peripherals.readAddress<uint16_t>(programCounter)};
 	programCounter += 2U;
@@ -2440,40 +2462,89 @@ int32_t motorola68000_t::computeIndirectDisplacement() noexcept
 			{
 				// If it's suppressed, make it 0
 				if (extra & 0x0080U)
-					return 0U;
-				// Otherwise, determine how many bytes follow
-				switch (extra & 0x0030U)
-				{
-					case 0x0020U: // s16 displacement follows
-					{
-						const auto result{_peripherals.readAddress<int16_t>(programCounter)};
-						programCounter += 2U;
-						return result;
-					}
-					case 0x003U: // s32 displacement follows
-					{
-						const auto result{_peripherals.readAddress<int32_t>(programCounter)};
-						programCounter += 4U;
-						return result;
-					}
-					default:
-						// No displacement follows (or we got the reserved size)
-						return 0U;
-				}
+					return 0;
+				// Otherwise, determine how many bytes follow and read them
+				return readExtraDisplacement((extra & 0x0030U) >> 4U);
 			}()
 		};
 		// Now the index, which can also be suppressed
 		const auto index{(extra & 0x0040U) ? 0 : readIndex(extra)};
+		// Extract the indirection action selection
+		const auto action{uint8_t(extra & 0x0007U)};
+		const auto outerDisplacement
+		{
+			[&]() -> int32_t
+			{
+				// If it is 4, for any reason, that is reserved and should be ignored
+				if (action == 4U)
+					return 0;
 
-		// TODO: deal with outer displacement..????
+				// If the index is being suppressed, it changes what happens next
+				if (extra & 0x0040U)
+				{
+					// If the action is above 4, it is reserved in this mode
+					if (action > 4U)
+						return 0;
+					return readExtraDisplacement(action);
+				}
+				// All combinations are allowed, get the displacement back
+				return readExtraDisplacement(action & 0x03U);
+			}()
+		};
 
-		return baseDisplacement + index;
+		// If indexing is being suppressed
+		if (extra & 0x0040U)
+		{
+			// Determine what outer displacement needs applying (treat reserved modes as no memory indirection)
+			switch (action)
+			{
+				// Memory Indirect with Outer Displacement
+				case 1U:
+				case 2U:
+				case 3U:
+				{
+					// Start by pulling back the indirect memory address to use
+					const auto indirectAddress{_peripherals.readAddress<uint32_t>(baseAddress + baseDisplacement)};
+					// Now compute the final address
+					return indirectAddress + outerDisplacement;
+				}
+			}
+		}
+		else
+		{
+			// Determine what outer displacement needs applying (treat reserved modes as no memory indirection)
+			switch (action)
+			{
+				// Indirect Pre-Indexed with Outer Displacement
+				case 1U:
+				case 2U:
+				case 3U:
+				{
+					// Start by pulling back the indexed indirect memory address to use
+					const auto indirectAddress{_peripherals.readAddress<uint32_t>(baseAddress + baseDisplacement + index)};
+					// Now build the final address
+					return indirectAddress + outerDisplacement;
+				}
+				// Indirect Post-Indexed with Outer Displacement
+				case 5U:
+				case 6U:
+				case 7U:
+				{
+					// Start by pulling back the indirect memory address to use
+					const auto indirectAddress{_peripherals.readAddress<uint32_t>(baseAddress + baseDisplacement)};
+					// Now build the indexed final address
+					return indirectAddress + index + outerDisplacement;
+				}
+			}
+		}
+
+		return baseAddress + baseDisplacement + index;
 	}
 	else
 	{
 		const auto index{readIndex(extra)};
 		const auto displacement{int8_t(extra)};
-		return displacement + index;
+		return baseAddress + displacement + index;
 	}
 }
 
@@ -2501,8 +2572,10 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noe
 			programCounter += 2U;
 			return a[reg] + displacement;
 		}
-		case 6U: // (d8,An,Xn.SIZE*SCALE) and (bd,An,Xn.SIZE*SCALE)
-			return a[reg] + computeIndirectDisplacement();
+		case 6U:
+			// (d8,An,Xn.SIZE*SCALE), (bd,An,Xn.SIZE*SCALE),
+			// ([bd,An],Xn.SIZE*SCALE,od), and ([bd,An,Xn.SIZE*SCALE].od)
+			return computeIndirect(a[reg]);
 		case 7U: // PC-rel and absolute modes
 			switch (reg)
 			{
@@ -2524,12 +2597,10 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noe
 					programCounter += 2U;
 					return ptr;
 				}
-				case 3U: // (d8,PC,Xn.SIZE*SCALE), and (bd,PC,Xn.SIZE*SCALE)
-				{
-					// Grab the programCounter value first so we use the correct value of it for the base address
-					const auto baseAddress{programCounter};
-					return baseAddress + computeIndirectDisplacement();
-				}
+				case 3U:
+					// (d8,PC,Xn.SIZE*SCALE), (bd,PC,Xn.SIZE*SCALE),
+					// ([bd,PC],Xn.SIZE*SCALE,od), and ([bd,PC,Xn.SIZE*SCALE],od)
+					return computeIndirect(programCounter);
 			}
 	}
 	// Shouldn't be able to get here, but just in case..
