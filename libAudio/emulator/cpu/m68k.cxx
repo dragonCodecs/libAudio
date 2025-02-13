@@ -2433,13 +2433,17 @@ uint32_t motorola68000_t::computeEffectiveAddress(uint8_t mode, uint8_t reg) noe
 		case 2U: // (An)
 			return a[reg];
 		case 3U: // (An)+
+		{
 			const auto ptr{a[reg] + 4U};
 			a[reg] = ptr;
 			return ptr;
+		}
 		case 4U: // -(An)
+		{
 			const auto ptr{a[reg] - 4U};
 			a[reg] = ptr;
 			return ptr;
+		}
 		case 5U: // (d16,An)
 		{
 			const auto displacement{_peripherals.readAddress<int16_t>(programCounter)};
