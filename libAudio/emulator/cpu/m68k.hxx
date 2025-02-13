@@ -34,7 +34,7 @@ struct motorola68000_t
 {
 private:
 	memoryMap_t<uint32_t> &_peripherals;
-	uint64_t clockFrequency;
+	uint32_t clockFrequency;
 
 	// There are 8 data registers, 7 address registers, 3 stack pointers,
 	// a program counter and a status register in a m68k
@@ -57,7 +57,7 @@ private:
 	uint32_t fpInstructionAddress;
 
 public:
-	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint64_t clockFreq) noexcept;
+	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint32_t clockFreq) noexcept;
 
 	// Not actually part of the public interface, just necessary to be exposed for testing
 	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;

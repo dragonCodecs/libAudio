@@ -21,7 +21,7 @@ constexpr static size_t eaModeShift{3U};
 constexpr static uint16_t vectorMask{0x0007U};
 constexpr static uint16_t displacementMask{0x00ffU};
 
-motorola68000_t::motorola68000_t(memoryMap_t<uint32_t> &peripherals, const uint64_t clockFreq) noexcept :
+motorola68000_t::motorola68000_t(memoryMap_t<uint32_t> &peripherals, const uint32_t clockFreq) noexcept :
 	_peripherals{peripherals}, clockFrequency{clockFreq}
 {
 }
