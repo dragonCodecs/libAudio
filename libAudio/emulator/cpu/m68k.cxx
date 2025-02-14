@@ -2393,6 +2393,8 @@ stepResult_t motorola68000_t::step() noexcept
 	// Now we have an instruction to run, try to dispatch it
 	switch (instruction.operation)
 	{
+		case instruction_t::adda:
+			return dispatchADDA(instruction);
 		case instruction_t::bcc:
 			return dispatchBcc(instruction);
 		case instruction_t::bra:
@@ -2812,6 +2814,24 @@ bool motorola68000_t::checkCondition(const uint8_t condition) const noexcept
 	}
 	// Impossible, but just in case
 	return false;
+}
+
+stepResult_t motorola68000_t::dispatchADDA(const decodedOperation_t &insn) noexcept
+{
+	// Extract the value to be added to the target address register
+	const auto value
+	{
+		[&]() -> uint32_t
+		{
+			if (insn.operationSize == 2U)
+				return readEffectiveAddress<uint16_t>(insn.mode, insn.ry);
+			return readEffectiveAddress<uint32_t>(insn.mode, insn.ry);
+		}()
+	};
+	// Now update the target address register
+	addrRegister(insn.rx) += value;
+	// Figure out how long this operation took and finish up
+	return {true, false, insn.operationSize == 2U ? 8U : 6U};
 }
 
 stepResult_t motorola68000_t::dispatchBcc(const decodedOperation_t &insn) noexcept
