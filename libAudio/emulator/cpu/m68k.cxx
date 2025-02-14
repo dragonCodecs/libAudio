@@ -2407,6 +2407,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVE(instruction);
 		case instruction_t::movem:
 			return dispatchMOVEM(instruction);
+		case instruction_t::moveq:
+			return dispatchMOVEQ(instruction);
 		case instruction_t::scc:
 			return dispatchScc(instruction);
 		case instruction_t::tst:
@@ -3096,6 +3098,29 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 	// Get done and mark out how many cycles this took
 	// XXX: Need to take into account the EA mode fully.. between 12 and 20 cycles extra depending on mode.
 	return {true, false, 4U * copied};
+}
+
+stepResult_t motorola68000_t::dispatchMOVEQ(const decodedOperation_t &insn) noexcept
+{
+	// Make the value signed so when we copy it to the target register, it sign-extends
+	// and so that flags generation works propeprly
+	const int32_t value{static_cast<int8_t>(insn.ry)};
+	// Clear flags that are always cleared
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Check if the value is zero
+	if (value == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if the value is negative
+	if (value < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+
+	// Move the value to the target data register and return
+	dataRegister(insn.rx) = static_cast<uint32_t>(value);
+	return {true, false, 4U};
 }
 
 stepResult_t motorola68000_t::dispatchScc(const decodedOperation_t &insn) noexcept
