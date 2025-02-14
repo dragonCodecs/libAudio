@@ -2703,8 +2703,29 @@ uint32_t motorola68000_t::computeEffectiveAddress(const uint8_t mode, const uint
 	return UINT32_MAX;
 }
 
-template<typename T> T motorola68000_t::readEffectiveAddress(const uint8_t mode, const uint8_t reg) noexcept
+// Template helper that allows us to pull out the different underlying storage types for a given result type
+template<typename T> struct underlyingStorageFor_t;
+
+// u32 result type underlying storage
+template<> struct underlyingStorageFor_t<uint32_t>
 {
+	using i8 = uint8_t;
+	using i16 = uint16_t;
+	using i32 = uint32_t;
+};
+
+// s32 result type underlying storage
+template<> struct underlyingStorageFor_t<int32_t>
+{
+	using i8 = int8_t;
+	using i16 = int16_t;
+	using i32 = int32_t;
+};
+
+template<typename T>
+	T motorola68000_t::readValue(const uint8_t mode, const uint8_t reg, const uint32_t address) noexcept
+{
+	// Dispatch the effective addressing mode used
 	switch (mode)
 	{
 		case 0U: // Dn
@@ -2712,19 +2733,56 @@ template<typename T> T motorola68000_t::readEffectiveAddress(const uint8_t mode,
 		case 1U: // An
 			return static_cast<T>(addrRegister(reg));
 		default:
-			return _peripherals.readAddress<T>(computeEffectiveAddress(mode, reg, sizeof(T)));
+		{
+			if (mode == 7U && reg == 4U) // #<xxx> form so just return the value
+				return static_cast<T>(address);
+			// Everything else needs us to actually access memory
+			return _peripherals.readAddress<T>(address);
+		}
 	}
 }
 
-template int8_t motorola68000_t::readEffectiveAddress<int8_t>(uint8_t mode, uint8_t reg) noexcept;
-template uint8_t motorola68000_t::readEffectiveAddress<uint8_t>(uint8_t mode, uint8_t reg) noexcept;
-template int16_t motorola68000_t::readEffectiveAddress<int16_t>(uint8_t mode, uint8_t reg) noexcept;
-template uint16_t motorola68000_t::readEffectiveAddress<uint16_t>(uint8_t mode, uint8_t reg) noexcept;
-template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg) noexcept;
-template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg) noexcept;
+template int8_t motorola68000_t::readValue<int8_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+template uint8_t motorola68000_t::readValue<uint8_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+template int16_t motorola68000_t::readValue<int16_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+template uint16_t motorola68000_t::readValue<uint16_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+template int32_t motorola68000_t::readValue<int32_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+template uint32_t motorola68000_t::readValue<uint32_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+
+template<typename T> T motorola68000_t::readValue(
+	const uint8_t mode, const uint8_t reg, const uint32_t address, const size_t width) noexcept
+{
+	// Get the underlying storage types for our result type
+	using underlyingStorage_t = underlyingStorageFor_t<T>;
+	// Dispatch the access width requested
+	switch (width)
+	{
+		case 1U:
+			return readValue<typename underlyingStorage_t::i8>(mode, reg, address);
+		case 2U:
+			return readValue<typename underlyingStorage_t::i16>(mode, reg, address);
+		case 4U:
+			return readValue<typename underlyingStorage_t::i32>(mode, reg, address);
+	}
+	// Should be impossible to get here.. but just in case
+	return UINT32_MAX;
+}
+
+template uint32_t motorola68000_t::readValue<uint32_t>(uint8_t mode, uint8_t reg, uint32_t address, size_t width) noexcept;
+template int32_t motorola68000_t::readValue<int32_t>(uint8_t mode, uint8_t reg, uint32_t address, size_t width) noexcept;
 
 template<typename T>
-	void motorola68000_t::writeEffectiveAddress(const uint8_t mode, const uint8_t reg, const T value) noexcept
+	T motorola68000_t::readEffectiveAddress(const uint8_t mode, const uint8_t reg, const size_t width) noexcept
+{
+	// Compute the effective address to use and read
+	return readValue<T>(mode, reg, computeEffectiveAddress(mode, reg, width), width);
+}
+
+template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg, size_t width) noexcept;
+template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg, size_t width) noexcept;
+
+template<typename T>
+	void motorola68000_t::writeValue(const uint8_t mode, const uint8_t reg, const uint32_t address, const T value) noexcept
 {
 	switch (mode)
 	{
@@ -2735,17 +2793,52 @@ template<typename T>
 			addrRegister(reg) = value;
 			break;
 		default:
-			_peripherals.writeAddress<T>(computeEffectiveAddress(mode, reg, sizeof(T)), value);
+			_peripherals.writeAddress<T>(address, value);
 			break;
 	}
 }
 
-template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int8_t value) noexcept;
-template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint8_t value) noexcept;
-template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int16_t value) noexcept;
-template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint16_t value) noexcept;
-template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int32_t value) noexcept;
-template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint32_t value) noexcept;
+template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, int8_t value) noexcept;
+template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, uint8_t value) noexcept;
+template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, int16_t value) noexcept;
+template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, uint16_t value) noexcept;
+template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, int32_t value) noexcept;
+template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, uint32_t value) noexcept;
+
+template<typename T> void motorola68000_t::writeValue(
+	const uint8_t mode, const uint8_t reg, const uint32_t address, const size_t width, T value) noexcept
+{
+	// Get the underlying storage types for our result type
+	using underlyingStorage_t = underlyingStorageFor_t<T>;
+	// Dispatch the access width requested
+	switch (width)
+	{
+		case 1U:
+			writeValue(mode, reg, address, static_cast<typename underlyingStorage_t::i8>(value));
+			break;
+		case 2U:
+			writeValue(mode, reg, address, static_cast<typename underlyingStorage_t::i16>(value));
+			break;
+		case 4U:
+			writeValue(mode, reg, address, static_cast<typename underlyingStorage_t::i32>(value));
+			break;
+	}
+}
+
+template void
+	motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, size_t width, uint32_t value) noexcept;
+template void
+	motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, size_t width, int32_t value) noexcept;
+
+template<typename T> void motorola68000_t::writeEffectiveAddress(
+	const uint8_t mode, const uint8_t reg, const size_t width, const T value) noexcept
+{
+	// Compute the effective address to use and write
+	writeValue(mode, reg, computeEffectiveAddress(mode, reg, width), width, value);
+}
+
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, size_t width, uint32_t value) noexcept;
+template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, size_t width, int32_t value) noexcept;
 
 uint32_t &motorola68000_t::activeStackPointer() noexcept
 {

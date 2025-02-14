@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <array>
+#include <type_traits>
 #include <substrate/flags>
 #include "../memoryMap.hxx"
 #include "m68kInstruction.hxx"
@@ -68,8 +69,25 @@ private:
 	[[nodiscard]] int32_t readExtraDisplacement(uint8_t displacementSize) noexcept;
 	[[nodiscard]] uint32_t computeIndirect(uint32_t baseAddress) noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept;
-	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept;
-	template<typename T> void writeEffectiveAddress(uint8_t mode, uint8_t reg, T value) noexcept;
+	template<typename T> [[nodiscard]] T readValue(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+	template<typename T> [[nodiscard]] T readValue(uint8_t mode, uint8_t reg, uint32_t address, size_t width) noexcept;
+	template<typename T> void writeValue(uint8_t mode, uint8_t reg, uint32_t address, T value) noexcept;
+	template<typename T> void writeValue(uint8_t mode, uint8_t reg, uint32_t address, size_t width, T value) noexcept;
+	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg, size_t width) noexcept;
+	template<typename T> void writeEffectiveAddress(uint8_t mode, uint8_t reg, size_t width, T value) noexcept;
+
+	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept
+	{
+		using effective_t = std::conditional_t<std::is_unsigned_v<T>, uint32_t, int32_t>;
+		return readEffectiveAddress<effective_t>(mode, reg, sizeof(T));
+	}
+
+	template<typename T> void writeEffectiveAddress(uint8_t mode, uint8_t reg, T value) noexcept
+	{
+		using effective_t = std::conditional_t<std::is_unsigned_v<T>, uint32_t, int32_t>;
+		writeEffectiveAddress(mode, reg, sizeof(T), effective_t{value});
+	}
+
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
 	[[nodiscard]] int32_t readImmediateDisplacement(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] bool checkCondition(uint8_t condition) const noexcept;
@@ -106,18 +124,38 @@ public:
 	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;
 };
 
-extern template int8_t motorola68000_t::readEffectiveAddress<int8_t>(uint8_t mode, uint8_t reg) noexcept;
-extern template uint8_t motorola68000_t::readEffectiveAddress<uint8_t>(uint8_t mode, uint8_t reg) noexcept;
-extern template int16_t motorola68000_t::readEffectiveAddress<int16_t>(uint8_t mode, uint8_t reg) noexcept;
-extern template uint16_t motorola68000_t::readEffectiveAddress<uint16_t>(uint8_t mode, uint8_t reg) noexcept;
-extern template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg) noexcept;
-extern template uint32_t motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg) noexcept;
+extern template uint8_t motorola68000_t::readValue<uint8_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+extern template int8_t motorola68000_t::readValue<int8_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+extern template uint16_t motorola68000_t::readValue<uint16_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+extern template int16_t motorola68000_t::readValue<int16_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+extern template uint32_t motorola68000_t::readValue<uint32_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
+extern template int32_t motorola68000_t::readValue<int32_t>(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
 
-extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int8_t value) noexcept;
-extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint8_t value) noexcept;
-extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int16_t value) noexcept;
-extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint16_t value) noexcept;
-extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, int32_t value) noexcept;
-extern template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, uint32_t value) noexcept;
+extern template uint32_t
+	motorola68000_t::readValue<uint32_t>(uint8_t mode, uint8_t reg, uint32_t address, size_t width) noexcept;
+extern template int32_t
+	motorola68000_t::readValue<int32_t>(uint8_t mode, uint8_t reg, uint32_t address, size_t width) noexcept;
+
+extern template uint32_t
+	motorola68000_t::readEffectiveAddress<uint32_t>(uint8_t mode, uint8_t reg, size_t width) noexcept;
+extern template int32_t
+	motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, uint8_t reg, size_t width) noexcept;
+
+extern template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, int8_t value) noexcept;
+extern template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, uint8_t value) noexcept;
+extern template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, int16_t value) noexcept;
+extern template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, uint16_t value) noexcept;
+extern template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, int32_t value) noexcept;
+extern template void motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, uint32_t value) noexcept;
+
+extern template void
+	motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, size_t width, uint32_t value) noexcept;
+extern template void
+	motorola68000_t::writeValue(uint8_t mode, uint8_t reg, uint32_t address, size_t width, int32_t value) noexcept;
+
+extern template void
+	motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, size_t width, uint32_t value) noexcept;
+extern template void
+	motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, size_t width, int32_t value) noexcept;
 
 #endif /*EMULATOR_CPU_M68K_HXX*/
