@@ -3250,18 +3250,10 @@ stepResult_t motorola68000_t::dispatchScc(const decodedOperation_t &insn) noexce
 
 stepResult_t motorola68000_t::dispatchTST(const decodedOperation_t &insn) noexcept
 {
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
 	// Get the value to test (sign-extended to make negative testing easier)
-	const auto value
-	{
-		[&]() -> int32_t
-		{
-			if (insn.operationSize == 0U)
-				return readEffectiveAddress<int8_t>(insn.mode, insn.ry);
-			if (insn.operationSize == 1U)
-				return readEffectiveAddress<int16_t>(insn.mode, insn.ry);
-			return readEffectiveAddress<int32_t>(insn.mode, insn.ry);
-		}()
-	};
+	const auto value{readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize)};
 	// Clear flags that are always cleared
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 	// Check if the value is zero
