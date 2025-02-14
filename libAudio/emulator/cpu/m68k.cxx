@@ -2672,6 +2672,27 @@ uint32_t motorola68000_t::computeEffectiveAddress(const uint8_t mode, const uint
 					// (d8,PC,Xn.SIZE*SCALE), (bd,PC,Xn.SIZE*SCALE),
 					// ([bd,PC],Xn.SIZE*SCALE,od), and ([bd,PC,Xn.SIZE*SCALE],od)
 					return computeIndirect(programCounter);
+				case 4U: // #<xxx>
+					// u8 and u16 operation is trivial enough
+					if (operandSize == 1U || operandSize == 2U)
+					{
+						// Read the u16 that follows the instructioon
+						const auto value{_peripherals.readAddress<uint16_t>(programCounter)};
+						programCounter += 2U;
+						// Truncate if only a byte is needed
+						if (operandSize == 1U)
+							return uint8_t(value);
+						return value;
+					}
+					// u32 is even easier, just read the u32 and return it
+					if (operandSize == 4U)
+					{
+						const auto value{_peripherals.readAddress<uint32_t>(programCounter)};
+						programCounter += 4U;
+						return value;
+					}
+					// TODO: Deal with float modes
+					break;
 			}
 	}
 	// Shouldn't be able to get here, but just in case..
