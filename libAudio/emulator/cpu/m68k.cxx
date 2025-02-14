@@ -2914,15 +2914,7 @@ bool motorola68000_t::checkCondition(const uint8_t condition) const noexcept
 stepResult_t motorola68000_t::dispatchADDA(const decodedOperation_t &insn) noexcept
 {
 	// Extract the value to be added to the target address register
-	const auto value
-	{
-		[&]() -> uint32_t
-		{
-			if (insn.operationSize == 2U)
-				return readEffectiveAddress<uint16_t>(insn.mode, insn.ry);
-			return readEffectiveAddress<uint32_t>(insn.mode, insn.ry);
-		}()
-	};
+	const auto value{readEffectiveAddress<uint32_t>(insn.mode, insn.ry, insn.operationSize)};
 	// Now update the target address register
 	addrRegister(insn.rx) += value;
 	// Figure out how long this operation took and finish up
@@ -2999,21 +2991,26 @@ stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexc
 			return dispatchMOVESpecialUSP(insn);
 	}
 
+	// Convert the operation size to a size in bytes
+	const auto operationSize
+	{
+		[&]() -> size_t
+		{
+			if (insn.operationSize == 1U)
+				return 1U;
+			if (insn.operationSize == 3U)
+				return 2U;
+			if (insn.operationSize == 2U)
+				return 4U;
+			return 0U;
+		}()
+	};
+
 	// Extract out the mode parts of the effective addresses
 	const auto srcEAMode{insn.mode & 0x03U};
 	const auto dstEAMode{(insn.mode & 0x38U) >> 3U};
 	// Read the data to be moved, allowing it to sign extend to make resetting the flags easier
-	const auto value
-	{
-		[&]() -> int32_t
-		{
-			if (insn.operationSize == 1U)
-				return readEffectiveAddress<int8_t>(srcEAMode, insn.ry);
-			if (insn.operationSize == 3U)
-				return readEffectiveAddress<int16_t>(srcEAMode, insn.ry);
-			return readEffectiveAddress<int32_t>(srcEAMode, insn.ry);
-		}()
-	};
+	const auto value{readEffectiveAddress<int32_t>(srcEAMode, insn.ry, operationSize)};
 	// Clear flags that are always cleared
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 	// Check if the value is zero
@@ -3028,12 +3025,7 @@ stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexc
 		status.clear(m68kStatusBits_t::negative);
 
 	// Now put the value into the destination location
-	if (insn.operationSize == 1U)
-		writeEffectiveAddress(dstEAMode, insn.rx, int8_t(value));
-	if (insn.operationSize == 3U)
-		writeEffectiveAddress(dstEAMode, insn.rx, int16_t(value));
-	if (insn.operationSize == 2U)
-		writeEffectiveAddress(dstEAMode, insn.rx, int32_t(value));
+	writeEffectiveAddress(dstEAMode, insn.rx, operationSize, value);
 
 	// Get done and figure out how long the execution took - NB, this is massively dependant
 	// on the operating modes, forming a large matrix
