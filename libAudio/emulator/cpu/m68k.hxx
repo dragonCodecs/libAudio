@@ -81,6 +81,10 @@ private:
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchMOVE(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchMOVESpecialCCR(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchMOVESpecialSR(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchMOVESpecialUSP(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVEM(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchScc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchTST(const decodedOperation_t &insn) noexcept;

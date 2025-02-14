@@ -2396,6 +2396,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBSR(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
+		case instruction_t::move:
+			return dispatchMOVE(instruction);
 		case instruction_t::movem:
 			return dispatchMOVEM(instruction);
 		case instruction_t::scc:
@@ -2798,6 +2800,133 @@ stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexce
 	// and then write it to the indicated address register from the instruction
 	writeAddrRegister(insn.rx, computeEffectiveAddress(insn.mode, insn.ry, 0U));
 	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexcept
+{
+	// Detect and handle the special MOVE instructions (USP, CCR, and SR)
+	switch (std::max(insn.rx, insn.ry))
+	{
+		case 8U:
+			return dispatchMOVESpecialCCR(insn);
+		case 9U:
+			return dispatchMOVESpecialSR(insn);
+		case 10U:
+			return dispatchMOVESpecialUSP(insn);
+	}
+
+	// Extract out the mode parts of the effective addresses
+	const auto srcEAMode{insn.mode & 0x03U};
+	const auto dstEAMode{(insn.mode & 0x38U) >> 3U};
+	// Read the data to be moved, allowing it to sign extend to make resetting the flags easier
+	const auto value
+	{
+		[&]() -> int32_t
+		{
+			if (insn.operationSize == 1U)
+				return readEffectiveAddress<int8_t>(srcEAMode, insn.ry);
+			if (insn.operationSize == 3U)
+				return readEffectiveAddress<int16_t>(srcEAMode, insn.ry);
+			return readEffectiveAddress<int32_t>(srcEAMode, insn.ry);
+		}()
+	};
+	// Clear flags that are always cleared
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Check if the value is zero
+	if (value == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if the value is negative
+	if (value < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+
+	// Now put the value into the destination location
+	if (insn.operationSize == 1U)
+		writeEffectiveAddress(dstEAMode, insn.rx, int8_t(value));
+	if (insn.operationSize == 3U)
+		writeEffectiveAddress(dstEAMode, insn.rx, int16_t(value));
+	if (insn.operationSize == 2U)
+		writeEffectiveAddress(dstEAMode, insn.rx, int32_t(value));
+
+	// Get done and figure out how long the execution took - NB, this is massively dependant
+	// on the operating modes, forming a large matrix
+	return {true, false, 4U};
+}
+
+stepResult_t motorola68000_t::dispatchMOVESpecialCCR(const decodedOperation_t &insn) noexcept
+{
+	// Determine if this is a from (true) or to (false) move
+	const auto direction{insn.rx == 8U};
+	// Using that, dispatch the move
+	if (direction)
+	{
+		// Grab the CCR portion of the SR
+		const auto ccr{uint8_t(status.toRaw())};
+		// Write it to the target location, 0-extended
+		writeEffectiveAddress(insn.mode, insn.ry, uint16_t{ccr});
+		// Execution takes an unknown amount of time.. *sighs*
+		return {true, false, 0U};
+	}
+	else
+	{
+		// Grab the value from the target location and truncate to just the CCR byte
+		const auto ccr{uint8_t(readEffectiveAddress<uint16_t>(insn.mode, insn.rx))};
+		// Get back the status register value and patch
+		status.fromRaw((status.toRaw() & 0xff00U) | ccr);
+		// Execution takes a fixed amount of time thankfully
+		return {true, false, 12U};
+	}
+}
+
+stepResult_t motorola68000_t::dispatchMOVESpecialSR(const decodedOperation_t &insn) noexcept
+{
+	// Determine if this is a from (true) or to (false) move
+	const auto direction{insn.rx == 9U};
+	// Using that, dispatch the move
+	if (direction)
+	{
+		// Copy the SR to the target location
+		writeEffectiveAddress(insn.mode, insn.ry, status.toRaw());
+		// Execution time depends on where the register got moved to
+		return
+		{
+			true, false,
+			insn.ry == 0U ? 6U : 8U
+		};
+	}
+	else
+	{
+		// Check that we're in supervisor state, and if not, abort
+		if (status.excludes(m68kStatusBits_t::supervisor))
+			return {true, true, 0U};
+		// Grab the new SR value and stuff it into the register
+		status.fromRaw(readEffectiveAddress<uint16_t>(insn.mode, insn.rx));
+		// Execution takes a fixed amount of time thankfully
+		return {true, false, 12U};
+	}
+}
+
+stepResult_t motorola68000_t::dispatchMOVESpecialUSP(const decodedOperation_t &insn) noexcept
+{
+	// Check that we're in supervisor state, and if not, abort
+	if (status.excludes(m68kStatusBits_t::supervisor))
+		return {true, true, 0U};
+
+	// Determine if this is a from (true) or to (false) move
+	const auto direction{insn.rx == 10U};
+	// Using that, dispatch the move
+	if (direction)
+		// Copy the USP to the target location
+		writeEffectiveAddress(insn.mode, insn.ry, userStackPointer);
+	else
+		// Grab the new stack pointer value and stuff it into the register
+		userStackPointer = readEffectiveAddress<uint32_t>(insn.mode, insn.rx);
+
+	// Get done, execution takes a fixed amount of time thankfuly
+	return {true, false, 4U};
 }
 
 stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noexcept
