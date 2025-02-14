@@ -2393,6 +2393,8 @@ stepResult_t motorola68000_t::step() noexcept
 	// Now we have an instruction to run, try to dispatch it
 	switch (instruction.operation)
 	{
+		case instruction_t::add:
+			return dispatchADD(instruction);
 		case instruction_t::adda:
 			return dispatchADDA(instruction);
 		case instruction_t::bcc:
@@ -2921,6 +2923,77 @@ size_t motorola68000_t::unpackSize(const uint8_t sizeField) const noexcept
 		return 2U;
 	// u32 operation size
 	return 4U;
+}
+
+stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the data register value used as one of the operands (add is commutative, so don't care
+	// which order we grab them here.. unlike for subtract which matters)
+	const auto operandA
+	{
+		static_cast<uint32_t>([&]() -> int32_t
+		{
+			const auto value{dataRegister(insn.rx)};
+			if (operationSize == 1U)
+				return static_cast<int8_t>(value);
+			if (operationSize == 2U)
+				return static_cast<int16_t>(value);
+			return static_cast<int32_t>(value);
+		}())
+	};
+	// Grab the other operand using the computed address
+	const auto operandB{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress))};
+	// With the two values retreived, do the addition
+	const auto result{operandA + operandB};
+
+	// Recompute all the flags, starting with the negative bit
+	if (result & (1U << ((8U * operationSize) - 1)))
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Then the zero bit
+	if (result == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if overflow occurred during the calculation
+	if (result < operandA)
+		status.set(m68kStatusBits_t::overflow);
+	else
+		status.clear(m68kStatusBits_t::overflow);
+	// And finally check and see if the calculation would generate a carry
+	const auto carry
+	{
+		[&]() -> bool
+		{
+			if (operationSize == 4U)
+			{
+				// For the u32 version of this calculation, re-do it in 64-bit
+				const uint64_t result64{operandA + operandB};
+				// Then take the 32nd bit, this is carry
+				return result64 & (UINT64_C(1) << 32U);
+			}
+			// For everything else, we can use some bit shifty instead..
+			return result & (1U << (8U * operationSize));
+		}()
+	};
+	if (carry)
+		status.set(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+	else
+		status.clear(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+
+	// Store the result back
+	if (insn.opMode == 0U)
+		dataRegister(insn.rx) = result & ((1U << (8U * operationSize)) - 1U);
+	else
+		writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+
+	// Get done and figure out how many cycles that took
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchADDA(const decodedOperation_t &insn) noexcept
