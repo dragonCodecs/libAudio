@@ -98,6 +98,8 @@ public:
 	[[nodiscard]] uint32_t readProgramCounter() const noexcept;
 	[[nodiscard]] stepResult_t step() noexcept;
 
+	void displayRegs() const noexcept;
+
 	// Not actually part of the public interface, just necessary to be exposed for testing
 	decodedOperation_t decodeInstruction(uint16_t insn) const noexcept;
 };

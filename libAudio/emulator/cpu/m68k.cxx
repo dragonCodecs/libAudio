@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
+#include <string_view>
 #include <substrate/index_sequence>
 #include "m68k.hxx"
+#include "console.hxx"
+
+using namespace std::literals::string_view_literals;
+using namespace libAudio::console;
 
 constexpr static uint16_t insnMaskSimpleRegs{0xf1f8U};
 constexpr static uint16_t insnMaskEA{0xf1c0U};
@@ -2407,6 +2412,49 @@ stepResult_t motorola68000_t::step() noexcept
 	}
 
 	return {false, false, 34U};
+}
+
+void motorola68000_t::displayRegs() const noexcept
+{
+	// Start by displaying the d-regs
+	for (const auto idx : substrate::indexSequence_t{8U})
+	{
+		if ((idx & 3U) == 0U)
+			console.debug(nullptr);
+		console.output("  d"sv, idx, ": "sv, asHex_t<8U, '0'>{d[idx]}, nullptr);
+		if ((idx & 3U) == 3U)
+			console.output();
+		else
+			console.output(' ', nullptr);
+	}
+
+	// Now the a-regs, including the active the stack pointer
+	for (const auto idx : substrate::indexSequence_t{8U})
+	{
+		if ((idx & 3U) == 0U)
+			console.debug(nullptr);
+		if (idx != 7U)
+			console.output("  a"sv, idx, ": "sv, asHex_t<8U, '0'>{a[idx]}, nullptr);
+		else
+			console.output
+			(
+				"  a7: "sv,
+				asHex_t<8U, '0'>{status.includes(m68kStatusBits_t::supervisor) ? systemStackPointer : userStackPointer},
+				nullptr
+			);
+
+		if ((idx & 3U) == 3U)
+			console.output();
+		else
+			console.output(' ', nullptr);
+	}
+
+	// Now display the stack pointers, program counter, and finally the status register
+	console.debug
+	(
+		" ssp: "sv, asHex_t<8U, '0'>{systemStackPointer}, "  usp: "sv, asHex_t<8U, '0'>{userStackPointer},
+		"   pc: "sv, asHex_t<8U, '0'>{programCounter}, "   sr: "sv, asHex_t<4U, '0'>{status.toRaw()}
+	);
 }
 
 int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
