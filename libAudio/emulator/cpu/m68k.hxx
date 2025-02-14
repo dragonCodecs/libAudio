@@ -91,6 +91,7 @@ private:
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
 	[[nodiscard]] int32_t readImmediateDisplacement(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] bool checkCondition(uint8_t condition) const noexcept;
+	[[nodiscard]] size_t unpackSize(uint8_t sizeField) const noexcept;
 
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;

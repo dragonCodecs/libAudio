@@ -2911,6 +2911,18 @@ bool motorola68000_t::checkCondition(const uint8_t condition) const noexcept
 	return false;
 }
 
+size_t motorola68000_t::unpackSize(const uint8_t sizeField) const noexcept
+{
+	// u8 operation size
+	if (sizeField == 0U)
+		return 1U;
+	// u16 operation size
+	if (sizeField == 1U)
+		return 2U;
+	// u32 operation size
+	return 4U;
+}
+
 stepResult_t motorola68000_t::dispatchADDA(const decodedOperation_t &insn) noexcept
 {
 	// Extract the value to be added to the target address register
