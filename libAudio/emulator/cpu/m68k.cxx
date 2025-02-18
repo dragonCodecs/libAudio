@@ -2963,18 +2963,7 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
 	// Grab the data register value used as one of the operands (add is commutative, so don't care
 	// which order we grab them here.. unlike for subtract which matters)
-	const auto lhs
-	{
-		static_cast<uint32_t>([&]() -> int32_t
-		{
-			const auto value{dataRegister(insn.rx)};
-			if (operationSize == 1U)
-				return static_cast<int8_t>(value);
-			if (operationSize == 2U)
-				return static_cast<int16_t>(value);
-			return static_cast<int32_t>(value);
-		}())
-	};
+	const auto lhs{static_cast<uint32_t>(readDataRegisterSigned(insn.rx, operationSize))};
 	// Grab the other operand using the computed address
 	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress))};
 	// With the two values retreived, do the addition
@@ -3027,7 +3016,7 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 
 	// Store the result back
 	if (insn.opMode == 0U)
-		dataRegister(insn.rx) = result & ((1U << (8U * operationSize)) - 1U);
+		writeDataRegisterSized(insn.rx, operationSize, result);
 	else
 		writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
 
@@ -3099,18 +3088,7 @@ stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexce
 	// Figure out the operation width
 	const auto operationSize{unpackSize(insn.operationSize)};
 	// Grab the data register to be used on the LHS of the subtraction
-	const auto lhs
-	{
-		static_cast<uint32_t>([&]() -> int32_t
-		{
-			const auto value{dataRegister(insn.rx)};
-			if (operationSize == 1U)
-				return static_cast<int8_t>(value);
-			if (operationSize == 2U)
-				return static_cast<int16_t>(value);
-			return static_cast<int32_t>(value);
-		}())
-	};
+	const auto lhs{static_cast<uint32_t>(readDataRegisterSigned(insn.rx, operationSize))};
 	// Grab the data to be used on the RHS of the subtraction from the EA
 	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
 	// Do the subtraction unsigned so we don't UB on overflow
