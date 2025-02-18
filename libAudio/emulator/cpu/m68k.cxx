@@ -2415,6 +2415,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVEQ(instruction);
 		case instruction_t::scc:
 			return dispatchScc(instruction);
+		case instruction_t::sub:
+			return dispatchSUB(instruction);
 		case instruction_t::tst:
 			return dispatchTST(instruction);
 	}
@@ -3361,6 +3363,54 @@ stepResult_t motorola68000_t::dispatchScc(const decodedOperation_t &insn) noexce
 			return 8U;
 		}()
 	};
+}
+
+stepResult_t motorola68000_t::dispatchSUB(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Figure out which direction the operation is going in
+	const auto eaAsSource{insn.opMode == 0U};
+	// Grab the LHS operand
+	const auto lhs
+	{
+		static_cast<uint32_t>([&]() -> int32_t
+		{
+			// If the EA operand is the destination, it is also the LHS operand
+			if (!eaAsSource)
+				return readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize);
+			// Otherwise the LHS is the data register
+			return readDataRegisterSigned(insn.rx, operationSize);
+		}())
+	};
+	// Grab the RHS operand
+	const auto rhs
+	{
+		static_cast<uint32_t>([&]() -> int32_t
+		{
+			// If the EA operand is the source, it is then the RHS operand
+			if (eaAsSource)
+				return readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize);
+			// Otherwise the RHS is the data register
+			return readDataRegisterSigned(insn.rx, operationSize);
+		}())
+	};
+	// With the two values retreived, do the subtraction
+	const auto result{uint64_t{lhs} - uint64_t{rhs}};
+
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
+
+	// Store the result back
+	if (eaAsSource)
+		writeDataRegisterSized(insn.rx, operationSize, static_cast<uint32_t>(result));
+	else
+		writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, static_cast<uint32_t>(result));
+
+	// Get done and figure out how many cycles that took
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchTST(const decodedOperation_t &insn) noexcept

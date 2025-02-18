@@ -114,6 +114,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchMOVEM(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVEQ(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchScc(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchSUB(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchTST(const decodedOperation_t &insn) noexcept;
 
 public:
