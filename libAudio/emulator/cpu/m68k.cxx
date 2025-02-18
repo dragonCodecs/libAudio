@@ -2927,6 +2927,34 @@ size_t motorola68000_t::unpackSize(const uint8_t sizeField) const noexcept
 	return 4U;
 }
 
+int32_t motorola68000_t::readDataRegisterSigned(const size_t reg, const size_t size) const noexcept
+{
+	// Extract the register's value
+	const auto value{d[reg]};
+	// Properly sign extend it to int32_t based on the operation size to be performed
+	if (size == 1U)
+		return static_cast<int8_t>(value);
+	if (size == 2U)
+		return static_cast<int16_t>(value);
+	return static_cast<int32_t>(value);
+}
+
+void motorola68000_t::writeDataRegisterSized(const size_t reg, const size_t size, const uint32_t value) noexcept
+{
+	// Write the result back to the register, preserving bits not touched by the width of the operation
+	dataRegister(reg) = static_cast<uint32_t>([&]() -> int32_t
+	{
+		// Extract the current register value
+		const auto data{dataRegister(reg)};
+		// Narrow the result and overwrite just those bits in the register value
+		if (size == 1U)
+			return (data & 0xffffff00U) | static_cast<uint8_t>(value);
+		if (size == 2U)
+			return (data & 0xffff0000U) | static_cast<uint16_t>(value);
+		return static_cast<uint32_t>(value);
+	}());
+}
+
 stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexcept
 {
 	// Unpack the operation size to a value in bytes

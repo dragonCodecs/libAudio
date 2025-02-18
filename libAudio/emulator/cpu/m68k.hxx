@@ -96,6 +96,9 @@ private:
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
 
+	[[nodiscard]] int32_t readDataRegisterSigned(size_t reg, size_t size) const noexcept;
+	void writeDataRegisterSized(size_t reg, size_t size, uint32_t value) noexcept;
+
 	[[nodiscard]] stepResult_t dispatchADD(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchADDA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBcc(const decodedOperation_t &insn) noexcept;
