@@ -1124,12 +1124,29 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x48c0U:
 		case 0x4c80U:
 		case 0x4cc0U:
-			// MOVEM is not allowed with direct register usage, or postinc mode
-			if (eaMode == 0U || eaMode == 1U || eaMode == 3U)
+			// MOVEM is not allowed with direct register usage
+			if (eaMode == 0U || eaMode == 1U)
 				break;
-			// MOVEM is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
-			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
-				break;
+			// If this is a reg -> mem MOVEM
+			if ((insn & 0x0400U) == 0U)
+			{
+				// MOVEM is not allowed with postincrement mode
+				if (eaMode == 3U)
+					break;
+				// MOVEM is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+				if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
+					break;
+			}
+			// Otherwise if this is a mem -> reg MOVEM
+			else
+			{
+				// MOVEM is not allowed with predecrement mode
+				if (eaMode == 4U)
+					break;
+				// MOVEM is not allowed with `#<data>` mode 7
+				if (eaMode == 7U && (eaReg & 0x4U) != 0U)
+					break;
+			}
 			return
 			{
 				instruction_t::movem,
