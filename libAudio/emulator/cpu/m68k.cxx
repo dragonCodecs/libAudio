@@ -2403,6 +2403,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBRA(instruction);
 		case instruction_t::bsr:
 			return dispatchBSR(instruction);
+		case instruction_t::cmp:
+			return dispatchCMP(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
 		case instruction_t::move:
@@ -3062,6 +3064,76 @@ stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexce
 	// Now update the program counter to the new execution address and get done
 	programCounter += displacement;
 	return {true, false, 18U};
+}
+
+stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexcept
+{
+	// Figure out the operation width
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Grab the data register to be used on the LHS of the subtraction
+	const auto lhs
+	{
+		static_cast<uint32_t>([&]() -> int32_t
+		{
+			const auto value{dataRegister(insn.rx)};
+			if (operationSize == 1U)
+				return static_cast<int8_t>(value);
+			if (operationSize == 2U)
+				return static_cast<int16_t>(value);
+			return static_cast<int32_t>(value);
+		}())
+	};
+	// Grab the data to be used on the RHS of the subtraction from the EA
+	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
+	// Do the subtraction unsigned so we don't UB on overflow
+	const auto result{lhs - rhs};
+
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+
+	// Recompute all the flags, starting with the negative bit
+	if (result & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Then the zero bit
+	if (result == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if overflow occurred during the calculation
+	const auto overflow
+	{
+		[&](const uint32_t rhsInv) -> bool
+		{
+			// If the sign bits of the inputs disagree, it can't overflow
+			if ((lhs & signBit) != (rhsInv & signBit))
+				return false;
+			// However, if they do and the sign of the output is different, we did
+			return (lhs & signBit) != (result & signBit);
+		}(~rhs + 1U)
+	};
+	if (overflow)
+		status.set(m68kStatusBits_t::overflow);
+	else
+		status.clear(m68kStatusBits_t::overflow);
+	// Check if borrow was necessary
+	const auto borrow
+	{
+		[&]() -> bool
+		{
+			// Re-do the calculation it in 64-bit to get the carry bit generated back
+			const auto result64{uint64_t{lhs} - uint64_t{rhs}};
+			// And then mask it off to generate if a borrow occured
+			return result64 & (UINT64_C(1) << 32U);
+		}()
+	};
+	if (borrow)
+		status.set(m68kStatusBits_t::carry);
+	else
+		status.clear(m68kStatusBits_t::carry);
+
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchLEA(const decodedOperation_t &insn) noexcept
