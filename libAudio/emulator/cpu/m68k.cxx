@@ -2927,6 +2927,44 @@ size_t motorola68000_t::unpackSize(const uint8_t sizeField) const noexcept
 	return 4U;
 }
 
+void motorola68000_t::recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize) noexcept
+{
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+
+	// Recompute all the flags, starting with the negative bit
+	if (result & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Then the zero bit
+	if (result == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if overflow occurred during the calculation
+	const auto overflow
+	{
+		[&]() -> bool
+		{
+			// If the sign bits of the inputs disagree, this can't overflow
+			if ((lhs & signBit) != (rhs & signBit))
+				return false;
+			// However, if they do agree and the sign of the output is different, we did
+			return (lhs & signBit) != (result & signBit);
+		}()
+	};
+	if (overflow)
+		status.set(m68kStatusBits_t::overflow);
+	else
+		status.clear(m68kStatusBits_t::overflow);
+	// And finally check and see if the calculation would generate a carry
+	if (result & (UINT64_C(1) << 32U))
+		status.set(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+	else
+		status.clear(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+}
+
 int32_t motorola68000_t::readDataRegisterSigned(const size_t reg, const size_t size) const noexcept
 {
 	// Extract the register's value
@@ -2967,58 +3005,16 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 	// Grab the other operand using the computed address
 	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress))};
 	// With the two values retreived, do the addition
-	const auto result{lhs + rhs};
+	const auto result{uint64_t{lhs} + uint64_t{rhs}};
 
-	// Compute which bit is the sign bit of the result
-	const auto signBit{1U << ((8U * operationSize) - 1U)};
-
-	// Recompute all the flags, starting with the negative bit
-	if (result & signBit)
-		status.set(m68kStatusBits_t::negative);
-	else
-		status.clear(m68kStatusBits_t::negative);
-	// Then the zero bit
-	if (result == 0U)
-		status.set(m68kStatusBits_t::zero);
-	else
-		status.clear(m68kStatusBits_t::zero);
-	// Check if overflow occurred during the calculation
-	const auto overflow
-	{
-		[&]() -> bool
-		{
-			// If the sign bits of the inputs disagree, this can't overflow
-			if ((lhs & signBit) != (rhs & signBit))
-				return false;
-			// However, if they do agree and the sign of the output is different, we did
-			return (lhs & signBit) != (result & signBit);
-		}()
-	};
-	if (overflow)
-		status.set(m68kStatusBits_t::overflow);
-	else
-		status.clear(m68kStatusBits_t::overflow);
-	// And finally check and see if the calculation would generate a carry
-	const auto carry
-	{
-		[&]() -> bool
-		{
-			// Re-do the calculation it in 64-bit to get the carry bit generated back
-			const auto result64{uint64_t{lhs} + uint64_t{rhs}};
-			// And then mask it off to generate the carry flag
-			return result64 & (UINT64_C(1) << 32U);
-		}()
-	};
-	if (carry)
-		status.set(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
-	else
-		status.clear(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, rhs, result, operationSize);
 
 	// Store the result back
 	if (insn.opMode == 0U)
-		writeDataRegisterSized(insn.rx, operationSize, result);
+		writeDataRegisterSized(insn.rx, operationSize, static_cast<uint32_t>(result));
 	else
-		writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+		writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, static_cast<uint32_t>(result));
 
 	// Get done and figure out how many cycles that took
 	return {true, false, 0U};
@@ -3091,53 +3087,12 @@ stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexce
 	const auto lhs{static_cast<uint32_t>(readDataRegisterSigned(insn.rx, operationSize))};
 	// Grab the data to be used on the RHS of the subtraction from the EA
 	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
-	// Do the subtraction unsigned so we don't UB on overflow
-	const auto result{lhs - rhs};
+	// With the two values retreived, do the subtraction
+	// We do the subtraction unsigned so we don't UB on overflow
+	const auto result{uint64_t{lhs} - uint64_t{rhs}};
 
-	// Compute which bit is the sign bit of the result
-	const auto signBit{1U << ((8U * operationSize) - 1U)};
-
-	// Recompute all the flags, starting with the negative bit
-	if (result & signBit)
-		status.set(m68kStatusBits_t::negative);
-	else
-		status.clear(m68kStatusBits_t::negative);
-	// Then the zero bit
-	if (result == 0U)
-		status.set(m68kStatusBits_t::zero);
-	else
-		status.clear(m68kStatusBits_t::zero);
-	// Check if overflow occurred during the calculation
-	const auto overflow
-	{
-		[&](const uint32_t rhsInv) -> bool
-		{
-			// If the sign bits of the inputs disagree, it can't overflow
-			if ((lhs & signBit) != (rhsInv & signBit))
-				return false;
-			// However, if they do and the sign of the output is different, we did
-			return (lhs & signBit) != (result & signBit);
-		}(~rhs + 1U)
-	};
-	if (overflow)
-		status.set(m68kStatusBits_t::overflow);
-	else
-		status.clear(m68kStatusBits_t::overflow);
-	// Check if borrow was necessary
-	const auto borrow
-	{
-		[&]() -> bool
-		{
-			// Re-do the calculation it in 64-bit to get the carry bit generated back
-			const auto result64{uint64_t{lhs} - uint64_t{rhs}};
-			// And then mask it off to generate if a borrow occured
-			return result64 & (UINT64_C(1) << 32U);
-		}()
-	};
-	if (borrow)
-		status.set(m68kStatusBits_t::carry);
-	else
-		status.clear(m68kStatusBits_t::carry);
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
 
 	return {true, false, 0U};
 }
