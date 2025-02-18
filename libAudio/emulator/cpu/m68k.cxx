@@ -2430,6 +2430,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVEM(instruction);
 		case instruction_t::moveq:
 			return dispatchMOVEQ(instruction);
+		case instruction_t::rts:
+			return dispatchRTS();
 		case instruction_t::scc:
 			return dispatchScc(instruction);
 		case instruction_t::sub:
@@ -3091,7 +3093,7 @@ stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexce
 	const auto displacement{readImmediateDisplacement(insn)};
 	// Now we have the displacement, calculate the post-instruction program counter, and push it to stack
 	auto &stackPointer{activeStackPointer()};
-	stackPointer -= 4;
+	stackPointer -= 4U;
 	_peripherals.writeAddress(stackPointer, programCounter + insn.trailingBytes);
 	// Now update the program counter to the new execution address and get done
 	programCounter += displacement;
@@ -3352,6 +3354,17 @@ stepResult_t motorola68000_t::dispatchMOVEQ(const decodedOperation_t &insn) noex
 	// Move the value to the target data register and return
 	dataRegister(insn.rx) = static_cast<uint32_t>(value);
 	return {true, false, 4U};
+}
+
+stepResult_t motorola68000_t::dispatchRTS() noexcept
+{
+	// Extract the new program counter value from the current stack pointer
+	auto &stackPointer{activeStackPointer()};
+	programCounter = _peripherals.readAddress<uint32_t>(stackPointer);
+	// Now adjust the stack pointer by the size of an address
+	stackPointer += 4U;
+	// RTS thankfully takes a fixed number of cycles, so return that
+	return {true, false, 16U};
 }
 
 stepResult_t motorola68000_t::dispatchScc(const decodedOperation_t &insn) noexcept
