@@ -2933,7 +2933,7 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
 	// Grab the data register value used as one of the operands (add is commutative, so don't care
 	// which order we grab them here.. unlike for subtract which matters)
-	const auto operandA
+	const auto lhs
 	{
 		static_cast<uint32_t>([&]() -> int32_t
 		{
@@ -2946,12 +2946,15 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 		}())
 	};
 	// Grab the other operand using the computed address
-	const auto operandB{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress))};
+	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress))};
 	// With the two values retreived, do the addition
-	const auto result{operandA + operandB};
+	const auto result{lhs + rhs};
+
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
 
 	// Recompute all the flags, starting with the negative bit
-	if (result & (1U << ((8U * operationSize) - 1)))
+	if (result & signBit)
 		status.set(m68kStatusBits_t::negative);
 	else
 		status.clear(m68kStatusBits_t::negative);
@@ -2961,7 +2964,18 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 	else
 		status.clear(m68kStatusBits_t::zero);
 	// Check if overflow occurred during the calculation
-	if (result < operandA)
+	const auto overflow
+	{
+		[&]() -> bool
+		{
+			// If the sign bits of the inputs disagree, this can't overflow
+			if ((lhs & signBit) != (rhs & signBit))
+				return false;
+			// However, if they do agree and the sign of the output is different, we did
+			return (lhs & signBit) != (result & signBit);
+		}()
+	};
+	if (overflow)
 		status.set(m68kStatusBits_t::overflow);
 	else
 		status.clear(m68kStatusBits_t::overflow);
@@ -2970,15 +2984,10 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 	{
 		[&]() -> bool
 		{
-			if (operationSize == 4U)
-			{
-				// For the u32 version of this calculation, re-do it in 64-bit
-				const uint64_t result64{operandA + operandB};
-				// Then take the 32nd bit, this is carry
-				return result64 & (UINT64_C(1) << 32U);
-			}
-			// For everything else, we can use some bit shifty instead..
-			return result & (1U << (8U * operationSize));
+			// Re-do the calculation it in 64-bit to get the carry bit generated back
+			const auto result64{uint64_t{lhs} + uint64_t{rhs}};
+			// And then mask it off to generate the carry flag
+			return result64 & (UINT64_C(1) << 32U);
 		}()
 	};
 	if (carry)
