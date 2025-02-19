@@ -3286,12 +3286,22 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 	// Extract the list of registers to move
 	const auto registerList{_peripherals.readAddress<uint16_t>(programCounter)};
 	programCounter += 2U;
-	// Figure out where to move the registers to
-	auto address{computeEffectiveAddress(insn.mode, insn.ry, insn.operationSize)};
 	// Determine whether we're in postincrement mode or not
 	const auto isPostincrement{insn.mode == 3U};
 	// Determine whether we're in predecrement mode or not
 	const auto isPredecrement{insn.mode == 4U};
+	// Determine whether we're in a complex EA mode (something that has instruction-trailing addressing bytes)
+	const auto complexMode{!(isPostincrement || isPredecrement)};
+	// Figure out the base address for where to move the registers to if in a complex EA mode
+	auto address
+	{
+		[&]() -> uint32_t
+		{
+			if (complexMode)
+				return computeEffectiveAddress(insn.mode, insn.ry, insn.operationSize);
+			return 0U;
+		}()
+	};
 	// Keep a tally of the number of registers transferred
 	size_t copied{0U};
 	// Loop through all 16 possible register slots
@@ -3299,7 +3309,7 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 	{
 		// Check if this register should be moved or not
 		if ((registerList & (1U << idx)) == 0U)
-			break; // Skip this one then
+			continue; // Skip this one then
 
 		// Determine which register to move
 		auto &reg
@@ -3325,9 +3335,14 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 			}()
 		};
 
+		// For the simple EA modes, figure out to what address we should move this register
+		if (!complexMode)
+			address = computeEffectiveAddress(insn.mode, insn.ry, insn.operationSize);
+
 		// Determine transfer direction (1 = mem -> reg, 0 = reg -> mem)
 		if (insn.opMode)
 		{
+			// Grab the value to update the register to from memory
 			const auto value
 			{
 				[&]() -> int32_t
@@ -3337,22 +3352,25 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 					return _peripherals.readAddress<int32_t>(address);
 				}()
 			};
+			// And update the selected register with that value
 			reg = static_cast<uint32_t>(value);
 		}
 		else
 		{
+			// Put the register's value to memory
 			if (insn.operationSize == 2U)
 				_peripherals.writeAddress(address, uint16_t(reg));
 			else
 				_peripherals.writeAddress(address, reg);
 		}
 
-		// Now update the address for the next transfer
-		if ((isPredecrement || isPostincrement) && idx != 15U)
-			address = computeEffectiveAddress(insn.mode, insn.ry, insn.operationSize);
-		else
+		// If we're in a simple mode, update the address appropriately
+		if (isPostincrement)
 			address += insn.operationSize;
+		else if (isPredecrement)
+			address -= insn.operationSize;
 
+		// Mark another register copied for the number of cycles taken
 		++copied;
 	}
 
