@@ -2416,6 +2416,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchADDA(instruction);
 		case instruction_t::bcc:
 			return dispatchBcc(instruction);
+		case instruction_t::bclr:
+			return dispatchBCLR(instruction);
 		case instruction_t::bra:
 			return dispatchBRA(instruction);
 		case instruction_t::bsr:
@@ -3080,6 +3082,45 @@ stepResult_t motorola68000_t::dispatchBcc(const decodedOperation_t &insn) noexce
 			return 12U; // If it is not taken and there are trailing bytes
 		}()
 	};
+}
+
+stepResult_t motorola68000_t::dispatchBCLR(const decodedOperation_t &insn) noexcept
+{
+	// Determine if the target is a data register or not
+	const auto isDataReg{insn.mode == 0U};
+	const size_t operationSize{isDataReg ? 4U : 1U};
+	// Grab the bit number to poke at
+	const auto bitIndex
+	{
+		[&]() -> uint8_t
+		{
+			// If the bit number is coming from a trailing immediate
+			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
+			{
+				// Grab back the u16 for that, adjusting the program counter
+				const auto result{_peripherals.readAddress<uint16_t>(programCounter)};
+				programCounter += 2U;
+				// We're actually only interested in the bottom 8 bits, so discard the rest
+				return static_cast<uint8_t>(result);
+			}
+			// Otherwise, if the bit number is coming from a register, extract that
+			else
+				return static_cast<uint8_t>(dataRegister(insn.rx));
+		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
+	};
+	// Now extract the address of the manipulation target
+	const auto address{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Read back the value at the destination
+	const auto value{readValue<uint32_t>(insn.mode, insn.ry, address, operationSize)};
+
+	// Test to see if the bit at the requested position is zero or not
+	if (value & (1U << bitIndex))
+		status.clear(m68kStatusBits_t::zero);
+	else
+		status.set(m68kStatusBits_t::zero);
+	// Now zero that bit position and write it back, then return
+	writeValue(insn.mode, insn.ry, address, operationSize, uint32_t{value & ~(1U << bitIndex)});
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexcept
