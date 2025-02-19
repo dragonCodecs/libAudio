@@ -2426,6 +2426,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchCMP(instruction);
 		case instruction_t::cmpi:
 			return dispatchCMPI(instruction);
+		case instruction_t::dbcc:
+			return dispatchDBcc(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
 		case instruction_t::move:
@@ -3190,6 +3192,29 @@ stepResult_t motorola68000_t::dispatchCMPI(const decodedOperation_t &insn) noexc
 	// Recompute all the flags
 	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
 
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchDBcc(const decodedOperation_t &insn) noexcept
+{
+	// Grab the current program counter value as this is used as the base value for the displacement calculation
+	const auto branchBase{programCounter};
+	// Extract the displacement specified by the instruction and
+	// set the program counter for just after the instruction
+	const auto displacement{readImmediateDisplacement(insn)};
+	programCounter += insn.trailingBytes;
+	// Now test the condition for the instruction
+	const auto condition{checkCondition(insn.opMode)};
+	// If it is false, then we decrement the data register for the instruction
+	if (!condition)
+	{
+		// Grab the result of this as we have a further test to do
+		const auto value{static_cast<int32_t>(--dataRegister(insn.ry))};
+		// If the result of that calculation is not -1, adjust the program counter by the displacement
+		if (value != -1)
+			programCounter = branchBase + displacement;
+	}
+	// Get done and compute how long that took
 	return {true, false, 0U};
 }
 
