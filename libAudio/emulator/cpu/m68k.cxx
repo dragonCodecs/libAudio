@@ -3139,26 +3139,11 @@ stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexc
 			return dispatchMOVESpecialUSP(insn);
 	}
 
-	// Convert the operation size to a size in bytes
-	const auto operationSize
-	{
-		[&]() -> size_t
-		{
-			if (insn.operationSize == 1U)
-				return 1U;
-			if (insn.operationSize == 3U)
-				return 2U;
-			if (insn.operationSize == 2U)
-				return 4U;
-			return 0U;
-		}()
-	};
-
 	// Extract out the mode parts of the effective addresses
-	const auto srcEAMode{insn.mode & 0x03U};
+	const auto srcEAMode{insn.mode & 0x07U};
 	const auto dstEAMode{(insn.mode & 0x38U) >> 3U};
 	// Read the data to be moved, allowing it to sign extend to make resetting the flags easier
-	const auto value{readEffectiveAddress<int32_t>(srcEAMode, insn.ry, operationSize)};
+	const auto value{readEffectiveAddress<int32_t>(srcEAMode, insn.ry, insn.operationSize)};
 	// Clear flags that are always cleared
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 	// Check if the value is zero
@@ -3173,7 +3158,7 @@ stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexc
 		status.clear(m68kStatusBits_t::negative);
 
 	// Now put the value into the destination location
-	writeEffectiveAddress(dstEAMode, insn.rx, operationSize, value);
+	writeEffectiveAddress(dstEAMode, insn.rx, insn.operationSize, value);
 
 	// Get done and figure out how long the execution took - NB, this is massively dependant
 	// on the operating modes, forming a large matrix
