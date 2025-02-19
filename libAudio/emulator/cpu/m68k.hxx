@@ -111,6 +111,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchMOVESpecialCCR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVESpecialSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVESpecialUSP(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchMOVEA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVEM(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVEQ(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchRTS() noexcept;

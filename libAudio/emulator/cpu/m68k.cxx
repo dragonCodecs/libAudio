@@ -2426,6 +2426,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchLEA(instruction);
 		case instruction_t::move:
 			return dispatchMOVE(instruction);
+		case instruction_t::movea:
+			return dispatchMOVEA(instruction);
 		case instruction_t::movem:
 			return dispatchMOVEM(instruction);
 		case instruction_t::moveq:
@@ -3236,6 +3238,15 @@ stepResult_t motorola68000_t::dispatchMOVESpecialUSP(const decodedOperation_t &i
 
 	// Get done, execution takes a fixed amount of time thankfuly
 	return {true, false, 4U};
+}
+
+stepResult_t motorola68000_t::dispatchMOVEA(const decodedOperation_t &insn) noexcept
+{
+	// Read the data to be moved, allowing it to sign extend to fill the whole target address register
+	const auto value{readEffectiveAddress<int32_t>(insn.mode, insn.ry, insn.operationSize)};
+	// Store the value into the target address register and report the execution time
+	addrRegister(insn.rx) = static_cast<uint32_t>(value);
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noexcept
