@@ -34,7 +34,7 @@ bool atariSTe_t::init(const uint16_t subtune) noexcept
 	writeAddress<uint32_t>(0x800000U - 4U, 0xffffffffU);
 	cpu.writeDataRegister(0U, subtune);
 	// And that we're going to run from the init entrypoint
-	cpu.executeFrom(0x000600U, 0x800000U - 4U);
+	cpu.executeFrom(0x000600U, 0x800000U - 4U, false);
 	// Now run till we RTS and hit the sentinel program counter state
 	while (true)
 	{
