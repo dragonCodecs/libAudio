@@ -2422,6 +2422,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBSR(instruction);
 		case instruction_t::cmp:
 			return dispatchCMP(instruction);
+		case instruction_t::cmpi:
+			return dispatchCMPI(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
 		case instruction_t::move:
@@ -3109,6 +3111,36 @@ stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexce
 	// Grab the data register to be used on the LHS of the subtraction
 	const auto lhs{static_cast<uint32_t>(readDataRegisterSigned(insn.rx, operationSize))};
 	// Grab the data to be used on the RHS of the subtraction from the EA
+	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
+	// With the two values retreived, do the subtraction
+	// We do the subtraction unsigned so we don't UB on overflow
+	const auto result{uint64_t{lhs} - uint64_t{rhs}};
+
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
+
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchCMPI(const decodedOperation_t &insn) noexcept
+{
+	// Figure out the operation width
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Grab the data to be used on the RHS of the subtraction from just after the instruction
+	const auto lhs
+	{
+		static_cast<uint32_t>([&]() -> int32_t
+		{
+			if (operationSize == 1U)
+				return static_cast<int8_t>(_peripherals.readAddress<int16_t>(programCounter));
+			if (operationSize == 2U)
+				return _peripherals.readAddress<int16_t>(programCounter);
+			return _peripherals.readAddress<int32_t>(programCounter);
+		}())
+	};
+	/* Adjust the program counter by the number of u16's just consumed */
+	programCounter += operationSize == 4U ? 4U : 2U;
+	// Grab the data to be used on the LHS of the subtraction from the EA
 	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
 	// With the two values retreived, do the subtraction
 	// We do the subtraction unsigned so we don't UB on overflow
