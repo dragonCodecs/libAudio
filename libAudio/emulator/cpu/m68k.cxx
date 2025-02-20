@@ -2444,6 +2444,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVEM(instruction);
 		case instruction_t::moveq:
 			return dispatchMOVEQ(instruction);
+		case instruction_t::ori:
+			return dispatchORI(instruction);
 		case instruction_t::rts:
 			return dispatchRTS();
 		case instruction_t::scc:
@@ -3596,6 +3598,64 @@ stepResult_t motorola68000_t::dispatchMOVEQ(const decodedOperation_t &insn) noex
 	// Move the value to the target data register and return
 	dataRegister(insn.rx) = static_cast<uint32_t>(value);
 	return {true, false, 4U};
+}
+
+stepResult_t motorola68000_t::dispatchORI(const decodedOperation_t &insn) noexcept
+{
+	// Deal with the special register forms first
+	switch (insn.ry)
+	{
+		case 8U:
+		case 9U:
+			return dispatchORISpecialCCR(insn);
+	}
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Extract the immediate that follows this instruction
+	const auto rhs{readImmediateUnsigned(operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the LHS using the computed address
+	const auto lhs{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	// Apply the set operation
+	const auto result{lhs | rhs};
+
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+	// Recompute all the flags, starting with the negative bit
+	if (result & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Then the zero bit
+	if (result == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// The overflow and carry bits are always cleared by this instruction
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+
+	// Store the result back
+	writeValue(insn.mode, insn.ry, effectiveAddress, result);
+
+	// Return how many cycles that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchORISpecialCCR(const decodedOperation_t &insn) noexcept
+{
+	// If this instruction is for the SR specifically, it is privileged, so check that
+	if (insn.ry == 9U && status.excludes(m68kStatusBits_t::supervisor))
+		return {true, true, 0U};
+	// Extract the immediate that follows this instruction and widen it to 16-bit
+	const auto rhs{static_cast<uint16_t>(readImmediateUnsigned(1U))};
+	// Grab the SR
+	const auto lhs{status.toRaw()};
+	// Apply the set and write it back
+	status.fromRaw(lhs | rhs);
+
+	// Return how many cycles that took
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchRTS() noexcept
