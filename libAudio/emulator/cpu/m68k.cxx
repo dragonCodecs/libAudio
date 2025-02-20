@@ -3216,9 +3216,9 @@ stepResult_t motorola68000_t::dispatchBCLR(const decodedOperation_t &insn) noexc
 		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
 	};
 	// Now extract the address of the manipulation target
-	const auto address{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
 	// Read back the value at the destination
-	const auto value{readValue<uint32_t>(insn.mode, insn.ry, address, operationSize)};
+	const auto value{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
 
 	// Test to see if the bit at the requested position is zero or not
 	if (value & (1U << bitIndex))
@@ -3226,7 +3226,7 @@ stepResult_t motorola68000_t::dispatchBCLR(const decodedOperation_t &insn) noexc
 	else
 		status.set(m68kStatusBits_t::zero);
 	// Now zero that bit position and write it back, then return
-	writeValue(insn.mode, insn.ry, address, operationSize, uint32_t{value & ~(1U << bitIndex)});
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, uint32_t{value & ~(1U << bitIndex)});
 	return {true, false, 0U};
 }
 
