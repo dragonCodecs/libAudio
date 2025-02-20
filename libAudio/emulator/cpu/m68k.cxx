@@ -2424,6 +2424,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBRA(instruction);
 		case instruction_t::bsr:
 			return dispatchBSR(instruction);
+		case instruction_t::clr:
+			return dispatchCLR(instruction);
 		case instruction_t::cmp:
 			return dispatchCMP(instruction);
 		case instruction_t::cmpi:
@@ -3171,6 +3173,20 @@ stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexce
 	// Now update the program counter to the new execution address and get done
 	programCounter += displacement;
 	return {true, false, 18U};
+}
+
+stepResult_t motorola68000_t::dispatchCLR(const decodedOperation_t &insn) noexcept
+{
+	// Figure out the operation width
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Clear (0) the target of the effective address
+	writeEffectiveAddress(insn.mode, insn.ry, operationSize, uint32_t{0U});
+	// Set the condition flags for zero
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow, m68kStatusBits_t::negative);
+	status.set(m68kStatusBits_t::zero);
+
+	// Figure out how long that all took and return
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexcept
