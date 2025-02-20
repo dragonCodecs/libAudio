@@ -110,6 +110,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchBcc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBCLR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchBSET(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCLR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCMP(const decodedOperation_t &insn) noexcept;

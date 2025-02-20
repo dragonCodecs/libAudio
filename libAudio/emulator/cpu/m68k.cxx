@@ -2424,6 +2424,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBCLR(instruction);
 		case instruction_t::bra:
 			return dispatchBRA(instruction);
+		case instruction_t::bset:
+			return dispatchBSET(instruction);
 		case instruction_t::bsr:
 			return dispatchBSR(instruction);
 		case instruction_t::clr:
@@ -3256,6 +3258,39 @@ stepResult_t motorola68000_t::dispatchBRA(const decodedOperation_t &insn) noexce
 	// Now we have a displacement, update the program counter and get done
 	programCounter += displacement;
 	return {true, false, 10U};
+}
+
+stepResult_t motorola68000_t::dispatchBSET(const decodedOperation_t &insn) noexcept
+{
+	// Determine if the target is a data register or not
+	const auto isDataReg{insn.mode == 0U};
+	const size_t operationSize{isDataReg ? 4U : 1U};
+	// Grab the bit number to poke at
+	const auto bitIndex
+	{
+		[&]() -> uint8_t
+		{
+			// If the bit number is coming from a trailing immediate
+			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
+				// Read the 8-bit immediate
+				return readImmediateUnsigned(1U);
+			// Otherwise, if the bit number is coming from a register, extract that
+			return static_cast<uint8_t>(dataRegister(insn.rx));
+		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
+	};
+	// Now extract the address of the manipulation target
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Read back the value at the destination
+	const auto value{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+
+	// Test to see if the bit at the requested position is zero or not
+	if (value & (1U << bitIndex))
+		status.clear(m68kStatusBits_t::zero);
+	else
+		status.set(m68kStatusBits_t::zero);
+	// Now set that bit position and write it back, then return
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, uint32_t{value | (1U << bitIndex)});
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexcept
