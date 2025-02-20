@@ -2432,6 +2432,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchCLR(instruction);
 		case instruction_t::cmp:
 			return dispatchCMP(instruction);
+		case instruction_t::cmpa:
+			return dispatchCMPA(instruction);
 		case instruction_t::cmpi:
 			return dispatchCMPI(instruction);
 		case instruction_t::dbcc:
@@ -3338,6 +3340,22 @@ stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexce
 
 	// Recompute all the flags
 	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
+
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchCMPA(const decodedOperation_t &insn) noexcept
+{
+	// Grab the address register to be used as the LHS
+	const auto lhs{addrRegister(insn.rx)};
+	// Grab the data to be used on the RHS of the subtraction from the EA
+	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, insn.operationSize))};
+	// With the two values retreived, do the subtraction
+	// We do the subtraction unsigned so we don't UB on overflow
+	const auto result{uint64_t{lhs} - uint64_t{rhs}};
+
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, insn.operationSize);
 
 	return {true, false, 0U};
 }
