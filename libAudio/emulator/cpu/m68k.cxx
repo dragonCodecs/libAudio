@@ -3228,16 +3228,10 @@ stepResult_t motorola68000_t::dispatchBCLR(const decodedOperation_t &insn) noexc
 		{
 			// If the bit number is coming from a trailing immediate
 			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
-			{
-				// Grab back the u16 for that, adjusting the program counter
-				const auto result{_peripherals.readAddress<uint16_t>(programCounter)};
-				programCounter += 2U;
-				// We're actually only interested in the bottom 8 bits, so discard the rest
-				return static_cast<uint8_t>(result);
-			}
+				// Read the 8-bit immediate
+				return readImmediateUnsigned(1U);
 			// Otherwise, if the bit number is coming from a register, extract that
-			else
-				return static_cast<uint8_t>(dataRegister(insn.rx));
+			return static_cast<uint8_t>(dataRegister(insn.rx));
 		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
 	};
 	// Now extract the address of the manipulation target
@@ -3250,7 +3244,7 @@ stepResult_t motorola68000_t::dispatchBCLR(const decodedOperation_t &insn) noexc
 		status.clear(m68kStatusBits_t::zero);
 	else
 		status.set(m68kStatusBits_t::zero);
-	// Now zero that bit position and write it back, then return
+	// Now clear that bit position and write it back, then return
 	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, uint32_t{value & ~(1U << bitIndex)});
 	return {true, false, 0U};
 }
