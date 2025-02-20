@@ -2444,6 +2444,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVEA(instruction);
 		case instruction_t::movem:
 			return dispatchMOVEM(instruction);
+		case instruction_t::movep:
+			return dispatchMOVEP(instruction);
 		case instruction_t::moveq:
 			return dispatchMOVEQ(instruction);
 		case instruction_t::ori:
@@ -3604,6 +3606,54 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 	// Get done and mark out how many cycles this took
 	// XXX: Need to take into account the EA mode fully.. between 12 and 20 cycles extra depending on mode.
 	return {true, false, 4U * copied};
+}
+
+stepResult_t motorola68000_t::dispatchMOVEP(const decodedOperation_t &insn) noexcept
+{
+	// Extract the displacement for this instruction
+	const auto displacement{readImmediateDisplacement(insn)};
+	// Adjust the program counter past the instruction
+	programCounter += insn.trailingBytes;
+	// Grab the address to be used with memory (and apply the displacement)
+	const auto address{(uint32_t{addrRegister(insn.ry) & 0xfffffffeU}) + displacement};
+	// Figure out if the address is even or odd so we put the bytes in the right locations in memory
+	const auto u16Shift{addrRegister(insn.ry) & 1U ? 0U : 8U};
+	// Figure out the starting offset for (un)packing the register
+	const auto startOffset{insn.operationSize - 1U};
+	// Are we moving reg -> mem or mem -> reg?
+	if (insn.opMode)
+	{
+		// reg -> mem, okay - grab the data from the register to move into memory
+		const auto data{dataRegister(insn.rx)};
+		// Start looping through the bytes to move
+		for (const auto byte : substrate::indexSequence_t{insn.operationSize})
+		{
+			// Compute the shift for this byte
+			const auto shift{(startOffset - byte) * 8U};
+			// Extract the byte and get it in the right location for the destination
+			const auto value{static_cast<uint32_t>(uint8_t(data >> shift) << u16Shift)};
+			// Store the extracted data to the target memory address
+			_peripherals.writeAddress<uint16_t>(address + (byte * 2U), value);
+		}
+	}
+	else
+	{
+		// mem -> reg, start looping through the bytes to move
+		uint32_t data{};
+		for (const auto byte : substrate::indexSequence_t{insn.operationSize})
+		{
+			// Read the value at the target memory address
+			const auto value{uint8_t(_peripherals.readAddress<uint16_t>(address + (byte * 2U)) >> u16Shift)};
+			// Compute the shift for this byte
+			const auto shift{(startOffset - byte) * 8U};
+			// Shift the value into the right place in the register data
+			data |= value << shift;
+		}
+		// Now store the resulting value in the register
+		dataRegister(insn.rx) = data;
+	}
+	// Return how many cycles that took
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchMOVEQ(const decodedOperation_t &insn) noexcept
