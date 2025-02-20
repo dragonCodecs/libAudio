@@ -3131,6 +3131,13 @@ stepResult_t motorola68000_t::dispatchADDQ(const decodedOperation_t &insn) noexc
 
 stepResult_t motorola68000_t::dispatchANDI(const decodedOperation_t &insn) noexcept
 {
+	// Deal with the special register forms first
+	switch (insn.ry)
+	{
+		case 8U:
+		case 9U:
+			return dispatchANDISpecialCCR(insn);
+	}
 	// Unpack the operation size to a value in bytes
 	const auto operationSize{unpackSize(insn.operationSize)};
 	// Extract the immediate that follows this instruction
@@ -3159,6 +3166,22 @@ stepResult_t motorola68000_t::dispatchANDI(const decodedOperation_t &insn) noexc
 
 	// Store the result back
 	writeValue(insn.mode, insn.ry, effectiveAddress, result);
+
+	// Return how many cycles that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchANDISpecialCCR(const decodedOperation_t &insn) noexcept
+{
+	// If this instruction is for the SR specifically, it is privileged, so check that
+	if (insn.ry == 9U && status.excludes(m68kStatusBits_t::supervisor))
+		return {true, true, 0U};
+	// Extract the immediate that follows this instruction and widen it to 16-bit
+	const auto rhs{static_cast<uint16_t>(readImmediateUnsigned(1U) | 0xff00U)};
+	// Grab the SR
+	const auto lhs{status.toRaw()};
+	// Apply the mask and write it back
+	status.fromRaw(lhs & rhs);
 
 	// Return how many cycles that took
 	return {true, false, 0U};
