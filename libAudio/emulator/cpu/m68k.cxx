@@ -2560,6 +2560,46 @@ int32_t motorola68000_t::readExtraDisplacement(const uint8_t displacementSize) n
 	}
 }
 
+uint32_t motorola68000_t::readImmediateUnsigned(const size_t immediateSize) noexcept
+{
+	// Extract the immediate from just after the instruction
+	const auto immediate
+	{
+		[&]() -> uint32_t
+		{
+			if (immediateSize == 1U)
+				return static_cast<uint8_t>(_peripherals.readAddress<uint16_t>(programCounter));
+			if (immediateSize == 2U)
+				return _peripherals.readAddress<uint16_t>(programCounter);
+			return _peripherals.readAddress<uint32_t>(programCounter);
+		}()
+	};
+	// Adjust the program counter by the number of u16's just consumed
+	programCounter += immediateSize == 4U ? 4U : 2U;
+	// Return the zero-extended immediate
+	return immediate;
+}
+
+int32_t motorola68000_t::readImmediateSigned(const size_t immediateSize) noexcept
+{
+	// Extract the immediate from just after the instruction
+	const auto immediate
+	{
+		[&]() -> int32_t
+		{
+			if (immediateSize == 1U)
+				return static_cast<int8_t>(_peripherals.readAddress<int16_t>(programCounter));
+			if (immediateSize == 2U)
+				return _peripherals.readAddress<int16_t>(programCounter);
+			return _peripherals.readAddress<int32_t>(programCounter);
+		}()
+	};
+	// Adjust the program counter by the number of u16's just consumed
+	programCounter += immediateSize == 4U ? 4U : 2U;
+	// Return the sign-extended immediate
+	return immediate;
+}
+
 uint32_t motorola68000_t::computeIndirect(const uint32_t baseAddress) noexcept
 {
 	const auto extra{_peripherals.readAddress<uint16_t>(programCounter)};
@@ -3212,19 +3252,7 @@ stepResult_t motorola68000_t::dispatchCMPI(const decodedOperation_t &insn) noexc
 	// Figure out the operation width
 	const auto operationSize{unpackSize(insn.operationSize)};
 	// Grab the data to be used on the RHS of the subtraction from just after the instruction
-	const auto lhs
-	{
-		static_cast<uint32_t>([&]() -> int32_t
-		{
-			if (operationSize == 1U)
-				return static_cast<int8_t>(_peripherals.readAddress<int16_t>(programCounter));
-			if (operationSize == 2U)
-				return _peripherals.readAddress<int16_t>(programCounter);
-			return _peripherals.readAddress<int32_t>(programCounter);
-		}())
-	};
-	/* Adjust the program counter by the number of u16's just consumed */
-	programCounter += operationSize == 4U ? 4U : 2U;
+	const auto lhs{static_cast<uint32_t>(readImmediateSigned(operationSize))};
 	// Grab the data to be used on the LHS of the subtraction from the EA
 	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
 	// With the two values retreived, do the subtraction

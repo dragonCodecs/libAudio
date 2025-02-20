@@ -67,6 +67,8 @@ private:
 	// Instruction dispatch/execution functions
 	[[nodiscard]] int16_t readIndex(uint16_t extension) const noexcept;
 	[[nodiscard]] int32_t readExtraDisplacement(uint8_t displacementSize) noexcept;
+	[[nodiscard]] uint32_t readImmediateUnsigned(size_t immediateSize) noexcept;
+	[[nodiscard]] int32_t readImmediateSigned(size_t immediateSize) noexcept;
 	[[nodiscard]] uint32_t computeIndirect(uint32_t baseAddress) noexcept;
 	[[nodiscard]] uint32_t computeEffectiveAddress(uint8_t mode, uint8_t reg, size_t operandSize) noexcept;
 	template<typename T> [[nodiscard]] T readValue(uint8_t mode, uint8_t reg, uint32_t address) noexcept;
