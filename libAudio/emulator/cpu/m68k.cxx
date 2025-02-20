@@ -3014,6 +3014,9 @@ size_t motorola68000_t::unpackSize(const uint8_t sizeField) const noexcept
 
 void motorola68000_t::recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize) noexcept
 {
+	// This can never be true, but it makes the analysis for the signBit calculation happy, so..
+	if (operationSize == 0U || operationSize > 4U)
+		return;
 	// Compute which bit is the sign bit of the result
 	const auto signBit{1U << ((8U * operationSize) - 1U)};
 
