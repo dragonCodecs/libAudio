@@ -39,7 +39,7 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 		}
 		// Current noise frequency
 		case 6U:
-			data[0U] = noiseFrequency;
+			data[0U] = noisePeriod;
 			break;
 		// Current mixer configuration
 		case 7U:
@@ -113,7 +113,7 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				// Noise frequency adjustment
 				case 6U:
 					// Register is actually only 5 bit, so discard the upper 3
-					noiseFrequency = data[0U] & 0x1fU;
+					noisePeriod = data[0U] & 0x1fU;
 					break;
 				// Mixer configuration adjustment
 				case 7U:
@@ -184,6 +184,20 @@ void ym2149_t::updateFSM() noexcept
 		envelopeCounter = 0U;
 		// Update the envelope position (64 possible positions)
 		envelopePosition = (envelopePosition + 1U) & 0x3fU;
+	}
+
+	// Step the noise generator forward one internal cycle, noting it runs
+	// at half speed to everything else. If the noise counter exceeds the
+	// period of the noise to be generated
+	if ((++noiseCounter) >= noisePeriod)
+	{
+		// Reset the counter
+		noiseCounter = 0U;
+		// Set the noise state if the 0th and 2nd bits of the noise LFSR are the same value as each other
+		noiseState = (noiseLFSR ^ (noiseLFSR >> 2U)) & 1U;
+		// Shift the new noise state in as single bit on the LHS of the noise LFSR
+		noiseLFSR >>= 1U;
+		noiseLFSR |= noiseState ? (1U << 16U) : 0U;
 	}
 }
 

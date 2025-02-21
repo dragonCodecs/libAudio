@@ -39,13 +39,17 @@ private:
 	uint8_t cyclesTillUpdate{0U};
 
 	std::array<ym2149::channel_t, 3U> channels{};
-	uint8_t noiseFrequency{0U};
+	uint8_t noisePeriod{0U};
+	uint8_t noiseCounter{0U};
 	uint8_t mixerConfig{0U};
 	uint16_t envelopePeriod{0U};
 	uint16_t envelopeCounter{0U};
 	uint8_t envelopeShape{0U};
 	uint8_t envelopePosition{0U};
 	std::array<uint8_t, 2U> ioPort{};
+
+	bool noiseState{0U};
+	uint32_t noiseLFSR{1U};
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
