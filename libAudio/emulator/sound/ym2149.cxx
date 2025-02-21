@@ -28,9 +28,9 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 		case 5U:
 		{
 			// Turn the register selection into a channel number and rough adjustment indicator
-			const auto channelNumber{static_cast<size_t>(selectedRegister >> 1U)};
+			const auto channel{static_cast<size_t>(selectedRegister >> 1U)};
 			const auto roughAdjustment{(selectedRegister & 1U) != 0U};
-			data[0U] = channel[channelNumber].readFrequency(roughAdjustment);
+			data[0U] = channels[channel].readFrequency(roughAdjustment);
 			break;
 		}
 		// Current noise frequency
@@ -47,8 +47,8 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 		case 10U:
 		{
 			// Turn the register selection into a channel number
-			const size_t channelNumber{selectedRegister - 8U};
-			data[0U] = channel[channelNumber].level;
+			const size_t channel{selectedRegister - 8U};
+			data[0U] = channels[channel].level;
 			break;
 		}
 		// Envelope frequency fine adjustment
@@ -100,10 +100,10 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				case 5U:
 				{
 					// Turn the register selection into a channel number and rough adjustment indicator
-					const auto channelNumber{static_cast<size_t>(selectedRegister >> 1U)};
+					const auto channel{static_cast<size_t>(selectedRegister >> 1U)};
 					const auto roughAdjustment{(selectedRegister & 1U) != 0U};
 					// Select the channel and write the adjustment
-					channel[channelNumber].writeFrequency(data[0U], roughAdjustment);
+					channels[channel].writeFrequency(data[0U], roughAdjustment);
 					break;
 				}
 				// Noise frequency adjustment
@@ -121,9 +121,9 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				case 10U:
 				{
 					// Turn the register selection into a channel number
-					const size_t channelNumber{selectedRegister - 8U};
+					const size_t channel{selectedRegister - 8U};
 					// Adjust that channel's levels (only 5 bits valid, discard the upper 3)
-					channel[channelNumber].level = data[0U] & 0x1fU;
+					channels[channel].level = data[0U] & 0x1fU;
 					break;
 				}
 				// Envelope frequency fine adjustment
@@ -181,22 +181,22 @@ namespace ym2149
 	{
 		if (roughAdjust)
 		{
-			frequency &= 0x00ff0U;
+			period &= 0x00ff0U;
 			// Only 4 bits valid, throw away the upper 4
-			frequency |= (value & 0x0fU) << 8U;
+			period |= (value & 0x0fU) << 8U;
 		}
 		else
 		{
-			frequency &= 0xff00U;
-			frequency |= value;
+			period &= 0xff00U;
+			period |= value;
 		}
 	}
 
 	uint8_t channel_t::readFrequency(const bool roughAdjust) const noexcept
 	{
 		if (roughAdjust)
-			return static_cast<uint8_t>(frequency >> 8U);
+			return static_cast<uint8_t>(period >> 8U);
 		else
-			return static_cast<uint8_t>(frequency);
+			return static_cast<uint8_t>(period);
 	}
 } // namespace ym2149

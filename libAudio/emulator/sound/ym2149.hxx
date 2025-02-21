@@ -12,7 +12,7 @@ namespace ym2149
 {
 	struct channel_t final
 	{
-		uint16_t frequency{0U};
+		uint16_t period{0U};
 		uint8_t level{0U};
 
 		void writeFrequency(uint8_t value, bool roughAdjust) noexcept;
@@ -26,7 +26,7 @@ private:
 	uint8_t selectedRegister{0U};
 	uint8_t cyclesToUpdate{0U};
 
-	std::array<ym2149::channel_t, 3U> channel{};
+	std::array<ym2149::channel_t, 3U> channels{};
 	uint8_t noiseFrequency{0U};
 	uint8_t mixerConfig{0U};
 	uint16_t envelopeFrequency{0U};
