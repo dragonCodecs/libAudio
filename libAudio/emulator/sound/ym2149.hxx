@@ -26,6 +26,7 @@ namespace ym2149
 
 		void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint8_t> &dist) noexcept;
 		void step() noexcept;
+		[[nodiscard]] bool state(bool toneInhibit) const noexcept;
 	};
 } // namespace ym2149
 
@@ -39,9 +40,11 @@ private:
 	uint8_t cyclesTillUpdate{0U};
 
 	std::array<ym2149::channel_t, 3U> channels{};
+	std::array<bool, 3U> channelState{};
 	uint8_t noisePeriod{0U};
 	uint8_t noiseCounter{0U};
-	uint8_t mixerConfig{0U};
+	// Default to no output from any channel of any kind
+	uint8_t mixerConfig{0x3fU};
 	uint16_t envelopePeriod{0U};
 	uint16_t envelopeCounter{0U};
 	uint8_t envelopeShape{0U};

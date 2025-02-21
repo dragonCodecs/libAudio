@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <random>
 #include <substrate/span>
+#include <substrate/indexed_iterator>
 #include "ym2149.hxx"
 #include "../unitsHelpers.hxx"
 
@@ -162,6 +163,13 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 
 bool ym2149_t::clockCycle() noexcept
 {
+	// Reset the channel states if ready was true
+	if (ready)
+	{
+		for (auto &state : channelState)
+			state = false;
+	}
+
 	// See if a sample should be ready this cycle or not
 	ready = clockManager.advanceCycle();
 
@@ -177,6 +185,17 @@ bool ym2149_t::clockCycle() noexcept
 
 void ym2149_t::updateFSM() noexcept
 {
+	// Update the channel states to reflect the current chip state
+	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
+	{
+		// Check to see the state for tone generation
+		const auto channelToneState{channel.state(mixerConfig & (1U << idx))};
+		// Followed by noise generation for the channel
+		const auto channelNoiseState{noiseState || bool(mixerConfig & (1U << (idx + 3U)))};
+		// Combine it all together and update the channel state
+		channelState[idx] |= channelToneState && channelNoiseState;
+	}
+
 	// Step all the channels forward one internal cycle
 	for (auto &channel : channels)
 		channel.step();
@@ -246,4 +265,7 @@ namespace ym2149
 			edgeState = !edgeState;
 		}
 	}
+
+	bool channel_t::state(const bool toneInhibit) const noexcept
+		{ return edgeState || toneInhibit; }
 } // namespace ym2149
