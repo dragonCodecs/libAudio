@@ -3066,7 +3066,8 @@ size_t motorola68000_t::unpackSize(const uint8_t sizeField) const noexcept
 	return 4U;
 }
 
-void motorola68000_t::recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize) noexcept
+void motorola68000_t::recomputeStatusFlags(const uint32_t lhs, const uint32_t rhs, const uint64_t result,
+	const size_t operationSize) noexcept
 {
 	// This can never be true, but it makes the analysis for the signBit calculation happy, so..
 	if (operationSize == 0U || operationSize > 4U)
@@ -3105,6 +3106,27 @@ void motorola68000_t::recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t 
 		status.set(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
 	else
 		status.clear(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+}
+
+void motorola68000_t::recomputeStatusFlags(const uint32_t result, const bool carry, const uint32_t signBit) noexcept
+{
+	// Recompute all the status bits, starting with negative
+	if (result & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Now check for zero
+	if (result == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Overflow is always cleared
+	status.clear(m68kStatusBits_t::overflow);
+	// And finally, set carry and extend accordingly
+	if (carry)
+		status.set(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+	else
+		status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
 }
 
 int32_t motorola68000_t::readDataRegisterSigned(const size_t reg, const size_t size) const noexcept

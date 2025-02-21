@@ -98,6 +98,7 @@ private:
 	[[nodiscard]] bool checkCondition(uint8_t condition) const noexcept;
 	[[nodiscard]] size_t unpackSize(uint8_t sizeField) const noexcept;
 	void recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize) noexcept;
+	void recomputeStatusFlags(uint32_t result, bool carry, uint32_t signBit) noexcept;
 
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
