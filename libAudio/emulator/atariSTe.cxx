@@ -32,21 +32,10 @@ bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
 bool atariSTe_t::init(const uint16_t subtune) noexcept
 {
 	// Set up the calling context
-	writeAddress<uint32_t>(0x800000U - 4U, 0xffffffffU);
 	cpu.writeDataRegister(0U, subtune);
-	// And that we're going to run from the init entrypoint
-	cpu.executeFrom(0x001000U, 0x800000U - 4U, false);
-	// Now run till we RTS and hit the sentinel program counter state
-	while (true)
-	{
-		// Try and run another instruction
-		const auto result{cpu.step()};
-		// Check that something bad didn't happen
-		if (result.trap || !result.validInsn)
-			return false;
-		// Check for the sentinel program counter value
-		if (cpu.readProgramCounter() == 0xffffffffU)
-			break;
-	}
-	return true;
+	// And run the init entrypoint to return
+	return cpu.executeToReturn(0x001000U, 0x800000U, false);
 }
+
+void atariSTe_t::displayCPUState() const noexcept
+	{ cpu.displayRegs(); }

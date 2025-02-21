@@ -2386,6 +2386,29 @@ void motorola68000_t::executeFrom(const uint32_t entryAddress, const uint32_t st
 	}
 }
 
+bool motorola68000_t::executeToReturn(const uint32_t entryAddress, const uint32_t stackTop, const bool asUser) noexcept
+{
+	// Set up where we're going to execute from
+	executeFrom(entryAddress, stackTop, asUser);
+	// Set up the calling context so we know when we're doing
+	auto &stackPointer{activeStackPointer()};
+	stackPointer -= 4U;
+	_peripherals.writeAddress<uint32_t>(stackPointer, 0xffffffffU);
+	// Now run till we RTS and hit the sentinel program counter state
+	while (true)
+	{
+		// Try and run another instruction
+		const auto result{step()};
+		// Check that something bad didn't happen
+		if (result.trap || !result.validInsn)
+			return false;
+		// Check for the sentinel program counter value
+		if (programCounter == 0xffffffffU)
+			break;
+	}
+	return true;
+}
+
 uint32_t &motorola68000_t::dataRegister(const size_t reg) noexcept
 	{ return d.at(reg); }
 
