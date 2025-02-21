@@ -254,6 +254,7 @@ if formats['SNDH']
 		'sndh/loader.cxx',
 		'sndh/iceDecrunch.cxx',
 		'emulator/atariSTe.cxx',
+		'emulator/clockManager.cxx',
 		'emulator/cpu/m68k.cxx',
 		'emulator/sound/ym2149.cxx',
 	]

@@ -151,4 +151,20 @@ public:
 	}
 };
 
+struct clockManager_t
+{
+private:
+	float clockRatio;
+	uint32_t timeSinceLastCycle{0U};
+	float correction{0.0f};
+
+public:
+	// Construct an invalid manager with infinite ratio
+	clockManager_t() noexcept : clockRatio{std::numeric_limits<float>::infinity()} { }
+	// Construct a valid manager from the base and target clock frequencies
+	clockManager_t(uint32_t baseClockFrequency, uint32_t targetClockFrequency) noexcept;
+	// Returns true if the clock being managed by this should advance a cycle, false otherwise
+	bool advanceCycle() noexcept;
+};
+
 #endif /*EMULATOR_MEMORY_MAP_HXX*/
