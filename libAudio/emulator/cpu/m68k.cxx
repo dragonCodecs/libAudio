@@ -2428,6 +2428,10 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchBSET(instruction);
 		case instruction_t::bsr:
 			return dispatchBSR(instruction);
+		case instruction_t::cinva:
+		case instruction_t::cinvl:
+		case instruction_t::cinvp:
+			return dispatchCINV(instruction);
 		case instruction_t::clr:
 			return dispatchCLR(instruction);
 		case instruction_t::cmp:
@@ -2436,6 +2440,10 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchCMPA(instruction);
 		case instruction_t::cmpi:
 			return dispatchCMPI(instruction);
+		case instruction_t::cpusha:
+		case instruction_t::cpushl:
+		case instruction_t::cpushp:
+			return dispatchCPUSH(instruction);
 		case instruction_t::dbcc:
 			return dispatchDBcc(instruction);
 		case instruction_t::lea:
@@ -3315,6 +3323,12 @@ stepResult_t motorola68000_t::dispatchBSR(const decodedOperation_t &insn) noexce
 	return {true, false, 18U};
 }
 
+stepResult_t motorola68000_t::dispatchCINV(const decodedOperation_t &/*insn*/) noexcept
+{
+	// This instruction is (for now) a no-op
+	return {true, false, 0U};
+}
+
 stepResult_t motorola68000_t::dispatchCLR(const decodedOperation_t &insn) noexcept
 {
 	// Figure out the operation width
@@ -3378,6 +3392,12 @@ stepResult_t motorola68000_t::dispatchCMPI(const decodedOperation_t &insn) noexc
 	// Recompute all the flags
 	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
 
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchCPUSH(const decodedOperation_t &/*insn*/) noexcept
+{
+	// This instruction is (for now) a no-op
 	return {true, false, 0U};
 }
 

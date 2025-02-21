@@ -112,10 +112,12 @@ private:
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBSET(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBSR(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchCINV(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCLR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCMP(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCMPA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCMPI(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchCPUSH(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchDBcc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVE(const decodedOperation_t &insn) noexcept;
