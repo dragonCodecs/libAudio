@@ -168,6 +168,7 @@ bool ym2149_t::clockCycle() noexcept
 	// Reset the channel states if ready was true
 	if (ready)
 	{
+		read = false;
 		for (auto &state : channelState)
 			state = false;
 	}
@@ -227,10 +228,11 @@ void ym2149_t::updateFSM() noexcept
 	}
 }
 
-bool ym2149_t::sampleReady() const noexcept { return ready; }
+bool ym2149_t::sampleReady() const noexcept { return ready && !read; }
 
 int16_t ym2149_t::sample() noexcept
 {
+	read = true;
 	// Grab the current envelope level
 	const uint8_t envelopeLevel{};
 

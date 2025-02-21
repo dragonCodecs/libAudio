@@ -59,6 +59,7 @@ private:
 
 	clockManager_t clockManager;
 	bool ready{false};
+	bool read{false};
 
 	// Have enough space for 2048 samples of adjustment history
 	constexpr static size_t dcAdjustmentLengthLog2{11U};
