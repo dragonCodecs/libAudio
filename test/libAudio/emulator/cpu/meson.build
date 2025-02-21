@@ -1,9 +1,9 @@
 cpuTests = []
 
 if formats['SNDH']
-cpuTests += [
-	'testM68k'
-]
+	cpuTests += [
+		'testM68k',
+	]
 endif
 
 testObjectMap = {
