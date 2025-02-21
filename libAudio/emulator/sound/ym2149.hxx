@@ -27,7 +27,10 @@ namespace ym2149
 		void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint8_t> &dist) noexcept;
 		void step() noexcept;
 		[[nodiscard]] bool state(bool toneInhibit) const noexcept;
+		[[nodiscard]] bool shiftRequired() const noexcept;
 	};
+
+	[[nodiscard]] uint16_t logLevel(uint8_t level) noexcept;
 } // namespace ym2149
 
 struct ym2149_t final : public clockedPeripheral_t<uint32_t>
@@ -57,10 +60,17 @@ private:
 	clockManager_t clockManager;
 	bool ready{false};
 
+	// Have enough space for 2048 samples of adjustment history
+	constexpr static size_t dcAdjustmentLengthLog2{11U};
+	std::array<uint16_t, 1U << dcAdjustmentLengthLog2> dcAdjustmentBuffer{};
+	size_t dcAdjustmentPosition{0U};
+	uint32_t dcAdjustmentSum{0U};
+
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
 
 	void updateFSM() noexcept;
+	[[nodisard]] int16_t dcAdjust(uint16_t sample) noexcept;
 
 public:
 	ym2149_t(uint32_t clockFrequency) noexcept;
@@ -72,6 +82,7 @@ public:
 
 	[[nodiscard]] bool clockCycle() noexcept override;
 	[[nodiscard]] bool sampleReady() const noexcept;
+	[[nodiscard]] int16_t sample() noexcept;
 };
 
 #endif /*EMULATOR_SOUND_YM2149_HXX*/

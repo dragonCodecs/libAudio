@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
+#include <cmath>
 #include <random>
+#include <numeric>
 #include <substrate/span>
 #include <substrate/indexed_iterator>
 #include "ym2149.hxx"
@@ -227,6 +229,56 @@ void ym2149_t::updateFSM() noexcept
 
 bool ym2149_t::sampleReady() const noexcept { return ready; }
 
+int16_t ym2149_t::sample() noexcept
+{
+	// Grab the current envelope level
+	const uint8_t envelopeLevel{};
+
+	std::array<uint16_t, 3U> levels;
+	// Go through each channel and compute the volume level associated with it
+	for (const auto &[channel, state] : substrate::indexedIterator_t{channelState})
+	{
+		const auto level
+		{
+			[&]() -> uint8_t
+			{
+				if (state)
+				{
+					// Extract the level information from the channel
+					const auto rawLevel{channels[channel].level};
+					// If it indicates the level is controlled by the envelope, use that
+					if (rawLevel & 0x10U)
+						return envelopeLevel;
+					// Otherwise, use the raw level for the channel, scaled appropriately
+					else
+						return rawLevel << 1U;
+				}
+				return 0U;
+			}()
+		};
+		// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
+		const auto shift{static_cast<size_t>(channels[channel].shiftRequired())};
+		// Compute and store the final level using the logarithm table for the chip
+		levels[channel] = ym2149::logLevel(level) >> shift;
+	}
+
+	// Sum the levels and do DC adjustment
+	return dcAdjust(std::reduce(levels.begin(), levels.end()));
+}
+
+int16_t ym2149_t::dcAdjust(uint16_t sample) noexcept
+{
+	// First adjust the DC ballancing adjustment sum
+	dcAdjustmentSum -= dcAdjustmentBuffer[dcAdjustmentPosition];
+	dcAdjustmentSum += sample;
+	// Then store this sample in the buffer
+	dcAdjustmentBuffer[dcAdjustmentPosition] = sample;
+	// Update the adjustment position to make this a circular buffer
+	dcAdjustmentPosition = (dcAdjustmentPosition + 1U) & (dcAdjustmentBuffer.size() - 1U);
+	// Now scale the sum and apply it to the sample to get the final sample
+	return static_cast<int16_t>(int32_t{sample} - int32_t(dcAdjustmentSum >> dcAdjustmentLengthLog2));
+}
+
 namespace ym2149
 {
 	void channel_t::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint8_t> &dist) noexcept
@@ -268,4 +320,18 @@ namespace ym2149
 
 	bool channel_t::state(const bool toneInhibit) const noexcept
 		{ return edgeState || toneInhibit; }
+
+	bool channel_t::shiftRequired() const noexcept
+		{ return period <= 1U; }
+
+	// Logarithmic volume levels from 1 / (sqrt(2) ^ (level / 2))
+	// The sequence is reversed though to get 0 to be the lowest volume
+	uint16_t logLevel(const uint8_t level) noexcept
+	{
+		// Do the main computation
+		double result{1.0 / std::pow(std::sqrt(2.0), (31U - level) / 2.0)};
+		// Scale the result to make space for 3 channels of max volume, and convert
+		// to the range [0, 32767] to make the result
+		return static_cast<uint16_t>((result / 3.0) * 32767U);
+	}
 } // namespace ym2149
