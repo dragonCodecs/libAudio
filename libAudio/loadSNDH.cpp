@@ -20,8 +20,9 @@ using substrate::make_unique_nothrow;
 
 struct sndh_t::decoderContext_t final
 {
-	uint8_t buffer[8192];
+	uint8_t playbackBuffer[8192];
 	atariSTe_t emulator{};
+	bool eof{false};
 };
 
 using libAudio::console::asHex_t;
@@ -39,6 +40,11 @@ void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {
 	info.title(std::move(metadata.title));
 	info.artist(std::move(metadata.artist));
+
+	// The playback engine is written to generate data at 48kHz, 16-bit, one channel
+	info.bitRate(48000U);
+	info.bitsPerSample(16U);
+	info.channels(1U);
 }
 
 sndh_t *sndh_t::openR(const char *const fileName) noexcept try
@@ -71,6 +77,13 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 		console.error("Error while setting up emulator for SNDH file"sv);
 		return nullptr;
 	}
+
+	// Set up the playback engine if necessary
+	if (ToPlayback)
+	{
+		if (ExternalPlayback == 0)
+			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 	return file.release();
 }
 catch (const std::exception &)
@@ -83,21 +96,29 @@ void *sndhOpenR(const char *fileName) { return sndh_t::openR(fileName); }
 
 int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
+	const auto buffer = static_cast<int16_t *>(bufferPtr);
 	auto &ctx = *context();
-	// Advance the emulator state till we get a new sample out
-	while (!ctx.emulator.sampleReady())
+	if (ctx.eof)
+		return -2;
+	// Fill the sample buffer as much as we can
+	for (size_t offset = 0U; offset < length / 2U; ++offset)
 	{
-		if (!ctx.emulator.advanceClock())
+		// Advance the emulator state till we get a new sample out
+		while (!ctx.emulator.sampleReady())
 		{
-			// If something went wrong while emulating the machine, display the
-			// crash state to allow debugging
-			ctx.emulator.displayCPUState();
-			break;
+			if (!ctx.emulator.advanceClock())
+			{
+				// If something went wrong while emulating the machine, display the
+				// crash state to allow debugging
+				ctx.emulator.displayCPUState();
+				return -1;
+			}
 		}
+		buffer[offset] = ctx.emulator.readSample();
 	}
-	(void)bufferPtr;
-	(void)length;
-	return -2;
+	ctx.eof = true;
+	// Return how much we filled the buffer by
+	return length & ~1U;
 }
 
 bool isSNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
