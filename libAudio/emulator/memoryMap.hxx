@@ -88,7 +88,7 @@ public:
 	~clockedPeripheral_t() noexcept override = default;
 
 	[[nodiscard]] uint32_t clockFrequency() const noexcept { return _clockFrequency; }
-	virtual bool clockCycle() noexcept = 0;
+	[[nodiscard]] virtual bool clockCycle() noexcept = 0;
 };
 
 template<typename address_t, address_t validAddressMask = std::numeric_limits<address_t>::max()> struct memoryMap_t

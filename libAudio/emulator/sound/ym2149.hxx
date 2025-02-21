@@ -43,7 +43,7 @@ public:
 	ym2149_t &operator =(ym2149_t &&) = default;
 	~ym2149_t() noexcept override = default;
 
-	bool clockCycle() noexcept override;
+	[[nodiscard]] bool clockCycle() noexcept override;
 };
 
 #endif /*EMULATOR_SOUND_YM2149_HXX*/
