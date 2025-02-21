@@ -67,6 +67,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 		// Having done this, set up to play the first subtune in the file
 		!ctx.emulator.init(0U))
 	{
+		ctx.emulator.displayCPUState();
 		console.error("Error while setting up emulator for SNDH file"sv);
 		return nullptr;
 	}
