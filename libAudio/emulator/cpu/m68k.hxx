@@ -43,6 +43,7 @@ struct motorola68000_t final
 private:
 	memoryMap_t<uint32_t, 0x00ffffffU> &_peripherals;
 	uint32_t clockFrequency;
+	uint32_t waitCycles{0U};
 
 	// There are 8 data registers, 7 address registers, 3 stack pointers,
 	// a program counter and a status register in a m68k
@@ -63,6 +64,8 @@ private:
 	// Likewise, 8-15 - see M68000PRM pg17, §1.2.3.3; and 3-7 - see M68000PRM pg18, §1.2.3.4
 	uint32_t fpStatus;
 	uint32_t fpInstructionAddress;
+
+	bool trapState{false};
 
 	// Instruction dispatch/execution functions
 	[[nodiscard]] int16_t readIndex(uint16_t extension) const noexcept;
@@ -146,6 +149,8 @@ public:
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;
 	[[nodiscard]] uint32_t readProgramCounter() const noexcept;
 	[[nodiscard]] stepResult_t step() noexcept;
+	[[nodiscard]] bool advanceClock() noexcept;
+	[[nodiscard]] bool trapped() const noexcept { return trapState; }
 
 	void displayRegs() const noexcept;
 

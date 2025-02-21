@@ -2500,6 +2500,27 @@ stepResult_t motorola68000_t::step() noexcept
 	return {false, false, 34U};
 }
 
+bool motorola68000_t::advanceClock() noexcept
+{
+	// Check to see if this cycle we should actually run the core, or just fake it
+	if (waitCycles == 0U)
+	{
+		// We should actually run the core, okay.. let's run an instruction then
+		const auto result{step()};
+		// Unpack how many cycles the instruction took and skip one of them for this cycle
+		waitCycles = result.cyclesTaken;
+		if (waitCycles)
+			--waitCycles;
+		// Unpack if the instruction trapped
+		trapState = result.trap;
+		// Return if the instruction was valid
+		return result.validInsn;
+	}
+	// We should not actually do anything, waste a cycle and get done
+	--waitCycles;
+	return true;
+}
+
 void motorola68000_t::displayRegs() const noexcept
 {
 	// Start by displaying the d-regs
