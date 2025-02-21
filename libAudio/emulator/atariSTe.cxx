@@ -33,10 +33,16 @@ atariSTe_t::atariSTe_t() noexcept
 			// Make sure we're invoked only with a std::unique_ptr<> of some kind of clockedPeripheral_t
 			static_assert(isUniquePtr_v<decltype(peripheral)> && isClockedPeripheral_v<decltype(peripheral)>);
 
+			// Extract a pointer to the device
+			auto *const ptr{peripheral.get()};
+
 			// Add the device to the clocking map according to the clocking ratio set up
-			clockedPeripherals[peripheral.get()] = {systemClockFrequency, peripheral->clockFrequency()};
+			clockedPeripherals[ptr] = {systemClockFrequency, peripheral->clockFrequency()};
 			// Add the device to the address map
 			addressMap[addressRange] = std::move(peripheral);
+
+			// Return that pointer for use externally
+			return ptr;
 		}
 	};
 
@@ -45,7 +51,7 @@ atariSTe_t::atariSTe_t() noexcept
 	// TODO: TOS ROM needs to go at 0xe00000U, it is in a 1MiB window
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
-	addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz));
+	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz));
 	// sound DMA at 0xff8900
 }
 
@@ -115,6 +121,9 @@ bool atariSTe_t::advanceClock() noexcept
 
 	return true;
 }
+
+bool atariSTe_t::sampleReady() const noexcept
+	{ return psg->sampleReady(); }
 
 void atariSTe_t::displayCPUState() const noexcept
 	{ cpu.displayRegs(); }

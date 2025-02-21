@@ -6,6 +6,7 @@
 #include <map>
 #include "memoryMap.hxx"
 #include "cpu/m68k.hxx"
+#include "sound/ym2149.hxx"
 #include "unitsHelpers.hxx"
 #include "sndh/iceDecrunch.hxx"
 
@@ -15,6 +16,7 @@ struct atariSTe_t : protected memoryMap_t<uint32_t, 0x00ffffffU>
 private:
 	constexpr static auto systemClockFrequency{32_MHz};
 	motorola68000_t cpu{*this, 8_MHz};
+	ym2149_t *psg{nullptr};
 
 	uint32_t timeSinceLastCPUCycle{0U};
 	std::map<clockedPeripheral_t<uint32_t> *, clockManager_t> clockedPeripherals{};
@@ -27,6 +29,7 @@ public:
 	[[nodiscard]] bool exit() noexcept;
 
 	[[nodiscard]] bool advanceClock() noexcept;
+	[[nodiscard]] bool sampleReady() const noexcept;
 
 	void displayCPUState() const noexcept;
 };

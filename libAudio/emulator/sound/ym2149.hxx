@@ -44,6 +44,7 @@ public:
 	~ym2149_t() noexcept override = default;
 
 	[[nodiscard]] bool clockCycle() noexcept override;
+	[[nodiscard]] bool sampleReady() const noexcept;
 };
 
 #endif /*EMULATOR_SOUND_YM2149_HXX*/

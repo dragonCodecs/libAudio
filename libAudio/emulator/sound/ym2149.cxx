@@ -159,6 +159,11 @@ bool ym2149_t::clockCycle() noexcept
 	return true;
 }
 
+bool ym2149_t::sampleReady() const noexcept
+{
+	return true;
+}
+
 namespace ym2149
 {
 	void channel_t::writeFrequency(const uint8_t value, const bool roughAdjust) noexcept
