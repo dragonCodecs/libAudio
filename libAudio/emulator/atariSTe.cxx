@@ -37,5 +37,11 @@ bool atariSTe_t::init(const uint16_t subtune) noexcept
 	return cpu.executeToReturn(0x001000U, 0x800000U, false);
 }
 
+bool atariSTe_t::exit() noexcept
+	{ return cpu.executeToReturn(0x001004U, 0x800000U, false); }
+
+bool atariSTe_t::play() noexcept
+	{ return cpu.executeToReturn(0x001008U, 0x800000U, false); }
+
 void atariSTe_t::displayCPUState() const noexcept
 	{ cpu.displayRegs(); }

@@ -19,6 +19,10 @@ public:
 
 	[[nodiscard]] bool copyToRAM(sndhDecruncher_t &data) noexcept;
 	[[nodiscard]] bool init(uint16_t subtune) noexcept;
+	[[nodiscard]] bool exit() noexcept;
+	[[nodiscard]] bool play() noexcept;
+
+	void displayCPUState() const noexcept;
 };
 
 #endif /*EMULATOR_ATARI_STE_HXX*/
