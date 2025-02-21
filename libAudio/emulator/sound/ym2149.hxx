@@ -16,6 +16,7 @@ namespace ym2149
 		uint8_t level{0U};
 
 		void writeFrequency(uint8_t value, bool roughAdjust) noexcept;
+		uint8_t readFrequency(bool roughAdjust) const noexcept;
 	};
 } // namespace ym2149
 
