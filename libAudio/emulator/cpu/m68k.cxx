@@ -2499,6 +2499,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchSUB(instruction);
 		case instruction_t::subq:
 			return dispatchSUBQ(instruction);
+		case instruction_t::swap:
+			return dispatchSWAP(instruction);
 		case instruction_t::tst:
 			return dispatchTST(instruction);
 	}
@@ -4106,6 +4108,33 @@ stepResult_t motorola68000_t::dispatchSUBQ(const decodedOperation_t &insn) noexc
 	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, static_cast<uint32_t>(result));
 
 	// Get done and figure out how many cycles that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchSWAP(const decodedOperation_t &insn) noexcept
+{
+	// Extract the data register to swap the contents of and do the swapping
+	const auto value
+	{
+		[](const uint32_t data) -> uint32_t
+		{
+			return (data >> 16U) | (data << 16U);
+		}(dataRegister(insn.ry))
+	};
+	// Now recompute the flag bits, starting with negative
+	if (value & (1U << 31U))
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Now check if the result is zero
+	if (value == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Overflow and carry are both always cleared
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Write the result back and return how long that took
+	dataRegister(insn.ry) = value;
 	return {true, false, 0U};
 }
 
