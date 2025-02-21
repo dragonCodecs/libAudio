@@ -25,7 +25,86 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 			selectedRegister = data[0U] & 0x0fU;
 			break;
 		case 2U: // Register write
-			//
+			// Where we write depends on the register selection, so..
+			switch (selectedRegister)
+			{
+				// Channel frequency rough/fine adjustment
+				case 0U:
+				case 1U:
+				case 2U:
+				case 3U:
+				case 4U:
+				case 5U:
+				{
+					// Turn the register selection into a channel number and rough adjustment indicator
+					const auto channelNumber{static_cast<size_t>(selectedRegister >> 1U)};
+					const auto roughAdjustment{(selectedRegister & 1U) != 0U};
+					// Select the channel and write the adjustment
+					channel[channelNumber].writeFrequency(data[0U], roughAdjustment);
+					break;
+				}
+				// Noise frequency adjustment
+				case 6U:
+					// Register is actually only 5 bit, so discard the upper 3
+					noiseFrequency = data[0U] & 0x1fU;
+					break;
+				// Mixer configuration adjustment
+				case 7U:
+					mixerConfig = data[0U];
+					break;
+				// Channel level adjustment
+				case 8U:
+				case 9U:
+				case 10U:
+				{
+					// Turn the register selection into a channel number
+					const size_t channelNumber{selectedRegister - 8U};
+					// Adjust that channel's levels (only 5 bits valid, discard the upper 3)
+					channel[channelNumber].level = data[0U] & 0x1fU;
+					break;
+				}
+				// Envelope frequency fine adjustment
+				case 11U:
+					envelopeFrequency &= 0xff00U;
+					envelopeFrequency |= data[0U];
+					break;
+				// Envelope frequency rough adjustment
+				case 12U:
+					envelopeFrequency &= 0x00ffU;
+					envelopeFrequency |= data[0U] << 8U;
+					break;
+				// Envelope shape adjustment
+				case 13U:
+					envelopeShape = data[0U] & 0x0fU;
+					break;
+				// I/O port data
+				case 14U:
+				case 15U:
+				{
+					// Turn the register selection into a port number (repesenting A vs B)
+					const auto port{selectedRegister & 1U};
+					ioPort[port] = data[0U];
+					break;
+				}
+			}
 			break;
 	}
 }
+
+namespace ym2149
+{
+	void channel_t::writeFrequency(const uint8_t value, const bool roughAdjust) noexcept
+	{
+		if (roughAdjust)
+		{
+			frequency &= 0x00ff0U;
+			// Only 4 bits valid, throw away the upper 4
+			frequency |= (value & 0x0fU) << 8U;
+		}
+		else
+		{
+			frequency &= 0xff00U;
+			frequency |= value;
+		}
+	}
+} // namespace ym2149
