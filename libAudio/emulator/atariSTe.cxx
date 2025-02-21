@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include "atariSTe.hxx"
 #include "ram.hxx"
+#include "sound/ym2149.hxx"
 #include "unitsHelpers.hxx"
 #include "sndh/iceDecrunch.hxx"
 
@@ -14,7 +15,7 @@ atariSTe_t::atariSTe_t() noexcept
 	// TODO: TOS ROM needs to go at 0xe00000U, it is in a 1MiB window
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
-	// PSG at 0xff8800
+	addressMap[{0xff8800U, 0xff8804U}] = std::make_unique<ym2149_t>(2_MHz);
 	// sound DMA at 0xff8900
 }
 
