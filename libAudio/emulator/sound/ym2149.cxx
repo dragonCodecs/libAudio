@@ -4,7 +4,7 @@
 #include <substrate/span>
 #include "ym2149.hxx"
 
-ym2149_t::ym2149_t(const uint32_t clockFreq) noexcept : clockFrequency{clockFreq}
+ym2149_t::ym2149_t(const uint32_t clockFreq) noexcept : clockedPeripheral_t<uint32_t>{clockFreq}
 {
 }
 
@@ -152,6 +152,11 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 			}
 			break;
 	}
+}
+
+bool ym2149_t::clockCycle() noexcept
+{
+	return true;
 }
 
 namespace ym2149

@@ -20,29 +20,30 @@ namespace ym2149
 	};
 } // namespace ym2149
 
-struct ym2149_t final : public peripheral_t<uint32_t>
+struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
-	uint32_t clockFrequency;
 	uint8_t selectedRegister{0U};
 
-	std::array<ym2149::channel_t, 3U> channel;
-	uint8_t noiseFrequency;
-	uint8_t mixerConfig;
-	uint16_t envelopeFrequency;
-	uint8_t envelopeShape;
-	std::array<uint8_t, 2U> ioPort;
+	std::array<ym2149::channel_t, 3U> channel{};
+	uint8_t noiseFrequency{0U};
+	uint8_t mixerConfig{0U};
+	uint16_t envelopeFrequency{0U};
+	uint8_t envelopeShape{0U};
+	std::array<uint8_t, 2U> ioPort{};
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
 
 public:
-	ym2149_t(uint32_t clockFreq) noexcept;
+	ym2149_t(uint32_t clockFrequency) noexcept;
 	ym2149_t(const ym2149_t &) = default;
 	ym2149_t(ym2149_t &&) = default;
 	ym2149_t &operator =(const ym2149_t &) = default;
 	ym2149_t &operator =(ym2149_t &&) = default;
 	~ym2149_t() noexcept override = default;
+
+	bool clockCycle() noexcept override;
 };
 
 #endif /*EMULATOR_SOUND_YM2149_HXX*/
