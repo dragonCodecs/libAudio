@@ -83,6 +83,18 @@ void *sndhOpenR(const char *fileName) { return sndh_t::openR(fileName); }
 
 int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
+	auto &ctx = *context();
+	// Advance the emulator state till we get a new sample out
+	while (!ctx.emulator.sampleReady())
+	{
+		if (!ctx.emulator.advanceClock())
+		{
+			// If something went wrong while emulating the machine, display the
+			// crash state to allow debugging
+			ctx.emulator.displayCPUState();
+			break;
+		}
+	}
 	(void)bufferPtr;
 	(void)length;
 	return -2;
