@@ -25,7 +25,8 @@ public:
 	[[nodiscard]] bool copyToRAM(sndhDecruncher_t &data) noexcept;
 	[[nodiscard]] bool init(uint16_t subtune) noexcept;
 	[[nodiscard]] bool exit() noexcept;
-	[[nodiscard]] bool play() noexcept;
+
+	[[nodiscard]] bool advanceClock() noexcept;
 
 	void displayCPUState() const noexcept;
 };
