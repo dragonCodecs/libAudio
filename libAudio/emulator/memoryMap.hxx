@@ -50,6 +50,7 @@ namespace std
 	};
 }
 
+// A generic clockless peripheral
 template<typename address_t> struct peripheral_t
 {
 private:
@@ -66,6 +67,28 @@ public:
 
 	virtual void readAddress(address_t address, substrate::span<uint8_t> data) const noexcept = 0;
 	virtual void writeAddress(address_t address, const substrate::span<uint8_t> &data) noexcept = 0;
+};
+
+// A peripheral that requires clocking at some frequency
+template<typename address_t> struct clockedPeripheral_t : public peripheral_t<address_t>
+{
+private:
+	clockedPeripheral_t(const clockedPeripheral_t &) = delete;
+	clockedPeripheral_t(clockedPeripheral_t &&) = delete;
+	clockedPeripheral_t &operator =(const clockedPeripheral_t &) = delete;
+	clockedPeripheral_t &operator =(clockedPeripheral_t &&) = delete;
+
+	uint32_t _clockFrequency;
+
+protected:
+	clockedPeripheral_t(const uint32_t clockFrequency) noexcept :
+		peripheral_t<address_t>{}, _clockFrequency{clockFrequency} { }
+
+public:
+	~clockedPeripheral_t() noexcept override = default;
+
+	[[nodiscard]] uint32_t clockFrequency() const noexcept { return _clockFrequency; }
+	virtual bool clockCycle() noexcept = 0;
 };
 
 template<typename address_t, address_t validAddressMask = std::numeric_limits<address_t>::max()> struct memoryMap_t
