@@ -57,11 +57,11 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 		}
 		// Envelope frequency fine adjustment
 		case 11U:
-			data[0U] = static_cast<uint8_t>(envelopeFrequency);
+			data[0U] = static_cast<uint8_t>(envelopePeriod);
 			break;
 		// Envelope frequency rough adjustment
 		case 12U:
-			data[0U] = static_cast<uint8_t>(envelopeFrequency >> 8U);
+			data[0U] = static_cast<uint8_t>(envelopePeriod >> 8U);
 			break;
 		// Envelope shape adjustment
 		case 13U:
@@ -132,13 +132,13 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				}
 				// Envelope frequency fine adjustment
 				case 11U:
-					envelopeFrequency &= 0xff00U;
-					envelopeFrequency |= data[0U];
+					envelopePeriod &= 0xff00U;
+					envelopePeriod |= data[0U];
 					break;
 				// Envelope frequency rough adjustment
 				case 12U:
-					envelopeFrequency &= 0x00ffU;
-					envelopeFrequency |= data[0U] << 8U;
+					envelopePeriod &= 0x00ffU;
+					envelopePeriod |= data[0U] << 8U;
 					break;
 				// Envelope shape adjustment
 				case 13U:
@@ -172,8 +172,19 @@ bool ym2149_t::clockCycle() noexcept
 
 void ym2149_t::updateFSM() noexcept
 {
+	// Step all the channels forward one internal cycle
 	for (auto &channel : channels)
 		channel.step();
+
+	// Step the envelope generator forward one internal cycle
+	// If the envelope counter exceeds the period of the envelope
+	if (++envelopeCounter >= envelopePeriod)
+	{
+		// Reset the counter
+		envelopeCounter = 0U;
+		// Update the envelope position (64 possible positions)
+		envelopePosition = (envelopePosition + 1U) & 0x3fU;
+	}
 }
 
 bool ym2149_t::sampleReady() const noexcept

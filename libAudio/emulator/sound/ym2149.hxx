@@ -41,8 +41,10 @@ private:
 	std::array<ym2149::channel_t, 3U> channels{};
 	uint8_t noiseFrequency{0U};
 	uint8_t mixerConfig{0U};
-	uint16_t envelopeFrequency{0U};
+	uint16_t envelopePeriod{0U};
+	uint16_t envelopeCounter{0U};
 	uint8_t envelopeShape{0U};
+	uint8_t envelopePosition{0U};
 	std::array<uint8_t, 2U> ioPort{};
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
