@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
+#include <random>
 #include <substrate/span>
 #include "ym2149.hxx"
 
-ym2149_t::ym2149_t(const uint32_t clockFreq) noexcept : clockedPeripheral_t<uint32_t>{clockFreq}
+ym2149_t::ym2149_t(const uint32_t clockFreq) noexcept : clockedPeripheral_t<uint32_t>{clockFreq},
+	rng{std::random_device{}()}, rngDistribution{0U, 1U}
 {
+	for (auto &channel : channels)
+		channel.resetEdgeState(rng, rngDistribution);
 }
 
 void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
@@ -168,6 +172,8 @@ bool ym2149_t::clockCycle() noexcept
 
 void ym2149_t::updateFSM() noexcept
 {
+	for (auto &channel : channels)
+		channel.step();
 }
 
 bool ym2149_t::sampleReady() const noexcept
@@ -177,6 +183,9 @@ bool ym2149_t::sampleReady() const noexcept
 
 namespace ym2149
 {
+	void channel_t::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint8_t> &dist) noexcept
+		{ edgeState = static_cast<bool>(dist(rng)); }
+
 	void channel_t::writeFrequency(const uint8_t value, const bool roughAdjust) noexcept
 	{
 		if (roughAdjust)
@@ -198,5 +207,16 @@ namespace ym2149
 			return static_cast<uint8_t>(period >> 8U);
 		else
 			return static_cast<uint8_t>(period);
+	}
+
+	void channel_t::step() noexcept
+	{
+		// If our channel's period counter exceeds the period of the current tone frequency
+		if (++counter >= period)
+		{
+			// Reset the counter and update the edge states
+			counter = 0U;
+			edgeState = !edgeState;
+		}
 	}
 } // namespace ym2149
