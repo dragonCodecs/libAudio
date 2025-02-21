@@ -3,6 +3,7 @@
 #ifndef EMULATOR_ATARI_STE_HXX
 #define EMULATOR_ATARI_STE_HXX
 
+#include <map>
 #include "memoryMap.hxx"
 #include "cpu/m68k.hxx"
 #include "unitsHelpers.hxx"
@@ -12,7 +13,11 @@
 struct atariSTe_t : protected memoryMap_t<uint32_t, 0x00ffffffU>
 {
 private:
+	constexpr static auto systemClockFrequency{32_MHz};
 	motorola68000_t cpu{*this, 8_MHz};
+
+	uint32_t timeSinceLastCPUCycle{0U};
+	std::map<clockedPeripheral_t<uint32_t> *, clockManager_t> clockedPeripherals{};
 
 public:
 	atariSTe_t() noexcept;

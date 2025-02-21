@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
+#include <type_traits>
 #include "atariSTe.hxx"
 #include "ram.hxx"
 #include "sound/ym2149.hxx"
@@ -8,14 +9,38 @@
 
 using stRAM_t = ram_t<uint32_t, 8_MiB>;
 
+template<typename T> struct isUniquePtr : std::false_type { };
+template<typename T> struct isUniquePtr<std::unique_ptr<T>> : std::true_type { };
+template<typename T> constexpr inline bool isUniquePtr_v = isUniquePtr<T>::value;
+
+template<typename T> struct isClockedPeripheral :
+	std::is_base_of<clockedPeripheral_t<uint32_t>, T> { };
+template<typename T> struct isClockedPeripheral<std::unique_ptr<T>> :
+	isClockedPeripheral<T> { };
+template<typename T> constexpr inline bool isClockedPeripheral_v = isClockedPeripheral<T>::value;
+
 atariSTe_t::atariSTe_t() noexcept
 {
+	const auto addClockedPeripheral
+	{
+		[this](const memoryRange_t<uint32_t> addressRange, auto peripheral)
+		{
+			// Make sure we're invoked only with a std::unique_ptr<> of some kind of clockedPeripheral_t
+			static_assert(isUniquePtr_v<decltype(peripheral)> && isClockedPeripheral_v<decltype(peripheral)>);
+
+			// Add the device to the clocking map according to the clocking ratio set up
+			clockedPeripherals[peripheral.get()] = {systemClockFrequency, peripheral->clockFrequency()};
+			// Add the device to the address map
+			addressMap[addressRange] = std::move(peripheral);
+		}
+	};
+
 	// Build the system memory map
 	addressMap[{0x000000U, 0x800000U}] = std::make_unique<stRAM_t>();
 	// TODO: TOS ROM needs to go at 0xe00000U, it is in a 1MiB window
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
-	addressMap[{0xff8800U, 0xff8804U}] = std::make_unique<ym2149_t>(2_MHz);
+	addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz));
 	// sound DMA at 0xff8900
 }
 
