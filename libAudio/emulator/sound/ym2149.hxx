@@ -36,7 +36,7 @@ private:
 	std::uniform_int_distribution<uint8_t> rngDistribution{};
 
 	uint8_t selectedRegister{0U};
-	uint8_t cyclesToUpdate{0U};
+	uint8_t cyclesTillUpdate{0U};
 
 	std::array<ym2149::channel_t, 3U> channels{};
 	uint8_t noiseFrequency{0U};
