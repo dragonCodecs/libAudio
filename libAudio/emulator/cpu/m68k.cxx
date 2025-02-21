@@ -1034,8 +1034,9 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::lsr,
 				0U,
 				eaReg,
-				{},
-				0U, 0U,
+				{operationFlags_t::memoryNotRegister},
+				// The EA form of this instruction must be executed in u16 mode
+				1U, 0U,
 				eaMode,
 			};
 		case 0xe3c0U:
@@ -2476,6 +2477,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchLEA(instruction);
 		case instruction_t::lsl:
 			return dispatchLSL(instruction);
+		case instruction_t::lsr:
+			return dispatchLSR(instruction);
 		case instruction_t::move:
 			return dispatchMOVE(instruction);
 		case instruction_t::movea:
@@ -3583,6 +3586,62 @@ stepResult_t motorola68000_t::dispatchLSL(const decodedOperation_t &insn) noexce
 	const auto carry{shift == 0U ? 0U : (value >> (operationBits - shift)) & 1U};
 	// Now actually do the shift on the value
 	const auto result{(value << shift) & mask};
+	// Recompute all the status bits
+	recomputeStatusFlags(result, carry, signBit);
+
+	// Finally, write the result back and get done
+	writeDataRegisterSized(insn.ry, operationSize, result);
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchLSR(const decodedOperation_t &insn) noexcept
+{
+	// Figure out the operation width
+	const auto operationSize{unpackSize(insn.operationSize)};
+	const auto operationBits{operationSize * 8U};
+	// Convert that into a mask to apply to the value
+	const auto mask{static_cast<uint32_t>((UINT64_C(1) << operationBits) - 1U)};
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+
+	// LSL has 3 forms, check if this is the effective addressed form
+	if (insn.flags.includes(operationFlags_t::memoryNotRegister))
+	{
+		// Extract the address of the manipulation target
+		const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+		// Extract the data to shift from the EA target
+		const auto value{readValue<uint16_t>(insn.mode, insn.ry, effectiveAddress)};
+		// Extract the value to use as the new carry and extend bits
+		const auto carry{value & 1U};
+		// Now actually do the shift on the value
+		const auto result{uint16_t(value >> 1U)};
+		// Recompute all the status bits
+		recomputeStatusFlags(result, carry, signBit);
+
+		// Finally, write the result back to the EA target and get done
+		writeValue(insn.mode, insn.ry, effectiveAddress, result);
+		return {true, false, 0U};
+	}
+	// Figure out the shift amount to use
+	const auto shift
+	{
+		[&]() -> size_t
+		{
+			// Check if this one is the one where rx is an immediate operating on a data register
+			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
+				// Unpack the immediate as the shift amount (remapping 0 as 8)
+				return insn.rx == 0U ? 8U : insn.rx;
+			// Otherwise, extract the data register specified and bound the shift
+			return dataRegister(insn.rx) & 63U;
+		}()
+	};
+
+	// Extract the data to shift from the data register, and mask it
+	const auto value{dataRegister(insn.ry) & mask};
+	// Extract the value to use as the new carry and extend bits
+	const auto carry{shift == 0U ? 0U : (value >> (shift - 1U)) & 1U};
+	// Now actually do the shift on the value
+	const auto result{(value >> shift) & mask};
 	// Recompute all the status bits
 	recomputeStatusFlags(result, carry, signBit);
 

@@ -126,6 +126,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchDBcc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLSL(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchLSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVE(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVESpecialCCR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMOVESpecialSR(const decodedOperation_t &insn) noexcept;
