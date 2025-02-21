@@ -2384,16 +2384,16 @@ void motorola68000_t::executeFrom(const uint32_t entryAddress, const uint32_t st
 		systemStackPointer = stackTop;
 		status.set(m68kStatusBits_t::supervisor);
 	}
+	// Set up a sentinel value on the stack for RTS to hit to tell us we're done
+	auto &stackPointer{activeStackPointer()};
+	stackPointer -= 4U;
+	_peripherals.writeAddress<uint32_t>(stackPointer, 0xffffffffU);
 }
 
 bool motorola68000_t::executeToReturn(const uint32_t entryAddress, const uint32_t stackTop, const bool asUser) noexcept
 {
 	// Set up where we're going to execute from
 	executeFrom(entryAddress, stackTop, asUser);
-	// Set up the calling context so we know when we're doing
-	auto &stackPointer{activeStackPointer()};
-	stackPointer -= 4U;
-	_peripherals.writeAddress<uint32_t>(stackPointer, 0xffffffffU);
 	// Now run till we RTS and hit the sentinel program counter state
 	while (true)
 	{
