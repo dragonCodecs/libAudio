@@ -283,7 +283,7 @@ int16_t ym2149_t::dcAdjust(uint16_t sample) noexcept
 
 namespace ym2149
 {
-	void channel_t::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint8_t> &dist) noexcept
+	void channel_t::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept
 		{ edgeState = static_cast<bool>(dist(rng)); }
 
 	void channel_t::writeFrequency(const uint8_t value, const bool roughAdjust) noexcept

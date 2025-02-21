@@ -24,7 +24,7 @@ namespace ym2149
 		void writeFrequency(uint8_t value, bool roughAdjust) noexcept;
 		uint8_t readFrequency(bool roughAdjust) const noexcept;
 
-		void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint8_t> &dist) noexcept;
+		void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept;
 		void step() noexcept;
 		[[nodiscard]] bool state(bool toneInhibit) const noexcept;
 		[[nodiscard]] bool shiftRequired() const noexcept;
@@ -37,7 +37,7 @@ struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
 	std::minstd_rand rng;
-	std::uniform_int_distribution<uint8_t> rngDistribution{};
+	std::uniform_int_distribution<uint16_t> rngDistribution{};
 
 	uint8_t selectedRegister{0U};
 	uint8_t cyclesTillUpdate{0U};
