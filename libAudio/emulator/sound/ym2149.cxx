@@ -156,7 +156,18 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 
 bool ym2149_t::clockCycle() noexcept
 {
+	// If we should update the FSM in this cycle, do so
+	if (cyclesToUpdate == 0U)
+		updateFSM();
+	// The internal state machine runs at 1/8th the device clock speed
+	// (presume that ~SEL is low, yielding f(T) = (f(Master) / 2) / (16 * TP)
+	// which simplifies to f(T) = f(Master) / (8 * TP))
+	cyclesToUpdate = (cyclesToUpdate + 1U) & 7U;
 	return true;
+}
+
+void ym2149_t::updateFSM() noexcept
+{
 }
 
 bool ym2149_t::sampleReady() const noexcept

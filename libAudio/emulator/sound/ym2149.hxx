@@ -24,6 +24,7 @@ struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
 	uint8_t selectedRegister{0U};
+	uint8_t cyclesToUpdate{0U};
 
 	std::array<ym2149::channel_t, 3U> channel{};
 	uint8_t noiseFrequency{0U};
@@ -34,6 +35,8 @@ private:
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
+
+	void updateFSM() noexcept;
 
 public:
 	ym2149_t(uint32_t clockFrequency) noexcept;
