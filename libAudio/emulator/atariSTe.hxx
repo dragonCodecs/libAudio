@@ -30,6 +30,7 @@ public:
 
 	[[nodiscard]] bool advanceClock() noexcept;
 	[[nodiscard]] bool sampleReady() const noexcept;
+	[[nodiscard]] int16_t readSample() noexcept;
 
 	void displayCPUState() const noexcept;
 };

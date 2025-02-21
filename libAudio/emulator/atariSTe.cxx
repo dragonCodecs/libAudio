@@ -125,5 +125,8 @@ bool atariSTe_t::advanceClock() noexcept
 bool atariSTe_t::sampleReady() const noexcept
 	{ return psg->sampleReady(); }
 
+int16_t atariSTe_t::readSample() noexcept
+	{ return psg->sample(); }
+
 void atariSTe_t::displayCPUState() const noexcept
 	{ cpu.displayRegs(); }
