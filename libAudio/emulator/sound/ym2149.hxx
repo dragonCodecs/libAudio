@@ -51,6 +51,9 @@ private:
 	bool noiseState{0U};
 	uint32_t noiseLFSR{1U};
 
+	clockManager_t clockManager;
+	bool ready{false};
+
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
 

@@ -27,7 +27,7 @@ constexpr uint64_t operator ""_TB(const unsigned long long value) noexcept
 constexpr uint64_t operator ""_PB(const unsigned long long value) noexcept
 	{ return static_cast<uint64_t>(value) * 1000000000000000U; }
 
-constexpr uint64_t operator ""_KHz(const unsigned long long value)
+constexpr uint64_t operator ""_kHz(const unsigned long long value)
 	{ return static_cast<uint64_t>(value) * 1000U; }
 constexpr uint64_t operator ""_MHz(const unsigned long long value)
 	{ return static_cast<uint64_t>(value) * 1000000U; }

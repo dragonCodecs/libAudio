@@ -4,9 +4,11 @@
 #include <random>
 #include <substrate/span>
 #include "ym2149.hxx"
+#include "../unitsHelpers.hxx"
 
-ym2149_t::ym2149_t(const uint32_t clockFreq) noexcept : clockedPeripheral_t<uint32_t>{clockFreq},
-	rng{std::random_device{}()}, rngDistribution{0U, 1U}
+// Set the playback rate up for 48kHz
+ym2149_t::ym2149_t(const uint32_t clockFrequency) noexcept : clockedPeripheral_t<uint32_t>{clockFrequency},
+	rng{std::random_device{}()}, rngDistribution{0U, 1U}, clockManager{clockFrequency, 48_kHz}
 {
 	for (auto &channel : channels)
 		channel.resetEdgeState(rng, rngDistribution);
@@ -160,6 +162,9 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 
 bool ym2149_t::clockCycle() noexcept
 {
+	// See if a sample should be ready this cycle or not
+	ready = clockManager.advanceCycle();
+
 	// If we should update the FSM in this cycle, do so
 	if (cyclesTillUpdate == 0U)
 		updateFSM();
@@ -201,10 +206,7 @@ void ym2149_t::updateFSM() noexcept
 	}
 }
 
-bool ym2149_t::sampleReady() const noexcept
-{
-	return true;
-}
+bool ym2149_t::sampleReady() const noexcept { return ready; }
 
 namespace ym2149
 {
