@@ -102,11 +102,10 @@ bool atariSTe_t::advanceClock() noexcept
 		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
 		if (cpu.readProgramCounter() != 0xffffffffU)
 		{
-			// Grab the program counter at the start and run an instruction
+			// Grab the program counter at the start
 			const auto programCounter{cpu.readProgramCounter()};
-			const auto result{cpu.step()};
-			// Check that something bad didn't happen
-			if (result.trap || !result.validInsn)
+			// Try to advance the clock and check if the CPU is in a trap state
+			if (!cpu.advanceClock() || cpu.trapped())
 			{
 				// Something bad happened, so display the program counter at the faulting instruction
 				console.debug("Bad instruction at "sv, asHex_t<6U, '0'>{programCounter});
