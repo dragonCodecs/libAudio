@@ -9,7 +9,7 @@
 #include "sndh/iceDecrunch.hxx"
 
 // M68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.
-struct atariSTe_t : protected memoryMap_t<uint32_t>
+struct atariSTe_t : protected memoryMap_t<uint32_t, 0x00ffffffU>
 {
 private:
 	motorola68000_t cpu{*this, 8_MHz};

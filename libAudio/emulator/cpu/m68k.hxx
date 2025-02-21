@@ -41,7 +41,7 @@ struct stepResult_t
 struct motorola68000_t final
 {
 private:
-	memoryMap_t<uint32_t> &_peripherals;
+	memoryMap_t<uint32_t, 0x00ffffffU> &_peripherals;
 	uint32_t clockFrequency;
 
 	// There are 8 data registers, 7 address registers, 3 stack pointers,
@@ -138,7 +138,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchTST(const decodedOperation_t &insn) noexcept;
 
 public:
-	motorola68000_t(memoryMap_t<uint32_t> &peripherals, uint32_t clockFreq) noexcept;
+	motorola68000_t(memoryMap_t<uint32_t, 0x00ffffffU> &peripherals, uint32_t clockFreq) noexcept;
 
 	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;

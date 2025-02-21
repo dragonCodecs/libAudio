@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <limits>
 #include <substrate/span>
 #include <substrate/buffer_utils>
 
@@ -67,7 +68,7 @@ public:
 	virtual void writeAddress(address_t address, const substrate::span<uint8_t> &data) noexcept = 0;
 };
 
-template<typename address_t> struct memoryMap_t
+template<typename address_t, address_t validAddressMask = std::numeric_limits<address_t>::max()> struct memoryMap_t
 {
 protected:
 	// Use 16 buckets at minimum.
@@ -76,14 +77,15 @@ protected:
 public:
 	template<typename value_t> value_t readAddress(const address_t address) const noexcept
 	{
+		const auto adjustedAddres{address & validAddressMask};
 		// Try to find a peripheral mapped for the address
 		for (const auto &[mapping, peripheral] : addressMap)
 		{
 			// If the peripheral's mapping contains this address
-			if (mapping.inRange(address))
+			if (mapping.inRange(adjustedAddres))
 			{
 				// Convert the address to a relative one
-				const auto relativeAddress{mapping.relative(address)};
+				const auto relativeAddress{mapping.relative(adjustedAddres)};
 				std::array<uint8_t, sizeof(value_t)> value{};
 				// Read the data associated with that address in the peripheral
 				peripheral->readAddress(relativeAddress, value);
@@ -102,14 +104,15 @@ public:
 
 	template<typename value_t> void writeAddress(const address_t address, const value_t data) noexcept
 	{
+		const auto adjustedAddres{address & validAddressMask};
 		// Try to find a peripheral to write the value to
 		for (auto &[mapping, peripheral] : addressMap)
 		{
 			// If the peripheral's mapping contains this address
-			if (mapping.inRange(address))
+			if (mapping.inRange(adjustedAddres))
 			{
 				// Convert the address to a relative one
-				const auto relativeAddress{mapping.relative(address)};
+				const auto relativeAddress{mapping.relative(adjustedAddres)};
 				std::array<uint8_t, sizeof(value_t)> value{};
 				// Convert the data to write in an endian-appropriate manner from a value_t
 				if constexpr (sizeof(value_t) == 1U)

@@ -9,7 +9,7 @@
 #include "emulator/unitsHelpers.hxx"
 #include "testM68kDecodeTable.hxx"
 
-class testM68k final : public testsuite, memoryMap_t<uint32_t>
+class testM68k final : public testsuite, memoryMap_t<uint32_t, 0x00ffffffU>
 {
 private:
 	motorola68000_t cpu{*this, 8_MHz};
@@ -22,7 +22,7 @@ private:
 	}
 
 public:
-	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t>{}
+	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
 		addressMap[{0x000000U, 0x800000U}] = std::make_unique<ram_t<uint32_t, 8_MiB>>();
 	}
