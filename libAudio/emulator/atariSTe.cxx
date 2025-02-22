@@ -5,6 +5,7 @@
 #include "atariSTe.hxx"
 #include "ram.hxx"
 #include "sound/ym2149.hxx"
+#include "timing/mc68901.hxx"
 #include "unitsHelpers.hxx"
 #include "sndh/iceDecrunch.hxx"
 #include "console.hxx"
@@ -53,6 +54,7 @@ atariSTe_t::atariSTe_t() noexcept
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz));
 	// sound DMA at 0xff8900
+	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
 }
 
 // Copy the contents of a decrunched SNDH into the ST's RAM
