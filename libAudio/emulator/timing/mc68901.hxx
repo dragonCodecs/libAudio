@@ -15,6 +15,7 @@ namespace mc68901
 	private:
 		uint8_t control{0U};
 		uint8_t counter{0U};
+		uint8_t reloadValue{0U};
 		clockManager_t clockManager;
 
 	public:
@@ -24,6 +25,8 @@ namespace mc68901
 		void ctrl(uint8_t value, uint32_t baseClockFrequency) noexcept;
 		[[nodiscard]] uint8_t data() const noexcept;
 		void data(uint8_t value) noexcept;
+
+		void clockCycle() noexcept;
 	};
 } // namespace mc68901
 

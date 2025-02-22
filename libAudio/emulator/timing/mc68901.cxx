@@ -250,6 +250,9 @@ void mc68901_t::writeAddress(const uint32_t address, const substrate::span<uint8
 
 bool mc68901_t::clockCycle() noexcept
 {
+	// Go through each timer and try to advance them a clock cycle
+	for (auto &timer : timers)
+		timer.clockCycle();
 	return true;
 }
 
@@ -298,5 +301,32 @@ namespace mc68901
 	}
 
 	void timer_t::data(const uint8_t value) noexcept
-		{ counter = value; }
+	{
+		// Always store the new value as the reload value
+		reloadValue = value;
+		// If the counter is stopped, also store it as the new counter value
+		if ((control & 0x0fU) == 0U)
+			counter = value;
+	}
+
+	void timer_t::clockCycle() noexcept
+	{
+		// Check if the timer is stopped
+		if ((control & 0x0fU) == 0U)
+			return;
+		// If it is not, check if this is a clock advancement cycle
+		if (!clockManager.advanceCycle())
+			return;
+		// Check if the timer is in a counting mode
+		if ((control & 0x08U) == 0U)
+		{
+			// Apply a clock pulse to the counterm, and if that counter is now 0, reload it to the value in reloadValue
+			if (--counter == 0U)
+				counter = reloadValue;
+		}
+		else
+		{
+			// For now we don't support the event counting and PWM modes
+		}
+	}
 } // namespace mc68901
