@@ -12,9 +12,18 @@ namespace mc68901
 {
 	struct timer_t final
 	{
-		uint8_t control;
-		uint8_t data;
+	private:
+		uint8_t control{0U};
+		uint8_t counter{0U};
 		clockManager_t clockManager;
+
+	public:
+		timer_t(uint32_t baseClockFrequency) noexcept;
+
+		[[nodiscard]] uint8_t ctrl() const noexcept;
+		void ctrl(uint8_t value) noexcept;
+		[[nodiscard]] uint8_t data() const noexcept;
+		void data(uint8_t value) noexcept;
 	};
 } // namespace mc68901
 

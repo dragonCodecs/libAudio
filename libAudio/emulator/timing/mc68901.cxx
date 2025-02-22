@@ -20,3 +20,18 @@ bool mc68901_t::clockCycle() noexcept
 {
 	return true;
 }
+
+namespace mc68901
+{
+	timer_t::timer_t(const uint32_t baseClockFrequency) noexcept :
+		clockManager{baseClockFrequency, baseClockFrequency} { }
+
+	uint8_t timer_t::ctrl() const noexcept { return control; }
+	uint8_t timer_t::data() const noexcept { return counter; }
+
+	void timer_t::ctrl(const uint8_t value) noexcept
+		{ control = value; }
+
+	void timer_t::data(const uint8_t value) noexcept
+		{ counter = value; }
+} // namespace mc68901
