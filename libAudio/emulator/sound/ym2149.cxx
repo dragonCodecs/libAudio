@@ -242,12 +242,12 @@ int16_t ym2149_t::sample() noexcept
 	{
 		const auto level
 		{
-			[&]() -> uint8_t
+			[&](const size_t index, const bool channelEnabled) -> uint8_t
 			{
-				if (state)
+				if (channelEnabled)
 				{
 					// Extract the level information from the channel
-					const auto rawLevel{channels[channel].level};
+					const auto rawLevel{channels[index].level};
 					// If it indicates the level is controlled by the envelope, use that
 					if (rawLevel & 0x10U)
 						return envelopeLevel;
@@ -256,7 +256,7 @@ int16_t ym2149_t::sample() noexcept
 						return rawLevel << 1U;
 				}
 				return 0U;
-			}()
+			}(channel, state)
 		};
 		// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
 		const auto shift{static_cast<size_t>(channels[channel].shiftRequired())};
