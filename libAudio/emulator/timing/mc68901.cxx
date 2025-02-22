@@ -210,18 +210,18 @@ void mc68901_t::writeAddress(const uint32_t address, const substrate::span<uint8
 			break;
 		case 12U:
 			// Only 5 bits used, mask off the upper 3
-			timers[0].ctrl(value & 0x1fU);
+			timers[0].ctrl(value & 0x1fU, clockFrequency());
 			break;
 		case 13U:
 			// Only 5 bits used, mask off the upper 3
-			timers[1].ctrl(value & 0x1fU);
+			timers[1].ctrl(value & 0x1fU, clockFrequency());
 			break;
 		case 14U:
 			// Write controls 2 timers, C's control value is in the upper nibble,
 			// but the timer doesn't support event modes or reset output, so only 3 bits used
-			timers[2].ctrl((value >> 4U) & 0x07U);
+			timers[2].ctrl((value >> 4U) & 0x07U, clockFrequency());
 			// D's control value is in the lower nibble and has the same support restrictions
-			timers[3].ctrl(value & 0x07U);
+			timers[3].ctrl(value & 0x07U, clockFrequency());
 			break;
 		case 15U:
 		case 16U:
@@ -261,8 +261,41 @@ namespace mc68901
 	uint8_t timer_t::ctrl() const noexcept { return control; }
 	uint8_t timer_t::data() const noexcept { return counter; }
 
-	void timer_t::ctrl(const uint8_t value) noexcept
-		{ control = value; }
+	void timer_t::ctrl(const uint8_t value, const uint32_t baseClockFrequency) noexcept
+	{
+		control = value;
+		// Turn the operation mode into a prescaling value
+		const auto prescale
+		{
+			[&](const uint8_t mode)
+			{
+				switch (mode)
+				{
+					case 0U:
+						return 1U;
+					case 1U:
+						return 4U;
+					case 2U:
+						return 10U;
+					case 3U:
+						return 16U;
+					case 4U:
+						return 50U;
+					case 5U:
+						return 64U;
+					case 6U:
+						return 100U;
+					case 7U:
+						return 200U;
+				}
+				// Should not be possible, but just in case
+				return UINT32_MAX;
+			}(value & 0x07U)
+		};
+		// Convert that into a clock ratio for the clock manager, and reinitialise the
+		// clock manager accordingly so we get the right generated frequency
+		clockManager = {baseClockFrequency, baseClockFrequency / prescale};
+	}
 
 	void timer_t::data(const uint8_t value) noexcept
 		{ counter = value; }

@@ -21,7 +21,7 @@ namespace mc68901
 		timer_t(uint32_t baseClockFrequency) noexcept;
 
 		[[nodiscard]] uint8_t ctrl() const noexcept;
-		void ctrl(uint8_t value) noexcept;
+		void ctrl(uint8_t value, uint32_t baseClockFrequency) noexcept;
 		[[nodiscard]] uint8_t data() const noexcept;
 		void data(uint8_t value) noexcept;
 	};
