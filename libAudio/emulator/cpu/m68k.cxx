@@ -2510,6 +2510,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVEQ(instruction);
 		case instruction_t::ori:
 			return dispatchORI(instruction);
+		case instruction_t::rte:
+			return dispatchRTE();
 		case instruction_t::rts:
 			return dispatchRTS();
 		case instruction_t::scc:
@@ -4016,6 +4018,27 @@ stepResult_t motorola68000_t::dispatchORISpecialCCR(const decodedOperation_t &in
 	status.fromRaw(lhs | rhs);
 
 	// Return how many cycles that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchRTE() noexcept
+{
+	// Grab the current stack pointer
+	auto &stackPointer{activeStackPointer()};
+	// Unstack the status register and adjust the stack pointer
+	status.fromRaw(_peripherals.readAddress<uint16_t>(stackPointer));
+	stackPointer += 2U;
+	// Unstack the program counter and adjust the stack pointer
+	programCounter = _peripherals.readAddress<uint32_t>(stackPointer);
+	stackPointer += 4U;
+	// Unstack the frame format and offset
+	const auto format{_peripherals.readAddress<uint16_t>(stackPointer)};
+	stackPointer += 2U;
+	const auto frameType{format >> 12U};
+	// For now, explode if this is not a format 1 frame
+	if (frameType != 1U)
+		return {true, true, 0U};
+	// Otherwise return success and how long it took
 	return {true, false, 0U};
 }
 
