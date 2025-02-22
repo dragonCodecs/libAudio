@@ -220,7 +220,7 @@ void ym2149_t::updateFSM() noexcept
 	{
 		// Reset the counter
 		noiseCounter = 0U;
-		// Set the noise state if the 0th and 2nd bits of the noise LFSR are the same value as each other
+		// Set the noise state if the 0th and 2nd bits of the noise LFSR are not the same value as each other
 		noiseState = (noiseLFSR ^ (noiseLFSR >> 2U)) & 1U;
 		// Shift the new noise state in as single bit on the LHS of the noise LFSR
 		noiseLFSR >>= 1U;
