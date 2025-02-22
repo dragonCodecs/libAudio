@@ -257,6 +257,7 @@ if formats['SNDH']
 		'emulator/clockManager.cxx',
 		'emulator/cpu/m68k.cxx',
 		'emulator/sound/ym2149.cxx',
+		'emulator/timing/mc68901.cxx'
 	]
 	confData.set10('ENABLE_SNDH', true)
 endif
