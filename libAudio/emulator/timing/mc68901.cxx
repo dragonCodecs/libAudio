@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
 #include <substrate/span>
+#include <substrate/index_sequence>
 #include "mc68901.hxx"
 #include "../unitsHelpers.hxx"
 
@@ -251,8 +252,39 @@ void mc68901_t::writeAddress(const uint32_t address, const substrate::span<uint8
 bool mc68901_t::clockCycle() noexcept
 {
 	// Go through each timer and try to advance them a clock cycle
-	for (auto &timer : timers)
-		timer.clockCycle();
+	for (const auto idx : substrate::indexSequence_t{timers.size()})
+	{
+		auto &timer{timers[idx]};
+		// Translate the timer number into an interrupt register bit
+		const auto itrBit
+		{
+			1U << [&]()
+			{
+				// Dispatch the timer to the bit number for it
+				switch (idx)
+				{
+					case 0U:
+						return 13U;
+					case 1U:
+						return 8U;
+					case 2U:
+						return 5U;
+					case 3U:
+						return 4U;
+				}
+				// This should never happen, but just in case.. this selects one past the end
+				// of the itr registers so it's a safe no-op
+				return 16U;
+			}()
+		};
+		// If the clock cycle on the timer triggered an interrupt causing event
+		if (timer.clockCycle())
+		{
+			// If interrupts are enabled for the timer, set the pending bit
+			if (itrEnable & itrBit)
+				itrPending |= itrBit;
+		}
+	}
 	return true;
 }
 
@@ -309,24 +341,30 @@ namespace mc68901
 			counter = value;
 	}
 
-	void timer_t::clockCycle() noexcept
+	bool timer_t::clockCycle() noexcept
 	{
 		// Check if the timer is stopped
 		if ((control & 0x0fU) == 0U)
-			return;
+			return false;
 		// If it is not, check if this is a clock advancement cycle
 		if (!clockManager.advanceCycle())
-			return;
+			return false;
 		// Check if the timer is in a counting mode
 		if ((control & 0x08U) == 0U)
 		{
-			// Apply a clock pulse to the counterm, and if that counter is now 0, reload it to the value in reloadValue
+			// Apply a clock pulse to the counter, and if that counter is now 0, reload it to the value in reloadValue
 			if (--counter == 0U)
+			{
 				counter = reloadValue;
+				// Signal that this was an interrupt generating cycle
+				return true;
+			}
 		}
 		else
 		{
 			// For now we don't support the event counting and PWM modes
 		}
+		// Signal that this was not an interrupt generating cycle
+		return false;
 	}
 } // namespace mc68901

@@ -26,7 +26,7 @@ namespace mc68901
 		[[nodiscard]] uint8_t data() const noexcept;
 		void data(uint8_t value) noexcept;
 
-		void clockCycle() noexcept;
+		[[nodiscard]] bool clockCycle() noexcept;
 	};
 } // namespace mc68901
 
