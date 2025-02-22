@@ -10,6 +10,116 @@ mc68901_t::mc68901_t(const uint32_t clockFrequency) noexcept : clockedPeripheral
 
 void mc68901_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
 {
+	// Extract how wide an access this is
+	const auto accessWidth{data.size_bytes()};
+	// Only admit 8- and 16-bit reads
+	if (accessWidth > 2U)
+		return;
+	// Adjust the address to take into account u16 vs u8 accesses to odd bytes
+	const auto adjustedAddress
+	{
+		[&]()
+		{
+			if (accessWidth == 1U)
+				return address;
+			return address + 1U;
+		}()
+	};
+	// If the resulting address is not odd, we're done
+	if ((adjustedAddress & 1U) == 0U)
+		return;
+	// Extract out the byte to read into
+	auto &value
+	{
+		[&]() -> uint8_t &
+		{
+			if (accessWidth == 1U)
+				return data[0U];
+			return data[1U];
+		}()
+	};
+	// Chop off the now unused bit of the address to make selection easier
+	switch (adjustedAddress >> 1U)
+	{
+		case 0U:
+			value = gpio;
+			break;
+		case 1U:
+			value = activeEdge;
+			break;
+		case 2U:
+			value = dataDirection;
+			break;
+		case 3U:
+			// itrEnableA is the upper half of the enable register
+			value = static_cast<uint8_t>(itrEnable >> 8U);
+			break;
+		case 4U:
+			// itrEnableB is the lower half of the enable register
+			value = static_cast<uint8_t>(itrEnable);
+			break;
+		case 5U:
+			// itrPendingA is the upper half of the pending register
+			value = static_cast<uint8_t>(itrPending >> 8U);
+			break;
+		case 6U:
+			// itrPendingB is the lower half of the pending register
+			value = static_cast<uint8_t>(itrPending);
+			break;
+		case 7U:
+			// itrServicingA is the upper half of the servicing register
+			value = static_cast<uint8_t>(itrServicing >> 8U);
+			break;
+		case 8U:
+			// itrServicingB is the lower half of the servicing register
+			value = static_cast<uint8_t>(itrServicing);
+			break;
+		case 9U:
+			// itrMaskA is the upper half of the mask register
+			value = static_cast<uint8_t>(itrMask >> 8U);
+			break;
+		case 10U:
+			// itrMaskB is the lower half of the mask register
+			value = static_cast<uint8_t>(itrMask);
+			break;
+		case 11U:
+			value = vectorReg;
+			break;
+		case 12U:
+			value = timers[0].ctrl();
+			break;
+		case 13U:
+			value = timers[1].ctrl();
+			break;
+		case 14U:
+			// Read is from 2 timers, C's control value is in the upper nibble,
+			// and D's is in the lower - neither can have more than 3 bits set
+			// so just combine
+			value = (timers[2].ctrl() << 4U) | timers[3].ctrl();
+			break;
+		case 15U:
+		case 16U:
+		case 17U:
+		case 18U:
+			// Extract the given timer's counter value
+			value = timers[(adjustedAddress >> 1U) - 15U].data();
+			break;
+		case 19U:
+			value = syncChar;
+			break;
+		case 20U:
+			value = usartCtrl;
+			break;
+		case 21U:
+			value = rxStatus;
+			break;
+		case 22U:
+			value = txStatus;
+			break;
+		case 23U:
+			value = usartData;
+			break;
+	}
 }
 
 void mc68901_t::writeAddress(const uint32_t address, const substrate::span<uint8_t> &data) noexcept
