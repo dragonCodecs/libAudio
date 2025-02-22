@@ -2392,6 +2392,25 @@ void motorola68000_t::executeFrom(const uint32_t entryAddress, const uint32_t st
 	_peripherals.writeAddress<uint32_t>(stackPointer, 0xffffffffU);
 }
 
+void motorola68000_t::executeFromException(const uint32_t entryAddress, const uint32_t stackTop, const uint8_t vectorNumber) noexcept
+{
+	// Copy in the new program counter value
+	programCounter = entryAddress;
+	// Force supervisor mode
+	status.set(m68kStatusBits_t::supervisor);
+	// Grab the active stack and start stacking up a throwaway exception frame
+	auto &stackPointer{activeStackPointer()};
+	stackPointer = stackTop - 2U;
+	// Stack the start of a throwaway frame for the selected vector number
+	_peripherals.writeAddress<uint16_t>(stackPointer, 0x1000U | (vectorNumber << 2U));
+	// Set up a sentinel value on the stack for RTE to hit to tell us we're done
+	stackPointer -= 4U;
+	_peripherals.writeAddress<uint32_t>(stackPointer, 0xffffffffU);
+	// Set up a dummy status register to complete the exception frame
+	stackPointer -= 2U;
+	_peripherals.writeAddress<uint16_t>(stackPointer, 0x0000U);
+}
+
 bool motorola68000_t::executeToReturn(const uint32_t entryAddress, const uint32_t stackTop, const bool asUser) noexcept
 {
 	// Set up where we're going to execute from

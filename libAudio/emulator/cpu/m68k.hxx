@@ -148,6 +148,7 @@ public:
 	motorola68000_t(memoryMap_t<uint32_t, 0x00ffffffU> &peripherals, uint32_t clockFreq) noexcept;
 
 	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
+	void executeFromException(uint32_t entryAddress, uint32_t stackTop, uint8_t vectorNumber) noexcept;
 	[[nodiscard]] bool executeToReturn(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;

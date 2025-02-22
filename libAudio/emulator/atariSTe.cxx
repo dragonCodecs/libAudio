@@ -115,7 +115,7 @@ bool atariSTe_t::advanceClock() noexcept
 		// XXX: Not actually correct
 		else
 			// Set up to execute the play routine afresh
-			cpu.executeFrom(0x001008U, 0x80000000U, false);
+			cpu.executeFromException(0x001008U, 0x80000000U, 1U);
 	}
 
 	return true;
