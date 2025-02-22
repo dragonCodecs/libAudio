@@ -60,6 +60,8 @@ public:
 	}
 
 	[[nodiscard]] size_t length() const noexcept { return _data.length(); }
+	[[nodiscard]] size_t tell() const noexcept { return _offset; }
+	[[nodiscard]] char peak() const noexcept { return _data[_offset]; }
 
 	[[nodiscard]] bool read(void *const value, const size_t valueLen) noexcept
 	{

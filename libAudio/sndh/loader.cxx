@@ -55,6 +55,12 @@ std::string readString(sndhDecruncher_t &file)
 			throw std::exception{};
 		result += atariChars[value];
 	}
+	// If there are trailing NUL's after the string, chew through them
+	while (file.peak() == '\0')
+	{
+		if (!file.read(value))
+			throw std::exception{};
+	}
 	return result;
 }
 
