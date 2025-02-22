@@ -61,6 +61,7 @@ public:
 	~mc68901_t() noexcept override = default;
 
 	[[nodiscard]] bool clockCycle() noexcept override;
+	[[nodiscard]] uint16_t pendingInterrupts() const noexcept;
 };
 
 #endif /*EMULATOR_TIMING_MC68901_HXX*/

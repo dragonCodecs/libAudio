@@ -288,6 +288,10 @@ bool mc68901_t::clockCycle() noexcept
 	return true;
 }
 
+// Return only non-masked pending interrupts
+uint16_t mc68901_t::pendingInterrupts() const noexcept
+	{ return itrPending & itrMask; }
+
 namespace mc68901
 {
 	timer_t::timer_t(const uint32_t baseClockFrequency) noexcept :
