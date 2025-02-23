@@ -51,7 +51,7 @@ private:
 	uint16_t envelopePeriod{0U};
 	uint16_t envelopeCounter{0U};
 	uint8_t envelopeShape{0U};
-	uint8_t envelopePosition{0U};
+	uint8_t envelopePosition{64U};
 	std::array<uint8_t, 2U> ioPort{};
 
 	bool noiseState{0U};

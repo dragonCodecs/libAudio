@@ -147,6 +147,8 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				// Envelope shape adjustment
 				case 13U:
 					envelopeShape = data[0U] & 0x0fU;
+					// Reset where we are in the envelope as a result
+					envelopePosition = 0U;
 					break;
 				// I/O port data
 				case 14U:
@@ -208,8 +210,9 @@ void ym2149_t::updateFSM() noexcept
 	{
 		// Reset the counter
 		envelopeCounter = 0U;
-		// Update the envelope position (64 possible positions)
-		envelopePosition = (envelopePosition + 1U) & 0x3fU;
+		// Update the envelope position (128 possible positions, the last 64 loop)
+		if (++envelopePosition > 64U)
+			envelopePosition = (envelopePosition & 0x3fU) | 0x40U;
 	}
 
 	// Step the noise generator forward one internal cycle, noting it runs
