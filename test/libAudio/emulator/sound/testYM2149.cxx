@@ -48,8 +48,7 @@ class testYM2149 final : public testsuite
 				assertFalse(psg.sampleReady());
 		}
 		// Now check the value of the sample
-		//assertEqual(psg.sample(), );
-		const auto sample{psg.sample()};
+		assertEqual(psg.sample(), 0x2ad7);
 	}
 
 public:
