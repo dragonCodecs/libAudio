@@ -1,16 +1,16 @@
-emulatorTests = []
+soundTests = []
 
 if formats['SNDH']
-	emulatorTests += [
-		'testClockManager',
+	soundTests += [
+		'testYM2149',
 	]
 endif
 
 testObjectMap = {
-	'testClockManager': {'libAudio': ['emulator/clockManager.cxx']}
+	'testYM2149': {'libAudio': ['emulator/sound/ym2149.cxx', 'emulator/clockManager.cxx']},
 }
 
-foreach test : emulatorTests
+foreach test : soundTests
 	map = testObjectMap.get(test, {})
 	libAudioObjs = map.has_key('libAudio') ? [libAudioLibrary.extract_objects(map['libAudio'])] : []
 	#testObjs = map.has_key('test') ? [testHelpers.extract_objects(map['test'])] : []
@@ -41,6 +41,3 @@ foreach test : emulatorTests
 		)
 	endif
 endforeach
-
-subdir('cpu')
-subdir('sound')
