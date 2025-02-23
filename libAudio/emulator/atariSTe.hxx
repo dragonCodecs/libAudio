@@ -21,6 +21,7 @@ private:
 	mc68901_t *mfp{nullptr};
 
 	uint32_t timeSinceLastCPUCycle{0U};
+	clockManager_t playRoutineManager;
 	std::map<clockedPeripheral_t<uint32_t> *, clockManager_t> clockedPeripherals{};
 
 public:
@@ -28,6 +29,7 @@ public:
 
 	atariSTe_t() noexcept;
 
+	void configureTimer(char timer, uint16_t timerFrequency) noexcept;
 	[[nodiscard]] bool copyToRAM(sndhDecruncher_t &data) noexcept;
 	[[nodiscard]] bool init(uint16_t subtune) noexcept;
 	[[nodiscard]] bool exit() noexcept;

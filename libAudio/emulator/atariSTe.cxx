@@ -28,7 +28,17 @@ template<typename T> constexpr inline bool isClockedPeripheral_v = isClockedPeri
 constexpr static std::array<uint8_t, 4U> cookieSND{{'_', 'S', 'N', 'D'}};
 constexpr static std::array<uint8_t, 4U> cookieMCH{{'_', 'M', 'C', 'H'}};
 
-atariSTe_t::atariSTe_t() noexcept
+constexpr static std::array<uint32_t, 4U> timerVectorAddresses
+{{
+	0x000174U,
+	0x000160U,
+	0x000154U,
+	0x000150U,
+}};
+
+atariSTe_t::atariSTe_t() noexcept :
+	// Set up a dummy clock manager for the play routine
+	playRoutineManager{systemClockFrequency, systemClockFrequency}
 {
 	const auto addClockedPeripheral
 	{
@@ -58,6 +68,23 @@ atariSTe_t::atariSTe_t() noexcept
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
 	// sound DMA at 0xff8900
 	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
+}
+
+void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept
+{
+	// Convert the timer's letter code into a timer index
+	if (timer < 'A' || timer > 'D')
+		return;
+	const auto index{static_cast<size_t>(timer - 'A')};
+	// Set the selected timer's vector slot to a branch to the play routine
+	const auto vectorAddress{timerVectorAddresses[index]};
+	// BRA.W
+	writeAddress(vectorAddress + 0U, uint16_t{0x6000U});
+	// to address 0x001008U (SNDH play routine)
+	writeAddress(vectorAddress + 2U, static_cast<uint16_t>(0x1008U - (vectorAddress + 2U)));
+
+	// Now the vector slot is properly set up, enable the timer and set the call frequency
+	playRoutineManager = {systemClockFrequency, timerFrequency};
 }
 
 // Copy the contents of a decrunched SNDH into the ST's RAM
@@ -108,7 +135,15 @@ bool atariSTe_t::advanceClock() noexcept
 		}
 	}
 
-	// See if the triggering timer is ready
+	// If the play routine should be run again, set that up
+	if (playRoutineManager.advanceCycle())
+	{
+		// Check to see that the last call to it actually finished
+		if (cpu.readProgramCounter() != 0xffffffffU)
+			// It did not, error
+			return false;
+		cpu.executeFrom(0x001008U, 0x800000U, false);
+	}
 
 	// CPU ratio is 32:8, aka 4, so use a simple AND mask to maintain that
 	timeSinceLastCPUCycle = (timeSinceLastCPUCycle + 1U) & 3U;
@@ -128,10 +163,6 @@ bool atariSTe_t::advanceClock() noexcept
 				return false;
 			}
 		}
-		// XXX: Not actually correct
-		else
-			// Set up to execute the play routine afresh
-			cpu.executeFrom(0x001008U, 0x800000U, false);
 	}
 
 	return true;
