@@ -68,6 +68,10 @@ atariSTe_t::atariSTe_t() noexcept :
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
 	// sound DMA at 0xff8900
 	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
+
+	// Make all timer handlers RTEs for now
+	for (const auto &address : timerVectorAddresses)
+		writeAddress(address, uint16_t{0x4e73U});
 }
 
 void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept
@@ -143,6 +147,27 @@ bool atariSTe_t::advanceClock() noexcept
 			// It did not, error
 			return false;
 		cpu.executeFrom(0x001008U, 0x800000U, false);
+	}
+
+	// Check if we got any pending interrupts from the timers
+	const auto pendingIRQs{mfp->pendingInterrupts()};
+	if (pendingIRQs)
+	{
+		// For each of the IRQs that stages, translate to a timer and stage an appropriate
+		// exception frame for them - starting with Timer A
+		if (pendingIRQs & (1U << 13U))
+			cpu.stageIRQCall(timerVectorAddresses[0U]);
+		// Timer B
+		if (pendingIRQs & (1U << 8U))
+			cpu.stageIRQCall(timerVectorAddresses[1U]);
+		// Timer C
+		if (pendingIRQs & (1U << 5U))
+			cpu.stageIRQCall(timerVectorAddresses[2U]);
+		// And finally Timer D
+		if (pendingIRQs & (1U << 4U))
+			cpu.stageIRQCall(timerVectorAddresses[3U]);
+		// Now we've staged appropriate invocations for them, clear them
+		mfp->clearInterrupts(pendingIRQs);
 	}
 
 	// CPU ratio is 32:8, aka 4, so use a simple AND mask to maintain that
