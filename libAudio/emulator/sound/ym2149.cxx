@@ -274,7 +274,7 @@ uint8_t ym2149_t::computeEnvelopeLevel() const noexcept
 {
 	// Extract out the actual position and phase data (32 unique positions, 4 phases)
 	const auto position{envelopePosition & 0x1fU};
-	const auto phase{envelopePosition >> 5U};
+	const auto phase{static_cast<size_t>(envelopePosition >> 5U)};
 	switch (phase)
 	{
 		// Initial envelope phase, behaviour determined by attack bit
@@ -340,7 +340,13 @@ int16_t ym2149_t::dcAdjust(uint16_t sample) noexcept
 	// Update the adjustment position to make this a circular buffer
 	dcAdjustmentPosition = (dcAdjustmentPosition + 1U) & (dcAdjustmentBuffer.size() - 1U);
 	// Now scale the sum and apply it to the sample to get the final sample
-	return static_cast<int16_t>(int32_t{sample} - int32_t(dcAdjustmentSum >> dcAdjustmentLengthLog2));
+	return static_cast<int16_t>(sample - int32_t(dcAdjustmentSum >> dcAdjustmentLengthLog2));
+}
+
+void ym2149_t::forceChannelStates(const bool edgeState) noexcept
+{
+	for (auto &channel : channels)
+		channel.forceEdgeState(edgeState);
 }
 
 namespace ym2149
@@ -387,6 +393,9 @@ namespace ym2149
 
 	bool channel_t::shiftRequired() const noexcept
 		{ return period <= 1U; }
+
+	void channel_t::forceEdgeState(const bool state) noexcept
+		{ edgeState = state; }
 
 	// Logarithmic volume levels from 1 / (sqrt(2) ^ (level / 2))
 	// The sequence is reversed though to get 0 to be the lowest volume

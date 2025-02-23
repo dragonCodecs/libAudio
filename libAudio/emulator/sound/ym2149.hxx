@@ -28,6 +28,8 @@ namespace ym2149
 		void step() noexcept;
 		[[nodiscard]] bool state(bool toneInhibit) const noexcept;
 		[[nodiscard]] bool shiftRequired() const noexcept;
+
+		void forceEdgeState(bool state) noexcept;
 	};
 
 	[[nodiscard]] uint16_t logLevel(uint8_t level) noexcept;
@@ -85,6 +87,9 @@ public:
 	[[nodiscard]] bool clockCycle() noexcept override;
 	[[nodiscard]] bool sampleReady() const noexcept;
 	[[nodiscard]] int16_t sample() noexcept;
+
+	// NB, only use for testing
+	void forceChannelStates(bool edgeState) noexcept;
 };
 
 #endif /*EMULATOR_SOUND_YM2149_HXX*/

@@ -73,6 +73,8 @@ class testYM2149 final : public testsuite
 	{
 		// Set up a PSG to generate 48kHz audio, and configure the channels and mixer settings
 		ym2149_t psg{2_MHz, 48_kHz};
+		// Make the test deterministic by forcing the edge states into a known state
+		psg.forceChannelStates(true);
 		// Write channel configs, A = 638, B = 0, C = 0
 		writeRegister(psg, 0U, 0x7eU); // ChA fine
 		writeRegister(psg, 1U, 0x02U); // ChA rough
