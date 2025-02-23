@@ -297,6 +297,9 @@ bool mc68901_t::clockCycle() noexcept
 uint16_t mc68901_t::pendingInterrupts() const noexcept
 	{ return itrPending & itrMask; }
 
+void mc68901_t::clearInterrupts(const uint16_t interrupts) noexcept
+	{ itrPending &= ~interrupts; }
+
 namespace mc68901
 {
 	timer_t::timer_t(const uint32_t baseClockFrequency) noexcept :
