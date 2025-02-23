@@ -41,8 +41,7 @@ void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 	info.title(std::move(metadata.title));
 	info.artist(std::move(metadata.artist));
 
-	// The playback engine is written to generate data at 48kHz, 16-bit, one channel
-	info.bitRate(48000U);
+	// The playback engine is written to generate data in 16-bit, one channel
 	info.bitsPerSample(16U);
 	info.channels(1U);
 }
@@ -69,6 +68,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 
 	// Copy the metadata for this SNDH into the fileInfo_t, and then copy the decrunched SNDH into emulator memory
 	loadFileInfo(info, metadata);
+	info.bitRate(ctx.emulator.sampleRate);
 	if (!loader.copyToRAM(ctx.emulator) ||
 		// Having done this, set up to play the first subtune in the file
 		!ctx.emulator.init(0U))

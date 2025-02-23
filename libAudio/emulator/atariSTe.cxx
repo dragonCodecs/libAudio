@@ -55,7 +55,7 @@ atariSTe_t::atariSTe_t() noexcept
 	// TODO: TOS ROM needs to go at 0xe00000U, it is in a 1MiB window
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
-	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz));
+	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
 	// sound DMA at 0xff8900
 	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
 }

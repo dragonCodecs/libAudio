@@ -74,7 +74,7 @@ private:
 	[[nodisard]] int16_t dcAdjust(uint16_t sample) noexcept;
 
 public:
-	ym2149_t(uint32_t clockFrequency) noexcept;
+	ym2149_t(uint32_t clockFrequency, uint32_t sampleFrequency) noexcept;
 	ym2149_t(const ym2149_t &) = default;
 	ym2149_t(ym2149_t &&) = default;
 	ym2149_t &operator =(const ym2149_t &) = default;

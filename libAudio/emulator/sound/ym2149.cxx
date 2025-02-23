@@ -7,11 +7,10 @@
 #include <substrate/span>
 #include <substrate/indexed_iterator>
 #include "ym2149.hxx"
-#include "../unitsHelpers.hxx"
 
-// Set the playback rate up for 48kHz
-ym2149_t::ym2149_t(const uint32_t clockFrequency) noexcept : clockedPeripheral_t<uint32_t>{clockFrequency},
-	rng{std::random_device{}()}, rngDistribution{0U, 1U}, clockManager{clockFrequency, 48_kHz}
+ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency) noexcept :
+	clockedPeripheral_t<uint32_t>{clockFrequency}, rng{std::random_device{}()}, rngDistribution{0U, 1U},
+	clockManager{clockFrequency, sampleFrequency}
 {
 	for (auto &channel : channels)
 		channel.resetEdgeState(rng, rngDistribution);

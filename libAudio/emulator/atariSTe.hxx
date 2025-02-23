@@ -24,6 +24,8 @@ private:
 	std::map<clockedPeripheral_t<uint32_t> *, clockManager_t> clockedPeripherals{};
 
 public:
+	constexpr static uint32_t sampleRate{48_kHz};
+
 	atariSTe_t() noexcept;
 
 	[[nodiscard]] bool copyToRAM(sndhDecruncher_t &data) noexcept;
