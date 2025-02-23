@@ -7,7 +7,12 @@
 #include "../unitsHelpers.hxx"
 
 mc68901_t::mc68901_t(const uint32_t clockFrequency) noexcept : clockedPeripheral_t<uint32_t>{clockFrequency},
-	timers{{{clockFrequency}, {clockFrequency}, {clockFrequency}, {clockFrequency}}} { }
+	timers{{{clockFrequency}, {clockFrequency}, {clockFrequency}, {clockFrequency}}}
+{
+	// Timer C interrupts should be enabled and unmasked by default
+	itrEnable |= 1U << 5U;
+	itrMask |= 1U << 5U;
+}
 
 void mc68901_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
 {
