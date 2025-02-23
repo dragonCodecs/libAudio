@@ -151,6 +151,7 @@ public:
 	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void executeFromException(uint32_t entryAddress, uint32_t stackTop, uint8_t vectorNumber) noexcept;
 	[[nodiscard]] bool executeToReturn(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
+	void stageIRQCall(uint32_t vectorAddress) noexcept;
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;
 	[[nodiscard]] uint32_t readProgramCounter() const noexcept;
