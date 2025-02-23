@@ -25,6 +25,9 @@ template<typename T> struct isClockedPeripheral<std::unique_ptr<T>> :
 	isClockedPeripheral<T> { };
 template<typename T> constexpr inline bool isClockedPeripheral_v = isClockedPeripheral<T>::value;
 
+constexpr static std::array<uint8_t, 4U> cookieSND{{'_', 'S', 'N', 'D'}};
+constexpr static std::array<uint8_t, 4U> cookieMCH{{'_', 'M', 'C', 'H'}};
+
 atariSTe_t::atariSTe_t() noexcept
 {
 	const auto addClockedPeripheral
@@ -69,6 +72,17 @@ bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
 
 bool atariSTe_t::init(const uint16_t subtune) noexcept
 {
+	// Set up the cookie jar at 0x000600 so replay routines work properly
+	writeAddress(0x0005a0U, uint32_t{0x000600U});
+	writeAddress(0x000600U, substrate::buffer_utils::readBE<uint32_t>({cookieSND}));
+	// Bit 0 -> PSG, bit 1 -> DMA sound, bit 2 -> CODEC, bit 3 -> DSP
+	writeAddress(0x000604U, uint32_t{0x00000001U});
+	writeAddress(0x000608U, substrate::buffer_utils::readBE<uint32_t>({cookieMCH}));
+	// Set the machine type to an STe
+	writeAddress(0x00060cU, uint32_t{0x00010000U});
+	// Sentinel that ends the cookie jar
+	writeAddress(0x000610U, uint32_t{0U});
+
 	// Set up the calling context
 	cpu.writeDataRegister(0U, subtune);
 	// And run the init entrypoint to return
