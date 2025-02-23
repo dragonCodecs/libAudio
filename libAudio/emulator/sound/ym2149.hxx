@@ -71,6 +71,7 @@ private:
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
 
 	void updateFSM() noexcept;
+	[[nodiscard]] uint8_t computeEnvelopeLevel() const noexcept;
 	[[nodiscard]] int16_t dcAdjust(uint16_t sample) noexcept;
 
 public:

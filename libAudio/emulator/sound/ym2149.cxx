@@ -236,7 +236,7 @@ int16_t ym2149_t::sample() noexcept
 {
 	read = true;
 	// Grab the current envelope level
-	const uint8_t envelopeLevel{};
+	const auto envelopeLevel{computeEnvelopeLevel()};
 
 	std::array<uint16_t, 3U> levels;
 	// Go through each channel and compute the volume level associated with it
@@ -268,6 +268,66 @@ int16_t ym2149_t::sample() noexcept
 
 	// Sum the levels and do DC adjustment
 	return dcAdjust(std::reduce(levels.begin(), levels.end()));
+}
+
+uint8_t ym2149_t::computeEnvelopeLevel() const noexcept
+{
+	// Extract out the actual position and phase data (32 unique positions, 4 phases)
+	const auto position{envelopePosition & 0x1fU};
+	const auto phase{envelopePosition >> 5U};
+	switch (phase)
+	{
+		// Initial envelope phase, behaviour determined by attack bit
+		case 0U:
+			// If the attack bit is set, the envelope level is the position value, otherwise
+			// the ramp runs backwards, so invert the position to make the level.
+			if (envelopeShape & 0x4U)
+				return position;
+			return 0x1fU - position;
+		// The 2nd and 4th phase is determined identically by the rest of the shape bits
+		case 1U:
+		case 3U:
+			// If this is not a continuous envelope, the level is low permanently
+			if (envelopeShape & 0x8U)
+				return 0U;
+			// Otherwise, if the envelope should hold its value
+			if (envelopeShape & 0x1U)
+			{
+				// Low or high determined by attack and alternate bits xor'd together
+				const auto state{(envelopeShape & 0x2U) ^ ((envelopeShape & 0x4U) >> 1U)};
+				return state ? 0x1fU : 0x00U;
+			}
+			// If the alternate bit is set, then ramp the opposite direction to before
+			if (envelopeShape & 0x2U)
+			{
+				if (envelopeShape & 0x4U)
+					return 0x1fU - position;
+				return position;
+			}
+			// Otherwise, ramp the same as before
+			if (envelopeShape & 0x4U)
+				return position;
+			return 0x1fU - position;
+		// The 3rd phase is also determined by the rest of the shape bits, but has the opposite
+		// logic for the alternate-controlled ramping when alternate set
+		case 2U:
+			// If this is not a continuous envelope, the level is low permanently
+			if (envelopeShape & 0x8U)
+				return 0U;
+			// Otherwise, if the envelope should hold its value
+			if (envelopeShape & 0x1U)
+			{
+				// Low or high determined by attack and alternate bits xor'd together
+				const auto state{(envelopeShape & 0x2U) ^ ((envelopeShape & 0x4U) >> 1U)};
+				return state ? 0x1fU : 0x00U;
+			}
+			// Ramp in the original direction regardless of alternate bit
+			if (envelopeShape & 0x4U)
+				return position;
+			return 0x1fU - position;
+	}
+	// Should not be possible, but just in case..
+	return 0U;
 }
 
 int16_t ym2149_t::dcAdjust(uint16_t sample) noexcept
