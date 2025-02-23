@@ -71,7 +71,7 @@ private:
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
 
 	void updateFSM() noexcept;
-	[[nodisard]] int16_t dcAdjust(uint16_t sample) noexcept;
+	[[nodiscard]] int16_t dcAdjust(uint16_t sample) noexcept;
 
 public:
 	ym2149_t(uint32_t clockFrequency, uint32_t sampleFrequency) noexcept;
