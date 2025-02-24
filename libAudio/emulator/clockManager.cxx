@@ -33,7 +33,7 @@ bool clockManager_t::advanceCycle() noexcept
 	{
 		// If the correction factor went above 1 (a correction cycle was necessary),
 		// then adjust it back down so we maintain the range [0, 1)
-		if (correction > 1.0f)
+		if (correction >= 1.0f)
 			correction -= 1.0f;
 
 		// Add the fractional part of the ratio to the correction factor
