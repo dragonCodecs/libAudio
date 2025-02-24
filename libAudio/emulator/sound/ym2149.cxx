@@ -218,7 +218,7 @@ void ym2149_t::updateFSM() noexcept
 	// Step the noise generator forward one internal cycle, noting it runs
 	// at half speed to everything else. If the noise counter exceeds the
 	// period of the noise to be generated
-	if ((++noiseCounter) >= noisePeriod)
+	if (++noiseCounter >= noisePeriod)
 	{
 		// Reset the counter
 		noiseCounter = 0U;
