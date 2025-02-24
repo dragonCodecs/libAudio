@@ -288,7 +288,7 @@ uint8_t ym2149_t::computeEnvelopeLevel() const noexcept
 		case 1U:
 		case 3U:
 			// If this is not a continuous envelope, the level is low permanently
-			if (envelopeShape & 0x8U)
+			if (!(envelopeShape & 0x8U))
 				return 0U;
 			// Otherwise, if the envelope should hold its value
 			if (envelopeShape & 0x1U)
