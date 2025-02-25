@@ -3533,9 +3533,9 @@ stepResult_t motorola68000_t::dispatchCMPI(const decodedOperation_t &insn) noexc
 	// Figure out the operation width
 	const auto operationSize{unpackSize(insn.operationSize)};
 	// Grab the data to be used on the RHS of the subtraction from just after the instruction
-	const auto lhs{static_cast<uint32_t>(readImmediateSigned(operationSize))};
+	const auto rhs{static_cast<uint32_t>(readImmediateSigned(operationSize))};
 	// Grab the data to be used on the LHS of the subtraction from the EA
-	const auto rhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
+	const auto lhs{static_cast<uint32_t>(readEffectiveAddress<int32_t>(insn.mode, insn.ry, operationSize))};
 	// With the two values retreived, do the subtraction
 	// We do the subtraction unsigned so we don't UB on overflow
 	const auto result{uint64_t{lhs} - uint64_t{rhs}};
