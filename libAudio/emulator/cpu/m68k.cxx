@@ -2441,10 +2441,10 @@ void motorola68000_t::stageIRQCall(const uint32_t vectorAddress) noexcept
 	// Stack the start of a throwaway frame for the selected vector number
 	stackPointer -= 2U;
 	_peripherals.writeAddress<uint16_t>(stackPointer, 0x1000U | (vectorAddress & 0x0fffU));
-	// Push the current program counter to the stack and set it to the requested vector address
+	// Push the current program counter to the stack and set it to value at the requested vector address
 	stackPointer -= 4U;
 	_peripherals.writeAddress(stackPointer, programCounter);
-	programCounter = vectorAddress;
+	programCounter = _peripherals.readAddress<uint32_t>(vectorAddress);
 	// Stack up the previous status register to be restored on RTE
 	stackPointer -= 2U;
 	_peripherals.writeAddress(stackPointer, statusReg);
