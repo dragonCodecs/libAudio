@@ -3216,7 +3216,7 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 	// which order we grab them here.. unlike for subtract which matters)
 	const auto lhs{static_cast<uint32_t>(readDataRegisterSigned(insn.rx, operationSize))};
 	// Grab the other operand using the computed address
-	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress))};
+	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize))};
 	// With the two values retreived, do the addition
 	const auto result{uint64_t{lhs} + uint64_t{rhs}};
 
