@@ -2512,6 +2512,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchCPUSH(instruction);
 		case instruction_t::dbcc:
 			return dispatchDBcc(instruction);
+		case instruction_t::jmp:
+			return dispatchJMP(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
 		case instruction_t::lsl:
@@ -3570,6 +3572,15 @@ stepResult_t motorola68000_t::dispatchDBcc(const decodedOperation_t &insn) noexc
 			programCounter = branchBase + displacement;
 	}
 	// Get done and compute how long that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchJMP(const decodedOperation_t &insn) noexcept
+{
+	// Extract the address to jump to from the effective address for the instruction
+	// and then load that into the program counter, competing the jump
+	programCounter = readEffectiveAddress<uint32_t>(insn.mode, insn.ry);
+	// Figure out how long that took and return
 	return {true, false, 0U};
 }
 
