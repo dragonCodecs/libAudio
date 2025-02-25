@@ -3460,10 +3460,8 @@ stepResult_t motorola68000_t::dispatchBTST(const decodedOperation_t &insn) noexc
 			return static_cast<uint8_t>(dataRegister(insn.rx));
 		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
 	};
-	// Now extract the address of the manipulation target
-	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
-	// Read back the value at the destination
-	const auto value{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	// Read the data to test a bit in from the EA target
+	const auto value{readEffectiveAddress<uint32_t>(insn.mode, insn.ry, operationSize)};
 
 	// Test to see if the bit at the requested position is zero or not
 	if (value & (1U << bitIndex))
