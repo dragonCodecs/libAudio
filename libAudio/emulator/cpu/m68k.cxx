@@ -3563,8 +3563,9 @@ stepResult_t motorola68000_t::dispatchDBcc(const decodedOperation_t &insn) noexc
 	// If it is false, then we decrement the data register for the instruction
 	if (!condition)
 	{
-		// Grab the result of this as we have a further test to do
-		const auto value{static_cast<int32_t>(--dataRegister(insn.ry))};
+		// Decrement the target register and write back the result to only the bottom 16 bits
+		const auto value{static_cast<int16_t>(dataRegister(insn.ry)) - 1};
+		writeDataRegisterSized(insn.ry, 2U, static_cast<uint32_t>(value));
 		// If the result of that calculation is not -1, adjust the program counter by the displacement
 		if (value != -1)
 			programCounter = branchBase + displacement;
