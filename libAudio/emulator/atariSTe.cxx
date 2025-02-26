@@ -108,7 +108,7 @@ bool atariSTe_t::init(const uint16_t subtune) noexcept
 	writeAddress(0x0005a0U, uint32_t{0x000600U});
 	writeAddress(0x000600U, substrate::buffer_utils::readBE<uint32_t>({cookieSND}));
 	// Bit 0 -> PSG, bit 1 -> DMA sound, bit 2 -> CODEC, bit 3 -> DSP
-	writeAddress(0x000604U, uint32_t{0x00000001U});
+	writeAddress(0x000604U, uint32_t{0x00000003U});
 	writeAddress(0x000608U, substrate::buffer_utils::readBE<uint32_t>({cookieMCH}));
 	// Set the machine type to an STe
 	writeAddress(0x00060cU, uint32_t{0x00010000U});
