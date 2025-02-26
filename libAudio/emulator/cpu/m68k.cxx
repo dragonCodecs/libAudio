@@ -2548,6 +2548,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchSUBQ(instruction);
 		case instruction_t::swap:
 			return dispatchSWAP(instruction);
+		case instruction_t::trap:
+			return dispatchTRAP(instruction);
 		case instruction_t::tst:
 			return dispatchTST(instruction);
 	}
@@ -4275,6 +4277,30 @@ stepResult_t motorola68000_t::dispatchSWAP(const decodedOperation_t &insn) noexc
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 	// Write the result back and return how long that took
 	dataRegister(insn.ry) = value;
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchTRAP(const decodedOperation_t &insn) noexcept
+{
+	// Compute where the TRAP handler is
+	const auto vectorAddress{static_cast<uint32_t>(insn.rx << 2U)};
+	// Grab the old status register value
+	const auto statusReg{status.toRaw()};
+	// Force supervisor mode
+	status.set(m68kStatusBits_t::supervisor);
+	// Grab the active stack and start stacking up an exception frame
+	auto &stackPointer{activeStackPointer()};
+	// Stack the start of a frame for the selected vector number
+	stackPointer -= 2U;
+	_peripherals.writeAddress<uint16_t>(stackPointer, 0x0080U | vectorAddress);
+	// Push the current program counter to the stack and set it to value at the requested vector address
+	stackPointer -= 4U;
+	_peripherals.writeAddress(stackPointer, programCounter);
+	programCounter = _peripherals.readAddress<uint32_t>(vectorAddress);
+	// Stack up the previous status register to be restored on RTE
+	stackPointer -= 2U;
+	_peripherals.writeAddress(stackPointer, statusReg);
+	// Figure out how long that all took and return
 	return {true, false, 0U};
 }
 

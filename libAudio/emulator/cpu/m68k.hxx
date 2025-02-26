@@ -146,6 +146,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchSUB(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchSUBQ(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchSWAP(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchTRAP(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchTST(const decodedOperation_t &insn) noexcept;
 
 public:
