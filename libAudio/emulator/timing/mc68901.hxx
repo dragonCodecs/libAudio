@@ -36,19 +36,19 @@ private:
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
 
-	uint8_t gpio;
-	uint8_t activeEdge;
-	uint8_t dataDirection;
-	uint16_t itrEnable;
-	uint16_t itrPending;
-	uint16_t itrServicing;
-	uint16_t itrMask;
-	uint8_t vectorReg;
-	uint8_t syncChar;
-	uint8_t usartCtrl;
-	uint8_t rxStatus;
-	uint8_t txStatus;
-	uint8_t usartData;
+	uint8_t gpio{0U};
+	uint8_t activeEdge{0U};
+	uint8_t dataDirection{0U};
+	uint16_t itrEnable{0U};
+	uint16_t itrPending{0U};
+	uint16_t itrServicing{0U};
+	uint16_t itrMask{0U};
+	uint8_t vectorReg{0U};
+	uint8_t syncChar{0U};
+	uint8_t usartCtrl{0U};
+	uint8_t rxStatus{0U};
+	uint8_t txStatus{0U};
+	uint8_t usartData{0U};
 
 	std::array<mc68901::timer_t, 4> timers;
 
