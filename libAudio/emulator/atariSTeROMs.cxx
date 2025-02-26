@@ -32,5 +32,20 @@ void atariSTeROMs_t::writeAddress(const uint32_t, const substrate::span<uint8_t>
 
 void atariSTeROMs_t::handleGEMDOSAccess() const noexcept
 {
-	//
+	// Extract the current stack pointer
+	const auto stackPointer{_cpu.readAddrRegister(7U)};
+	// Figure out where on the stack the opcode value is and extract it
+	const auto opcode{_peripherals.readAddress<uint16_t>(stackPointer + 8U)};
+	// Dispatch the opcode requested
+	switch (opcode)
+	{
+		case 0x30U: // GEMDOS version number
+			// Respond with being version 0.30 via D0
+			_cpu.writeDataRegister(0U, 0x3000U);
+			break;
+		default:
+			// Unimplemented GEMDOS operation, explode
+			// NOLINTNEXTLINE(clang-diagnostic-exceptions)
+			throw std::exception{};
+	}
 }
