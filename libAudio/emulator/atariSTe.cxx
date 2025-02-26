@@ -32,9 +32,9 @@ constexpr static std::array<uint8_t, 4U> cookieMCH{{'_', 'M', 'C', 'H'}};
 constexpr static std::array<uint32_t, 4U> timerVectorAddresses
 {{
 	0x000134U,
-	0x000160U,
-	0x000154U,
-	0x000150U,
+	0x000120U,
+	0x000114U,
+	0x000110U,
 }};
 
 // Private address we stick an RTE instruction at for vector returns and such
