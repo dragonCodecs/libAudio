@@ -3,6 +3,7 @@
 #include <string_view>
 #include <type_traits>
 #include "atariSTe.hxx"
+#include "atariSTeROMs.hxx"
 #include "ram.hxx"
 #include "sound/ym2149.hxx"
 #include "sound/steDAC.hxx"
@@ -66,7 +67,7 @@ atariSTe_t::atariSTe_t() noexcept :
 
 	// Build the system memory map
 	addressMap[{0x000000U, 0x800000U}] = std::make_unique<stRAM_t>();
-	// TODO: TOS ROM needs to go at 0xe00000U, it is in a 1MiB window
+	addressMap[{0xe00000U, 0xf00000U}] = std::make_unique<atariSTeROMs_t>(&cpu);
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
@@ -75,6 +76,9 @@ atariSTe_t::atariSTe_t() noexcept :
 
 	// Set up our dummy RTE for vector handling
 	writeAddress(rteAddress, uint16_t{0x4e73U});
+
+	// Set up the GEMDOS TRAP handler so the ROM will handle it
+	writeAddress(0x000084U, uint32_t{0xe00000U + atariSTeROMs_t::handlerAddressGEMDOS});
 
 	// Make all timer handlers RTEs for now
 	for (const auto &address : timerVectorAddresses)
