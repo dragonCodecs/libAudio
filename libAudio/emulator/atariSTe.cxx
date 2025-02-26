@@ -40,6 +40,8 @@ constexpr static std::array<uint32_t, 4U> timerVectorAddresses
 
 // Private address we stick an RTE instruction at for vector returns and such
 constexpr static uint32_t rteAddress{0x000700U};
+// Private address we stick a STOP instruction at for unimplemented vectors
+constexpr static uint32_t stopAddress{0x000704U};
 
 atariSTe_t::atariSTe_t() noexcept :
 	// Set up a dummy clock manager for the play routine
@@ -76,9 +78,28 @@ atariSTe_t::atariSTe_t() noexcept :
 
 	// Set up our dummy RTE for vector handling
 	writeAddress(rteAddress, uint16_t{0x4e73U});
+	// Set up a dummy STOP for unimplemented vectors
+	writeAddress(stopAddress, uint16_t{0x4e72U});
+	writeAddress(stopAddress + 2U, uint16_t{0x2700U});
 
+	// Set up the TRAP handlers using the dummy STOP for unused ones
+	writeAddress(0x000080U, stopAddress);
 	// Set up the GEMDOS TRAP handler so the ROM will handle it
 	writeAddress(0x000084U, uint32_t{0xe00000U + atariSTeROMs_t::handlerAddressGEMDOS});
+	writeAddress(0x000088U, stopAddress);
+	writeAddress(0x00008cU, stopAddress);
+	writeAddress(0x000090U, stopAddress);
+	writeAddress(0x000094U, stopAddress);
+	writeAddress(0x000098U, stopAddress);
+	writeAddress(0x00009cU, stopAddress);
+	writeAddress(0x0000a0U, stopAddress);
+	writeAddress(0x0000a4U, stopAddress);
+	writeAddress(0x0000a8U, stopAddress);
+	writeAddress(0x0000acU, stopAddress);
+	writeAddress(0x0000b0U, stopAddress);
+	writeAddress(0x0000b4U, stopAddress);
+	writeAddress(0x0000b8U, stopAddress);
+	writeAddress(0x0000bcU, stopAddress);
 
 	// Make all timer handlers RTEs for now
 	for (const auto &address : timerVectorAddresses)
