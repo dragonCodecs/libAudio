@@ -4,6 +4,7 @@
 #define EMULATOR_SOUND_STEDAC_HXX
 
 #include <cstdint>
+#include <substrate/span>
 #include "../memoryMap.hxx"
 
 struct steDAC_t final : public clockedPeripheral_t<uint32_t>

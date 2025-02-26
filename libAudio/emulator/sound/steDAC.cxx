@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
 #include <tuple>
+#include <substrate/span>
 #include <substrate/index_sequence>
 #include <substrate/buffer_utils>
 #include "steDAC.hxx"
