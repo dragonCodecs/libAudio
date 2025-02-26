@@ -4156,8 +4156,8 @@ stepResult_t motorola68000_t::dispatchRTE() noexcept
 	const auto format{_peripherals.readAddress<uint16_t>(stackPointer)};
 	stackPointer += 2U;
 	const auto frameType{format >> 12U};
-	// For now, explode if this is not a format 1 frame
-	if (frameType != 1U)
+	// For now, explode if this is not a format 0 or 1 frame
+	if (frameType != 0U && frameType != 1U)
 		return {true, true, 0U};
 	// Otherwise return success and how long it took
 	return {true, false, 0U};
