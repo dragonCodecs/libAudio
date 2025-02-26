@@ -69,7 +69,10 @@ atariSTe_t::atariSTe_t() noexcept :
 
 	// Build the system memory map
 	addressMap[{0x000000U, 0x800000U}] = std::make_unique<stRAM_t>();
-	addressMap[{0xe00000U, 0xf00000U}] = std::make_unique<atariSTeROMs_t>(&cpu);
+	addressMap[{0xe00000U, 0xf00000U}] = std::make_unique<atariSTeROMs_t>
+	(
+		cpu, static_cast<memoryMap_t<uint32_t, 0x00ffffffU> &>(*this)
+	);
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));

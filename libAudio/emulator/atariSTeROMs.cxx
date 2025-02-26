@@ -6,7 +6,8 @@
 #include "atariSTeROMs.hxx"
 #include "cpu/m68k.hxx"
 
-atariSTeROMs_t::atariSTeROMs_t(motorola68000_t *cpu) noexcept : peripheral_t<uint32_t>{}, _cpu{cpu} { }
+atariSTeROMs_t::atariSTeROMs_t(motorola68000_t &cpu, memoryMap_t<uint32_t, 0x00ffffffU> &peripherals) noexcept :
+	peripheral_t<uint32_t>{}, _cpu{cpu}, _peripherals{peripherals} { }
 
 void atariSTeROMs_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
 {
