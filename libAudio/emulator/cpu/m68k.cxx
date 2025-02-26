@@ -4304,7 +4304,7 @@ stepResult_t motorola68000_t::dispatchSWAP(const decodedOperation_t &insn) noexc
 stepResult_t motorola68000_t::dispatchTRAP(const decodedOperation_t &insn) noexcept
 {
 	// Compute where the TRAP handler is
-	const auto vectorAddress{static_cast<uint32_t>(insn.rx << 2U)};
+	const auto vectorAddress{static_cast<uint32_t>(0x0080U | (insn.rx << 2U))};
 	// Grab the old status register value
 	const auto statusReg{status.toRaw()};
 	// Force supervisor mode
@@ -4313,7 +4313,7 @@ stepResult_t motorola68000_t::dispatchTRAP(const decodedOperation_t &insn) noexc
 	auto &stackPointer{activeStackPointer()};
 	// Stack the start of a frame for the selected vector number
 	stackPointer -= 2U;
-	_peripherals.writeAddress<uint16_t>(stackPointer, 0x0080U | vectorAddress);
+	_peripherals.writeAddress<uint16_t>(stackPointer, vectorAddress);
 	// Push the current program counter to the stack and set it to value at the requested vector address
 	stackPointer -= 4U;
 	_peripherals.writeAddress(stackPointer, programCounter);
