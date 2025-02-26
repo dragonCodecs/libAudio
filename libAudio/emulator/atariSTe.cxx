@@ -118,7 +118,7 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 	// Set the selected timer's vector slot to a branch to the play routine
 	const auto vectorAddress{timerVectorAddresses[index]};
 	// And write the address of the SNDH play routine to that location
-	writeAddress(vectorAddress, uint32_t{0x001008U});
+	writeAddress(vectorAddress, uint32_t{0x010008U});
 
 	// Now the vector slot is properly set up, enable the timer and set the call frequency
 	playRoutineManager = {systemClockFrequency, timerFrequency};
@@ -129,7 +129,7 @@ bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
 {
 	stRAM_t &systemRAM{*dynamic_cast<stRAM_t *>(addressMap[{0x000000U, 0x800000U}].get())};
 	// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
-	auto destination{systemRAM.subspan(0x001000U, data.length())};
+	auto destination{systemRAM.subspan(0x010000U, data.length())};
 	// Now make sure we're at the start of the data and copy it all in
 	return data.head() && data.read(destination);
 }
@@ -150,11 +150,11 @@ bool atariSTe_t::init(const uint16_t subtune) noexcept
 	// Set up the calling context
 	cpu.writeDataRegister(0U, subtune + 1U);
 	// And run the init entrypoint to return
-	return cpu.executeToReturn(0x001000U, 0x800000U, false);
+	return cpu.executeToReturn(0x010000U, 0x800000U, false);
 }
 
 bool atariSTe_t::exit() noexcept
-	{ return cpu.executeToReturn(0x001004U, 0x800000U, false); }
+	{ return cpu.executeToReturn(0x010004U, 0x800000U, false); }
 
 bool atariSTe_t::advanceClock() noexcept
 {
@@ -179,7 +179,7 @@ bool atariSTe_t::advanceClock() noexcept
 		if (cpu.readProgramCounter() != 0xffffffffU)
 			// It did not, error
 			return false;
-		cpu.executeFrom(0x001008U, 0x800000U, false);
+		cpu.executeFrom(0x010008U, 0x800000U, false);
 	}
 
 	// Check if we got any pending interrupts from the timers
