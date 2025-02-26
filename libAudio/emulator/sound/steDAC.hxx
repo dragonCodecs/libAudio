@@ -17,7 +17,9 @@ private:
 	uint16_t microwireData{0U};
 	mutable uint16_t microwireMask{0U};
 	mutable uint8_t microwireCycles{0U};
+	uint8_t mainVolume{64U};
 
+	void runMicrowireTransaction() noexcept;
 	[[nodiscard]] uint16_t microwireCycle() const noexcept;
 
 public:
