@@ -7,6 +7,7 @@
 #include "memoryMap.hxx"
 #include "cpu/m68k.hxx"
 #include "sound/ym2149.hxx"
+#include "sound/steDAC.hxx"
 #include "timing/mc68901.hxx"
 #include "unitsHelpers.hxx"
 #include "sndh/iceDecrunch.hxx"
@@ -18,6 +19,7 @@ private:
 	constexpr static auto systemClockFrequency{32_MHz};
 	motorola68000_t cpu{*this, 8_MHz};
 	ym2149_t *psg{nullptr};
+	steDAC_t *dac{nullptr};
 	mc68901_t *mfp{nullptr};
 
 	uint32_t timeSinceLastCPUCycle{0U};
