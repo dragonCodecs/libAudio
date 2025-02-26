@@ -31,11 +31,14 @@ constexpr static std::array<uint8_t, 4U> cookieMCH{{'_', 'M', 'C', 'H'}};
 
 constexpr static std::array<uint32_t, 4U> timerVectorAddresses
 {{
-	0x000174U,
+	0x000134U,
 	0x000160U,
 	0x000154U,
 	0x000150U,
 }};
+
+// Private address we stick an RTE instruction at for vector returns and such
+constexpr static uint32_t rteAddress{0x000700U};
 
 atariSTe_t::atariSTe_t() noexcept :
 	// Set up a dummy clock manager for the play routine
@@ -70,9 +73,12 @@ atariSTe_t::atariSTe_t() noexcept :
 	dac = addClockedPeripheral({0xff8900U, 0xff8926U}, std::make_unique<steDAC_t>(50_kHz));
 	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
 
+	// Set up our dummy RTE for vector handling
+	writeAddress(rteAddress, uint16_t{0x4e73U});
+
 	// Make all timer handlers RTEs for now
 	for (const auto &address : timerVectorAddresses)
-		writeAddress(address, uint16_t{0x4e73U});
+		writeAddress(address, rteAddress);
 }
 
 void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept
