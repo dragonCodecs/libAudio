@@ -2452,6 +2452,8 @@ void motorola68000_t::stageIRQCall(const uint32_t vectorAddress) noexcept
 
 uint32_t &motorola68000_t::dataRegister(const size_t reg) noexcept
 	{ return d.at(reg); }
+const uint32_t &motorola68000_t::dataRegister(const size_t reg) const noexcept
+	{ return d.at(reg); }
 
 uint32_t &motorola68000_t::addrRegister(const size_t reg) noexcept
 {
@@ -2460,8 +2462,19 @@ uint32_t &motorola68000_t::addrRegister(const size_t reg) noexcept
 	return a.at(reg);
 }
 
+const uint32_t &motorola68000_t::addrRegister(const size_t reg) const noexcept
+{
+	if (reg == 7U)
+		return activeStackPointer();
+	return a.at(reg);
+}
+
+uint32_t motorola68000_t::readDataRegister(const size_t reg) const noexcept
+	{ return dataRegister(reg); }
 void motorola68000_t::writeDataRegister(const size_t reg, const uint32_t value) noexcept
 	{ dataRegister(reg) = value; }
+uint32_t motorola68000_t::readAddrRegister(const size_t reg) const noexcept
+	{ return addrRegister(reg); }
 void motorola68000_t::writeAddrRegister(const size_t reg, const uint32_t value) noexcept
 	{ addrRegister(reg) = value; }
 uint32_t motorola68000_t::readProgramCounter() const noexcept { return programCounter; }
@@ -3041,6 +3054,14 @@ template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, 
 template void motorola68000_t::writeEffectiveAddress(uint8_t mode, uint8_t reg, size_t width, int32_t value) noexcept;
 
 uint32_t &motorola68000_t::activeStackPointer() noexcept
+{
+	// XXX: Need to deal with interrupt contexts and the interrupt stack pointer..
+	if (status.includes(m68kStatusBits_t::supervisor))
+		return systemStackPointer;
+	return userStackPointer;
+}
+
+const uint32_t &motorola68000_t::activeStackPointer() const noexcept
 {
 	// XXX: Need to deal with interrupt contexts and the interrupt stack pointer..
 	if (status.includes(m68kStatusBits_t::supervisor))

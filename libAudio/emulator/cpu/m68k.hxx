@@ -94,6 +94,7 @@ private:
 	}
 
 	[[nodiscard]] uint32_t &activeStackPointer() noexcept;
+	[[nodiscard]] const uint32_t &activeStackPointer() const noexcept;
 	[[nodiscard]] int32_t readImmediateDisplacement(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] bool checkCondition(uint8_t condition) const noexcept;
 	[[nodiscard]] size_t unpackSize(uint8_t sizeField) const noexcept;
@@ -101,7 +102,9 @@ private:
 	void recomputeStatusFlags(uint32_t result, bool carry, uint32_t signBit) noexcept;
 
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
+	[[nodiscard]] const uint32_t &dataRegister(size_t reg) const noexcept;
 	[[nodiscard]] uint32_t &addrRegister(size_t reg) noexcept;
+	[[nodiscard]] const uint32_t &addrRegister(size_t reg) const noexcept;
 
 	[[nodiscard]] int32_t readDataRegisterSigned(size_t reg, size_t size) const noexcept;
 	void writeDataRegisterSized(size_t reg, size_t size, uint32_t value) noexcept;
@@ -156,7 +159,9 @@ public:
 	void executeFromException(uint32_t entryAddress, uint32_t stackTop, uint8_t vectorNumber) noexcept;
 	[[nodiscard]] bool executeToReturn(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void stageIRQCall(uint32_t vectorAddress) noexcept;
+	[[nodiscard]] uint32_t readDataRegister(size_t reg) const noexcept;
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;
+	[[nodiscard]] uint32_t readAddrRegister(size_t reg) const noexcept;
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;
 	[[nodiscard]] uint32_t readProgramCounter() const noexcept;
 	[[nodiscard]] stepResult_t step() noexcept;
