@@ -122,7 +122,7 @@ bool atariSTe_t::init(const uint16_t subtune) noexcept
 	writeAddress(0x000610U, uint32_t{0U});
 
 	// Set up the calling context
-	cpu.writeDataRegister(0U, subtune);
+	cpu.writeDataRegister(0U, subtune + 1U);
 	// And run the init entrypoint to return
 	return cpu.executeToReturn(0x001000U, 0x800000U, false);
 }
