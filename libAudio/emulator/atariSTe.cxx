@@ -89,10 +89,8 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 	const auto index{static_cast<size_t>(timer - 'A')};
 	// Set the selected timer's vector slot to a branch to the play routine
 	const auto vectorAddress{timerVectorAddresses[index]};
-	// BRA.W
-	writeAddress(vectorAddress + 0U, uint16_t{0x6000U});
-	// to address 0x001008U (SNDH play routine)
-	writeAddress(vectorAddress + 2U, static_cast<uint16_t>(0x1008U - (vectorAddress + 2U)));
+	// And write the address of the SNDH play routine to that location
+	writeAddress(vectorAddress, uint32_t{0x001008U});
 
 	// Now the vector slot is properly set up, enable the timer and set the call frequency
 	playRoutineManager = {systemClockFrequency, timerFrequency};
