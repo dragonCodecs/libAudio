@@ -2512,6 +2512,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchCPUSH(instruction);
 		case instruction_t::dbcc:
 			return dispatchDBcc(instruction);
+		case instruction_t::divu:
+			return dispatchDIVU(instruction);
 		case instruction_t::jmp:
 			return dispatchJMP(instruction);
 		case instruction_t::lea:
@@ -3571,6 +3573,44 @@ stepResult_t motorola68000_t::dispatchDBcc(const decodedOperation_t &insn) noexc
 			programCounter = branchBase + displacement;
 	}
 	// Get done and compute how long that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchDIVU(const decodedOperation_t &insn) noexcept
+{
+	// This form of DIVU is required to be in u16 mode, so grab the register to operate on as the LHS
+	const auto lhs{dataRegister(insn.rx)};
+	// And then the RHS from the target of the EA
+	const auto rhs{readEffectiveAddress<uint16_t>(insn.mode, insn.ry)};
+	// Check that we're not about to try dividing by zero (if we are, trap)
+	if (!rhs)
+		return {true, true, 0U};
+	// Now do the division, getting both the quotient and remainder
+	const auto quotient{lhs / rhs};
+	const auto remainder{lhs % rhs};
+	// Recompute the flags, starting by clearing carry
+	status.clear(m68kStatusBits_t::carry);
+	// Now do zero
+	if (quotient == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// As this is a 32-bit LHS, 16-bit RHS division, negative is if bit 31 is set in the quotient
+	if (quotient & 0x80000000U)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// And finally, if any of the upper 16 bits of the quotient is set, we overflowed
+	if (quotient & 0xffff0000U)
+		status.set(m68kStatusBits_t::overflow);
+	else
+	{
+		status.clear(m68kStatusBits_t::overflow);
+		// Now, as overflow hasn't occured, write the result back to the target register,
+		// packing the remainder in the upper 16 bits and the quotient in the lower
+		dataRegister(insn.rx) = quotient | (remainder << 16U);
+	}
+	// Figure out how long that took an return
 	return {true, false, 0U};
 }
 
