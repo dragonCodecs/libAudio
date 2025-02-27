@@ -100,6 +100,7 @@ private:
 	[[nodiscard]] size_t unpackSize(uint8_t sizeField) const noexcept;
 	void recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize) noexcept;
 	void recomputeStatusFlags(uint32_t result, bool carry, uint32_t signBit) noexcept;
+	void recomputeStatusFlagsArithmetic(uint32_t result, bool carry, bool oldSign, uint32_t signBit) noexcept;
 
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] const uint32_t &dataRegister(size_t reg) const noexcept;
@@ -114,6 +115,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchADDQ(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchANDI(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchANDISpecialCCR(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchASL(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBcc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBCLR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchBRA(const decodedOperation_t &insn) noexcept;
