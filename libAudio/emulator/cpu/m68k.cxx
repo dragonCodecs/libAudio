@@ -4282,7 +4282,7 @@ stepResult_t motorola68000_t::dispatchSWAP(const decodedOperation_t &insn) noexc
 		[](const uint32_t data) -> uint32_t
 		{
 			return (data >> 16U) | (data << 16U);
-		}(dataRegister(insn.ry))
+		}(dataRegister(insn.rx))
 	};
 	// Now recompute the flag bits, starting with negative
 	if (value & (1U << 31U))
@@ -4297,7 +4297,7 @@ stepResult_t motorola68000_t::dispatchSWAP(const decodedOperation_t &insn) noexc
 	// Overflow and carry are both always cleared
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 	// Write the result back and return how long that took
-	dataRegister(insn.ry) = value;
+	dataRegister(insn.rx) = value;
 	return {true, false, 0U};
 }
 
