@@ -3652,7 +3652,7 @@ stepResult_t motorola68000_t::dispatchJMP(const decodedOperation_t &insn) noexce
 {
 	// Extract the address to jump to from the effective address for the instruction
 	// and then load that into the program counter, competing the jump
-	programCounter = readEffectiveAddress<uint32_t>(insn.mode, insn.ry);
+	programCounter = computeEffectiveAddress(insn.mode, insn.ry, 4U);
 	// Figure out how long that took and return
 	return {true, false, 0U};
 }
