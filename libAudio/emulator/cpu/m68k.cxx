@@ -3981,11 +3981,9 @@ stepResult_t motorola68000_t::dispatchMOVEM(const decodedOperation_t &insn) noex
 				_peripherals.writeAddress(address, reg);
 		}
 
-		// If we're in a simple mode, update the address appropriately
-		if (isPostincrement)
+		// If we're in a complex mode, treat it as postincrement
+		if (complexMode)
 			address += insn.operationSize;
-		else if (isPredecrement)
-			address -= insn.operationSize;
 
 		// Mark another register copied for the number of cycles taken
 		++copied;
