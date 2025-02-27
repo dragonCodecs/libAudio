@@ -2545,6 +2545,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMOVEP(instruction);
 		case instruction_t::moveq:
 			return dispatchMOVEQ(instruction);
+		case instruction_t::muls:
+			return dispatchMULS(instruction);
 		case instruction_t::mulu:
 			return dispatchMULU(instruction);
 		case instruction_t::ori:
@@ -4063,6 +4065,32 @@ stepResult_t motorola68000_t::dispatchMOVEQ(const decodedOperation_t &insn) noex
 	// Move the value to the target data register and return
 	dataRegister(insn.rx) = static_cast<uint32_t>(value);
 	return {true, false, 4U};
+}
+
+stepResult_t motorola68000_t::dispatchMULS(const decodedOperation_t &insn) noexcept
+{
+	// This form of MULS is required to be in s16 mode, so grab the target of the EA as the LHS
+	const auto lhs{readEffectiveAddress<int16_t>(insn.mode, insn.ry)};
+	// And then the RHS from the destination register, truncated to a s16
+	const auto rhs{static_cast<int16_t>(dataRegister(insn.rx))};
+	// Multiply the two together to make a s32 result
+	const auto result{int32_t{lhs} * int32_t{rhs}};
+	// This form can never overflow, so clear that and the carry bits in the flags
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Check if the result is zero
+	if (result == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if the result is negative
+	if (result < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+
+	// Store the result in the target data register and return how long this all took
+	dataRegister(insn.rx) = static_cast<uint32_t>(result);
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchMULU(const decodedOperation_t &insn) noexcept
