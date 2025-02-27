@@ -3790,20 +3790,26 @@ stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexc
 			return dispatchMOVESpecialUSP(insn);
 	}
 
+	// This can never be true, but it makes the analysis for the signBit calculation happy, so..
+	if (insn.operationSize == 0U || insn.operationSize > 4U)
+		return {true, true, 0U};
+
 	// Extract out the mode parts of the effective addresses
 	const auto srcEAMode{insn.mode & 0x07U};
 	const auto dstEAMode{(insn.mode & 0x38U) >> 3U};
-	// Read the data to be moved, allowing it to sign extend to make resetting the flags easier
-	const auto value{readEffectiveAddress<int32_t>(srcEAMode, insn.ry, insn.operationSize)};
+	// Read the data to be moved, unsigned so as not to cause problems on write back
+	const auto value{readEffectiveAddress<uint32_t>(srcEAMode, insn.ry, insn.operationSize)};
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * insn.operationSize) - 1U)};
 	// Clear flags that are always cleared
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 	// Check if the value is zero
-	if (value == 0)
+	if (value == 0U)
 		status.set(m68kStatusBits_t::zero);
 	else
 		status.clear(m68kStatusBits_t::zero);
 	// Check if the value is negative
-	if (value < 0)
+	if (value & signBit)
 		status.set(m68kStatusBits_t::negative);
 	else
 		status.clear(m68kStatusBits_t::negative);
