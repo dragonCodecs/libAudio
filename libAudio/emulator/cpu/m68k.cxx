@@ -2531,6 +2531,10 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchDBcc(instruction);
 		case instruction_t::divu:
 			return dispatchDIVU(instruction);
+		case instruction_t::ext:
+			return dispatchEXT(instruction);
+		case instruction_t::extb:
+			return dispatchEXTB(instruction);
 		case instruction_t::jmp:
 			return dispatchJMP(instruction);
 		case instruction_t::lea:
@@ -3792,6 +3796,49 @@ stepResult_t motorola68000_t::dispatchDIVU(const decodedOperation_t &insn) noexc
 		dataRegister(insn.rx) = quotient | (remainder << 16U);
 	}
 	// Figure out how long that took an return
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchEXT(const decodedOperation_t &insn) noexcept
+{
+	// Grab the s8 or s16 to extend and extend it
+	const auto value{readDataRegisterSigned(insn.rx, insn.operationSize)};
+	// Recompute status flags, starting by clearing carry and overflow
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Check if the result is zero
+	if (value == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if the result is negative
+	if (value < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Write the result back at double the starting width and return how long this all took
+	// (EXT does s8 -> s16, and s16 -> s32, EXTB does s8 -> s32)
+	writeDataRegisterSized(insn.rx, insn.operationSize * 2U, static_cast<uint32_t>(value));
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchEXTB(const decodedOperation_t &insn) noexcept
+{
+	// Grab the byte from the register to extend (as signed) and extend it
+	const auto value{readDataRegisterSigned(insn.rx, 1U)};
+	// Recompute status flags, starting by clearing carry and overflow
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+	// Check if the result is zero
+	if (value == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check if the result is negative
+	if (value < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Write the result back and return how long this all took
+	dataRegister(insn.rx) = static_cast<uint32_t>(value);
 	return {true, false, 0U};
 }
 
