@@ -3341,7 +3341,7 @@ stepResult_t motorola68000_t::dispatchANDI(const decodedOperation_t &insn) noexc
 	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
 
 	// Store the result back
-	writeValue(insn.mode, insn.ry, effectiveAddress, result);
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
 
 	// Return how many cycles that took
 	return {true, false, 0U};
