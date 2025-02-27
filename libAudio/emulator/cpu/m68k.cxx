@@ -2491,6 +2491,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchADD(instruction);
 		case instruction_t::adda:
 			return dispatchADDA(instruction);
+		case instruction_t::addi:
+			return dispatchADDI(instruction);
 		case instruction_t::addq:
 			return dispatchADDQ(instruction);
 		case instruction_t::andi:
@@ -3312,6 +3314,27 @@ stepResult_t motorola68000_t::dispatchADDA(const decodedOperation_t &insn) noexc
 	addrRegister(insn.rx) += value;
 	// Figure out how long this operation took and finish up
 	return {true, false, insn.operationSize == 2U ? 8U : 6U};
+}
+
+stepResult_t motorola68000_t::dispatchADDI(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Extract the immediate that follows this instruction
+	const auto lhs{readImmediateUnsigned(operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the LHS using the computed address
+	const auto rhs{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	// With the two values retreived, do the addition
+	const auto result{uint64_t{lhs} + uint64_t{rhs}};
+
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, rhs, result, operationSize);
+
+	// Store the result back and return how long this all took
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, static_cast<uint32_t>(result));
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchADDQ(const decodedOperation_t &insn) noexcept
