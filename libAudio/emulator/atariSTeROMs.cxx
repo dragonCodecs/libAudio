@@ -44,6 +44,7 @@ void atariSTeROMs_t::handleGEMDOSAccess() const noexcept
 			// Respond with being version 0.30 via D0
 			_cpu.writeDataRegister(0U, 0x3000U);
 			break;
+		case 0x44U: // mxalloc (we ignore the mode value.. sp + 14U)
 		case 0x48U: // malloc
 		{
 			// Set D0 in case of failure to a NULL pointer for the platform
