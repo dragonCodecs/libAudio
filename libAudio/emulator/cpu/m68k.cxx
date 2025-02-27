@@ -2997,13 +2997,20 @@ template int32_t motorola68000_t::readEffectiveAddress<int32_t>(uint8_t mode, ui
 template<typename T>
 	void motorola68000_t::writeValue(const uint8_t mode, const uint8_t reg, const uint32_t address, const T value) noexcept
 {
+	constexpr static auto mask{static_cast<uint32_t>((UINT64_C(1) << (sizeof(T) * 8)) - 1U)};
 	switch (mode)
 	{
 		case 0U: // Dn
-			dataRegister(reg) = value;
+			// Mask out bits that need touching for this write, then put the new value for the register
+			// in via bitwise or to preserve the value of the untouched bits
+			dataRegister(reg) &= ~mask;
+			dataRegister(reg) |= value;
 			break;
 		case 1U: // An
-			addrRegister(reg) = value;
+			// Mask out bits that need touching for this write, then put the new value for the register
+			// in via bitwise or to preserve the value of the untouched bits
+			addrRegister(reg) &= ~mask;
+			addrRegister(reg) |= value;
 			break;
 		default:
 			_peripherals.writeAddress<T>(address, value);
