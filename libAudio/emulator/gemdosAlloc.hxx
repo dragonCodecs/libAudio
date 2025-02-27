@@ -11,6 +11,11 @@ struct allocChunk_t final
 {
 	uint32_t base{0U};
 	uint32_t size{0U};
+
+	constexpr bool operator ==(const uint32_t ptr) const noexcept
+		{ return base == ptr; }
+	constexpr bool operator <(const uint32_t ptr) const noexcept
+		{ return base < ptr; }
 };
 
 struct gemdosAllocator_t final
@@ -28,6 +33,7 @@ public:
 	gemdosAllocator_t(uint32_t base, uint32_t size) noexcept;
 
 	[[nodiscard]] std::optional<uint32_t> alloc(size_t size) noexcept;
+	void free(uint32_t ptr) noexcept;
 };
 
 #endif /*EMULATOR_GEMDOS_ALLOC_HXX*/

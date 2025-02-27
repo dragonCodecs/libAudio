@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
+#include <algorithm>
 #include "gemdosAlloc.hxx"
 
 // Define the alignment requirements on allocations
@@ -124,4 +125,17 @@ std::optional<uint32_t> gemdosAllocator_t::alloc(const size_t size) noexcept
 		return chunk.base;
 	}
 	return std::nullopt;
+}
+
+void gemdosAllocator_t::free(const uint32_t ptr) noexcept
+{
+	// Find the chunk for this pointer from the alloc list
+	const auto node{std::find(allocList.begin(), allocList.end(), ptr)};
+	// If it's not in this list, something is wrong but we're also done here
+	if (node == allocList.end())
+		return;
+	// Otherwise, extract it from the alloc list and find where to insert it in the free list
+	const auto chunk{*node};
+	allocList.erase(node);
+	freeList.insert(std::lower_bound(freeList.begin(), freeList.end(), ptr), chunk);
 }
