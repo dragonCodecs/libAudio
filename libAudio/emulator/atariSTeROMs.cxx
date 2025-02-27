@@ -44,6 +44,25 @@ void atariSTeROMs_t::handleGEMDOSAccess() const noexcept
 			// Respond with being version 0.30 via D0
 			_cpu.writeDataRegister(0U, 0x3000U);
 			break;
+		case 0x48U: // malloc
+		{
+			// Set D0 in case of failure to a NULL pointer for the platform
+			_cpu.writeDataRegister(0U, 0U);
+			// Extract how large and allocation is being requested
+			const auto amount{_peripherals.readAddress<int32_t>(stackPointer + 10U)};
+			// If the amount requested is the special value -1, return the largest free block
+			if (amount == -1)
+				_cpu.writeDataRegister(0U, allocator.largestFreeBlock());
+			// Otherwise if it's a non-zero positive amount to allocate, actually try to
+			else if (amount > 0)
+			{
+				const auto result{allocator.alloc(static_cast<size_t>(amount))};
+				// Check if it succeeded, and if so then write the new pointer into D0
+				if (result != std::nullopt)
+					_cpu.writeDataRegister(0U, *result);
+			}
+			break;
+		}
 		default:
 			// Unimplemented GEMDOS operation, explode
 			// NOLINTNEXTLINE(clang-diagnostic-exceptions)

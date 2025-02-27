@@ -14,7 +14,7 @@ struct atariSTeROMs_t final : peripheral_t<uint32_t>
 private:
 	motorola68000_t &_cpu;
 	memoryMap_t<uint32_t, 0x00ffffffU> &_peripherals;
-	gemdosAllocator_t allocator;
+	mutable gemdosAllocator_t allocator;
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
