@@ -34,6 +34,7 @@ public:
 
 	[[nodiscard]] std::optional<uint32_t> alloc(size_t size) noexcept;
 	void free(uint32_t ptr) noexcept;
+	[[nodiscard]] uint32_t largestFreeBlock() const noexcept;
 };
 
 #endif /*EMULATOR_GEMDOS_ALLOC_HXX*/

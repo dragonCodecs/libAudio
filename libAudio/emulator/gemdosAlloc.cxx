@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <cstdint>
 #include <algorithm>
+#include <numeric>
 #include "gemdosAlloc.hxx"
 
 // Define the alignment requirements on allocations
@@ -138,4 +139,17 @@ void gemdosAllocator_t::free(const uint32_t ptr) noexcept
 	const auto chunk{*node};
 	allocList.erase(node);
 	freeList.insert(std::lower_bound(freeList.begin(), freeList.end(), ptr), chunk);
+}
+
+uint32_t gemdosAllocator_t::largestFreeBlock() const noexcept
+{
+	// Start with the size of the heap remaining to be allocated
+	const uint32_t heapFree{heapEnd - heapCurrent};
+	// And see if anything in the free list is larger, returning whatever we can find
+	return std::reduce
+	(
+		freeList.begin(), freeList.end(), allocChunk_t{0U, heapFree},
+		[](const allocChunk_t &a, const allocChunk_t &b) -> allocChunk_t
+			{ return {0U, std::max(a.size, b.size)}; }
+	).size;
 }
