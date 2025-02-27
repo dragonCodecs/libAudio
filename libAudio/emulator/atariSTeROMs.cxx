@@ -63,6 +63,19 @@ void atariSTeROMs_t::handleGEMDOSAccess() const noexcept
 			}
 			break;
 		}
+		case 0x49U: // free
+		{
+			// Extract the pointer for the allocation being released
+			const auto ptr{_peripherals.readAddress<int32_t>(stackPointer + 10U)};
+			// Execute on that with our actual allocator
+			if (allocator.free(ptr))
+				// Deallocation succeeded, so return 0 (E_OK)
+				_cpu.writeDataRegister(0U, 0U);
+			else
+				// Deallocation failed, signal this with a failure code
+				_cpu.writeDataRegister(0U, UINT16_MAX);
+			break;
+		}
 		default:
 			// Unimplemented GEMDOS operation, explode
 			// NOLINTNEXTLINE(clang-diagnostic-exceptions)
