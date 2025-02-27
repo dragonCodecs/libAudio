@@ -43,6 +43,12 @@ constexpr static uint32_t rteAddress{0x000700U};
 // Private address we stick a STOP instruction at for unimplemented vectors
 constexpr static uint32_t stopAddress{0x000704U};
 
+constexpr static uint32_t stackBase{0x600000U};
+constexpr static uint32_t stackSize{0x100000U};
+constexpr static uint32_t stackTop{stackBase + stackSize};
+constexpr static uint32_t heapBase{0x700000U};
+constexpr static uint32_t heapSize{0x100000U};
+
 atariSTe_t::atariSTe_t() noexcept :
 	// Set up a dummy clock manager for the play routine
 	playRoutineManager{systemClockFrequency, systemClockFrequency}
@@ -71,7 +77,7 @@ atariSTe_t::atariSTe_t() noexcept :
 	addressMap[{0x000000U, 0x800000U}] = std::make_unique<stRAM_t>();
 	addressMap[{0xe00000U, 0xf00000U}] = std::make_unique<atariSTeROMs_t>
 	(
-		cpu, static_cast<memoryMap_t<uint32_t, 0x00ffffffU> &>(*this)
+		cpu, static_cast<memoryMap_t<uint32_t, 0x00ffffffU> &>(*this), heapBase, heapSize
 	);
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
@@ -129,7 +135,8 @@ bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
 {
 	stRAM_t &systemRAM{*dynamic_cast<stRAM_t *>(addressMap[{0x000000U, 0x800000U}].get())};
 	// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
-	auto destination{systemRAM.subspan(0x010000U, data.length())};
+	// But that also excludes the heap and stack spaces
+	auto destination{systemRAM.subspan(0U, stackBase).subspan(0x010000U, data.length())};
 	// Now make sure we're at the start of the data and copy it all in
 	return data.head() && data.read(destination);
 }
@@ -150,11 +157,11 @@ bool atariSTe_t::init(const uint16_t subtune) noexcept
 	// Set up the calling context
 	cpu.writeDataRegister(0U, subtune + 1U);
 	// And run the init entrypoint to return
-	return cpu.executeToReturn(0x010000U, 0x800000U, false);
+	return cpu.executeToReturn(0x010000U, stackTop, false);
 }
 
 bool atariSTe_t::exit() noexcept
-	{ return cpu.executeToReturn(0x010004U, 0x800000U, false); }
+	{ return cpu.executeToReturn(0x010004U, stackTop, false); }
 
 bool atariSTe_t::advanceClock() noexcept
 {
@@ -179,7 +186,7 @@ bool atariSTe_t::advanceClock() noexcept
 		if (cpu.readProgramCounter() != 0xffffffffU)
 			// It did not, error
 			return false;
-		cpu.executeFrom(0x010008U, 0x800000U, false);
+		cpu.executeFrom(0x010008U, stackTop, false);
 	}
 
 	// Check if we got any pending interrupts from the timers

@@ -7,12 +7,14 @@
 #include <substrate/span>
 #include "memoryMap.hxx"
 #include "cpu/m68k.hxx"
+#include "gemdosAlloc.hxx"
 
 struct atariSTeROMs_t final : peripheral_t<uint32_t>
 {
 private:
 	motorola68000_t &_cpu;
 	memoryMap_t<uint32_t, 0x00ffffffU> &_peripherals;
+	gemdosAllocator_t allocator;
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
@@ -20,7 +22,8 @@ private:
 	void handleGEMDOSAccess() const noexcept;
 
 public:
-	atariSTeROMs_t(motorola68000_t &cpu, memoryMap_t<uint32_t, 0x00ffffffU> &peripherals) noexcept;
+	atariSTeROMs_t(motorola68000_t &cpu, memoryMap_t<uint32_t, 0x00ffffffU> &peripherals,
+		uint32_t heapBase, uint32_t heapSize) noexcept;
 	atariSTeROMs_t(const atariSTeROMs_t &) = default;
 	atariSTeROMs_t(atariSTeROMs_t &&) = default;
 	atariSTeROMs_t &operator =(const atariSTeROMs_t &) = default;
