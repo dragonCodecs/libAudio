@@ -128,17 +128,18 @@ std::optional<uint32_t> gemdosAllocator_t::alloc(const size_t size) noexcept
 	return std::nullopt;
 }
 
-void gemdosAllocator_t::free(const uint32_t ptr) noexcept
+bool gemdosAllocator_t::free(const uint32_t ptr) noexcept
 {
 	// Find the chunk for this pointer from the alloc list
 	const auto node{std::find(allocList.begin(), allocList.end(), ptr)};
 	// If it's not in this list, something is wrong but we're also done here
 	if (node == allocList.end())
-		return;
+		return false;
 	// Otherwise, extract it from the alloc list and find where to insert it in the free list
 	const auto chunk{*node};
 	allocList.erase(node);
 	freeList.insert(std::lower_bound(freeList.begin(), freeList.end(), ptr), chunk);
+	return true;
 }
 
 uint32_t gemdosAllocator_t::largestFreeBlock() const noexcept

@@ -33,7 +33,7 @@ public:
 	gemdosAllocator_t(uint32_t base, uint32_t size) noexcept;
 
 	[[nodiscard]] std::optional<uint32_t> alloc(size_t size) noexcept;
-	void free(uint32_t ptr) noexcept;
+	[[nodiscard]] bool free(uint32_t ptr) noexcept;
 	[[nodiscard]] uint32_t largestFreeBlock() const noexcept;
 };
 
