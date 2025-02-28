@@ -85,6 +85,13 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 
 void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_t> &data) noexcept
 {
+	// 32-bit writes must be split into two 16-bit ones
+	if (data.size_bytes() == 4U)
+	{
+		writeAddress(address, data.subspan(0U, 2U));
+		writeAddress(address + 2U, data.subspan(2U));
+		return;
+	}
 	// Only admit 8- and 16-bit writes
 	if (data.size_bytes() > 2U)
 		return;
