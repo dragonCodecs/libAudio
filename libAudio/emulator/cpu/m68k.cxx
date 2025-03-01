@@ -1987,8 +1987,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::immediateNotRegister};
-					return {};
+						return {};
+					return {operationFlags_t::immediateNotRegister};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
@@ -2006,8 +2006,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				[&]() -> decltype(decodedOperation_t::flags)
 				{
 					if (insn & irMask)
-						return {operationFlags_t::immediateNotRegister};
-					return {};
+						return {};
+					return {operationFlags_t::immediateNotRegister};
 				}(),
 				uint8_t((insn & sizeMask) >> sizeShift),
 			};
