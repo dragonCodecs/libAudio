@@ -131,6 +131,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchCMPI(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchCPUSH(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchDBcc(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchDIVS(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchDIVU(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchEXT(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchEXTB(const decodedOperation_t &insn) noexcept;

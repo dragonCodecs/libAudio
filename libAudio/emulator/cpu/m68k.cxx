@@ -2531,6 +2531,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchCPUSH(instruction);
 		case instruction_t::dbcc:
 			return dispatchDBcc(instruction);
+		case instruction_t::divs:
+			return dispatchDIVS(instruction);
 		case instruction_t::divu:
 			return dispatchDIVU(instruction);
 		case instruction_t::ext:
@@ -3781,6 +3783,44 @@ stepResult_t motorola68000_t::dispatchDBcc(const decodedOperation_t &insn) noexc
 			programCounter = branchBase + displacement;
 	}
 	// Get done and compute how long that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchDIVS(const decodedOperation_t &insn) noexcept
+{
+	// This form of DIVS is required to be in s32/s16 mode, so grab the register to operate on as the LHS
+	const auto lhs{static_cast<int32_t>(dataRegister(insn.rx))};
+	// And then the RHS from the target of the EA as a s16
+	const auto rhs{readEffectiveAddress<int16_t>(insn.mode, insn.ry)};
+	// Check that we're not about to try dividing by zero (if we are, trap)
+	if (!rhs)
+		return {true, true, 0U};
+	// Now do the division, getting both the quotient and remainder
+	const auto quotient{lhs / rhs};
+	const auto remainder{lhs % rhs};
+	// Recompute the flags, starting by clearing carry
+	status.clear(m68kStatusBits_t::carry);
+	// Now do zero
+	if (quotient == 0)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// Check for negative
+	if (quotient < 0)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// And finally, if any of the upper 16 bits of the quotient is set, we overflowed
+	if (static_cast<uint32_t>(quotient) & 0xffff0000U)
+		status.set(m68kStatusBits_t::overflow);
+	else
+	{
+		status.clear(m68kStatusBits_t::overflow);
+		// Now, as overflow hasn't occured, write the result back to the target register,
+		// packing the remainder in the upper 16 bits and the quotient in the lower
+		dataRegister(insn.rx) = static_cast<uint16_t>(quotient) | (static_cast<uint16_t>(remainder) << 16U);
+	}
+	// Figure out how long that took an return
 	return {true, false, 0U};
 }
 
