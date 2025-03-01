@@ -98,16 +98,19 @@ class testYM2149 final : public testsuite
 		writeRegister(psg, 0U, 0xffU);
 		assertEqual(readRegister(psg, 0U), 0xffU);
 		writeRegister(psg, 1U, 0xffU);
+		assertEqual(readRegister(psg, 0U), 0xffU);
 		assertEqual(readRegister(psg, 1U), 0x0fU);
 		// Channel B frequency
 		writeRegister(psg, 2U, 0xffU);
 		assertEqual(readRegister(psg, 2U), 0xffU);
 		writeRegister(psg, 3U, 0xffU);
+		assertEqual(readRegister(psg, 2U), 0xffU);
 		assertEqual(readRegister(psg, 3U), 0x0fU);
 		// Channel C frequency
 		writeRegister(psg, 4U, 0xffU);
 		assertEqual(readRegister(psg, 4U), 0xffU);
 		writeRegister(psg, 5U, 0xffU);
+		assertEqual(readRegister(psg, 4U), 0xffU);
 		assertEqual(readRegister(psg, 5U), 0x0fU);
 		// Noise frequency
 		writeRegister(psg, 6U, 0xffU);
