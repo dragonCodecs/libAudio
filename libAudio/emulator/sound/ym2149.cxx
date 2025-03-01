@@ -239,6 +239,37 @@ void ym2149_t::updateFSM() noexcept
 
 bool ym2149_t::sampleReady() const noexcept { return ready && !read; }
 
+namespace ym2149
+{
+	namespace internal
+	{
+		// Logarithmic volume levels from 1 / (sqrt(2) ^ (level / 2))
+		// The sequence is reversed though to get 0 to be the lowest volume
+		[[nodiscard]] constexpr uint16_t logLevel(const uint8_t level) noexcept
+		{
+			// Do the main computation
+			double result{1.0 / std::pow(std::sqrt(2.0), (31U - level) / 2.0)};
+			// Scale the result to make space for 3 channels of max volume, and convert
+			// to the range [0, 32767] to make the result
+			return static_cast<uint16_t>((result / 3.0) * 32767U);
+		}
+
+		template<size_t N, uint16_t... table> struct calcLogTable
+		{
+			constexpr static std::array<uint16_t, sizeof...(table) + N + 1U> value
+				{calcLogTable<N - 1U, logLevel(N), table...>::value};
+		};
+
+		template<uint16_t... table> struct calcLogTable<0U, table...>
+		{
+			constexpr static std::array<uint16_t, sizeof...(table) + 1U> value
+				{{logLevel(0U), table...}};
+		};
+	} // namespace internal
+
+	constexpr static auto logLevel{internal::calcLogTable<31U>::value};
+} // namespace ym2149
+
 int16_t ym2149_t::sample() noexcept
 {
 	read = true;
@@ -270,7 +301,7 @@ int16_t ym2149_t::sample() noexcept
 		// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
 		const auto shift{static_cast<size_t>(channels[channel].shiftRequired())};
 		// Compute and store the final level using the logarithm table for the chip
-		levels[channel] = ym2149::logLevel(level) >> shift;
+		levels[channel] = ym2149::logLevel[level] >> shift;
 	}
 
 	// Sum the levels and do DC adjustment
@@ -403,15 +434,4 @@ namespace ym2149
 
 	void channel_t::forceEdgeState(const bool state) noexcept
 		{ edgeState = state; }
-
-	// Logarithmic volume levels from 1 / (sqrt(2) ^ (level / 2))
-	// The sequence is reversed though to get 0 to be the lowest volume
-	uint16_t logLevel(const uint8_t level) noexcept
-	{
-		// Do the main computation
-		double result{1.0 / std::pow(std::sqrt(2.0), (31U - level) / 2.0)};
-		// Scale the result to make space for 3 channels of max volume, and convert
-		// to the range [0, 32767] to make the result
-		return static_cast<uint16_t>((result / 3.0) * 32767U);
-	}
 } // namespace ym2149

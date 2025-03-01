@@ -31,8 +31,6 @@ namespace ym2149
 
 		void forceEdgeState(bool state) noexcept;
 	};
-
-	[[nodiscard]] uint16_t logLevel(uint8_t level) noexcept;
 } // namespace ym2149
 
 struct ym2149_t final : public clockedPeripheral_t<uint32_t>
