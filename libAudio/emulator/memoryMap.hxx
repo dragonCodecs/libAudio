@@ -154,13 +154,13 @@ public:
 struct clockManager_t
 {
 private:
-	float clockRatio;
-	uint32_t timeSinceLastCycle{0U};
-	float correction{0.0f};
+	uint32_t baseFrequency;
+	uint32_t targetFrequency;
+	uint32_t cycleCounter{0U};
 
 public:
 	// Construct an invalid manager with infinite ratio
-	clockManager_t() noexcept : clockRatio{std::numeric_limits<float>::infinity()} { }
+	clockManager_t() noexcept : baseFrequency{0U}, targetFrequency{0U} { }
 	// Construct a valid manager from the base and target clock frequencies
 	clockManager_t(uint32_t baseClockFrequency, uint32_t targetClockFrequency) noexcept;
 	// Returns true if the clock being managed by this should advance a cycle, false otherwise

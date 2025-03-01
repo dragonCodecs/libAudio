@@ -29,8 +29,8 @@ class testClockManager final : public testsuite
 		// Run a good few cycles
 		for (const auto loop : substrate::indexSequence_t{64U})
 		{
-			// The 49th cycle should be the correction cycle
-			const auto correction{loop == 49U};
+			// The 47th cycle should be the correction cycle
+			const auto correction{loop == 47U};
 			// 32:2.4576 gives a ratio of 13.020833333
 			const auto cycles{13U + (correction ? 1U : 0U)};
 			for (const auto cycle : substrate::indexSequence_t{cycles})
