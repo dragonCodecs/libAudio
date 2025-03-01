@@ -2563,6 +2563,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMULU(instruction);
 		case instruction_t::neg:
 			return dispatchNEG(instruction);
+		case instruction_t::_or:
+			return dispatchOR(instruction);
 		case instruction_t::ori:
 			return dispatchORI(instruction);
 		case instruction_t::rte:
@@ -4395,6 +4397,46 @@ stepResult_t motorola68000_t::dispatchNEG(const decodedOperation_t &insn) noexce
 	recomputeStatusFlags(0, rhs, result, operationSize);
 	// Store the result back and return how long this all took
 	writeValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchOR(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the data register value used as one of the operands (logical or is commutative, so don't
+	// care which order we grab them here..)
+	const auto lhs{readDataRegister(insn.rx)};
+	// Grab the other operand using the computed address
+	const auto rhs{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	// With the two values retreived, do the logical or
+	const uint32_t result{lhs | rhs};
+
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+	const auto mask{signBit | (signBit - 1U)};
+	// Recompute all the flags, starting with the negative bit
+	if (result & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Then the zero bit
+	if ((result & mask) == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// The overflow and carry bits are always cleared by this instruction
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+
+	// Store the result back
+	if (insn.opMode == 0U)
+		writeDataRegisterSized(insn.rx, operationSize, result);
+	else
+		writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+
+	// Return how many cycles that took
 	return {true, false, 0U};
 }
 
