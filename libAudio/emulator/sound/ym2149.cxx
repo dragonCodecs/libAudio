@@ -378,7 +378,7 @@ int16_t ym2149_t::dcAdjust(uint16_t sample) noexcept
 	// Update the adjustment position to make this a circular buffer
 	dcAdjustmentPosition = (dcAdjustmentPosition + 1U) & (dcAdjustmentBuffer.size() - 1U);
 	// Now scale the sum and apply it to the sample to get the final sample
-	return static_cast<int16_t>(sample - int32_t(dcAdjustmentSum >> dcAdjustmentLengthLog2));
+	return static_cast<int16_t>(int32_t{sample} - int32_t(dcAdjustmentSum >> dcAdjustmentLengthLog2));
 }
 
 void ym2149_t::forceChannelStates(const bool edgeState) noexcept
@@ -396,7 +396,7 @@ namespace ym2149
 	{
 		if (roughAdjust)
 		{
-			period &= 0x00ff0U;
+			period &= 0x000ffU;
 			// Only 4 bits valid, throw away the upper 4
 			period |= (value & 0x0fU) << 8U;
 		}
