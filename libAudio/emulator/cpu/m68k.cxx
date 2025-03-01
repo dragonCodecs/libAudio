@@ -2561,6 +2561,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMULS(instruction);
 		case instruction_t::mulu:
 			return dispatchMULU(instruction);
+		case instruction_t::neg:
+			return dispatchNEG(instruction);
 		case instruction_t::ori:
 			return dispatchORI(instruction);
 		case instruction_t::rte:
@@ -3826,7 +3828,7 @@ stepResult_t motorola68000_t::dispatchDIVS(const decodedOperation_t &insn) noexc
 
 stepResult_t motorola68000_t::dispatchDIVU(const decodedOperation_t &insn) noexcept
 {
-	// This form of DIVU is required to be in u16 mode, so grab the register to operate on as the LHS
+	// This form of DIVU is required to be in u32/u16 mode, so grab the register to operate on as the LHS
 	const auto lhs{dataRegister(insn.rx)};
 	// And then the RHS from the target of the EA
 	const auto rhs{readEffectiveAddress<uint16_t>(insn.mode, insn.ry)};
@@ -4377,6 +4379,22 @@ stepResult_t motorola68000_t::dispatchMULU(const decodedOperation_t &insn) noexc
 
 	// Store the result in the target data register and return how long this all took
 	dataRegister(insn.rx) = result;
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchNEG(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the value to negate and do so
+	const auto rhs{readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	const auto result{-rhs};
+	// Recompute all the flags bits
+	recomputeStatusFlags(0, rhs, result, operationSize);
+	// Store the result back and return how long this all took
+	writeValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize, result);
 	return {true, false, 0U};
 }
 

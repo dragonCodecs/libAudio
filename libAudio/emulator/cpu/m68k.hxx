@@ -149,6 +149,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchMOVEQ(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMULS(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchMULU(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchNEG(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchORI(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchORISpecialCCR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchRTE() noexcept;
