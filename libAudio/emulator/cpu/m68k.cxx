@@ -3317,7 +3317,7 @@ stepResult_t motorola68000_t::dispatchADD(const decodedOperation_t &insn) noexce
 stepResult_t motorola68000_t::dispatchADDA(const decodedOperation_t &insn) noexcept
 {
 	// Extract the value to be added to the target address register
-	const auto value{readEffectiveAddress<uint32_t>(insn.mode, insn.ry, insn.operationSize)};
+	const auto value{readEffectiveAddress<int32_t>(insn.mode, insn.ry, insn.operationSize)};
 	// Now update the target address register
 	addrRegister(insn.rx) += value;
 	// Figure out how long this operation took and finish up
