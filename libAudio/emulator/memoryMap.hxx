@@ -54,10 +54,10 @@ namespace std
 template<typename address_t> struct peripheral_t
 {
 private:
-	peripheral_t(const peripheral_t &) = delete;
-	peripheral_t(peripheral_t &&) = delete;
-	peripheral_t &operator =(const peripheral_t &) = delete;
-	peripheral_t &operator =(peripheral_t &&) = delete;
+	peripheral_t(const peripheral_t &) noexcept = delete;
+	peripheral_t(peripheral_t &&) noexcept = delete;
+	peripheral_t &operator =(const peripheral_t &) noexcept = delete;
+	peripheral_t &operator =(peripheral_t &&) noexcept = delete;
 
 protected:
 	peripheral_t() noexcept = default;
@@ -73,10 +73,10 @@ public:
 template<typename address_t> struct clockedPeripheral_t : public peripheral_t<address_t>
 {
 private:
-	clockedPeripheral_t(const clockedPeripheral_t &) = delete;
-	clockedPeripheral_t(clockedPeripheral_t &&) = delete;
-	clockedPeripheral_t &operator =(const clockedPeripheral_t &) = delete;
-	clockedPeripheral_t &operator =(clockedPeripheral_t &&) = delete;
+	clockedPeripheral_t(const clockedPeripheral_t &) noexcept = delete;
+	clockedPeripheral_t(clockedPeripheral_t &&) noexcept = delete;
+	clockedPeripheral_t &operator =(const clockedPeripheral_t &) noexcept = delete;
+	clockedPeripheral_t &operator =(clockedPeripheral_t &&) noexcept = delete;
 
 	uint32_t _clockFrequency;
 

@@ -33,8 +33,8 @@ namespace mc68901
 struct mc68901_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
-	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept override;
-	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept override;
+	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept final;
+	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
 
 	uint8_t gpio{0U};
 	uint8_t activeEdge{0U};
@@ -54,13 +54,13 @@ private:
 
 public:
 	mc68901_t(uint32_t clockFrequency) noexcept;
-	mc68901_t(const mc68901_t &) = default;
-	mc68901_t(mc68901_t &&) = default;
-	mc68901_t &operator =(const mc68901_t &) = default;
-	mc68901_t &operator =(mc68901_t &&) = default;
-	~mc68901_t() noexcept override = default;
+	mc68901_t(const mc68901_t &) noexcept = delete;
+	mc68901_t(mc68901_t &&) noexcept = delete;
+	mc68901_t &operator =(const mc68901_t &) noexcept = delete;
+	mc68901_t &operator =(mc68901_t &&) noexcept = delete;
+	~mc68901_t() noexcept final = default;
 
-	[[nodiscard]] bool clockCycle() noexcept override;
+	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] uint16_t pendingInterrupts() const noexcept;
 	void clearInterrupts(uint16_t interrupts) noexcept;
 };
