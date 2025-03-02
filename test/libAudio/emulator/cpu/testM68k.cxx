@@ -130,6 +130,26 @@ private:
 		assertEqual(cpu.readStatus(), 0x2000U);
 	}
 
+	void testRTE()
+	{
+		writeAddress(0x000100U, uint16_t{0x4e73U}); // RTE
+		// Set up to execute an exception vector
+		cpu.executeFromException(0x00000100U, 0x00800000U, 1U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000100U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffff8U);
+		assertEqual(cpu.readStatus(), 0x2000U);
+		// Check that the stacked exception frame is okay
+		assertEqual(readAddress<uint16_t>(0x007ffffeU), uint16_t{0x1004U}); // Frame type and vector info
+		assertEqual(readAddress<uint32_t>(0x007ffffaU), uint32_t{0xffffffffU}); // Return program counter
+		assertEqual(readAddress<uint16_t>(0x007ffff8U), uint16_t{0x0000U}); // Return status register
+		// Step the CPU and validate the results line up
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+		assertEqual(cpu.readStatus(), 0x0000U);
+	}
+
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
@@ -142,6 +162,7 @@ public:
 		CXX_TEST(testBranch)
 		CXX_TEST(testJump)
 		CXX_TEST(testRTS)
+		CXX_TEST(testRTE)
 	}
 };
 
