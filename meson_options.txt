@@ -1,7 +1,7 @@
 option('extra_formats', type: 'array', choices: [
-	'wma', 'optimFROG', 'sndh',
+	'wma', 'optimFROG',
 	'sid', 'aon', 'fc1x', 'ra'
-], value: ['sndh'])
+], value: [])
 
 option('spectrometer', type: 'boolean', value: false)
 option('bindings', type: 'boolean', value: true)

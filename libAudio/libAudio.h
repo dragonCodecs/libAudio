@@ -154,11 +154,9 @@ libAUDIO_API bool isWavPack(const char *fileName);
 libAUDIO_API void *wavPackOpenR(const char *fileName);
 #endif
 
-#ifdef ENABLE_SNDH
 // SNDH API
 libAUDIO_API bool isSNDH(const char *fileName);
 libAUDIO_API void *sndhOpenR(const char *fileName);
-#endif
 
 #ifdef ENABLE_SID
 // SID API
@@ -266,5 +264,7 @@ libAUDIO_API uint8_t ToPlayback;
 #define AUDIO_FC1x			17
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AUDIO_OGG_OPUS		18
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define AUDIO_SNDH			19
 
 #endif /*LIB_AUDIO_H*/

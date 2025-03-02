@@ -408,7 +408,6 @@ public:
 };
 #endif // ENABLE_WAVPACK
 
-#ifdef ENABLE_SNDH
 struct sndh_t final : public audioFile_t
 {
 private:
@@ -425,7 +424,6 @@ public:
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
-#endif
 
 #ifdef ENABLE_SID
 struct sid_t final : public audioFile_t

@@ -1,10 +1,6 @@
-soundTests = []
-
-if formats['SNDH']
-	soundTests += [
-		'testYM2149',
-	]
-endif
+soundTests = [
+	'testYM2149',
+]
 
 testObjectMap = {
 	'testYM2149': {'libAudio': ['emulator/sound/ym2149.cxx', 'emulator/clockManager.cxx']},

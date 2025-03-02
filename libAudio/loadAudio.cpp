@@ -55,9 +55,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 #ifdef ENABLE_OPUS
 	{isOggOpus, oggOpusOpenR},
 #endif
-#ifdef ENABLE_SNDH
 	{isSNDH, sndhOpenR},
-#endif
 #ifdef ENABLE_SID
 	{isSID, sidOpenR},
 #endif

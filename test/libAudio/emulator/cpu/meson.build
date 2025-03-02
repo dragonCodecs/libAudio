@@ -1,10 +1,6 @@
-cpuTests = []
-
-if formats['SNDH']
-	cpuTests += [
-		'testM68k',
-	]
-endif
+cpuTests = [
+	'testM68k',
+]
 
 testObjectMap = {
 	'testM68k': {'libAudio': ['emulator/cpu/m68k.cxx', 'console.cxx'], 'deps': ['testM68kDecodeTable.hxx']},

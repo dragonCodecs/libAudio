@@ -1,10 +1,6 @@
-emulatorTests = []
-
-if formats['SNDH']
-	emulatorTests += [
-		'testClockManager',
-	]
-endif
+emulatorTests = [
+	'testClockManager',
+]
 
 testObjectMap = {
 	'testClockManager': {'libAudio': ['emulator/clockManager.cxx']}

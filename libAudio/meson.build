@@ -246,24 +246,6 @@ if formats['OptimFROG']
 	confData.set10('ENABLE_OptimFROG', true)
 	extraDeps += [libOptimFROG]
 endif
-formats += {'SNDH': extraFormats.contains('sndh')}
-if formats['SNDH']
-	message('Enabling support for SNDH')
-	extraSrcs += [
-		'loadSNDH.cpp',
-		'sndh/loader.cxx',
-		'sndh/iceDecrunch.cxx',
-		'emulator/atariSTe.cxx',
-		'emulator/atariSTeROMs.cxx',
-		'emulator/gemdosAlloc.cxx',
-		'emulator/clockManager.cxx',
-		'emulator/cpu/m68k.cxx',
-		'emulator/sound/ym2149.cxx',
-		'emulator/sound/steDAC.cxx',
-		'emulator/timing/mc68901.cxx'
-	]
-	confData.set10('ENABLE_SNDH', true)
-endif
 formats += {'SID': extraFormats.contains('sid')}
 if formats['SID']
 	message('Enabling support for SID')
@@ -304,12 +286,30 @@ if cxx.get_id() == 'msvc'
 endif
 
 formats += {
+	'SNDH': true,
 	'MOD': true,
 	'S3M': true,
 	'STM': true,
 	'IT': true,
 	'WAV': true,
 }
+
+emulatorSrcs = [
+	'emulator/cpu/m68k.cxx',
+	'emulator/clockManager.cxx',
+]
+
+sndhSrcs = [
+	'emulator/atariSTe.cxx',
+	'emulator/atariSTeROMs.cxx',
+	'emulator/gemdosAlloc.cxx',
+	'emulator/sound/ym2149.cxx',
+	'emulator/sound/steDAC.cxx',
+	'emulator/timing/mc68901.cxx',
+	'sndh/loader.cxx',
+	'sndh/iceDecrunch.cxx',
+	'loadSNDH.cpp',
+]
 
 genericModuleSrcs = [
 	'genericModule/ModuleFile.cpp',
@@ -327,9 +327,12 @@ genericModuleSrcs = [
 ]
 
 libAudioSrcs = [
+	genericModuleSrcs,
+	emulatorSrcs,
 	'loadAudio.cpp',
 	'saveAudio.cpp',
 	'fileInfo.cxx',
+	sndhSrcs,
 	'loadWAV.cpp',
 	'fixedPoint/fixedPoint.cpp',
 	'openAL.cxx',
@@ -371,7 +374,7 @@ summary(
 
 libAudioLibrary = shared_library(
 	'libAudio',
-	genericModuleSrcs + libAudioSrcs + extraSrcs,
+	libAudioSrcs + extraSrcs,
 	dependencies: requiredDependencies + extraDeps,
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
 	include_directories: includes,
