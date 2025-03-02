@@ -182,10 +182,21 @@ bool atariSTe_t::advanceClock() noexcept
 	// If the play routine should be run again, set that up
 	if (playRoutineManager.advanceCycle())
 	{
-		// Check to see that the last call to it actually finished
-		if (cpu.readProgramCounter() != 0xffffffffU)
-			// It did not, error
-			return false;
+		// Check to see that the last call to it actually finished, and force it to if it hasn't
+		while (cpu.readProgramCounter() != 0xffffffffU)
+		{
+			// Grab the program counter at the start
+			const auto programCounter{cpu.readProgramCounter()};
+			// Try to execute the next instruction
+			const auto result{cpu.step()};
+			// If the instruction was invalid or caused a trap, bail
+			if (!result.validInsn || result.trap)
+			{
+				// Display the program counter at the faulting instruction
+				console.debug("Bad instruction at "sv, asHex_t<6U, '0'>{programCounter});
+				return false;
+			}
+		}
 		cpu.executeFrom(0x010008U, stackTop, false);
 	}
 
