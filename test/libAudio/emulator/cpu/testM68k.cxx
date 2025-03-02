@@ -119,6 +119,17 @@ private:
 		assertEqual(cpu.readStatus(), 0x0000U);
 	}
 
+	void testRTS()
+	{
+		writeAddress(0x000000U, uint16_t{0x4e75U}); // RTS
+		// Run the solitary RTS
+		assertTrue(cpu.executeToReturn(0x00000000U, 0x00800000U, false));
+		// Then make sure the CPU state matches up
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+		assertEqual(cpu.readStatus(), 0x2000U);
+	}
+
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
@@ -130,6 +141,7 @@ public:
 		CXX_TEST(testDecode)
 		CXX_TEST(testBranch)
 		CXX_TEST(testJump)
+		CXX_TEST(testRTS)
 	}
 };
 
