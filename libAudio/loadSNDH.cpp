@@ -22,6 +22,7 @@ struct sndh_t::decoderContext_t final
 {
 	uint8_t playbackBuffer[8192];
 	atariSTe_t emulator{};
+	uint32_t buffers{0U};
 	bool eof{false};
 };
 
@@ -118,7 +119,9 @@ int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		}
 		buffer[offset] = ctx.emulator.readSample();
 	}
-	ctx.eof = true;
+	// 11.71875 buffers a second, so 4406 buffers is ~6m16s of audio
+	if (++ctx.buffers == 4406U)
+		ctx.eof = true;
 	// Return how much we filled the buffer by
 	return length & ~1U;
 }
