@@ -150,6 +150,49 @@ private:
 		assertEqual(cpu.readStatus(), 0x0000U);
 	}
 
+	void testOR()
+	{
+		writeAddress(0x000000U, uint16_t{0x8080U}); // OR.L d0, d0
+		writeAddress(0x000002U, uint16_t{0x8050U}); // OR.W (a0), d0
+		writeAddress(0x000004U, uint16_t{0x803cU});
+		writeAddress(0x000006U, uint16_t{0x0040U}); // OR.b #$0x40, d0
+		writeAddress(0x000008U, uint16_t{0x4e75U}); // RTS to end the test
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Re-use the 3rd instruction as the data for the 2nd
+		cpu.writeAddrRegister(0U, 0x00000004U);
+		// Make sure d0 starts out as 0 for this sequence
+		cpu.writeDataRegister(0U, 0U);
+		// Set the carry and overflow bits in the status register so we can observe them being cleared
+		// And the extend bit to make sure that's left alone
+		cpu.writeStatus(0x0013U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(0U), 0x00000004U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0013U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+		assertEqual(cpu.readStatus(), 0x0014U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x0000803cU);
+		assertEqual(cpu.readStatus(), 0x0018U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readDataRegister(0U), 0x0000807cU);
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the fourth and final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
@@ -163,6 +206,7 @@ public:
 		CXX_TEST(testJump)
 		CXX_TEST(testRTS)
 		CXX_TEST(testRTE)
+		CXX_TEST(testOR)
 	}
 };
 
