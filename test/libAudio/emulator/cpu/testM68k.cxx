@@ -79,10 +79,10 @@ private:
 		writeAddress(0x000004U, uint16_t{0x4ee8U});
 		writeAddress(0x000006U, uint16_t{0x0100U}); // jmp 0x0100(a0)
 		writeAddress(0x000104U, uint16_t{0x4ef8U});
-		writeAddress(0x000106U, uint16_t{0x0110U}); // jmp (0x0110).w
+		writeAddress(0x000106U, uint16_t{0x0110U}); // jmp $0110.w
 		writeAddress(0x000110U, uint16_t{0x4ef9U});
 		writeAddress(0x000112U, uint16_t{0x0001U});
-		writeAddress(0x000114U, uint16_t{0x0000U}); // jmp (0x00010000).l
+		writeAddress(0x000114U, uint16_t{0x0000U}); // jmp $00010000.l
 		writeAddress(0x010000U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -189,7 +189,7 @@ private:
 		writeAddress(0x000000U, uint16_t{0x8080U}); // or.l d0, d0
 		writeAddress(0x000002U, uint16_t{0x8050U}); // or.w (a0), d0
 		writeAddress(0x000004U, uint16_t{0x803cU});
-		writeAddress(0x000006U, uint16_t{0x0040U}); // or.b #$0x40, d0
+		writeAddress(0x000006U, uint16_t{0x0040U}); // or.b #$40, d0
 		writeAddress(0x000008U, uint16_t{0x8199U}); // or.l d0, (a1)+
 		writeAddress(0x00000aU, uint16_t{0x4e75U}); // rts to end the test
 		writeAddress(0x000100U, uint32_t{0x84000000U});
@@ -242,12 +242,12 @@ private:
 	{
 		writeAddress(0x000000U, uint16_t{0x0038U});
 		writeAddress(0x000002U, uint16_t{0x0024U});
-		writeAddress(0x000004U, uint16_t{0x0100U}); // ori.b #$0x24, (0x0100).w
+		writeAddress(0x000004U, uint16_t{0x0100U}); // ori.b #$24, $0100.w
 		writeAddress(0x000006U, uint16_t{0x0040U});
 		writeAddress(0x000008U, uint16_t{0x0000U}); // ori.w #0, d0
 		writeAddress(0x00000aU, uint16_t{0x0080U});
 		writeAddress(0x00000cU, uint16_t{0x8000U});
-		writeAddress(0x00000eU, uint16_t{0x0001U}); // ori.l #0x80000001, d0
+		writeAddress(0x00000eU, uint16_t{0x0001U}); // ori.l #$80000001, d0
 		writeAddress(0x000010U, uint16_t{0x4e75U}); // rts to end the test
 		writeAddress(0x000100U, uint8_t{0x01U});
 		// Set the CPU to execute this sequence
