@@ -79,10 +79,10 @@ private:
 		writeAddress(0x000004U, uint16_t{0x4ee8U});
 		writeAddress(0x000006U, uint16_t{0x0100U}); // jmp 0x0100(a0)
 		writeAddress(0x000104U, uint16_t{0x4ef8U});
-		writeAddress(0x000106U, uint16_t{0x0110U}); // jmp (0x0110).W
+		writeAddress(0x000106U, uint16_t{0x0110U}); // jmp (0x0110).w
 		writeAddress(0x000110U, uint16_t{0x4ef9U});
 		writeAddress(0x000112U, uint16_t{0x0001U});
-		writeAddress(0x000114U, uint16_t{0x0000U}); // jmp (0x00010000).L
+		writeAddress(0x000114U, uint16_t{0x0000U}); // jmp (0x00010000).l
 		writeAddress(0x010000U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -204,6 +204,33 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testORI()
+	{
+		writeAddress(0x000000U, uint16_t{0x0038U});
+		writeAddress(0x000002U, uint16_t{0x0024U});
+		writeAddress(0x000004U, uint16_t{0x0100U}); // ori.b #$0x24, (0x0100).w
+		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint8_t{0x01U});
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set the carry and overflow bits in the status register so we can observe them being cleared
+		// And the extend bit to make sure that's left alone
+		cpu.writeStatus(0x0013U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0013U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(readAddress<uint8_t>(0x000100U), uint8_t{0x25U});
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
@@ -218,6 +245,7 @@ public:
 		CXX_TEST(testRTS)
 		CXX_TEST(testRTE)
 		CXX_TEST(testOR)
+		CXX_TEST(testORI)
 	}
 };
 
