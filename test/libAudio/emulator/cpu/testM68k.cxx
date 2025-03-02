@@ -49,22 +49,27 @@ private:
 		// Validate starting conditions
 		assertEqual(cpu.readProgramCounter(), 0x00000100U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
 		// Step the first instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000152U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
 		// Step the second instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000050U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
 		// Step the third instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00010100U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
 		// Step the fourth and final instruction to complete the test
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+		assertEqual(cpu.readStatus(), 0x0000U);
 	}
 
 public:
