@@ -72,6 +72,53 @@ private:
 		assertEqual(cpu.readStatus(), 0x0000U);
 	}
 
+	void testJump()
+	{
+		// NB: We don't test all EA's here as we get through them in other tests.
+		writeAddress(0x000000U, uint16_t{0x4ed0U}); // JMP (a0)
+		writeAddress(0x000004U, uint16_t{0x4ee8U});
+		writeAddress(0x000006U, uint16_t{0x0100U}); // JMP 0x0100(a0)
+		writeAddress(0x000104U, uint16_t{0x4ef8U});
+		writeAddress(0x000106U, uint16_t{0x0110U}); // JMP (0x0110).W
+		writeAddress(0x000110U, uint16_t{0x4ef9U});
+		writeAddress(0x000112U, uint16_t{0x0001U});
+		writeAddress(0x000114U, uint16_t{0x0000U}); // JMP (0x00010000).L
+		writeAddress(0x010000U, uint16_t{0x4e75U}); // RTS to end the test
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		cpu.writeAddrRegister(0U, 0x00000004U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(0U), 0x00000004U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000104U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000110U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00010000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the fifth and final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+		assertEqual(cpu.readStatus(), 0x0000U);
+	}
+
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
@@ -82,6 +129,7 @@ public:
 	{
 		CXX_TEST(testDecode)
 		CXX_TEST(testBranch)
+		CXX_TEST(testJump)
 	}
 };
 
