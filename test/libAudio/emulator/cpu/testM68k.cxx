@@ -43,7 +43,7 @@ private:
 		writeAddress(0x000050U, uint16_t{0x60ffU});
 		writeAddress(0x000052U, uint16_t{0x0001U}); // Jump to +0x100ae from end of instruction
 		writeAddress(0x000054U, uint16_t{0x00aeU});
-		writeAddress(0x010100U, uint16_t{0x4e75U}); // RTS to end the test
+		writeAddress(0x010100U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000100U, 0x00800000U);
 		// Validate starting conditions
@@ -75,15 +75,15 @@ private:
 	void testJump()
 	{
 		// NB: We don't test all EA's here as we get through them in other tests.
-		writeAddress(0x000000U, uint16_t{0x4ed0U}); // JMP (a0)
+		writeAddress(0x000000U, uint16_t{0x4ed0U}); // jmp (a0)
 		writeAddress(0x000004U, uint16_t{0x4ee8U});
-		writeAddress(0x000006U, uint16_t{0x0100U}); // JMP 0x0100(a0)
+		writeAddress(0x000006U, uint16_t{0x0100U}); // jmp 0x0100(a0)
 		writeAddress(0x000104U, uint16_t{0x4ef8U});
-		writeAddress(0x000106U, uint16_t{0x0110U}); // JMP (0x0110).W
+		writeAddress(0x000106U, uint16_t{0x0110U}); // jmp (0x0110).W
 		writeAddress(0x000110U, uint16_t{0x4ef9U});
 		writeAddress(0x000112U, uint16_t{0x0001U});
-		writeAddress(0x000114U, uint16_t{0x0000U}); // JMP (0x00010000).L
-		writeAddress(0x010000U, uint16_t{0x4e75U}); // RTS to end the test
+		writeAddress(0x000114U, uint16_t{0x0000U}); // jmp (0x00010000).L
+		writeAddress(0x010000U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
 		cpu.writeAddrRegister(0U, 0x00000004U);
@@ -121,8 +121,8 @@ private:
 
 	void testRTS()
 	{
-		writeAddress(0x000000U, uint16_t{0x4e75U}); // RTS
-		// Run the solitary RTS
+		writeAddress(0x000000U, uint16_t{0x4e75U}); // rts
+		// Run the solitary rts
 		assertTrue(cpu.executeToReturn(0x00000000U, 0x00800000U, false));
 		// Then make sure the CPU state matches up
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
@@ -132,7 +132,7 @@ private:
 
 	void testRTE()
 	{
-		writeAddress(0x000100U, uint16_t{0x4e73U}); // RTE
+		writeAddress(0x000100U, uint16_t{0x4e73U}); // rte
 		// Set up to execute an exception vector
 		cpu.executeFromException(0x00000100U, 0x00800000U, 1U);
 		// Validate starting conditions
@@ -152,15 +152,18 @@ private:
 
 	void testOR()
 	{
-		writeAddress(0x000000U, uint16_t{0x8080U}); // OR.L d0, d0
-		writeAddress(0x000002U, uint16_t{0x8050U}); // OR.W (a0), d0
+		writeAddress(0x000000U, uint16_t{0x8080U}); // or.l d0, d0
+		writeAddress(0x000002U, uint16_t{0x8050U}); // or.w (a0), d0
 		writeAddress(0x000004U, uint16_t{0x803cU});
-		writeAddress(0x000006U, uint16_t{0x0040U}); // OR.b #$0x40, d0
-		writeAddress(0x000008U, uint16_t{0x4e75U}); // RTS to end the test
+		writeAddress(0x000006U, uint16_t{0x0040U}); // or.b #$0x40, d0
+		writeAddress(0x000008U, uint16_t{0x8199U}); // or.l d0, (a1)+
+		writeAddress(0x00000aU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint32_t{0x84000000U});
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Re-use the 3rd instruction as the data for the 2nd
+		// Re-use the 3rd instruction as the data for the 2nd, and set a reasonable destination for the 4th
 		cpu.writeAddrRegister(0U, 0x00000004U);
+		cpu.writeAddrRegister(1U, 0x00000100U);
 		// Make sure d0 starts out as 0 for this sequence
 		cpu.writeDataRegister(0U, 0U);
 		// Set the carry and overflow bits in the status register so we can observe them being cleared
@@ -170,6 +173,7 @@ private:
 		assertEqual(cpu.readProgramCounter(), 0x00000000U);
 		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
 		assertEqual(cpu.readAddrRegister(0U), 0x00000004U);
+		assertEqual(cpu.readAddrRegister(1U), 0x00000100U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
 		assertEqual(cpu.readStatus(), 0x0013U);
 		// Step the first instruction and validate
@@ -187,7 +191,14 @@ private:
 		assertEqual(cpu.readProgramCounter(), 0x00000008U);
 		assertEqual(cpu.readDataRegister(0U), 0x0000807cU);
 		assertEqual(cpu.readStatus(), 0x0010U);
-		// Step the fourth and final instruction to complete the test
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(cpu.readDataRegister(0U), 0x0000807cU);
+		assertEqual(cpu.readAddrRegister(1U), 0x00000104U);
+		assertEqual(readAddress<uint32_t>(0x000100U), uint32_t{0x8400807cU});
+		assertEqual(cpu.readStatus(), 0x0018U);
+		// Step the fifth and final instruction to complete the test
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
