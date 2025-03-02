@@ -2479,6 +2479,7 @@ void motorola68000_t::writeAddrRegister(const size_t reg, const uint32_t value) 
 	{ addrRegister(reg) = value; }
 uint32_t motorola68000_t::readProgramCounter() const noexcept { return programCounter; }
 uint16_t motorola68000_t::readStatus() const noexcept { return status.toRaw(); }
+void motorola68000_t::writeStatus(const uint16_t value) noexcept { status.fromRaw(value); }
 
 stepResult_t motorola68000_t::step() noexcept
 {

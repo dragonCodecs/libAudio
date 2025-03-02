@@ -175,6 +175,7 @@ public:
 	void writeAddrRegister(size_t reg, uint32_t value) noexcept;
 	[[nodiscard]] uint32_t readProgramCounter() const noexcept;
 	[[nodiscard]] uint16_t readStatus() const noexcept;
+	[[nodiscard]] void writeStatus(uint16_t value) noexcept;
 	[[nodiscard]] stepResult_t step() noexcept;
 	[[nodiscard]] bool advanceClock() noexcept;
 	[[nodiscard]] bool trapped() const noexcept { return trapState; }
