@@ -5,6 +5,7 @@
 #include <random>
 #include <numeric>
 #include <substrate/span>
+#include <substrate/utility>
 #include <substrate/indexed_iterator>
 #include "ym2149.hxx"
 
@@ -241,6 +242,8 @@ bool ym2149_t::sampleReady() const noexcept { return ready && !read; }
 
 namespace ym2149
 {
+	// FIXME: floating point function usage here is non-constexpr so can't be precomputed except on GCC!
+#if 0
 	namespace internal
 	{
 		// Logarithmic volume levels from 1 / (sqrt(2) ^ (level / 2))
@@ -268,6 +271,17 @@ namespace ym2149
 	} // namespace internal
 
 	constexpr static auto logLevel{internal::calcLogTable<31U>::value};
+#endif
+	constexpr static auto logLevel
+	{
+		substrate::make_array<uint16_t>
+		({
+			0x0032U, 0x003cU, 0x0047U, 0x0055U, 0x0065U, 0x0078U, 0x008fU, 0x00aaU,
+			0x00caU, 0x00f1U, 0x011fU, 0x0155U, 0x0195U, 0x01e2U, 0x023eU, 0x02aaU,
+			0x032bU, 0x03c5U, 0x047cU, 0x0555U, 0x0657U, 0x078aU, 0x08f8U, 0x0aaaU,
+			0x0cafU, 0x0f15U, 0x11f0U, 0x1555U, 0x195eU, 0x1e2bU, 0x23e0U, 0x2aaaU,
+		})
+	};
 } // namespace ym2149
 
 int16_t ym2149_t::sample() noexcept
