@@ -200,9 +200,9 @@ void ym2149_t::updateFSM() noexcept
 	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
 	{
 		// Check to see the state for tone generation
-		const auto channelToneState{channel.state(mixerConfig & (1U << idx))};
+		const auto channelToneState{channel.state((mixerConfig >> idx) & 1U)};
 		// Followed by noise generation for the channel
-		const auto channelNoiseState{noiseState || bool(mixerConfig & (1U << (idx + 3U)))};
+		const auto channelNoiseState{noiseState || bool((mixerConfig >> (idx + 3U)) & 1U)};
 		// Combine it all together and update the channel state
 		channelState[idx] |= channelToneState && channelNoiseState;
 	}
@@ -276,7 +276,7 @@ int16_t ym2149_t::sample() noexcept
 	// Grab the current envelope level
 	const auto envelopeLevel{computeEnvelopeLevel()};
 
-	std::array<uint16_t, 3U> levels;
+	std::array<uint16_t, 3U> levels{};
 	// Go through each channel and compute the volume level associated with it
 	for (const auto &[channel, state] : substrate::indexedIterator_t{channelState})
 	{
