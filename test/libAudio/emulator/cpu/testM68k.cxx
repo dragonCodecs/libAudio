@@ -153,15 +153,22 @@ private:
 	void testADD()
 	{
 		writeAddress(0x000000U, uint16_t{0xd070U});
-		writeAddress(0x000002U, uint16_t{0x1204U}); // add.w 4(a0, d1.w), d0
-		writeAddress(0x000004U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000002U, uint16_t{0x1204U}); // add.w 4(a0, d1.w*2), d0
+		writeAddress(0x000004U, uint16_t{0xd030U});
+		writeAddress(0x000006U, uint16_t{0x8800U}); // add.b (a0, a0.l), d0
+		writeAddress(0x000008U, uint16_t{0xd088U}); // add.l a0, d0
+		writeAddress(0x00000aU, uint16_t{0xd590U}); // add.l d2, (a0)
+		writeAddress(0x00000cU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint32_t{0U});
 		writeAddress(0x000108U, uint16_t{0x8080U});
+		writeAddress(0x000200U, uint8_t{0xc1U});
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up a0, d0 and d1 to sensible values
+		// Set up a0, d0, d1 and d2 to sensible values
 		cpu.writeAddrRegister(0U, 0x00000100U);
 		cpu.writeDataRegister(0U, 0x40000004U);
 		cpu.writeDataRegister(1U, 0x00000002U);
+		cpu.writeDataRegister(2U, 0x00000000U);
 		// Set the status register to some improbable value that makes it easy to see if it changes
 		cpu.writeStatus(0x001fU);
 		// Validate starting conditions
@@ -172,6 +179,21 @@ private:
 		assertEqual(cpu.readProgramCounter(), 0x00000004U);
 		assertEqual(cpu.readDataRegister(0U), 0x40008084U);
 		assertEqual(cpu.readStatus(), 0x0008U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readDataRegister(0U), 0x40008045U);
+		assertEqual(cpu.readStatus(), 0x0013U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(cpu.readDataRegister(0U), 0x40008145U);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(readAddress<uint32_t>(0x00000100U), 0U);
+		assertEqual(cpu.readStatus(), 0x0004U);
 		// Step the final instruction to complete the test
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
