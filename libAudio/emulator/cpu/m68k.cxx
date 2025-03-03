@@ -3186,7 +3186,7 @@ void motorola68000_t::recomputeStatusFlags(const uint32_t lhs, const uint32_t rh
 	else
 		status.clear(m68kStatusBits_t::negative);
 	// Then the zero bit
-	if (result == 0U)
+	if ((result & UINT32_MAX) == 0U)
 		status.set(m68kStatusBits_t::zero);
 	else
 		status.clear(m68kStatusBits_t::zero);
