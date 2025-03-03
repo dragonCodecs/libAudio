@@ -3,6 +3,7 @@
 #include <array>
 #include <memory>
 #include <substrate/indexed_iterator>
+#include <substrate/index_sequence>
 #include <crunch++.h>
 #include "emulator/cpu/m68k.hxx"
 #include "emulator/ram.hxx"
@@ -427,6 +428,15 @@ private:
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
+		// Check all the CPU preconditions before any execution begins
+		for (const auto &reg : substrate::indexSequence_t{8U})
+			assertEqual(cpu.readDataRegister(reg), 0U);
+		for (const auto &reg : substrate::indexSequence_t{8U})
+			assertEqual(cpu.readAddrRegister(reg), 0U);
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readStatus(), 0x2000U);
+
+		// Register some memory for the tests to use
 		addressMap[{0x000000U, 0x800000U}] = std::make_unique<ram_t<uint32_t, 8_MiB>>();
 	}
 
