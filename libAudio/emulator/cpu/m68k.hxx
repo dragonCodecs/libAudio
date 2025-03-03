@@ -47,12 +47,12 @@ private:
 
 	// There are 8 data registers, 7 address registers, 3 stack pointers,
 	// a program counter and a status register in a m68k
-	std::array<uint32_t, 8U> d;
-	std::array<uint32_t, 7U> a;
-	uint32_t systemStackPointer;
-	uint32_t interruptStackPointer;
-	uint32_t userStackPointer;
-	uint32_t programCounter;
+	std::array<uint32_t, 8U> d{};
+	std::array<uint32_t, 7U> a{};
+	uint32_t systemStackPointer{0U};
+	uint32_t interruptStackPointer{0U};
+	uint32_t userStackPointer{0U};
+	uint32_t programCounter{UINT32_MAX};
 	// By default the system starts up in supervisor (system) mode
 	substrate::bitFlags_t<uint16_t, m68kStatusBits_t> status{m68kStatusBits_t::supervisor};
 
