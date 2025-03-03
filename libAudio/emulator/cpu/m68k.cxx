@@ -3329,11 +3329,11 @@ stepResult_t motorola68000_t::dispatchADDI(const decodedOperation_t &insn) noexc
 	// Unpack the operation size to a value in bytes
 	const auto operationSize{unpackSize(insn.operationSize)};
 	// Extract the immediate that follows this instruction
-	const auto lhs{readImmediateUnsigned(operationSize)};
+	const auto lhs{static_cast<uint32_t>(readImmediateSigned(operationSize))};
 	// Figure out the effective address operand as much as possible so we know where to go poking
 	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
 	// Grab the LHS using the computed address
-	const auto rhs{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize))};
 	// With the two values retreived, do the addition
 	const auto result{uint64_t{lhs} + uint64_t{rhs}};
 
