@@ -54,7 +54,17 @@ private:
 	uint16_t workingData{};
 
 public:
-	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData{size_t(file.length()) - 12U}, decrunchedData{data}
+	decruncher_t(const fd_t &file, span<uint8_t> data) : crunchedData
+		{
+			[&]()
+			{
+				// Check the file length to make sure it's at least 12 bytes to satisfy the alloc analyser
+				const auto length{file.length()};
+				if (length < 12)
+					throw std::exception{};
+				return size_t(length) - 12U;
+			}()
+		}, decrunchedData{data}
 	{
 		if (!crunchedData.valid() ||
 			!file.read(crunchedData.data(), crunchedData.size()))
