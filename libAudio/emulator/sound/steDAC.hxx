@@ -32,6 +32,7 @@ public:
 	~steDAC_t() noexcept final = default;
 
 	[[nodiscard]] bool clockCycle() noexcept final;
+	[[nodiscard]] uint8_t outputLevel() const noexcept { return mainVolume; }
 };
 
 #endif /*EMULATOR_SOUND_STEDAC_HXX*/

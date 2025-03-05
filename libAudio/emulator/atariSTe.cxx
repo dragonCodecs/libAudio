@@ -248,7 +248,14 @@ bool atariSTe_t::sampleReady() const noexcept
 	{ return psg->sampleReady(); }
 
 int16_t atariSTe_t::readSample() noexcept
-	{ return psg->sample(); }
+{
+	// Extract the sample from the PSG
+	const auto psgSample{psg->sample()};
+	// TODO: Extract a sample too from the STe DAC block and combine
+	// Scale the sample by the output level set via the DAC block LMC1992 and return
+	// NB: the max output level is 64, allowing this to be simplified by the compiler and fast
+	return (psgSample * dac->outputLevel()) / 64;
+}
 
 void atariSTe_t::displayCPUState() const noexcept
 	{ cpu.displayRegs(); }
