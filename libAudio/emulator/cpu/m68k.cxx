@@ -2688,7 +2688,7 @@ int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
 		case 0x0400U: // * 4
 			return index * 4U;
 		case 0x0600U: // * 8
-			return index * 8;
+			return index * 8U;
 	}
 	// We can't actually get here.. but just incase
 	return INT16_MAX;
