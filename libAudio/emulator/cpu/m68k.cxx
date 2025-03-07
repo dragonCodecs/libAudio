@@ -3751,7 +3751,7 @@ stepResult_t motorola68000_t::dispatchCMPA(const decodedOperation_t &insn) noexc
 	const auto result{uint64_t{lhs} - uint64_t{rhs}};
 
 	// Recompute all the flags
-	recomputeStatusFlags(lhs, ~rhs + 1U, result, insn.operationSize);
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, insn.operationSize, true);
 
 	return {true, false, 0U};
 }
@@ -3769,7 +3769,7 @@ stepResult_t motorola68000_t::dispatchCMPI(const decodedOperation_t &insn) noexc
 	const auto result{uint64_t{lhs} - uint64_t{rhs}};
 
 	// Recompute all the flags
-	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize, true);
 
 	return {true, false, 0U};
 }
