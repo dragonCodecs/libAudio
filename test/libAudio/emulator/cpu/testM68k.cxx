@@ -650,6 +650,56 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testNEG()
+	{
+		writeAddress(0x000000U, uint16_t{0x4400U}); // neg.b d0
+		writeAddress(0x000002U, uint16_t{0x4440U}); // neg.w d0
+		writeAddress(0x000004U, uint16_t{0x4480U}); // neg.l d0
+		writeAddress(0x000006U, uint16_t{0x4458U}); // neg.w (a0)+
+		writeAddress(0x000008U, uint16_t{0x4450U}); // neg.w (a0)
+		writeAddress(0x00000aU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint16_t{0x0000U});
+		writeAddress(0x000102U, uint16_t{0x8000U});
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 to a sensible value
+		cpu.writeDataRegister(0U, 0xffff00ffU);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x000eU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readDataRegister(0U), 0xffff0001U);
+		assertEqual(cpu.readStatus(), 0x0011U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0xffffffffU);
+		assertEqual(cpu.readStatus(), 0x0019U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000001U);
+		assertEqual(cpu.readStatus(), 0x0011U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(readAddress<uint16_t>(0x000100U), uint16_t{0x0000U});
+		assertEqual(cpu.readStatus(), 0x0004U);
+		// Step the fifth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(readAddress<uint16_t>(0x000102U), uint16_t{0x8000U});
+		assertEqual(cpu.readStatus(), 0x001bU);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testOR()
 	{
 		writeAddress(0x000000U, uint16_t{0x8080U}); // or.l d0, d0
@@ -780,6 +830,7 @@ public:
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
+		CXX_TEST(testNEG)
 		CXX_TEST(testOR)
 		CXX_TEST(testORI)
 	}
