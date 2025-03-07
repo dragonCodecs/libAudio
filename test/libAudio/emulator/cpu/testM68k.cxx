@@ -33,7 +33,7 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testBranch()
+	void testBRA()
 	{
 		// Set up 3 branches in each of the 3 instruction encoding forms, checking they jump properly to each other
 		// Start with the 8-bit immediate form, then use the 16-bit immediate form, and finally the 32-bit immediate
@@ -130,7 +130,7 @@ private:
 		assertEqual(cpu.readStatus(), 0x0000U);
 	}
 
-	void testJump()
+	void testJMP()
 	{
 		// NB: We don't test all EA's here as we get through them in other tests.
 		writeAddress(0x000000U, uint16_t{0x4ed0U}); // jmp (a0)
@@ -652,9 +652,9 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testBranch)
+		CXX_TEST(testBRA)
 		CXX_TEST(testBSR)
-		CXX_TEST(testJump)
+		CXX_TEST(testJMP)
 		CXX_TEST(testRTS)
 		CXX_TEST(testRTE)
 		CXX_TEST(testADD)
