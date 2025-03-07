@@ -468,6 +468,74 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testLEA()
+	{
+		writeAddress(0x000000U, uint16_t{0x43d0U}); // lea (a0), a1
+		writeAddress(0x000002U, uint16_t{0x43e8U});
+		writeAddress(0x000004U, uint16_t{0xfeedU}); // lea $feed(a0), a1
+		writeAddress(0x000006U, uint16_t{0x43f0U});
+		writeAddress(0x000008U, uint16_t{0x0c10U}); // lea $10(a0, d0.l*4), a1
+		writeAddress(0x00000aU, uint16_t{0x43f8U});
+		writeAddress(0x00000cU, uint16_t{0xca15U}); // lea ($ca15).w, a1
+		writeAddress(0x00000eU, uint16_t{0x43f9U});
+		writeAddress(0x000010U, uint32_t{0x0badf00dU}); // lea ($0badf00d).l, a1
+		writeAddress(0x000014U, uint16_t{0x43faU});
+		writeAddress(0x000016U, uint16_t{0xfffaU}); // lea -6(pc), a1
+		writeAddress(0x000018U, uint16_t{0x43fbU});
+		writeAddress(0x00001aU, uint16_t{0x0727U});
+		writeAddress(0x00001cU, uint16_t{0x0026U});
+		writeAddress(0x00001eU, uint32_t{0xf00daca1U}); // lea $f00daca1($26[pc], d0.w*8), a1
+		writeAddress(0x000022U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000040U, uint32_t{0xdeadbeefU});
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up a0 and d0 to sensible values
+		cpu.writeAddrRegister(0U, 0x00000100U);
+		cpu.writeDataRegister(0U, 0x00000200U);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readAddrRegister(1U), 0x00000100U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readAddrRegister(1U), 0xffffffedU);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(cpu.readAddrRegister(1U), 0x00000910U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000eU);
+		assertEqual(cpu.readAddrRegister(1U), 0xffffca15U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the fifth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000014U);
+		assertEqual(cpu.readAddrRegister(1U), 0x0badf00dU);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the sixth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000018U);
+		assertEqual(cpu.readAddrRegister(1U), 0x00000010U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the seventh instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000022U);
+		// 0xdeadbeefU + 0x00000200U * 8U + 0xf00daca1U
+		assertEqual(cpu.readAddrRegister(1U), 0xcebb7b90U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testOR()
 	{
 		writeAddress(0x000000U, uint16_t{0x8080U}); // or.l d0, d0
@@ -595,6 +663,7 @@ public:
 		CXX_TEST(testADDQ)
 		CXX_TEST(testANDI)
 		CXX_TEST(testCLR)
+		CXX_TEST(testLEA)
 		CXX_TEST(testOR)
 		CXX_TEST(testORI)
 	}
