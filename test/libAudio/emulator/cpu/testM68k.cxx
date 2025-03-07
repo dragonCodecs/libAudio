@@ -1064,6 +1064,56 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testTRAP()
+	{
+		writeAddress(0x000000U, uint16_t{0x4e40U}); // trap #0
+		writeAddress(0x000002U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000004U, uint16_t{0x4e44U}); // trap #4
+		writeAddress(0x000006U, uint16_t{0x4e73U}); // rte
+		// TRAP handler vector pointers
+		writeAddress(0x000080U, uint32_t{0x00000004U});
+		writeAddress(0x000090U, uint32_t{0x00000006U});
+		// Set up the supervisor-mode stack pointer
+		cpu.writeStatus(0x2000U);
+		cpu.writeAddrRegister(7U, 0x00700000U);
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readAddrRegister(7U), 0x006ffff8U);
+		assertEqual(cpu.readStatus(), 0x2000U);
+		assertEqual(readAddress<uint16_t>(0x006ffffeU), uint16_t{0x0080U}); // Frame type and vector info
+		assertEqual(readAddress<uint32_t>(0x006ffffaU), uint32_t{0x00000002U}); // Return program counter
+		assertEqual(readAddress<uint16_t>(0x006ffff8U), uint16_t{0x0000U}); // Return status register
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readAddrRegister(7U), 0x006ffff0U);
+		assertEqual(cpu.readStatus(), 0x2000U);
+		assertEqual(readAddress<uint16_t>(0x006ffff6U), uint16_t{0x0090U}); // Frame type and vector info
+		assertEqual(readAddress<uint32_t>(0x006ffff2U), uint32_t{0x00000006U}); // Return program counter
+		assertEqual(readAddress<uint16_t>(0x006ffff0U), uint16_t{0x2000U}); // Return status register
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readAddrRegister(7U), 0x006ffff8U);
+		assertEqual(cpu.readStatus(), 0x2000U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 public:
 	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
@@ -1105,6 +1155,7 @@ public:
 		CXX_TEST(testSUB)
 		CXX_TEST(testSUBQ)
 		CXX_TEST(testSWAP)
+		CXX_TEST(testTRAP)
 	}
 };
 
