@@ -3206,11 +3206,23 @@ void motorola68000_t::recomputeStatusFlags(const uint32_t lhs, const uint32_t rh
 		status.set(m68kStatusBits_t::overflow);
 	else
 		status.clear(m68kStatusBits_t::overflow);
-	// And finally check and see if the calculation would generate a carry
-	if (result & (UINT64_C(1) << 32U))
-		status.set(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+	// Check if we should not be modifying the extend bit
+	if (inhibitExtend)
+	{
+		// And finally check and see if the calculation would generate a carry
+		if (result & (UINT64_C(1) << 32U))
+			status.set(m68kStatusBits_t::carry);
+		else
+			status.clear(m68kStatusBits_t::carry);
+	}
 	else
-		status.clear(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+	{
+		// And finally check and see if the calculation would generate a carry
+		if (result & (UINT64_C(1) << 32U))
+			status.set(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+		else
+			status.clear(m68kStatusBits_t::extend, m68kStatusBits_t::carry);
+	}
 }
 
 void motorola68000_t::recomputeStatusFlags(const uint32_t result, const bool carry, const uint32_t signBit) noexcept
@@ -3723,7 +3735,7 @@ stepResult_t motorola68000_t::dispatchCMP(const decodedOperation_t &insn) noexce
 	const auto result{uint64_t{lhs} - uint64_t{rhs}};
 
 	// Recompute all the flags
-	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize, true);
 
 	return {true, false, 0U};
 }
