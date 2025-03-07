@@ -476,11 +476,14 @@ private:
 		writeAddress(0x000008U, uint16_t{0x007fU}); // cmp.b #$7f, d0
 		writeAddress(0x00000aU, uint16_t{0xb07cU});
 		writeAddress(0x00000cU, uint16_t{0xaca7U}); // cmp.w #$aca7, d0
-		writeAddress(0x00000eU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x00000eU, uint16_t{0xb401U}); // cmp.b d1, d2
+		writeAddress(0x000010U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up d0 to a sensible value
+		// Set up d0, d1 and d2 to sensible values
 		cpu.writeDataRegister(0U, 0x0badf00dU);
+		cpu.writeDataRegister(1U, 0x00000001U);
+		cpu.writeDataRegister(2U, 0x00000080U);
 		// Set the status register to some improbable value that makes it easy to see if it changes
 		cpu.writeStatus(0x001bU);
 		// Validate starting conditions
@@ -500,6 +503,10 @@ private:
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x0000000eU);
 		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000010U);
+		assertEqual(cpu.readStatus(), 0x0002U);
 		// Step the final instruction to complete the test
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
