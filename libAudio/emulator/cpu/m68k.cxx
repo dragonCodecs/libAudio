@@ -4395,10 +4395,40 @@ stepResult_t motorola68000_t::dispatchNEG(const decodedOperation_t &insn) noexce
 	// Grab the value to negate and do so
 	const auto rhs{readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
 	const auto result{-rhs};
-	// Recompute all the flags bits
-	recomputeStatusFlags(0, rhs, result, operationSize);
+
+	// Compute which bit is the sign bit of the result and build a value mask from it
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+	const auto mask{signBit | (signBit - 1U)};
+	// Convert the result to unsigned for flags recomputation, and mask it
+	const auto value{static_cast<uint32_t>(result) & mask};
+	// Recompute all the flags bits, starting with the zero bit
+	if (value == 0U)
+	{
+		status.set(m68kStatusBits_t::zero);
+		// Spec says carry and extend are cleared in this case
+		status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+	}
+	else
+	{
+		status.clear(m68kStatusBits_t::zero);
+		// Spec says carry and extend are set in this case
+		status.set(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+	}
+	// Now check if the result is negative
+	if (value & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Now check for overflow - negation is a special-case, where the only overflow
+	// that can occur is where one tries to negate the smallest negative integer of
+	// a given width from itself, so check for that using masking!
+	if (value == signBit)
+		status.set(m68kStatusBits_t::overflow);
+	else
+		status.clear(m68kStatusBits_t::overflow);
+
 	// Store the result back and return how long this all took
-	writeValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
 	return {true, false, 0U};
 }
 
@@ -4416,7 +4446,7 @@ stepResult_t motorola68000_t::dispatchOR(const decodedOperation_t &insn) noexcep
 	// With the two values retreived, do the logical or
 	const uint32_t result{lhs | rhs};
 
-	// Compute which bit is the sign bit of the result
+	// Compute which bit is the sign bit of the result and build a value mask from it
 	const auto signBit{1U << ((8U * operationSize) - 1U)};
 	const auto mask{signBit | (signBit - 1U)};
 	// Recompute all the flags, starting with the negative bit
