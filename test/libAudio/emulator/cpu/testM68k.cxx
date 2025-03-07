@@ -430,6 +430,44 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testCLR()
+	{
+		writeAddress(0x000000U, uint16_t{0x4200U}); // clr.b d0
+		writeAddress(0x000002U, uint16_t{0x4240U}); // clr.w d0
+		writeAddress(0x000004U, uint16_t{0x4280U}); // clr.l d0
+		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 to a sensible value
+		cpu.writeDataRegister(0U, 0xfeedaca7U);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001bU);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readDataRegister(0U), 0xfeedac00U);
+		assertEqual(cpu.readStatus(), 0x0014U);
+		// Reset the status register to a different improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x000fU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0xfeed0000U);
+		assertEqual(cpu.readStatus(), 0x0004U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+		assertEqual(cpu.readStatus(), 0x0004U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testOR()
 	{
 		writeAddress(0x000000U, uint16_t{0x8080U}); // or.l d0, d0
@@ -556,6 +594,7 @@ public:
 		CXX_TEST(testADDI)
 		CXX_TEST(testADDQ)
 		CXX_TEST(testANDI)
+		CXX_TEST(testCLR)
 		CXX_TEST(testOR)
 		CXX_TEST(testORI)
 	}
