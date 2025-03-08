@@ -554,8 +554,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::asr,
 				0U,
 				eaReg,
-				{},
-				0U, 0U,
+				{operationFlags_t::memoryNotRegister},
+				1U, 0U,
 				eaMode,
 			};
 		case 0xe1c0U:
@@ -570,8 +570,8 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				instruction_t::asl,
 				0U,
 				eaReg,
-				{},
-				0U, 0U,
+				{operationFlags_t::memoryNotRegister},
+				1U, 0U,
 				eaMode,
 			};
 		case 0x0840U:
