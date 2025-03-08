@@ -101,7 +101,7 @@ private:
 	void recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize,
 		bool inhibitExtend = false) noexcept;
 	void recomputeStatusFlagsShift(uint32_t result, bool carry, uint32_t signBit, bool zero) noexcept;
-	void recomputeStatusFlagsArithmetic(uint32_t result, bool carry, bool oldSign, uint32_t signBit) noexcept;
+	void recomputeStatusFlagsArithmetic(uint32_t result, bool carry, bool overflow, uint32_t signBit) noexcept;
 
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;
 	[[nodiscard]] const uint32_t &dataRegister(size_t reg) const noexcept;

@@ -3259,7 +3259,7 @@ void motorola68000_t::recomputeStatusFlagsShift(const uint32_t result, const boo
 	}
 }
 
-void motorola68000_t::recomputeStatusFlagsArithmetic(const uint32_t result, const bool carry, const bool oldSign,
+void motorola68000_t::recomputeStatusFlagsArithmetic(const uint32_t result, const bool carry, const bool overflow,
 	const uint32_t signBit) noexcept
 {
 	// Recompute all the status bits, starting with negative
@@ -3272,8 +3272,8 @@ void motorola68000_t::recomputeStatusFlagsArithmetic(const uint32_t result, cons
 		status.set(m68kStatusBits_t::zero);
 	else
 		status.clear(m68kStatusBits_t::zero);
-	// Overflow happens if the sign bit changes during shift
-	if (bool(result & signBit) != oldSign)
+	// Overflow happens if the sign bit changes during shift, but this is computed in advance and passed in to us
+	if (overflow)
 		status.set(m68kStatusBits_t::overflow);
 	else
 		status.clear(m68kStatusBits_t::overflow);
@@ -3476,7 +3476,7 @@ stepResult_t motorola68000_t::dispatchASL(const decodedOperation_t &insn) noexce
 		// Now actually do the shift on the value
 		const auto result{uint16_t(value << 1U)};
 		// Recompute all the status bits
-		recomputeStatusFlagsArithmetic(result, carry, oldSign, signBit);
+		recomputeStatusFlagsArithmetic(result, carry, oldSign != signBit, signBit);
 
 		// Finally, write the result back to the EA target and get done
 		writeValue(insn.mode, insn.ry, effectiveAddress, result);
@@ -3500,12 +3500,23 @@ stepResult_t motorola68000_t::dispatchASL(const decodedOperation_t &insn) noexce
 	const auto value{dataRegister(insn.ry) & mask};
 	// Extract the value to use as the new carry and extend bits
 	const auto carry{shift == 0U ? 0U : (value >> (operationBits - shift)) & 1U};
-	// Extract the old sign bit value for flags recomputation
-	const auto oldSign{value & signBit};
 	// Now actually do the shift on the value
 	const auto result{(value << shift) & mask};
+	// Figure out if the conditions for overflow (sign bit changing at *any* time during calculation) were met
+	const auto overflow
+	{
+		[&]()
+		{
+			// Build a bit fill of the new sign bit to detect changes with
+			const uint32_t signFill{result & signBit ? UINT32_MAX : 0U};
+			// Build a mask for the bits shifted through the sign bit
+			const auto signMask{((1U << shift) - 1U) << (operationBits - shift)};
+			// Extract the sign bits and compare them
+			return (value & signMask) != (signFill & signMask);
+		}()
+	};
 	// Recompute all the status bits
-	recomputeStatusFlagsArithmetic(result, carry, oldSign, signBit);
+	recomputeStatusFlagsArithmetic(result, carry, overflow, signBit);
 
 	// Finally, write the result back and get done
 	writeDataRegisterSized(insn.ry, operationSize, result);
