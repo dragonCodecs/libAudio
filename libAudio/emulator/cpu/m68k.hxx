@@ -100,7 +100,7 @@ private:
 	[[nodiscard]] size_t unpackSize(uint8_t sizeField) const noexcept;
 	void recomputeStatusFlags(uint32_t lhs, uint32_t rhs, uint64_t result, size_t operationSize,
 		bool inhibitExtend = false) noexcept;
-	void recomputeStatusFlags(uint32_t result, bool carry, uint32_t signBit) noexcept;
+	void recomputeStatusFlagsShift(uint32_t result, bool carry, uint32_t signBit, bool zero) noexcept;
 	void recomputeStatusFlagsArithmetic(uint32_t result, bool carry, bool oldSign, uint32_t signBit) noexcept;
 
 	[[nodiscard]] uint32_t &dataRegister(size_t reg) noexcept;

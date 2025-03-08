@@ -3225,7 +3225,8 @@ void motorola68000_t::recomputeStatusFlags(const uint32_t lhs, const uint32_t rh
 	}
 }
 
-void motorola68000_t::recomputeStatusFlags(const uint32_t result, const bool carry, const uint32_t signBit) noexcept
+void motorola68000_t::recomputeStatusFlagsShift(const uint32_t result, const bool carry, const uint32_t signBit,
+	const bool zero) noexcept
 {
 	// Recompute all the status bits, starting with negative
 	if (result & signBit)
@@ -3239,11 +3240,23 @@ void motorola68000_t::recomputeStatusFlags(const uint32_t result, const bool car
 		status.clear(m68kStatusBits_t::zero);
 	// Overflow is always cleared
 	status.clear(m68kStatusBits_t::overflow);
-	// And finally, set carry and extend accordingly
-	if (carry)
-		status.set(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+	// Check if the shift amount was zero or not (inihibits extend changes)
+	if (zero)
+	{
+		// And finally, set carry accordingly
+		if (carry)
+			status.set(m68kStatusBits_t::carry);
+		else
+			status.clear(m68kStatusBits_t::carry);
+	}
 	else
-		status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+	{
+		// And finally, set carry and extend accordingly
+		if (carry)
+			status.set(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+		else
+			status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::extend);
+	}
 }
 
 void motorola68000_t::recomputeStatusFlagsArithmetic(const uint32_t result, const bool carry, const bool oldSign,
@@ -3521,7 +3534,7 @@ stepResult_t motorola68000_t::dispatchASR(const decodedOperation_t &insn) noexce
 		// Now actually do the shift on the value, extending the sign bit
 		const auto result{uint16_t((value >> 1U) | (value & signBit))};
 		// Recompute all the status bits
-		recomputeStatusFlags(result, carry, signBit);
+		recomputeStatusFlagsShift(result, carry, signBit, false);
 
 		// Finally, write the result back to the EA target and get done
 		writeValue(insn.mode, insn.ry, effectiveAddress, result);
@@ -3550,7 +3563,7 @@ stepResult_t motorola68000_t::dispatchASR(const decodedOperation_t &insn) noexce
 	// Now actually do the shift on the value, sign extending it appropriately
 	const auto result{((value >> shift) | (extensionBits << (operationBits - shift))) & mask};
 	// Recompute all the status bits
-	recomputeStatusFlags(result, carry, signBit);
+	recomputeStatusFlagsShift(result, carry, signBit, shift == 0U);
 
 	// Finally, write the result back and get done
 	writeDataRegisterSized(insn.ry, operationSize, result);
@@ -3962,7 +3975,7 @@ stepResult_t motorola68000_t::dispatchLSL(const decodedOperation_t &insn) noexce
 		// Now actually do the shift on the value
 		const auto result{uint16_t(value << 1U)};
 		// Recompute all the status bits
-		recomputeStatusFlags(result, carry, signBit);
+		recomputeStatusFlagsShift(result, carry, signBit, false);
 
 		// Finally, write the result back to the EA target and get done
 		writeValue(insn.mode, insn.ry, effectiveAddress, result);
@@ -3989,7 +4002,7 @@ stepResult_t motorola68000_t::dispatchLSL(const decodedOperation_t &insn) noexce
 	// Now actually do the shift on the value
 	const auto result{(value << shift) & mask};
 	// Recompute all the status bits
-	recomputeStatusFlags(result, carry, signBit);
+	recomputeStatusFlagsShift(result, carry, signBit, shift == 0U);
 
 	// Finally, write the result back and get done
 	writeDataRegisterSized(insn.ry, operationSize, result);
@@ -4000,7 +4013,6 @@ stepResult_t motorola68000_t::dispatchLSR(const decodedOperation_t &insn) noexce
 {
 	// Figure out the operation width
 	const auto operationSize{unpackSize(insn.operationSize)};
-	const auto operationBits{operationSize * 8U};
 	// Compute which bit is the sign bit of the result
 	const auto signBit{1U << ((8U * operationSize) - 1U)};
 	// Convert that into a mask to apply to the value
@@ -4018,7 +4030,7 @@ stepResult_t motorola68000_t::dispatchLSR(const decodedOperation_t &insn) noexce
 		// Now actually do the shift on the value
 		const auto result{uint16_t(value >> 1U)};
 		// Recompute all the status bits
-		recomputeStatusFlags(result, carry, signBit);
+		recomputeStatusFlagsShift(result, carry, signBit, false);
 
 		// Finally, write the result back to the EA target and get done
 		writeValue(insn.mode, insn.ry, effectiveAddress, result);
@@ -4045,7 +4057,7 @@ stepResult_t motorola68000_t::dispatchLSR(const decodedOperation_t &insn) noexce
 	// Now actually do the shift on the value
 	const auto result{(value >> shift) & mask};
 	// Recompute all the status bits
-	recomputeStatusFlags(result, carry, signBit);
+	recomputeStatusFlagsShift(result, carry, signBit, shift == 0U);
 
 	// Finally, write the result back and get done
 	writeDataRegisterSized(insn.ry, operationSize, result);

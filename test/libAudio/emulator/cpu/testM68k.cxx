@@ -522,7 +522,7 @@ private:
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000006U);
 		assertEqual(cpu.readDataRegister(1U), 0x80000480U);
-		assertEqual(cpu.readStatus(), 0x0008U); // XXX: X bit should actually be unaffacted by this.
+		assertEqual(cpu.readStatus(), 0x0018U);
 		// Step the fourth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000008U);
@@ -884,7 +884,7 @@ private:
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000006U);
 		assertEqual(cpu.readDataRegister(1U), 0x00000800U);
-		assertEqual(cpu.readStatus(), 0x0004U); // XXX: X bit should actually be unaffacted by this.
+		assertEqual(cpu.readStatus(), 0x0014U);
 		// Step the fourth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000008U);
@@ -939,7 +939,7 @@ private:
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000006U);
 		assertEqual(cpu.readDataRegister(1U), 0x01000880U);
-		assertEqual(cpu.readStatus(), 0x0008U); // XXX: X bit should actually be unaffacted by this.
+		assertEqual(cpu.readStatus(), 0x0018U);
 		// Step the fourth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000008U);
