@@ -643,6 +643,52 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testBTST()
+	{
+		writeAddress(0x000000U, uint16_t{0x0800U});
+		writeAddress(0x000002U, uint16_t{0x0002U}); // btst #2, d0
+		writeAddress(0x000004U, uint16_t{0x0300U}); // btst d1, d0
+		writeAddress(0x000006U, uint16_t{0x0310U}); // btst d1, (a0)
+		writeAddress(0x000008U, uint16_t{0x0810U});
+		writeAddress(0x00000aU, uint16_t{0x0007U}); // btst #7, (a0)
+		writeAddress(0x00000cU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint8_t{0xa5U});
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up a0, d0 and d1 to sensible values
+		cpu.writeAddrRegister(0U, 0x00000100U);
+		cpu.writeDataRegister(0U, 0xcafef00dU);
+		cpu.writeDataRegister(1U, 0x00000004U);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0xcafef00dU);
+		assertEqual(cpu.readStatus(), 0x001bU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readDataRegister(0U), 0xcafef00dU);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Reset the status register to a different value that makes it easy to see if it changes
+		cpu.writeStatus(0x0000U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(readAddress<uint8_t>(0x000100U), uint8_t{0xa5U});
+		assertEqual(cpu.readStatus(), 0x0004U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(readAddress<uint8_t>(0x000100U), uint8_t{0xa5U});
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testCLR()
 	{
 		writeAddress(0x000000U, uint16_t{0x4200U}); // clr.b d0
@@ -1417,8 +1463,9 @@ public:
 		CXX_TEST(testANDI)
 		CXX_TEST(testASL)
 		CXX_TEST(testASR)
-		CXX_TEST(testBSET)
 		CXX_TEST(testBCLR)
+		CXX_TEST(testBSET)
+		CXX_TEST(testBTST)
 		CXX_TEST(testCLR)
 		CXX_TEST(testCMP)
 		CXX_TEST(testCMPA)
