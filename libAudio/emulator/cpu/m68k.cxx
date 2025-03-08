@@ -3504,10 +3504,10 @@ stepResult_t motorola68000_t::dispatchASR(const decodedOperation_t &insn) noexce
 	// Figure out the operation width
 	const auto operationSize{unpackSize(insn.operationSize)};
 	const auto operationBits{operationSize * 8U};
-	// Convert that into a mask to apply to the value
-	const auto mask{static_cast<uint32_t>((UINT64_C(1) << operationBits) - 1U)};
 	// Compute which bit is the sign bit of the result
 	const auto signBit{1U << ((8U * operationSize) - 1U)};
+	// Convert that into a mask to apply to the value
+	const auto mask{(signBit - 1U) | signBit};
 
 	// ASR has 3 forms, check if this is the effective addressed form
 	if (insn.flags.includes(operationFlags_t::memoryNotRegister))
@@ -4001,10 +4001,10 @@ stepResult_t motorola68000_t::dispatchLSR(const decodedOperation_t &insn) noexce
 	// Figure out the operation width
 	const auto operationSize{unpackSize(insn.operationSize)};
 	const auto operationBits{operationSize * 8U};
-	// Convert that into a mask to apply to the value
-	const auto mask{static_cast<uint32_t>((UINT64_C(1) << operationBits) - 1U)};
 	// Compute which bit is the sign bit of the result
 	const auto signBit{1U << ((8U * operationSize) - 1U)};
+	// Convert that into a mask to apply to the value
+	const auto mask{(signBit - 1U) | signBit};
 
 	// LSR has 3 forms, check if this is the effective addressed form
 	if (insn.flags.includes(operationFlags_t::memoryNotRegister))
