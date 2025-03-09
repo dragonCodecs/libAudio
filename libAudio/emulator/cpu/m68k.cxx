@@ -3862,8 +3862,10 @@ stepResult_t motorola68000_t::dispatchDIVS(const decodedOperation_t &insn) noexc
 		status.set(m68kStatusBits_t::negative);
 	else
 		status.clear(m68kStatusBits_t::negative);
-	// And finally, if any of the upper 16 bits of the quotient is set, we overflowed
-	if (static_cast<uint32_t>(quotient) & 0xffff0000U)
+	// And finally, if any of the upper 16 bits of the quotient are anything other than the sign bit
+	// (This works by converting the quotient to a 16-bit integer and then letting it sign extend to
+	// compare it against the 32-bit one - if any of the upper bits are different, the comparison fails)
+	if (static_cast<int16_t>(quotient) != quotient)
 		status.set(m68kStatusBits_t::overflow);
 	else
 	{
