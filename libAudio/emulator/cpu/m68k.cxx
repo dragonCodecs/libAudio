@@ -3242,13 +3242,8 @@ void motorola68000_t::recomputeStatusFlagsShift(const uint32_t result, const boo
 	status.clear(m68kStatusBits_t::overflow);
 	// Check if the shift amount was zero or not (inihibits extend changes)
 	if (zero)
-	{
-		// And finally, set carry accordingly
-		if (carry)
-			status.set(m68kStatusBits_t::carry);
-		else
-			status.clear(m68kStatusBits_t::carry);
-	}
+		// Shits of zero always clear the carry bit
+		status.clear(m68kStatusBits_t::carry);
 	else
 	{
 		// And finally, set carry and extend accordingly
