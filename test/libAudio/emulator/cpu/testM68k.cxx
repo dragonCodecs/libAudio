@@ -864,6 +864,43 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testDIVS()
+	{
+		writeAddress(0x000000U, uint16_t{0x81fcU});
+		writeAddress(0x000002U, uint16_t{0x0002U}); // divs.w #2, d0
+		writeAddress(0x000004U, uint16_t{0x83fcU});
+		writeAddress(0x000006U, uint16_t{0x0001U}); // divs.w #1, d1
+		writeAddress(0x000008U, uint16_t{0x83fcU});
+		writeAddress(0x00000aU, uint16_t{0x0000U}); // divs.w #0, d1
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 and d1 to sensible values
+		cpu.writeDataRegister(0U, 0x00010041U);
+		cpu.writeDataRegister(1U, 0x00068000U);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x00018020U);
+		assertEqual(cpu.readStatus(), 0x0018U);
+		// Set the status register to some other improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x000fU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readDataRegister(1U), 0x00068000U);
+		assertEqual(cpu.readStatus(), 0x000aU);
+		// Step the third instruction and validate
+		runStep(true); // Expect this one to trap because of DBZ
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(cpu.readDataRegister(1U), 0x00068000U);
+		assertEqual(cpu.readStatus(), 0x000aU);
+	}
+
 	void testEXT()
 	{
 		writeAddress(0x000000U, uint16_t{0x4880U}); // ext.w d0
@@ -1470,6 +1507,7 @@ public:
 		CXX_TEST(testCMP)
 		CXX_TEST(testCMPA)
 		CXX_TEST(testCMPI)
+		CXX_TEST(testDIVS)
 		CXX_TEST(testEXT)
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
