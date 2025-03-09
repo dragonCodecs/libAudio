@@ -3843,12 +3843,12 @@ stepResult_t motorola68000_t::dispatchDIVS(const decodedOperation_t &insn) noexc
 	// Recompute the flags, starting by clearing carry
 	status.clear(m68kStatusBits_t::carry);
 	// Now do zero
-	if (quotient == 0)
+	if (static_cast<uint16_t>(quotient) == 0)
 		status.set(m68kStatusBits_t::zero);
 	else
 		status.clear(m68kStatusBits_t::zero);
 	// Check for negative
-	if (quotient < 0)
+	if (static_cast<int16_t>(quotient) < 0)
 		status.set(m68kStatusBits_t::negative);
 	else
 		status.clear(m68kStatusBits_t::negative);
@@ -3885,8 +3885,8 @@ stepResult_t motorola68000_t::dispatchDIVU(const decodedOperation_t &insn) noexc
 		status.set(m68kStatusBits_t::zero);
 	else
 		status.clear(m68kStatusBits_t::zero);
-	// As this is a 32-bit LHS, 16-bit RHS division, negative is if bit 31 is set in the quotient
-	if (quotient & 0x80000000U)
+	// As this is a 32-bit LHS, 16-bit RHS division, negative is if bit 15 is set in the quotient
+	if (quotient & 0x8000U)
 		status.set(m68kStatusBits_t::negative);
 	else
 		status.clear(m68kStatusBits_t::negative);
@@ -3898,7 +3898,7 @@ stepResult_t motorola68000_t::dispatchDIVU(const decodedOperation_t &insn) noexc
 		status.clear(m68kStatusBits_t::overflow);
 		// Now, as overflow hasn't occured, write the result back to the target register,
 		// packing the remainder in the upper 16 bits and the quotient in the lower
-		dataRegister(insn.rx) = quotient | (remainder << 16U);
+		dataRegister(insn.rx) = static_cast<uint16_t>(quotient) | (static_cast<uint16_t>(remainder) << 16U);
 	}
 	// Figure out how long that took an return
 	return {true, false, 0U};
