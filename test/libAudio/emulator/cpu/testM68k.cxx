@@ -873,14 +873,16 @@ private:
 		writeAddress(0x000008U, uint16_t{0x83fcU});
 		writeAddress(0x00000aU, uint16_t{0x0000U}); // divs.w #0, d1
 		writeAddress(0x00000cU, uint16_t{0x85fcU});
-		writeAddress(0x00000eU, uint16_t{0xffffU}); // divs.w #-1, d2
-		writeAddress(0x000010U, uint16_t{0x87fcU});
-		writeAddress(0x000012U, uint16_t{0x0002U}); // divs.w #2, d3
-		writeAddress(0x000014U, uint16_t{0x89fcU});
-		writeAddress(0x000016U, uint16_t{0x0002U}); // divs.w #2, d4
-		writeAddress(0x000018U, uint16_t{0x85fcU});
-		writeAddress(0x00001aU, uint16_t{0x0001U}); // divs.w #1, d2
-		writeAddress(0x00001cU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x00000eU, uint16_t{0x8000U}); // divs.w #$8000, d2
+		writeAddress(0x000010U, uint16_t{0x85fcU});
+		writeAddress(0x000012U, uint16_t{0xffffU}); // divs.w #-1, d2
+		writeAddress(0x000014U, uint16_t{0x87fcU});
+		writeAddress(0x000016U, uint16_t{0x0002U}); // divs.w #2, d3
+		writeAddress(0x000018U, uint16_t{0x89fcU});
+		writeAddress(0x00001aU, uint16_t{0x0002U}); // divs.w #2, d4
+		writeAddress(0x00001cU, uint16_t{0x85fcU});
+		writeAddress(0x00001eU, uint16_t{0x0001U}); // divs.w #1, d2
+		writeAddress(0x000020U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
 		// Set up d0, d1, d2 and d3 to sensible values
@@ -914,21 +916,26 @@ private:
 		// Step the fourth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000010U);
-		assertEqual(cpu.readDataRegister(2U), 0x00000000U);
-		assertEqual(cpu.readStatus(), 0x0004U);
+		assertEqual(cpu.readDataRegister(2U), 0x80000000U);
+		assertEqual(cpu.readStatus(), 0x0006U);
 		// Step the fifth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000014U);
-		assertEqual(cpu.readDataRegister(3U), 0x00010041U);
-		assertEqual(cpu.readStatus(), 0x000aU);
+		assertEqual(cpu.readDataRegister(2U), 0x00000000U);
+		assertEqual(cpu.readStatus(), 0x0004U);
 		// Step the sixth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000018U);
-		assertEqual(cpu.readDataRegister(4U), 0xfffff807U);
-		assertEqual(cpu.readStatus(), 0x0008U);
+		assertEqual(cpu.readDataRegister(3U), 0x00010041U);
+		assertEqual(cpu.readStatus(), 0x000aU);
 		// Step the seventh instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x0000001cU);
+		assertEqual(cpu.readDataRegister(4U), 0xfffff807U);
+		assertEqual(cpu.readStatus(), 0x0008U);
+		// Step the eighth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000020U);
 		assertEqual(cpu.readDataRegister(2U), 0x00000000U);
 		assertEqual(cpu.readStatus(), 0x0004U);
 		// Step the final instruction to complete the test
