@@ -1415,6 +1415,33 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testScc()
+	{
+		writeAddress(0x000000U, uint16_t{0x50c0U}); // st d0
+		writeAddress(0x000002U, uint16_t{0x51c0U}); // sf d0
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 so we can observe which bits change with the condition tests
+		cpu.writeDataRegister(0U, 0x00000000U);
+		// Set up the status bits in a way where it's trivial to observe if they change
+		cpu.writeStatus(0x001fU);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readDataRegister(0U), 0x000000ffU);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Switch up the status bits in a way where it's trivial to observe if they change
+		cpu.writeStatus(0x0010U);
+	}
+
 	void testSUB()
 	{
 		writeAddress(0x000000U, uint16_t{0x9590U}); // sub.l d2, (a0)
@@ -1640,6 +1667,7 @@ public:
 		CXX_TEST(testNEG)
 		CXX_TEST(testOR)
 		CXX_TEST(testORI)
+		CXX_TEST(testScc)
 		CXX_TEST(testSUB)
 		CXX_TEST(testSUBQ)
 		CXX_TEST(testSWAP)
