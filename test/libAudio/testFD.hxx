@@ -10,4 +10,4 @@ namespace fd
 	void testRead(testsuite &suite);
 }
 
-#endif /*TEST_FIXED_VECTOR__HXX*/
+#endif /*TEST_FD__HXX*/

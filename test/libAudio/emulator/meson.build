@@ -1,9 +1,18 @@
 emulatorTests = [
 	'testClockManager',
+	'testAtariSTeROMs'
 ]
 
 testObjectMap = {
-	'testClockManager': {'libAudio': ['emulator/clockManager.cxx']}
+	'testClockManager': {'libAudio': ['emulator/clockManager.cxx']},
+	'testAtariSTeROMs': {
+		'libAudio': [
+			'emulator/atariSTeROMs.cxx',
+			'emulator/gemdosAlloc.cxx',
+			'emulator/cpu/m68k.cxx',
+			'console.cxx',
+		]
+	},
 }
 
 foreach test : emulatorTests
