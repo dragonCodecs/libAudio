@@ -3837,6 +3837,16 @@ stepResult_t motorola68000_t::dispatchDIVS(const decodedOperation_t &insn) noexc
 	// Check that we're not about to try dividing by zero (if we are, trap)
 	if (!rhs)
 		return {true, true, 0U};
+	// If we're about to try dividing the smallest negative number by -1, special-case
+	if (lhs == INT32_MIN && rhs == -1)
+	{
+		// Set up the flags for a zero result and no other special conditions
+		status.set(m68kStatusBits_t::zero);
+		status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow, m68kStatusBits_t::negative);
+		// Turn the result of this operation into 0
+		dataRegister(insn.rx) = 0U;
+		return {true, false, 0U};
+	}
 	// Now do the division, getting both the quotient and remainder
 	const auto quotient{lhs / rhs};
 	const auto remainder{lhs % rhs};
