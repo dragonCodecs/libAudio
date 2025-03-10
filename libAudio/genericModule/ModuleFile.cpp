@@ -658,7 +658,7 @@ template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint
 {
 	auto *const Sample = dynamic_cast<ModuleSampleNative *>(p_Samples[i]);
 	const size_t Length = p_Samples[i]->GetLength() << (Sample->GetStereo() ? 1U : 0U);
-	if ((Sample->Flags & 0x01U) == 0)
+	if ((Sample->Flags & 0x01U) == 0U || Length == 0U)
 	{
 		p_PCM[i] = nullptr;
 		return;
