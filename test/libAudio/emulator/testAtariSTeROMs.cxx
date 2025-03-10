@@ -17,6 +17,18 @@ class testAtariSTeROMs final : public testsuite, m68kMemoryMap_t
 
 	void testAllocator()
 	{
+		// Set up to allocate 4KiB with Malloc()
+		writeAddress(0x000100U, uint16_t{0x2f3cU});
+		writeAddress(0x000102U, uint32_t{0x00001000U}); // move.l #4096, -(sp)
+		writeAddress(0x000106U, uint16_t{0x3f3cU});
+		writeAddress(0x000108U, uint16_t{0x0048U}); // move.w #$48, -(sp)
+		writeAddress(0x00010aU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010cU, uint16_t{0x5c8fU}); // addq.l #6, sp
+		writeAddress(0x00010eU, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Extract the allocation address returned and check it's correct
+		assertEqual(cpu.readDataRegister(0U), 0x00080000U);
 	}
 
 public:
@@ -28,6 +40,9 @@ public:
 		(
 			cpu, static_cast<m68kMemoryMap_t &>(*this), heapBase, heapSize
 		);
+
+		// Set up the GEMDOS TRAP handler so we can use it in the tests
+		writeAddress(0x000084U, uint32_t{0x100000U + atariSTeROMs_t::handlerAddressGEMDOS});
 	}
 
 	void registerTests() final
