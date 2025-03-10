@@ -108,6 +108,46 @@ class testAtariSTeROMs final : public testsuite, m68kMemoryMap_t
 		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
 		// Check that the result was E_OK
 		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+
+		// Set up to allocate 2KiB with Malloc() to check it uses a block from the free list
+		writeAddress(0x000100U, uint16_t{0x2f3cU});
+		writeAddress(0x000102U, uint32_t{0x00000800U}); // move.l #2048, -(sp)
+		writeAddress(0x000106U, uint16_t{0x3f3cU});
+		writeAddress(0x000108U, uint16_t{0x0048U}); // move.w #$48, -(sp)
+		writeAddress(0x00010aU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010cU, uint16_t{0x5c8fU}); // addq.l #6, sp
+		writeAddress(0x00010eU, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Extract the allocation address returned and check it's correct
+		assertEqual(cpu.readDataRegister(0U), 0x00080000U);
+
+		// Set up to allocate 2KiB with Malloc() to check what happens when there's not enough free in
+		// a non-empty free list
+		writeAddress(0x000100U, uint16_t{0x2f3cU});
+		writeAddress(0x000102U, uint32_t{0x00000800U}); // move.l #2048, -(sp)
+		writeAddress(0x000106U, uint16_t{0x3f3cU});
+		writeAddress(0x000108U, uint16_t{0x0048U}); // move.w #$48, -(sp)
+		writeAddress(0x00010aU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010cU, uint16_t{0x5c8fU}); // addq.l #6, sp
+		writeAddress(0x00010eU, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Extract the allocation address returned and check it's correct
+		assertEqual(cpu.readDataRegister(0U), 0x00081808U);
+
+		// Set up to allocate 1KiB with Malloc() to check it still uses a block from the free list
+		writeAddress(0x000100U, uint16_t{0x2f3cU});
+		writeAddress(0x000102U, uint32_t{0x00000400U}); // move.l #1024, -(sp)
+		writeAddress(0x000106U, uint16_t{0x3f3cU});
+		writeAddress(0x000108U, uint16_t{0x0048U}); // move.w #$48, -(sp)
+		writeAddress(0x00010aU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010cU, uint16_t{0x5c8fU}); // addq.l #6, sp
+		writeAddress(0x00010eU, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Extract the allocation address returned and check it's correct
+		assertEqual(cpu.readDataRegister(0U), 0x00080804U);
 	}
 
 public:
