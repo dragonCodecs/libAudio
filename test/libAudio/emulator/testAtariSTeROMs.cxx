@@ -29,6 +29,20 @@ class testAtariSTeROMs final : public testsuite, m68kMemoryMap_t
 		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
 		// Extract the allocation address returned and check it's correct
 		assertEqual(cpu.readDataRegister(0U), 0x00080000U);
+
+		// Set up to allocate 2KiB with Mxalloc()
+		writeAddress(0x000100U, uint16_t{0x4267U}); // clr.w -(sp)
+		writeAddress(0x000102U, uint16_t{0x2f3cU});
+		writeAddress(0x000104U, uint32_t{0x00000800U}); // move.l #2048, -(sp)
+		writeAddress(0x000108U, uint16_t{0x3f3cU});
+		writeAddress(0x00010aU, uint16_t{0x0044U}); // move.w #$44, -(sp)
+		writeAddress(0x00010cU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010eU, uint16_t{0x508fU}); // addq.l #8, sp
+		writeAddress(0x000110U, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Extract the allocation address returned and check it's correct
+		assertEqual(cpu.readDataRegister(0U), 0x00081004U);
 	}
 
 public:
