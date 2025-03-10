@@ -227,6 +227,33 @@ class testAtariSTeROMs final : public testsuite, m68kMemoryMap_t
 		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
 		// Check that the result was an error
 		assertEqual(cpu.readDataRegister(0U), 0x0000ffffU);
+
+		// Free the last 4KiB allocation
+		writeAddress(0x000100U, uint16_t{0x2f3cU});
+		writeAddress(0x000102U, uint32_t{0x0008200cU}); // move.l #$0008200c, -(sp)
+		writeAddress(0x000106U, uint16_t{0x3f3cU});
+		writeAddress(0x000108U, uint16_t{0x0049U}); // move.w #$49, -(sp)
+		writeAddress(0x00010aU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010cU, uint16_t{0x5c8fU}); // addq.l #6, sp
+		writeAddress(0x00010eU, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Check that the result was E_OK
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+
+		// Set up to allocate the entire rest of the heap with Malloc() to check that the allocator uses
+		// that final free block and expands it to meet the request
+		writeAddress(0x000100U, uint16_t{0x2f3cU});
+		writeAddress(0x000102U, uint32_t{0x0007dff0U}); // move.l #$0007dff0, -(sp)
+		writeAddress(0x000106U, uint16_t{0x3f3cU});
+		writeAddress(0x000108U, uint16_t{0x0048U}); // move.w #$48, -(sp)
+		writeAddress(0x00010aU, uint16_t{0x4e41U}); // trap #1
+		writeAddress(0x00010cU, uint16_t{0x5c8fU}); // addq.l #6, sp
+		writeAddress(0x00010eU, uint16_t{0x4e75U}); // rts
+		// Set the CPU to execute this sequence and run it
+		assertTrue(cpu.executeToReturn(0x00000100U, 0x00080000U, false));
+		// Extract the allocation address returned and check it's correct
+		assertEqual(cpu.readDataRegister(0U), 0x0008200cU);
 	}
 
 public:
