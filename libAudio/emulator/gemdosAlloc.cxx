@@ -136,6 +136,7 @@ bool gemdosAllocator_t::free(const uint32_t ptr) noexcept
 	if (node == allocList.end())
 		return false;
 	// Otherwise, extract it from the alloc list and find where to insert it in the free list
+	// (strict requirement: free block list must remain sorted!)
 	const auto chunk{*node};
 	allocList.erase(node);
 	freeList.insert(std::lower_bound(freeList.begin(), freeList.end(), ptr), chunk);
