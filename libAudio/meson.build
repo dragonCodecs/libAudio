@@ -166,11 +166,21 @@ endif
 if not libMP4v2.found()
 	libMP4v2 = dependency('mp4v2', version: '>=2.1.2', required: requiresAAC, allow_fallback: true)
 endif
-libFAAC = cxx.find_library('faac', required: false)
+# Try and find FAAC if we're not forcing fallback here
+if not forcedFallback and 'faac' not in forceFallbackFor
+	libFAAC = cxx.find_library('faac', required: false)
+else
+	libFAAC = disabler()
+endif
 if not libFAAC.found()
 	libFAAC = dependency('faac', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
 endif
-libFAAD = cxx.find_library('faad', required: false)
+# Try and find FAAD2 if we're not forcing fallback here
+if not forcedFallback and 'faad2' not in forceFallbackFor
+	libFAAD = cxx.find_library('faad', required: false)
+else
+	libFAAD = disabler()
+endif
 if not libFAAD.found()
 	libFAAD = dependency('faad2', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
 endif
