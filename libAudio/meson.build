@@ -8,7 +8,7 @@ forceFallbackFor = get_option('force_fallback_for')
 # Required dependencies
 threading = dependency('threads')
 # Check if OpenAL is being forced into fallback
-if not forcedFallback and 'openal' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('openal')
 	# If it is not, figure out if we can find it off the host system
 	if host_machine.system() == 'darwin'
 		if cxx.get_id() == 'clang'
@@ -108,7 +108,7 @@ libFLAC = dependency('flac', required: requiresFlac, allow_fallback: true, disab
 
 requiresMusepack = extraFormats.contains('musepack')
 # Try and find libMPC if we're not forcing fallback here
-if not forcedFallback and 'mpcdec' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('mpcdec')
 	libMPC = cxx.find_library('mpcdec', required: false, disabler: true)
 else
 	libMPC = disabler()
@@ -128,7 +128,7 @@ endif
 requiresMP3 = extraFormats.contains('mp3')
 libID3Tag = dependency('id3tag', required: requiresMP3, allow_fallback: true, disabler: true)
 # Try and find libmad if we're not forcing fallback here
-if not forcedFallback and 'mad' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('mad')
 	libMAD = cxx.find_library('mad', required: false)
 else
 	libMAD = disabler()
@@ -138,7 +138,7 @@ if not libMAD.found()
 	libMAD = dependency('mad', version: '>=0.16.3', required: requiresMP3, allow_fallback: true)
 endif
 # Try and find LAME if we're not forcing fallback here
-if not forcedFallback and 'mad' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('mad')
 	libLAME = cxx.find_library('mp3lame', required: false)
 else
 	libLAME = disabler()
@@ -150,7 +150,7 @@ endif
 
 requiresAAC = extraFormats.contains('aac')
 # Try and find libMP4v2 if we're not forcing fallback here
-if not forcedFallback and 'mp4v2' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('mp4v2')
 	libMP4v2 = cxx.find_library('mp4v2', required: false)
 else
 	libMP4v2 = disabler()
@@ -167,7 +167,7 @@ if not libMP4v2.found()
 	libMP4v2 = dependency('mp4v2', version: '>=2.1.2', required: requiresAAC, allow_fallback: true)
 endif
 # Try and find FAAC if we're not forcing fallback here
-if not forcedFallback and 'faac' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('faac')
 	libFAAC = cxx.find_library('faac', required: false)
 else
 	libFAAC = disabler()
@@ -176,7 +176,7 @@ if not libFAAC.found()
 	libFAAC = dependency('faac', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
 endif
 # Try and find FAAD2 if we're not forcing fallback here
-if not forcedFallback and 'faad2' not in forceFallbackFor
+if not forcedFallback and not forceFallbackFor.contains('faad2')
 	libFAAD = cxx.find_library('faad', required: false)
 else
 	libFAAD = disabler()
