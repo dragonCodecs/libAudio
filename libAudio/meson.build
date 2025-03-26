@@ -137,7 +137,13 @@ endif
 if not libMAD.found()
 	libMAD = dependency('mad', version: '>=0.16.3', required: requiresMP3, allow_fallback: true)
 endif
-libLAME = cxx.find_library('mp3lame', required: false)
+# Try and find LAME if we're not forcing fallback here
+if not forcedFallback and 'mad' not in forceFallbackFor
+	libLAME = cxx.find_library('mp3lame', required: false)
+else
+	libLAME = disabler()
+endif
+# If we didn't find the library.. use our fallback dependency
 if not libLAME.found()
 	libLAME = dependency('mp3lame', version: '>= 3.100', required: requiresMP3, allow_fallback: true)
 endif
