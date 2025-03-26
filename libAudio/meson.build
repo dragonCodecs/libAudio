@@ -107,7 +107,13 @@ requiresFlac = extraFormats.contains('flac')
 libFLAC = dependency('flac', required: requiresFlac, allow_fallback: true, disabler: true)
 
 requiresMusepack = extraFormats.contains('musepack')
-libMPC = cxx.find_library('mpcdec', required: false, disabler: true)
+# Try and find libMPC if we're not forcing fallback here
+if not forcedFallback and 'mpcdec' not in forceFallbackFor
+	libMPC = cxx.find_library('mpcdec', required: false, disabler: true)
+else
+	libMPC = disabler()
+endif
+# If we didn't find the library.. use our fallback dependency
 if not libMPC.found()
 	libMPC = dependency('mpcdec', required: requiresMusepack, allow_fallback: true, disabler: true)
 endif
@@ -144,7 +150,7 @@ if libMP4v2.found()
 		libMP4v2 = disabler()
 	endif
 endif
-# If we either didn't find the library, or it was unstuiable.. use our fallback dependency
+# If we either didn't find the library, or it was unsuitable.. use our fallback dependency
 if not libMP4v2.found()
 	libMP4v2 = dependency('mp4v2', version: '>=2.1.2', required: requiresAAC, allow_fallback: true)
 endif
