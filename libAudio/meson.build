@@ -1,30 +1,41 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # SPDX-FileCopyrightText: 2018-2023 Rachel Mant <git@dragonmux.network>
 
+# Forced fallbacks
+forcedFallback = get_option('wrap_mode') == 'forcefallback'
+forceFallbackFor = get_option('force_fallback_for')
+
 # Required dependencies
 threading = dependency('threads')
-if host_machine.system() == 'darwin'
-	if cxx.get_id() == 'clang'
-		libOpenAL = dependency('openal', method: 'extraframework', required: true)
+# Check if OpenAL is being forced into fallback
+if not forcedFallback and 'openal' not in forceFallbackFor
+	# If it is not, figure out if we can find it off the host system
+	if host_machine.system() == 'darwin'
+		if cxx.get_id() == 'clang'
+			libOpenAL = dependency('openal', method: 'extraframework', required: true)
+		else
+			# GCC cannot find frameworks properly
+			# https://github.com/mesonbuild/meson/issues/12160
+			libOpenALDep = dependency('openal', method: 'cmake', required: true, modules: ['OpenAL::OpenAL'])
+			# OpenAL-soft is also broken on Homebrew GCC, as it never enables OBJCXX for the Core Audio backend
+			# The easy fix is to reuse CMake's work and prod GCC a bit
+			libOpenAL = declare_dependency(
+				# not links or link_args as Meson thinks the framework folder /is/ the library
+				dependencies: libOpenALDep.partial_dependency(includes: true,  compile_args: true),
+				# this is a system framework so no -F flag necessary
+				compile_args: ['-framework', 'OpenAL'],
+				link_args: ['-framework', 'OpenAL'],
+			)
+			assert(cxx.has_header('OpenAL.h', dependencies: libOpenAL))
+		endif
 	else
-		# GCC cannot find frameworks properly
-		# https://github.com/mesonbuild/meson/issues/12160
-		libOpenALDep = dependency('openal', method: 'cmake', required: true, modules: ['OpenAL::OpenAL'])
-		# OpenAL-soft is also broken on Homebrew GCC, as it never enables OBJCXX for the Core Audio backend
-		# The easy fix is to reuse CMake's work and prod GCC a bit
-		libOpenAL = declare_dependency(
-			# not links or link_args as Meson thinks the framework folder /is/ the library
-			dependencies: libOpenALDep.partial_dependency(includes: true,  compile_args: true),
-			# this is a system framework so no -F flag necessary
-			compile_args: ['-framework', 'OpenAL'],
-			link_args: ['-framework', 'OpenAL'],
-		)
-		assert(cxx.has_header('OpenAL.h', dependencies: libOpenAL))
+		libOpenAL = dependency('openal', required: host_machine.system() != 'windows')
 	endif
 else
-	libOpenAL = dependency('openal', required: host_machine.system() != 'windows')
+	libOpenAL = disabler()
 endif
 
+# If we couldn't find OpenAL on the host or the user forced fallback, use the CMake subproject
 if not libOpenAL.found()
 	cmake = import('cmake')
 
@@ -121,7 +132,7 @@ endif
 
 requiresAAC = extraFormats.contains('aac')
 # Try and find libMP4v2 if we're not forcing fallback here
-if 'mp4v2' not in get_option('force_fallback_for')
+if not forcedFallback and 'mp4v2' not in forceFallbackFor
 	libMP4v2 = cxx.find_library('mp4v2', required: false)
 else
 	libMP4v2 = disabler()
