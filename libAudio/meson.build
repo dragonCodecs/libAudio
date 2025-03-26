@@ -127,7 +127,13 @@ endif
 
 requiresMP3 = extraFormats.contains('mp3')
 libID3Tag = dependency('id3tag', required: requiresMP3, allow_fallback: true, disabler: true)
-libMAD = cxx.find_library('mad', required: false)
+# Try and find libmad if we're not forcing fallback here
+if not forcedFallback and 'mad' not in forceFallbackFor
+	libMAD = cxx.find_library('mad', required: false)
+else
+	libMAD = disabler()
+endif
+# If we didn't find the library.. use our fallback dependency
 if not libMAD.found()
 	libMAD = dependency('mad', version: '>=0.16.3', required: requiresMP3, allow_fallback: true)
 endif
