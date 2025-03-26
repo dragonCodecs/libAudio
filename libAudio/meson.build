@@ -372,7 +372,7 @@ summary(
 	section: 'Formats'
 )
 
-libAudioLibrary = shared_library(
+libAudioLibrary = library(
 	'libAudio',
 	libAudioSrcs + extraSrcs,
 	dependencies: requiredDependencies + extraDeps,
