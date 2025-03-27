@@ -57,6 +57,7 @@ substrate = dependency(
 	default_options: [
 		'build_tests=false',
 		'cpp_std=c++17',
+		'default_library=@0@'.format(get_option('default_library')),
 	]
 )
 substrateDir = meson.current_source_dir() / 'deps/substrate'
