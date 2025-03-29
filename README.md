@@ -8,7 +8,7 @@ libAudio
 
 ## Getting started
 
-After cloning the repository, you will need to run `git submodule init --update` to pull all dependencies for a build.
+After cloning the repository, you will need to run `git submodule update --init` to pull all dependencies for a build.
 
 libAudio is built using Meson + Ninja and is designed and tested for Meson 0.56+.
 For general use, this means running
