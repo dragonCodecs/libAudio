@@ -1267,6 +1267,46 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMULS()
+	{
+		writeAddress(0x000000U, uint16_t{0xc1fcU});
+		writeAddress(0x000002U, uint16_t{0x0003U}); // muls.w #3, d0
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 to a sensible value
+		cpu.writeDataRegister(0U, 0x0ca78132U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0xfffe8396U);
+		assertEqual(cpu.readStatus(), 0x0018U);
+	}
+
+	void testMULU()
+	{
+		writeAddress(0x000000U, uint16_t{0xc0fcU});
+		writeAddress(0x000002U, uint16_t{0x0003U}); // mulu.w #3, d0
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 to a sensible value
+		cpu.writeDataRegister(0U, 0x0ca78132U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x00018396U);
+		assertEqual(cpu.readStatus(), 0x0010U);
+	}
+
 	void testNEG()
 	{
 		writeAddress(0x000000U, uint16_t{0x4400U}); // neg.b d0
@@ -1664,6 +1704,8 @@ public:
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
+		CXX_TEST(testMULS)
+		CXX_TEST(testMULU)
 		CXX_TEST(testNEG)
 		CXX_TEST(testOR)
 		CXX_TEST(testORI)
