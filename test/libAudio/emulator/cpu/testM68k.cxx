@@ -1300,6 +1300,38 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMOVM()
+	{
+		writeAddress(0x000000U, uint16_t{0x48f8U});
+		writeAddress(0x000002U, uint16_t{0x00ffU});
+		writeAddress(0x000004U, uint16_t{0x0100U}); // movem.l d0-d7, ($0100).w
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up all the data registers so it's easy to tell which one got put where
+		cpu.writeDataRegister(0U, 0x00010001U);
+		cpu.writeDataRegister(1U, 0x00020002U);
+		cpu.writeDataRegister(2U, 0x00030003U);
+		cpu.writeDataRegister(3U, 0x00040004U);
+		cpu.writeDataRegister(4U, 0x00050005U);
+		cpu.writeDataRegister(5U, 0x00060006U);
+		cpu.writeDataRegister(6U, 0x00070007U);
+		cpu.writeDataRegister(7U, 0x00080008U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(readAddress<uint32_t>(0x000100U), 0x00010001U);
+		assertEqual(readAddress<uint32_t>(0x000104U), 0x00020002U);
+		assertEqual(readAddress<uint32_t>(0x000108U), 0x00030003U);
+		assertEqual(readAddress<uint32_t>(0x00010cU), 0x00040004U);
+		assertEqual(readAddress<uint32_t>(0x000110U), 0x00050005U);
+		assertEqual(readAddress<uint32_t>(0x000114U), 0x00060006U);
+		assertEqual(readAddress<uint32_t>(0x000118U), 0x00070007U);
+		assertEqual(readAddress<uint32_t>(0x00011cU), 0x00080008U);
+	}
+
 	void testMOVQ()
 	{
 		writeAddress(0x000000U, uint16_t{0x7080U}); // movq #$80, d0
@@ -1812,6 +1844,7 @@ public:
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
 		CXX_TEST(testMOVA)
+		CXX_TEST(testMOVM)
 		CXX_TEST(testMOVQ)
 		CXX_TEST(testMULS)
 		CXX_TEST(testMULU)
