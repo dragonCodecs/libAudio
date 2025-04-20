@@ -1312,7 +1312,10 @@ private:
 		writeAddress(0x00000eU, uint16_t{0xc0c0U}); // movem.w d0-d1/a0-a1, -(sp)
 		writeAddress(0x000010U, uint16_t{0x4c9fU});
 		writeAddress(0x000012U, uint16_t{0x001eU}); // movem.w +(sp), d1-d4
-		writeAddress(0x000014U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000014U, uint16_t{0x3043U}); // mova.w d3, a0
+		writeAddress(0x000016U, uint16_t{0x4cd8U});
+		writeAddress(0x000018U, uint16_t{0x2418U}); // movem.l +(a0), d3-d4/a2,a5
+		writeAddress(0x00001aU, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
 		// Set up all the data registers so it's easy to tell which one got put where
@@ -1376,6 +1379,20 @@ private:
 		assertEqual(cpu.readDataRegister(2U), 0x00000002U);
 		assertEqual(cpu.readDataRegister(3U), 0x00000100U);
 		assertEqual(cpu.readDataRegister(4U), 0x00000200U);
+		// Step the fifth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000016U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readAddrRegister(0U), 0x00000100U);
+		// Step the sixth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000001aU);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readAddrRegister(0U), 0x00000110U);
+		assertEqual(cpu.readDataRegister(3U), 0x01000100U);
+		assertEqual(cpu.readDataRegister(4U), 0x02000200U);
+		assertEqual(cpu.readAddrRegister(2U), 0x03000300U);
+		assertEqual(cpu.readAddrRegister(5U), 0x04000400U);
 		// Step the final instruction to complete the test
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
