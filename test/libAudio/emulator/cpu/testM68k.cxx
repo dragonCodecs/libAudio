@@ -1306,12 +1306,14 @@ private:
 		writeAddress(0x000000U, uint16_t{0xc0fcU});
 		writeAddress(0x000002U, uint16_t{0x0003U}); // mulu.w #3, d0
 		writeAddress(0x000004U, uint16_t{0xc2c0U}); // mulu.w d0, d1
-		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000006U, uint16_t{0xc4c2U}); // mulu.w d2, d2
+		writeAddress(0x000008U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up d0 and d1 to sensible values
+		// Set up d0, d1, and d2 to sensible values
 		cpu.writeDataRegister(0U, 0x0ca78132U);
 		cpu.writeDataRegister(1U, 0x00010000U);
+		cpu.writeDataRegister(2U, 0x0000ffffU);
 		// Validate starting conditions
 		assertEqual(cpu.readProgramCounter(), 0x00000000U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
@@ -1329,6 +1331,11 @@ private:
 		assertEqual(cpu.readProgramCounter(), 0x00000006U);
 		assertEqual(cpu.readDataRegister(1U), 0x00000000U);
 		assertEqual(cpu.readStatus(), 0x0004U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readDataRegister(2U), 0xfffe0001U);
+		assertEqual(cpu.readStatus(), 0x0008U);
 		// Step the final instruction to complete the test
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
