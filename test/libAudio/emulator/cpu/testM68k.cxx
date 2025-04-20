@@ -1305,6 +1305,9 @@ private:
 		writeAddress(0x000000U, uint16_t{0x48f8U});
 		writeAddress(0x000002U, uint16_t{0x00ffU});
 		writeAddress(0x000004U, uint16_t{0x0100U}); // movem.l d0-d7, ($0100).w
+		writeAddress(0x000006U, uint16_t{0x48f8U});
+		writeAddress(0x000008U, uint16_t{0xff00U});
+		writeAddress(0x00000aU, uint16_t{0x0100U}); // movem.l a0-a7, ($0100).w
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
 		// Set up all the data registers so it's easy to tell which one got put where
@@ -1316,6 +1319,15 @@ private:
 		cpu.writeDataRegister(5U, 0x00060006U);
 		cpu.writeDataRegister(6U, 0x00070007U);
 		cpu.writeDataRegister(7U, 0x00080008U);
+		// Set up all the address registers so it's easy to tell which one got put where
+		cpu.writeAddrRegister(0U, 0x01000100U);
+		cpu.writeAddrRegister(1U, 0x02000200U);
+		cpu.writeAddrRegister(2U, 0x03000300U);
+		cpu.writeAddrRegister(3U, 0x04000400U);
+		cpu.writeAddrRegister(4U, 0x05000500U);
+		cpu.writeAddrRegister(5U, 0x06000600U);
+		cpu.writeAddrRegister(6U, 0x07000700U);
+		// NB, we skip a7 as that's the stack pointer and we know what value that has already.
 		// Validate starting conditions
 		assertEqual(cpu.readProgramCounter(), 0x00000000U);
 		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
@@ -1330,6 +1342,17 @@ private:
 		assertEqual(readAddress<uint32_t>(0x000114U), 0x00060006U);
 		assertEqual(readAddress<uint32_t>(0x000118U), 0x00070007U);
 		assertEqual(readAddress<uint32_t>(0x00011cU), 0x00080008U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(readAddress<uint32_t>(0x000100U), 0x01000100U);
+		assertEqual(readAddress<uint32_t>(0x000104U), 0x02000200U);
+		assertEqual(readAddress<uint32_t>(0x000108U), 0x03000300U);
+		assertEqual(readAddress<uint32_t>(0x00010cU), 0x04000400U);
+		assertEqual(readAddress<uint32_t>(0x000110U), 0x05000500U);
+		assertEqual(readAddress<uint32_t>(0x000114U), 0x06000600U);
+		assertEqual(readAddress<uint32_t>(0x000118U), 0x07000700U);
+		assertEqual(readAddress<uint32_t>(0x00011cU), 0x007ffffcU);
 	}
 
 	void testMOVQ()
