@@ -1425,7 +1425,8 @@ private:
 		writeAddress(0x000102U, uint16_t{0x8000U});
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up d0 to a sensible value
+		// Set up a0 and d0 to sensible values
+		cpu.writeAddrRegister(0U, 0x00000100U);
 		cpu.writeDataRegister(0U, 0xffff00ffU);
 		// Validate starting conditions
 		assertEqual(cpu.readProgramCounter(), 0x00000000U);
