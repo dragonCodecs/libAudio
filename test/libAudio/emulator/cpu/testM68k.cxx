@@ -1267,6 +1267,44 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMOVQ()
+	{
+		writeAddress(0x000000U, uint16_t{0x7080U}); // movq #$80, d0
+		writeAddress(0x000002U, uint16_t{0x7000U}); // movq #$00, d0
+		writeAddress(0x000004U, uint16_t{0x705aU}); // movq #$5a, d0
+		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Zero d0 so it's easy to see if the first move works properly
+		cpu.writeDataRegister(0U, 0x00000000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x0017U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readDataRegister(0U), 0xffffff80U);
+		assertEqual(cpu.readStatus(), 0x0018U);
+		// Set the status register to some other improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x000bU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+		assertEqual(cpu.readStatus(), 0x0004U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readDataRegister(0U), 0x0000005aU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testMULS()
 	{
 		writeAddress(0x000000U, uint16_t{0xc1fcU});
@@ -1739,6 +1777,7 @@ public:
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
+		CXX_TEST(testMOVQ)
 		CXX_TEST(testMULS)
 		CXX_TEST(testMULU)
 		CXX_TEST(testNEG)
