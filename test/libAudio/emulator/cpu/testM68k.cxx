@@ -1308,6 +1308,11 @@ private:
 		writeAddress(0x000006U, uint16_t{0x48f8U});
 		writeAddress(0x000008U, uint16_t{0xff00U});
 		writeAddress(0x00000aU, uint16_t{0x0100U}); // movem.l a0-a7, ($0100).w
+		writeAddress(0x00000cU, uint16_t{0x48a7U});
+		writeAddress(0x00000eU, uint16_t{0xc0c0U}); // movem.w d0-d1/a0-a1, -(sp)
+		writeAddress(0x000010U, uint16_t{0x4c9fU});
+		writeAddress(0x000012U, uint16_t{0x001eU}); // movem.w +(sp), d1-d4
+		writeAddress(0x000014U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
 		// Set up all the data registers so it's easy to tell which one got put where
@@ -1334,6 +1339,7 @@ private:
 		// Step the first instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
 		assertEqual(readAddress<uint32_t>(0x000100U), 0x00010001U);
 		assertEqual(readAddress<uint32_t>(0x000104U), 0x00020002U);
 		assertEqual(readAddress<uint32_t>(0x000108U), 0x00030003U);
@@ -1345,6 +1351,7 @@ private:
 		// Step the second instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
 		assertEqual(readAddress<uint32_t>(0x000100U), 0x01000100U);
 		assertEqual(readAddress<uint32_t>(0x000104U), 0x02000200U);
 		assertEqual(readAddress<uint32_t>(0x000108U), 0x03000300U);
@@ -1353,6 +1360,26 @@ private:
 		assertEqual(readAddress<uint32_t>(0x000114U), 0x06000600U);
 		assertEqual(readAddress<uint32_t>(0x000118U), 0x07000700U);
 		assertEqual(readAddress<uint32_t>(0x00011cU), 0x007ffffcU);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000010U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffff4U);
+		assertEqual(readAddress<uint16_t>(0x7ffffaU), 0x0200U);
+		assertEqual(readAddress<uint16_t>(0x7ffff8U), 0x0100U);
+		assertEqual(readAddress<uint16_t>(0x7ffff6U), 0x0002U);
+		assertEqual(readAddress<uint16_t>(0x7ffff4U), 0x0001U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000014U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readDataRegister(1U), 0x00000001U);
+		assertEqual(cpu.readDataRegister(2U), 0x00000002U);
+		assertEqual(cpu.readDataRegister(3U), 0x00000100U);
+		assertEqual(cpu.readDataRegister(4U), 0x00000200U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
 	void testMOVQ()
