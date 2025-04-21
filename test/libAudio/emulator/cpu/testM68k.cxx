@@ -1357,6 +1357,51 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMOVESpecialCCR()
+	{
+		writeAddress(0x000000U, uint16_t{0x44c0U}); // move d0, ccr
+		writeAddress(0x000002U, uint16_t{0x42c2U}); // move ccr, d2
+		writeAddress(0x000004U, uint16_t{0x44c1U}); // move d1, ccr
+		writeAddress(0x000006U, uint16_t{0x42c2U}); // move ccr, d2
+		writeAddress(0x000008U, uint16_t{0x4e75U}); // rts to end the test
+		// Set the CPU to execute this sequence in user mode
+		cpu.writeStatus(0x0000U);
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Set up d0 and d1 to sensible values
+		cpu.writeDataRegister(0U, 0x0000270fU);
+		cpu.writeDataRegister(1U, 0x00000015U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readStatus(), 0x000fU);
+		// Step the second instruction and validate,
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readStatus(), 0x000fU);
+		assertEqual(cpu.readDataRegister(2U), 0x0000000fU);
+		// Switch into supervisor mode
+		cpu.writeStatus(0x2000);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readStatus(), 0x2015U);
+		// Step the fourth instruction and validate,
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readStatus(), 0x2015U);
+		assertEqual(cpu.readDataRegister(2U), 0x00000015U);
+		// Switch back into user mode
+		cpu.writeStatus(0x0000);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testMOVESpecialSR()
 	{
 		writeAddress(0x000000U, uint16_t{0x46c0U}); // move d0, sr
@@ -2137,6 +2182,7 @@ public:
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
 		CXX_TEST(testMOVE)
+		CXX_TEST(testMOVESpecialCCR)
 		CXX_TEST(testMOVESpecialSR)
 		CXX_TEST(testMOVEA)
 		CXX_TEST(testMOVEM)
