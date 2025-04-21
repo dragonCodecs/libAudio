@@ -1318,10 +1318,10 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
-	void testMOVA()
+	void testMOVEA()
 	{
-		writeAddress(0x000000U, uint16_t{0x3048U}); // mova.w a0, a0
-		writeAddress(0x000002U, uint16_t{0x2040U}); // mova.l d0, a0
+		writeAddress(0x000000U, uint16_t{0x3048U}); // movea.w a0, a0
+		writeAddress(0x000002U, uint16_t{0x2040U}); // movea.l d0, a0
 		writeAddress(0x000004U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -1351,7 +1351,7 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
-	void testMOVM()
+	void testMOVEM()
 	{
 		writeAddress(0x000000U, uint16_t{0x48f8U});
 		writeAddress(0x000002U, uint16_t{0x00ffU});
@@ -1363,7 +1363,7 @@ private:
 		writeAddress(0x00000eU, uint16_t{0xc0c0U}); // movem.w d0-d1/a0-a1, -(sp)
 		writeAddress(0x000010U, uint16_t{0x4c9fU});
 		writeAddress(0x000012U, uint16_t{0x001eU}); // movem.w +(sp), d1-d4
-		writeAddress(0x000014U, uint16_t{0x3043U}); // mova.w d3, a0
+		writeAddress(0x000014U, uint16_t{0x3043U}); // movea.w d3, a0
 		writeAddress(0x000016U, uint16_t{0x4cd8U});
 		writeAddress(0x000018U, uint16_t{0x2418U}); // movem.l +(a0), d3-d4/a2,a5
 		writeAddress(0x00001aU, uint16_t{0x4e75U}); // rts to end the test
@@ -1450,18 +1450,18 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
-	void testMOVP()
+	void testMOVEP()
 	{
 		writeAddress(0x000000U, uint16_t{0x0188U});
-		writeAddress(0x000002U, uint16_t{0x0000U}); // movp.w d0, $0(a0)
+		writeAddress(0x000002U, uint16_t{0x0000U}); // movep.w d0, $0(a0)
 		writeAddress(0x000004U, uint16_t{0x01c8U});
-		writeAddress(0x000006U, uint16_t{0x0011U}); // movp.l d0, $11(a0)
+		writeAddress(0x000006U, uint16_t{0x0011U}); // movep.l d0, $11(a0)
 		writeAddress(0x000008U, uint16_t{0x0308U});
-		writeAddress(0x00000aU, uint16_t{0x0000U}); // movp.w $0(a0), d1
+		writeAddress(0x00000aU, uint16_t{0x0000U}); // movep.w $0(a0), d1
 		writeAddress(0x00000cU, uint16_t{0x0548U});
-		writeAddress(0x00000eU, uint16_t{0x0010U}); // movp.l $10(a0), d2
+		writeAddress(0x00000eU, uint16_t{0x0010U}); // movep.l $10(a0), d2
 		writeAddress(0x000010U, uint16_t{0x0548U});
-		writeAddress(0x000012U, uint16_t{0x0011U}); // movp.l $11(a0), d2
+		writeAddress(0x000012U, uint16_t{0x0011U}); // movep.l $11(a0), d2
 		writeAddress(0x000014U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -1507,11 +1507,11 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
-	void testMOVQ()
+	void testMOVEQ()
 	{
-		writeAddress(0x000000U, uint16_t{0x7080U}); // movq #$80, d0
-		writeAddress(0x000002U, uint16_t{0x7000U}); // movq #$00, d0
-		writeAddress(0x000004U, uint16_t{0x705aU}); // movq #$5a, d0
+		writeAddress(0x000000U, uint16_t{0x7080U}); // moveq #$80, d0
+		writeAddress(0x000002U, uint16_t{0x7000U}); // moveq #$00, d0
+		writeAddress(0x000004U, uint16_t{0x705aU}); // moveq #$5a, d0
 		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -2055,10 +2055,10 @@ public:
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
-		CXX_TEST(testMOVA)
-		CXX_TEST(testMOVM)
-		CXX_TEST(testMOVP)
-		CXX_TEST(testMOVQ)
+		CXX_TEST(testMOVEA)
+		CXX_TEST(testMOVEM)
+		CXX_TEST(testMOVEP)
+		CXX_TEST(testMOVEQ)
 		CXX_TEST(testMULS)
 		CXX_TEST(testMULU)
 		CXX_TEST(testNEG)
