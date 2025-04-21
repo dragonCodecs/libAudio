@@ -1407,6 +1407,11 @@ private:
 		writeAddress(0x000006U, uint16_t{0x0011U}); // movp.l d0, $11(a0)
 		writeAddress(0x000008U, uint16_t{0x0308U});
 		writeAddress(0x00000aU, uint16_t{0x0000U}); // movp.w $0(a0), d1
+		writeAddress(0x00000cU, uint16_t{0x0548U});
+		writeAddress(0x00000eU, uint16_t{0x0010U}); // movp.l $10(a0), d2
+		writeAddress(0x000010U, uint16_t{0x0548U});
+		writeAddress(0x000012U, uint16_t{0x0011U}); // movp.l $11(a0), d2
+		writeAddress(0x000014U, uint16_t{0x4e75U}); // rts to end the test
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
 		// Set up a0 and d0 to sensible values
@@ -1433,6 +1438,22 @@ private:
 		assertEqual(readAddress<uint16_t>(0x000114U), 0x00acU);
 		assertEqual(readAddress<uint16_t>(0x000116U), 0x00a7U);
 		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(cpu.readDataRegister(1U), 0x0000aca7U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000010U);
+		assertEqual(cpu.readDataRegister(2U), 0x00000000U);
+		// Step the fifth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000014U);
+		assertEqual(cpu.readDataRegister(2U), 0xfeedaca7U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
 	void testMOVQ()
