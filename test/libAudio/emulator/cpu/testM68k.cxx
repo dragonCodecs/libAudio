@@ -2132,9 +2132,14 @@ private:
 		assertEqual(cpu.readStatus(), 0x0008U);
 		// Step the final instruction to complete the test
 		runStep();
-		cpu.displayRegs();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
+	void testDisplayRegs()
+	{
+		// TODO: Actually do something with this.. this just guarantees coverage for now
+		cpu.displayRegs();
 	}
 
 public:
@@ -2199,6 +2204,7 @@ public:
 		CXX_TEST(testSWAP)
 		CXX_TEST(testTRAP)
 		CXX_TEST(testTST)
+		CXX_TEST(testDisplayRegs)
 	}
 };
 
