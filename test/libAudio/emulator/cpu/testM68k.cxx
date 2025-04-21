@@ -383,6 +383,17 @@ private:
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+
+		// This sequence should trap
+		writeAddress(0x000000U, uint16_t{0x027cU});
+		writeAddress(0x000002U, uint16_t{0xffffU}); // andi #$ffff, sr
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep(true);
 	}
 
 	void testADDQ()
