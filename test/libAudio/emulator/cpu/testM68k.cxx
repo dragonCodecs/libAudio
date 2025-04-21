@@ -1444,6 +1444,48 @@ private:
 		assertEqual(cpu.readStatus(), 0x0015U);
 	}
 
+	void testMOVESpecialUSP()
+	{
+		writeAddress(0x000000U, uint16_t{0x4e60U}); // move a0, usp
+		writeAddress(0x000002U, uint16_t{0x4e69U}); // move usp, a1
+		writeAddress(0x000004U, uint16_t{0x4e75U}); // rts to end the test
+		// Set the CPU to execute this sequence in supervisor mode
+		cpu.writeStatus(0x0000U);
+		cpu.executeFrom(0x00000000U, 0x00800000U, false);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x2000U);
+		// Set up a0 to a sensible value
+		cpu.writeAddrRegister(0U, 0x1234abcdU);
+		// Step the first instruction and validate
+		runStep();
+		// Switch into user mode
+		cpu.writeStatus(0x0000);
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readAddrRegister(7U), 0x1234abcdU);
+		// Update the USP with a new value then switch back into supervisor mode
+		cpu.writeAddrRegister(7U, 0xdeadbeefU);
+		cpu.writeStatus(0x2000);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readAddrRegister(1U), 0xdeadbeefU);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+
+		// Set the CPU Uback up to execute the same sequence in user mode
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0000U);
+		// Step the first instruction and validate that it traps
+		runStep(true);
+	}
+
 	void testMOVEA()
 	{
 		writeAddress(0x000000U, uint16_t{0x3048U}); // movea.w a0, a0
@@ -2189,6 +2231,7 @@ public:
 		CXX_TEST(testMOVE)
 		CXX_TEST(testMOVESpecialCCR)
 		CXX_TEST(testMOVESpecialSR)
+		CXX_TEST(testMOVESpecialUSP)
 		CXX_TEST(testMOVEA)
 		CXX_TEST(testMOVEM)
 		CXX_TEST(testMOVEP)
