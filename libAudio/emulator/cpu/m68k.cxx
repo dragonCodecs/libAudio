@@ -4571,7 +4571,15 @@ stepResult_t motorola68000_t::dispatchORISpecialCCR(const decodedOperation_t &in
 	if (insn.ry == 9U && status.excludes(m68kStatusBits_t::supervisor))
 		return {true, true, 0U};
 	// Extract the immediate that follows this instruction and widen it to 16-bit
-	const auto rhs{static_cast<uint16_t>(readImmediateUnsigned(1U))};
+	const auto rhs
+	{
+		[&]()
+		{
+			if (insn.ry == 9U)
+				return static_cast<uint16_t>(readImmediateUnsigned(2U));
+			return static_cast<uint16_t>(readImmediateUnsigned(1U));
+		}()
+	};
 	// Grab the SR
 	const auto lhs{status.toRaw()};
 	// Apply the set and write it back
