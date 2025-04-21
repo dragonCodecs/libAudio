@@ -1318,6 +1318,45 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMOVE()
+	{
+		writeAddress(0x000000U, uint16_t{0x103cU});
+		writeAddress(0x000002U, uint16_t{0x0048U}); // move.b #$48, d0
+		writeAddress(0x000004U, uint16_t{0x303cU});
+		writeAddress(0x000006U, uint16_t{0x0000U}); // move.w #0, d0
+		writeAddress(0x000008U, uint16_t{0x203cU});
+		writeAddress(0x00000aU, uint32_t{0xff000000U}); // move.w #$ff000000, d0
+		writeAddress(0x00000eU, uint16_t{0x4e75U}); // rts to end the test
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000048U);
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
+		assertEqual(cpu.readStatus(), 0x0014U);
+		// Set the status register to some other value that makes it easy to see if it changes
+		cpu.writeStatus(0x0000U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000eU);
+		assertEqual(cpu.readDataRegister(0U), 0xff000000U);
+		assertEqual(cpu.readStatus(), 0x0008U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testMOVEA()
 	{
 		writeAddress(0x000000U, uint16_t{0x3048U}); // movea.w a0, a0
@@ -2055,6 +2094,7 @@ public:
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
+		CXX_TEST(testMOVE)
 		CXX_TEST(testMOVEA)
 		CXX_TEST(testMOVEM)
 		CXX_TEST(testMOVEP)
