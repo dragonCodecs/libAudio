@@ -4312,9 +4312,10 @@ stepResult_t motorola68000_t::dispatchMOVEP(const decodedOperation_t &insn) noex
 	// Adjust the program counter past the instruction
 	programCounter += insn.trailingBytes;
 	// Grab the address to be used with memory (and apply the displacement)
-	const auto address{(uint32_t{addrRegister(insn.ry) & 0xfffffffeU}) + displacement};
+	const auto unalignedAddress{uint32_t{addrRegister(insn.ry)} + displacement};
+	const auto address{unalignedAddress & 0xfffffffeU};
 	// Figure out if the address is even or odd so we put the bytes in the right locations in memory
-	const auto u16Shift{addrRegister(insn.ry) & 1U ? 0U : 8U};
+	const auto u16Shift{unalignedAddress & 1U ? 0U : 8U};
 	// Figure out the starting offset for (un)packing the register
 	const auto startOffset{insn.operationSize - 1U};
 	// Are we moving reg -> mem or mem -> reg?
