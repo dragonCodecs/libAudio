@@ -1357,6 +1357,48 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMOVESpecialSR()
+	{
+		writeAddress(0x000000U, uint16_t{0x46c0U}); // move d0, sr
+		writeAddress(0x000002U, uint16_t{0x40c2U}); // move sr, d2
+		writeAddress(0x000004U, uint16_t{0x46c1U}); // move d1, sr
+		writeAddress(0x000006U, uint16_t{0x40c2U}); // move sr, d2
+		writeAddress(0x000008U, uint16_t{0x46c0U}); // move d0, sr
+		// Set the CPU to execute this sequence in supervisor mode
+		cpu.writeStatus(0x0000U);
+		cpu.executeFrom(0x00000000U, 0x00800000U, false);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x2000U);
+		// Set up d0 and d1 to sensible values
+		cpu.writeDataRegister(0U, 0x0000270fU);
+		cpu.writeDataRegister(1U, 0x00000015U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readStatus(), 0x270fU);
+		// Step the second instruction and validate,
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readStatus(), 0x270fU);
+		assertEqual(cpu.readDataRegister(2U), 0x0000270fU);
+		// Step the third instruction and validate
+		// this transitions us out of supervisor mode
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(cpu.readStatus(), 0x0015U);
+		// Step the fourth instruction and validate,
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readStatus(), 0x0015U);
+		assertEqual(cpu.readDataRegister(2U), 0x0015U);
+		// Step the fifth instruction and validate (this should trap)
+		runStep(true);
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(cpu.readStatus(), 0x0015U);
+	}
+
 	void testMOVEA()
 	{
 		writeAddress(0x000000U, uint16_t{0x3048U}); // movea.w a0, a0
@@ -2095,6 +2137,7 @@ public:
 		CXX_TEST(testLSL)
 		CXX_TEST(testLSR)
 		CXX_TEST(testMOVE)
+		CXX_TEST(testMOVESpecialSR)
 		CXX_TEST(testMOVEA)
 		CXX_TEST(testMOVEM)
 		CXX_TEST(testMOVEP)
