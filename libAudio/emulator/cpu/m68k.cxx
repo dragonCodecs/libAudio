@@ -4198,11 +4198,11 @@ stepResult_t motorola68000_t::dispatchMOVESpecialUSP(const decodedOperation_t &i
 	const auto direction{insn.rx == 10U};
 	// Using that, dispatch the move
 	if (direction)
-		// Copy the USP to the target location
-		writeEffectiveAddress(insn.mode, insn.ry, userStackPointer);
+		// Copy the USP to the target address register
+		addrRegister(insn.ry) = userStackPointer;
 	else
 		// Grab the new stack pointer value and stuff it into the register
-		userStackPointer = readEffectiveAddress<uint32_t>(insn.mode, insn.rx);
+		userStackPointer = addrRegister(insn.rx);
 
 	// Get done, execution takes a fixed amount of time thankfuly
 	return {true, false, 4U};
