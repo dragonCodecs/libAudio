@@ -1399,6 +1399,42 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testMOVP()
+	{
+		writeAddress(0x000000U, uint16_t{0x0188U});
+		writeAddress(0x000002U, uint16_t{0x0000U}); // movp.w d0, $0(a0)
+		writeAddress(0x000004U, uint16_t{0x01c8U});
+		writeAddress(0x000006U, uint16_t{0x0011U}); // movp.l d0, $11(a0)
+		writeAddress(0x000008U, uint16_t{0x0308U});
+		writeAddress(0x00000aU, uint16_t{0x0000U}); // movp.w $0(a0), d1
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up a0 and d0 to sensible values
+		cpu.writeAddrRegister(0U, 0x00000100U);
+		cpu.writeDataRegister(0U, 0xfeedaca7U);
+		// Set the status register to some improbable value that makes it easy to see if it changes
+		cpu.writeStatus(0x001fU);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(readAddress<uint16_t>(0x000100U), 0xac00U);
+		assertEqual(readAddress<uint16_t>(0x000102U), 0xa700U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Set the status register to some other value that makes it easy to see if it changes
+		cpu.writeStatus(0x0000U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(readAddress<uint16_t>(0x000110U), 0x00feU);
+		assertEqual(readAddress<uint16_t>(0x000112U), 0x00edU);
+		assertEqual(readAddress<uint16_t>(0x000114U), 0x00acU);
+		assertEqual(readAddress<uint16_t>(0x000116U), 0x00a7U);
+		assertEqual(cpu.readStatus(), 0x0000U);
+	}
+
 	void testMOVQ()
 	{
 		writeAddress(0x000000U, uint16_t{0x7080U}); // movq #$80, d0
@@ -1912,6 +1948,7 @@ public:
 		CXX_TEST(testLSR)
 		CXX_TEST(testMOVA)
 		CXX_TEST(testMOVM)
+		CXX_TEST(testMOVP)
 		CXX_TEST(testMOVQ)
 		CXX_TEST(testMULS)
 		CXX_TEST(testMULU)
