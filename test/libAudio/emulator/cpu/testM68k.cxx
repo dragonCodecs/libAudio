@@ -1076,6 +1076,49 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testEORI()
+	{
+		writeAddress(0x000000U, uint16_t{0x0a38U});
+		writeAddress(0x000002U, uint16_t{0x0024U});
+		writeAddress(0x000004U, uint16_t{0x0100U}); // eori.b #$24, $0100.w
+		writeAddress(0x000006U, uint16_t{0x0a40U});
+		writeAddress(0x000008U, uint16_t{0x0000U}); // eori.w #0, d0
+		writeAddress(0x00000aU, uint16_t{0x0a80U});
+		writeAddress(0x00000cU, uint32_t{0xc0000001U}); // eori.l #$c0000001, d0
+		writeAddress(0x000010U, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint8_t{0x21U});
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Set up d0 so we get zero = true from the second instruction, but get something interesting for the 3rd
+		cpu.writeDataRegister(0U, 0x45a00000U);
+		// Set the carry and overflow bits in the status register so we can observe them being cleared
+		// And the extend bit to make sure that's left alone
+		cpu.writeStatus(0x0013U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0013U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		assertEqual(readAddress<uint8_t>(0x000100U), uint8_t{0x05U});
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(cpu.readDataRegister(0U), 0x45a00000U);
+		assertEqual(cpu.readStatus(), 0x0014U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000010U);
+		assertEqual(cpu.readDataRegister(0U), 0x85a00001U);
+		assertEqual(cpu.readStatus(), 0x0018U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testEXT()
 	{
 		writeAddress(0x000000U, uint16_t{0x4880U}); // ext.w d0
@@ -1901,8 +1944,7 @@ private:
 		writeAddress(0x000006U, uint16_t{0x0040U});
 		writeAddress(0x000008U, uint16_t{0x0000U}); // ori.w #0, d0
 		writeAddress(0x00000aU, uint16_t{0x0080U});
-		writeAddress(0x00000cU, uint16_t{0x8000U});
-		writeAddress(0x00000eU, uint16_t{0x0001U}); // ori.l #$80000001, d0
+		writeAddress(0x00000cU, uint32_t{0x80000001U}); // ori.l #$80000001, d0
 		writeAddress(0x000010U, uint16_t{0x4e75U}); // rts to end the test
 		writeAddress(0x000100U, uint8_t{0x01U});
 		// Set the CPU to execute this sequence
@@ -2307,6 +2349,7 @@ public:
 		CXX_TEST(testCMPI)
 		CXX_TEST(testDIVS)
 		CXX_TEST(testDIVU)
+		CXX_TEST(testEORI)
 		CXX_TEST(testEXT)
 		CXX_TEST(testLEA)
 		CXX_TEST(testLSL)
