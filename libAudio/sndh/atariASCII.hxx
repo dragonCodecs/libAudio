@@ -40,8 +40,8 @@ constexpr static inline std::array<std::string_view, 256> atariChars
 	"h"sv, "i"sv, "j"sv, "k"sv,
 	"l"sv, "m"sv, "n"sv, "o"sv,
 	"p"sv, "q"sv, "r"sv, "s"sv,
-	"t"sv, "u"sv, "v"sv, "x"sv,
-	"w"sv, "y"sv, "z"sv, "{"sv,
+	"t"sv, "u"sv, "v"sv, "w"sv,
+	"x"sv, "y"sv, "z"sv, "{"sv,
 	"|"sv, "}"sv, "~"sv, u8"△"sv,
 
 	u8"Ç"sv, u8"ü"sv, u8"é"sv, u8"â"sv,
