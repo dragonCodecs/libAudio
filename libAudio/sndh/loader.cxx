@@ -72,32 +72,6 @@ void readString(sndhDecruncher_t &file, std::unique_ptr<char []> &dst)
 	copyComment(dst, result.data());
 }
 
-uint16_t readFrequency(sndhDecruncher_t &file, const char *const prefix)
-{
-	if (!prefix[0] || !isNumber(prefix[0]))
-		throw std::exception{};
-	uint16_t result{uint8_t(prefix[0] - '0')};
-	if (!prefix[1])
-		return result;
-	else if (!isNumber(prefix[1]))
-		throw std::exception{};
-	result *= 10;
-	result += prefix[1] - '0';
-
-	char value{-1};
-	while (value != 0)
-	{
-		if (!file.read(value) || (value && !isNumber(value)))
-			throw std::exception{};
-		else if (value)
-		{
-			result *= 10;
-			result += value - '0';
-		}
-	}
-	return result;
-}
-
 bool sndhLoader_t::readMeta()
 {
 	std::array<char, 4U> tagType{};
@@ -138,7 +112,9 @@ bool sndhLoader_t::readMeta()
 			tagType == typeTimerD || tagType == typeTimerVBL)
 		{
 			_metadata.timer = tagType[1];
-			_metadata.timerFrequency = readFrequency(_data, tagType.data() + 2);
+			auto frequency = readString(_data);
+			frequency.insert(0U, tagType.data() + 2, 2U);
+			_metadata.timerFrequency = toInt_t<uint16_t>{frequency.c_str()}.fromInt();
 		}
 		else if (tagType == typeYear)
 		{
