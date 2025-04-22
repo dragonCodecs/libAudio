@@ -2577,6 +2577,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchScc(instruction);
 		case instruction_t::sub:
 			return dispatchSUB(instruction);
+		case instruction_t::suba:
+			return dispatchSUBA(instruction);
 		case instruction_t::subq:
 			return dispatchSUBQ(instruction);
 		case instruction_t::swap:
@@ -4695,6 +4697,16 @@ stepResult_t motorola68000_t::dispatchSUB(const decodedOperation_t &insn) noexce
 
 	// Get done and figure out how many cycles that took
 	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchSUBA(const decodedOperation_t &insn) noexcept
+{
+	// Extract the value to be subtracted from the target address register
+	const auto value{readEffectiveAddress<int32_t>(insn.mode, insn.ry, insn.operationSize)};
+	// Now update the target address register
+	addrRegister(insn.rx) -= value;
+	// Figure out how long this operation took and finish up
+	return {true, false, insn.operationSize == 2U ? 8U : 6U};
 }
 
 stepResult_t motorola68000_t::dispatchSUBQ(const decodedOperation_t &insn) noexcept
