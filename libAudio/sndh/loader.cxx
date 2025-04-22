@@ -114,10 +114,9 @@ bool sndhLoader_t::readMeta()
 			readString(_data, _metadata.converter);
 		else if (tagType == typeTuneCount)
 		{
-			char junk{};
-			if (!_data.read(junk) || junk)
-				return false;
-			_metadata.tuneCount = toInt_t<uint8_t>{tagType.data() + 2, 2}.fromInt();
+			auto count = readString(_data);
+			count.insert(0U, tagType.data() + 2, 2U);
+			_metadata.tuneCount = toInt_t<uint8_t>{count.c_str()}.fromInt();
 			_metadata.tuneTimes = {_metadata.tuneCount};
 			_metadata.tuneNames = {_metadata.tuneCount};
 		}
