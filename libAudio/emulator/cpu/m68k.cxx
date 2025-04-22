@@ -893,10 +893,10 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 		case 0x0a00U:
 		case 0x0a40U:
 		case 0x0a80U:
-			// ORI is not allowed with address registers
+			// EORI is not allowed with address registers
 			if (eaMode == 1U)
 				break;
-			// ORI is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
+			// EORI is not allowed with `#<data>` mode or PC-rel data register usage, only u16 and u32 indirect mode 7
 			if (eaMode == 7U && !(eaReg == 0U || eaReg == 1U))
 				break;
 			return
@@ -2312,6 +2312,15 @@ decodedOperation_t motorola68000_t::decodeInstruction(const uint16_t insn) const
 				{},
 				1U, 0U, 0U,
 				2U, // 16-bit immediate follows (8 bits used)
+			};
+		case 0x0a7cU:
+			return
+			{
+				instruction_t::eori,
+				0U, 9U, // 9 is a special register number (not otherwise valid) indicating SR.
+				{},
+				1U, 0U, 0U,
+				2U, // 16-bit immediate follows
 			};
 		case 0x4afcU:
 			return {instruction_t::illegal};
