@@ -139,6 +139,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchEXT(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchEXTB(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchJMP(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchJSR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLEA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLSL(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchLSR(const decodedOperation_t &insn) noexcept;

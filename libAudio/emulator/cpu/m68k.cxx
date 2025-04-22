@@ -2554,6 +2554,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchEXTB(instruction);
 		case instruction_t::jmp:
 			return dispatchJMP(instruction);
+		case instruction_t::jsr:
+			return dispatchJSR(instruction);
 		case instruction_t::lea:
 			return dispatchLEA(instruction);
 		case instruction_t::lsl:
@@ -4047,6 +4049,19 @@ stepResult_t motorola68000_t::dispatchJMP(const decodedOperation_t &insn) noexce
 	// and then load that into the program counter, competing the jump
 	programCounter = computeEffectiveAddress(insn.mode, insn.ry, 4U);
 	// Figure out how long that took and return
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchJSR(const decodedOperation_t &insn) noexcept
+{
+	// Extract the target address to jump to for this instruction
+	const auto destination{readEffectiveAddress<int32_t>(insn.mode, insn.ry, 4U)};
+	// Now we have the target, push the post-instruction program counter to stack
+	auto &stackPointer{activeStackPointer()};
+	stackPointer -= 4U;
+	_peripherals.writeAddress(stackPointer, programCounter);
+	// Now update the program counter to the new execution address and get done
+	programCounter = static_cast<uint32_t>(destination);
 	return {true, false, 0U};
 }
 
