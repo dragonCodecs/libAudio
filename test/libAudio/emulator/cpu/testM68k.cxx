@@ -1937,6 +1937,55 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testORISpecial()
+	{
+		writeAddress(0x000000U, uint16_t{0x003cU});
+		writeAddress(0x000002U, uint16_t{0x000aU}); // ori #$0a, ccr
+		writeAddress(0x000004U, uint16_t{0x003cU});
+		writeAddress(0x000006U, uint16_t{0xff15U}); // ori #$15, ccr w/ intentional value misencode
+		writeAddress(0x000008U, uint16_t{0x007cU});
+		writeAddress(0x00000aU, uint16_t{0x070eU}); // ori #$070e, sr
+		writeAddress(0x00000cU, uint16_t{0x4e75U}); // rts to end the test
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set the status register to some improbable value that makes it easy to how it changes
+		cpu.writeStatus(0x0000U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readStatus(), 0x000aU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readStatus(), 0x001fU);
+		// Switch the processor into supervisor mode
+		cpu.writeStatus(0x2000U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+		assertEqual(cpu.readStatus(), 0x270eU);
+		// Switch the processor back out into user mode
+		cpu.writeStatus(0x0000U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+
+		// This sequence should trap
+		writeAddress(0x000000U, uint16_t{0x007cU});
+		writeAddress(0x000002U, uint16_t{0x2705U}); // ori #$2705, sr
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Step the first instruction and validate
+		runStep(true);
+	}
+
 	void testScc()
 	{
 		writeAddress(0x000000U, uint16_t{0x50c0U}); // st d0
@@ -2241,6 +2290,7 @@ public:
 		CXX_TEST(testNEG)
 		CXX_TEST(testOR)
 		CXX_TEST(testORI)
+		CXX_TEST(testORISpecial)
 		CXX_TEST(testScc)
 		CXX_TEST(testSUB)
 		CXX_TEST(testSUBQ)
