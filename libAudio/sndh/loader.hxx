@@ -32,6 +32,7 @@ struct sndhMetadata_t final
 	uint16_t timerFrequency;
 	uint32_t year;
 	fixedVector_t<uint16_t> tuneTimes;
+	fixedVector_t<std::unique_ptr<char []>> tuneNames;
 };
 
 struct sndhLoader_t

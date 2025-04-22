@@ -15,6 +15,7 @@ constexpr std::array<char, 4> typeTitle{'T', 'I', 'T', 'L'};
 constexpr std::array<char, 4> typeComposer{'C', 'O', 'M', 'M'};
 constexpr std::array<char, 4> typeRipper{'R', 'I', 'P', 'P'};
 constexpr std::array<char, 4> typeConverter{'C', 'O', 'N', 'V'};
+constexpr std::array<char, 4> typeTuneNames{'#', '!', 'S', 'N'};
 constexpr std::array<char, 2> typeTuneCount{'#', '#'};
 constexpr std::array<char, 2> typeTimerA{'T', 'A'};
 constexpr std::array<char, 2> typeTimerB{'T', 'B'};
@@ -118,6 +119,14 @@ bool sndhLoader_t::readMeta()
 				return false;
 			_metadata.tuneCount = toInt_t<uint8_t>{tagType.data() + 2, 2}.fromInt();
 			_metadata.tuneTimes = {_metadata.tuneCount};
+			_metadata.tuneNames = {_metadata.tuneCount};
+		}
+		else if (tagType == typeTuneNames)
+		{
+			if (!_metadata.tuneTimes.valid())
+				return false;
+			for (auto &tuneName: _metadata.tuneNames)
+				readString(_data, tuneName);
 		}
 		else if (tagType == typeTimerA || tagType == typeTimerB || tagType == typeTimerC ||
 			tagType == typeTimerD || tagType == typeTimerVBL)
