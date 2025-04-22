@@ -28,9 +28,10 @@ struct sndhMetadata_t final
 	std::unique_ptr<char []> ripper;
 	std::unique_ptr<char []> converter;
 	uint8_t tuneCount;
-	char timer; // A, B, C, D or V(BL).
+	uint8_t defaultTune{1U};
 	uint16_t timerFrequency;
 	uint32_t year;
+	char timer; // A, B, C, D or V(BL).
 	fixedVector_t<uint16_t> tuneTimes;
 	fixedVector_t<std::unique_ptr<char []>> tuneNames;
 };

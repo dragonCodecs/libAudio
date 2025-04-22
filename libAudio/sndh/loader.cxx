@@ -17,6 +17,7 @@ constexpr std::array<char, 4> typeRipper{'R', 'I', 'P', 'P'};
 constexpr std::array<char, 4> typeConverter{'C', 'O', 'N', 'V'};
 constexpr std::array<char, 4> typeTuneNames{'#', '!', 'S', 'N'};
 constexpr std::array<char, 2> typeTuneCount{'#', '#'};
+constexpr std::array<char, 2> typeTuneDefault{'!', '#'};
 constexpr std::array<char, 2> typeTimerA{'T', 'A'};
 constexpr std::array<char, 2> typeTimerB{'T', 'B'};
 constexpr std::array<char, 2> typeTimerC{'T', 'C'};
@@ -127,6 +128,12 @@ bool sndhLoader_t::readMeta()
 			for (auto &tuneName: _metadata.tuneNames)
 				readString(_data, tuneName);
 		}
+		else if (tagType == typeTuneDefault)
+		{
+			auto number = readString(_data);
+			number.insert(0U, tagType.data() + 2, 2U);
+			_metadata.defaultTune = toInt_t<uint8_t>{number.c_str()}.fromInt();
+		}
 		else if (tagType == typeTimerA || tagType == typeTimerB || tagType == typeTimerC ||
 			tagType == typeTimerD || tagType == typeTimerVBL)
 		{
@@ -136,7 +143,7 @@ bool sndhLoader_t::readMeta()
 		else if (tagType == typeYear)
 		{
 			std::string year{readString(_data)};
-			_metadata.year = toInt_t<uint32_t>{year.data()}.fromInt();
+			_metadata.year = toInt_t<uint32_t>{year.c_str()}.fromInt();
 		}
 		else if (tagType == typeTime)
 		{
