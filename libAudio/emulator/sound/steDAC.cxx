@@ -45,6 +45,40 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 				return;
 		}
 	}
+	// The rest of the registers are only accessible as u8's
+	else if (accessWidth == 1U)
+	{
+		// Registers in this peripheral are on the odd byte
+		if ((address & 1U) != 1U)
+			return;
+
+		// Handle DMA sound system register accesses
+		switch (address >> 1U)
+		{
+			case 0x0U:
+				data[0] = control;
+				break;
+			case 0x1U:
+			case 0x2U:
+			case 0x3U:
+				data[0] = baseAddress.readByte((address >> 1U) - 1U);
+				break;
+			case 0x4U:
+			case 0x5U:
+			case 0x6U:
+				data[0] = sampleCounter.readByte((address >> 1U) - 1U);
+				break;
+			case 0x7U:
+			case 0x8U:
+			case 0x9U:
+				data[0] = endAddress.readByte((address >> 1U) - 1U);
+				break;
+			case 0xaU:
+				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
+				data[0] = (sampleMono ? 0x80U : 0x00U) | (3U - sampleRateDivider);
+				break;
+		}
+	}
 }
 
 void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_t> &data) noexcept
