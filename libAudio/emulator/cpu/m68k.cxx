@@ -2594,6 +2594,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchSUB(instruction);
 		case instruction_t::suba:
 			return dispatchSUBA(instruction);
+		case instruction_t::subi:
+			return dispatchSUBI(instruction);
 		case instruction_t::subq:
 			return dispatchSUBQ(instruction);
 		case instruction_t::swap:
@@ -3369,7 +3371,7 @@ stepResult_t motorola68000_t::dispatchADDI(const decodedOperation_t &insn) noexc
 	const auto lhs{static_cast<uint32_t>(readImmediateSigned(operationSize))};
 	// Figure out the effective address operand as much as possible so we know where to go poking
 	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
-	// Grab the LHS using the computed address
+	// Grab the RHS using the computed address
 	const auto rhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize))};
 	// With the two values retreived, do the addition
 	const auto result{uint64_t{lhs} + uint64_t{rhs}};
@@ -4841,6 +4843,27 @@ stepResult_t motorola68000_t::dispatchSUBA(const decodedOperation_t &insn) noexc
 	addrRegister(insn.rx) -= value;
 	// Figure out how long this operation took and finish up
 	return {true, false, insn.operationSize == 2U ? 8U : 6U};
+}
+
+stepResult_t motorola68000_t::dispatchSUBI(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Extract the immediate that follows this instruction
+	const auto rhs{static_cast<uint32_t>(readImmediateSigned(operationSize))};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the LHS using the computed address
+	const auto lhs{static_cast<uint32_t>(readValue<int32_t>(insn.mode, insn.ry, effectiveAddress, operationSize))};
+	// With the two values retreived, do the subtraction
+	const auto result{uint64_t{lhs} - uint64_t{rhs}};
+
+	// Recompute all the flags
+	recomputeStatusFlags(lhs, ~rhs + 1U, result, operationSize);
+
+	// Store the result back and return how long this all took
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, static_cast<uint32_t>(result));
+	return {true, false, 0U};
 }
 
 stepResult_t motorola68000_t::dispatchSUBQ(const decodedOperation_t &insn) noexcept
