@@ -131,6 +131,9 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 			case 0x00U:
 				// Only the bottom two bits of the control byte are valid
 				control = data[0] & 0x03U;
+				// If playback is just starting, reset the sample counter
+				if (control & (1U << 0U))
+					sampleCounter.reset();
 				break;
 			case 0x01U:
 			case 0x02U:
