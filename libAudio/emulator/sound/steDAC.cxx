@@ -181,12 +181,12 @@ bool steDAC_t::clockCycle() noexcept
 	// If the sample address equals the end address
 	if (baseAddress + sampleCounter == endAddress)
 	{
+		// Reset the counter back to the start
+		sampleCounter.reset();
 		// If we're not looping playback, disable DMA
 		if ((control & (1U << 1U)) == 0x00U)
 			control &= 0xfeU;
-		// Otherwise reset the counter back to the start
-		else
-			sampleCounter.reset();
+		// Ping the MFP with the completion event
 		_mfp.fireDMAEvent();
 	}
 
