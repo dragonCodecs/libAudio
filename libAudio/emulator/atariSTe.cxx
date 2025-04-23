@@ -82,7 +82,7 @@ atariSTe_t::atariSTe_t() noexcept :
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
-	dac = addClockedPeripheral({0xff8900U, 0xff8926U}, std::make_unique<steDAC_t>(50_kHz));
+	dac = addClockedPeripheral({0xff8900U, 0xff8926U}, std::make_unique<steDAC_t>(50_kHz + 66U));
 	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
 
 	// Set up our dummy RTE for vector handling
@@ -251,10 +251,24 @@ int16_t atariSTe_t::readSample() noexcept
 {
 	// Extract the sample from the PSG
 	const auto psgSample{psg->sample()};
-	// TODO: Extract a sample too from the STe DAC block and combine
+	// Extract the sample from the STe DAC
+	const auto dacSample{dac->sample(*this)};
+	// Combine the samples to generate the input to the scaling
+	const auto sample
+	{
+		[](const int32_t sample) -> int16_t
+		{
+			// Clamp the resulting sample to keep it in range
+			if (sample > INT16_MAX)
+				return INT16_MAX;
+			if (sample < INT16_MIN)
+				return INT16_MIN;
+			return static_cast<int16_t>(sample);
+		}(psgSample + dacSample)
+	};
 	// Scale the sample by the output level set via the DAC block LMC1992 and return
 	// NB: the max output level is 64, allowing this to be simplified by the compiler and fast
-	return (psgSample * dac->outputLevel()) / 64;
+	return (sample * dac->outputLevel()) / 64;
 }
 
 void atariSTe_t::displayCPUState() const noexcept
