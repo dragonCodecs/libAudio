@@ -20,8 +20,8 @@
  * - STe and other schematics: https://docs.dev-docs.org/htm/search.php?find=_s
  */
 
-steDAC_t::steDAC_t(const uint32_t clockFrequency) noexcept : clockedPeripheral_t<uint32_t>{clockFrequency}
-	{ }
+steDAC_t::steDAC_t(const uint32_t clockFrequency, mc68901_t &mfp) noexcept :
+	clockedPeripheral_t<uint32_t>{clockFrequency}, _mfp{mfp} { }
 
 void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
 {
@@ -170,6 +170,7 @@ bool steDAC_t::clockCycle() noexcept
 		// Otherwise reset the counter back to the start
 		else
 			sampleCounter.reset();
+		_mfp.fireDMAEvent();
 	}
 	// Otherwise, step the counter based on whether we're playing mono or stereo
 	else

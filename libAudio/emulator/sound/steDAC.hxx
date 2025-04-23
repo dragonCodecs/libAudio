@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <substrate/span>
 #include "../memoryMap.hxx"
+#include "../timing/mc68901.hxx"
 
 namespace steDAC
 {
@@ -30,6 +31,8 @@ private:
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept final;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
 
+	mc68901_t &_mfp;
+
 	// Values that control the DMA engine
 	steDAC::register24b_t baseAddress{};
 	steDAC::register24b_t endAddress{};
@@ -50,7 +53,7 @@ private:
 	[[nodiscard]] uint16_t microwireCycle() const noexcept;
 
 public:
-	steDAC_t(uint32_t clockFrequency) noexcept;
+	steDAC_t(uint32_t clockFrequency, mc68901_t &mfp) noexcept;
 	steDAC_t(const steDAC_t &) noexcept = delete;
 	steDAC_t(steDAC_t &&) noexcept = delete;
 	steDAC_t &operator =(const steDAC_t &) noexcept = delete;
