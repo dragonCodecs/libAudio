@@ -70,6 +70,43 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				break;
 		}
 	}
+	// The rest of the registers are only accessible as u8's
+	else if (accessWidth == 1U)
+	{
+		// Registers in this peripheral are on the odd byte
+		if ((address & 1U) != 1U)
+			return;
+
+		// Handle DMA sound system register accesses
+		switch (address >> 1U)
+		{
+			case 0x0U:
+				// Only the bottom two bits of the control byte are valid
+				control = data[0] & 0x03U;
+				break;
+			case 0x1U:
+			case 0x2U:
+			case 0x3U:
+				baseAddress.writeByte((address >> 1U) - 1U, data[0]);
+				break;
+			case 0x4U:
+			case 0x5U:
+			case 0x6U:
+				sampleCounter.writeByte((address >> 1U) - 4U, data[0]);
+				break;
+			case 0x7U:
+			case 0x8U:
+			case 0x9U:
+				endAddress.writeByte((address >> 1U) - 7U, data[0]);
+				break;
+			case 0xaU:
+				// Determine whether the new mode should be mono or stereo
+				sampleMono = (data[0] & 0x80U) == 0x80U;
+				// Grab the frequency bits and turn them into a divider (3 == 2^3, 0 == 2^0)
+				sampleRateDivider = 3U - (data[0] & 0x03U);
+				break;
+		}
+	}
 }
 
 bool steDAC_t::clockCycle() noexcept
