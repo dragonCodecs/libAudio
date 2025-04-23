@@ -239,6 +239,23 @@ uint16_t steDAC_t::microwireCycle() const noexcept
 	return microwireMask;
 }
 
+int16_t steDAC_t::sample(memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) noexcept
+{
+	// If the DMA engine is currently active, grab a sample back and mix down to mono, otherwise return an idle value
+	if (control & 0x01U)
+	{
+		const auto sampleAddress{baseAddress + sampleCounter};
+		// If this is mono, just grab one sample and call it good
+		if (sampleMono)
+			return memoryMap.readAddress<int8_t>(sampleAddress);
+		// Otherwise, grab two and sum
+		const auto left{memoryMap.readAddress<int8_t>(sampleAddress)};
+		const auto right{memoryMap.readAddress<int8_t>(sampleAddress + 1U)};
+		return left + right;
+	}
+	return 0;
+}
+
 namespace steDAC
 {
 	void register24b_t::writeByte(const uint8_t position, const uint8_t byte) noexcept
