@@ -62,25 +62,25 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 		// Handle DMA sound system register accesses
 		switch (address >> 1U)
 		{
-			case 0x0U:
+			case 0x00U:
 				data[0] = control;
 				break;
-			case 0x1U:
-			case 0x2U:
-			case 0x3U:
+			case 0x01U:
+			case 0x02U:
+			case 0x03U:
 				data[0] = baseAddress.readByte((address >> 1U) - 1U);
 				break;
-			case 0x4U:
-			case 0x5U:
-			case 0x6U:
+			case 0x04U:
+			case 0x05U:
+			case 0x06U:
 				data[0] = sampleCounter.readByte((address >> 1U) - 4U);
 				break;
-			case 0x7U:
-			case 0x8U:
-			case 0x9U:
+			case 0x07U:
+			case 0x08U:
+			case 0x09U:
 				data[0] = endAddress.readByte((address >> 1U) - 7U);
 				break;
-			case 0xaU:
+			case 0x10U:
 				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
 				data[0] = ((sampleMono ? 1U : 0U) << 7U) | (3U - sampleRateDivider);
 				break;
@@ -128,26 +128,26 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 		// Handle DMA sound system register accesses
 		switch (address >> 1U)
 		{
-			case 0x0U:
+			case 0x00U:
 				// Only the bottom two bits of the control byte are valid
 				control = data[0] & 0x03U;
 				break;
-			case 0x1U:
-			case 0x2U:
-			case 0x3U:
+			case 0x01U:
+			case 0x02U:
+			case 0x03U:
 				baseAddress.writeByte((address >> 1U) - 1U, data[0]);
 				break;
-			case 0x4U:
-			case 0x5U:
-			case 0x6U:
+			case 0x04U:
+			case 0x05U:
+			case 0x06U:
 				sampleCounter.writeByte((address >> 1U) - 4U, data[0]);
 				break;
-			case 0x7U:
-			case 0x8U:
-			case 0x9U:
+			case 0x07U:
+			case 0x08U:
+			case 0x09U:
 				endAddress.writeByte((address >> 1U) - 7U, data[0]);
 				break;
-			case 0xaU:
+			case 0x10U:
 				// Determine whether the new mode should be mono or stereo
 				sampleMono = (data[0] & (1U << 7U)) == (1U << 7U);
 				// Grab the frequency bits and turn them into a divider (3 == 2^3, 0 == 2^0)
