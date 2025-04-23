@@ -17,6 +17,7 @@ namespace mc68901
 		uint8_t counter{0U};
 		uint8_t reloadValue{0U};
 		clockManager_t clockManager;
+		bool externalEvent{false};
 
 	public:
 		timer_t(uint32_t baseClockFrequency) noexcept;
@@ -25,6 +26,7 @@ namespace mc68901
 		void ctrl(uint8_t value, uint32_t baseClockFrequency) noexcept;
 		[[nodiscard]] uint8_t data() const noexcept;
 		void data(uint8_t value) noexcept;
+		void markExternalEvent() noexcept;
 
 		[[nodiscard]] bool clockCycle() noexcept;
 	};
@@ -63,6 +65,7 @@ public:
 	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] uint16_t pendingInterrupts() const noexcept;
 	void clearInterrupts(uint16_t interrupts) noexcept;
+	void fireDMAEvent() noexcept;
 };
 
 #endif /*EMULATOR_TIMING_MC68901_HXX*/

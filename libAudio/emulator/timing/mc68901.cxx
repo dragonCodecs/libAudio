@@ -300,6 +300,11 @@ uint16_t mc68901_t::pendingInterrupts() const noexcept
 void mc68901_t::clearInterrupts(const uint16_t interrupts) noexcept
 	{ itrPending &= ~interrupts; }
 
+void mc68901_t::fireDMAEvent() noexcept
+{
+	timers[0].markExternalEvent();
+}
+
 namespace mc68901
 {
 	timer_t::timer_t(const uint32_t baseClockFrequency) noexcept :
@@ -353,6 +358,9 @@ namespace mc68901
 			counter = value;
 	}
 
+	void timer_t::markExternalEvent() noexcept
+		{ externalEvent = true; }
+
 	bool timer_t::clockCycle() noexcept
 	{
 		// Check if the timer is stopped
@@ -372,9 +380,25 @@ namespace mc68901
 				return true;
 			}
 		}
+		// Check if the timer is in event count mode
+		else if ((control & 0x0fU) == 0x08U)
+		{
+			// If there is a pending external event
+			if (!externalEvent)
+				return false;
+			// Clear the event marker
+			externalEvent = false;
+			// Apply a clock pulse to the counter, and if that counter is now 0, reload it to the value in reloadValue
+			if (--counter == 0U)
+			{
+				counter = reloadValue;
+				// Signal that this was an interrupt generating cycle
+				return true;
+			}
+		}
 		else
 		{
-			// For now we don't support the event counting and PWM modes
+			// For now we don't support the PWM modes
 		}
 		// Signal that this was not an interrupt generating cycle
 		return false;
