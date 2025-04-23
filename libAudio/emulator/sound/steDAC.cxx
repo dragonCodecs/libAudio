@@ -138,6 +138,8 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				sampleMono = (data[0] & 0x80U) == 0x80U;
 				// Grab the frequency bits and turn them into a divider (3 == 2^3, 0 == 2^0)
 				sampleRateDivider = 3U - (data[0] & 0x03U);
+				// Reset the rate counter to adjust for the new sample rate
+				sampleRateCounter = 0U;
 				break;
 		}
 	}
@@ -145,6 +147,34 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 
 bool steDAC_t::clockCycle() noexcept
 {
+	// Check if there's anything playing or not, and if not then exit early
+	if ((control & 0x01U) == 0x00U)
+		return true;
+
+	// Something's playing, great.. step the rate counter to see if we should do something in this cycle
+	sampleRateCounter++;
+	// Counter overflowed?
+	if (sampleRateCounter == (1U << sampleRateDivider))
+		// Yes, so reset it
+		sampleRateCounter = 0U;
+	else
+		// No, okay - we're done.. exit early
+		return true;
+
+	// If the sample address equals the end address
+	if (baseAddress + sampleCounter == endAddress)
+	{
+		// If we're not looping playback, disable DMA
+		if ((control & 0x02U) == 0x00U)
+			control = 0U;
+		// Otherwise reset the counter back to the start
+		else
+			sampleCounter.reset();
+	}
+	// Otherwise, step the counter based on whether we're playing mono or stereo
+	else
+		sampleCounter += sampleMono ? 1U : 2U;
+
 	return true;
 }
 
@@ -216,11 +246,22 @@ namespace steDAC
 		const size_t shift{8U << (3U - position)};
 		value &= ~(0xffU << shift);
 		value |= uint32_t{byte} << shift;
+		// The bottom most bit in these registers must remain 0, as must the top 8
+		value &= 0x00fffffeU;
 	}
 
 	uint8_t register24b_t::readByte(const uint8_t position) const noexcept
 	{
 		const size_t shift{8U << (3U - position)};
 		return static_cast<uint8_t>(value >> shift);
+	}
+
+	void register24b_t::reset() noexcept
+		{ value = 0U; }
+
+	register24b_t &register24b_t::operator +=(const uint32_t amount) noexcept
+	{
+		value += amount;
+		return *this;
 	}
 } // namespace steDAC

@@ -17,8 +17,10 @@ namespace steDAC
 	public:
 		void writeByte(uint8_t position, uint8_t byte) noexcept;
 		[[nodiscard]] uint8_t readByte(uint8_t position) const noexcept;
+		void reset() noexcept;
 
 		[[nodiscard]] operator uint32_t() const noexcept { return value; }
+		register24b_t &operator +=(uint32_t amount) noexcept;
 	};
 } // namespace steDAC
 
@@ -35,14 +37,14 @@ private:
 	uint8_t control{0U};
 	bool sampleMono{false};
 	uint8_t sampleRateDivider{0U};
-
-	uint8_t mainVolume{64U};
+	uint8_t sampleRateCounter{0U};
 
 	// NB: only reason for these to be marked mutable is so microwireCycle() can be const
 	// for use in the readAddress call - not ideal, but not completely terrible
 	uint16_t microwireData{0U};
 	mutable uint16_t microwireMask{0U};
 	mutable uint8_t microwireCycles{0U};
+	uint8_t mainVolume{64U};
 
 	void runMicrowireTransaction() noexcept;
 	[[nodiscard]] uint16_t microwireCycle() const noexcept;
