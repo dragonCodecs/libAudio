@@ -137,3 +137,19 @@ uint16_t steDAC_t::microwireCycle() const noexcept
 	}
 	return microwireMask;
 }
+
+namespace steDAC
+{
+	void register24b_t::writeByte(const uint8_t position, const uint8_t byte) noexcept
+	{
+		const size_t shift{8U << (3U - position)};
+		value &= ~(0xffU << shift);
+		value |= uint32_t{byte} << shift;
+	}
+
+	uint8_t register24b_t::readByte(const uint8_t position) const noexcept
+	{
+		const size_t shift{8U << (3U - position)};
+		return static_cast<uint8_t>(value >> shift);
+	}
+} // namespace steDAC

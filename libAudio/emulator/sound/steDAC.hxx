@@ -7,18 +7,42 @@
 #include <substrate/span>
 #include "../memoryMap.hxx"
 
+namespace steDAC
+{
+	struct register24b_t final
+	{
+	private:
+		uint32_t value{0U};
+
+	public:
+		void writeByte(uint8_t position, uint8_t byte) noexcept;
+		[[nodiscard]] uint8_t readByte(uint8_t position) const noexcept;
+
+		[[nodiscard]] operator uint32_t() const noexcept { return value; }
+	};
+} // namespace steDAC
+
 struct steDAC_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept final;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
 
+	// Values that control the DMA engine
+	steDAC::register24b_t baseAddress{};
+	steDAC::register24b_t endAddress{};
+	steDAC::register24b_t sampleCounter{};
+	uint8_t control{0U};
+	bool sampleMono{false};
+	uint8_t sampleRateDivider{0U};
+
+	uint8_t mainVolume{64U};
+
 	// NB: only reason for these to be marked mutable is so microwireCycle() can be const
 	// for use in the readAddress call - not ideal, but not completely terrible
 	uint16_t microwireData{0U};
 	mutable uint16_t microwireMask{0U};
 	mutable uint8_t microwireCycles{0U};
-	uint8_t mainVolume{64U};
 
 	void runMicrowireTransaction() noexcept;
 	[[nodiscard]] uint16_t microwireCycle() const noexcept;
