@@ -75,7 +75,7 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 				break;
 			case 0xaU:
 				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
-				data[0] = (sampleMono ? 0x80U : 0x00U) | (3U - sampleRateDivider);
+				data[0] = ((sampleMono ? 1U : 0U) << 7U) | (3U - sampleRateDivider);
 				break;
 		}
 	}
@@ -135,7 +135,7 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				break;
 			case 0xaU:
 				// Determine whether the new mode should be mono or stereo
-				sampleMono = (data[0] & 0x80U) == 0x80U;
+				sampleMono = (data[0] & (1U << 7U)) == (1U << 7U);
 				// Grab the frequency bits and turn them into a divider (3 == 2^3, 0 == 2^0)
 				sampleRateDivider = 3U - (data[0] & 0x03U);
 				// Reset the rate counter to adjust for the new sample rate
@@ -148,7 +148,7 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 bool steDAC_t::clockCycle() noexcept
 {
 	// Check if there's anything playing or not, and if not then exit early
-	if ((control & 0x01U) == 0x00U)
+	if ((control & (1U << 0U)) == 0x00U)
 		return true;
 
 	// Something's playing, great.. step the rate counter to see if we should do something in this cycle
@@ -161,20 +161,20 @@ bool steDAC_t::clockCycle() noexcept
 		// No, okay - we're done.. exit early
 		return true;
 
+	// Step the sample counter based on whether we're playing mono or stereo
+	sampleCounter += sampleMono ? 1U : 2U;
+
 	// If the sample address equals the end address
 	if (baseAddress + sampleCounter == endAddress)
 	{
 		// If we're not looping playback, disable DMA
-		if ((control & 0x02U) == 0x00U)
+		if ((control & (1U << 1U)) == 0x00U)
 			control &= 0xfeU;
 		// Otherwise reset the counter back to the start
 		else
 			sampleCounter.reset();
 		_mfp.fireDMAEvent();
 	}
-	// Otherwise, step the counter based on whether we're playing mono or stereo
-	else
-		sampleCounter += sampleMono ? 1U : 2U;
 
 	return true;
 }
