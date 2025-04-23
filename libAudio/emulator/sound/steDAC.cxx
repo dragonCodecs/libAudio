@@ -27,6 +27,9 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 {
 	// Extract how wide an access this is
 	const auto accessWidth{data.size_bytes()};
+	// Only admit 8- and 16-bit reads
+	if (accessWidth > 2U)
+		return;
 	// Microwire registers are only accessible as u16's
 	if (accessWidth == 2U)
 	{
@@ -43,6 +46,10 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 			case 0x24U:
 				writeBE(microwireCycle(), data);
 				return;
+			default:
+				// Redirect everything else to 8-bit access
+				readAddress(address + 1U, data.subspan(1));
+				break;
 		}
 	}
 	// The rest of the registers are only accessible as u8's
@@ -85,6 +92,9 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 {
 	// Extract how wide an access this is
 	const auto accessWidth{data.size_bytes()};
+	// Only admit 8- and 16-bit writes
+	if (accessWidth > 2U)
+		return;
 	// Microwire registers are only accessible as u16's
 	if (accessWidth == 2U)
 	{
@@ -101,6 +111,10 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 				break;
 			case 0x24U:
 				microwireMask = readBE<uint16_t>(data);
+				break;
+			default:
+				// Redirect everything else to 8-bit access
+				writeAddress(address + 1U, data.subspan(1));
 				break;
 		}
 	}
