@@ -430,6 +430,64 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testAND()
+	{
+		writeAddress(0x000000U, uint16_t{0xc080U}); // and.l d0, d0
+		writeAddress(0x000002U, uint16_t{0xc050U}); // and.w (a0), d0
+		writeAddress(0x000004U, uint16_t{0xc03cU});
+		writeAddress(0x000006U, uint16_t{0x0060U}); // and.b #$60, d0
+		writeAddress(0x000008U, uint16_t{0xc199U}); // and.l d0, (a1)+
+		writeAddress(0x00000aU, uint16_t{0xc07cU});
+		writeAddress(0x00000cU, uint16_t{0x0000U}); // and.w #$00, d0
+		writeAddress(0x00000eU, uint16_t{0x4e75U}); // rts to end the test
+		writeAddress(0x000100U, uint32_t{0x4400ffffU});
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Re-use the 3rd instruction as the data for the 2nd, and set a reasonable destination for the 4th
+		cpu.writeAddrRegister(0U, 0x00000004U);
+		cpu.writeAddrRegister(1U, 0x00000100U);
+		// Make sure d0 starts out with a sensible value for this sequence
+		cpu.writeDataRegister(0U, 0x7f00ffffU);
+		// Set the carry and overflow bits in the status register so we can observe them being cleared
+		// And the extend bit to make sure that's left alone
+		cpu.writeStatus(0x0013U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		assertEqual(cpu.readStatus(), 0x0013U);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		assertEqual(cpu.readDataRegister(0U), 0x7f00ffffU);
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000004U);
+		assertEqual(cpu.readDataRegister(0U), 0x7f00c03cU);
+		assertEqual(cpu.readStatus(), 0x0018U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		assertEqual(cpu.readDataRegister(0U), 0x7f00c020U);
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
+		assertEqual(cpu.readDataRegister(0U), 0x7f00c020U);
+		assertEqual(cpu.readAddrRegister(1U), 0x00000104U);
+		assertEqual(readAddress<uint32_t>(0x000100U), uint32_t{0x4400c020U});
+		assertEqual(cpu.readStatus(), 0x0010U);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000eU);
+		assertEqual(cpu.readDataRegister(0U), 0x7f000000U);
+		assertEqual(cpu.readStatus(), 0x0014U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
+	}
+
 	void testANDISpecial()
 	{
 		writeAddress(0x000000U, uint16_t{0x023cU});
@@ -2385,6 +2443,7 @@ public:
 		CXX_TEST(testADDA)
 		CXX_TEST(testADDI)
 		CXX_TEST(testADDQ)
+		CXX_TEST(testAND)
 		CXX_TEST(testANDI)
 		CXX_TEST(testANDISpecial)
 		CXX_TEST(testASL)
