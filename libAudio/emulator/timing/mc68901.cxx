@@ -305,8 +305,8 @@ void mc68901_t::fireDMAEvent() noexcept
 	// Try to mark timer A for external event
 	timers[0].markExternalEvent();
 	// Also try to mark GPIO7 as having had an external event
-	if (itrEnable & (1U << 7U))
-		itrPending |= (1U << 7U);
+	if (itrEnable & (1U << 15U))
+		itrPending |= (1U << 15U);
 }
 
 namespace mc68901

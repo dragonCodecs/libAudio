@@ -222,7 +222,7 @@ bool atariSTe_t::advanceClock() noexcept
 		if (pendingIRQs & (1U << 4U))
 			cpu.stageIRQCall(timerVectorAddresses[3U]);
 		// Deal too with GPIO7 interrupts
-		if (pendingIRQs & (1U << 7U))
+		if (pendingIRQs & (1U << 15U))
 			cpu.stageIRQCall(gpio7VectorAddress);
 		// Now we've staged appropriate invocations for them, clear them
 		mfp->clearInterrupts(pendingIRQs);
