@@ -248,7 +248,7 @@ int16_t steDAC_t::sample(memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) noexcept
 		const auto sampleAddress{baseAddress + sampleCounter};
 		// If this is mono, just grab one sample and call it good
 		if (sampleMono)
-			return memoryMap.readAddress<int8_t>(sampleAddress) * 64;
+			return memoryMap.readAddress<int8_t>(sampleAddress) * 128;
 		// Otherwise, grab two and sum
 		const auto left{memoryMap.readAddress<int8_t>(sampleAddress)};
 		const auto right{memoryMap.readAddress<int8_t>(sampleAddress + 1U)};
