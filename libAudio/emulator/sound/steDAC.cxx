@@ -73,12 +73,12 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 			case 0x4U:
 			case 0x5U:
 			case 0x6U:
-				data[0] = sampleCounter.readByte((address >> 1U) - 1U);
+				data[0] = sampleCounter.readByte((address >> 1U) - 4U);
 				break;
 			case 0x7U:
 			case 0x8U:
 			case 0x9U:
-				data[0] = endAddress.readByte((address >> 1U) - 1U);
+				data[0] = endAddress.readByte((address >> 1U) - 7U);
 				break;
 			case 0xaU:
 				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
