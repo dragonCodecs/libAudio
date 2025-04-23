@@ -38,6 +38,8 @@ constexpr static std::array<uint32_t, 4U> timerVectorAddresses
 	0x000110U,
 }};
 
+constexpr static uint32_t gpio7VectorAddress{0x00013cU};
+
 // Private address we stick an RTE instruction at for vector returns and such
 constexpr static uint32_t rteAddress{0x000700U};
 // Private address we stick a STOP instruction at for unimplemented vectors
@@ -113,6 +115,8 @@ atariSTe_t::atariSTe_t() noexcept :
 	// Make all timer handlers RTEs for now
 	for (const auto &address : timerVectorAddresses)
 		writeAddress(address, rteAddress);
+	// And the GPIO7 handler too
+	writeAddress(gpio7VectorAddress, rteAddress);
 }
 
 void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept
@@ -217,6 +221,9 @@ bool atariSTe_t::advanceClock() noexcept
 		// And finally Timer D
 		if (pendingIRQs & (1U << 4U))
 			cpu.stageIRQCall(timerVectorAddresses[3U]);
+		// Deal too with GPIO7 interrupts
+		if (pendingIRQs & (1U << 7U))
+			cpu.stageIRQCall(gpio7VectorAddress);
 		// Now we've staged appropriate invocations for them, clear them
 		mfp->clearInterrupts(pendingIRQs);
 	}

@@ -302,7 +302,11 @@ void mc68901_t::clearInterrupts(const uint16_t interrupts) noexcept
 
 void mc68901_t::fireDMAEvent() noexcept
 {
+	// Try to mark timer A for external event
 	timers[0].markExternalEvent();
+	// Also try to mark GPIO7 as having had an external event
+	if (itrEnable & 0x80U)
+		itrPending |= 0x80U;
 }
 
 namespace mc68901
