@@ -35,7 +35,7 @@ private:
 	steDAC::register24b_t endAddress{};
 	steDAC::register24b_t sampleCounter{};
 	uint8_t control{0U};
-	bool sampleMono{false};
+	bool sampleMono{true};
 	uint8_t sampleRateDivider{0U};
 	uint8_t sampleRateCounter{0U};
 

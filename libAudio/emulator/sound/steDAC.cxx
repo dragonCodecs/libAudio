@@ -166,7 +166,7 @@ bool steDAC_t::clockCycle() noexcept
 	{
 		// If we're not looping playback, disable DMA
 		if ((control & 0x02U) == 0x00U)
-			control = 0U;
+			control &= 0xfeU;
 		// Otherwise reset the counter back to the start
 		else
 			sampleCounter.reset();
@@ -247,11 +247,11 @@ int16_t steDAC_t::sample(memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) noexcept
 		const auto sampleAddress{baseAddress + sampleCounter};
 		// If this is mono, just grab one sample and call it good
 		if (sampleMono)
-			return memoryMap.readAddress<int8_t>(sampleAddress);
+			return memoryMap.readAddress<int8_t>(sampleAddress) * 64;
 		// Otherwise, grab two and sum
 		const auto left{memoryMap.readAddress<int8_t>(sampleAddress)};
 		const auto right{memoryMap.readAddress<int8_t>(sampleAddress + 1U)};
-		return left + right;
+		return (left + right) * 64;
 	}
 	return 0;
 }
