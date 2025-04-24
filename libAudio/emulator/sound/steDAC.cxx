@@ -256,7 +256,7 @@ uint16_t steDAC_t::microwireCycle() const noexcept
 	return microwireMask;
 }
 
-int16_t steDAC_t::sample(memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) noexcept
+int16_t steDAC_t::sample(const memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) const noexcept
 {
 	// If the DMA engine is currently active, grab a sample back and mix down to mono, otherwise return an idle value
 	if (control & 0x01U)

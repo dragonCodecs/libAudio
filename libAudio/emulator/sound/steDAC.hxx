@@ -62,7 +62,7 @@ public:
 
 	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] uint8_t outputLevel() const noexcept { return mainVolume; }
-	[[nodiscard]] int16_t sample(memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) noexcept;
+	[[nodiscard]] int16_t sample(const memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) const noexcept;
 };
 
 #endif /*EMULATOR_SOUND_STEDAC_HXX*/
