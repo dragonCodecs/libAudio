@@ -1,43 +1,17 @@
 *.o
-*.out
-*.obj
 
-*.vcproj.*.user
-*.cod
-*.ncb
-*.suo
-*.manifest
-*.res
-*.idb
-*.pdb
-*.ilk
-*.exp
 *.dep
 
-build
+/build/
 debug
-release
-bin
-docs/libAudio
+/docs/libAudio
 
-libAudio_S3MHasCmd/libAudio_S3MHasCmd
-Spectrometer/Release
-Spectrometer/Debug
+/.mypy_cache
+/.vscode
 
-libAudio/*.a
-libAudio/*.pc
-libAudio/*.so*
-
-libAudio/fixedPoint/tests/TestLinearSlideDown
-libAudio/fixedPoint/tests/TestLinearSlideUp
-
-WMA*/Debug
-WMA*/Release
-
-.cache
-.vscode
-
-deps/*
-deps/packagecache
-!deps/packagefiles
-!deps/*.wrap
+/deps/*
+/deps/packagecache
+!/deps/packagefiles
+!/deps/*.wrap
+!/deps/openal-soft
+!/deps/pkgconf
