@@ -238,6 +238,8 @@ struct decodedOperation_t
 	uint8_t opMode{0U};
 	uint8_t mode{0U};
 	uint8_t trailingBytes{0U};
+
+	void display(uint32_t programCounter) const noexcept;
 };
 
 constexpr inline bool operator ==(const decodedOperation_t a, const decodedOperation_t b) noexcept

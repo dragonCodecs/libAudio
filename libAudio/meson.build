@@ -335,6 +335,7 @@ formats += {
 
 emulatorSrcs = [
 	'emulator/cpu/m68k.cxx',
+	'emulator/cpu/m68kInstruction.cxx',
 	'emulator/clockManager.cxx',
 ]
 
