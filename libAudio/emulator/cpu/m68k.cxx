@@ -2580,6 +2580,9 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchMULU(instruction);
 		case instruction_t::neg:
 			return dispatchNEG(instruction);
+		case instruction_t::nop:
+			// Do nothing and immediately return successfully
+			return {true, false, 0U};
 		case instruction_t::_or:
 			return dispatchOR(instruction);
 		case instruction_t::ori:
