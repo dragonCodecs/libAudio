@@ -168,10 +168,9 @@ bool steDAC_t::clockCycle() noexcept
 	if ((control & (1U << 0U)) == 0x00U)
 		return true;
 
-	// Something's playing, great.. step the rate counter to see if we should do something in this cycle
-	sampleRateCounter++;
-	// Counter overflowed?
-	if (sampleRateCounter == (1U << sampleRateDivider))
+	// Something's playing, great.. step the rate counter to see if we should do something
+	// in this cycle, and check if the counter overflowed
+	if (++sampleRateCounter == (1U << sampleRateDivider))
 		// Yes, so reset it
 		sampleRateCounter = 0U;
 	else
