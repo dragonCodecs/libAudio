@@ -262,12 +262,19 @@ int16_t steDAC_t::sample(const memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) co
 	if (control & 0x01U)
 	{
 		const auto sampleAddress{baseAddress + sampleCounter};
-		// If this is mono, just grab one sample and call it good
-		if (sampleMono)
-			return int16_t{memoryMap.readAddress<int8_t>(sampleAddress)} * 64;
-		// Otherwise, grab two and sum
+		// Grab the sample for the first channel
 		const int16_t left{memoryMap.readAddress<int8_t>(sampleAddress)};
-		const int16_t right{memoryMap.readAddress<int8_t>(sampleAddress + 1U)};
+		// Then grab the sample for the second
+		const auto right
+		{
+			[&]() -> int16_t
+			{
+				if (sampleMono)
+					return left;
+				return memoryMap.readAddress<int8_t>(sampleAddress + 1U);
+			}()
+		};
+		// Sum the result and scale to get the correct output level
 		return (left + right) * 32;
 	}
 	return 0;
