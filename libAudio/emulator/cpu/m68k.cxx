@@ -4098,8 +4098,8 @@ stepResult_t motorola68000_t::dispatchJMP(const decodedOperation_t &insn) noexce
 
 stepResult_t motorola68000_t::dispatchJSR(const decodedOperation_t &insn) noexcept
 {
-	// Extract the target address to jump to for this instruction
-	const auto destination{readEffectiveAddress<int32_t>(insn.mode, insn.ry, 4U)};
+	// Extract the address to jump to from the effective address for the instruction
+	const auto destination{computeEffectiveAddress(insn.mode, insn.ry, 4U)};
 	// Now we have the target, push the post-instruction program counter to stack
 	auto &stackPointer{activeStackPointer()};
 	stackPointer -= 4U;
