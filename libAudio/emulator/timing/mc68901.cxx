@@ -363,7 +363,10 @@ namespace mc68901
 	}
 
 	void timer_t::markExternalEvent() noexcept
-		{ externalEvent = true; }
+	{
+		if ((control & 0x0f) == 0x08U)
+			externalEvent = true;
+	}
 
 	bool timer_t::clockCycle() noexcept
 	{
