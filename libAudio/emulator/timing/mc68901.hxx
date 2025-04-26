@@ -7,6 +7,7 @@
 #include <array>
 #include <substrate/span>
 #include "../memoryMap.hxx"
+#include "../cpu/m68kIRQ.hxx"
 
 namespace mc68901
 {
@@ -32,11 +33,12 @@ namespace mc68901
 	};
 } // namespace mc68901
 
-struct mc68901_t final : public clockedPeripheral_t<uint32_t>
+struct mc68901_t final : public clockedPeripheral_t<uint32_t>, m68k::irqRequester_t
 {
 private:
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept final;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
+	uint8_t irqCause() noexcept final;
 
 	uint8_t gpio{0U};
 	uint8_t activeEdge{0U};
@@ -55,7 +57,7 @@ private:
 	std::array<mc68901::timer_t, 4> timers;
 
 public:
-	mc68901_t(uint32_t clockFrequency) noexcept;
+	mc68901_t(uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept;
 	mc68901_t(const mc68901_t &) noexcept = delete;
 	mc68901_t(mc68901_t &&) noexcept = delete;
 	mc68901_t &operator =(const mc68901_t &) noexcept = delete;

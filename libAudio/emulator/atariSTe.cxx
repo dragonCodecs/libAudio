@@ -84,7 +84,7 @@ atariSTe_t::atariSTe_t() noexcept :
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
 	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
-	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U));
+	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U, cpu, 6U));
 	dac = addClockedPeripheral({0xff8900U, 0xff8926U}, std::make_unique<steDAC_t>(50_kHz + 66U, *mfp));
 
 	// Set up our dummy RTE for vector handling
@@ -117,6 +117,8 @@ atariSTe_t::atariSTe_t() noexcept :
 		writeAddress(address, rteAddress);
 	// And the GPIO7 handler too
 	writeAddress(gpio7VectorAddress, rteAddress);
+	// Tell the MFP its vector number information and that we're in automatic mode
+	writeAddress(0xfffa17U, uint8_t{0x40U});
 }
 
 void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept

@@ -6,7 +6,8 @@
 #include "mc68901.hxx"
 #include "../unitsHelpers.hxx"
 
-mc68901_t::mc68901_t(const uint32_t clockFrequency) noexcept : clockedPeripheral_t<uint32_t>{clockFrequency},
+mc68901_t::mc68901_t(const uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept :
+	clockedPeripheral_t<uint32_t>{clockFrequency}, m68k::irqRequester_t{cpu, level},
 	timers{{{clockFrequency}, {clockFrequency}, {clockFrequency}, {clockFrequency}}}
 {
 	// Timer C interrupts should be enabled and unmasked by default
@@ -290,6 +291,9 @@ bool mc68901_t::clockCycle() noexcept
 				itrPending |= itrBit;
 		}
 	}
+	// If we have any pending IRQs as a result of this cycle, request handling by the CPU
+	if (itrPending & itrMask)
+		requestInterrupt();
 	return true;
 }
 
@@ -307,6 +311,37 @@ void mc68901_t::fireDMAEvent() noexcept
 	// Also try to mark GPIO7 as having had an external event
 	if (itrEnable & (1U << 15U))
 		itrPending |= (1U << 15U);
+}
+
+uint8_t mc68901_t::irqCause() noexcept
+{
+	// Look through the pending IRQs and find the highest priority one
+	const auto channel
+	{
+		[&]() -> size_t
+		{
+			// For each interrupt request bit
+			for (const auto &irq : substrate::indexSequence_t{16U})
+			{
+				// Calculate the channel for this IRQ
+				const auto irqChannel{15U - irq};
+				// If the channel has a pending IRQ set, then use it as the cause
+				if (itrPending & (1U << irqChannel))
+					return irqChannel;
+			}
+			// This should never be possible to be reached, but just in case..
+			return 16U;
+		}()
+	};
+	// If there was no reason to call this function, indicate a spurious interrupt error
+	if (channel >= 16U)
+		return 0x18U;
+	// Otherwise, clear pending on this IRQ and generate the vector number value
+	itrPending &= ~(1U << channel);
+	// Re-queue IRQ if there are still pending
+	if (itrPending)
+		requestInterrupt();
+	return (vectorReg & 0xf0) | channel;
 }
 
 namespace mc68901
