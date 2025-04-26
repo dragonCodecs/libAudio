@@ -3,6 +3,7 @@
 #include <string_view>
 #include <substrate/index_sequence>
 #include "m68k.hxx"
+#include "m68kIRQ.hxx"
 #include "console.hxx"
 
 using namespace std::literals::string_view_literals;
@@ -2444,6 +2445,48 @@ void motorola68000_t::requestInterrupt(const uint8_t level) noexcept
 	// Make sure the caller isn't asking for an insane interrupt level, then mark it pending
 	if (level > 0U && level <= 7U)
 		pendingIRQs |= (1U << level);
+}
+
+bool motorola68000_t::checkPendingIRQs() noexcept
+{
+	// Extract the current exception mask from the status register
+	const auto minIRQPriorty{static_cast<uint8_t>((status.toRaw() & 0x0700) >> 8U)};
+	// Calculate a mask from this number
+	const auto irqMask{static_cast<uint8_t>(~((1U << (minIRQPriorty + 1U)) - 1U))};
+	// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
+	const auto unmaskedIRQs{pendingIRQs & (irqMask | 0x80)};
+	// If there are no bits set, we're done here..
+	if (unmaskedIRQs == 0U)
+		return false;
+
+	// Otherwise, figure out which priorty level of IRQ to stack
+	for (const auto &slot : substrate::indexSequence_t{7U - minIRQPriorty})
+	{
+		const auto level{7U - slot};
+		// Check if this priorty is pending (level is a number from 0 to 7, but we have
+		// to step backwards through the priorities)
+		const auto irqPending{unmaskedIRQs & (1U << level)};
+		if (!irqPending)
+			continue;
+		// Ok, we've identified the current most high priority pending interrupt, clear it from pending
+		pendingIRQs &= ~(1U << level);
+		// Dispatch it using any available interrupt requester
+		auto *const requester = interruptRequesters[level];
+		if (requester)
+		{
+			// Identify the IRQ cause and stack the associated vector address
+			const auto cause = requester->irqCause();
+			stageIRQCall(cause << 2U);
+		}
+		else
+		{
+			// Turn this IRQ level into a request for the associated autovector slot and stack that
+			stageIRQCall((level + 24U) << 2U);
+		}
+		break;
+	}
+	// We entered an IRQ in this cycle, so step needs to stop here
+	return true;
 }
 
 void motorola68000_t::stageIRQCall(const uint32_t vectorAddress) noexcept

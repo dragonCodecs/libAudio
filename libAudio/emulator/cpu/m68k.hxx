@@ -38,10 +38,17 @@ struct stepResult_t
 	size_t cyclesTaken;
 };
 
+// Declare that there is a requester type so the below can work (cycling dependency if including the header otherwise)
+namespace m68k
+{
+	struct irqRequester_t;
+}
+
 struct motorola68000_t final
 {
 private:
 	memoryMap_t<uint32_t, 0x00ffffffU> &_peripherals;
+	std::array<m68k::irqRequester_t *, 7U> interruptRequesters{};
 	uint32_t clockFrequency;
 	uint32_t waitCycles{0U};
 
@@ -112,6 +119,8 @@ private:
 
 	[[nodiscard]] int32_t readDataRegisterSigned(size_t reg, size_t size) const noexcept;
 	void writeDataRegisterSized(size_t reg, size_t size, uint32_t value) noexcept;
+
+	bool checkPendingIRQs() noexcept;
 
 	[[nodiscard]] stepResult_t dispatchADD(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchADDA(const decodedOperation_t &insn) noexcept;

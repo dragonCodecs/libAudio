@@ -22,8 +22,10 @@ namespace m68k
 			{ _cpu.requestInterrupt(_level); }
 
 	public:
-		virtual uint8_t irqCause() noexcept = 0;
+		[[nodiscard]] virtual uint8_t irqCause() noexcept = 0;
+		[[nodiscard]] uint8_t irqLevel() const noexcept
+			{ return _level; }
 	};
 }
 
-#endif /**/
+#endif /*EMULATOR_CPU_M68K_IRQ_HXX*/
