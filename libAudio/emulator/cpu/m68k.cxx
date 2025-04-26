@@ -2499,6 +2499,17 @@ bool motorola68000_t::checkPendingIRQs() noexcept
 	return true;
 }
 
+bool motorola68000_t::hasPendingInterrupts() const noexcept
+{
+	// Extract the current exception mask from the status register
+	const auto minIRQPriority{static_cast<uint8_t>((status.toRaw() & 0x0700) >> 8U)};
+	// Calculate a mask from this number
+	const auto irqMask{static_cast<uint8_t>(~((1U << (minIRQPriority + 1U)) - 1U))};
+	// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
+	const auto unmaskedIRQs{pendingIRQs & (irqMask | 0x80)};
+	return unmaskedIRQs != 0U;
+}
+
 void motorola68000_t::maskIRQs(const uint8_t level) noexcept
 {
 	// Extract the status register minus the current mask value
