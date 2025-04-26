@@ -2458,9 +2458,9 @@ void motorola68000_t::registerInterruptRequester(m68k::irqRequester_t &requester
 bool motorola68000_t::checkPendingIRQs() noexcept
 {
 	// Extract the current exception mask from the status register
-	const auto minIRQPriorty{static_cast<uint8_t>((status.toRaw() & 0x0700) >> 8U)};
+	const auto minIRQPriority{static_cast<uint8_t>((status.toRaw() & 0x0700) >> 8U)};
 	// Calculate a mask from this number
-	const auto irqMask{static_cast<uint8_t>(~((1U << (minIRQPriorty + 1U)) - 1U))};
+	const auto irqMask{static_cast<uint8_t>(~((1U << (minIRQPriority + 1U)) - 1U))};
 	// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
 	const auto unmaskedIRQs{pendingIRQs & (irqMask | 0x80)};
 	// If there are no bits set, we're done here..
@@ -2468,7 +2468,7 @@ bool motorola68000_t::checkPendingIRQs() noexcept
 		return false;
 
 	// Otherwise, figure out which priorty level of IRQ to stack
-	for (const auto &slot : substrate::indexSequence_t{7U - minIRQPriorty})
+	for (const auto &slot : substrate::indexSequence_t{7U - minIRQPriority})
 	{
 		const auto level{7U - slot};
 		// Check if this priorty is pending (level is a number from 0 to 7, but we have
