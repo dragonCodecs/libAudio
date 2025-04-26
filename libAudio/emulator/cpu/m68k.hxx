@@ -55,6 +55,8 @@ private:
 	uint32_t programCounter{UINT32_MAX};
 	// By default the system starts up in supervisor (system) mode
 	substrate::bitFlags_t<uint16_t, m68kStatusBits_t> status{m68kStatusBits_t::supervisor};
+	// What IRQs are pending execution (7 levels, masked by the status register IRQ bits)
+	uint8_t pendingIRQs{0U};
 
 	// There are then 8 FPU registers, a control register, a status register, and an instruction address register
 	std::array<fpuReg_t, 8U> fp;
@@ -176,6 +178,7 @@ public:
 	void executeFromException(uint32_t entryAddress, uint32_t stackTop, uint8_t vectorNumber) noexcept;
 	[[nodiscard]] bool executeToReturn(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void stageIRQCall(uint32_t vectorAddress) noexcept;
+	void requestInterrupt(uint8_t level) noexcept;
 	[[nodiscard]] uint32_t readDataRegister(size_t reg) const noexcept;
 	void writeDataRegister(size_t reg, uint32_t value) noexcept;
 	[[nodiscard]] uint32_t readAddrRegister(size_t reg) const noexcept;

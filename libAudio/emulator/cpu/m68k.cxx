@@ -2439,6 +2439,13 @@ bool motorola68000_t::executeToReturn(const uint32_t entryAddress, const uint32_
 	return true;
 }
 
+void motorola68000_t::requestInterrupt(const uint8_t level) noexcept
+{
+	// Make sure the caller isn't asking for an insane interrupt level, then mark it pending
+	if (level > 0U && level <= 7U)
+		pendingIRQs |= (1U << level);
+}
+
 void motorola68000_t::stageIRQCall(const uint32_t vectorAddress) noexcept
 {
 	// Grab the old status register value
