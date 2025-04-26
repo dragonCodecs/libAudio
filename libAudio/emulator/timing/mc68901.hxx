@@ -30,6 +30,8 @@ namespace mc68901
 		void markExternalEvent() noexcept;
 
 		[[nodiscard]] bool clockCycle() noexcept;
+
+		[[nodiscard]] static uint32_t prescalingFor(uint8_t mode) noexcept;
 	};
 } // namespace mc68901
 

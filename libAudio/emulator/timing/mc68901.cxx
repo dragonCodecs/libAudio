@@ -351,33 +351,7 @@ namespace mc68901
 	{
 		control = value;
 		// Turn the operation mode into a prescaling value
-		const auto prescale
-		{
-			[&](const uint8_t mode)
-			{
-				switch (mode)
-				{
-					case 0U:
-						return 1U;
-					case 1U:
-						return 4U;
-					case 2U:
-						return 10U;
-					case 3U:
-						return 16U;
-					case 4U:
-						return 50U;
-					case 5U:
-						return 64U;
-					case 6U:
-						return 100U;
-					case 7U:
-						return 200U;
-				}
-				// Should not be possible, but just in case
-				return UINT32_MAX;
-			}(value & 0x07U)
-		};
+		const auto prescale{prescalingFor(value & 0x07U)};
 		// Convert that into a clock ratio for the clock manager, and reinitialise the
 		// clock manager accordingly so we get the right generated frequency
 		clockManager = {baseClockFrequency, baseClockFrequency / prescale};
@@ -439,5 +413,30 @@ namespace mc68901
 		}
 		// Signal that this was not an interrupt generating cycle
 		return false;
+	}
+
+	uint32_t timer_t::prescalingFor(const uint8_t mode) noexcept
+	{
+		switch (mode)
+		{
+			case 0U:
+				return 1U;
+			case 1U:
+				return 4U;
+			case 2U:
+				return 10U;
+			case 3U:
+				return 16U;
+			case 4U:
+				return 50U;
+			case 5U:
+				return 64U;
+			case 6U:
+				return 100U;
+			case 7U:
+				return 200U;
+		}
+		// Should not be possible, but just in case
+		return UINT32_MAX;
 	}
 } // namespace mc68901
