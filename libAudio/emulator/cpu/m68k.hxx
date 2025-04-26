@@ -121,6 +121,7 @@ private:
 	void writeDataRegisterSized(size_t reg, size_t size, uint32_t value) noexcept;
 
 	bool checkPendingIRQs() noexcept;
+	void maskIRQs(uint8_t level) noexcept;
 
 	[[nodiscard]] stepResult_t dispatchADD(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchADDA(const decodedOperation_t &insn) noexcept;

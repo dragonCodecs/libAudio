@@ -2491,10 +2491,20 @@ bool motorola68000_t::checkPendingIRQs() noexcept
 			// Turn this IRQ level into a request for the associated autovector slot and stack that
 			stageIRQCall((level + 24U) << 2U);
 		}
+		// Mask any further IRQs at this level till the IRQ is handled
+		maskIRQs(level);
 		break;
 	}
 	// We entered an IRQ in this cycle, so step needs to stop here
 	return true;
+}
+
+void motorola68000_t::maskIRQs(const uint8_t level) noexcept
+{
+	// Extract the status register minus the current mask value
+	const auto statusReg{status.toRaw() & 0xf8ffU};
+	// Set the new one masking the new IRQ level
+	status.fromRaw(statusReg | ((level & 0x07) << 8U));
 }
 
 void motorola68000_t::stageIRQCall(const uint32_t vectorAddress) noexcept
