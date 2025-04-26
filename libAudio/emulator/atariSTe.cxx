@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
 #include <string_view>
 #include <type_traits>
+#include <substrate/index_sequence>
 #include "atariSTe.hxx"
 #include "atariSTeROMs.hxx"
 #include "ram.hxx"
@@ -51,9 +52,7 @@ constexpr static uint32_t stackTop{stackBase + stackSize};
 constexpr static uint32_t heapBase{0x700000U};
 constexpr static uint32_t heapSize{0x100000U};
 
-atariSTe_t::atariSTe_t() noexcept :
-	// Set up a dummy clock manager for the play routine
-	playRoutineManager{systemClockFrequency, systemClockFrequency}
+atariSTe_t::atariSTe_t() noexcept
 {
 	const auto addClockedPeripheral
 	{
@@ -123,19 +122,120 @@ atariSTe_t::atariSTe_t() noexcept :
 	cpu.registerInterruptRequester(*mfp);
 }
 
+struct udiv_t
+{
+	uint32_t quotient{0};
+	uint32_t remainder{UINT32_MAX};
+
+	udiv_t() noexcept = default;
+	udiv_t(const uint32_t numerator, const uint32_t denominator) noexcept :
+		quotient{numerator / denominator}, remainder{numerator % denominator} { }
+};
+
 void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept
 {
 	// Convert the timer's letter code into a timer index
 	if (timer < 'A' || timer > 'D')
 		return;
 	const auto index{static_cast<size_t>(timer - 'A')};
-	// Set the selected timer's vector slot to a branch to the play routine
+	// Extract where the IRQ handler is for the required timer
 	const auto vectorAddress{timerVectorAddresses[index]};
-	// And write the address of the SNDH play routine to that location
-	writeAddress(vectorAddress, uint32_t{0x010008U});
 
 	// Now the vector slot is properly set up, enable the timer and set the call frequency
-	playRoutineManager = {systemClockFrequency, timerFrequency};
+	// Start by computing the integer number of cycles per second (and its error) the requested frequency
+	// will beat against the MFP
+	const udiv_t cycleRate{mfp->clockFrequency(), timerFrequency};
+	// Now figure out what divider is necessary to make that fit the 8-bit counter
+	auto mode
+	{
+		[&]() -> uint8_t
+		{
+			udiv_t scaledRate{};
+			uint8_t scaleFactor{7U};
+			for (const auto &factor : substrate::indexSequence_t{8U})
+			{
+				// Calculate if this amount of prescaling results in a value that fits the timer counter
+				const udiv_t counter{cycleRate.quotient, mc68901::timer_t::prescalingFor(factor)};
+				// If it does and the error is less than the previously calculated value,
+				// note the factor and store the value
+				if (counter.quotient < 256U && counter.remainder < scaledRate.remainder)
+				{
+					scaledRate = counter;
+					scaleFactor = factor;
+				}
+			}
+			// Having hopefully found the best possible scale factor, return it
+			return scaleFactor;
+		}()
+	};
+
+	// With a scale factor picked, write the counter value, prescaling, and error into memory for the
+	// timer IRQ handler to use to adjust for the error and maintain frequency accuracy
+	const auto prescaler{mc68901::timer_t::prescalingFor(mode)};
+	const udiv_t counter{cycleRate.quotient, prescaler};
+	writeAddress(0x001000U, static_cast<uint8_t>(prescaler));
+	writeAddress(0x001001U, static_cast<uint8_t>(counter.quotient)); // Reload value
+	writeAddress(0x001002U, static_cast<uint8_t>(counter.remainder)); // Residual error
+	writeAddress(0x001003U, uint8_t{0U});
+
+	// Write the IRQ handler routine into memory so it can be used to trampoline into the SNDH play routine
+	// Stack the registers we clobber
+	writeAddress(0x001008U, uint16_t{0x48e7U});
+	writeAddress(0x00100aU, uint16_t{0xc080U}); // movem.l d0-d1,a0, -(sp)
+	// Prepare d0 to accept the accumulated error value
+	writeAddress(0x00100cU, uint16_t{0x4240U}); // clr.w d0
+	// Grab the accumulated error value
+	writeAddress(0x00100eU, uint16_t{0x103aU});
+	writeAddress(0x001010U, uint16_t{0xfff3U}); // move.b $-13(pc), d0
+	// Prepare d1 to accept the error residual value
+	writeAddress(0x001012U, uint16_t{0x4241U}); // clr.w d1
+	// Grab the error residual value
+	writeAddress(0x001014U, uint16_t{0x123aU});
+	writeAddress(0x001016U, uint16_t{0xffecU}); // move.b $-14(pc), d1
+	// Add the two together to get a new accumulation
+	writeAddress(0x001018U, uint16_t{0xd240U}); // add.w d0, d1
+	// Grab the prescaling value to compare the accumulation against
+	writeAddress(0x00101aU, uint16_t{0x103aU});
+	writeAddress(0x00101cU, uint16_t{0xffe4U}); // move.b $-1c(pc), d0
+	// Put the timer data register location in a0
+	writeAddress(0x00101eU, uint16_t{0x3078U});
+	writeAddress(0x001020U, static_cast<uint16_t>(0xfa1fU + (index << 1U))); // movea.w ($fa1f).w, a0
+	// Compare to see if prescaler < accumulation
+	writeAddress(0x001022U, uint16_t{0xb041U}); // cmp.w d1, d0
+	// Skip to non-adjustment code if false
+	writeAddress(0x001024U, uint16_t{0x6c06U}); // bge +$06 (0x00102c)
+	// Otherwise, add one to the reload value
+	writeAddress(0x001026U, uint16_t{0x5210U}); // addq.b #1, (a0)
+	// And subtract the prescaler off the accumulated error
+	writeAddress(0x001028U, uint16_t{0x9240U}); // sub d1, d0
+	// Jump to where we store the accumulated error
+	writeAddress(0x00102aU, uint16_t{0x6006}); // bra +$06 (0x001032)
+	// If the accumulation has not yet exceeded the prescaler value, load the original reload value back
+	writeAddress(0x00102cU, uint16_t{0x103aU});
+	writeAddress(0x00102eU, uint16_t{0xffd3U}); // move.b $-2d(pc), d0
+	writeAddress(0x001030U, uint16_t{0x1080U}); // move.b d0, (a0)
+	// Figure out where the accumulated error value is
+	writeAddress(0x001032U, uint16_t{0x41faU});
+	writeAddress(0x001034U, uint16_t{0xffd1U}); // lea $-2f(pc), a0
+	// Write the accumulated error back
+	writeAddress(0x001032U, uint16_t{0x1081U});  // move.b d1, (a0)
+	// Unstack the clobbered registers
+	writeAddress(0x001034U, uint16_t{0x4cdfU});
+	writeAddress(0x001036U, uint16_t{0x0103U}); // movew.l (sp)+, d0-d1,a0
+	// Jump into the play routine
+	writeAddress(0x001038U, uint16_t{0x207aU});
+	writeAddress(0x00103aU, uint16_t{0xffcaU}); // movea $-36(pc), a0
+	writeAddress(0x00103cU, uint16_t{0x4e90U}); // jsr (a0)
+	// Finally, return from the interrupt handler
+	writeAddress(0x00103eU, uint16_t{0x4e73U}); // rte
+
+	// Configure the IRQ handler to our routine, and write the entry address in the SNDH where it can
+	// get to it to `bsr` into the routine
+	writeAddress(0x001004U, uint32_t{0x010008U});
+	writeAddress(vectorAddress, uint32_t{0x001008U});
+
+	// Write the initial timer settings to the timer
+	mfp->configureTimer(index, counter.quotient, mode);
 }
 
 // Copy the contents of a decrunched SNDH into the ST's RAM
@@ -185,27 +285,6 @@ bool atariSTe_t::advanceClock() noexcept
 			if (!peripheral->clockCycle())
 				return false;
 		}
-	}
-
-	// If the play routine should be run again, set that up
-	if (playRoutineManager.advanceCycle())
-	{
-		// Check to see that the last call to it actually finished, and force it to if it hasn't
-		while (cpu.readProgramCounter() != 0xffffffffU)
-		{
-			// Grab the program counter at the start
-			const auto programCounter{cpu.readProgramCounter()};
-			// Try to execute the next instruction
-			const auto result{cpu.step()};
-			// If the instruction was invalid or caused a trap, bail
-			if (!result.validInsn || result.trap)
-			{
-				// Display the program counter at the faulting instruction
-				console.debug("Bad instruction at "sv, asHex_t<6U, '0'>{programCounter});
-				return false;
-			}
-		}
-		cpu.executeFrom(0x010008U, stackTop, false);
 	}
 
 	// CPU ratio is 32:8, aka 4, so use a simple AND mask to maintain that
