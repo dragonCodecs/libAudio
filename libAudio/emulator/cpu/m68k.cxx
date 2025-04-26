@@ -2542,6 +2542,10 @@ void motorola68000_t::writeStatus(const uint16_t value) noexcept { status.fromRa
 
 stepResult_t motorola68000_t::step() noexcept
 {
+	// See if there are any pending interrupt requests
+	if (checkPendingIRQs())
+		// There was, so return a step result indicating we "executed" a 2 cycle "instruction"
+		return {true, false, 2U};
 	// Start by fetching a uint16_t for the instruction and trying to decode it
 	auto instruction{decodeInstruction(_peripherals.readAddress<uint16_t>(programCounter))};
 	programCounter += 2U;
