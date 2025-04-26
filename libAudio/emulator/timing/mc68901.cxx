@@ -255,6 +255,18 @@ void mc68901_t::writeAddress(const uint32_t address, const substrate::span<uint8
 	}
 }
 
+void mc68901_t::configureTimer(const size_t timerIndex, const uint8_t reloadValue, const uint8_t mode) noexcept
+{
+	// Check this isn't a request for a completely nuts timer value
+	if (timerIndex >= timers.size())
+		return;
+	// Extract the timer we care about
+	auto &timer{timers[timerIndex]};
+	// Configure the reload value and mode
+	timer.data(reloadValue);
+	timer.ctrl(mode, clockFrequency());
+}
+
 bool mc68901_t::clockCycle() noexcept
 {
 	// Go through each timer and try to advance them a clock cycle
