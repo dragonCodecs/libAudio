@@ -214,7 +214,7 @@ bool atariSTe_t::advanceClock() noexcept
 	if (timeSinceLastCPUCycle == 0U)
 	{
 		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
-		if (cpu.readProgramCounter() != 0xffffffffU)
+		if (cpu.readProgramCounter() != 0xffffffffU || cpu.hasPendingInterrupts())
 		{
 			// Grab the program counter at the start
 			const auto programCounter{cpu.readProgramCounter()};
