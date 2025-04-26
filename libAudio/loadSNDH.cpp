@@ -22,7 +22,9 @@ struct sndh_t::decoderContext_t final
 {
 	uint8_t playbackBuffer[8192];
 	atariSTe_t emulator{};
-	uint32_t buffers{0U};
+	// 6m16s (376s) of samples at the current sample rate
+	uint32_t totalPlaybackSamples{376U * emulator.sampleRate};
+	uint32_t generatedSamples{0U};
 	bool eof{false};
 };
 
@@ -41,6 +43,9 @@ void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {
 	info.title(std::move(metadata.title));
 	info.artist(std::move(metadata.artist));
+	// If the song includes length data for the tune we'll play, populate that
+	if (metadata.tuneTimes)
+		info.totalTime(metadata.tuneTimes[metadata.defaultTune - 1U]);
 
 	// The playback engine is written to generate data in 16-bit, one channel
 	info.bitsPerSample(16U);
@@ -70,6 +75,9 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	// Copy the metadata for this SNDH into the fileInfo_t, and then copy the decrunched SNDH into emulator memory
 	loadFileInfo(info, metadata);
 	info.bitRate(ctx.emulator.sampleRate);
+	// If there was a total play length set as a result, convert that into a total samples count
+	if (info.totalTime())
+		ctx.totalPlaybackSamples = static_cast<uint32_t>(info.totalTime()) * ctx.emulator.sampleRate;
 	// Tell the emulator which timer this tune uses, and at what rate
 	ctx.emulator.configureTimer(metadata.timer, metadata.timerFrequency);
 	if (!loader.copyToRAM(ctx.emulator) ||
@@ -103,8 +111,10 @@ int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 	auto &ctx = *context();
 	if (ctx.eof)
 		return -2;
+	// Calculate how many samples should be filled in this buffer
+	const size_t samples = std::min(ctx.totalPlaybackSamples - ctx.generatedSamples, length / 2U);
 	// Fill the sample buffer as much as we can
-	for (size_t offset = 0U; offset < length / 2U; ++offset)
+	for (size_t offset = 0U; offset < samples; ++offset)
 	{
 		// Advance the emulator state till we get a new sample out
 		while (!ctx.emulator.sampleReady())
@@ -119,11 +129,13 @@ int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		}
 		buffer[offset] = ctx.emulator.readSample();
 	}
-	// 11.71875 buffers a second, so 4406 buffers is ~6m16s of audio
-	if (++ctx.buffers == 4406U)
+	// Update the total number of samples generated so far with how many more we made this call
+	ctx.generatedSamples += samples;
+	// If we've now generated all the samples this song calls for, mark us done
+	if (ctx.totalPlaybackSamples == ctx.generatedSamples)
 		ctx.eof = true;
 	// Return how much we filled the buffer by
-	return length & ~1U;
+	return samples * 2U;
 }
 
 bool isSNDH(const char *fileName) { return sndh_t::isSNDH(fileName); }
