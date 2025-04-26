@@ -119,6 +119,8 @@ atariSTe_t::atariSTe_t() noexcept :
 	writeAddress(gpio7VectorAddress, rteAddress);
 	// Tell the MFP its vector number information and that we're in automatic mode
 	writeAddress(0xfffa17U, uint8_t{0x40U});
+	// Register it as an interrupt source
+	cpu.registerInterruptRequester(*mfp);
 }
 
 void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency) noexcept

@@ -2447,6 +2447,14 @@ void motorola68000_t::requestInterrupt(const uint8_t level) noexcept
 		pendingIRQs |= (1U << level);
 }
 
+void motorola68000_t::registerInterruptRequester(m68k::irqRequester_t &requester) noexcept
+{
+	// Extract what IRQ level this is for
+	const auto level{requester.irqLevel()};
+	// Stick it in the requesters array
+	interruptRequesters[level] = &requester;
+}
+
 bool motorola68000_t::checkPendingIRQs() noexcept
 {
 	// Extract the current exception mask from the status register
