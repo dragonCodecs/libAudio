@@ -297,13 +297,6 @@ bool mc68901_t::clockCycle() noexcept
 	return true;
 }
 
-// Return only non-masked pending interrupts
-uint16_t mc68901_t::pendingInterrupts() const noexcept
-	{ return itrPending & itrMask; }
-
-void mc68901_t::clearInterrupts(const uint16_t interrupts) noexcept
-	{ itrPending &= ~interrupts; }
-
 void mc68901_t::fireDMAEvent() noexcept
 {
 	// Try to mark timer A for external event
@@ -315,6 +308,8 @@ void mc68901_t::fireDMAEvent() noexcept
 
 uint8_t mc68901_t::irqCause() noexcept
 {
+	// Compute which IRQs are not masked
+	const auto interrupts{itrPending & itrMask};
 	// Look through the pending IRQs and find the highest priority one
 	const auto channel
 	{
@@ -326,7 +321,7 @@ uint8_t mc68901_t::irqCause() noexcept
 				// Calculate the channel for this IRQ
 				const auto irqChannel{15U - irq};
 				// If the channel has a pending IRQ set, then use it as the cause
-				if (itrPending & (1U << irqChannel))
+				if (interrupts & (1U << irqChannel))
 					return irqChannel;
 			}
 			// This should never be possible to be reached, but just in case..
@@ -339,7 +334,7 @@ uint8_t mc68901_t::irqCause() noexcept
 	// Otherwise, clear pending on this IRQ and generate the vector number value
 	itrPending &= ~(1U << channel);
 	// Re-queue IRQ if there are still pending
-	if (itrPending)
+	if (itrPending & itrMask)
 		requestInterrupt();
 	return (vectorReg & 0xf0) | channel;
 }

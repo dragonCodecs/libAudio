@@ -206,30 +206,6 @@ bool atariSTe_t::advanceClock() noexcept
 		cpu.executeFrom(0x010008U, stackTop, false);
 	}
 
-	// Check if we got any pending interrupts from the timers
-	const auto pendingIRQs{mfp->pendingInterrupts()};
-	if (pendingIRQs)
-	{
-		// For each of the IRQs that stages, translate to a timer and stage an appropriate
-		// exception frame for them - starting with Timer A
-		if (pendingIRQs & (1U << 13U))
-			cpu.stageIRQCall(timerVectorAddresses[0U]);
-		// Timer B
-		if (pendingIRQs & (1U << 8U))
-			cpu.stageIRQCall(timerVectorAddresses[1U]);
-		// Timer C
-		if (pendingIRQs & (1U << 5U))
-			cpu.stageIRQCall(timerVectorAddresses[2U]);
-		// And finally Timer D
-		if (pendingIRQs & (1U << 4U))
-			cpu.stageIRQCall(timerVectorAddresses[3U]);
-		// Deal too with GPIO7 interrupts
-		if (pendingIRQs & (1U << 15U))
-			cpu.stageIRQCall(gpio7VectorAddress);
-		// Now we've staged appropriate invocations for them, clear them
-		mfp->clearInterrupts(pendingIRQs);
-	}
-
 	// CPU ratio is 32:8, aka 4, so use a simple AND mask to maintain that
 	timeSinceLastCPUCycle = (timeSinceLastCPUCycle + 1U) & 3U;
 	// If the CPU should run a cycle, have it try to progress

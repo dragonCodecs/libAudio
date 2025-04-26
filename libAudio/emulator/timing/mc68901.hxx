@@ -65,8 +65,6 @@ public:
 	~mc68901_t() noexcept final = default;
 
 	[[nodiscard]] bool clockCycle() noexcept final;
-	[[nodiscard]] uint16_t pendingInterrupts() const noexcept;
-	void clearInterrupts(uint16_t interrupts) noexcept;
 	void fireDMAEvent() noexcept;
 };
 
