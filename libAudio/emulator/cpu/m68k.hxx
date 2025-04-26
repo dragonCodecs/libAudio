@@ -122,6 +122,7 @@ private:
 
 	bool checkPendingIRQs() noexcept;
 	void maskIRQs(uint8_t level) noexcept;
+	void stageIRQCall(uint32_t vectorAddress) noexcept;
 
 	[[nodiscard]] stepResult_t dispatchADD(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchADDA(const decodedOperation_t &insn) noexcept;
@@ -187,7 +188,6 @@ public:
 	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void executeFromException(uint32_t entryAddress, uint32_t stackTop, uint8_t vectorNumber) noexcept;
 	[[nodiscard]] bool executeToReturn(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
-	void stageIRQCall(uint32_t vectorAddress) noexcept;
 	void requestInterrupt(uint8_t level) noexcept;
 	void registerInterruptRequester(m68k::irqRequester_t &requester) noexcept;
 	[[nodiscard]] bool hasPendingInterrupts() const noexcept;
