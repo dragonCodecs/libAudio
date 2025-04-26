@@ -16,13 +16,14 @@
 struct atariSTe_t : protected memoryMap_t<uint32_t, 0x00ffffffU>
 {
 private:
-	constexpr static auto systemClockFrequency{32_MHz};
+	// To save emulation cycles, use the CPU clock frequency rather than the machine clock frequency
+	// as the system clock frequency
+	constexpr static auto systemClockFrequency{8_MHz};
 	motorola68000_t cpu{*this, 8_MHz};
 	ym2149_t *psg{nullptr};
 	steDAC_t *dac{nullptr};
 	mc68901_t *mfp{nullptr};
 
-	uint32_t timeSinceLastCPUCycle{0U};
 	std::map<clockedPeripheral_t<uint32_t> *, clockManager_t> clockedPeripherals{};
 
 public:

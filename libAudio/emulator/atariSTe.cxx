@@ -287,23 +287,17 @@ bool atariSTe_t::advanceClock() noexcept
 		}
 	}
 
-	// CPU ratio is 32:8, aka 4, so use a simple AND mask to maintain that
-	timeSinceLastCPUCycle = (timeSinceLastCPUCycle + 1U) & 3U;
-	// If the CPU should run a cycle, have it try to progress
-	if (timeSinceLastCPUCycle == 0U)
+	// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
+	if (cpu.readProgramCounter() != 0xffffffffU || cpu.hasPendingInterrupts())
 	{
-		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
-		if (cpu.readProgramCounter() != 0xffffffffU || cpu.hasPendingInterrupts())
+		// Grab the program counter at the start
+		const auto programCounter{cpu.readProgramCounter()};
+		// Try to advance the clock and check if the CPU is in a trap state
+		if (!cpu.advanceClock() || cpu.trapped())
 		{
-			// Grab the program counter at the start
-			const auto programCounter{cpu.readProgramCounter()};
-			// Try to advance the clock and check if the CPU is in a trap state
-			if (!cpu.advanceClock() || cpu.trapped())
-			{
-				// Something bad happened, so display the program counter at the faulting instruction
-				console.debug("Bad instruction at "sv, asHex_t<6U, '0'>{programCounter});
-				return false;
-			}
+			// Something bad happened, so display the program counter at the faulting instruction
+			console.debug("Bad instruction at "sv, asHex_t<6U, '0'>{programCounter});
+			return false;
 		}
 	}
 
