@@ -1,9 +1,19 @@
 soundTests = [
 	'testYM2149',
+	'testSTeDAC'
 ]
 
 testObjectMap = {
 	'testYM2149': {'libAudio': ['emulator/sound/ym2149.cxx', 'emulator/clockManager.cxx']},
+	'testSTeDAC': {
+		'libAudio': [
+			'emulator/sound/steDAC.cxx',
+			'emulator/timing/mc68901.cxx',
+			'emulator/cpu/m68k.cxx',
+			'emulator/clockManager.cxx',
+			'console.cxx',
+		]
+	},
 }
 
 foreach test : soundTests
