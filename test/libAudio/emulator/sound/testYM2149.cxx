@@ -200,8 +200,6 @@ public:
 	}
 };
 
-// A level = 0x10, B level = 0, C level = 0, env freq = 28, shape = 0xa
-
 CRUNCH_API void registerCXXTests() noexcept;
 void registerCXXTests() noexcept
 {

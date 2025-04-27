@@ -1,21 +1,19 @@
-emulatorTests = [
-	'testClockManager',
-	'testAtariSTeROMs'
+soundTests = [
+	'testMC68901',
 ]
 
 testObjectMap = {
-	'testClockManager': {'libAudio': ['emulator/clockManager.cxx']},
-	'testAtariSTeROMs': {
+	'testMC68901': {
 		'libAudio': [
-			'emulator/atariSTeROMs.cxx',
-			'emulator/gemdosAlloc.cxx',
+			'emulator/timing/mc68901.cxx',
 			'emulator/cpu/m68k.cxx',
+			'emulator/clockManager.cxx',
 			'console.cxx',
 		]
 	},
 }
 
-foreach test : emulatorTests
+foreach test : soundTests
 	map = testObjectMap.get(test, {})
 	libAudioObjs = map.has_key('libAudio') ? [libAudioLibrary.extract_objects(map['libAudio'])] : []
 	#testObjs = map.has_key('test') ? [testHelpers.extract_objects(map['test'])] : []
@@ -46,7 +44,3 @@ foreach test : emulatorTests
 		)
 	endif
 endforeach
-
-subdir('cpu')
-subdir('sound')
-subdir('timing')
