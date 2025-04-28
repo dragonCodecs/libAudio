@@ -72,9 +72,33 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		// Read the main volume to check what it's now set to (should be 40)
 		assertEqual(dac.outputLevel(), 0x40U);
 
+		// Set up another write to the main volume register to set the volume to mid (20 internally, 32 externally)
+		writeRegister(dac, 0x22U, uint16_t{0x09a9U});
+		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x09a9U);
+		// Execute the transaction
+		runMicrowireCycle(0x0ffeU);
+		// Read the main volume to check what it's now set to (should be 40)
+		assertEqual(dac.outputLevel(), 0x20U);
+
 		// Set up another write to the main volume register to over-set the volume to 63
 		writeRegister(dac, 0x22U, uint16_t{0x09ffU});
 		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x09ffU);
+		// Execute the transaction
+		runMicrowireCycle(0x0ffeU);
+		// Read the main volume to check what it's now set to (should be 64)
+		assertEqual(dac.outputLevel(), 0x40U);
+
+		// Set up a write to the left front fader register
+		writeRegister(dac, 0x22U, uint16_t{0x0aa9U});
+		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x0aa9U);
+		// Execute the transaction
+		runMicrowireCycle(0x0ffeU);
+		// Read the main volume to check what it's now set to (should be 64)
+		assertEqual(dac.outputLevel(), 0x40U);
+
+		// Set up a write to the right front fader register
+		writeRegister(dac, 0x22U, uint16_t{0x0a29U});
+		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x0a29U);
 		// Execute the transaction
 		runMicrowireCycle(0x0ffeU);
 		// Read the main volume to check what it's now set to (should be 64)
