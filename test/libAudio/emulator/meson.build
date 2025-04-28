@@ -1,6 +1,7 @@
 emulatorTests = [
 	'testClockManager',
-	'testAtariSTeROMs'
+	'testAtariSTeROMs',
+	'testAtariSTe',
 ]
 
 testObjectMap = {
@@ -10,6 +11,19 @@ testObjectMap = {
 			'emulator/atariSTeROMs.cxx',
 			'emulator/gemdosAlloc.cxx',
 			'emulator/cpu/m68k.cxx',
+			'console.cxx',
+		]
+	},
+	'testAtariSTe': {
+		'libAudio': [
+			'emulator/atariSTe.cxx',
+			'emulator/atariSTeROMs.cxx',
+			'emulator/gemdosAlloc.cxx',
+			'emulator/sound/ym2149.cxx',
+			'emulator/sound/steDAC.cxx',
+			'emulator/timing/mc68901.cxx',
+			'emulator/cpu/m68k.cxx',
+			'emulator/clockManager.cxx',
 			'console.cxx',
 		]
 	},
