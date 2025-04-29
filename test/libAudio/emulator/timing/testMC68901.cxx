@@ -146,6 +146,8 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		writeRegister(mfp, 0x0dU, uint8_t{0x00U});
 		writeRegister(mfp, 0x0fU, uint8_t{0x00U});
 		writeRegister(mfp, 0x11U, uint8_t{0x00U});
+		// Make sure IRQs will be delivered at the correct vector base address
+		writeRegister(mfp, 0x17U, uint8_t{0x40U});
 		// Make sure the mask registers allow IRQ generation so we can
 		// mark pending interrupts for the timers
 		writeRegister(mfp, 0x13U, uint8_t{0x20U});
@@ -165,6 +167,10 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x00U);
 		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x20U);
 		assertTrue(cpu.hasPendingInterrupts());
+		// Assert that the TC interrupt creates the proper cause number
+		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x45U);
+		// And that that reset the pending bit
+		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
 	}
 
 public:
