@@ -133,6 +133,9 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		mfp.configureTimer(2U, 192U, 5U);
 		assertEqual(readRegister<uint8_t>(mfp, 0x1dU), 0x50U);
 		assertEqual(readRegister<uint8_t>(mfp, 0x23U), 192U);
+
+		// This call will be a no-op
+		mfp.configureTimer(4U, 192U, 5U);
 	}
 
 	void testIRQGeneration()
@@ -153,6 +156,9 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		writeRegister(mfp, 0x13U, uint8_t{0x20U});
 		writeRegister(mfp, 0x15U, uint8_t{0x20U});
 		assertFalse(cpu.hasPendingInterrupts());
+
+		// Configure and enable timer B but not its IRQs generation
+		mfp.configureTimer(1U, 2U, 1U);
 
 		// Cycle the clock until timer C fires and we generate an interrupt
 		for (const auto _ : substrate::indexSequence_t{12288U})
