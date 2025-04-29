@@ -112,6 +112,7 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 	{
 		// Should be discarded as writing to an even address for an odd byte register
 		writeRegister(mfp, 0x00U, uint8_t{0xffU});
+		assertEqual(readRegister<uint8_t>(mfp, 0x00U), 0x00U);
 		assertEqual(readRegister<uint16_t>(mfp, 0x00U), 0x0000U);
 		// Should be discarded as writing 32 bits in a go is inadmissable
 		writeRegister(mfp, 0x00U, uint32_t{0xffffffffU});
