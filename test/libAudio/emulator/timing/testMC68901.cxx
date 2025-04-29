@@ -171,6 +171,35 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x45U);
 		// And that that reset the pending bit
 		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
+
+		// Reconfigure timer A to be sensitive to external events
+		writeRegister(mfp, 0x19U, uint8_t{0x00U});
+		mfp.configureTimer(0U, 1U, 0x08U);
+
+		// Generate some more clock cycles so we're 50% of the way to timer C firing again
+		for (const auto _ : substrate::indexSequence_t{6144U})
+		{
+			assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x00U);
+			assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
+			assertTrue(mfp.clockCycle());
+		}
+		// Mark timer A with an external event
+		mfp.fireDMAEvent();
+		assertTrue(mfp.clockCycle());
+		// Generate some more clock cycles so we're so timer C fires again
+		for (const auto _ : substrate::indexSequence_t{6143U})
+		{
+			assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x20U);
+			assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
+			assertTrue(mfp.clockCycle());
+		}
+
+		// Check we now have two pending interrupts
+		assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x20U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x20U);
+		// Verify that A's pops before C's
+		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x4dU);
+		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x45U);
 	}
 
 public:
