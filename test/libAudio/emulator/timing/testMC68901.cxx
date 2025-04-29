@@ -8,19 +8,19 @@
 
 using m68kMemoryMap_t = memoryMap_t<uint32_t, 0x00ffffffU>;
 
-void writeRegister(peripheral_t<uint32_t> &periph, uint8_t reg, uint8_t value) noexcept
+void writeRegister(peripheral_t<uint32_t> &periph, const uint8_t reg, uint8_t value) noexcept
 {
 	periph.writeAddress(reg, {&value, 1U});
 }
 
-void writeRegister(peripheral_t<uint32_t> &periph, uint8_t reg, uint16_t value) noexcept
+template<typename T> void writeRegister(peripheral_t<uint32_t> &periph, const uint8_t reg, const T value) noexcept
 {
-	std::array<uint8_t, 2> data{};
+	std::array<uint8_t, sizeof(T)> data{};
 	writeBE(value, data);
 	periph.writeAddress(reg, data);
 }
 
-template<typename T> T readRegister(peripheral_t<uint32_t> &periph, uint8_t reg) noexcept
+template<typename T> T readRegister(peripheral_t<uint32_t> &periph, const uint8_t reg) noexcept
 {
 	std::array<uint8_t, sizeof(T)> result{};
 	periph.readAddress(reg, result);
@@ -37,6 +37,7 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 
 	void testRegisterIO()
 	{
+		// Verify the function of the GPIO registers
 		writeRegister(mfp, 0x00U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x00U), 0x00ffU);
 		assertEqual(readRegister<uint8_t>(mfp, 0x01U), 0xffU);
@@ -46,6 +47,7 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint16_t>(mfp, 0x02U), 0x00ffU);
 		writeRegister(mfp, 0x04U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x04U), 0x00ffU);
+		// Verify the function of the interrupt control registers
 		writeRegister(mfp, 0x06U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x06U), 0x00ffU);
 		writeRegister(mfp, 0x08U, uint16_t{0xffffU});
@@ -62,8 +64,10 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint16_t>(mfp, 0x12U), 0x00ffU);
 		writeRegister(mfp, 0x14U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x14U), 0x00ffU);
+		// Verify the function of the vector register
 		writeRegister(mfp, 0x16U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x16U), 0x00f8U);
+		// Verify the function of the timer registers
 		writeRegister(mfp, 0x18U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x18U), 0x001fU);
 		writeRegister(mfp, 0x1eU, uint16_t{0xffffU});
@@ -89,6 +93,7 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint16_t>(mfp, 0x22U), 0x00ffU);
 		writeRegister(mfp, 0x24U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x24U), 0x00ffU);
+		// Verify the function of the UART registers
 		writeRegister(mfp, 0x26U, uint16_t{0xffffU});
 		assertEqual(readRegister<uint16_t>(mfp, 0x26U), 0x00ffU);
 		writeRegister(mfp, 0x28U, uint16_t{0xffffU});
@@ -101,12 +106,26 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint16_t>(mfp, 0x2eU), 0x00ffU);
 	}
 
+	void testBadRegisterIO()
+	{
+		// Should be discarded as writing to an even address for an odd byte register
+		writeRegister(mfp, 0x00U, uint8_t{0xffU});
+		assertEqual(readRegister<uint16_t>(mfp, 0x00U), 0x0000U);
+		// Should be discarded as writing 32 bits in a go is inadmissable
+		writeRegister(mfp, 0x00U, uint32_t{0xffffffffU});
+		assertEqual(readRegister<uint16_t>(mfp, 0x00U), 0x0000U);
+		assertEqual(readRegister<uint16_t>(mfp, 0x02U), 0x00ffU);
+		// Should be a no-op as reading 32 bits in a go is inadmissable
+		assertEqual(readRegister<uint32_t>(mfp, 0x00U), 0x00000000U);
+	}
+
 public:
 	CRUNCH_VIS testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
 	void registerTests() final
 	{
 		CXX_TEST(testRegisterIO)
+		CXX_TEST(testBadRegisterIO)
 	}
 };
 
