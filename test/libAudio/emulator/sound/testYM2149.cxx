@@ -140,6 +140,51 @@ class testYM2149 final : public testsuite
 		assertEqual(readRegister(psg, 15U), 0xffU);
 	}
 
+	void testBadRegisterIO()
+	{
+		// Set up a dummy PSG and get access to its register I/O interface
+		ym2149_t ym2149{2_MHz, 48_kHz};
+		peripheral_t<uint32_t> &psg{ym2149};
+		// Set up a byte working area
+		std::array<uint8_t, 1> resultU8{};
+		// Try to read something other than register 0
+		psg.readAddress(2U, resultU8);
+		assertEqual(resultU8[0], 0U);
+		// Try writing to an odd register (should be ignored)
+		resultU8[0] = 0xffU;
+		psg.writeAddress(1U, resultU8);
+		resultU8[0] = 0U;
+		psg.readAddress(1U, resultU8);
+		assertEqual(resultU8[0], 0U);
+		// Set up a 2 byte working area
+		std::array<uint8_t, 2> resultU16{{0xffU, 0xffU}};
+		// Try to do a write (should be to register 15)
+		psg.writeAddress(0U, resultU16);
+		psg.writeAddress(2U, resultU16);
+		// Check that it worked
+		resultU16[0] = 0U;
+		resultU16[1] = 0U;
+		psg.readAddress(0U, resultU16);
+		assertEqual(resultU16[0], 0xffU);
+		assertEqual(resultU16[1], 0x00U);
+		// Set up a 4 byte working area
+		std::array<uint8_t, 4> resultU32{{0x00U, 0xffU, 0xffU, 0xffU}};
+		// Try to do a 4 byte write (should be rejected, if not it'll put us on reg 0)
+		psg.writeAddress(0U, resultU32);
+		psg.readAddress(0U, resultU8);
+		assertEqual(resultU8[0], 0xffU);
+		// Reset the byte in reg 15 to zero
+		resultU8[0] = 0U;
+		psg.writeAddress(2U, resultU8);
+		// Try to do a 32-bit read (should be rejected)
+		resultU32[0] = 0xffU;
+		psg.readAddress(0U, resultU32);
+		assertEqual(resultU32[0], 0xffU);
+		assertEqual(resultU32[1], 0xffU);
+		assertEqual(resultU32[2], 0xffU);
+		assertEqual(resultU32[3], 0xffU);
+	}
+
 	void testToneWithEnvelope()
 	{
 		// Set up a PSG to generate 44.1kHz audio, and configure the channels and mixer settings
@@ -196,6 +241,7 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testRegisterIO)
+		CXX_TEST(testBadRegisterIO)
 		CXX_TEST(testToneWithEnvelope)
 	}
 };
