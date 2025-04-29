@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
+#include <cstdint>
 #include <crunch++.h>
+#include <substrate/index_sequence>
 #include "emulator/memoryMap.hxx"
 #include "emulator/cpu/m68k.hxx"
 #include "emulator/timing/mc68901.hxx"
@@ -132,6 +134,38 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint8_t>(mfp, 0x23U), 192U);
 	}
 
+	void testIRQGeneration()
+	{
+		// Reconfigure the interrupt registers so just timers A and C can generate events
+		// Enable just timer A and C IRQs
+		writeRegister(mfp, 0x07U, uint8_t{0x20U});
+		writeRegister(mfp, 0x09U, uint8_t{0x20U});
+		// Reset the pending and in-service status for both
+		writeRegister(mfp, 0x0bU, uint8_t{0x00U});
+		writeRegister(mfp, 0x0dU, uint8_t{0x00U});
+		writeRegister(mfp, 0x0fU, uint8_t{0x00U});
+		writeRegister(mfp, 0x11U, uint8_t{0x00U});
+		// Make sure the mask registers allow IRQ generation so we can
+		// mark pending interrupts for the timers
+		writeRegister(mfp, 0x13U, uint8_t{0x20U});
+		writeRegister(mfp, 0x15U, uint8_t{0x20U});
+		assertFalse(cpu.hasPendingInterrupts());
+
+		// Cycle the clock until timer C fires and we generate an interrupt
+		for (const auto _ : substrate::indexSequence_t{12288U})
+		{
+			// Make sure now interrupts are set yet
+			assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x00U);
+			assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
+			// Now wiggle the clock
+			assertTrue(mfp.clockCycle());
+		}
+		// Now verify that it's TC's IRQ that's actually pending
+		assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x00U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x20U);
+		assertTrue(cpu.hasPendingInterrupts());
+	}
+
 public:
 	CRUNCH_VIS testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
@@ -140,6 +174,7 @@ public:
 		CXX_TEST(testRegisterIO)
 		CXX_TEST(testBadRegisterIO)
 		CXX_TEST(testConfigureTimer)
+		CXX_TEST(testIRQGeneration)
 	}
 };
 
