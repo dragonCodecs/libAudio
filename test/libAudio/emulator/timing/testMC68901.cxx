@@ -223,6 +223,8 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		// Make sure the mask registers do not allow any IRQ generation just yet
 		writeRegister(mfp, 0x13U, uint8_t{0x00U});
 		writeRegister(mfp, 0x15U, uint8_t{0x00U});
+		// Disable timer A as an external event source
+		mfp.configureTimer(0U, 0U, 0U);
 
 		// Check that running the peripheral does nothing now
 		assertTrue(mfp.clockCycle());
