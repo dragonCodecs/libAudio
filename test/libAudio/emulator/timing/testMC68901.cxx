@@ -208,6 +208,39 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x45U);
 	}
 
+	void testGPIO7Events()
+	{
+		// Enable IRQs for just GPIO7
+		writeRegister(mfp, 0x07U, uint8_t{0x80U});
+		writeRegister(mfp, 0x09U, uint8_t{0x00U});
+		// Reset the pending and in-service status for both
+		writeRegister(mfp, 0x0bU, uint8_t{0x00U});
+		writeRegister(mfp, 0x0dU, uint8_t{0x00U});
+		writeRegister(mfp, 0x0fU, uint8_t{0x00U});
+		writeRegister(mfp, 0x11U, uint8_t{0x00U});
+		// Make sure IRQs will be delivered at the correct vector base address
+		writeRegister(mfp, 0x17U, uint8_t{0x40U});
+		// Make sure the mask registers do not allow any IRQ generation just yet
+		writeRegister(mfp, 0x13U, uint8_t{0x00U});
+		writeRegister(mfp, 0x15U, uint8_t{0x00U});
+
+		// Check that running the peripheral does nothing now
+		assertTrue(mfp.clockCycle());
+		assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x00U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
+
+		// Generate an interrupt on GPIO7
+		mfp.fireDMAEvent();
+		assertTrue(mfp.clockCycle());
+		assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x80U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x0dU), 0x00U);
+		// The interrupt is presently masked, so.. irqCause should report a spurious error
+		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x18U);
+		// Unmask and do that again..
+		writeRegister(mfp, 0x13U, uint8_t{0x80U});
+		assertEqual(static_cast<m68k::irqRequester_t &>(mfp).irqCause(), 0x4fU);
+	}
+
 public:
 	CRUNCH_VIS testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
@@ -217,6 +250,7 @@ public:
 		CXX_TEST(testBadRegisterIO)
 		CXX_TEST(testConfigureTimer)
 		CXX_TEST(testIRQGeneration)
+		CXX_TEST(testGPIO7Events)
 	}
 };
 
