@@ -119,6 +119,19 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint32_t>(mfp, 0x00U), 0x00000000U);
 	}
 
+	void testConfigureTimer()
+	{
+		// Check that we can configure timer A for ~50Hz operation
+		mfp.configureTimer(0U, 245U, 7U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x19U), 0x07U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x1fU), 245U);
+
+		// Check that we can configure timer C for 200Hz operation
+		mfp.configureTimer(2U, 192U, 5U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x1dU), 0x50U);
+		assertEqual(readRegister<uint8_t>(mfp, 0x23U), 192U);
+	}
+
 public:
 	CRUNCH_VIS testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
@@ -126,6 +139,7 @@ public:
 	{
 		CXX_TEST(testRegisterIO)
 		CXX_TEST(testBadRegisterIO)
+		CXX_TEST(testConfigureTimer)
 	}
 };
 
