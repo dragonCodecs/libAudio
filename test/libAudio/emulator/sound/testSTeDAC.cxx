@@ -184,7 +184,7 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 	void test25kMonoSampleNoLoop()
 	{
 		// Set the DMA controller up to stream the first 254 bytes of RAM out, without looping,
-		// at the next playback rate (2503Hz, ~25kHz), marked as stopped initially
+		// at the next playback rate (25033Hz, ~25kHz), marked as stopped initially
 		writeRegister(dac, 0x01U, uint8_t{0x00U});
 		writeRegister(dac, 0x03U, uint8_t{0x00U});
 		writeRegister(dac, 0x05U, uint8_t{0x00U});
@@ -208,6 +208,35 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		}
 	}
 
+	void test50kStereoSampleNoLoop()
+	{
+		// Set the DMA controller up to stream 508 bytes out from the upper 1KiB of RAM, without
+		// looping, at the fastest playback rate (50066Hz, ~50kHz), marked as stopped initially
+		writeRegister(dac, 0x01U, uint8_t{0x00U});
+		writeRegister(dac, 0x03U, uint8_t{0x00U});
+		writeRegister(dac, 0x05U, uint8_t{0x04U});
+		writeRegister(dac, 0x07U, uint8_t{0x00U});
+		writeRegister(dac, 0x0fU, uint8_t{0x00U});
+		writeRegister(dac, 0x11U, uint8_t{0x05U});
+		writeRegister(dac, 0x13U, uint8_t{0xfcU});
+		// Make sure playback is done in stereo.
+		writeRegister(dac, 0x21U, uint8_t{0x03U});
+		// Run one clock cycle and make sure the value emitted is a silence sample
+		assertTrue(dac.clockCycle());
+		assertEqual(dac.sample(*this), 0);
+		// Now enable playback
+		writeRegister(dac, 0x01U, uint8_t{0x01U});
+		// Check that the sample sequence is returned at half speed
+		for (const auto &sampleBase : substrate::indexSequence_t{1U, 255U})
+		{
+			// Compute the stereo sample for this step
+			const auto sample{static_cast<int8_t>(sampleBase) + static_cast<int8_t>(sampleBase - 1U)};
+			assertEqual(dac.sample(*this), sample * 32);
+			assertTrue(dac.clockCycle());
+			// XXX: Should have to run 2 cycles here.. not just one
+		}
+	}
+
 public:
 	CRUNCH_VIS testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{}
 	{
@@ -219,7 +248,7 @@ public:
 		for (const auto &sample : substrate::indexSequence_t{1U, 255U})
 			writeAddress(0x000000U + (sample - 1U), static_cast<uint8_t>(sample));
 		// Now a stereo stream to the upper 1KiB
-		for (const auto &sample: substrate::indexSequence_t{1U, 255U})
+		for (const auto &sample : substrate::indexSequence_t{1U, 255U})
 		{
 			const size_t offset{(sample - 1U) * 2U};
 			writeAddress(0x000400U + offset + 0U, static_cast<uint8_t>(sample));
@@ -234,6 +263,7 @@ public:
 		CXX_TEST(testBadDMARegisterIO)
 		CXX_TEST(test50kMonoSampleLoop)
 		CXX_TEST(test25kMonoSampleNoLoop)
+		CXX_TEST(test50kStereoSampleNoLoop)
 	}
 };
 
