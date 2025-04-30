@@ -233,7 +233,8 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 			const auto sample{static_cast<int8_t>(sampleBase) + static_cast<int8_t>(sampleBase - 1U)};
 			assertEqual(dac.sample(*this), sample * 32);
 			assertTrue(dac.clockCycle());
-			// XXX: Should have to run 2 cycles here.. not just one
+			assertEqual(dac.sample(*this), sample * 32);
+			assertTrue(dac.clockCycle());
 		}
 	}
 
