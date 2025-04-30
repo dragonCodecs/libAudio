@@ -181,6 +181,33 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		}
 	}
 
+	void test25kSampleNoLoop()
+	{
+		// Set the DMA controller up to stream the first 254 bytes of RAM out, without looping,
+		// at the next playback rate (2503Hz, ~25kHz), marked as stopped initially
+		writeRegister(dac, 0x01U, uint8_t{0x00U});
+		writeRegister(dac, 0x03U, uint8_t{0x00U});
+		writeRegister(dac, 0x05U, uint8_t{0x00U});
+		writeRegister(dac, 0x07U, uint8_t{0x00U});
+		writeRegister(dac, 0x0fU, uint8_t{0x00U});
+		writeRegister(dac, 0x11U, uint8_t{0x00U});
+		writeRegister(dac, 0x13U, uint8_t{0xfeU});
+		writeRegister(dac, 0x21U, uint8_t{0x82U});
+		// Run one clock cycle and make sure the value emitted is a silence sample
+		assertTrue(dac.clockCycle());
+		assertEqual(dac.sample(*this), 0);
+		// Now enable playback
+		writeRegister(dac, 0x01U, uint8_t{0x01U});
+		// Check that the sample sequence is returned at half speed
+		for (const auto &sample : substrate::indexSequence_t{1U, 255U})
+		{
+			assertEqual(dac.sample(*this), static_cast<int8_t>(sample) * 64);
+			assertTrue(dac.clockCycle());
+			assertEqual(dac.sample(*this), static_cast<int8_t>(sample) * 64);
+			assertTrue(dac.clockCycle());
+		}
+	}
+
 public:
 	CRUNCH_VIS testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{}
 	{
@@ -206,6 +233,7 @@ public:
 		CXX_TEST(testDMARegisterIO)
 		CXX_TEST(testBadDMARegisterIO)
 		CXX_TEST(test50kSampleLoop)
+		CXX_TEST(test25kSampleNoLoop)
 	}
 };
 
