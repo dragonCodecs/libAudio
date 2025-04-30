@@ -11,15 +11,13 @@
 
 using m68kMemoryMap_t = memoryMap_t<uint32_t, 0x00ffffffU>;
 
-void writeRegister(peripheral_t<uint32_t> &periph, uint8_t reg, uint8_t value) noexcept
+template<typename T> void writeRegister(peripheral_t<uint32_t> &periph, const uint8_t reg, const T value) noexcept
 {
-	periph.writeAddress(reg, {&value, 1U});
-}
-
-void writeRegister(peripheral_t<uint32_t> &periph, uint8_t reg, uint16_t value) noexcept
-{
-	std::array<uint8_t, 2> data{};
-	writeBE(value, data);
+	std::array<uint8_t, sizeof(T)> data{};
+	if constexpr (sizeof(T) == 1)
+		data[0] = value;
+	else
+		writeBE(value, data);
 	periph.writeAddress(reg, data);
 }
 
@@ -107,7 +105,28 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 
 	void testDMARegisterIO()
 	{
-		//
+		writeRegister(dac, 0x00U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x00U), 0x0003U);
+		writeRegister(dac, 0x02U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x02U), 0x00ffU);
+		writeRegister(dac, 0x04U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x04U), 0x00ffU);
+		writeRegister(dac, 0x06U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x06U), 0x00feU);
+		writeRegister(dac, 0x08U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x08U), 0x00ffU);
+		writeRegister(dac, 0x0aU, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x0aU), 0x00ffU);
+		writeRegister(dac, 0x0cU, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x0cU), 0x00feU);
+		writeRegister(dac, 0x0eU, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x0eU), 0x00ffU);
+		writeRegister(dac, 0x10U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x10U), 0x00ffU);
+		writeRegister(dac, 0x12U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x12U), 0x00feU);
+		writeRegister(dac, 0x20U, uint16_t{0xffffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x20U), 0x0083U);
 	}
 
 public:
