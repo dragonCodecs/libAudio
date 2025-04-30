@@ -10,15 +10,13 @@
 
 using m68kMemoryMap_t = memoryMap_t<uint32_t, 0x00ffffffU>;
 
-void writeRegister(peripheral_t<uint32_t> &periph, const uint8_t reg, uint8_t value) noexcept
-{
-	periph.writeAddress(reg, {&value, 1U});
-}
-
 template<typename T> void writeRegister(peripheral_t<uint32_t> &periph, const uint8_t reg, const T value) noexcept
 {
 	std::array<uint8_t, sizeof(T)> data{};
-	writeBE(value, data);
+	if constexpr (sizeof(T) == 1)
+		data[0] = value;
+	else
+		writeBE(value, data);
 	periph.writeAddress(reg, data);
 }
 
