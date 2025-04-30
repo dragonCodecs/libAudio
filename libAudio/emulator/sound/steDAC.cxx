@@ -168,9 +168,21 @@ bool steDAC_t::clockCycle() noexcept
 	if ((control & (1U << 0U)) == 0x00U)
 		return true;
 
+	// Calculate the current sample rate tick count to hit the required play rate
+	const auto sampleRateTicks
+	{
+		[&]()
+		{
+			const auto ticks{(1U << sampleRateDivider)};
+			if (sampleMono)
+				return ticks;
+			// Stero playback requires us stretch the tick rate to half to get the correct cadence
+			return ticks << 1U;
+		}()
+	};
 	// Something's playing, great.. step the rate counter to see if we should do something
 	// in this cycle, and check if the counter overflowed
-	if (++sampleRateCounter == (1U << sampleRateDivider))
+	if (++sampleRateCounter == sampleRateTicks)
 		// Yes, so reset it
 		sampleRateCounter = 0U;
 	else
