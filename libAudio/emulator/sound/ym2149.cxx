@@ -93,9 +93,6 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 		writeAddress(address + 2U, data.subspan(2U));
 		return;
 	}
-	// Only admit 8- and 16-bit writes
-	if (data.size_bytes() > 2U)
-		return;
 	// The address to write determines if we're making a register selection or writing a register
 	switch (address)
 	{
