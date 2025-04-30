@@ -129,6 +129,26 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint16_t>(dac, 0x20U), 0x0083U);
 	}
 
+	void testBadDMARegisterIO()
+	{
+		// 8-bit writes to even numbered registers should be discarded as all 8-bit registers here are odd byte
+		writeRegister(dac, 0x00U, uint8_t{0xffU});
+		assertEqual(readRegister<uint16_t>(dac, 0x00U), 0x0003U);
+		// 16-bit writes to odd addresses should be inadmissable
+		writeRegister(dac, 0x01U, uint16_t{0x0000U});
+		assertEqual(readRegister<uint8_t>(dac, 0x01U), 0x03U);
+		// 32-bit writes similarly are inadmissable and should be discarded
+		writeRegister(dac, 0x00U, uint32_t{0x00000000U});
+		assertEqual(readRegister<uint8_t>(dac, 0x01U), 0x03U);
+		assertEqual(readRegister<uint8_t>(dac, 0x03U), 0xffU);
+		// 32-bit reads should also be inadmissable and discarded
+		assertEqual(readRegister<uint32_t>(dac, 0x00U), 0x00000000U);
+		// Likewise 16-bit odd address reads
+		assertEqual(readRegister<uint16_t>(dac, 0x01U), 0x0000U);
+		// And 8-bit even reads
+		assertEqual(readRegister<uint8_t>(dac, 0x00U), 0x00U);
+	}
+
 public:
 	CRUNCH_VIS testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
@@ -136,6 +156,7 @@ public:
 	{
 		CXX_TEST(testMicrowire)
 		CXX_TEST(testDMARegisterIO)
+		CXX_TEST(testBadDMARegisterIO)
 	}
 };
 
