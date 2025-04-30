@@ -150,7 +150,7 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint8_t>(dac, 0x00U), 0x00U);
 	}
 
-	void test50kSampleLoop()
+	void test50kMonoSampleLoop()
 	{
 		// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
 		// the fastest playback rate (50066Hz, ~50kHz), marked as stopped initially
@@ -181,7 +181,7 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		}
 	}
 
-	void test25kSampleNoLoop()
+	void test25kMonoSampleNoLoop()
 	{
 		// Set the DMA controller up to stream the first 254 bytes of RAM out, without looping,
 		// at the next playback rate (2503Hz, ~25kHz), marked as stopped initially
@@ -232,8 +232,8 @@ public:
 		CXX_TEST(testMicrowire)
 		CXX_TEST(testDMARegisterIO)
 		CXX_TEST(testBadDMARegisterIO)
-		CXX_TEST(test50kSampleLoop)
-		CXX_TEST(test25kSampleNoLoop)
+		CXX_TEST(test50kMonoSampleLoop)
+		CXX_TEST(test25kMonoSampleNoLoop)
 	}
 };
 
