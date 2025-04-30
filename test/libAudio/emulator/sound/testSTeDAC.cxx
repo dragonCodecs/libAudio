@@ -7,6 +7,7 @@
 #include "emulator/cpu/m68k.hxx"
 #include "emulator/timing/mc68901.hxx"
 #include "emulator/sound/steDAC.hxx"
+#include "emulator/ram.hxx"
 #include "emulator/unitsHelpers.hxx"
 
 using m68kMemoryMap_t = memoryMap_t<uint32_t, 0x00ffffffU>;
@@ -149,14 +150,62 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint8_t>(dac, 0x00U), 0x00U);
 	}
 
+	void test50kSampleLoop()
+	{
+		// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
+		// the fastest playback rate (50066Hz, ~50kHz), marked as stopped initially
+		writeRegister(dac, 0x01U, uint8_t{0x02U});
+		writeRegister(dac, 0x03U, uint8_t{0x00U});
+		writeRegister(dac, 0x05U, uint8_t{0x00U});
+		writeRegister(dac, 0x07U, uint8_t{0x00U});
+		writeRegister(dac, 0x0fU, uint8_t{0x00U});
+		writeRegister(dac, 0x11U, uint8_t{0x00U});
+		writeRegister(dac, 0x13U, uint8_t{0xfeU});
+		writeRegister(dac, 0x21U, uint8_t{0x83U});
+		// Run one clock cycle and make sure the value emitted is a silence sample
+		assertTrue(dac.clockCycle());
+		assertEqual(dac.sample(*this), 0);
+		// Now enable playback
+		writeRegister(dac, 0x01U, uint8_t{0x03U});
+		// Check that the sample sequence is returned
+		for (const auto &sample : substrate::indexSequence_t{1U, 255U})
+		{
+			assertEqual(dac.sample(*this), static_cast<int8_t>(sample) * 64);
+			assertTrue(dac.clockCycle());
+		}
+		// Then that the second iteration through the loop works and does the same thing
+		for (const auto &sample : substrate::indexSequence_t{1U, 255U})
+		{
+			assertEqual(dac.sample(*this), static_cast<int8_t>(sample) * 64);
+			assertTrue(dac.clockCycle());
+		}
+	}
+
 public:
-	CRUNCH_VIS testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{} { }
+	CRUNCH_VIS testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{}
+	{
+		// Register some memory for the sample tests, and fill with a couple of patterns that make it easy to see
+		// if things are working right within the sampler
+		addressMap[{0x000000U, 0x000800U}] = std::make_unique<ram_t<uint32_t, 2_KiB>>();
+
+		// Write a mono stream to the first 254 bytes of RAM
+		for (const auto &sample : substrate::indexSequence_t{1U, 255U})
+			writeAddress(0x000000U + (sample - 1U), static_cast<uint8_t>(sample));
+		// Now a stereo stream to the upper 1KiB
+		for (const auto &sample: substrate::indexSequence_t{1U, 255U})
+		{
+			const size_t offset{(sample - 1U) * 2U};
+			writeAddress(0x000400U + offset + 0U, static_cast<uint8_t>(sample));
+			writeAddress(0x000400U + offset + 1U, static_cast<uint8_t>(sample - 1U));
+		}
+	}
 
 	void registerTests() final
 	{
 		CXX_TEST(testMicrowire)
 		CXX_TEST(testDMARegisterIO)
 		CXX_TEST(testBadDMARegisterIO)
+		CXX_TEST(test50kSampleLoop)
 	}
 };
 
