@@ -102,6 +102,13 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 		runMicrowireCycle(0x0ffeU);
 		// Read the main volume to check what it's now set to (should be 64)
 		assertEqual(dac.outputLevel(), 0x40U);
+
+		// Do a nonsense write with the wrong number of bits used (should be discarded)
+		writeRegister(dac, 0x24U, uint16_t{0x0ff0U});
+		writeRegister(dac, 0x22U, uint16_t{0x0981U});
+		runMicrowireCycle(0x0ff0U);
+		// Read the main volume to check what it's now set to (should be 64)
+		assertEqual(dac.outputLevel(), 0x40U);
 	}
 
 	void testDMARegisterIO()
