@@ -676,6 +676,10 @@ private:
 		writeAddress(0x00001aU, uint16_t{0x6602}); // bne +$02 (0x00001e)
 		writeAddress(0x00001eU, uint16_t{0x6740}); // beq +$40 (0x000060)
 		writeAddress(0x000020U, uint16_t{0x6702}); // beq +$02 (0x000024)
+		writeAddress(0x000024U, uint16_t{0x6840}); // bvc +$40 (0x000066)
+		writeAddress(0x000026U, uint16_t{0x6802}); // bvc +$02 (0x00002a)
+		writeAddress(0x00002aU, uint16_t{0x6940}); // bvs +$40 (0x00006c)
+		writeAddress(0x00002cU, uint16_t{0x6902}); // bvs +$02 (0x000030)
 
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -732,6 +736,22 @@ private:
 		// Step the twelveth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000024U);
+		// Step the thirteenth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000026U);
+		// Set up the status register to not skip the next jump
+		cpu.writeStatus(0x001dU);
+		// Step the fourteenth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000002aU);
+		// Step the fiftheenth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000002cU);
+		// Set up the status register to not skip the next jump
+		cpu.writeStatus(0x001fU);
+		// Step the sixtheenth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000030U);
 	}
 
 	void testBCLR()
