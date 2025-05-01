@@ -660,6 +660,40 @@ private:
 		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
+	void testBcc()
+	{
+		// This jump sled requires the status register be changed in each step to a suitable value
+		// to variously trigger and not trigger the different jumps.
+		writeAddress(0x000000U, uint16_t{0x6240}); // bhi +$40 (0x000042)
+		writeAddress(0x000002U, uint16_t{0x6202}); // bhi +$02 (0x000006)
+		writeAddress(0x000006U, uint16_t{0x6340}); // bls +$40 (0x000048)
+		writeAddress(0x000008U, uint16_t{0x6302}); // bls +$02 (0x00000c)
+
+		// Set the CPU to execute this sequence
+		cpu.executeFrom(0x00000000U, 0x00800000U);
+		// Validate starting conditions
+		assertEqual(cpu.readProgramCounter(), 0x00000000U);
+		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
+		// Set up the status register to skip the first jump
+		cpu.writeStatus(0x001fU);
+		// Step the first instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000002U);
+		// Set up the status register to not skip the second jump
+		cpu.writeStatus(0x001aU);
+		// Step the second instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000006U);
+		// Step the third instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000008U);
+		// Set up the status register to not skip the next jump
+		cpu.writeStatus(0x001fU);
+		// Step the fourth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
+	}
+
 	void testBCLR()
 	{
 		writeAddress(0x000000U, uint16_t{0x0880U});
@@ -2523,6 +2557,7 @@ public:
 		CXX_TEST(testANDISpecial)
 		CXX_TEST(testASL)
 		CXX_TEST(testASR)
+		CXX_TEST(testBcc)
 		CXX_TEST(testBCLR)
 		CXX_TEST(testBSET)
 		CXX_TEST(testBTST)
