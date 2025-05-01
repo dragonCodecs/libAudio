@@ -664,30 +664,37 @@ private:
 	{
 		// This jump sled requires the status register be changed in each step to a suitable value
 		// to variously trigger and not trigger the different jumps.
-		writeAddress(0x000000U, uint16_t{0x6240}); // bhi +$40 (0x000042)
-		writeAddress(0x000002U, uint16_t{0x6202}); // bhi +$02 (0x000006)
-		writeAddress(0x000006U, uint16_t{0x6340}); // bls +$40 (0x000048)
-		writeAddress(0x000008U, uint16_t{0x6302}); // bls +$02 (0x00000c)
-		writeAddress(0x00000cU, uint16_t{0x6440}); // bcc +$40 (0x00004e)
-		writeAddress(0x00000eU, uint16_t{0x6402}); // bcc +$02 (0x000012)
-		writeAddress(0x000012U, uint16_t{0x6540}); // bcs +$40 (0x000054)
-		writeAddress(0x000014U, uint16_t{0x6502}); // bcs +$02 (0x000018)
-		writeAddress(0x000018U, uint16_t{0x6640}); // bne +$40 (0x00005a)
-		writeAddress(0x00001aU, uint16_t{0x6602}); // bne +$02 (0x00001e)
-		writeAddress(0x00001eU, uint16_t{0x6740}); // beq +$40 (0x000060)
-		writeAddress(0x000020U, uint16_t{0x6702}); // beq +$02 (0x000024)
-		writeAddress(0x000024U, uint16_t{0x6840}); // bvc +$40 (0x000066)
-		writeAddress(0x000026U, uint16_t{0x6802}); // bvc +$02 (0x00002a)
-		writeAddress(0x00002aU, uint16_t{0x6940}); // bvs +$40 (0x00006c)
-		writeAddress(0x00002cU, uint16_t{0x6902}); // bvs +$02 (0x000030)
-		writeAddress(0x000030U, uint16_t{0x6a40}); // bpl +$40 (0x000072)
-		writeAddress(0x000032U, uint16_t{0x6a02}); // bpl +$02 (0x000036)
-		writeAddress(0x000036U, uint16_t{0x6b40}); // bmi +$40 (0x000078)
-		writeAddress(0x000038U, uint16_t{0x6b02}); // bmi +$02 (0x00003c)
-		writeAddress(0x00003cU, uint16_t{0x6c40}); // bge +$40 (0x00007e)
-		writeAddress(0x00003eU, uint16_t{0x6c02}); // bge +$02 (0x000042)
-		writeAddress(0x000042U, uint16_t{0x6d40}); // blt +$40 (0x000084)
-		writeAddress(0x000044U, uint16_t{0x6d02}); // blt +$02 (0x000048)
+		writeAddress(0x000000U, uint16_t{0x6240U}); // bhi +$40 (0x000042)
+		writeAddress(0x000002U, uint16_t{0x6202U}); // bhi +$02 (0x000006)
+		writeAddress(0x000006U, uint16_t{0x6340U}); // bls +$40 (0x000048)
+		writeAddress(0x000008U, uint16_t{0x6302U}); // bls +$02 (0x00000c)
+		writeAddress(0x00000cU, uint16_t{0x6440U}); // bcc +$40 (0x00004e)
+		writeAddress(0x00000eU, uint16_t{0x6402U}); // bcc +$02 (0x000012)
+		writeAddress(0x000012U, uint16_t{0x6540U}); // bcs +$40 (0x000054)
+		writeAddress(0x000014U, uint16_t{0x6502U}); // bcs +$02 (0x000018)
+		writeAddress(0x000018U, uint16_t{0x6640U}); // bne +$40 (0x00005a)
+		writeAddress(0x00001aU, uint16_t{0x6602U}); // bne +$02 (0x00001e)
+		writeAddress(0x00001eU, uint16_t{0x6740U}); // beq +$40 (0x000060)
+		writeAddress(0x000020U, uint16_t{0x6702U}); // beq +$02 (0x000024)
+		writeAddress(0x000024U, uint16_t{0x6840U}); // bvc +$40 (0x000066)
+		writeAddress(0x000026U, uint16_t{0x6802U}); // bvc +$02 (0x00002a)
+		writeAddress(0x00002aU, uint16_t{0x6940U}); // bvs +$40 (0x00006c)
+		writeAddress(0x00002cU, uint16_t{0x6902U}); // bvs +$02 (0x000030)
+		writeAddress(0x000030U, uint16_t{0x6a40U}); // bpl +$40 (0x000072)
+		writeAddress(0x000032U, uint16_t{0x6a02U}); // bpl +$02 (0x000036)
+		writeAddress(0x000036U, uint16_t{0x6b40U}); // bmi +$40 (0x000078)
+		writeAddress(0x000038U, uint16_t{0x6b02U}); // bmi +$02 (0x00003c)
+		writeAddress(0x00003cU, uint16_t{0x6c40U}); // bge +$40 (0x00007e)
+		writeAddress(0x00003eU, uint16_t{0x6c02U}); // bge +$02 (0x000042)
+		writeAddress(0x000042U, uint16_t{0x6d40U}); // blt +$40 (0x000084)
+		writeAddress(0x000044U, uint16_t{0x6d02U}); // blt +$02 (0x000048)
+		writeAddress(0x000048U, uint16_t{0x6e40U}); // bgt +$40 (0x00008a)
+		writeAddress(0x00004aU, uint16_t{0x6e02U}); // bgt +$02 (0x00004e)
+		writeAddress(0x00004eU, uint16_t{0x6f00U});
+		writeAddress(0x000050U, uint16_t{0x0100U}); // ble +$0100 (0x000152)
+		writeAddress(0x000052U, uint16_t{0x6f00U});
+		writeAddress(0x000054U, uint16_t{0x00acU}); // ble +$00aa (0x000100)
+		writeAddress(0x000100U, uint16_t{0x4e75U}); // rts to end the test
 
 		// Set the CPU to execute this sequence
 		cpu.executeFrom(0x00000000U, 0x00800000U);
@@ -794,6 +801,28 @@ private:
 		// Step the twentyfourth instruction and validate
 		runStep();
 		assertEqual(cpu.readProgramCounter(), 0x00000048U);
+		// Set up the status register to not skip the next jump
+		cpu.writeStatus(0x001fU);
+		// Step the twentyfifth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000004aU);
+		// Set up the status register to not skip the next jump
+		cpu.writeStatus(0x001bU);
+		// Step the twentysixth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x0000004eU);
+		// Step the twentyseventh instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000052U);
+		// Set up the status register to not skip the next jump
+		cpu.writeStatus(0x0013U);
+		// Step the twentyeigth instruction and validate
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0x00000100U);
+		// Step the final instruction to complete the test
+		runStep();
+		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
+		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
 	}
 
 	void testBCLR()
