@@ -4703,7 +4703,7 @@ stepResult_t motorola68000_t::dispatchNEG(const decodedOperation_t &insn) noexce
 		status.clear(m68kStatusBits_t::overflow);
 
 	// Store the result back and return how long this all took
-	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, value);
 	return {true, false, 0U};
 }
 
