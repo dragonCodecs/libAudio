@@ -68,12 +68,12 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 			case 0x01U:
 			case 0x02U:
 			case 0x03U:
-				data[0] = baseAddress.readByte((address >> 1U) - 1U);
+				data[0] = beginAddress.readByte((address >> 1U) - 1U);
 				break;
 			case 0x04U:
 			case 0x05U:
 			case 0x06U:
-				data[0] = sampleCounter.readByte((address >> 1U) - 4U);
+				data[0] = sampleAddress.readByte((address >> 1U) - 4U);
 				break;
 			case 0x07U:
 			case 0x08U:
@@ -129,21 +129,21 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 		switch (address >> 1U)
 		{
 			case 0x00U:
-				// If playback state is being switched, reset the sample counter
-				if ((control & (1U << 0U)) != (data[0] & (1U << 0)))
-					sampleCounter.reset();
+				// If playback state is being switched, reset the sample address
+				if ((control & (1U << 0U)) != (data[0] & (1U << 0U)))
+					sampleAddress = beginAddress;
 				// Only the bottom two bits of the control byte are valid
 				control = data[0] & 0x03U;
 				break;
 			case 0x01U:
 			case 0x02U:
 			case 0x03U:
-				baseAddress.writeByte((address >> 1U) - 1U, data[0]);
+				beginAddress.writeByte((address >> 1U) - 1U, data[0]);
 				break;
 			case 0x04U:
 			case 0x05U:
 			case 0x06U:
-				sampleCounter.writeByte((address >> 1U) - 4U, data[0]);
+				sampleAddress.writeByte((address >> 1U) - 4U, data[0]);
 				break;
 			case 0x07U:
 			case 0x08U:
@@ -190,13 +190,13 @@ bool steDAC_t::clockCycle() noexcept
 		return true;
 
 	// Step the sample counter based on whether we're playing mono or stereo
-	sampleCounter += sampleMono ? 1U : 2U;
+	sampleAddress += sampleMono ? 1U : 2U;
 
 	// If the sample address equals the end address
-	if (baseAddress + sampleCounter == endAddress)
+	if (sampleAddress == endAddress)
 	{
 		// Reset the counter back to the start
-		sampleCounter.reset();
+		sampleAddress = beginAddress;
 		// If we're not looping playback, disable DMA
 		if ((control & (1U << 1U)) == 0x00U)
 			control &= 0xfeU;
@@ -273,7 +273,6 @@ int16_t steDAC_t::sample(const memoryMap_t<uint32_t, 0x00ffffffU> &memoryMap) co
 	// If the DMA engine is currently active, grab a sample back and mix down to mono, otherwise return an idle value
 	if (control & 0x01U)
 	{
-		const auto sampleAddress{baseAddress + sampleCounter};
 		// Grab the sample for the first channel
 		const int16_t left{memoryMap.readAddress<int8_t>(sampleAddress)};
 		// Then grab the sample for the second
@@ -309,12 +308,15 @@ namespace steDAC
 		return static_cast<uint8_t>(value >> shift);
 	}
 
-	void register24b_t::reset() noexcept
-		{ value = 0U; }
-
 	register24b_t &register24b_t::operator +=(const uint32_t amount) noexcept
 	{
 		value += amount;
+		return *this;
+	}
+
+	register24b_t &register24b_t::operator =(const register24b_t &other) noexcept
+	{
+		value = other.value;
 		return *this;
 	}
 } // namespace steDAC

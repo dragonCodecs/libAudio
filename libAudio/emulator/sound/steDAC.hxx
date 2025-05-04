@@ -18,10 +18,10 @@ namespace steDAC
 	public:
 		void writeByte(uint8_t position, uint8_t byte) noexcept;
 		[[nodiscard]] uint8_t readByte(uint8_t position) const noexcept;
-		void reset() noexcept;
 
 		[[nodiscard]] operator uint32_t() const noexcept { return value; }
 		register24b_t &operator +=(uint32_t amount) noexcept;
+		register24b_t &operator =(const register24b_t &other) noexcept;
 	};
 } // namespace steDAC
 
@@ -34,9 +34,9 @@ private:
 	mc68901_t &_mfp;
 
 	// Values that control the DMA engine
-	steDAC::register24b_t baseAddress{};
+	steDAC::register24b_t beginAddress{};
 	steDAC::register24b_t endAddress{};
-	steDAC::register24b_t sampleCounter{};
+	steDAC::register24b_t sampleAddress{};
 	uint8_t control{0U};
 	bool sampleMono{true};
 	uint8_t sampleRateDivider{0U};
