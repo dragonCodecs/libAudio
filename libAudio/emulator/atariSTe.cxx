@@ -311,8 +311,8 @@ int16_t atariSTe_t::readSample() noexcept
 {
 	// Extract the sample from the PSG
 	const auto psgSample{psg->sample()};
-	// Extract the sample from the STe DAC
-	const auto dacSample{dac->sample(*this)};
+	// Extract the sample from the STe DMA DAC engine
+	const auto dmaSample{dac->sample(*this)};
 	// Combine the samples to generate the input to the scaling
 	const auto sample
 	{
@@ -324,7 +324,7 @@ int16_t atariSTe_t::readSample() noexcept
 			if (sample < INT16_MIN)
 				return INT16_MIN;
 			return static_cast<int16_t>(sample);
-		}(psgSample + dacSample)
+		}(psgSample + dmaSample)
 	};
 	// Scale the sample by the output level set via the DAC block LMC1992 and return
 	// NB: the max output level is 64, allowing this to be simplified by the compiler and fast
