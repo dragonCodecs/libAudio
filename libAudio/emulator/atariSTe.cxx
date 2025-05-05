@@ -328,7 +328,7 @@ int16_t atariSTe_t::readSample() noexcept
 	};
 	// Scale the sample by the output level set via the DAC block LMC1992 and return
 	// NB: the max output level is 64, allowing this to be simplified by the compiler and fast
-	return (sample * dac->outputLevel()) / 64;
+	return (int32_t{sample} * dac->outputLevel()) / 64;
 }
 
 void atariSTe_t::displayCPUState() const noexcept
