@@ -61,15 +61,8 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	fileInfo_t &info = file->fileInfo();
 	sndhLoader_t loader{file->_fd};
 
-	auto &entryPoints = loader.entryPoints();
-	console.debug("Read SNDH entry points"sv);
-	console.debug(" -> init = "sv, asHex_t<8, '0'>{entryPoints.init}, ", exit = "sv,
-		asHex_t<8, '0'>{entryPoints.exit}, ", play = "sv, asHex_t<8, '0'>{entryPoints.play});
 	auto &metadata = loader.metadata();
-	console.debug("Read SNDH metadata"sv);
-	console.debug(" -> title: "sv, metadata.title);
-	console.debug(" -> composer: "sv, metadata.artist);
-	console.debug(" -> converter: "sv, metadata.converter);
+	console.debug("SNDH metadata"sv);
 	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 
 	// Copy the metadata for this SNDH into the fileInfo_t, and then copy the decrunched SNDH into emulator memory
