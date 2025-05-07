@@ -223,6 +223,18 @@ playStep:
 	beq .step4
 	cmpi #39, d0
 	beq .step5
+	cmpi #48, d0
+	beq .step8
+	cmpi #51, d0
+	beq .step9
+	cmpi #54, d0
+	beq .step2
+	cmpi #57, d0
+	beq .step3
+	cmpi #60, d0
+	beq .step4
+	cmpi #63, d0
+	beq .step5
 	rts
 
 .step0:
@@ -299,6 +311,30 @@ playStep:
 	move.w #0x0907, d1
 	movep.w d1, 0(a0)
 
+	move.w #0x080e, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step8:
+	* step2-5 are repeated before this, leading to us playing C4 on channel A at full volume
+	move.w #0x0101, d1
+	movep.w d1, 0(a0)
+	move.w #0x00de, d1
+	movep.w d1, 0(a0)
+	move.w #0x080f, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step9:
+	* Play C4 on channel B at half volume
+	move.w #0x0301, d1
+	movep.w d1, 0(a0)
+	move.w #0x02de, d1
+	movep.w d1, 0(a0)
+	move.w #0x0907, d1
+	movep.w d1, 0(a0)
+
+	* And decrease the volume of A a step
 	move.w #0x080e, d1
 	movep.w d1, 0(a0)
 	rts
