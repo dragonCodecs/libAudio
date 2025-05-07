@@ -1,15 +1,25 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2025 Rachel Mant <git@dragonmux.network>
+#include <string_view>
 #include <crunch++.h>
+#include <substrate/fd>
+#include <substrate/index_sequence>
+#include "sndh/iceDecrunch.hxx"
 #include "emulator/atariSTe.hxx"
 
+using namespace std::literals::string_view_literals;
+
 using m68kMemoryMap_t = memoryMap_t<uint32_t, 0x00ffffffU>;
+
+constexpr static auto sndhFileName{"atariSTe.sndh"sv};
 
 class testAtariSTe final : public testsuite
 {
 	atariSTe_t emulator{};
 	// Convert the emulation instance to grab access to the memory map to read memory
 	m68kMemoryMap_t &mmio{reinterpret_cast<m68kMemoryMap_t &>(emulator)};
+
+	sndhDecruncher_t sndh;
 
 	void testMemoryMap()
 	{
@@ -59,11 +69,53 @@ class testAtariSTe final : public testsuite
 		mmio.writeAddress(0xfffa1dU, uint8_t{0x00U});
 	}
 
+	void testCopyToRAM()
+	{
+		// Start by trying to read all of the SNDH data into RAM, having made sure it's valid
+		assertTrue(sndh.valid());
+		assertTrue(emulator.copyToRAM(sndh));
+		// Having done this, put the SNDH source data back to the start
+		assertTrue(sndh.head());
+		// And try to read each byte back out of RAM and compare it to the source file data
+		for (const auto offset : substrate::indexSequence_t{sndh.length()})
+		{
+			// Read the source byte from the SNDH data
+			const auto expectedByte
+			{
+				[this]()
+				{
+					uint8_t result{};
+					assertTrue(sndh.read(result));
+					return result;
+				}()
+			};
+			// Read the matching byte back out from memory and check it
+			assertEqual(mmio.readAddress<uint8_t>(0x010000U + offset), expectedByte);
+		}
+	}
+
 public:
+	CRUNCH_VIS testAtariSTe() noexcept : testsuite{},
+		sndh
+		{
+			[this]()
+			{
+				// Open the SNDH file of test data, and read it all into memory
+				const fd_t sndhFile{sndhFileName, O_RDONLY | O_NOCTTY};
+				assertNotEqual(sndhFile, -1);
+				assertGreaterThan(sndhFile.length(), 0);
+				// Use the decruncher to get something valid to use with copyToRAM() etc
+				return sndhDecruncher_t{sndhFile};
+			}()
+		}
+	{
+	}
+
 	void registerTests() final
 	{
 		CXX_TEST(testMemoryMap)
 		CXX_TEST(testConfigureTimer)
+		CXX_TEST(testCopyToRAM)
 	}
 };
 
