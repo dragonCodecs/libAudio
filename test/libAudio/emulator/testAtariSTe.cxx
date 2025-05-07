@@ -64,9 +64,6 @@ class testAtariSTe final : public testsuite
 		assertEqual(mmio.readAddress<uint8_t>(0x001001U), 245U);
 		assertEqual(mmio.readAddress<uint8_t>(0x001002U), 152U);
 		assertEqual(mmio.readAddress<uint8_t>(0x001003U), 0U);
-
-		// Turn the timer back off
-		mmio.writeAddress(0xfffa1dU, uint8_t{0x00U});
 	}
 
 	void testCopyToRAM()
@@ -94,6 +91,41 @@ class testAtariSTe final : public testsuite
 		}
 	}
 
+	void testInit()
+	{
+		// Try to initialised the first subtune
+		assertTrue(emulator.init(1U));
+		// Now check that the area the program uses for PSG register backups is properly populated
+		assertEqual(mmio.readAddress<uint8_t>(0x01007cU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01007dU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01007eU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01007fU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010080U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010081U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010082U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010083U), 0x3fU);
+		assertEqual(mmio.readAddress<uint8_t>(0x010084U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010085U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010086U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010087U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010088U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010089U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01008aU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01008bU), 0x00U);
+		// And check that the area the program uses for DMA register backups is properly populated
+		assertEqual(mmio.readAddress<uint8_t>(0x01008cU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01008dU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01008eU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x01008fU), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010090U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010091U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010092U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010093U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010094U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010095U), 0x00U);
+		assertEqual(mmio.readAddress<uint8_t>(0x010096U), 0x83U);
+	}
+
 public:
 	CRUNCH_VIS testAtariSTe() noexcept : testsuite{},
 		sndh
@@ -108,14 +140,14 @@ public:
 				return sndhDecruncher_t{sndhFile};
 			}()
 		}
-	{
-	}
+	{ }
 
 	void registerTests() final
 	{
 		CXX_TEST(testMemoryMap)
 		CXX_TEST(testConfigureTimer)
 		CXX_TEST(testCopyToRAM)
+		CXX_TEST(testInit)
 	}
 };
 
