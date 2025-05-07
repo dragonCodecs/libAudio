@@ -99,7 +99,7 @@ init:
 
 .saveDACRegs:
 	* Save the DMA DAC regs into our save area
-	movea.w 0x8900, a0
+	movea.w #0x8900, a0
 	lea dmaRegs(pc), a1
 	move.b 0x01(a0), (a1)+
 	move.b 0x03(a0), (a1)+
@@ -118,7 +118,7 @@ init:
 
 	* We could be nice here with the MFP, but we just don't care..
 	* make sure only timer C is actually enabled and running
-	movea.w 0xfa00, a0
+	movea.w #0xfa00, a0
 	move.b #0, 0x19(a0)
 	move.b #0, 0x1b(a0)
 	and.b #0xf0, 0x1d(a0)
@@ -138,7 +138,7 @@ deinit:
 
 .restoreDMARegs:
 	* Restore the DMA DAC regs from our save area
-	movea.w 0x8900, a0
+	movea.w #0x8900, a0
 	lea dmaRegs(pc), a1
 	move.b (a1)+, 0x01(a0)
 	move.b (a1)+, 0x03(a0)
