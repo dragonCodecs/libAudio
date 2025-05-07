@@ -56,7 +56,7 @@ init:
 	* Now, load the address of the PSG into a0
 	movea.w #0x8800, a0
 	* Load the address of our save area into a1
-	movea.l psgRegs(pc), a1
+	lea psgRegs(pc), a1
 	* Start the process at reg 0, and process 16 regs
 	moveq #0, d0
 	move.w #15, d1
@@ -100,7 +100,7 @@ init:
 .saveDACRegs:
 	* Save the DMA DAC regs into our save area
 	movea.w 0x8900, a0
-	movea.l dmaRegs(pc), a1
+	lea dmaRegs(pc), a1
 	move.b 0x01(a0), (a1)+
 	move.b 0x03(a0), (a1)+
 	move.b 0x05(a0), (a1)+
@@ -139,7 +139,7 @@ deinit:
 .restoreDMARegs:
 	* Restore the DMA DAC regs from our save area
 	movea.w 0x8900, a0
-	movea.l dmaRegs(pc), a1
+	lea dmaRegs(pc), a1
 	move.b (a1)+, 0x01(a0)
 	move.b (a1)+, 0x03(a0)
 	move.b (a1)+, 0x05(a0)
@@ -155,7 +155,7 @@ deinit:
 	* Now, load the address of the PSG into a0
 	movea.w #0x8800, a0
 	* Load the address of our save area into a1
-	movea.l psgRegs(pc), a1
+	lea psgRegs(pc), a1
 	* Start the process at reg 0, and process 16 regs
 	moveq #0, d0
 	move.w #15, d1
