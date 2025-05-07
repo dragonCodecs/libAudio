@@ -178,7 +178,7 @@ timestep:
 
 play:
 	* Save the registers we're about to clobber
-	movem.l d0/a0, -(sp)
+	movem.l d0-d1/a0, -(sp)
 
 	* Load the current timestep value to figure out what we need to do
 	move.w timestep(pc), d0
@@ -192,7 +192,7 @@ play:
 	lea timestep(pc), a0
 	addi.w #1, (a0)
 	* Unstack the saved regs
-	movem.l (sp)+, d0/a0
+	movem.l (sp)+, d0-d1/a0
 	* We're done, so return to the caller!
 	rts
 
@@ -201,14 +201,19 @@ playStep:
 	* Check which action this step requires we take
 	cmpi #0, d0
 	beq .step0
-	cmpi #1, d0
+	cmpi #5, d0
 	beq .step1
+	cmpi #10, d0
+	beq .step2
+	cmpi #15, d0
+	beq .step3
+	cmpi #20, d0
+	beq .step4
+	cmpi #25, d0
+	beq .step5
 	rts
 
 .step0:
-	* Store the registers we're about to clobber
-	movem.l d1, -(sp)
-
 	* In the first step, we set up channel A of the PSG to play A#4 at full volume
 	move.w #0x0102, d1
 	movep.w d1, 0(a0)
@@ -220,9 +225,6 @@ playStep:
 	* Turn the channel on in the mixer
 	move.w #0x073e, d1
 	movep.w d1, 0(a0)
-
-	* Unstack the saved regs and return
-	movem.l (sp)+, d1
 	rts
 
 .step1:
@@ -247,4 +249,31 @@ playStep:
 
 	* Unstack the saved regs and return
 	movem.l (sp)+, d1
+	rts
+
+.step2:
+	* Third, fourth, fifth and sixth steps see the volumes of both active channels reduced
+	move.w #0x080d, d1
+	movep.w d1, 0(a0)
+	move.w #0x0906, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step3:
+	move.w #0x080c, d1
+	movep.w d1, 0(a0)
+	move.w #0x0905, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step4:
+	move.w #0x0800, d1
+	movep.w d1, 0(a0)
+	move.w #0x0904, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step5:
+	move.w #0x0900, d1
+	movep.w d1, 0(a0)
 	rts
