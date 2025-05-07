@@ -201,15 +201,27 @@ playStep:
 	* Check which action this step requires we take
 	cmpi #0, d0
 	beq .step0
-	cmpi #5, d0
+	cmpi #3, d0
 	beq .step1
-	cmpi #10, d0
+	cmpi #6, d0
 	beq .step2
-	cmpi #15, d0
+	cmpi #9, d0
 	beq .step3
-	cmpi #20, d0
+	cmpi #12, d0
 	beq .step4
-	cmpi #25, d0
+	cmpi #15, d0
+	beq .step5
+	cmpi #24, d0
+	beq .step6
+	cmpi #27, d0
+	beq .step7
+	cmpi #30, d0
+	beq .step2
+	cmpi #33, d0
+	beq .step3
+	cmpi #36, d0
+	beq .step4
+	cmpi #39, d0
 	beq .step5
 	rts
 
@@ -228,9 +240,6 @@ playStep:
 	rts
 
 .step1:
-	* Store the registers we're about to clobber
-	movem.l d1, -(sp)
-
 	* In the second step, we set up channel B of the PSG to play A#4 at half volume
 	move.w #0x0302, d1
 	movep.w d1, 0(a0)
@@ -246,9 +255,6 @@ playStep:
 	* And decrease the volume of A a step
 	move.w #0x080e, d1
 	movep.w d1, 0(a0)
-
-	* Unstack the saved regs and return
-	movem.l (sp)+, d1
 	rts
 
 .step2:
@@ -275,5 +281,24 @@ playStep:
 
 .step5:
 	move.w #0x0900, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step6:
+	* In this seventh step, channel A plays F3 at full volume
+	move.w #0x00cc, d1
+	movep.w d1, 0(a0)
+	move.w #0x080f, d1
+	movep.w d1, 0(a0)
+	rts
+
+.step7:
+	* Eighth step sees channel B play F3 at half volume, and channel A reduce volume again
+	move.w #0x02cc, d1
+	movep.w d1, 0(a0)
+	move.w #0x0907, d1
+	movep.w d1, 0(a0)
+
+	move.w #0x080e, d1
 	movep.w d1, 0(a0)
 	rts
