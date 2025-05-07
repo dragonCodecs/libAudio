@@ -199,10 +199,12 @@ play:
 * Expects the timestep to be in d0, and PSG address in a0
 playStep:
 	* Check which action this step requires we take
+	* Setup for first note (A#4)
 	cmpi #0, d0
 	beq .step0
 	cmpi #3, d0
 	beq .step1
+	* Tail for note
 	cmpi #6, d0
 	beq .step2
 	cmpi #9, d0
@@ -211,10 +213,12 @@ playStep:
 	beq .step4
 	cmpi #15, d0
 	beq .step5
+	* Setup for second note (F3)
 	cmpi #24, d0
 	beq .step6
 	cmpi #27, d0
 	beq .step7
+	* Tail for note
 	cmpi #30, d0
 	beq .step2
 	cmpi #33, d0
@@ -223,10 +227,12 @@ playStep:
 	beq .step4
 	cmpi #39, d0
 	beq .step5
+	* Setup for third note (C4)
 	cmpi #48, d0
 	beq .step8
 	cmpi #51, d0
 	beq .step9
+	* Tail for note
 	cmpi #54, d0
 	beq .step2
 	cmpi #57, d0
@@ -234,6 +240,20 @@ playStep:
 	cmpi #60, d0
 	beq .step4
 	cmpi #63, d0
+	beq .step5
+	* Setup for fourth (and last) note (A#4)
+	cmpi #72, d0
+	beq .step0
+	cmpi #75, d0
+	beq .step1
+	* Tail for note
+	cmpi #78, d0
+	beq .step2
+	cmpi #81, d0
+	beq .step3
+	cmpi #84, d0
+	beq .step4
+	cmpi #87, d0
 	beq .step5
 	rts
 
