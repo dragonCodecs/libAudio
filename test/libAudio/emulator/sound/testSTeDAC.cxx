@@ -246,7 +246,7 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 	}
 
 public:
-	CRUNCH_VIS testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{}
+	testSTeDAC() noexcept : testsuite{}, m68kMemoryMap_t{}
 	{
 		// Register some memory for the sample tests, and fill with a couple of patterns that make it easy to see
 		// if things are working right within the sampler
@@ -275,8 +275,4 @@ public:
 	}
 };
 
-CRUNCH_API void registerCXXTests() noexcept;
-void registerCXXTests() noexcept
-{
-	registerTestClasses<testSTeDAC>();
-}
+CRUNCHpp_TESTS(testSTeDAC)

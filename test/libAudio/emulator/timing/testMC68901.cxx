@@ -279,7 +279,7 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 	}
 
 public:
-	CRUNCH_VIS testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
+	testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
 	void registerTests() final
 	{
@@ -293,8 +293,4 @@ public:
 	}
 };
 
-CRUNCH_API void registerCXXTests() noexcept;
-void registerCXXTests() noexcept
-{
-	registerTestClasses<testMC68901>();
-}
+CRUNCHpp_TESTS(testMC68901)

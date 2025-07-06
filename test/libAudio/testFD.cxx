@@ -28,8 +28,4 @@ public:
 	}
 };
 
-CRUNCH_API void registerCXXTests() noexcept;
-void registerCXXTests() noexcept
-{
-	registerTestClasses<testFD>();
-}
+CRUNCHpp_TESTS(testFD)

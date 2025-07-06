@@ -297,7 +297,7 @@ class testAtariSTeROMs final : public testsuite, m68kMemoryMap_t
 	}
 
 public:
-	CRUNCH_VIS testAtariSTeROMs() noexcept : testsuite{}, m68kMemoryMap_t{}
+	testAtariSTeROMs() noexcept : testsuite{}, m68kMemoryMap_t{}
 	{
 		// Register some memory and the ROMs for the tests to use
 		addressMap[{0x000000U, 0x100000U}] = std::make_unique<ram_t<uint32_t, 1_MiB>>();
@@ -316,8 +316,4 @@ public:
 	}
 };
 
-CRUNCH_API void registerCXXTests() noexcept;
-void registerCXXTests() noexcept
-{
-	registerTestClasses<testAtariSTeROMs>();
-}
+CRUNCHpp_TESTS(testAtariSTeROMs)

@@ -127,7 +127,7 @@ class testAtariSTe final : public testsuite
 	}
 
 public:
-	CRUNCH_VIS testAtariSTe() noexcept : testsuite{},
+	testAtariSTe() noexcept : testsuite{},
 		sndh
 		{
 			[this]()
@@ -151,8 +151,4 @@ public:
 	}
 };
 
-CRUNCH_API void registerCXXTests() noexcept;
-void registerCXXTests() noexcept
-{
-	registerTestClasses<testAtariSTe>();
-}
+CRUNCHpp_TESTS(testAtariSTe)

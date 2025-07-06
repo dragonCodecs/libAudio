@@ -2732,7 +2732,7 @@ private:
 	}
 
 public:
-	CRUNCH_VIS testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
+	testM68k() noexcept : testsuite{}, memoryMap_t<uint32_t, 0x00ffffffU>{}
 	{
 		// Check all the CPU preconditions before any execution begins
 		for (const auto &reg : substrate::indexSequence_t{8U})
@@ -2808,8 +2808,4 @@ public:
 	}
 };
 
-CRUNCH_API void registerCXXTests() noexcept;
-void registerCXXTests() noexcept
-{
-	registerTestClasses<testM68k>();
-}
+CRUNCHpp_TESTS(testM68k)
