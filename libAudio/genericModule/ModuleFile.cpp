@@ -485,11 +485,11 @@ template<> void itUnpackPCM<uint8_t>(ModuleSample *sample, uint8_t *PCM, const f
 				uint16_t special = 1U << (bitWidth - 1U);
 				if (bits == special)
 				{
-					const auto bits = itBitstreamRead(buff, buffLen, fd, 3) + 1U;
-					if (bits < bitWidth)
-						bitWidth = bits;
+					const auto specialBits = static_cast<uint8_t>(itBitstreamRead(buff, buffLen, fd, 3) + 1U);
+					if (specialBits < bitWidth)
+						bitWidth = specialBits;
 					else
-						bitWidth = bits + 1U;
+						bitWidth = specialBits + 1U;
 					continue;
 				}
 			}
@@ -580,11 +580,11 @@ template<> void itUnpackPCM<uint16_t>(ModuleSample *sample, uint16_t *PCM, const
 				uint32_t special = 1U << (bitWidth - 1U);
 				if (bits == special)
 				{
-					const auto bits = itBitstreamRead(buff, buffLen, fd, 4) + 1U;
-					if (bits < bitWidth)
-						bitWidth = bits;
+					const auto specialBits = static_cast<uint8_t>(itBitstreamRead(buff, buffLen, fd, 4) + 1U);
+					if (specialBits < bitWidth)
+						bitWidth = specialBits;
 					else
-						bitWidth = bits + 1U;
+						bitWidth = specialBits + 1U;
 					continue;
 				}
 			}
