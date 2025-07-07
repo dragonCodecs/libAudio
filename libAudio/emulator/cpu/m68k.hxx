@@ -77,7 +77,7 @@ private:
 	bool trapState{false};
 
 	// Instruction dispatch/execution functions
-	[[nodiscard]] int16_t readIndex(uint16_t extension) const noexcept;
+	[[nodiscard]] int32_t readIndex(uint16_t extension) const noexcept;
 	[[nodiscard]] int32_t readExtraDisplacement(uint8_t displacementSize) noexcept;
 	[[nodiscard]] uint32_t readImmediateUnsigned(size_t immediateSize) noexcept;
 	[[nodiscard]] int32_t readImmediateSigned(size_t immediateSize) noexcept;

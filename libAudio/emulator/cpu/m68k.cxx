@@ -2759,7 +2759,7 @@ void motorola68000_t::displayRegs() const noexcept
 	);
 }
 
-int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
+int32_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
 {
 	// Get the index value that will be used
 	const auto index
@@ -2796,7 +2796,7 @@ int16_t motorola68000_t::readIndex(const uint16_t extension) const noexcept
 			return index * 8U;
 	}
 	// We can't actually get here.. but just incase
-	return INT16_MAX;
+	return INT32_MAX;
 }
 
 int32_t motorola68000_t::readExtraDisplacement(const uint8_t displacementSize) noexcept
@@ -4561,7 +4561,7 @@ stepResult_t motorola68000_t::dispatchMOVEP(const decodedOperation_t &insn) noex
 			// Compute the shift for this byte
 			const auto shift{(startOffset - byte) * 8U};
 			// Extract the byte and get it in the right location for the destination
-			const auto value{static_cast<uint32_t>(uint8_t(data >> shift) << u16Shift)};
+			const auto value{static_cast<uint16_t>(uint8_t(data >> shift) << u16Shift)};
 			// Store the extracted data to the target memory address
 			_peripherals.writeAddress<uint16_t>(address + uint32_t(byte * 2U), value);
 		}
@@ -5006,7 +5006,7 @@ stepResult_t motorola68000_t::dispatchSWAP(const decodedOperation_t &insn) noexc
 stepResult_t motorola68000_t::dispatchTRAP(const decodedOperation_t &insn) noexcept
 {
 	// Compute where the TRAP handler is
-	const auto vectorAddress{static_cast<uint32_t>(0x0080U | (insn.rx << 2U))};
+	const auto vectorAddress{static_cast<uint16_t>(0x0080U | (insn.rx << 2U))};
 	// Grab the old status register value
 	const auto statusReg{status.toRaw()};
 	// Force supervisor mode
