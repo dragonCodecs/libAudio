@@ -18,29 +18,29 @@ std::array<uint8_t, 8192> buffer;
 
 struct audioClose_t final { void operator ()(void *ptr) noexcept { audioCloseFile(ptr); } };
 
-const std::map<std::string, uint8_t> typeMap
+const std::map<std::string, audioType_t> typeMap
 {
-	{"OGG", AUDIO_OGG_VORBIS},
-	{"OPUS", AUDIO_OGG_OPUS},
-	{"FLAC", AUDIO_FLAC},
-	{"WAVE", AUDIO_WAVE},
-	{"MP4", AUDIO_MP4},
-	{"M4A", AUDIO_M4A},
-	{"AAC", AUDIO_AAC},
-	{"MP3", AUDIO_MP3},
-	{"MPC", AUDIO_MUSEPACK},
-	{"WVP", AUDIO_WAVPACK},
-	{"OFR", AUDIO_OPTIMFROG},
-	{"RA", AUDIO_REALAUDIO},
-	{"WMA", AUDIO_WMA}
+	{"OGG", audioType_t::oggVorbis},
+	{"OPUS", audioType_t::oggOpus},
+	{"FLAC", audioType_t::flac},
+	{"WAVE", audioType_t::wave},
+	{"MP4", audioType_t::m4a},
+	{"M4A", audioType_t::m4a},
+	{"AAC", audioType_t::aac},
+	{"MP3", audioType_t::mp3},
+	{"MPC", audioType_t::musePack},
+	{"WVP", audioType_t::wavPack},
+	{"OFR", audioType_t::optimFROG},
+	{"RA", audioType_t::realAudio},
+	{"WMA", audioType_t::wma}
 };
 
-uint8_t mapType(std::string typeName)
+audioType_t mapType(std::string typeName)
 {
 	std::transform(typeName.begin(), typeName.end(), typeName.begin(), ::toupper);
 	const auto entry = typeMap.find(typeName);
 	if (entry == typeMap.end())
-		return AUDIO_OGG_VORBIS;
+		return audioType_t::oggVorbis;
 	return entry->second;
 }
 
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	if (argc < 2)
 		return usage(argv[0]);
 	ExternalPlayback = 1;
-	const uint8_t type = mapType(argv[1]);
+	const auto type{static_cast<uint8_t>(mapType(argv[1]))};
 	argc -= argc % 2;
 	for (uint32_t i = 2; i < uint32_t(argc); i += 2)
 	{
