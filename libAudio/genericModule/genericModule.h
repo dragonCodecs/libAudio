@@ -68,7 +68,7 @@ enum class envelopeType_t : uint8_t
 	count = 3
 };
 
-class ModuleLoaderError : std::exception
+class ModuleLoaderError : public std::exception
 {
 private:
 	uint32_t _error;
