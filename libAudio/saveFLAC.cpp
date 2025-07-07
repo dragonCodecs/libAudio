@@ -181,7 +181,7 @@ int64_t flac_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength
 		const uint32_t samplesMax = (length - offset) / sizeof(int16_t);
 		const uint32_t sampleCount = std::min(uint32_t(ctx.encoderBuffer.size()), samplesMax);
 		const auto samples = buffer + offset;
-		const uint8_t bytesPerSample = info.bitsPerSample() / 8U;
+		const auto bytesPerSample = info.bitsPerSample() / 8U;
 
 		if (info.bitsPerSample() == 8)
 			ctx.fillFrame(reinterpret_cast<const int8_t *>(samples), sampleCount);

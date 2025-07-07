@@ -119,7 +119,7 @@ int64_t oggOpus_t::writeBuffer(const void *const bufferPtr, const int64_t length
 	// Convert length into samples per channel
 	const auto sampleCount{uint64_t(length) / (uint64_t(info.channels()) * (info.bitsPerSample() / 8U))};
 	const auto *const buffer{static_cast<const int16_t *>(bufferPtr)};
-	const auto result{ope_encoder_write(ctx.encoder, buffer, sampleCount)};
+	const auto result{ope_encoder_write(ctx.encoder, buffer, static_cast<int>(sampleCount))};
 	if (result == OPE_OK)
 		return length;
 	return -1;

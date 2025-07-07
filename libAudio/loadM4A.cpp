@@ -132,7 +132,7 @@ void m4a_t::decoderContext_t::aacTrack(fileInfo_t &fileInfo) noexcept
 
 	for (uint32_t i = 0; i < trackCount; ++i)
 	{
-		const MP4TrackId trackID = MP4FindTrackId(mp4Stream, i, nullptr, 0);
+		const MP4TrackId trackID = MP4FindTrackId(mp4Stream, static_cast<uint16_t>(i), nullptr, 0);
 		const char *type = MP4GetTrackType(mp4Stream, trackID);
 
 		if (!MP4_IS_AUDIO_TRACK_TYPE(type))

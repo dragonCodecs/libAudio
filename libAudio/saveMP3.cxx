@@ -96,12 +96,12 @@ int64_t mp3_t::writeBuffer(const void *const bufferPtr, const int64_t length)
 		std::array<unsigned char, 7200> encoderBuffer{};
 		do
 		{
-			result = lame_encode_flush(ctx.encoder, encoderBuffer.data(), encoderBuffer.size());
+			result = lame_encode_flush(ctx.encoder, encoderBuffer.data(), static_cast<int>(encoderBuffer.size()));
 			if (result > 0 && !file.write(encoderBuffer.data(), result))
 				break;
 		}
 		while (result > 0);
-		result = lame_get_lametag_frame(ctx.encoder, encoderBuffer.data(), encoderBuffer.size());
+		result = static_cast<int32_t>(lame_get_lametag_frame(ctx.encoder, encoderBuffer.data(), encoderBuffer.size()));
 		if (file.seek(ctx.lameFrameOffset, SEEK_SET) == ctx.lameFrameOffset)
 			[[maybe_unused]] const auto _{file.write(encoderBuffer.data(), result)};
 		return length;
@@ -112,8 +112,8 @@ int64_t mp3_t::writeBuffer(const void *const bufferPtr, const int64_t length)
 	const auto *const sampleBuffer{static_cast<const short *>(bufferPtr)};
 	const auto encodedLength{sampleCount + (sampleCount / 4U) + 7200U};
 	auto encoderBuffer{substrate::make_unique<unsigned char []>(encodedLength)};
-	const auto result{lame_encode_buffer_interleaved(ctx.encoder, const_cast<short *>(sampleBuffer), sampleCount,
-		encoderBuffer.get(), encodedLength)};
+	const auto result{lame_encode_buffer_interleaved(ctx.encoder, const_cast<short *>(sampleBuffer),
+		static_cast<int>(sampleCount), encoderBuffer.get(), static_cast<int>(encodedLength))};
 	if (result >= 0)
 	{
 		if (!file.write(encoderBuffer, result))

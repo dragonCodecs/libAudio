@@ -51,7 +51,7 @@ namespace libAudio::optimFROG
 		size_t bytes{0};
 		const auto result{file->fd().read(buffer, count, bytes)};
 		if (result)
-			return bytes;
+			return static_cast<sInt32_t>(bytes);
 		return -1;
 	}
 
@@ -163,7 +163,7 @@ int64_t optimFROG_t::fillBuffer(void *const bufferPtr, const uint32_t bufferLen)
 	while (offset < bufferLen && !ctx.eof)
 	{
 		const auto samples{std::min<size_t>(bufferLen - offset, sizeof(ctx.playbackBuffer)) / stride};
-		const auto result{OptimFROG_read(ctx.decoder, buffer + offset, samples, C_TRUE)};
+		const auto result{OptimFROG_read(ctx.decoder, buffer + offset, static_cast<uInt32_t>(samples), C_TRUE)};
 		if (result == -1)
 			return -1;
 		if (size_t(result) < samples)

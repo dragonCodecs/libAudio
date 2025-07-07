@@ -243,7 +243,7 @@ uint8_t *aac_t::nextFrame() noexcept
 		ctx.samplesUsed = 0;
 		return nullptr;
 	}
-	const uint8_t sampleBytes = fileInfo().bitsPerSample() / 8;
+	const auto sampleBytes = fileInfo().bitsPerSample() / 8U;
 	ctx.sampleCount = FI.samples * sampleBytes;
 	ctx.samplesUsed = 0;
 	return ctx.decodeBuffer;

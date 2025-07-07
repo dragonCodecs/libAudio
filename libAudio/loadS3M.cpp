@@ -54,7 +54,7 @@ bool modS3M_t::isS3M(const int32_t fd) noexcept
 	return
 		fd != -1 &&
 		lseek(fd, seekOffset1, SEEK_SET) == seekOffset1 &&
-		read(fd, &s3mMagic1, 1) == 1 &&
+		read(fd, &s3mMagic1, 1U) == 1 &&
 		lseek(fd, seekOffset2, SEEK_SET) == seekOffset2 &&
 		static_cast<size_t>(read(fd, s3mMagic2.data(), s3mMagic2.size())) == s3mMagic2.size() &&
 		lseek(fd, 0, SEEK_SET) == 0 &&

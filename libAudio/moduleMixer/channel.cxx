@@ -218,18 +218,18 @@ int16_t channel_t::applyVibrato(const ModuleFile &module, const uint32_t period)
 			if (delta < 0)
 			{
 				const auto amount{uint16_t(-delta)};
-				delta = linearSlideDown(period, amount >> 2U) - period;
+				delta = static_cast<int16_t>(linearSlideDown(period, static_cast<uint8_t>(amount >> 2U)) - period);
 				const uint8_t findSlide = amount & 3U;
 				if (findSlide)
-					delta += fineLinearSlideDown(period, findSlide) - period;
+					delta += static_cast<int16_t>(fineLinearSlideDown(period, findSlide) - period);
 			}
 			else if (delta > 0)
 			{
 				const auto amount{uint16_t(delta)};
-				delta = linearSlideUp(period, amount >> 2U) - period;
+				delta = static_cast<int16_t>(linearSlideUp(period, static_cast<uint8_t>(amount >> 2U)) - period);
 				const uint8_t findSlide = amount & 3U;
 				if (findSlide)
-					delta += fineLinearSlideUp(period, findSlide) - period;
+					delta += static_cast<int16_t>(fineLinearSlideUp(period, findSlide) - period);
 			}
 		}
 		if (module.ticks() || oldSfx)
@@ -293,7 +293,7 @@ int16_t channel_t::applyAutoVibrato(const ModuleFile &module, const uint32_t per
 			value >>= 2U;
 			const int32_t result = muldiv_t<>{}(period, a + (((b - a) * (value & 0x3FU)) >> 6U), 256);
 			fractionalPeriod = uint32_t(result) & 0xFFU;
-			return period - (result >> 8U);
+			return static_cast<int16_t>(period - (result >> 8U));
 		}
 		else
 			return vibrato >> 6U;
@@ -555,13 +555,13 @@ void channel_t::tonePortamento(const ModuleFile &module, uint8_t param)
 			uint16_t delta{};
 			if (module.hasLinearSlides())
 			{
-				int16_t slide = linearSlideUp(Period, portamentoSlide) - Period;
+				const auto slide = static_cast<int16_t>(linearSlideUp(Period, portamentoSlide) - Period);
 				delta = slide < 1 ? 1 : uint16_t(slide);
 			}
 			else
 				delta = uint16_t(portamentoSlide) << 2U;
 			if (portamentoTarget - Period < delta)
-				delta = portamentoTarget - Period;
+				delta = static_cast<uint16_t>(portamentoTarget - Period);
 			Period += delta;
 		}
 		else if (Period > portamentoTarget)
@@ -569,13 +569,13 @@ void channel_t::tonePortamento(const ModuleFile &module, uint8_t param)
 			uint16_t delta{};
 			if (module.hasLinearSlides())
 			{
-				int16_t slide = linearSlideDown(Period, portamentoSlide) - Period;
+				const auto slide = static_cast<int16_t>(linearSlideDown(Period, portamentoSlide) - Period);
 				delta = slide > -1 ? 1 : uint16_t(-slide);
 			}
 			else
 				delta = uint16_t(portamentoSlide) << 2U;
 			if (Period - portamentoTarget < delta)
-				delta = Period - portamentoTarget;
+				delta = static_cast<uint16_t>(Period - portamentoTarget);
 			Period -= delta;
 		}
 	}

@@ -123,7 +123,7 @@ int64_t sndh_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 		buffer[offset] = ctx.emulator.readSample();
 	}
 	// Update the total number of samples generated so far with how many more we made this call
-	ctx.generatedSamples += samples;
+	ctx.generatedSamples += static_cast<uint32_t>(samples);
 	// If we've now generated all the samples this song calls for, mark us done
 	if (ctx.totalPlaybackSamples == ctx.generatedSamples)
 		ctx.eof = true;
