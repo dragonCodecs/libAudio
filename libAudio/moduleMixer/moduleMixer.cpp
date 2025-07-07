@@ -1479,30 +1479,30 @@ uint32_t channel_t::GetSampleCount(uint32_t samples)
 
 inline void ModuleFile::FixDCOffset(int *p_DCOffsL, int *p_DCOffsR, int *buff, uint32_t samples)
 {
-	int DCOffsL = *p_DCOffsL;
-	int DCOffsR = *p_DCOffsR;
-	while (samples != 0 && (DCOffsR | DCOffsL) != 0)
+	int dcOffsL = *p_DCOffsL;
+	int dcOffsR = *p_DCOffsR;
+	while (samples != 0 && (dcOffsR | dcOffsL) != 0)
 	{
-		int OffsL = -DCOffsL;
-		int OffsR = -DCOffsR;
+		int OffsL = -dcOffsL;
+		int OffsR = -dcOffsR;
 
 		OffsL >>= 31U;
 		OffsR >>= 31U;
 		OffsL &= 0xFFU;
 		OffsR &= 0xFFU;
-		OffsL += DCOffsL;
-		OffsR += DCOffsR;
+		OffsL += dcOffsL;
+		OffsR += dcOffsR;
 		OffsL >>= 8U;
 		OffsR >>= 8U;
-		DCOffsL -= OffsL;
-		DCOffsR -= OffsR;
-		buff[0] += DCOffsR;
-		buff[1] += DCOffsL;
+		dcOffsL -= OffsL;
+		dcOffsR -= OffsR;
+		buff[0] += dcOffsR;
+		buff[1] += dcOffsL;
 		buff += 2;
 		samples--;
 	}
-	*p_DCOffsL = DCOffsL;
-	*p_DCOffsR = DCOffsR;
+	*p_DCOffsL = dcOffsL;
+	*p_DCOffsR = dcOffsR;
 }
 
 inline void ModuleFile::DCFixingFill(uint32_t samples)
