@@ -37,7 +37,7 @@ namespace libAudio::sndh
 }
 
 sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)},
-	ctx{make_unique_nothrow<decoderContext_t>()} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 
 void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {

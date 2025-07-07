@@ -166,7 +166,7 @@ namespace libAudio::mpc
 using namespace libAudio;
 
 mpc_t::mpc_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::musePack, std::move(fd)},
-	ctx{make_unique_nothrow<decoderContext_t>()} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 mpc_t::decoderContext_t::decoderContext_t() noexcept : demuxer{nullptr}, streamInfo{}, frameInfo{}, playbackBuffer{},
 	samplesUsed{0}, callbacks{mpc::read, mpc::seek, mpc::tell, mpc::length, mpc::canSeek, nullptr} { }
 

@@ -5,7 +5,7 @@
 using substrate::make_unique_nothrow;
 
 moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t{type, std::move(fd)},
-	ctx{make_unique_nothrow<decoderContext_t>()} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 
 constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType{moduleType}, p_Header{nullptr},
 	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},

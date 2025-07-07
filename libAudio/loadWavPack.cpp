@@ -173,7 +173,7 @@ namespace libAudio::wavPack
 using namespace libAudio;
 
 wavPack_t::wavPack_t(fd_t &&fd, const char *const fileName) noexcept : audioFile_t{audioType_t::wavPack, std::move(fd)},
-	ctx{make_unique_nothrow<decoderContext_t>(fileName)} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>(fileName)} { }
 wavPack_t::decoderContext_t::decoderContext_t(std::string fileName) noexcept : decoder{nullptr}, playbackBuffer{},
 	decodeBuffer{}, sampleCount{0}, samplesUsed{0}, eof{false}, wvcFileFD{wvcFile(fileName)}, callbacks{wavPack::read,
 		nullptr, wavPack::tell, wavPack::seekAbs, wavPack::seekRel, wavPack::ungetc, wavPack::length, wavPack::canSeek,

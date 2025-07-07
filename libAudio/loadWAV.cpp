@@ -56,7 +56,7 @@ private:
 };
 
 wav_t::wav_t(fd_t &&fd) noexcept : audioFile_t(audioType_t::wave, std::move(fd)),
-	ctx(make_unique_nothrow<decoderContext_t>()) { }
+	decoderCtx(make_unique_nothrow<decoderContext_t>()) { }
 wav_t::decoderContext_t::decoderContext_t() noexcept : inputBuffer{}, bytesAvailable{0},
 	bytesUsed{0}, playbackBuffer{}, offsetDataLength{0}, compression{0}, bitsPerSample{0},
 	floatData{false} { }

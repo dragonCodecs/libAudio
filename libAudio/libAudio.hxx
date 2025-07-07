@@ -202,7 +202,7 @@ struct wav_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 	bool skipToChunk(const std::array<char, 4> &chunkName) const noexcept;
 	bool readFormat() noexcept;
@@ -213,8 +213,8 @@ public:
 	static wav_t *openR(const char *fileName) noexcept;
 	static bool isWAV(const char *fileName) noexcept;
 	static bool isWAV(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -250,7 +250,7 @@ struct aac_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 	uint8_t *nextFrame() noexcept;
 
@@ -259,8 +259,8 @@ public:
 	static aac_t *openR(const char *fileName) noexcept;
 	static bool isAAC(const char *fileName) noexcept;
 	static bool isAAC(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -299,13 +299,13 @@ struct moduleFile_t : public audioFile_t
 {
 protected:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 	moduleFile_t(audioType_t type, fd_t &&fd) noexcept;
 
 public:
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -375,15 +375,15 @@ struct mpc_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
 	mpc_t(fd_t &&fd) noexcept;
 	static mpc_t *openR(const char *fileName) noexcept;
 	static bool isMPC(const char *fileName) noexcept;
 	static bool isMPC(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -394,15 +394,15 @@ struct wavPack_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
 	wavPack_t(fd_t &&fd, const char *const fileName) noexcept;
 	static wavPack_t *openR(const char *fileName) noexcept;
 	static bool isWavPack(const char *fileName) noexcept;
 	static bool isWavPack(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -412,15 +412,15 @@ struct sndh_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
 	sndh_t(fd_t &&fd) noexcept;
 	static sndh_t *openR(const char *fileName) noexcept;
 	static bool isSNDH(const char *fileName) noexcept;
 	static bool isSNDH(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -430,15 +430,15 @@ struct sid_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
 	sid_t(fd_t &&fd) noexcept;
 	static sid_t *openR(const char *fileName) noexcept;
 	static bool isSID(const char *fileName) noexcept;
 	static bool isSID(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
@@ -449,15 +449,15 @@ struct optimFROG_t final : public audioFile_t
 {
 private:
 	struct decoderContext_t;
-	std::unique_ptr<decoderContext_t> ctx;
+	std::unique_ptr<decoderContext_t> decoderCtx;
 
 public:
 	optimFROG_t(fd_t &&fd) noexcept;
 	static optimFROG_t *openR(const char *fileName) noexcept;
 	static bool isOptimFROG(const char *fileName) noexcept;
 	static bool isOptimFROG(int32_t fd) noexcept;
-	decoderContext_t *context() const noexcept { return ctx.get(); }
-	bool valid() const noexcept { return bool(ctx) && _fd.valid(); }
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
 
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };

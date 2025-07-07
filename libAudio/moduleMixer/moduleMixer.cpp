@@ -34,7 +34,7 @@ uint32_t Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 int64_t moduleFile_t::fillBuffer(void *const bufferPtr, const uint32_t length)
 {
 	const auto buffer = static_cast<uint8_t *>(bufferPtr);
-	return ctx->mod->Mix(buffer, length);
+	return decoderCtx->mod->Mix(buffer, length);
 }
 
 void ModuleFile::InitMixer(fileInfo_t &info)

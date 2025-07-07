@@ -76,7 +76,7 @@ struct aac_t::decoderContext_t final
 };
 
 aac_t::aac_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::aac, std::move(fd)},
-	ctx{make_unique_nothrow<decoderContext_t>()} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 aac_t::decoderContext_t::decoderContext_t() : decoder{NeAACDecOpen()}, eof{false}, sampleCount{0},
 	samplesUsed{0}, decodeBuffer{nullptr}, playbackBuffer{} { }
 

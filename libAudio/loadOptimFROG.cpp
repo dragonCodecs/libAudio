@@ -103,7 +103,7 @@ namespace libAudio::optimFROG
 using namespace libAudio;
 
 optimFROG_t::optimFROG_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::optimFROG, std::move(fd)},
-	ctx{make_unique_nothrow<decoderContext_t>()} { }
+	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 optimFROG_t::decoderContext_t::decoderContext_t() noexcept : decoder{OptimFROG_createInstance()},
 	playbackBuffer{}, eof{false} { }
 
