@@ -57,8 +57,8 @@ bool oggVorbis_t::encoderContext_t::writePage(const fd_t &fd, const bool force) 
 			ogg_stream_pageout(&streamState, &page);
 		if (result == 0)
 			return true;
-		else if (fd.write(page.header, page.header_len) != page.header_len ||
-			fd.write(page.body, page.body_len) != page.body_len)
+		else if (!fd.write(page.header, page.header_len) ||
+			!fd.write(page.body, page.body_len))
 			return false;
 		eos = ogg_page_eos(&page);
 	}
