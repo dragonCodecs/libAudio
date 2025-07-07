@@ -86,7 +86,7 @@ bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 		uint32_t chunkLength = 0;
 		if (!file.readLE(chunkLength) ||
 			chunkLength > (fileSize - offset) ||
-			file.seek(chunkLength, SEEK_CUR) != (offset + chunkLength + 4) ||
+			file.seek(chunkLength, SEEK_CUR) != static_cast<substrate::off_t>(offset + chunkLength + 4U) ||
 			!file.read(chunkTag))
 			return false;
 		offset += chunkLength + 8;
