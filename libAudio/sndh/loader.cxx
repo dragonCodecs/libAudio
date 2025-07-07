@@ -134,7 +134,7 @@ bool sndhLoader_t::readMeta()
 		// If none of the above tags matched, we're in a SNDH v1.1 file and came to the end of the header
 		else if (tagType != typeEnd)
 			// Put the non-header data back and get out of here
-			return _data.seekRel(off_t{-4});
+			return _data.seekRel(static_cast<off_t>(-4));
 	}
 	return true;
 }
