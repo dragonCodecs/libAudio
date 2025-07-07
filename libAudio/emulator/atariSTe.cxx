@@ -82,9 +82,9 @@ atariSTe_t::atariSTe_t() noexcept
 	);
 	// Cartridge ROM at 0xfa0000, 128KiB
 	// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
-	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(2_MHz, sampleRate));
-	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U, cpu, 6U));
-	dac = addClockedPeripheral({0xff8900U, 0xff8926U}, std::make_unique<steDAC_t>(50_kHz + 66U, *mfp));
+	psg = addClockedPeripheral({0xff8800U, 0xff8804U}, std::make_unique<ym2149_t>(static_cast<uint32_t>(2_MHz), sampleRate));
+	mfp = addClockedPeripheral({0xfffa00U, 0xfffa40U}, std::make_unique<mc68901_t>(2457600U, cpu, uint8_t{6U}));
+	dac = addClockedPeripheral({0xff8900U, 0xff8926U}, std::make_unique<steDAC_t>(static_cast<uint32_t>(50_kHz + 66U), *mfp));
 
 	// Set up our dummy RTE for vector handling
 	writeAddress(rteAddress, uint16_t{0x4e73U});
@@ -155,13 +155,13 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 			for (const auto &factor : substrate::indexSequence_t{8U})
 			{
 				// Calculate if this amount of prescaling results in a value that fits the timer counter
-				const udiv_t counter{cycleRate.quotient, mc68901::timer_t::prescalingFor(factor)};
+				const udiv_t counter{cycleRate.quotient, mc68901::timer_t::prescalingFor(static_cast<uint8_t>(factor))};
 				// If it does and the error is less than the previously calculated value,
 				// note the factor and store the value
 				if (counter.quotient < 256U && counter.remainder < scaledRate.remainder)
 				{
 					scaledRate = counter;
-					scaleFactor = factor;
+					scaleFactor = static_cast<uint8_t>(factor);
 				}
 			}
 			// Having hopefully found the best possible scale factor, return it
@@ -235,7 +235,7 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 	writeAddress(vectorAddress, uint32_t{0x001008U});
 
 	// Write the initial timer settings to the timer
-	mfp->configureTimer(index, counter.quotient, mode);
+	mfp->configureTimer(index, static_cast<uint8_t>(counter.quotient), mode);
 }
 
 // Copy the contents of a decrunched SNDH into the ST's RAM

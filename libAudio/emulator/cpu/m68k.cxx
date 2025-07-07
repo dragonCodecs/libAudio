@@ -2489,10 +2489,10 @@ bool motorola68000_t::checkPendingIRQs() noexcept
 		else
 		{
 			// Turn this IRQ level into a request for the associated autovector slot and stack that
-			stageIRQCall((level + 24U) << 2U);
+			stageIRQCall((static_cast<uint32_t>(level) + 24U) << 2U);
 		}
 		// Mask any further IRQs at this level till the IRQ is handled
-		maskIRQs(level);
+		maskIRQs(static_cast<uint8_t>(level));
 		break;
 	}
 	// We entered an IRQ in this cycle, so step needs to stop here
@@ -2513,7 +2513,7 @@ bool motorola68000_t::hasPendingInterrupts() const noexcept
 void motorola68000_t::maskIRQs(const uint8_t level) noexcept
 {
 	// Extract the status register minus the current mask value
-	const auto statusReg{status.toRaw() & 0xf8ffU};
+	const auto statusReg{static_cast<uint16_t>(status.toRaw() & 0xf8ffU)};
 	// Set the new one masking the new IRQ level
 	status.fromRaw(statusReg | ((level & 0x07) << 8U));
 }
@@ -2703,7 +2703,7 @@ bool motorola68000_t::advanceClock() noexcept
 		// We should actually run the core, okay.. let's run an instruction then
 		const auto result{step()};
 		// Unpack how many cycles the instruction took and skip one of them for this cycle
-		waitCycles = result.cyclesTaken;
+		waitCycles = static_cast<uint32_t>(result.cyclesTaken);
 		if (waitCycles)
 			--waitCycles;
 		// Unpack if the instruction trapped
@@ -2970,12 +2970,12 @@ uint32_t motorola68000_t::computeEffectiveAddress(const uint8_t mode, const uint
 		case 3U: // (An)+
 		{
 			const auto ptr{addrRegister(reg)};
-			addrRegister(reg) = ptr + operandSize;
+			addrRegister(reg) = ptr + static_cast<uint32_t>(operandSize);
 			return ptr;
 		}
 		case 4U: // -(An)
 		{
-			const auto ptr{addrRegister(reg) - operandSize};
+			const auto ptr{addrRegister(reg) - static_cast<uint32_t>(operandSize)};
 			addrRegister(reg) = ptr;
 			return ptr;
 		}
@@ -3722,10 +3722,10 @@ stepResult_t motorola68000_t::dispatchASR(const decodedOperation_t &insn) noexce
 	// Now actually do the shift on the value, sign extending it appropriately
 	const auto result{((value >> shift) | (extensionBits << (operationBits - shift))) & mask};
 	// Recompute all the status bits
-	recomputeStatusFlagsShift(result, carry, signBit, shift == 0U);
+	recomputeStatusFlagsShift(static_cast<uint32_t>(result), carry, signBit, shift == 0U);
 
 	// Finally, write the result back and get done
-	writeDataRegisterSized(insn.ry, operationSize, result);
+	writeDataRegisterSized(insn.ry, operationSize, static_cast<uint32_t>(result));
 	return {true, false, 0U};
 }
 
@@ -3769,7 +3769,7 @@ stepResult_t motorola68000_t::dispatchBCLR(const decodedOperation_t &insn) noexc
 			// If the bit number is coming from a trailing immediate
 			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
 				// Read the 8-bit immediate
-				return readImmediateUnsigned(1U);
+				return static_cast<uint8_t>(readImmediateUnsigned(1U));
 			// Otherwise, if the bit number is coming from a register, extract that
 			return static_cast<uint8_t>(dataRegister(insn.rx));
 		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
@@ -3811,7 +3811,7 @@ stepResult_t motorola68000_t::dispatchBSET(const decodedOperation_t &insn) noexc
 			// If the bit number is coming from a trailing immediate
 			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
 				// Read the 8-bit immediate
-				return readImmediateUnsigned(1U);
+				return static_cast<uint8_t>(readImmediateUnsigned(1U));
 			// Otherwise, if the bit number is coming from a register, extract that
 			return static_cast<uint8_t>(dataRegister(insn.rx));
 		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
@@ -3857,7 +3857,7 @@ stepResult_t motorola68000_t::dispatchBTST(const decodedOperation_t &insn) noexc
 			// If the bit number is coming from a trailing immediate
 			if (insn.flags.includes(operationFlags_t::immediateNotRegister))
 				// Read the 8-bit immediate
-				return readImmediateUnsigned(1U);
+				return static_cast<uint8_t>(readImmediateUnsigned(1U));
 			// Otherwise, if the bit number is coming from a register, extract that
 			return static_cast<uint8_t>(dataRegister(insn.rx));
 		}() & ((operationSize * 8U) - 1U) // Make sure the bit number is in range for the destination width
@@ -4332,8 +4332,8 @@ stepResult_t motorola68000_t::dispatchMOVE(const decodedOperation_t &insn) noexc
 		return {true, true, 0U};
 
 	// Extract out the mode parts of the effective addresses
-	const auto srcEAMode{insn.mode & 0x07U};
-	const auto dstEAMode{(insn.mode & 0x38U) >> 3U};
+	const auto srcEAMode{static_cast<uint8_t>(insn.mode & 0x07U)};
+	const auto dstEAMode{static_cast<uint8_t>((insn.mode & 0x38U) >> 3U)};
 	// Read the data to be moved, unsigned so as not to cause problems on write back
 	const auto value{readEffectiveAddress<uint32_t>(srcEAMode, insn.ry, insn.operationSize)};
 	// Compute which bit is the sign bit of the result
@@ -4563,7 +4563,7 @@ stepResult_t motorola68000_t::dispatchMOVEP(const decodedOperation_t &insn) noex
 			// Extract the byte and get it in the right location for the destination
 			const auto value{static_cast<uint32_t>(uint8_t(data >> shift) << u16Shift)};
 			// Store the extracted data to the target memory address
-			_peripherals.writeAddress<uint16_t>(address + (byte * 2U), value);
+			_peripherals.writeAddress<uint16_t>(address + uint32_t(byte * 2U), value);
 		}
 	}
 	else
@@ -4573,7 +4573,7 @@ stepResult_t motorola68000_t::dispatchMOVEP(const decodedOperation_t &insn) noex
 		for (const auto byte : substrate::indexSequence_t{insn.operationSize})
 		{
 			// Read the value at the target memory address
-			const auto value{uint8_t(_peripherals.readAddress<uint16_t>(address + (byte * 2U)) >> u16Shift)};
+			const auto value{uint8_t(_peripherals.readAddress<uint16_t>(address + uint32_t(byte * 2U)) >> u16Shift)};
 			// Compute the shift for this byte
 			const auto shift{(startOffset - byte) * 8U};
 			// Shift the value into the right place in the register data

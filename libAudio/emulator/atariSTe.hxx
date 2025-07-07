@@ -19,7 +19,7 @@ private:
 	// To save emulation cycles, use the CPU clock frequency rather than the machine clock frequency
 	// as the system clock frequency
 	constexpr static auto systemClockFrequency{8_MHz};
-	motorola68000_t cpu{*this, 8_MHz};
+	motorola68000_t cpu{*this, static_cast<uint32_t>(8_MHz)};
 	ym2149_t *psg{nullptr};
 	steDAC_t *dac{nullptr};
 	mc68901_t *mfp{nullptr};
@@ -27,7 +27,7 @@ private:
 	std::map<clockedPeripheral_t<uint32_t> *, clockManager_t> clockedPeripherals{};
 
 public:
-	constexpr static uint32_t sampleRate{48_kHz};
+	constexpr static auto sampleRate{static_cast<uint32_t>(48_kHz)};
 
 	atariSTe_t() noexcept;
 

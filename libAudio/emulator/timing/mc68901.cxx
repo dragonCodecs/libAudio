@@ -348,7 +348,7 @@ uint8_t mc68901_t::irqCause() noexcept
 	// Re-queue IRQ if there are still pending
 	if (itrPending & itrMask)
 		requestInterrupt();
-	return (vectorReg & 0xf0) | channel;
+	return (vectorReg & 0xf0U) | static_cast<uint8_t>(channel);
 }
 
 namespace mc68901

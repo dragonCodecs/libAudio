@@ -322,7 +322,7 @@ int16_t ym2149_t::sample() noexcept
 uint8_t ym2149_t::computeEnvelopeLevel() const noexcept
 {
 	// Extract out the actual position and phase data (32 unique positions, 4 phases)
-	const auto position{envelopePosition & 0x1fU};
+	const auto position{static_cast<uint8_t>(envelopePosition & 0x1fU)};
 	const auto phase{static_cast<size_t>(envelopePosition >> 5U)};
 	switch (phase)
 	{

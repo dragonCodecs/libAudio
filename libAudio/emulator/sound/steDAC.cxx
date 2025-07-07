@@ -68,17 +68,17 @@ void steDAC_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 			case 0x01U:
 			case 0x02U:
 			case 0x03U:
-				data[0] = beginAddress.readByte((address >> 1U) - 1U);
+				data[0] = beginAddress.readByte(static_cast<uint8_t>((address >> 1U) - 1U));
 				break;
 			case 0x04U:
 			case 0x05U:
 			case 0x06U:
-				data[0] = sampleAddress.readByte((address >> 1U) - 4U);
+				data[0] = sampleAddress.readByte(static_cast<uint8_t>((address >> 1U) - 4U));
 				break;
 			case 0x07U:
 			case 0x08U:
 			case 0x09U:
-				data[0] = endAddress.readByte((address >> 1U) - 7U);
+				data[0] = endAddress.readByte(static_cast<uint8_t>((address >> 1U) - 7U));
 				break;
 			case 0x10U:
 				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
@@ -138,17 +138,17 @@ void steDAC_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 			case 0x01U:
 			case 0x02U:
 			case 0x03U:
-				beginAddress.writeByte((address >> 1U) - 1U, data[0]);
+				beginAddress.writeByte(static_cast<uint8_t>((address >> 1U) - 1U), data[0]);
 				break;
 			case 0x04U:
 			case 0x05U:
 			case 0x06U:
-				sampleAddress.writeByte((address >> 1U) - 4U, data[0]);
+				sampleAddress.writeByte(static_cast<uint8_t>((address >> 1U) - 4U), data[0]);
 				break;
 			case 0x07U:
 			case 0x08U:
 			case 0x09U:
-				endAddress.writeByte((address >> 1U) - 7U, data[0]);
+				endAddress.writeByte(static_cast<uint8_t>((address >> 1U) - 7U), data[0]);
 				break;
 			case 0x10U:
 				// Determine whether the new mode should be mono or stereo
@@ -250,7 +250,7 @@ void steDAC_t::runMicrowireTransaction() noexcept
 					mainVolume = 64U;
 				// Otherwise rescale it to our internal 0-64 levels
 				else
-					mainVolume = (data * 64U) / 40U;
+					mainVolume = static_cast<uint8_t>((data * 64U) / 40U);
 				break;
 		}
 	}

@@ -71,9 +71,9 @@ std::optional<uint32_t> gemdosAllocator_t::alloc(const size_t size) noexcept
 			{
 				// Split the node, and extract the necessary memory for the allocation
 				chunk.base = entry->base;
-				chunk.size = allocSize;
-				entry->base += allocSize;
-				entry->size -= allocSize;
+				chunk.size = static_cast<uint32_t>(allocSize);
+				entry->base += static_cast<uint32_t>(allocSize);
+				entry->size -= static_cast<uint32_t>(allocSize);
 			}
 			// If we found chunk that's exactly or barely bigger than the right size,
 			// extract it from the free list entirely
@@ -92,7 +92,7 @@ std::optional<uint32_t> gemdosAllocator_t::alloc(const size_t size) noexcept
 	if (chunk.size == 0U)
 	{
 		// Get some memory
-		chunk.base = changeHeapSize(allocSize);
+		chunk.base = changeHeapSize(static_cast<int32_t>(allocSize));
 		// If that failed
 		if (chunk.base == UINT32_MAX)
 		{
@@ -105,10 +105,10 @@ std::optional<uint32_t> gemdosAllocator_t::alloc(const size_t size) noexcept
 			if (entry.base + entry.size == heapCurrent)
 			{
 				// Ask for the difference and extract the node if that succeeds
-				if (changeHeapSize(allocSize - entry.size) == UINT32_MAX)
+				if (changeHeapSize(static_cast<int32_t>(allocSize - entry.size)) == UINT32_MAX)
 					return std::nullopt;
 				chunk.base = entry.base;
-				chunk.size = allocSize;
+				chunk.size = static_cast<uint32_t>(allocSize);
 				freeList.pop_back();
 			}
 			// Otherwise, we couldn't find any more free memory
@@ -117,7 +117,7 @@ std::optional<uint32_t> gemdosAllocator_t::alloc(const size_t size) noexcept
 		}
 		// Otherwise, hppy case - set the allocation size
 		else
-			chunk.size = allocSize;
+			chunk.size = static_cast<uint32_t>(allocSize);
 	}
 	// Happy days, we got some memory - return it!
 	if (chunk.size != 0U)

@@ -93,7 +93,7 @@ private:
 	template<typename T> [[nodiscard]] T readEffectiveAddress(uint8_t mode, uint8_t reg) noexcept
 	{
 		using effective_t = std::conditional_t<std::is_unsigned_v<T>, uint32_t, int32_t>;
-		return readEffectiveAddress<effective_t>(mode, reg, sizeof(T));
+		return static_cast<T>(readEffectiveAddress<effective_t>(mode, reg, sizeof(T)));
 	}
 
 	template<typename T> void writeEffectiveAddress(uint8_t mode, uint8_t reg, T value) noexcept
