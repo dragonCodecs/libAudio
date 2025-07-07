@@ -114,7 +114,7 @@ void getsinc(short **p_Sinc, double Beta, double LowPassFactor)
 			FSinc = sin(y * LPAt) * zero(Beta * sqrt(1 - y * y * (1.0 / 16.0))) / (ZeroBeta * y * LPAt);
 		}
 		n = (int)(FSinc * LowPassFactor * (16384 * 256));
-		*Sinc = (n + 0x80U) >> 8U;
+		*Sinc = static_cast<short>((n + 0x80U) >> 8U);
 		Sinc++;
 	}
 }
@@ -141,7 +141,7 @@ inline samplePair_t monoLinearSample(const int8_t *const buffer, const uint32_t 
 	const auto positionLow{uint8_t(position >> 8U)};
 	const auto firstSample{monoSample(buffer, position).first};
 	const auto secondSample{monoSample(buffer, position + (1U << 16U)).first};
-	const auto sample{(firstSample << 7U) + (positionLow * (secondSample - firstSample))};
+	const auto sample{static_cast<int16_t>((firstSample << 7U) + (positionLow * (secondSample - firstSample)))};
 	return {sample, sample};
 }
 
@@ -150,7 +150,7 @@ inline samplePair_t monoLinearSample(const int16_t *const buffer, const uint32_t
 	const auto positionLow{uint8_t(position >> 8U)};
 	const auto firstSample{monoSample(buffer, position).first};
 	const auto secondSample{monoSample(buffer, position + (1U << 16U)).first};
-	const auto sample{firstSample + ((positionLow * (secondSample - firstSample)) >> 9U)};
+	const auto sample{static_cast<int16_t>(firstSample + ((positionLow * (secondSample - firstSample)) >> 9U))};
 	return {sample, sample};
 }
 
@@ -165,7 +165,7 @@ inline samplePair_t monoHighQualitySample(const int8_t *const buffer, const uint
 		FastSinc[positionLow + 2U] * buffer[positionHigh + 1U] +
 		FastSinc[positionLow + 3U] * buffer[positionHigh + 2U]
 	};
-	return {sample >> 7U, sample >> 7U};
+	return {static_cast<int16_t>(sample >> 7U), static_cast<int16_t>(sample >> 7U)};
 }
 
 inline samplePair_t monoHighQualitySample(const int16_t *const buffer, const uint32_t position) noexcept
@@ -179,15 +179,15 @@ inline samplePair_t monoHighQualitySample(const int16_t *const buffer, const uin
 		FastSinc[positionLow + 2U] * buffer[positionHigh + 1U] +
 		FastSinc[positionLow + 3U] * buffer[positionHigh + 2U]
 	};
-	return {sample >> 15U, sample >> 15U};
+	return {static_cast<int16_t>(sample >> 15U), static_cast<int16_t>(sample >> 15U)};
 }
 
 inline samplePair_t stereoSample(const int8_t *const buffer, const uint32_t position) noexcept
 {
 	const auto shiftedPosition{(position >> 16U) << 1U};
 	return {
-		buffer[shiftedPosition + 0] << 8U,
-		buffer[shiftedPosition + 1] << 8U,
+		static_cast<int16_t>(buffer[shiftedPosition + 0] << 8U),
+		static_cast<int16_t>(buffer[shiftedPosition + 1] << 8U),
 	};
 }
 
@@ -250,8 +250,8 @@ template<typename T> inline void sampleLoop(channel_t &channel, int32_t *begin, 
 	while (begin < end);
 	channel.Pos += position >> 16U;
 	channel.PosLo = position & 0xFFFFU;
-	channel.leftVol = leftVol;
-	channel.rightVol = rightVol;
+	channel.leftVol = static_cast<uint8_t>(leftVol);
+	channel.rightVol = static_cast<uint8_t>(rightVol);
 }
 
 template<typename T> inline void sampleFilterLoop(channel_t &channel, int32_t *begin, const int32_t *const end,
@@ -278,7 +278,7 @@ template<typename T> inline void sampleFilterLoop(channel_t &channel, int32_t *b
 
 		fltY2 = fltY1;
 		fltY1 = fltY - (samples.first & channel.Filter_HP);
-		samples = {fltY, fltY};
+		samples = {static_cast<T>(fltY), static_cast<T>(fltY)};
 
 		store(channel, begin, samples.first, samples.second, leftVol, rightVol);
 		begin += 2U;
@@ -287,8 +287,8 @@ template<typename T> inline void sampleFilterLoop(channel_t &channel, int32_t *b
 	while (begin < end);
 	channel.Pos += position >> 16U;
 	channel.PosLo = position & 0xFFFFU;
-	channel.leftVol = leftVol;
-	channel.rightVol = rightVol;
+	channel.leftVol = static_cast<uint8_t>(leftVol);
+	channel.rightVol = static_cast<uint8_t>(rightVol);
 	channel.Filter_Y1 = fltY1;
 	channel.Filter_Y2 = fltY2;
 }
