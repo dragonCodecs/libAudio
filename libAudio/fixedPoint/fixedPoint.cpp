@@ -225,7 +225,7 @@ fixed64_t::operator uint32_t() const { return i + (d >> 31U); }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 fixed64_t::operator int32_t() const { return sign * (i + (d >> 31U)); }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-fixed64_t::operator int16_t() const { return sign * (i + (d >> 31U)); }
+fixed64_t::operator int16_t() const { return static_cast<int16_t>(sign * (i + (d >> 31U))); }
 fixed64_t::operator double() const
 	// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 	{ return sign * double((uint64_t{i} << 32U) | d) / 4294967296.0; }

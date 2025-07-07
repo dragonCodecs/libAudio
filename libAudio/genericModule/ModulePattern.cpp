@@ -298,9 +298,9 @@ uint8_t command_t::modPeriodToNoteIndex(const uint16_t period) noexcept
 	uint8_t max{59};
 	do
 	{
-		const auto i = min + ((max - min) / 2);
+		const auto i = static_cast<uint8_t>(min + ((max - min) / 2U));
 		if (Periods[i] == period)
-			return 37 + i;
+			return 37U + i;
 		else if (Periods[i] < period)
 		{
 			if (i > 0)

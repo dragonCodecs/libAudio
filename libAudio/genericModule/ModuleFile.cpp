@@ -28,13 +28,13 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
 		throw ModuleLoaderError(E_BAD_MOD);
 
 	// Count the number of patterns present
-	uint32_t maxPattern{};
+	uint8_t maxPattern{};
 	for (uint16_t i = 0; i < p_Header->nOrders; i++)
 	{
 		if (p_Header->Orders[i] < 128)
-			maxPattern = std::max<uint32_t>(maxPattern, p_Header->Orders[i]);
+			maxPattern = std::max(maxPattern, p_Header->Orders[i]);
 	}
-	p_Header->nPatterns = maxPattern + 1;
+	p_Header->nPatterns = maxPattern + 1U;
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
@@ -501,9 +501,9 @@ template<> void itUnpackPCM<uint8_t>(ModuleSample *sample, uint8_t *PCM, const f
 				{
 					bits -= special2;
 					if ((bits & 0xFF) < bitWidth)
-						bitWidth = uint8_t(bits);
+						bitWidth = static_cast<uint8_t>(bits);
 					else
-						bitWidth = bits + 1;
+						bitWidth = static_cast<uint8_t>(bits + 1U);
 					continue;
 				}
 			}
@@ -514,7 +514,7 @@ template<> void itUnpackPCM<uint8_t>(ModuleSample *sample, uint8_t *PCM, const f
 			}
 			else if (bits >= 256)
 			{
-				bitWidth = bits + 1;
+				bitWidth = static_cast<uint8_t>(bits + 1U);
 				continue;
 			}
 			if (bitWidth < 8)
@@ -522,7 +522,7 @@ template<> void itUnpackPCM<uint8_t>(ModuleSample *sample, uint8_t *PCM, const f
 				uint8_t shift = 8 - bitWidth;
 				bits = int8_t(bits << shift) >> shift;
 			}
-			delta += bits;
+			delta += static_cast<int8_t>(bits);
 			adjDelta += delta;
 			if (offs >= Length)
 				return;
@@ -596,9 +596,9 @@ template<> void itUnpackPCM<uint16_t>(ModuleSample *sample, uint16_t *PCM, const
 				{
 					bits -= special2;
 					if ((bits & 0xFF) < bitWidth)
-						bitWidth = bits;
+						bitWidth = static_cast<uint8_t>(bits);
 					else
-						bitWidth = bits + 1;
+						bitWidth = static_cast<uint8_t>(bits + 1U);
 					continue;
 				}
 			}
@@ -609,7 +609,7 @@ template<> void itUnpackPCM<uint16_t>(ModuleSample *sample, uint16_t *PCM, const
 			}
 			else if (bits >= 65536)
 			{
-				bitWidth = bits + 1;
+				bitWidth = static_cast<uint8_t>(bits + 1U);
 				continue;
 			}
 			if (bitWidth < 16)
@@ -617,7 +617,7 @@ template<> void itUnpackPCM<uint16_t>(ModuleSample *sample, uint16_t *PCM, const
 				uint8_t shift = 16 - bitWidth;
 				bits = int16_t(bits << shift) >> shift;
 			}
-			delta += bits;
+			delta += static_cast<int16_t>(bits);
 			adjDelta += delta;
 			if (offs >= Length)
 				return;

@@ -20,9 +20,9 @@ std::unique_ptr<ModuleInstrument> ModuleInstrument::LoadInstrument(const modIT_t
 std::pair<uint8_t, uint8_t> ModuleInstrument::mapNote(const uint8_t note) noexcept
 {
 	if (note >= 254) // 0xFE and 0xFF have special meaning.
-		return {note, 0};
+		return {note, uint8_t{0U}};
 	else if (!note || note > 120)
-		return {250, 0}; // If we get an out of range value, return an invalid note.
+		return {uint8_t{250U}, uint8_t{0U}}; // If we get an out of range value, return an invalid note.
 	const uint8_t entry = (note - 1U) << 1U;
 	uint8_t mappedNote = SampleMapping[entry];
 	const uint8_t mappedSample = SampleMapping[entry + 1];
@@ -240,7 +240,7 @@ uint8_t ModuleEnvelope::Apply(const uint16_t currentTick) noexcept
 		int32_t val = currentTick - n1;
 		val *= int16_t(Nodes[pt].Value) - ret;
 		n2 -= n1;
-		return ret + (val / n2);
+		return ret + static_cast<uint8_t>(val / n2);
 	}
 	return ret;
 }
