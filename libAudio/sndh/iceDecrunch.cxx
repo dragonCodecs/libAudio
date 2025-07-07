@@ -18,7 +18,7 @@ struct decrunchingError_t : std::exception
 
 struct byteBlock_t
 {
-	uint16_t bits;
+	uint8_t bits;
 	uint16_t mask;
 };
 
@@ -87,7 +87,7 @@ public:
 		}
 
 		if (getBit())
-			unshuffle(getBit() ? getBits(15) : 0x0f9fU);
+			unshuffle(getBit() ? static_cast<uint16_t>(getBits(15U)) : 0x0f9fU);
 	}
 
 private:
@@ -138,7 +138,7 @@ private:
 			for (; i < 5; ++i)
 			{
 				const auto chunk = chunkTable[i];
-				count = getBits(chunk.bits);
+				count = static_cast<uint16_t>(getBits(chunk.bits));
 				if ((chunk.mask ^ count) & 0xffffU)
 					break;
 			}
@@ -169,8 +169,8 @@ private:
 		}
 
 		uint32_t lengthAdjustment = 0;
-		const uint16_t bits = lengthTable[4 - i];
-		if (!(bits & 0x8000U))
+		const uint8_t bits = lengthTable[4 - i];
+		if (!(bits & 0x80U))
 			lengthAdjustment = getBits(bits);
 
 		uint32_t length = lengthTable[9 - i] + lengthAdjustment + 1U;
@@ -190,7 +190,7 @@ private:
 		offset += int16Offsets[4 - i];
 		if (offset < 0)
 			offset -= length;
-		return offset;
+		return static_cast<int16_t>(offset);
 	}
 
 	int16_t offsetFromCalculation()
@@ -203,7 +203,7 @@ private:
 			adjustment = 63;
 		}
 		int32_t offset = getBits(bits);
-		return offset + adjustment;
+		return static_cast<int16_t>(offset) + adjustment;
 	}
 
 	void unshuffle(uint16_t blocks)
