@@ -17,10 +17,10 @@
 struct libAUDIO_CLS_API fileInfo_t final
 {
 private:
-	uint64_t _totalTime{0};
-	uint32_t _bitsPerSample{0};
-	uint32_t _bitRate{0};
-	uint8_t _channels{0};
+	uint64_t _totalTime{0U};
+	uint32_t _bitRate{0U};
+	uint8_t _bitsPerSample{0U};
+	uint8_t _channels{0U};
 
 	std::unique_ptr<char []> _title{};
 	std::unique_ptr<char []> _artist{};
@@ -39,8 +39,8 @@ public:
 
 	[[nodiscard]] uint64_t totalTime() const noexcept;
 	void totalTime(uint64_t totalTime) noexcept;
-	[[nodiscard]] uint32_t bitsPerSample() const noexcept;
-	void bitsPerSample(uint32_t bitsPerSample) noexcept;
+	[[nodiscard]] uint8_t bitsPerSample() const noexcept;
+	void bitsPerSample(uint8_t bitsPerSample) noexcept;
 	[[nodiscard]] uint32_t bitRate() const noexcept;
 	void bitRate(uint32_t bitRate) noexcept;
 	[[nodiscard]] uint8_t channels() const noexcept;

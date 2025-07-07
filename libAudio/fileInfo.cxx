@@ -22,9 +22,9 @@ uint64_t fileInfo_t::totalTime() const noexcept
 	{ return _totalTime; }
 void fileInfo_t::totalTime(const uint64_t totalTime) noexcept
 	{ _totalTime = totalTime; }
-uint32_t fileInfo_t::bitsPerSample() const noexcept
+uint8_t fileInfo_t::bitsPerSample() const noexcept
 	{ return _bitsPerSample; }
-void fileInfo_t::bitsPerSample(const uint32_t bitsPerSample) noexcept
+void fileInfo_t::bitsPerSample(const uint8_t bitsPerSample) noexcept
 	{ _bitsPerSample = bitsPerSample; }
 uint32_t fileInfo_t::bitRate() const noexcept
 	{ return _bitRate; }

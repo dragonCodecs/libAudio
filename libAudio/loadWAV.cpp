@@ -94,11 +94,11 @@ bool wav_t::skipToChunk(const std::array<char, 4> &chunkName) const noexcept
 	return chunkTag == chunkName;
 }
 
-uint32_t mapBPS(const uint16_t bitsPerSample)
+uint8_t mapBPS(const uint16_t bitsPerSample)
 {
-	if (bitsPerSample == 8)
-		return bitsPerSample;
-	return 16;
+	if (bitsPerSample == 8U)
+		return 8U;
+	return 16U;
 }
 
 bool wav_t::readFormat() noexcept
@@ -122,7 +122,7 @@ bool wav_t::readFormat() noexcept
 		return false;
 
 	info.bitRate(bitRate);
-	info.channels(channels);
+	info.channels(static_cast<uint8_t>(channels));
 	info.bitsPerSample(mapBPS(ctx.bitsPerSample));
 	ctx.floatData = ctx.compression == 3;
 	return true;

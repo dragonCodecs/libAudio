@@ -217,8 +217,8 @@ wavPack_t *wavPack_t::openR(const char *const fileName) noexcept
 	ctx.decoder = WavpackOpenFileInputEx64(&ctx.callbacks, &fileDesc,
 		ctx.wvcFile(), nullptr, OPEN_NORMALIZE | OPEN_TAGS, 15);
 
-	info.channels(WavpackGetNumChannels(ctx.decoder));
-	info.bitsPerSample(WavpackGetBitsPerSample(ctx.decoder));
+	info.channels(static_cast<uint8_t>(WavpackGetNumChannels(ctx.decoder)));
+	info.bitsPerSample(static_cast<uint8_t>(WavpackGetBitsPerSample(ctx.decoder)));
 	info.bitRate(WavpackGetSampleRate(ctx.decoder));
 	info.album(ctx.readTag("album"));
 	info.artist(ctx.readTag("artist"));

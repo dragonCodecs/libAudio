@@ -189,9 +189,9 @@ mpc_t *mpc_t::openR(const char *const fileName) noexcept
 	ctx.frameInfo.buffer = ctx.buffer;
 	mpc_demux_get_info(ctx.demuxer, &ctx.streamInfo);
 
-	info.bitsPerSample(ctx.streamInfo.bitrate == 0 ? 16 : ctx.streamInfo.bitrate);
+	info.bitsPerSample(ctx.streamInfo.bitrate == 0U ? 16U : static_cast<uint8_t>(ctx.streamInfo.bitrate));
 	info.bitRate(ctx.streamInfo.sample_freq);
-	info.channels(ctx.streamInfo.channels);
+	info.channels(static_cast<uint8_t>(ctx.streamInfo.channels));
 	info.totalTime(ctx.streamInfo.samples / info.bitRate());
 
 	if (!ExternalPlayback)

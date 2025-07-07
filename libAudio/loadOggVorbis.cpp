@@ -100,10 +100,10 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 
 	const vorbis_info &vorbisInfo = *ov_info(&ctx.decoder, -1);
 	info.bitRate(vorbisInfo.rate);
-	info.channels(vorbisInfo.channels);
+	info.channels(static_cast<uint8_t>(vorbisInfo.channels));
 	info.bitsPerSample(16U);
 	if (ov_seekable(&ctx.decoder))
-		info.totalTime(ov_time_total(&ctx.decoder, -1));
+		info.totalTime(static_cast<uint64_t>(ov_time_total(&ctx.decoder, -1)));
 	oggVorbis::copyComments(info, *ov_comment(&ctx.decoder, -1));
 
 	if (!ExternalPlayback)

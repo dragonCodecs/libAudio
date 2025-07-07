@@ -121,9 +121,9 @@ optimFROG_t *optimFROG_t::openR(const char *const fileName) noexcept
 	OptimFROG_Info ofgInfo{};
 	if (!OptimFROG_getInfo(ctx.decoder, &ofgInfo))
 		return nullptr;
-	info.channels(ofgInfo.channels);
+	info.channels(static_cast<uint8_t>(ofgInfo.channels));
 	info.bitRate(ofgInfo.samplerate);
-	info.bitsPerSample(ofgInfo.bitspersample);
+	info.bitsPerSample(static_cast<uint8_t>(ofgInfo.bitspersample));
 	if (info.bitsPerSample() > 16U)
 		info.bitsPerSample(16U);
 	info.totalTime(ofgInfo.length_ms / 1000);

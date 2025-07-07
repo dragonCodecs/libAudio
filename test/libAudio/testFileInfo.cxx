@@ -30,7 +30,7 @@ private:
 		assertNull(fileInfo.otherComment(0));
 
 		fileInfo.totalTime(UINT64_MAX);
-		fileInfo.bitsPerSample(UINT32_MAX);
+		fileInfo.bitsPerSample(UINT8_MAX);
 		fileInfo.bitRate(UINT32_MAX);
 		fileInfo.channels(UINT8_MAX);
 		fileInfo.title(stringDup(title.data()));
@@ -39,7 +39,7 @@ private:
 		fileInfo.addOtherComment(stringDup(other.data()));
 
 		assertEqual(fileInfo.totalTime(), UINT64_MAX);
-		assertEqual(fileInfo.bitsPerSample(), UINT32_MAX);
+		assertEqual(fileInfo.bitsPerSample(), UINT8_MAX);
 		assertEqual(fileInfo.bitRate(), UINT32_MAX);
 		assertEqual(fileInfo.channels(), UINT8_MAX);
 		assertNotNull(fileInfo.title());
@@ -83,7 +83,7 @@ private:
 		assertNull(audioFileOtherComment(&fileInfo, 0));
 
 		fileInfo.totalTime(UINT64_MAX);
-		fileInfo.bitsPerSample(UINT32_MAX);
+		fileInfo.bitsPerSample(UINT8_MAX);
 		fileInfo.bitRate(UINT32_MAX);
 		fileInfo.channels(UINT8_MAX);
 		fileInfo.title(stringDup(title.data()));
@@ -92,7 +92,7 @@ private:
 		fileInfo.addOtherComment(stringDup(other.data()));
 
 		assertEqual(audioFileTotalTime(&fileInfo), UINT64_MAX);
-		assertEqual(audioFileBitsPerSample(&fileInfo), UINT32_MAX);
+		assertEqual(audioFileBitsPerSample(&fileInfo), UINT8_MAX);
 		assertEqual(audioFileBitRate(&fileInfo), UINT32_MAX);
 		assertEqual(audioFileChannels(&fileInfo), UINT8_MAX);
 		assertNotNull(audioFileTitle(&fileInfo));

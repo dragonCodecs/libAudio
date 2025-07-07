@@ -163,9 +163,9 @@ namespace libAudio::flac
 			case FLAC__METADATA_TYPE_STREAMINFO:
 			{
 				const FLAC__StreamMetadata_StreamInfo &streamInfo = metadata->data.stream_info;
-				info.channels(streamInfo.channels);
+				info.channels(static_cast<uint8_t>(streamInfo.channels));
 				info.bitRate(streamInfo.sample_rate);
-				info.bitsPerSample(streamInfo.bits_per_sample);
+				info.bitsPerSample(static_cast<uint8_t>(streamInfo.bits_per_sample));
 				if (info.bitsPerSample() == 24U)
 				{
 					info.bitsPerSample(16U);
