@@ -5,10 +5,10 @@
 #include "moduleMixer.h"
 #include "waveTables.h"
 
-int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume) noexcept
+int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t newVolume) noexcept
 {
 	int16_t result{};
-	if (volume)
+	if (newVolume)
 	{
 		const uint8_t type = tremoloType & 0x03U;
 		const uint16_t depth = tremoloDepth << 4U;
@@ -26,7 +26,7 @@ int16_t channel_t::applyTremolo(const ModuleFile &module, const uint16_t volume)
 	return result;
 }
 
-uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t volume) noexcept
+uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t newVolume) noexcept
 {
 	uint16_t result{};
 	if (module.ticks() || module.typeIs<MODULE_S3M>())
@@ -44,17 +44,17 @@ uint16_t channel_t::applyTremor(const ModuleFile &module, const uint16_t volume)
 		};
 
 		if (count > onTime)
-			result = volume;
+			result = newVolume;
 		tremorCount = count + 1;
 	}
 	Flags |= CHN_FASTVOLRAMP;
 	return result;
 }
 
-uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
+uint16_t channel_t::applyNoteFade(const uint16_t newVolume) noexcept
 {
 	if (!Instrument)
-		return volume;
+		return newVolume;
 	const uint16_t FadeOut{Instrument->GetFadeOut()};
 	if (FadeOut)
 	{
@@ -62,22 +62,22 @@ uint16_t channel_t::applyNoteFade(const uint16_t volume) noexcept
 			FadeOutVol = 0;
 		else
 			FadeOutVol -= FadeOut << 1U;
-		return uint32_t(volume * FadeOutVol) >> 16U;
+		return uint32_t(newVolume * FadeOutVol) >> 16U;
 	}
 	else if (FadeOutVol == 0U)
 		return 0U;
-	return volume;
+	return newVolume;
 }
 
-uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t volume) noexcept
+uint16_t channel_t::applyVolumeEnvelope(const ModuleFile &module, const uint16_t newVolume) noexcept
 {
 	if (!Instrument)
-		return volume;
+		return newVolume;
 	auto &envelope{Instrument->GetEnvelope(envelopeType_t::volume)};
 	if (!envelope.GetEnabled() || !envelope.HasNodes())
-		return volume;
+		return newVolume;
 	uint8_t volValue{envelope.Apply(EnvVolumePos)};
-	auto result{uint16_t(muldiv_t<uint32_t>{}(volume, volValue, 1U << 6U))};
+	auto result{uint16_t(muldiv_t<uint32_t>{}(newVolume, volValue, 1U << 6U))};
 	clipInt<uint16_t>(result, 0, 128);
 	++EnvVolumePos;
 	if (envelope.GetLooped())
@@ -606,25 +606,25 @@ void channel_t::channelVolumeSlide(const ModuleFile &module, uint8_t param) noex
 	else
 		_channelVolumeSlide = param;
 
-	uint8_t volume = channelVolume;
+	uint8_t newVolume = channelVolume;
 	const uint8_t slideLo = param & 0x0FU;
 	const uint8_t slideHi = param & 0xF0U;
 	if (!module.ticks())
 	{
 		if (slideHi == 0xF0U && slideLo)
-			volume -= slideLo;
+			newVolume -= slideLo;
 		else if (slideLo == 0x0FU && slideHi)
-			volume += slideHi >> 4U;
+			newVolume += slideHi >> 4U;
 	}
 	else if (slideLo)
-		volume -= slideLo;
+		newVolume -= slideLo;
 	else
-		volume += slideHi >> 4U;
+		newVolume += slideHi >> 4U;
 
-	if (volume != channelVolume)
+	if (newVolume != channelVolume)
 	{
-		clipInt<uint8_t>(volume, 0, 64);
-		channelVolume = volume;
+		clipInt<uint8_t>(newVolume, 0, 64);
+		channelVolume = newVolume;
 	}
 }
 
@@ -683,11 +683,11 @@ inline void channel_t::fineSampleVolumeSlide(const ModuleFile &module, uint8_t p
 
 	if (module.ticks() == startTick)
 	{
-		auto volume{op(RawVolume, param << 1U)};
+		auto newVolume{op(RawVolume, param << 1U)};
 		if (module.typeIs<MODULE_MOD>())
 			Flags |= CHN_FASTVOLRAMP;
-		clipInt<uint16_t>(volume, 0, 128);
-		RawVolume = static_cast<uint8_t>(volume);
+		clipInt<uint16_t>(newVolume, 0, 128);
+		RawVolume = static_cast<uint8_t>(newVolume);
 	}
 }
 
