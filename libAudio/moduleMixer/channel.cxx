@@ -164,16 +164,28 @@ uint32_t channel_t::applyPitchEnvelope(const uint32_t period) noexcept
 	{
 		if (pitchValue < 0)
 		{
-			uint16_t adjust = uint16_t(-pitchValue) << 3U;
-			if (adjust > 255U)
-				adjust = 255U;
+			const auto adjust
+			{
+				[](const uint16_t value) -> uint8_t
+				{
+					if (value > 255U)
+						return 255U;
+					return static_cast<uint8_t>(value);
+				}(uint16_t(-pitchValue) << 3U)
+			};
 			result = linearSlideUp(period, adjust);
 		}
 		else if (pitchValue > 0)
 		{
-			uint16_t adjust = uint16_t(pitchValue) << 3U;
-			if (adjust > 255U)
-				adjust = 255U;
+			const auto adjust
+			{
+				[](const uint16_t value) -> uint8_t
+				{
+					if (value > 255U)
+						return 255U;
+					return static_cast<uint8_t>(value);
+				}(uint16_t(pitchValue) << 3U)
+			};
 			result = linearSlideDown(period, adjust);
 		}
 	}
