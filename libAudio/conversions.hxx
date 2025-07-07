@@ -39,11 +39,11 @@ namespace libAudio
 
 			bool isInt() const noexcept
 			{
-				if (_isSigned && _value[0] == '-' && length() == 1)
+				if constexpr (_isSigned && _value[0] == '-' && length() == 1)
 					return false;
 				for (size_t i = 0; i < _length; ++i)
 				{
-					if (_isSigned && i == 0 && _value[i] == '-')
+					if constexpr (_isSigned && i == 0 && _value[i] == '-')
 						continue;
 					else if (!isNumber(_value[i]))
 						return false;
@@ -66,12 +66,12 @@ namespace libAudio
 				uint_t value(0);
 				for (size_t i(0); i < _length; ++i)
 				{
-					if (_isSigned && i == 0 && _value[i] == '-')
+					if constexpr (_isSigned && i == 0 && _value[i] == '-')
 						continue;
 					value *= 10;
 					value += _value[i] - '0';
 				}
-				if (_isSigned && _value[0] == '-')
+				if constexpr (_isSigned && _value[0] == '-')
 					return -int_t(value);
 				return int_t(value);
 			}
