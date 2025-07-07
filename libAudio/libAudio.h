@@ -58,6 +58,16 @@
 	#endif
 #endif
 
+#if defined(libAUDIO) && defined(_WINDOWS) && defined(__cplusplus)
+#include <utility>
+#include <io.h>
+
+inline std::make_signed_t<size_t> read(const int32_t fd, void *const buffer, const size_t bytes)
+{
+	return _read(static_cast<int>(fd), buffer, static_cast<unsigned int>(bytes));
+}
+#endif
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define libAudioVersion "0.6.0"
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
