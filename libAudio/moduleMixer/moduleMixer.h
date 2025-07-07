@@ -85,7 +85,7 @@ template<> struct muldiv_t<uint32_t> final
 		const auto d = uint64_t(a) * uint64_t(b);
 		if (c >= d)
 			return 0xFFFFFFFFU;
-		return d / c;
+		return static_cast<uint32_t>(d / c);
 	}
 };
 

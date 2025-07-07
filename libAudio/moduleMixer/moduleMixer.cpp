@@ -26,7 +26,7 @@ uint32_t Convert32to16(void *_out, int32_t *_in, uint32_t SampleCount)
 	{
 		int32_t samp = _in[i]/* + (1 << 11)*/;
 		clipInt<int32_t>(samp, 0xF8000001, 0x07FFFFFF);
-		out[i] = samp >> 12U;
+		out[i] = static_cast<int16_t>(samp >> 12U);
 	}
 	return SampleCount << 1U;
 }
@@ -178,7 +178,7 @@ void ModuleFile::SampleChange(channel_t &channel, const uint32_t sampleIndex, co
 		(!p_Instruments && sampleIndex > totalSamples()))
 		return;
 	auto *const instr = p_Instruments ? p_Instruments[sampleIndex - 1] : nullptr;
-	auto *sample = this->sample(sampleIndex);
+	auto *sample = this->sample(static_cast<uint16_t>(sampleIndex));
 	auto note = channel.Note;
 	bool instrumentChanged = false;
 	if (instr && note && note <= 128U)
@@ -1239,9 +1239,9 @@ bool ModuleFile::AdvanceTick()
 				}
 			}
 
-			vol = muldiv_t<uint32_t>{}(vol * globalVolume, channel.channelVolume * channel.sampleVolume, 1U << 19U);
+			vol = static_cast<uint16_t>(muldiv_t<uint32_t>{}(vol * globalVolume, channel.channelVolume * channel.sampleVolume, 1U << 19U));
 			clipInt<uint16_t>(vol, 0, 128);
-			channel.volume = vol;
+			channel.volume = static_cast<uint8_t>(vol);
 			clipInt(channel.Period, MinPeriod, MaxPeriod);
 			uint32_t period = channel.Period;
 			if ((channel.Flags & (CHN_GLISSANDO | CHN_PORTAMENTO)) == (CHN_GLISSANDO | CHN_PORTAMENTO))
@@ -1327,14 +1327,14 @@ bool ModuleFile::AdvanceTick()
 					clipInt<uint32_t>(RampLength, 2U, 256U);
 				}
 				// Calculate value to add to the volume to get it closer to the new volume during ramping
-				channel.LeftRamp = LeftDelta / RampLength;
-				channel.RightRamp = RightDelta / RampLength;
+				channel.LeftRamp = static_cast<short>(LeftDelta / RampLength);
+				channel.RightRamp = static_cast<short>(RightDelta / RampLength);
 				// Normalise the current volume so that the ramping won't under or over shoot
-				channel.leftVol = channel.NewLeftVol - (channel.LeftRamp * RampLength);
-				channel.rightVol = channel.NewRightVol - (channel.RightRamp * RampLength);
+				channel.leftVol = channel.NewLeftVol - static_cast<uint8_t>(channel.LeftRamp * RampLength);
+				channel.rightVol = channel.NewRightVol - static_cast<uint8_t>(channel.RightRamp * RampLength);
 				// If the ramp values aren't 0 (ramping already done?)
 				if ((channel.LeftRamp | channel.RightRamp) != 0U)
-					channel.RampLength = RampLength;
+					channel.RampLength = static_cast<uint8_t>(RampLength);
 				else
 				{
 					// Otherwise the ramping is done, so don't need to make the mixer functions do it for us
@@ -1358,7 +1358,11 @@ bool ModuleFile::AdvanceTick()
 			MixerChannels[nMixerChannels++] = i;
 		}
 		else
-			channel.leftVol = channel.rightVol = channel.Length = 0;
+		{
+			channel.leftVol = 0U;
+			channel.rightVol = 0U;
+			channel.Length = 0U;
+		}
 	}
 
 	return true;
@@ -1561,7 +1565,7 @@ void ModuleFile::CreateStereoMix(uint32_t count)
 			samples -= SampleCount;
 			if (channel->RampLength != 0)
 			{
-				channel->RampLength -= SampleCount;
+				channel->RampLength -= static_cast<uint8_t>(SampleCount);
 				if (channel->RampLength <= 0)
 				{
 					channel->RampLength = 0;
