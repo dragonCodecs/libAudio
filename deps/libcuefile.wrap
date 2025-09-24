@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/libcuefile
+revision = head
+clone-recursive = false
