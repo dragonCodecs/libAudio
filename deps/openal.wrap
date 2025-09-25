@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/dragonCodecs/openal-soft.git
+revision = meson
+clone-recursive = false
+
+[provide]
+openal = openALDep
