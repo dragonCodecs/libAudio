@@ -64,13 +64,14 @@ jobs:
         run: |
           git submodule init deps/pkgconf
           git submodule update --depth 1
+          cd deps/pkgconf
           meson setup build --prefix=$HOME/.local -Dtests=disabled
           meson compile -C build
           meson install -C build
           "PKG_CONFIG=$(where.exe pkgconf.exe)" >> $env:GITHUB_ENV
           Remove-Item $(where.exe pkg-config.bat)
           Remove-Item $(where.exe pkg-config)
-        working-directory:  ${{ github.workspace }}/deps/pkgconf
+        working-directory:  ${{ github.workspace }}
       - name: Version tools
         run: |
           cl /Bv
