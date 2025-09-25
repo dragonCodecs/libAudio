@@ -95,8 +95,6 @@ jobs:
         if: github.repository == 'dragonCodecs/libAudio'
         run: |
           Remove-Item -Recurse build
-          Remove-Item deps/libcuefile.wrap
-          Remove-Item deps/libreplaygain.wrap
           meson setup build --prefix=$HOME/.local -Db_coverage=true --buildtype=debug
           meson compile -C build
           meson test -C build
