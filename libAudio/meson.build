@@ -408,6 +408,7 @@ libAudioLibrary = library(
 	libAudioSrcs + extraSrcs,
 	dependencies: requiredDependencies + extraDeps,
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
+	cpp_static_args: ['-DlibAUDIO_STATIC'],
 	include_directories: includes,
 	gnu_symbol_visibility: 'inlineshidden',
 	name_prefix: '',
@@ -421,3 +422,4 @@ libAudio = declare_dependency(
 	link_with: libAudioLibrary,
 	version: meson.project_version()
 )
+meson.override_dependency('libAudio', libAudio)

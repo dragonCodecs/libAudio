@@ -17,15 +17,20 @@
 #include "libAudioConfig.h"
 
 #ifdef _WINDOWS
-	#ifdef libAUDIO
+	#ifdef libAUDIO_STATIC
 		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllexport)
-		#ifdef _MSC_VER
-			#pragma warning (disable : 4996)
-		#endif
+		#define libAUDIO_DEFAULT_VISIBILITY
 	#else
-		// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllimport)
+		#ifdef libAUDIO
+			// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+			#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllexport)
+			#ifdef _MSC_VER
+				#pragma warning (disable : 4996)
+			#endif
+		#else
+			// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+			#define libAUDIO_DEFAULT_VISIBILITY __declspec(dllimport)
+		#endif
 	#endif
 	// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 	#define libAUDIO_API extern "C" libAUDIO_DEFAULT_VISIBILITY
