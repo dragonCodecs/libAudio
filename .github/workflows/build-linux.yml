@@ -68,11 +68,11 @@ jobs:
         run: |
           sudo apt purge llvm-{12,13,14,15}-linker-tools || true
       - name: Checkout libAudio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: true
       - name: Checkout crunch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: dragonmux/crunch
           path: deps/crunch
@@ -134,7 +134,7 @@ jobs:
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           directory: ./build/meson-logs/
           files: coverage.xml

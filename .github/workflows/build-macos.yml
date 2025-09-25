@@ -24,6 +24,7 @@ jobs:
         os:
           - macos-13
           - macos-14
+          - macos-15
         build_opts:
           - ''
         include:
@@ -41,11 +42,11 @@ jobs:
           echo "GITHUB_WORKSPACE=`pwd`" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig" >> $GITHUB_ENV
       - name: Checkout libAudio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: true
       - name: Checkout crunch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: dragonmux/crunch
           path: deps/crunch
@@ -99,7 +100,7 @@ jobs:
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           directory: ./build/meson-logs/
           files: coverage.xml
@@ -123,6 +124,7 @@ jobs:
           - gcc@12
           - gcc@13
           - gcc@14
+          - gcc@15
       fail-fast: false
     steps:
       - name: Runtime environment
@@ -144,11 +146,11 @@ jobs:
         env:
           COMPILER: ${{ matrix.compiler }}
       - name: Checkout libAudio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: true
       - name: Checkout crunch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: dragonmux/crunch
           path: deps/crunch
@@ -204,7 +206,7 @@ jobs:
           retention-days: 5
       - name: Codecov
         if: success() && github.repository == 'dragonCodecs/libAudio'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           directory: ./build/meson-logs/
           files: coverage.xml
