@@ -55,11 +55,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           lfs: true
-      - name: Checkout public deps
-        shell: bash
-        run: |
-          git submodule init deps/pkgconf
-          git submodule update --depth 1
       - name: Setup Meson + Ninja
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
@@ -67,6 +62,8 @@ jobs:
         working-directory: ${{ runner.temp }}
       - name: Setup pkgconf
         run: |
+          git submodule init deps/pkgconf
+          git submodule update --depth 1
           meson setup build --prefix=$HOME/.local -Dtests=disabled
           meson compile -C build
           meson install -C build
@@ -155,11 +152,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           lfs: true
-      - name: Checkout public deps
-        shell: bash
-        run: |
-          git submodule init deps/pkgconf
-          git submodule update --depth 1
       - name: Setup Meson + Ninja + gcovr
         shell: bash
         run: |
