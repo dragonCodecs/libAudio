@@ -37,52 +37,43 @@ endif
 
 # If we couldn't find OpenAL on the host or the user forced fallback, use the CMake subproject
 if not libOpenAL.found()
-	cmake = import('cmake')
+	libOpenAL = subproject(
+		'openal',
+		default_options: {
+			'utils': false,
+			'config_util': false,
+			'examples': false,
+			'install_config': false,
+			'install_hrtf_data': false,
+			'install_ambdec_presets': false,
+			'al_backend_alsa': host_machine.system() == 'linux',
+			'al_backend_coreaudio': host_machine.system() == 'darwin',
+			'al_backend_dsound': ['windows', 'cygwin'].contains(host_machine.system()),
+			'al_backend_jack': false,
+			'al_backend_oboe': host_machine.system() == 'android',
+			'al_backend_sdl2': false,
+			'al_backend_sdl3': false,
+			'al_backend_opensl': false,
+			'al_backend_oss': false,
+			'al_backend_otherio': false,
+			'al_backend_pipewire': host_machine.system() == 'linux',
+			'al_backend_portaudio': false,
+			'al_backend_pulseaudio': host_machine.system() == 'linux',
+			'al_backend_sndio': false,
+			'al_backend_solaris': host_machine.system() == 'sunos',
+			'al_backend_wasapi': false,
+			'al_backend_wave': true,
+			'al_backend_winmm': false,
+		},
+		required: true,
+	).get_variable(
+		'openALDep'
+	)
 
-	# CMake and Meson don't have a common minimum OSX deployment version
-	if host_machine.system() == 'darwin'
-		minOSXVersion = cxx.get_define('__MAC_OS_X_VERSION_MIN_REQUIRED', prefix: '#include <Availability.h>')
-		if minOSXVersion != ''
-			minOSXVersion = run_command(python, '-c', 'from sys import argv; x = argv[1]; s = "0"; min = x[2:4].lstrip(s); min = min if min else s; print(f"{x[0:2]}.{min}")', minOSXVersion, check: true).stdout().strip()
-		endif
-	else
-		minOSXVersion = ''
-	endif
-
-	openALOptions = cmake.subproject_options()
-	# OpenAL can NOT be built with c++17 -- see almalloc.cpp
-	openALOptions.set_override_option('cpp_std', 'c++14')
-	openALOptions.set_override_option('strip', 'false')
-	# Disable Git because Meson somehow gets confused with the
-	# custom version generator
-	openALOptions.add_cmake_defines({
-		'CMAKE_BUILD_TYPE': 'RelWithDebInfo',
-		'ALSOFT_UTILS': false,
-		'ALSOFT_NO_CONFIG_UTIL': true,
-		'ALSOFT_EXAMPLES': false,
-		'ALSOFT_INSTALL_CONFIG': false,
-		'ALSOFT_INSTALL_HRTF_DATA': false,
-		'ALSOFT_INSTALL_AMBDEC_PRESETS': false,
-		'ALSOFT_BACKEND_ALSA': host_machine.system() == 'linux',
-		'ALSOFT_BACKEND_OSS': false,
-		'ALSOFT_BACKEND_SOLARIS': host_machine.system() == 'sunos',
-		'ALSOFT_BACKEND_SNDIO': false,
-		'ALSOFT_BACKEND_PORTAUDIO': false,
-		'ALSOFT_BACKEND_PULSEAUDIO': host_machine.system() == 'linux',
-		'ALSOFT_BACKEND_COREAUDIO': host_machine.system() == 'darwin',
-		'ALSOFT_BACKEND_JACK': false,
-		'ALSOFT_BACKEND_OPENSL': false,
-		'ALSOFT_BACKEND_WAVE': true,
-		'ALSOFT_BACKEND_WINMM': false,
-		'ALSOFT_BACKEND_DSOUND': ['windows', 'cygwin'].contains(host_machine.system()),
-		'ALSOFT_BACKEND_WASAPI': false,
-		'ALSOFT_CPUEXT_NEON': false,
-		'CMAKE_DISABLE_FIND_PACKAGE_WindowsSDK': true,
-		'CMAKE_DISABLE_FIND_PACKAGE_Git': true,
-		'CMAKE_OSX_DEPLOYMENT_TARGET': minOSXVersion,
-	})
-
-	libOpenAL = cmake.subproject('openal-soft', options: openALOptions, required: true).dependency('OpenAL')
+	# openALOptions.add_cmake_defines({
+	# 	'ALSOFT_CPUEXT_NEON': false,
+	# 	'CMAKE_OSX_DEPLOYMENT_TARGET': minOSXVersion,
+	# })
 endif
 
 maths = cxx.find_library('m', required: false)
