@@ -5,6 +5,8 @@
 forcedFallback = get_option('wrap_mode') == 'forcefallback'
 forceFallbackFor = get_option('force_fallback_for')
 
+extraArgs = []
+
 # Required dependencies
 threading = dependency('threads')
 # Check if OpenAL is being forced into fallback
@@ -69,6 +71,7 @@ if not libOpenAL.found()
 	).get_variable(
 		'openALDep'
 	)
+	extraArgs += ['-DUSE_INTERNAL_OPENAL']
 
 	# openALOptions.add_cmake_defines({
 	# 	'ALSOFT_CPUEXT_NEON': false,
@@ -407,7 +410,7 @@ libAudioLibrary = library(
 	'libAudio',
 	libAudioSrcs + extraSrcs,
 	dependencies: requiredDependencies + extraDeps,
-	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'],
+	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'] + extraArgs,
 	cpp_static_args: ['-DlibAUDIO_STATIC'],
 	include_directories: includes,
 	gnu_symbol_visibility: 'inlineshidden',
