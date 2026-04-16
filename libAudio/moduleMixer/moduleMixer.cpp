@@ -1108,12 +1108,8 @@ bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int
 		{
 			const uint16_t _positionJump = positionJump < 0 ? NewPattern + 1 : uint32_t(positionJump);
 			const uint16_t _breakRow = breakRow < 0 ? 0 : uint32_t(breakRow);
-			if (_positionJump < NewPattern)// || (_positionJump == NewPattern && _breakRow <= Row))
-			{
-				NextPattern = p_Header->nOrders;
-				return false;
-			}
-			else if ((_positionJump != NewPattern || _breakRow != Row))
+			/* It was already guaranteed by the loop scanner that this won't cause a loop, so just do it */
+			if (_positionJump != NewPattern || _breakRow != Row)
 			{
 				if (_positionJump != NewPattern)
 				{
