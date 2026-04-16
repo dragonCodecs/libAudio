@@ -642,8 +642,9 @@ private:
 	uint32_t MusicSpeed, MusicTempo;
 	uint16_t Pattern, NewPattern, NextPattern;
 	uint32_t RowsPerBeat, SamplesPerTick;
-	channel_t *Channels;
-	uint32_t nMixerChannels, *MixerChannels;
+	std::unique_ptr<channel_t []> Channels;
+	uint32_t nMixerChannels;
+	std::unique_ptr<uint32_t []> MixerChannels;
 
 	uint16_t globalVolume;
 	uint8_t globalVolumeSlide;
@@ -684,7 +685,6 @@ private:
 	void stmLoadPCM(const fd_t &fd);
 	void aonLoadPCM(const fd_t &fd);
 	void itLoadPCM(const fd_t &fd);
-	void DeinitMixer();
 	friend struct channel_t;
 
 	template<typename T> void itLoadPCMSample(const fd_t &fd, uint32_t i);

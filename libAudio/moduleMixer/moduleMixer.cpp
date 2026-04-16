@@ -53,14 +53,14 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 	// If we have the possibility of NNAs, allocate a full set of channels.
 	if (p_Instruments != nullptr)
 	{
-		Channels = new channel_t[128]();
-		MixerChannels = new uint32_t[128];
+		Channels = std::make_unique<channel_t[]>(128);
+		MixerChannels = std::make_unique<uint32_t[]>(128);
 	}
 	// Otherwise just allocate the number in the song as that's all we can process in this case.
 	else
 	{
-		Channels = new channel_t[p_Header->nChannels]();
-		MixerChannels = new uint32_t[p_Header->nChannels];
+		Channels = std::make_unique<channel_t[]>(p_Header->nChannels);
+		MixerChannels = std::make_unique<uint32_t[]>(p_Header->nChannels);
 	}
 
 	for (uint8_t i = 0; i < p_Header->nChannels; ++i)
@@ -87,12 +87,6 @@ channel_t::channel_t() noexcept : SampleData{nullptr}, NewSampleData{nullptr}, N
 	vibratoDepth{}, vibratoSpeed{}, vibratoPosition{}, vibratoType{}, panbrelloDepth{}, panbrelloSpeed{},
 	panbrelloPosition{}, panbrelloType{}, EnvVolumePos{}, EnvPanningPos{}, EnvPitchPos{}, FadeOutVol{},
 	DCOffsL{}, DCOffsR{} { }
-
-void ModuleFile::DeinitMixer()
-{
-	delete [] Channels;
-	delete [] MixerChannels;
-}
 
 void ModuleFile::ResetChannelPanning()
 {

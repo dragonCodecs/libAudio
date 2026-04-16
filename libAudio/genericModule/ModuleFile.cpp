@@ -267,8 +267,6 @@ ModuleFile::~ModuleFile()
 {
 	uint32_t i;
 
-	DeinitMixer();
-
 	if (ModuleType != MODULE_AON && p_Header)
 		nPCM = p_Header->nSamples;
 	for (i = 0; i < nPCM; i++)
