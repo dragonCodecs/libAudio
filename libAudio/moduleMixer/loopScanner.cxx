@@ -255,13 +255,14 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 		 * Check to see if we've already visited the jump target,
 		 * starting by seeing if the target pattern's ever been run
 		 */
-		if (jumpPattern < patterns.count() && patterns[jumpPattern].rows)
+		if (jumpPattern < orders.size() && patterns[orders[jumpPattern]].rows)
 		{
+			const auto pattern{orders[jumpPattern]};
 			/* Adjust the target row if it's outside the target pattern */
-			if (targetRow >= patterns[jumpPattern].rows.count())
+			if (targetRow >= patterns[pattern].rows.count())
 				targetRow = 0U;
 			/* As it has, see if we've ever jumped to the target row before then */
-			if ((patterns[jumpPattern].rows[targetRow] & ~ROW_PATTERN_LOOPED) == ROW_VISITED)
+			if ((patterns[pattern].rows[targetRow] & ~ROW_PATTERN_LOOPED) == ROW_VISITED)
 			{
 				/* Don't take the jump, instead disable it */
 				disableJumpEffect();
