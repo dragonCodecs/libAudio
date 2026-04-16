@@ -10,6 +10,7 @@
 #include <array>
 #include <exception>
 #include <tuple>
+#include <optional>
 
 using substrate::fixedVector_t;
 using substrate::managedPtr_t;
@@ -667,13 +668,15 @@ private:
 	[[nodiscard]] bool AdvanceTick();
 	[[nodiscard]] bool Tick();
 	[[nodiscard]] bool ProcessEffects();
-	void processEffects(channel_t &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump);
+	void processEffects(channel_t &channel, uint8_t param, std::optional<uint16_t> &breakRow,
+		std::optional<uint8_t> &positionJump);
 	void ResetChannelPanning();
 	void SampleChange(channel_t &channel, uint32_t sample, bool doPortamento);
 	void ReloadSample(channel_t &channel);
 	void HandleNNA(channel_t *channel, uint32_t sample, uint8_t note);
 	[[nodiscard]] uint8_t FindFreeNNAChannel() const;
-	[[nodiscard]] bool handleNavigationEffects(int32_t patternLoopRow, int16_t breakRow, int16_t positionJump) noexcept;
+	[[nodiscard]] bool handleNavigationEffects(std::optional<uint16_t> patternLoopRow, std::optional<uint16_t> breakRow,
+		std::optional<uint8_t> positionJump) noexcept;
 	[[nodiscard]] uint32_t GetPeriodFromNote(uint8_t Note, uint8_t fineTune, uint32_t C4Speed);
 	[[nodiscard]] uint32_t GetFreqFromPeriod(uint32_t Period, uint32_t C4Speed, int8_t PeriodFrac);
 

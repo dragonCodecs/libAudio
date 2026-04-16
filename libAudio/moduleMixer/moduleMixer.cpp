@@ -828,9 +828,9 @@ inline void ModuleFile::applyGlobalVolumeSlide(uint8_t param)
 
 bool ModuleFile::ProcessEffects()
 {
-	int16_t positionJump = -1;
-	int16_t breakRow = -1;
-	int32_t patternLoopRow = -1;
+	std::optional<uint8_t> positionJump{};
+	std::optional<uint16_t> breakRow{};
+	std::optional<uint16_t> patternLoopRow{};
 	for (uint16_t i = 0; i < p_Header->nChannels; ++i)
 	{
 		channel_t *channel = &Channels[i];
@@ -929,7 +929,8 @@ bool ModuleFile::ProcessEffects()
 	return handleNavigationEffects(patternLoopRow, breakRow, positionJump);
 }
 
-void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &breakRow, int16_t &positionJump)
+void ModuleFile::processEffects(channel_t &channel, uint8_t param, std::optional<uint16_t> &breakRow,
+		std::optional<uint8_t> &positionJump)
 {
 	switch (channel.RowEffect)
 	{
@@ -1005,15 +1006,22 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &brea
 			applyGlobalVolumeSlide(param);
 			break;
 		case CMD_POSITIONJUMP:
-			positionJump = param;
-			if (positionJump > p_Header->nOrders)
-				positionJump = 0;
+			/* Adjust the jump destination to not go outside the number of orders available */
+			if (param > p_Header->nOrders)
+				positionJump = {0};
+			else
+				positionJump = {param};
 			break;
 		case CMD_PATTERNBREAK:
-			breakRow = ((param >> 4U) * 10) + (param & 0x0FU);
-			if (breakRow > Rows - 1)
-				breakRow = Rows - 1;
+		{
+			const auto position{static_cast<uint16_t>(((param >> 4U) * 10U) + (param & 0x0fU))};
+			/* Figure out if the new row position is outside the valid range, if so adjust */
+			if (position >= Rows - 1U)
+				breakRow = {Rows - 1U};
+			else
+				breakRow = {position};
 			break;
+		}
 		case CMD_SPEED:
 			MusicSpeed = param;
 			break;
@@ -1092,26 +1100,26 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, int16_t &brea
 	}
 }
 
-bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int16_t breakRow,
-	const int16_t positionJump) noexcept
+bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLoopRow,
+	const std::optional<uint16_t> breakRow, const std::optional<uint8_t> positionJump) noexcept
 {
 	if (!TickCount)
 	{
-		if (patternLoopRow >= 0)
+		if (patternLoopRow)
 		{
 			NextPattern = NewPattern;
-			NextRow = uint16_t(patternLoopRow);
+			NextRow = *patternLoopRow;
 			if (PatternDelay)
 				++NextRow;
 		}
 		else if (breakRow >= 0 || positionJump >= 0)
 		{
-			const uint16_t _positionJump = positionJump < 0 ? NewPattern + 1 : uint32_t(positionJump);
-			const uint16_t _breakRow = breakRow < 0 ? 0 : uint32_t(breakRow);
+			const auto jumpPattern{positionJump ? *positionJump : NewPattern + 1U};
+			auto targetRow{breakRow ? *breakRow : 0U};
 			/* It was already guaranteed by the loop scanner that this won't cause a loop, so just do it */
-			if (_positionJump != NewPattern || _breakRow != Row)
+			if (jumpPattern != NewPattern || targetRow != Row)
 			{
-				if (_positionJump != NewPattern)
+				if (jumpPattern != NewPattern)
 				{
 					for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 					{
@@ -1120,8 +1128,8 @@ bool ModuleFile::handleNavigationEffects(const int32_t patternLoopRow, const int
 						channel.patternLoopStart = 0;
 					}
 				}
-				NextPattern = _positionJump;
-				NextRow = _breakRow;
+				NextPattern = jumpPattern;
+				NextRow = targetRow;
 			}
 		}
 	}
