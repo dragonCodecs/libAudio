@@ -64,8 +64,8 @@ struct scanState_t final
 	void scan();
 	bool tick();
 	void processEffects() noexcept;
-	void handleNavigationEffects(std::optional<uint8_t> positionJump, std::optional<uint16_t> breakRow,
-		std::optional<uint16_t> patternLoopRow) noexcept;
+	void handleNavigationEffects(std::optional<uint16_t> patternLoopRow, std::optional<uint16_t> breakRow,
+		std::optional<uint8_t> positionJump) noexcept;
 	void disableJumpEffect() noexcept;
 };
 
@@ -229,8 +229,8 @@ void scanState_t::processEffects() noexcept
 	handleNavigationEffects(patternLoopRow, breakRow, positionJump);
 }
 
-void scanState_t::handleNavigationEffects(const std::optional<uint8_t> positionJump,
-	const std::optional<uint16_t> breakRow, const std::optional<uint16_t> patternLoopRow) noexcept
+void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternLoopRow,
+	const std::optional<uint16_t> breakRow, const std::optional<uint8_t> positionJump) noexcept
 {
 	/* Only process on the first tick of the row */
 	if (tickCount != 0U)
