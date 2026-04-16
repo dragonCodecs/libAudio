@@ -49,9 +49,9 @@ struct scanState_t final
 	uint8_t patternDelay{};
 	uint8_t frameDelay{};
 	/* Pattern and order tracking */
-	uint16_t nextPattern{};
-	uint16_t selectedPattern{};
-	uint16_t patternIndex{};
+	uint16_t nextOrder{};
+	uint16_t currentOrder{};
+	uint16_t currentPattern{};
 
 	/* Row tracking */
 	uint16_t nextRow{};
@@ -118,44 +118,44 @@ bool scanState_t::tick()
 		do
 		{
 			/* If this was the last pattern, we're done */
-			if (nextPattern >= patterns.count())
+			if (nextOrder >= orders.size())
 				return false;
 			/* If the next selected pattern is not the next one from the orders, adjust where we go next */
-			if (selectedPattern != nextPattern)
-				selectedPattern = nextPattern;
-			patternIndex = orders[selectedPattern];
+			if (currentOrder != nextOrder)
+				currentOrder = nextOrder;
+			currentPattern = orders[currentOrder];
 			/* If the selected pattern is beyond the last pattern, try the next one in the order list */
-			if (patternIndex >= patterns.count())
-				++nextPattern;
+			if (currentPattern >= patterns.count())
+				++nextOrder;
 		}
-		while (patternIndex >= patterns.count());
+		while (currentPattern >= patterns.count());
+		nextOrder = currentOrder;
 		/* Having adjusted the pattern we're on appropriately, now see if we need to adjust the row */
-		nextPattern = selectedPattern;
 		if (currentRow >= rowsInPattern)
-			currentRow = 0;
+			currentRow = 0U;
 		nextRow = currentRow + 1U;
 		/* If at the end of this row, we'd end the current pattern, set up for the next pattern */
 		if (nextRow >= rowsInPattern)
 		{
-			++nextPattern;
+			++nextOrder;
 			nextRow = 0U;
 		}
 		/* If we hit a sentinel pattern, we're done */
-		if (!patternData[patternIndex])
+		if (!patternData[currentPattern])
 			return false;
 		/*
 		 * Otherwise, extract from the pattern how many rows there are, initialising the tracking for it
 		 * if it's not already been
 		 */
-		const auto &pattern{*patternData[patternIndex]};
+		const auto &pattern{*patternData[currentPattern]};
 		rowsInPattern = pattern.rows();
-		if (!patterns[patternIndex].rows.valid())
-			patterns[patternIndex].rows = {rowsInPattern};
+		if (!patterns[currentPattern].rows.valid())
+			patterns[currentPattern].rows = {rowsInPattern};
 		/* Mark this row visited */
-		patterns[patternIndex].rows[currentRow] |= ROW_VISITED;
+		patterns[currentPattern].rows[currentRow] |= ROW_VISITED;
 	}
-	if (speed == 0)
-		speed = 1;
+	if (speed == 0U)
+		speed = 1U;
 	return true;
 }
 
@@ -164,13 +164,13 @@ void scanState_t::processEffects() noexcept
 	std::optional<uint8_t> positionJump{};
 	std::optional<uint16_t> breakRow{};
 	std::optional<uint16_t> patternLoopRow{};
-	const auto &pattern{*patternData[patternIndex]};
+	const auto &pattern{*patternData[currentPattern]};
 	/* Process the effects for each channel, focusing specifically on speed and position change effects */
 	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
 	{
 		/* If this channel is processing pattern loop effects, mark the row visited by pattern loop */
 		if (channel.patternLoopStart && channel.patternLoopCount)
-			patterns[patternIndex].rows[currentRow] |= ROW_PATTERN_LOOPED;
+			patterns[currentPattern].rows[currentRow] |= ROW_PATTERN_LOOPED;
 		const auto command{pattern.commands()[idx][currentRow]};
 		const auto [effect, param]{command.effect()};
 		switch (effect)
@@ -235,7 +235,7 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 	/* If we have a pattern loop going, process that */
 	if (patternLoopRow)
 	{
-		nextPattern = selectedPattern;
+		nextOrder = currentOrder;
 		nextRow = *patternLoopRow;
 		/* Adjust the next row to play by if there is a pattern delay in effect */
 		if (patternDelay)
@@ -245,16 +245,16 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 	if (breakRow || positionJump)
 	{
 		/* Unpack where to jump to - if there is no valid position jump, it's the next selected pattern */
-		const auto jumpPattern{positionJump.value_or(selectedPattern + 1U)};
+		const auto jumpOrder{positionJump.value_or(currentOrder + 1U)};
 		/* Unpack what row to go to - if there's no valid row, it's the first of the new pattern */
 		auto targetRow{breakRow.value_or(0U)};
+		const auto pattern{orders[jumpOrder]};
 		/*
 		 * Check to see if we've already visited the jump target,
 		 * starting by seeing if the target pattern's ever been run
 		 */
-		if (jumpPattern < orders.size() && patterns[orders[jumpPattern]].rows)
+		if (jumpOrder < orders.size() && patterns[pattern].rows)
 		{
-			const auto pattern{orders[jumpPattern]};
 			/* Adjust the target row if it's outside the target pattern */
 			if (targetRow >= patterns[pattern].rows.count())
 				targetRow = 0U;
@@ -267,10 +267,10 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 			}
 		}
 		/* It's a valid jump if we get here, so do it */
-		if (jumpPattern != selectedPattern || targetRow != currentRow)
+		if (jumpOrder != currentOrder || targetRow != currentRow)
 		{
 			/* Clear out any pattern loop state as we do this */
-			if (jumpPattern != selectedPattern)
+			if (jumpOrder != currentOrder)
 			{
 				for (auto &channel : channels)
 				{
@@ -279,7 +279,7 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 				}
 			}
 			/* And set up to hit the new pattern and row */
-			nextPattern = jumpPattern;
+			nextOrder = jumpOrder;
 			nextRow = targetRow;
 		}
 	}
@@ -287,7 +287,7 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 
 void scanState_t::disableJumpEffect() noexcept
 {
-	const auto &pattern{*patternData[patternIndex]};
+	const auto &pattern{*patternData[currentPattern]};
 	/* Scan through all the channels' command data */
 	for (const auto idx : substrate::indexSequence_t{channels.count()})
 	{
