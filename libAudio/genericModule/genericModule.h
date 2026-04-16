@@ -645,7 +645,7 @@ private:
 	uint32_t TickCount, SamplesToMix, MinPeriod, MaxPeriod;
 	uint16_t MixChannels, Row, NextRow, Rows;
 	uint32_t MusicSpeed, MusicTempo;
-	uint16_t Pattern, NewPattern, NextPattern;
+	uint16_t Pattern, currentOrder, nextOrder;
 	uint32_t RowsPerBeat, SamplesPerTick;
 	std::unique_ptr<channel_t []> Channels;
 	uint32_t nMixerChannels;

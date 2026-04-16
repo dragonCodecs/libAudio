@@ -1104,19 +1104,19 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 	{
 		if (patternLoopRow)
 		{
-			NextPattern = NewPattern;
+			nextOrder = currentOrder;
 			NextRow = *patternLoopRow;
 			if (PatternDelay)
 				++NextRow;
 		}
 		else if (breakRow || positionJump)
 		{
-			const auto jumpPattern{positionJump.value_or(NewPattern + 1U)};
+			const auto jumpOrder{positionJump.value_or(currentOrder + 1U)};
 			const auto targetRow{breakRow.value_or(0U)};
 			/* It was already guaranteed by the loop scanner that this won't cause a loop, so just do it */
-			if (jumpPattern != NewPattern || targetRow != Row)
+			if (jumpOrder < p_Header->nOrders && (jumpOrder != currentOrder || targetRow != Row))
 			{
-				if (jumpPattern != NewPattern)
+				if (jumpOrder != currentOrder)
 				{
 					for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 					{
@@ -1125,7 +1125,7 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 						channel.patternLoopStart = 0U;
 					}
 				}
-				NextPattern = jumpPattern;
+				nextOrder = jumpOrder;
 				NextRow = targetRow;
 			}
 		}
@@ -1155,8 +1155,7 @@ void channel_t::SetData(command_t *Command, ModuleHeader *p_Header)
 
 bool ModuleFile::Tick()
 {
-	TickCount++;
-	if (TickCount >= (MusicSpeed * (PatternDelay + 1)) + FrameDelay)
+	if (++TickCount >= (MusicSpeed * (PatternDelay + 1)) + FrameDelay)
 	{
 		TickCount = 0;
 		PatternDelay = 0;
@@ -1164,22 +1163,22 @@ bool ModuleFile::Tick()
 		Row = NextRow;
 		do
 		{
-			if (NextPattern >= p_Header->nOrders)
+			if (nextOrder >= p_Header->nOrders)
 				return false;
-			if (NewPattern != NextPattern)
-				NewPattern = NextPattern;
-			Pattern = p_Header->Orders[NewPattern];
+			if (currentOrder != nextOrder)
+				currentOrder = nextOrder;
+			Pattern = p_Header->Orders[currentOrder];
 			if (Pattern >= p_Header->nPatterns)
-				NextPattern++;
+				nextOrder++;
 		}
 		while (Pattern >= p_Header->nPatterns);
-		NextPattern = NewPattern;
+		nextOrder = currentOrder;
 		if (Row >= Rows)
 			Row = 0;
 		NextRow = Row + 1;
 		if (NextRow >= Rows)
 		{
-			NextPattern = NewPattern + 1;
+			nextOrder = currentOrder + 1;
 			NextRow = 0;
 		}
 		if (!p_Patterns[Pattern])
@@ -1190,8 +1189,8 @@ bool ModuleFile::Tick()
 		for (uint32_t i = 0; i < p_Header->nChannels; ++i)
 			Channels[i].SetData(&commands[i][Row], p_Header);
 	}
-	if (MusicSpeed == 0)
-		MusicSpeed = 1;
+	if (MusicSpeed == 0U)
+		MusicSpeed = 1U;
 	return ProcessEffects();
 }
 
@@ -1590,7 +1589,7 @@ int32_t ModuleFile::Mix(uint8_t *Buffer, uint32_t BuffLen)
 
 	if (Max == 0)
 		return -2;
-	if (NextPattern >= p_Header->nOrders)
+	if (nextOrder >= p_Header->nOrders)
 		return (Mixed == 0 ? -2 : Mixed * (MixBitsPerSample / 8U) * MixChannels);
 	while (Mixed < Max)
 	{

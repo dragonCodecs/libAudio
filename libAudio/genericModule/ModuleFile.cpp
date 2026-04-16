@@ -10,7 +10,7 @@ moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t{t
 constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType{moduleType}, p_Header{nullptr},
 	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},
 	MixSampleRate{}, MixBitsPerSample{}, TickCount{}, SamplesToMix{}, MinPeriod{}, MaxPeriod{}, MixChannels{},
-	Row{}, NextRow{}, Rows{}, MusicSpeed{}, MusicTempo{}, Pattern{}, NewPattern{}, NextPattern{}, RowsPerBeat{},
+	Row{}, NextRow{}, Rows{}, MusicSpeed{}, MusicTempo{}, Pattern{}, currentOrder{}, nextOrder{}, RowsPerBeat{},
 	SamplesPerTick{}, Channels{nullptr}, nMixerChannels{}, MixerChannels{nullptr}, globalVolume{},
 	globalVolumeSlide{}, PatternDelay{}, FrameDelay{}, MixBuffer{}, DCOffsR{}, DCOffsL{} { }
 
