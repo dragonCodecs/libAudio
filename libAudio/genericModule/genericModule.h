@@ -495,6 +495,7 @@ public:
 	void setITNote(uint8_t note) noexcept;
 	void setITVolume(uint8_t volume) noexcept;
 	void setITEffect(uint8_t effect, uint8_t param);
+	void disableEffect() noexcept;
 
 	std::tuple<uint8_t, uint8_t> effect() const noexcept { return {Effect, Param}; }
 };

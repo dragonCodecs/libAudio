@@ -294,3 +294,8 @@ void command_t::setITEffect(uint8_t effect, uint8_t param)
 	}
 	Effect = CMD_NONE;
 }
+
+void command_t::disableEffect() noexcept
+{
+	Effect |= CMD_DISABLED;
+}
