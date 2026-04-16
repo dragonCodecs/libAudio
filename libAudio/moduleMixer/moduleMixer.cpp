@@ -1173,6 +1173,10 @@ bool ModuleFile::Tick()
 		}
 		while (Pattern >= p_Header->nPatterns);
 		nextOrder = currentOrder;
+		if (!p_Patterns[Pattern])
+			return false;
+		const pattern_t &pattern = *p_Patterns[Pattern];
+		Rows = pattern.rows();
 		if (Row >= Rows)
 			Row = 0;
 		NextRow = Row + 1;
@@ -1181,11 +1185,7 @@ bool ModuleFile::Tick()
 			nextOrder = currentOrder + 1;
 			NextRow = 0;
 		}
-		if (!p_Patterns[Pattern])
-			return false;
-		const pattern_t &pattern = *p_Patterns[Pattern];
 		const auto &commands = pattern.commands();
-		Rows = pattern.rows();
 		for (uint32_t i = 0; i < p_Header->nChannels; ++i)
 			Channels[i].SetData(&commands[i][Row], p_Header);
 	}

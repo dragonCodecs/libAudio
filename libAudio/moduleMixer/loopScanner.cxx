@@ -132,6 +132,12 @@ bool scanState_t::tick()
 		}
 		while (currentPattern >= patterns.count());
 		nextOrder = currentOrder;
+		/* If we hit a sentinel pattern, we're done */
+		if (!patternData[currentPattern])
+			return false;
+		/* Extract from the pattern how many rows there are */
+		const auto &pattern{*patternData[currentPattern]};
+		rowsInPattern = pattern.rows();
 		/* Having adjusted the pattern we're on appropriately, now see if we need to adjust the row */
 		if (currentRow >= rowsInPattern)
 			currentRow = 0U;
@@ -142,15 +148,9 @@ bool scanState_t::tick()
 			++nextOrder;
 			nextRow = 0U;
 		}
-		/* If we hit a sentinel pattern, we're done */
-		if (!patternData[currentPattern])
-			return false;
 		/*
-		 * Otherwise, extract from the pattern how many rows there are, initialising the tracking for it
-		 * if it's not already been
+		 * Initialising the tracking for the pattern if it's not already been
 		 */
-		const auto &pattern{*patternData[currentPattern]};
-		rowsInPattern = pattern.rows();
 		if (!patterns[currentPattern].rows.valid())
 			patterns[currentPattern].rows = {rowsInPattern};
 		/* Mark this row visited */
