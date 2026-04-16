@@ -11,6 +11,8 @@
 #define ROW_VISITED 0x01U
 /* If the reason that row has been visited is by pattern loop effect */
 #define ROW_PATTERN_LOOPED 0x02U
+/* If the reason that the row has been visited is because of a nav effect */
+#define ROW_NAV_JUMP 0x04U
 
 struct patternState_t final
 {
@@ -248,18 +250,24 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 		const auto jumpOrder{positionJump.value_or(currentOrder + 1U)};
 		/* Unpack what row to go to - if there's no valid row, it's the first of the new pattern */
 		auto targetRow{breakRow.value_or(0U)};
+		/* If the place to jump to is outside the song, nothing doing */
+		if (jumpOrder >= orders.size())
+			return;
 		const auto pattern{orders[jumpOrder]};
-		/*
-		 * Check to see if we've already visited the jump target,
-		 * starting by seeing if the target pattern's ever been run
-		 */
-		if (jumpOrder < orders.size() && patterns[pattern].rows)
+		/* If this is a pattern that is valid and we've not yet visited, init for it */
+		if (patternData[pattern] && !patterns[pattern].rows)
+			patterns[pattern].rows = {patternData[pattern]->rows()};
+		/* Check to see if we've already visited the jump target */
+		if (patterns[pattern].rows)
 		{
 			/* Adjust the target row if it's outside the target pattern */
 			if (targetRow >= patterns[pattern].rows.count())
 				targetRow = 0U;
 			/* As it has, see if we've ever jumped to the target row before then */
-			if ((patterns[pattern].rows[targetRow] & ~ROW_PATTERN_LOOPED) == ROW_VISITED)
+			const auto visited{patterns[pattern].rows[targetRow]};
+			/* Already played, or already jumped to by a nav command that's not a pattern loop */
+			if (visited == ROW_VISITED || visited == (ROW_VISITED | ROW_NAV_JUMP) ||
+				visited == (ROW_VISITED | ROW_PATTERN_LOOPED | ROW_NAV_JUMP))
 			{
 				/* Don't take the jump, instead disable it */
 				disableJumpEffect();
@@ -281,6 +289,9 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 			/* And set up to hit the new pattern and row */
 			nextOrder = jumpOrder;
 			nextRow = targetRow;
+			/* Mark the reason we got there as because of this jump */
+			if (patterns[pattern].rows)
+				patterns[pattern].rows[nextRow] |= ROW_NAV_JUMP;
 		}
 	}
 }
