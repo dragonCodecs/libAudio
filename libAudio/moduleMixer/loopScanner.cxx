@@ -150,8 +150,8 @@ bool scanState_t::tick()
 
 void scanState_t::processEffects()
 {
-	int16_t positionJump = -1;
-	int16_t breakRow = -1;
+	std::optional<uint8_t> positionJump{};
+	std::optional<uint16_t> breakRow{};
 	std::optional<uint16_t> patternLoopRow{};
 	const auto &pattern{*patternData[patternIndex]};
 	/* Process the effects for each channel, focusing specifically on speed and position change effects */
@@ -159,27 +159,59 @@ void scanState_t::processEffects()
 	{
 		const auto command{pattern.commands()[idx][currentRow]};
 		const auto [effect, param]{command.effect()};
-		/* If the effect is either a MOD or S3M extended effect */
-		if (effect == CMD_MOD_EXTENDED || effect == CMD_S3M_EXTENDED)
+		switch (effect)
 		{
-			const auto extendedCommand{static_cast<uint8_t>((param & 0xf0U) >> 4U)};
-			/* Only process extended commands on the first tick of a row */
-			if (tickCount == 0U)
+			/* If the effect is either a MOD or S3M extended effect */
+			case CMD_MOD_EXTENDED:
+			case CMD_S3M_EXTENDED:
 			{
-				if ((effect == CMD_MOD_EXTENDED && extendedCommand == CMD_MODEX_LOOP) ||
-					(effect == CMD_S3M_EXTENDED && extendedCommand == CMD_S3MEX_LOOP))
+				const auto extendedCommand{static_cast<uint8_t>((param & 0xf0U) >> 4U)};
+				/* Only process extended commands on the first tick of a row */
+				if (tickCount == 0U)
 				{
-					/* Try to handle the pattern loop */
-					const auto loop{channel.patternLoop(param & 0x0fU, currentRow)};
-					if (loop)
-						patternLoopRow = loop;
+					if ((effect == CMD_MOD_EXTENDED && extendedCommand == CMD_MODEX_LOOP) ||
+						(effect == CMD_S3M_EXTENDED && extendedCommand == CMD_S3MEX_LOOP))
+					{
+						/* Try to handle the pattern loop */
+						const auto loop{channel.patternLoop(param & 0x0fU, currentRow)};
+						if (loop)
+							patternLoopRow = loop;
+					}
+					/* Handle pattern delay commands */
+					else if (effect == CMD_MODEX_DELAYPAT)
+						patternDelay = param & 0x0fU;
 				}
-				/* Handle pattern delay commands */
-				else if (effect == CMD_MODEX_DELAYPAT)
-					patternDelay = param & 0x0fU;
+				break;
 			}
+			/* If the effect is a position jump, set up for the jump */
+			case CMD_POSITIONJUMP:
+				/* Adjust the jump destination to not go outside the number of orders available */
+				if (param > orders.size())
+					positionJump = {0};
+				else
+					positionJump = {param};
+				break;
+			/* If the effect is a pattern break, set up for the break destination */
+			case CMD_PATTERNBREAK:
+			{
+				const auto position{static_cast<uint16_t>(((param >> 4U) * 10U) + (param & 0x0fU))};
+				/* Figure out if the new row position is outside the valid range, if so adjust */
+				if (position >= rowsInPattern - 1U)
+					breakRow = {rowsInPattern - 1U};
+				else
+					breakRow = {position};
+				break;
+			}
+			/* Track speed and tempo changes */
+			case CMD_SPEED:
+				speed = param;
+				break;
+			case CMD_TEMPO:
+				tempo = param;
+				break;
 		}
 	}
+	/* Now we know where we're going and at what speed, process the nav effects */
 }
 
 std::optional<uint16_t> channelState_t::patternLoop(const uint8_t param, const uint16_t row)
