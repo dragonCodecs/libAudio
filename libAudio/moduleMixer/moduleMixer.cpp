@@ -1112,7 +1112,7 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 			if (PatternDelay)
 				++NextRow;
 		}
-		else if (breakRow >= 0 || positionJump >= 0)
+		else if (breakRow || positionJump)
 		{
 			const auto jumpPattern{positionJump ? *positionJump : NewPattern + 1U};
 			auto targetRow{breakRow ? *breakRow : 0U};
