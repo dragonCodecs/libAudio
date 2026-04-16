@@ -207,15 +207,12 @@ void scanState_t::processEffects() noexcept
 				break;
 			/* If the effect is a pattern break, set up for the break destination */
 			case CMD_PATTERNBREAK:
-			{
-				const auto position{static_cast<uint16_t>(((param >> 4U) * 10U) + (param & 0x0fU))};
 				/* Figure out if the new row position is outside the valid range, if so adjust */
-				if (position >= rowsInPattern - 1U)
+				if (param >= rowsInPattern - 1U)
 					breakRow = {rowsInPattern - 1U};
 				else
-					breakRow = {position};
+					breakRow = {param};
 				break;
-			}
 			/* Track speed and tempo changes */
 			case CMD_SPEED:
 				speed = param;
@@ -248,9 +245,9 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 	if (breakRow || positionJump)
 	{
 		/* Unpack where to jump to - if there is no valid position jump, it's the next selected pattern */
-		const auto jumpPattern{positionJump ? *positionJump : selectedPattern + 1U};
+		const auto jumpPattern{positionJump.value_or(selectedPattern + 1U)};
 		/* Unpack what row to go to - if there's no valid row, it's the first of the new pattern */
-		auto targetRow{breakRow ? *breakRow : 0U};
+		auto targetRow{breakRow.value_or(0U)};
 		/*
 		 * Check to see if we've already visited the jump target,
 		 * starting by seeing if the target pattern's ever been run

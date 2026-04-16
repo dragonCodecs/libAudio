@@ -859,7 +859,7 @@ bool ModuleFile::ProcessEffects()
 				{
 					const auto loop = channel->patternLoop(param & 0x0FU, Row);
 					if (loop >= 0)
-						patternLoopRow = loop;
+						patternLoopRow = {loop};
 				}
 				else if (excmd == CMD_MODEX_DELAYPAT)
 					PatternDelay = param & 0x0FU;
@@ -1008,20 +1008,17 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, std::optional
 		case CMD_POSITIONJUMP:
 			/* Adjust the jump destination to not go outside the number of orders available */
 			if (param > p_Header->nOrders)
-				positionJump = {0};
+				positionJump = {0U};
 			else
 				positionJump = {param};
 			break;
 		case CMD_PATTERNBREAK:
-		{
-			const auto position{static_cast<uint16_t>(((param >> 4U) * 10U) + (param & 0x0fU))};
 			/* Figure out if the new row position is outside the valid range, if so adjust */
-			if (position >= Rows - 1U)
+			if (param >= Rows - 1U)
 				breakRow = {Rows - 1U};
 			else
-				breakRow = {position};
+				breakRow = {param};
 			break;
-		}
 		case CMD_SPEED:
 			MusicSpeed = param;
 			break;
@@ -1114,8 +1111,8 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 		}
 		else if (breakRow || positionJump)
 		{
-			const auto jumpPattern{positionJump ? *positionJump : NewPattern + 1U};
-			auto targetRow{breakRow ? *breakRow : 0U};
+			const auto jumpPattern{positionJump.value_or(NewPattern + 1U)};
+			const auto targetRow{breakRow.value_or(0U)};
 			/* It was already guaranteed by the loop scanner that this won't cause a loop, so just do it */
 			if (jumpPattern != NewPattern || targetRow != Row)
 			{
@@ -1124,8 +1121,8 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 					for (uint8_t i = 0; i < p_Header->nChannels; ++i)
 					{
 						channel_t &channel = Channels[i];
-						channel.patternLoopCount = 0;
-						channel.patternLoopStart = 0;
+						channel.patternLoopCount = 0U;
+						channel.patternLoopStart = 0U;
 					}
 				}
 				NextPattern = jumpPattern;
