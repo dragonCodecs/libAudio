@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2010-2023 Rachel Mant <git@dragonmux.network>
+#include <optional>
 #include <substrate/span>
+#include <substrate/indexed_iterator>
 #include "../libAudio.hxx"
 #include "../genericModule/genericModule.h"
 
@@ -14,6 +16,8 @@ struct channelState_t final
 	/* Pattern loop tracking */
 	uint8_t patternLoopCount{};
 	uint16_t patternLoopStart{};
+
+	std::optional<uint16_t> patternLoop(uint8_t param, uint16_t row);
 };
 
 struct scanState_t final
@@ -53,6 +57,7 @@ struct scanState_t final
 	void updateSamplesPerTick();
 	void scan();
 	bool tick();
+	void processEffects();
 };
 
 void ModuleFile::loopScanPatterns(fileInfo_t &info)
@@ -83,7 +88,7 @@ void scanState_t::scan()
 	while (tick() && tempo != 0U)
 	{
 		/* Process any effects the current row causes to fire that we care about */
-		// processEffects();
+		processEffects();
 		/* Now make sure to update the sampling info */
 		updateSamplesPerTick();
 		samplesProduced += samplesPerTick;
@@ -141,4 +146,68 @@ bool scanState_t::tick()
 	if (speed == 0)
 		speed = 1;
 	return true;
+}
+
+void scanState_t::processEffects()
+{
+	int16_t positionJump = -1;
+	int16_t breakRow = -1;
+	std::optional<uint16_t> patternLoopRow{};
+	const auto &pattern{*patternData[patternIndex]};
+	/* Process the effects for each channel, focusing specifically on speed and position change effects */
+	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
+	{
+		const auto command{pattern.commands()[idx][currentRow]};
+		const auto [effect, param]{command.effect()};
+		/* If the effect is either a MOD or S3M extended effect */
+		if (effect == CMD_MOD_EXTENDED || effect == CMD_S3M_EXTENDED)
+		{
+			const auto extendedCommand{static_cast<uint8_t>((param & 0xf0U) >> 4U)};
+			/* Only process extended commands on the first tick of a row */
+			if (tickCount == 0U)
+			{
+				if ((effect == CMD_MOD_EXTENDED && extendedCommand == CMD_MODEX_LOOP) ||
+					(effect == CMD_S3M_EXTENDED && extendedCommand == CMD_S3MEX_LOOP))
+				{
+					/* Try to handle the pattern loop */
+					const auto loop{channel.patternLoop(param & 0x0fU, currentRow)};
+					if (loop)
+						patternLoopRow = loop;
+				}
+				/* Handle pattern delay commands */
+				else if (effect == CMD_MODEX_DELAYPAT)
+					patternDelay = param & 0x0fU;
+			}
+		}
+	}
+}
+
+std::optional<uint16_t> channelState_t::patternLoop(const uint8_t param, const uint16_t row)
+{
+	/* Figure out where the pattern loop is to */
+	if (param)
+	{
+		/*
+		 * If we're already processing a pattern loop, we just hit the command again,
+		 * so check to see if there are any loops needed left
+		 */
+		if (patternLoopCount)
+		{
+			/* If this is the last loop */
+			if (!--patternLoopCount)
+			{
+				// Reset the default start position for the next CMDEX_LOOP
+				patternLoopStart = 0;
+				return {};
+			}
+		}
+		/* If there are no loops left to process, this is a new loop */
+		else
+			patternLoopCount = param;
+		return {patternLoopStart};
+	}
+	/* If this was to set where the loop should start, store that */
+	else
+		patternLoopStart = row;
+	return {};
 }

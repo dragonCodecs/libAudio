@@ -9,6 +9,7 @@
 #include "../string.hxx"
 #include <array>
 #include <exception>
+#include <tuple>
 
 using substrate::fixedVector_t;
 using substrate::managedPtr_t;
@@ -494,6 +495,8 @@ public:
 	void setITNote(uint8_t note) noexcept;
 	void setITVolume(uint8_t volume) noexcept;
 	void setITEffect(uint8_t effect, uint8_t param);
+
+	std::tuple<uint8_t, uint8_t> effect() const noexcept { return {Effect, Param}; }
 };
 
 struct pattern_t final
