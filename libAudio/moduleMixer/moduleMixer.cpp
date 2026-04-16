@@ -1122,7 +1122,6 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 					{
 						channel_t &channel = Channels[i];
 						channel.patternLoopCount = 0U;
-						channel.patternLoopStart = 0U;
 					}
 				}
 				nextOrder = jumpOrder;

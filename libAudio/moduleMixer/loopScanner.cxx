@@ -171,7 +171,7 @@ void scanState_t::processEffects() noexcept
 	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
 	{
 		/* If this channel is processing pattern loop effects, mark the row visited by pattern loop */
-		if (channel.patternLoopStart && channel.patternLoopCount)
+		if (channel.patternLoopCount)
 			patterns[currentPattern].rows[currentRow] |= ROW_PATTERN_LOOPED;
 		const auto command{pattern.commands()[idx][currentRow]};
 		const auto [effect, param]{command.effect()};
@@ -281,10 +281,7 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 			if (jumpOrder != currentOrder)
 			{
 				for (auto &channel : channels)
-				{
 					channel.patternLoopCount = 0U;
-					channel.patternLoopStart = 0U;
-				}
 			}
 			/* And set up to hit the new pattern and row */
 			nextOrder = jumpOrder;
