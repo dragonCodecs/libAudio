@@ -353,6 +353,7 @@ genericModuleSrcs = [
 	'genericModule/ModulePattern.cpp',
 	'genericModule/ModuleEffects.cpp',
 	'moduleMixer/moduleMixer.cpp',
+	'moduleMixer/loopScanner.cxx',
 	'moduleMixer/channel.cxx',
 	'loadMOD.cpp',
 	'loadS3M.cpp',

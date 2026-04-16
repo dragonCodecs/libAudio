@@ -72,6 +72,7 @@ void ModuleFile::InitMixer(fileInfo_t &info)
 
 	Rows = 2;
 	ResetChannelPanning();
+	loopScanPatterns(info);
 }
 
 channel_t::channel_t() noexcept : SampleData{nullptr}, NewSampleData{nullptr}, Note{}, RampLength{},

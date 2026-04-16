@@ -687,6 +687,11 @@ private:
 	void itLoadPCM(const fd_t &fd);
 	friend struct channel_t;
 
+	// Scans through the track looking for loops, and makes the position jump/pattern break instructions
+	// that cause them disabled, so they don't play a role in the played tune. Additionally calculates track
+	// run length because why not while we're already doing all that work?
+	void loopScanPatterns(fileInfo_t &info);
+
 	template<typename T> void itLoadPCMSample(const fd_t &fd, uint32_t i);
 
 public:
