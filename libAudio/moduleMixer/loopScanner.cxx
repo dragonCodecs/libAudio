@@ -3,8 +3,14 @@
 #include <optional>
 #include <substrate/span>
 #include <substrate/indexed_iterator>
+#include <substrate/index_sequence>
 #include "../libAudio.hxx"
 #include "../genericModule/genericModule.h"
+
+/* If the row in the pattern has been visited */
+#define ROW_VISITED 0x01U
+/* If the reason that row has been visited is by pattern loop effect */
+#define ROW_PATTERN_LOOPED 0x02U
 
 struct patternState_t final
 {
@@ -17,7 +23,7 @@ struct channelState_t final
 	uint8_t patternLoopCount{};
 	uint16_t patternLoopStart{};
 
-	std::optional<uint16_t> patternLoop(uint8_t param, uint16_t row);
+	std::optional<uint16_t> patternLoop(uint8_t param, uint16_t row) noexcept;
 };
 
 struct scanState_t final
@@ -54,10 +60,13 @@ struct scanState_t final
 
 	scanState_t(size_t patternCount, size_t channelCount, substrate::span<pattern_t *>patternList,
 		substrate::span<uint8_t> orderList, uint32_t musicSpeed, uint32_t musicTempo, uint32_t mixSampleRate);
-	void updateSamplesPerTick();
+	void updateSamplesPerTick() noexcept;
 	void scan();
 	bool tick();
-	void processEffects();
+	void processEffects() noexcept;
+	void handleNavigationEffects(std::optional<uint8_t> positionJump, std::optional<uint16_t> breakRow,
+		std::optional<uint16_t> patternLoopRow) noexcept;
+	void disableJumpEffect() noexcept;
 };
 
 void ModuleFile::loopScanPatterns(fileInfo_t &info)
@@ -79,7 +88,7 @@ scanState_t::scanState_t(const size_t patternCount, const size_t channelCount,
 	channels{channelCount}, patternData{patternList}, orders{orderList}, speed{musicSpeed}, tempo{musicTempo},
 	sampleRate{mixSampleRate}, tickCount{speed} { updateSamplesPerTick(); }
 
-void scanState_t::updateSamplesPerTick()
+void scanState_t::updateSamplesPerTick() noexcept
 	{ samplesPerTick = (sampleRate * 640U) / (tempo << 8U); }
 
 void scanState_t::scan()
@@ -142,13 +151,15 @@ bool scanState_t::tick()
 		rowsInPattern = pattern.rows();
 		if (!patterns[patternIndex].rows.valid())
 			patterns[patternIndex].rows = {rowsInPattern};
+		/* Mark this row visited */
+		patterns[patternIndex].rows[currentRow] |= ROW_VISITED;
 	}
 	if (speed == 0)
 		speed = 1;
 	return true;
 }
 
-void scanState_t::processEffects()
+void scanState_t::processEffects() noexcept
 {
 	std::optional<uint8_t> positionJump{};
 	std::optional<uint16_t> breakRow{};
@@ -157,6 +168,9 @@ void scanState_t::processEffects()
 	/* Process the effects for each channel, focusing specifically on speed and position change effects */
 	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
 	{
+		/* If this channel is processing pattern loop effects, mark the row visited by pattern loop */
+		if (channel.patternLoopStart && channel.patternLoopCount)
+			patterns[patternIndex].rows[currentRow] |= ROW_PATTERN_LOOPED;
 		const auto command{pattern.commands()[idx][currentRow]};
 		const auto [effect, param]{command.effect()};
 		switch (effect)
@@ -212,9 +226,83 @@ void scanState_t::processEffects()
 		}
 	}
 	/* Now we know where we're going and at what speed, process the nav effects */
+	handleNavigationEffects(patternLoopRow, breakRow, positionJump);
 }
 
-std::optional<uint16_t> channelState_t::patternLoop(const uint8_t param, const uint16_t row)
+void scanState_t::handleNavigationEffects(const std::optional<uint8_t> positionJump,
+	const std::optional<uint16_t> breakRow, const std::optional<uint16_t> patternLoopRow) noexcept
+{
+	/* Only process on the first tick of the row */
+	if (tickCount != 0U)
+		return;
+	/* If we have a pattern loop going, process that */
+	if (patternLoopRow)
+	{
+		nextPattern = selectedPattern;
+		nextRow = *patternLoopRow;
+		/* Adjust the next row to play by if there is a pattern delay in effect */
+		if (patternDelay)
+			++nextRow;
+	}
+	/* Otherwise, check to see if we need to handle an effect that jumps about */
+	if (breakRow || positionJump)
+	{
+		/* Unpack where to jump to - if there is no valid position jump, it's the next selected pattern */
+		const auto jumpPattern{positionJump ? *positionJump : selectedPattern + 1U};
+		/* Unpack what row to go to - if there's no valid row, it's the first of the new pattern */
+		auto targetRow{breakRow ? *breakRow : 0U};
+		/*
+		 * Check to see if we've already visited the jump target,
+		 * starting by seeing if the target pattern's ever been run
+		 */
+		if (jumpPattern < patterns.count() && patterns[jumpPattern].rows)
+		{
+			/* Adjust the target row if it's outside the target pattern */
+			if (targetRow >= patterns[jumpPattern].rows.count())
+				targetRow = 0U;
+			/* As it has, see if we've ever jumped to the target row before then */
+			if ((patterns[jumpPattern].rows[targetRow] & ~ROW_PATTERN_LOOPED) == ROW_VISITED)
+			{
+				/* Don't take the jump, instead disable it */
+				disableJumpEffect();
+				return;
+			}
+		}
+		/* It's a valid jump if we get here, so do it */
+		if (jumpPattern != selectedPattern || targetRow != currentRow)
+		{
+			/* Clear out any pattern loop state as we do this */
+			if (jumpPattern != selectedPattern)
+			{
+				for (auto &channel : channels)
+				{
+					channel.patternLoopCount = 0U;
+					channel.patternLoopStart = 0U;
+				}
+			}
+			/* And set up to hit the new pattern and row */
+			nextPattern = jumpPattern;
+			nextRow = targetRow;
+		}
+	}
+}
+
+void scanState_t::disableJumpEffect() noexcept
+{
+	const auto &pattern{*patternData[patternIndex]};
+	/* Scan through all the channels' command data */
+	for (const auto idx : substrate::indexSequence_t{channels.count()})
+	{
+		/* Extract the appropriate command and effect data */
+		auto &command{pattern.commands()[idx][currentRow]};
+		const auto [effect, param]{command.effect()};
+		/* If this command is either a pattern jump or position jump, mark it disabled */
+		if (effect == CMD_PATTERNBREAK || effect == CMD_POSITIONJUMP)
+			command.disableEffect();
+	}
+}
+
+std::optional<uint16_t> channelState_t::patternLoop(const uint8_t param, const uint16_t row) noexcept
 {
 	/* Figure out where the pattern loop is to */
 	if (param)
