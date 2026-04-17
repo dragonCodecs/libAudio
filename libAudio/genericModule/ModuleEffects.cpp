@@ -63,7 +63,7 @@ void command_t::translateMODEffect(const uint8_t cmd, const uint8_t param) noexc
 			break;
 		case 13:
 			Effect = CMD_PATTERNBREAK;
-			Param = param;
+			Param = ((param >> 4U) * 10U) + (param & 0x0fU);
 			break;
 		case 14:
 			Effect = CMD_MOD_EXTENDED;
@@ -98,7 +98,7 @@ void command_t::setSTMEffect(uint8_t effect, uint8_t param)
 			break;
 		case 3:
 			Effect = CMD_PATTERNBREAK;
-			Param = ((param >> 4) * 10) + (param & 0x0F);
+			Param = ((param >> 4U) * 10U) + (param & 0x0fU);
 			break;
 		case 4:
 			Effect = CMD_VOLUMESLIDE;
@@ -288,7 +288,7 @@ void command_t::setITEffect(uint8_t effect, uint8_t param)
 	if (effect < 26)
 	{
 		setS3MEffect(effect, param);
-		if (effect == 3)
+		if (effect == 3U)
 			Param = param;
 		return;
 	}
