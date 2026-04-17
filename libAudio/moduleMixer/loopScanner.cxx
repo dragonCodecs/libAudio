@@ -255,15 +255,19 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 			/* Adjust the target row if it's outside the target pattern */
 			if (targetRow >= patterns[pattern].rows.count())
 				targetRow = 0U;
-			/* As it has, see if we've ever jumped to the target row before then */
-			const auto visited{patterns[pattern].rows[targetRow]};
-			/* Already played, or already jumped to by a nav command that's not a pattern loop */
-			if (visited == ROW_VISITED || visited == (ROW_VISITED | ROW_NAV_JUMP) ||
-				visited == (ROW_VISITED | ROW_PATTERN_LOOPED | ROW_NAV_JUMP))
+			/* If this is a jump forwards, it's awlays fine - otherwise it has to be checked */
+			if (jumpOrder <= currentOrder)
 			{
-				/* Don't take the jump, instead disable it */
-				disableJumpEffect();
-				return;
+				/* As it has, see if we've ever jumped to the target row before then */
+				const auto visited{patterns[pattern].rows[targetRow]};
+				/* Already played, or already jumped to by a nav command that's not a pattern loop */
+				if (visited == ROW_VISITED || visited == (ROW_VISITED | ROW_NAV_JUMP) ||
+					visited == (ROW_VISITED | ROW_PATTERN_LOOPED | ROW_NAV_JUMP))
+				{
+					/* Don't take the jump, instead disable it */
+					disableJumpEffect();
+					return;
+				}
 			}
 		}
 		/* It's a valid jump if we get here, so do it */
