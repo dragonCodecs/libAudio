@@ -853,16 +853,16 @@ bool ModuleFile::ProcessEffects()
 			if (!TickCount) // Only process extended commands on the first tick of a row.
 			{
 				if (excmd == CMD_MODEX_DELAYSAMP)
-					channel->startTick = param & 0x0FU;
+					channel->startTick = param & 0x0fU;
 				else if ((cmd == CMD_MOD_EXTENDED && excmd == CMD_MODEX_LOOP) ||
 					(cmd == CMD_S3M_EXTENDED && excmd == CMD_S3MEX_LOOP))
 				{
-					const auto loop = channel->patternLoop(param & 0x0FU, Row);
-					if (loop >= 0)
-						patternLoopRow = {loop};
+					const auto loop{channel->patternLoop(param & 0x0fU, Row)};
+					if (loop)
+						patternLoopRow = loop;
 				}
 				else if (excmd == CMD_MODEX_DELAYPAT)
-					PatternDelay = param & 0x0FU;
+					PatternDelay = param & 0x0fU;
 			}
 		}
 

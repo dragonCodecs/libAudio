@@ -598,7 +598,7 @@ public:
 	void noteChange(ModuleFile &module, uint8_t note, bool handlePorta = false);
 	void noteCut(ModuleFile &module, uint32_t tick) noexcept;
 	void noteOff() noexcept;
-	[[nodiscard]] int32_t patternLoop(uint8_t param, uint16_t row) noexcept;
+	[[nodiscard]] std::optional<uint16_t> patternLoop(uint8_t param, uint16_t row) noexcept;
 	void portamentoUp(const ModuleFile &module, uint8_t param) noexcept;
 	void portamentoDown(const ModuleFile &module, uint8_t param) noexcept;
 	void finePortamentoUp(const ModuleFile &module, uint8_t param) noexcept;

@@ -383,27 +383,22 @@ void channel_t::noteOff() noexcept
 	}
 }
 
-int32_t channel_t::patternLoop(const uint8_t param, const uint16_t row) noexcept
+std::optional<uint16_t> channel_t::patternLoop(const uint8_t param, const uint16_t row) noexcept
 {
-	if (param)
+	if (param != 0U)
 	{
-		if (patternLoopCount)
+		if (patternLoopCount != 0U)
 		{
-			if (!--patternLoopCount)
-			{
-				// Reset the default start position for the next
-				// CMDEX_LOOP
-				patternLoopStart = 0;
-				return -1;
-			}
+			if (--patternLoopCount == 0U)
+				return {};
 		}
 		else
 			patternLoopCount = param;
-		return patternLoopStart;
+		return {patternLoopStart};
 	}
 	else
 		patternLoopStart = row;
-	return -1;
+	return {};
 }
 
 void channel_t::portamentoUp(const ModuleFile &module, uint8_t param) noexcept

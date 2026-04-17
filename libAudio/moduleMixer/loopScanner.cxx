@@ -303,21 +303,17 @@ void scanState_t::disableJumpEffect() noexcept
 std::optional<uint16_t> channelState_t::patternLoop(const uint8_t param, const uint16_t row) noexcept
 {
 	/* Figure out where the pattern loop is to */
-	if (param)
+	if (param != 0U)
 	{
 		/*
 		 * If we're already processing a pattern loop, we just hit the command again,
 		 * so check to see if there are any loops needed left
 		 */
-		if (patternLoopCount)
+		if (patternLoopCount != 0U)
 		{
-			/* If this is the last loop */
-			if (!--patternLoopCount)
-			{
-				// Reset the default start position for the next CMDEX_LOOP
-				patternLoopStart = 0;
+			/* If this is the last loop, do no more */
+			if (--patternLoopCount == 0U)
 				return {};
-			}
 		}
 		/* If there are no loops left to process, this is a new loop */
 		else
