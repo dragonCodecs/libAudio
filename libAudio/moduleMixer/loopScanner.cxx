@@ -201,19 +201,11 @@ void scanState_t::processEffects() noexcept
 			}
 			/* If the effect is a position jump, set up for the jump */
 			case CMD_POSITIONJUMP:
-				/* Adjust the jump destination to not go outside the number of orders available */
-				if (param > orders.size())
-					positionJump = {0};
-				else
-					positionJump = {param};
+				positionJump = {param};
 				break;
 			/* If the effect is a pattern break, set up for the break destination */
 			case CMD_PATTERNBREAK:
-				/* Figure out if the new row position is outside the valid range, if so adjust */
-				if (param >= rowsInPattern - 1U)
-					breakRow = {rowsInPattern - 1U};
-				else
-					breakRow = {param};
+				breakRow = {param};
 				break;
 			/* Track speed and tempo changes */
 			case CMD_SPEED:

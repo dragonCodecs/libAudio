@@ -1006,18 +1006,10 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, std::optional
 			applyGlobalVolumeSlide(param);
 			break;
 		case CMD_POSITIONJUMP:
-			/* Adjust the jump destination to not go outside the number of orders available */
-			if (param > p_Header->nOrders)
-				positionJump = {0U};
-			else
-				positionJump = {param};
+			positionJump = {param};
 			break;
 		case CMD_PATTERNBREAK:
-			/* Figure out if the new row position is outside the valid range, if so adjust */
-			if (param >= Rows - 1U)
-				breakRow = {Rows - 1U};
-			else
-				breakRow = {param};
+			breakRow = {param};
 			break;
 		case CMD_SPEED:
 			MusicSpeed = param;
