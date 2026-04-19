@@ -1106,7 +1106,7 @@ bool ModuleFile::handleNavigationEffects(const std::optional<uint16_t> patternLo
 			const auto jumpOrder{positionJump.value_or(currentOrder + 1U)};
 			const auto targetRow{breakRow.value_or(0U)};
 			/* It was already guaranteed by the loop scanner that this won't cause a loop, so just do it */
-			if (jumpOrder < p_Header->nOrders && (jumpOrder != currentOrder || targetRow != Row))
+			if (jumpOrder != currentOrder || targetRow != Row)
 			{
 				if (jumpOrder != currentOrder)
 				{
