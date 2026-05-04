@@ -416,6 +416,7 @@ libAudioLibrary = library(
 	include_directories: includes,
 	gnu_symbol_visibility: 'inlineshidden',
 	name_prefix: '',
+	pic: true,
 	install: true,
 	version: meson.project_version()
 )
