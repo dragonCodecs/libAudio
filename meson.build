@@ -87,7 +87,8 @@ if target_machine.system() == 'windows'
 endif
 
 subdir('libAudio')
-if not meson.is_subproject()
+buildUtilities = get_option('utilities')
+if not meson.is_subproject() and buildUtilities
 	subdir('player')
 	subdir('transcoder')
 endif
