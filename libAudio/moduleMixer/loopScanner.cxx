@@ -239,7 +239,10 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 	if (breakRow || positionJump)
 	{
 		/* Unpack where to jump to - if there is no valid position jump, it's the next selected pattern */
-		const auto jumpOrder{positionJump.value_or(currentOrder + 1U)};
+		auto jumpOrder{positionJump.value_or(currentOrder + 1U)};
+		/* Check to see if this jump position lands us on skip patterns and if so.. skip them.. */
+		while (jumpOrder < orders.size() && orders[jumpOrder] > patterns.size())
+			++jumpOrder;
 		/* Unpack what row to go to - if there's no valid row, it's the first of the new pattern */
 		auto targetRow{breakRow.value_or(0U)};
 		/* If the place to jump to is outside the song, nothing doing */
