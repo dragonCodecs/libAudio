@@ -1012,7 +1012,15 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, std::optional
 			breakRow = {param};
 			break;
 		case CMD_SPEED:
-			MusicSpeed = param;
+			// Speed effects can only be processed in the first tick
+			if (TickCount == 0U)
+			{
+				// Figure out what the module-specific max is
+				const uint16_t maxSpeed = typeIs<MODULE_IT, MODULE_S3M>() ? 256U : 128U;
+				// If it's a reasonable speed setting, then make use of it
+				if (param != 0U && param < maxSpeed)
+					MusicSpeed = param;
+			}
 			break;
 		case CMD_MOD_EXTENDED:
 			ProcessMODExtended(&channel);
