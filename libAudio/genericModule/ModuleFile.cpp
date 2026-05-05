@@ -37,6 +37,7 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
 	}
 	p_Header->nPatterns = maxPattern + 1U;
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
+	memset(p_Patterns, 0, sizeof(pattern_t *) * p_Header->nPatterns);
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
 
@@ -51,6 +52,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleFile{MODULE_S3M}
 
 	p_Header = new ModuleHeader(file);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
+	memset(p_Samples, 0, sizeof(ModuleSample *) * p_Header->nSamples);
 	uint16_t *const SamplePtrs = p_Header->SamplePtrs.get<uint16_t>();
 	for (uint16_t i = 0; i < p_Header->nSamples; ++i)
 	{
@@ -72,6 +74,7 @@ ModuleFile::ModuleFile(const modS3M_t &file) : ModuleFile{MODULE_S3M}
 	}
 
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
+	memset(p_Patterns, 0, sizeof(pattern_t *) * p_Header->nPatterns);
 	uint16_t *const PatternPtrs = p_Header->PatternPtrs.get<uint16_t>();
 	for (uint16_t i = 0; i < p_Header->nPatterns; ++i)
 	{
@@ -92,11 +95,13 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleFile{MODULE_STM}
 
 	p_Header = new ModuleHeader(file);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
+	memset(p_Samples, 0, sizeof(ModuleSample *) * p_Header->nSamples);
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	if (!fd.seekRel(128))
 		throw ModuleLoaderError{E_BAD_STM};
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
+	memset(p_Patterns, 0, sizeof(pattern_t *) * p_Header->nPatterns);
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new pattern_t(file);
 	const uint32_t pcmOffset = 1104 + (1024 * p_Header->nPatterns);
