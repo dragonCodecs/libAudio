@@ -22,6 +22,7 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
 	if (fd.seek(20, SEEK_SET) != 20)
 		throw ModuleLoaderError(E_BAD_MOD);
 	p_Samples = new ModuleSample *[p_Header->nSamples];
+	memset(p_Samples, 0, sizeof(ModuleSample *) * p_Header->nSamples);
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	if (!fd.seekRel(130 + (p_Header->nSamples != 15 ? 4 : 0)))
