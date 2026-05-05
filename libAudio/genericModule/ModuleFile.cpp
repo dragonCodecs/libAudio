@@ -269,8 +269,12 @@ ModuleFile::~ModuleFile()
 
 	if (ModuleType != MODULE_AON && p_Header)
 		nPCM = p_Header->nSamples;
-	for (i = 0; i < nPCM; i++)
-		delete [] p_PCM[i];
+	// Only dispose of the PCM samples if any ever got allocated
+	if (p_PCM)
+	{
+		for (i = 0; i < nPCM; i++)
+			delete [] p_PCM[i];
+	}
 	delete [] p_PCM;
 	if (p_Header)
 	{
