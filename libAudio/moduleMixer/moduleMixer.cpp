@@ -1033,7 +1033,35 @@ void ModuleFile::processEffects(channel_t &channel, uint8_t param, std::optional
 				channel.noteChange(*this, channel.NewNote, false);
 			break;
 		case CMD_TEMPO:
-			MusicTempo = param;
+			// Tempo effects can only be processed in the first tick
+			if (TickCount == 0U)
+			{
+				// If the tempo param is less than 32, then it's a tempo slide
+				if (param < 32U)
+				{
+					// If it's more than 16, then it's a slide up
+					if (param >= 16U)
+					{
+						// Multiply the tempo change by 2 and apply it
+						MusicTempo += (param & 0x0fU) << 1U;
+						// Make sure we don't go over 255
+						if (MusicTempo > 255U)
+							MusicTempo = 255U;
+					}
+					// Otherwise, it's a slide down
+					else
+					{
+						// Multiply the tempo change by 2 and apply it
+						MusicTempo -= (param & 0x0fU) << 1U;
+						// Make sure we don't go under 32
+						if (MusicTempo < 32U)
+							MusicTempo = 32U;
+					}
+				}
+				// Otherwise it's a raw tempo to take
+				else
+					MusicTempo = param;
+			}
 			break;
 		case CMD_VOLUME:
 			if (TickCount == 0)//channel->startTick)
