@@ -288,7 +288,7 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 		/* Unpack what row to go to - if there's no valid row, it's the first of the new pattern */
 		auto targetRow{breakRow.value_or(0U)};
 		/* If the place to jump to is outside the song, nothing doing */
-		if (jumpOrder < orders.size())
+		if (jumpOrder < orders.size() && orders[jumpOrder] < patterns.size())
 		{
 			const auto pattern{orders[jumpOrder]};
 			/* If this is a pattern that is valid and we've not yet visited, init for it */
