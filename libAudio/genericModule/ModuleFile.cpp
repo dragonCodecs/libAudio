@@ -20,13 +20,13 @@ ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
 
 	p_Header = new ModuleHeader(file);
 	if (fd.seek(20, SEEK_SET) != 20)
-		throw ModuleLoaderError(E_BAD_MOD);
+		throw ModuleLoaderError{E_BAD_MOD};
 	p_Samples = new ModuleSample *[p_Header->nSamples];
 	memset(p_Samples, 0, sizeof(ModuleSample *) * p_Header->nSamples);
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	if (!fd.seekRel(130 + (p_Header->nSamples != 15 ? 4 : 0)))
-		throw ModuleLoaderError(E_BAD_MOD);
+		throw ModuleLoaderError{E_BAD_MOD};
 
 	// Count the number of patterns present
 	uint8_t maxPattern{};
@@ -95,13 +95,13 @@ ModuleFile::ModuleFile(const modSTM_t &file) : ModuleFile{MODULE_STM}
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	if (!fd.seekRel(128))
-		throw ModuleLoaderError(E_BAD_STM);
+		throw ModuleLoaderError{E_BAD_STM};
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 		p_Patterns[i] = new pattern_t(file);
 	const uint32_t pcmOffset = 1104 + (1024 * p_Header->nPatterns);
 	if (fd.seek(pcmOffset, SEEK_SET) != pcmOffset)
-		throw ModuleLoaderError(E_BAD_STM);
+		throw ModuleLoaderError{E_BAD_STM};
 
 	stmLoadPCM(fd);
 	MinPeriod = 64;
@@ -125,13 +125,13 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 	if (!fd.read(blockName) ||
 		memcmp(blockName.data(), "PATT", 4) != 0 ||
 		!fd.readBE(blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	// 2 if 8 voices, 1 otherwise
 	ChannelMul = p_Header->nChannels >> 2;
 	// Transform that into a shift value to get the number of patterns
 	ChannelMul += 9;
 	if ((blockLen % (1 << ChannelMul)) != 0)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	p_Header->nPatterns = blockLen >> ChannelMul;
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
 	for (i = 0; i < p_Header->nPatterns; i++)
@@ -141,30 +141,30 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 		memcmp(blockName.data(), "INST", 4) != 0 ||
 		!fd.readBE(blockLen) ||
 		(blockLen % 32) != 0)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	p_Header->nSamples = blockLen >> 5;
 	const off_t InstrPos = fd.tell();
 	if (!fd.seekRel(blockLen) ||
 		!fd.read(blockName) ||
 		!fd.readBE(blockLen))
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 	// We don't care about the instrument names, so skip over them.
 	else if (memcmp(blockName.data(), "INAM", 4) != 0)
 	{
 		if (!fd.seekRel(blockLen) ||
 			!fd.read(blockName) ||
 			!fd.readBE(blockLen))
-			throw ModuleLoaderError(E_BAD_AON);
+			throw ModuleLoaderError{E_BAD_AON};
 	}
 	if (memcmp(blockName.data(), "WLEN", 4) != 0 ||
 		blockLen != 0x0100)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 
 	lengthPCM = make_unique_nothrow<uint32_t []>(64);
 	for (i = 0, SampleLengths = 0; i < 64; i++)
 	{
 		if (!fd.readBE(lengthPCM[i]))
-			throw ModuleLoaderError(E_BAD_AON);
+			throw ModuleLoaderError{E_BAD_AON};
 		SampleLengths += lengthPCM[i];
 		if (lengthPCM[i] != 0)
 			nPCM = i + 1;
@@ -176,7 +176,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 	{
 		const off_t offset = InstrPos + (i << 5);
 		if (fd.seek(offset, SEEK_SET) != offset)
-			throw ModuleLoaderError(E_BAD_AON);
+			throw ModuleLoaderError{E_BAD_AON};
 		p_Samples[i] = ModuleSample::LoadSample(file, i, nullptr, lengthPCM.get());
 	}
 
@@ -185,7 +185,7 @@ ModuleFile::ModuleFile(const modAON_t &file) : ModuleFile{MODULE_AON}
 		memcmp(blockName.data(), "WAVE", 4) != 0 ||
 		!fd.readBE(blockLen) ||
 		blockLen != SampleLengths)
-		throw ModuleLoaderError(E_BAD_AON);
+		throw ModuleLoaderError{E_BAD_AON};
 
 	aonLoadPCM(fd);
 	MinPeriod = 56;
