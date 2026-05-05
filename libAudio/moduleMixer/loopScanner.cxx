@@ -332,7 +332,7 @@ void scanState_t::handleNavigationEffects(const std::optional<uint16_t> patternL
 			if (jumpOrder < orders.size())
 			{
 				const auto pattern{orders[jumpOrder]};
-				if (patterns[pattern].rows)
+				if (pattern < patterns.size() && patterns[pattern].rows)
 					patterns[pattern].rows[nextRow] |= ROW_NAV_JUMP;
 			}
 		}
