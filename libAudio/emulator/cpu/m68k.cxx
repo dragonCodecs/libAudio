@@ -2966,7 +2966,7 @@ uint32_t motorola68000_t::computeEffectiveAddress(const uint8_t mode, const uint
 	switch (mode)
 	{
 		case 2U: // (An)
-			return a[reg];
+			return addrRegister(reg);
 		case 3U: // (An)+
 		{
 			const auto ptr{addrRegister(reg)};
