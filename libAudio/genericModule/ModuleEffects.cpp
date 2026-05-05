@@ -75,11 +75,11 @@ void command_t::translateMODEffect(const uint8_t cmd, const uint8_t param) noexc
 			 * param <= 32 => Speed = NewSpeed (TPR)
 			 * param > 32 => Tempo = NewSpeed (BPM)
 			 */
-			if (param <= 32)
+			if (param <= 32U)
 				Effect = CMD_SPEED;
 			else
 				Effect = CMD_TEMPO;
-			Param = (param == 0 ? 1 : param);
+			Param = param == 0U ? 1U : param;
 			break;
 	}
 }
