@@ -30,6 +30,8 @@ struct channelState_t final
 
 struct scanState_t final
 {
+	/* Type of the module being scanned (MOD, STM, S3M, IT, etc) */
+	uint8_t moduleType;
 	/* Tracking for the states of each pattern */
 	fixedVector_t<patternState_t> patterns;
 	/* Tracking for the states of of the playback channels */
@@ -60,7 +62,7 @@ struct scanState_t final
 	uint16_t currentRow{};
 	uint16_t rowsInPattern{};
 
-	scanState_t(size_t patternCount, size_t channelCount, substrate::span<pattern_t *>patternList,
+	scanState_t(uint8_t modType, size_t patternCount, size_t channelCount, substrate::span<pattern_t *>patternList,
 		substrate::span<uint8_t> orderList, uint32_t musicSpeed, uint32_t musicTempo, uint32_t mixSampleRate);
 	void updateSamplesPerTick() noexcept;
 	void scan();
@@ -69,12 +71,16 @@ struct scanState_t final
 	void handleNavigationEffects(std::optional<uint16_t> patternLoopRow, std::optional<uint16_t> breakRow,
 		std::optional<uint8_t> positionJump) noexcept;
 	void disableJumpEffect() noexcept;
+
+	template<uint32_t type> [[nodiscard]] bool typeIs() const noexcept { return moduleType == type; }
+	template<uint32_t type, uint32_t... types> [[nodiscard]] typename std::enable_if<sizeof...(types) != 0, bool>::type
+		typeIs() const noexcept { return typeIs<type>() || typeIs<types...>(); }
 };
 
 void ModuleFile::loopScanPatterns(fileInfo_t &info)
 {
 	/* State tracker for the scan */
-	scanState_t state{p_Header->nPatterns, p_Header->nChannels, {p_Patterns, p_Header->nPatterns},
+	scanState_t state{ModuleType, p_Header->nPatterns, p_Header->nChannels, {p_Patterns, p_Header->nPatterns},
 		{p_Header->Orders.get(), p_Header->nOrders}, MusicSpeed, MusicTempo, info.bitRate()};
 	/* Ask the scanner to do its job across the patterns in the order specified by the tune */
 	state.scan();
@@ -84,11 +90,11 @@ void ModuleFile::loopScanPatterns(fileInfo_t &info)
 	info.totalTime(timeSeconds + (timeRemainder ? 1U : 0U));
 }
 
-scanState_t::scanState_t(const size_t patternCount, const size_t channelCount,
+scanState_t::scanState_t(const uint8_t modType, const size_t patternCount, const size_t channelCount,
 	const substrate::span<pattern_t *> patternList, const substrate::span<uint8_t> orderList,
-	const uint32_t musicSpeed, const uint32_t musicTempo, const uint32_t mixSampleRate) : patterns{patternCount},
-	channels{channelCount}, patternData{patternList}, orders{orderList}, speed{musicSpeed}, tempo{musicTempo},
-	sampleRate{mixSampleRate}, tickCount{speed} { updateSamplesPerTick(); }
+	const uint32_t musicSpeed, const uint32_t musicTempo, const uint32_t mixSampleRate) : moduleType{modType},
+	patterns{patternCount}, channels{channelCount}, patternData{patternList}, orders{orderList}, speed{musicSpeed},
+	tempo{musicTempo}, sampleRate{mixSampleRate}, tickCount{speed} { updateSamplesPerTick(); }
 
 void scanState_t::updateSamplesPerTick() noexcept
 	{ samplesPerTick = (sampleRate * 640U) / (tempo << 8U); }
@@ -209,10 +215,46 @@ void scanState_t::processEffects() noexcept
 				break;
 			/* Track speed and tempo changes */
 			case CMD_SPEED:
-				speed = param;
+				// Speed effects can only be processed in the first tick
+				if (tickCount == 0U)
+				{
+					// Figure out what the module-specific max is
+					const uint16_t maxSpeed = typeIs<MODULE_IT, MODULE_S3M>() ? 256U : 128U;
+					// If it's a reasonable speed setting, then make use of it
+					if (param != 0U && param < maxSpeed)
+						speed = param;
+				}
 				break;
 			case CMD_TEMPO:
-				tempo = param;
+				// Tempo effects can only be processed in the first tick
+				if (tickCount == 0U)
+				{
+					// If the tempo param is less than 32, then it's a tempo slide
+					if (param < 32U)
+					{
+						// If it's more than 16, then it's a slide up
+						if (param >= 16U)
+						{
+							// Multiply the tempo change by 2 and apply it
+							tempo += (param & 0x0fU) << 1U;
+							// Make sure we don't go over 255
+							if (tempo > 255U)
+								tempo = 255U;
+						}
+						// Otherwise, it's a slide down
+						else
+						{
+							// Multiply the tempo change by 2 and apply it
+							tempo -= (param & 0x0fU) << 1U;
+							// Make sure we don't go under 32
+							if (tempo < 32U)
+								tempo = 32U;
+						}
+					}
+					// Otherwise it's a raw tempo to take
+					else
+						tempo = param;
+				}
 				break;
 		}
 	}
