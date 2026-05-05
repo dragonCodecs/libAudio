@@ -209,20 +209,22 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 	if (p_Header->nInstruments)
 	{
 		p_Instruments = new ModuleInstrument *[p_Header->nInstruments];
+		memset(p_Instruments, 0, sizeof(ModuleInstrument *) * p_Header->nInstruments);
 		auto *const instrOffsets = p_Header->InstrumentPtrs.get<uint32_t>();
 		for (uint16_t i = 0; i < p_Header->nInstruments; ++i)
 		{
 			if (fd.seek(instrOffsets[i], SEEK_SET) != instrOffsets[i])
-				throw ModuleLoaderError(E_BAD_IT);
+				throw ModuleLoaderError{E_BAD_IT};
 			p_Instruments[i] = ModuleInstrument::LoadInstrument(file, i, p_Header->FormatVersion).release();
 		}
 	}
 	p_Samples = new ModuleSample *[p_Header->nSamples];
+	memset(p_Samples, 0, sizeof(ModuleSample *) * p_Header->nSamples);
 	auto *const sampleOffsets = p_Header->SamplePtrs.get<uint32_t>();
 	for (uint16_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		if (fd.seek(sampleOffsets[i], SEEK_SET) != sampleOffsets[i])
-			throw ModuleLoaderError(E_BAD_IT);
+			throw ModuleLoaderError{E_BAD_IT};
 		p_Samples[i] = ModuleSample::LoadSample(file, i);
 	}
 
@@ -245,6 +247,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 	}
 
 	p_Patterns = new pattern_t *[p_Header->nPatterns];
+	memset(p_Patterns, 0, sizeof(pattern_t *) * p_Header->nPatterns);
 	uint32_t *const PatternPtrs = p_Header->PatternPtrs.get<uint32_t>();
 	for (uint16_t i = 0; i < p_Header->nPatterns; i++)
 	{
@@ -253,7 +256,7 @@ ModuleFile::ModuleFile(const modIT_t &file) : ModuleFile{MODULE_IT}
 		else
 		{
 			if (fd.seek(PatternPtrs[i], SEEK_SET) != PatternPtrs[i])
-				throw ModuleLoaderError(E_BAD_IT);
+				throw ModuleLoaderError{E_BAD_IT};
 			p_Patterns[i] = new pattern_t(file, p_Header->nChannels);
 		}
 	}
