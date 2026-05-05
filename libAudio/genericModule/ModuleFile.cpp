@@ -278,14 +278,26 @@ ModuleFile::~ModuleFile()
 	delete [] p_PCM;
 	if (p_Header)
 	{
-		for (i = 0; i < p_Header->nPatterns; i++)
-			delete p_Patterns[i];
+		// Only dispose of the patterns if any ever got allocated
+		if (p_Patterns)
+		{
+			for (i = 0; i < p_Header->nPatterns; i++)
+				delete p_Patterns[i];
+		}
 		delete [] p_Patterns;
-		for (i = 0; i < p_Header->nInstruments; i++)
-			delete p_Instruments[i];
+		// Only dispose of the instruments if any ever got allocated
+		if (p_Instruments)
+		{
+			for (i = 0; i < p_Header->nInstruments; i++)
+				delete p_Instruments[i];
+		}
 		delete [] p_Instruments;
-		for (i = 0; i < p_Header->nSamples; i++)
-			delete p_Samples[i];
+		// Only dispose of the samples if any ever got allocated
+		if (p_Samples)
+		{
+			for (i = 0; i < p_Header->nSamples; i++)
+				delete p_Samples[i];
+		}
 	}
 	delete [] p_Samples;
 	delete p_Header;
