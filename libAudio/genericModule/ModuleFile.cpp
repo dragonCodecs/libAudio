@@ -375,6 +375,7 @@ void ModuleFile::modLoadPCM(const fd_t &fd)
 void ModuleFile::s3mLoadPCM(const fd_t &fd)
 {
 	p_PCM = new uint8_t *[p_Header->nSamples];
+	memset(p_PCM, 0, sizeof(uint8_t *) * p_Header->nSamples);
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		const uint32_t length = p_Samples[i]->GetLength() << (p_Samples[i]->Get16Bit() ? 1 : 0);
@@ -410,6 +411,7 @@ void ModuleFile::s3mLoadPCM(const fd_t &fd)
 void ModuleFile::stmLoadPCM(const fd_t &fd)
 {
 	p_PCM = new uint8_t *[p_Header->nSamples];
+	memset(p_PCM, 0, sizeof(uint8_t *) * p_Header->nSamples);
 	for (uint16_t i = 0; i < p_Header->nSamples; i++)
 	{
 		const uint32_t length = p_Samples[i]->GetLength();
@@ -428,6 +430,7 @@ void ModuleFile::stmLoadPCM(const fd_t &fd)
 void ModuleFile::aonLoadPCM(const fd_t &fd)
 {
 	p_PCM = new uint8_t *[nPCM];
+	memset(p_PCM, 0, sizeof(uint8_t *) * nPCM);
 	for (uint32_t i = 0; i < nPCM; i++)
 	{
 		uint32_t Length = lengthPCM[i];
@@ -713,6 +716,7 @@ template<typename T> void ModuleFile::itLoadPCMSample(const fd_t &fd, const uint
 void ModuleFile::itLoadPCM(const fd_t &fd)
 {
 	p_PCM = new uint8_t *[p_Header->nSamples];
+	memset(p_PCM, 0, sizeof(uint8_t *) * p_Header->nSamples);
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		if (p_Samples[i]->Get16Bit())
