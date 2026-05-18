@@ -174,10 +174,14 @@ bool mp3_t::readMetadata() noexcept
 	const uint32_t offset = uint32_t(!ctx.stream.buffer ? 0 : ctx.stream.bufend - ctx.stream.next_frame);
 	if (!fd().read(ctx.inputBuffer.data() + offset, ctx.inputBuffer.size() - offset))
 		return false;
-	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), uint32_t(ctx.inputBuffer.size()));
+	mad_stream_buffer(&ctx.stream, ctx.inputBuffer.data(), static_cast<uint32_t>(ctx.inputBuffer.size()));
+	ctx.initialFrame = false;
 
 	while (!ctx.frame.header.bitrate || !ctx.frame.header.samplerate)
-		mad_frame_decode(&ctx.frame, &ctx.stream);
+	{
+		if (ctx.decodeFrame(fd()) < 0)
+			return false;
+	}
 
 	const uint32_t frameCount = ctx.parseXingHeader();
 	if (frameCount != 0)
@@ -255,7 +259,7 @@ bool mp3_t::decoderContext_t::readData(const fd_t &fd) noexcept
 	/*if (*eof)
 		memset(p_MF->inbuff + (2 * 8192), 0x00, 8);*/
 
-	mad_stream_buffer(&stream, inputBuffer.data(), uint32_t(inputBuffer.size()));
+	mad_stream_buffer(&stream, inputBuffer.data(), static_cast<uint32_t>(inputBuffer.size()));
 	return true;
 }
 
