@@ -106,7 +106,10 @@ bool sndhLoader_t::readMeta()
 		{
 			auto number = readString(_data);
 			number.insert(0U, tagType.data() + 2, 2U);
-			_metadata.defaultTune = toInt_t<uint8_t>{number.c_str()}.fromInt();
+			const toInt_t<uint8_t> converter{number.c_str()};
+			// Make sure the value is a valid number before using it
+			if (converter.isInt())
+				_metadata.defaultTune = converter.fromInt();
 		}
 		else if (tagType == typeTimerA || tagType == typeTimerB || tagType == typeTimerC ||
 			tagType == typeTimerD || tagType == typeTimerVBL)
