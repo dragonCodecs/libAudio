@@ -11,7 +11,7 @@ constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType
 	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},
 	MixSampleRate{}, MixBitsPerSample{}, TickCount{}, SamplesToMix{}, MinPeriod{}, MaxPeriod{}, MixChannels{},
 	Row{}, NextRow{}, Rows{}, MusicSpeed{}, MusicTempo{}, Pattern{}, currentOrder{}, nextOrder{}, RowsPerBeat{},
-	SamplesPerTick{}, Channels{nullptr}, nMixerChannels{}, MixerChannels{nullptr}, globalVolume{},
+	SamplesPerTick{}, Channels{}, nMixerChannels{}, MixerChannels{}, globalVolume{},
 	globalVolumeSlide{}, PatternDelay{}, FrameDelay{}, MixBuffer{}, DCOffsR{}, DCOffsL{} { }
 
 ModuleFile::ModuleFile(const modMOD_t &file) : ModuleFile{MODULE_MOD}
@@ -331,6 +331,7 @@ uint8_t ModuleFile::channels() const noexcept
 void ModuleFile::modLoadPCM(const fd_t &fd)
 {
 	p_PCM = new uint8_t *[p_Header->nSamples];
+	memset(p_PCM, 0, sizeof(uint8_t *) * p_Header->nSamples);
 	for (uint32_t i = 0; i < p_Header->nSamples; ++i)
 	{
 		uint32_t Length = p_Samples[i]->GetLength();
