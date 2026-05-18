@@ -198,9 +198,17 @@ m4a_t *m4a_t::openR(const char *const fileName) noexcept
 		return nullptr;
 	file->fetchTags();
 
-	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
+}
+
+void m4a_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *decoderContext();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 /*!

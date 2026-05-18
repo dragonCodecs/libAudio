@@ -82,18 +82,22 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 		return nullptr;
 	}
 
-	// Set up the playback engine if necessary
-	if (ToPlayback)
-	{
-		if (ExternalPlayback == 0)
-			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
-	}
 	return file.release();
 }
 catch (const std::exception &)
 {
 	console.error("Failed to load SNDH file"sv);
 	return nullptr;
+}
+
+void sndh_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *context();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 void *sndhOpenR(const char *fileName) { return sndh_t::openR(fileName); }

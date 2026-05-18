@@ -111,9 +111,17 @@ aac_t *aac_t::openR(const char *const fileName) noexcept
 	info.channels(channels);
 	info.bitsPerSample(16U);
 
-	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
+}
+
+void aac_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *context();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 /*!

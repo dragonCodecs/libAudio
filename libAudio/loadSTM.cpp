@@ -32,12 +32,6 @@ modSTM_t *modSTM_t::openR(const char *const fileName) noexcept
 	}
 	info.title(ctx.mod->title());
 
-	if (ToPlayback)
-	{
-		if (!ExternalPlayback)
-			file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
-		ctx.mod->InitMixer(info);
-	}
 	return file.release();
 }
 

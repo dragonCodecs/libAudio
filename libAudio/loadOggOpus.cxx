@@ -78,9 +78,17 @@ oggOpus_t *oggOpus_t::openR(const char *const fileName) noexcept
 		info.totalTime(op_pcm_total(ctx.decoder, -1) / 48000U);
 	//OpusTags *tags = op_tags(ctx.decoder, -1);
 
-	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
+}
+
+void oggOpus_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *decoderContext();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 /*!

@@ -206,12 +206,18 @@ mp3_t *mp3_t::openR(const char *const fileName) noexcept
 	auto file{make_unique_nothrow<mp3_t>(fd_t{fileName, O_RDONLY | O_NOCTTY}, audioModeRead_t{})};
 	if (!file || !file->valid() || !isMP3(file->_fd) || !file->readMetadata())
 		return nullptr;
-	auto &ctx = *file->decoderContext();
-	const fileInfo_t &info = file->fileInfo();
 
-	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
+}
+
+void mp3_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *decoderContext();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 /*!

@@ -70,7 +70,6 @@ int main(int argc, char **argv)
 	console = {stdout, stderr};
 	if (argc < 2)
 		return usage(argv[0]);
-	ExternalPlayback = 1;
 	const auto type{static_cast<uint8_t>(mapType(argv[1]))};
 	argc -= argc % 2;
 	for (uint32_t i = 2; i < uint32_t(argc); i += 2)

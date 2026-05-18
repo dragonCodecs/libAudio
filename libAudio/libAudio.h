@@ -230,15 +230,6 @@ libAUDIO_API const char *audioFileAlbum(const fileInfo_t *fileInfo);
 libAUDIO_API size_t audioFileOtherCommentsCount(const fileInfo_t *fileInfo);
 libAUDIO_API const char *audioFileOtherComment(const fileInfo_t *fileInfo, size_t index);
 
-// Set this to a non-zero value if using your own payback routines. This must be set before any API calls.
-// cppcoreguidelines-avoid-non-const-global-variables
-libAUDIO_API uint8_t ExternalPlayback;
-
-// Set this to zero if you do not want the genericModule/moduleMixer
-// powered decoders to initialise a mixer instance
-// cppcoreguidelines-avoid-non-const-global-variables
-libAUDIO_API uint8_t ToPlayback;
-
 // Master Audio API Defines
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)

@@ -23,6 +23,16 @@ sid_t *sid_t::openR(const char *const fileName) noexcept
 	return nullptr;
 }
 
+void sid_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		// auto &ctx = *decoderContext();
+		// const fileInfo_t &info = fileInfo();
+		// player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
+}
+
 void *sidOpenR(const char *fileName) { return sid_t::openR(fileName); }
 
 int64_t sid_t::fillBuffer(void *const, const uint32_t) { return -1; }

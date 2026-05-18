@@ -7,6 +7,18 @@ using substrate::make_unique_nothrow;
 moduleFile_t::moduleFile_t(audioType_t type, fd_t &&fd) noexcept : audioFile_t{type, std::move(fd)},
 	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 
+void moduleFile_t::ensurePlayable() noexcept
+{
+	auto &ctx = *context();
+	fileInfo_t &info = fileInfo();
+	// If there isn't yet a playback engine for this track, make one
+	if (!_player)
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	// If the mixer has not yet been initialised, seperate of the player situation, make it so
+	if (!ctx.mod->isMixerInitialised())
+		ctx.mod->InitMixer(info);
+}
+
 constexpr ModuleFile::ModuleFile(const uint8_t moduleType) noexcept : ModuleType{moduleType}, p_Header{nullptr},
 	p_Samples{nullptr}, p_Patterns{nullptr}, p_Instruments{nullptr}, p_PCM{nullptr}, lengthPCM{}, nPCM{},
 	MixSampleRate{}, MixBitsPerSample{}, TickCount{}, SamplesToMix{}, MinPeriod{}, MaxPeriod{}, MixChannels{},

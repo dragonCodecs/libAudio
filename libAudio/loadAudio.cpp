@@ -62,14 +62,6 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 };
 
 /*!
- * \c ExternalPlayback defaults on library initialisation to 0 and holds whether or not
- * internal playback initialisation is active or not via being a truth value of whether
- * external playback is wanted or not - 0 means internal is active.
- */
-uint8_t ExternalPlayback = 0;
-uint8_t ToPlayback = 1;
-
-/*!
  * This function opens the file given by \c fileName for reading and playback and returns a pointer
  * to the context of the opened file which must be used only by Audio_* functions
  * @param fileName The name of the file to open
@@ -167,6 +159,7 @@ void audioPlay(void *audioFile)
 
 void audioFile_t::play()
 {
+	ensurePlayable();
 	if (_player)
 		_player->play();
 }

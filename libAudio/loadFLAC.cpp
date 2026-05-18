@@ -176,8 +176,6 @@ namespace libAudio::flac
 				ctx.bufferLen = streamInfo.channels * streamInfo.max_blocksize;
 				ctx.buffer = make_unique_nothrow<uint8_t []>(ctx.bufferLen * (streamInfo.bits_per_sample / 8));
 				info.totalTime(streamInfo.total_samples / streamInfo.sample_rate);
-				if (!ExternalPlayback && ctx.buffer != nullptr)
-					file.player(make_unique_nothrow<playback_t>(audioFile, audioFillBuffer, ctx.playbackBuffer, 16384U, info));
 				break;
 			}
 			case FLAC__METADATA_TYPE_VORBIS_COMMENT:
@@ -263,6 +261,16 @@ flac_t *flac_t::openR(const char *const fileName) noexcept
 	if (!ctx.buffer) // This indicates that no StreamInfo block was present, rendering the file unplayable
 		return nullptr;
 	return file.release();
+}
+
+void flac_t::ensurePlayable() noexcept
+{
+	auto &ctx = *decoderContext();
+	if (!_player && ctx.buffer != nullptr)
+	{
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 16384U, info));
+	}
 }
 
 /*!

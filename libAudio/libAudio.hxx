@@ -88,6 +88,7 @@ protected:
 // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 	audioFile_t(audioType_t type, fd_t &&fd) noexcept : _type{type}, _fd{std::move(fd)} { }
+	virtual void ensurePlayable() noexcept = 0;
 
 public:
 	audioFile_t(audioFile_t &&) = default;
@@ -126,6 +127,8 @@ private:
 	std::unique_ptr<decoderContext_t> decoderCtx;
 	std::unique_ptr<encoderContext_t> encoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 public:
 	oggVorbis_t(fd_t &&fd, audioModeRead_t) noexcept;
 	oggVorbis_t(fd_t &&fd, audioModeWrite_t) noexcept;
@@ -152,6 +155,8 @@ private:
 	struct encoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
 	std::unique_ptr<encoderContext_t> encoderCtx;
+
+	void ensurePlayable() noexcept override;
 
 public:
 	oggOpus_t(fd_t &&fd, audioModeRead_t) noexcept;
@@ -180,6 +185,8 @@ private:
 	std::unique_ptr<decoderContext_t> decoderCtx;
 	std::unique_ptr<encoderContext_t> encoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 public:
 	flac_t(fd_t &&fd, audioModeRead_t) noexcept;
 	flac_t(fd_t &&fd, audioModeWrite_t) noexcept;
@@ -203,6 +210,8 @@ struct wav_t final : public audioFile_t
 private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
+
+	void ensurePlayable() noexcept override;
 
 	bool skipToChunk(const std::array<char, 4> &chunkName) const noexcept;
 	bool readFormat() noexcept;
@@ -228,6 +237,8 @@ private:
 	std::unique_ptr<decoderContext_t> decoderCtx;
 	std::unique_ptr<encoderContext_t> encoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 public:
 	m4a_t(fd_t &&fd, audioModeRead_t) noexcept;
 	m4a_t(fd_t &&fd, audioModeWrite_t) noexcept;
@@ -252,6 +263,8 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 	uint8_t *nextFrame() noexcept;
 
 public:
@@ -274,6 +287,8 @@ private:
 	struct encoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
 	std::unique_ptr<encoderContext_t> encoderCtx;
+
+	void ensurePlayable() noexcept override;
 
 	libAUDIO_NO_DISCARD(bool readMetadata() noexcept);
 
@@ -300,6 +315,8 @@ struct moduleFile_t : public audioFile_t
 protected:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
+
+	void ensurePlayable() noexcept override;
 
 	moduleFile_t(audioType_t type, fd_t &&fd) noexcept;
 
@@ -377,6 +394,8 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 public:
 	mpc_t(fd_t &&fd) noexcept;
 	static mpc_t *openR(const char *fileName) noexcept;
@@ -396,6 +415,8 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 public:
 	wavPack_t(fd_t &&fd, const char *const fileName) noexcept;
 	static wavPack_t *openR(const char *fileName) noexcept;
@@ -413,6 +434,8 @@ struct sndh_t final : public audioFile_t
 private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
+
+	void ensurePlayable() noexcept override;
 
 public:
 	sndh_t(fd_t &&fd) noexcept;
@@ -432,6 +455,8 @@ private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
 
+	void ensurePlayable() noexcept override;
+
 public:
 	sid_t(fd_t &&fd) noexcept;
 	static sid_t *openR(const char *fileName) noexcept;
@@ -450,6 +475,8 @@ struct optimFROG_t final : public audioFile_t
 private:
 	struct decoderContext_t;
 	std::unique_ptr<decoderContext_t> decoderCtx;
+
+	void ensurePlayable() noexcept override;
 
 public:
 	optimFROG_t(fd_t &&fd) noexcept;

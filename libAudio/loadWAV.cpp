@@ -186,9 +186,17 @@ wav_t *wav_t::openR(const char *const fileName) noexcept
 	);
 	ctx.offsetDataLength = chunkLength + fd.tell();
 
-	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
+}
+
+void wav_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *context();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 /*!

@@ -106,9 +106,17 @@ oggVorbis_t *oggVorbis_t::openR(const char *const fileName) noexcept
 		info.totalTime(static_cast<uint64_t>(ov_time_total(&ctx.decoder, -1)));
 	oggVorbis::copyComments(info, *ov_comment(&ctx.decoder, -1));
 
-	if (!ExternalPlayback)
-		file->player(make_unique_nothrow<playback_t>(file.get(), audioFillBuffer, ctx.playbackBuffer, 8192U, info));
 	return file.release();
+}
+
+void oggVorbis_t::ensurePlayable() noexcept
+{
+	if (!_player)
+	{
+		auto &ctx = *decoderContext();
+		const fileInfo_t &info = fileInfo();
+		player(make_unique_nothrow<playback_t>(this, audioFillBuffer, ctx.playbackBuffer, 8192U, info));
+	}
 }
 
 /*!

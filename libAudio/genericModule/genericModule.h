@@ -723,6 +723,7 @@ public:
 	[[nodiscard]] stringPtr_t remark() const noexcept;
 	[[nodiscard]] uint8_t channels() const noexcept;
 	void InitMixer(fileInfo_t &info);
+	[[nodiscard]] bool isMixerInitialised() const noexcept { return Channels != nullptr && MixerChannels != nullptr; }
 	[[nodiscard]] int32_t Mix(uint8_t *Buffer, uint32_t BuffLen);
 
 	[[nodiscard]] uint32_t ticks() const noexcept { return TickCount; }
