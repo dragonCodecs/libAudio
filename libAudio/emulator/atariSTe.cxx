@@ -186,7 +186,7 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 	writeAddress(0x00100cU, uint16_t{0x4240U}); // clr.w d0
 	// Grab the accumulated error value
 	writeAddress(0x00100eU, uint16_t{0x103aU});
-	writeAddress(0x001010U, uint16_t{0xfff3U}); // move.b $-13(pc), d0
+	writeAddress(0x001010U, uint16_t{0xfff3U}); // move.b $-0d(pc), d0
 	// Prepare d1 to accept the error residual value
 	writeAddress(0x001012U, uint16_t{0x4241U}); // clr.w d1
 	// Grab the error residual value
@@ -198,8 +198,8 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 	writeAddress(0x00101aU, uint16_t{0x103aU});
 	writeAddress(0x00101cU, uint16_t{0xffe4U}); // move.b $-1c(pc), d0
 	// Put the timer data register location in a0
-	writeAddress(0x00101eU, uint16_t{0x3078U});
-	writeAddress(0x001020U, static_cast<uint16_t>(0xfa1fU + (index << 1U))); // movea.w ($fa1f).w, a0
+	writeAddress(0x00101eU, uint16_t{0x307cU});
+	writeAddress(0x001020U, static_cast<uint16_t>(0xfa1fU + (index << 1U))); // movea.w #$fa1f, a0
 	// Compare to see if prescaler < accumulation
 	writeAddress(0x001022U, uint16_t{0xb041U}); // cmp.w d1, d0
 	// Skip to non-adjustment code if false
@@ -216,18 +216,18 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 	writeAddress(0x001030U, uint16_t{0x1080U}); // move.b d0, (a0)
 	// Figure out where the accumulated error value is
 	writeAddress(0x001032U, uint16_t{0x41faU});
-	writeAddress(0x001034U, uint16_t{0xffd1U}); // lea $-2f(pc), a0
+	writeAddress(0x001034U, uint16_t{0xffcfU}); // lea $-31(pc), a0
 	// Write the accumulated error back
-	writeAddress(0x001032U, uint16_t{0x1081U});  // move.b d1, (a0)
+	writeAddress(0x001036U, uint16_t{0x1081U});  // move.b d1, (a0)
 	// Unstack the clobbered registers
-	writeAddress(0x001034U, uint16_t{0x4cdfU});
-	writeAddress(0x001036U, uint16_t{0x0103U}); // movew.l (sp)+, d0-d1,a0
+	writeAddress(0x001038U, uint16_t{0x4cdfU});
+	writeAddress(0x00103aU, uint16_t{0x0103U}); // movew.l (sp)+, d0-d1,a0
 	// Jump into the play routine
-	writeAddress(0x001038U, uint16_t{0x207aU});
-	writeAddress(0x00103aU, uint16_t{0xffcaU}); // movea $-36(pc), a0
-	writeAddress(0x00103cU, uint16_t{0x4e90U}); // jsr (a0)
+	writeAddress(0x00103cU, uint16_t{0x207aU});
+	writeAddress(0x00103eU, uint16_t{0xffc6U}); // movea $-3a(pc), a0
+	writeAddress(0x001040U, uint16_t{0x4e90U}); // jsr (a0)
 	// Finally, return from the interrupt handler
-	writeAddress(0x00103eU, uint16_t{0x4e73U}); // rte
+	writeAddress(0x001042U, uint16_t{0x4e73U}); // rte
 
 	// Configure the IRQ handler to our routine, and write the entry address in the SNDH where it can
 	// get to it to `bsr` into the routine
