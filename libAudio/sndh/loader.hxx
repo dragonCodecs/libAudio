@@ -33,6 +33,7 @@ struct sndhMetadata_t final
 	uint32_t year;
 	char timer; // A, B, C, D or V(BL).
 	fixedVector_t<uint16_t> tuneTimes;
+	fixedVector_t<uint32_t> tuneFrameCounts;
 	fixedVector_t<std::unique_ptr<char []>> tuneNames;
 };
 

@@ -25,6 +25,7 @@ constexpr std::array<char, 2> typeTimerD{'T', 'D'};
 constexpr std::array<char, 2> typeTimerVBL{'!', 'V'};
 constexpr std::array<char, 4> typeYear{'Y', 'E', 'A', 'R'};
 constexpr std::array<char, 4> typeTime{'T', 'I', 'M', 'E'};
+constexpr std::array<char, 4> typeFrames{'F', 'R', 'M', 'S'};
 constexpr std::array<char, 4> typeEnd{'H', 'D', 'N', 'S'};
 
 template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeB < sizeA, bool>
@@ -131,6 +132,19 @@ bool sndhLoader_t::readMeta()
 			for (auto &time : _metadata.tuneTimes)
 			{
 				if (!_data.readBE(time))
+					return false;
+			}
+		}
+		else if (tagType == typeFrames)
+		{
+			if (_metadata.tuneFrameCounts.valid())
+				return false;
+			_metadata.tuneFrameCounts = {_metadata.tuneCount};
+			if (!_metadata.tuneFrameCounts.valid())
+				return false;
+			for (auto &frames: _metadata.tuneFrameCounts)
+			{
+				if (!_data.readBE(frames))
 					return false;
 			}
 		}
