@@ -417,6 +417,9 @@ void decodedOperation_t::display(const uint32_t programCounter) const noexcept
 		case instruction_t::extb:
 			console.output("extb.l d"sv, rx);
 			break;
+		case instruction_t::illegal:
+			console.output("illegal"sv);
+			break;
 		case instruction_t::jmp:
 			console.output("jmp "sv, nullptr);
 			displayEA(mode, ry);

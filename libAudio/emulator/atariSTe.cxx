@@ -92,6 +92,9 @@ atariSTe_t::atariSTe_t() noexcept
 	writeAddress(stopAddress, uint16_t{0x4e72U});
 	writeAddress(stopAddress + 2U, uint16_t{0x2700U});
 
+	// Set up the illegal instruction handler using STOP
+	writeAddress(0x000010U, stopAddress);
+
 	// Set up the TRAP handlers using the dummy STOP for unused ones
 	writeAddress(0x000080U, stopAddress);
 	// Set up the GEMDOS TRAP handler so the ROM will handle it
