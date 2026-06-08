@@ -2589,6 +2589,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchADDI(instruction);
 		case instruction_t::addq:
 			return dispatchADDQ(instruction);
+		case instruction_t::addx:
+			return dispatchADDX(instruction);
 		case instruction_t::_and:
 			return dispatchAND(instruction);
 		case instruction_t::andi:
@@ -3504,6 +3506,29 @@ stepResult_t motorola68000_t::dispatchADDQ(const decodedOperation_t &insn) noexc
 	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, static_cast<uint32_t>(result));
 
 	// Get done and figure out how many cycles that took
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchADDX(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Convert the instruction flags into an EA mode value (`-(An)` form if memory, `Dn` if register)
+	const auto mode{insn.flags.includes(operationFlags_t::memoryNotRegister) ? 4U : 0U};
+	// Figure out the effective address for the destination as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(mode, insn.rx, operationSize)};
+	// Grab the LHS as being the value held using the source register
+	const auto lhs{readValue<uint32_t>(mode, insn.ry, computeEffectiveAddress(mode, insn.ry, operationSize))};
+	// Now do the same for the RHS using the value held using the destination register
+	const auto rhs{readValue<uint32_t>(mode, insn.rx, effectiveAddress)};
+	// Do the addition with the extend bit too
+	const auto result{uint64_t{lhs} + uint64_t{rhs} + (status.includes(m68kStatusBits_t::extend) ? 1U : 0U)};
+
+	// Recompute all the flags bits and store the result back
+	recomputeStatusFlags(lhs, rhs, result, operationSize);
+	writeValue(mode, insn.rx, effectiveAddress, operationSize, static_cast<uint32_t>(result));
+
+	// Get done and figure out thow many cycles that took
 	return {true, false, 0U};
 }
 

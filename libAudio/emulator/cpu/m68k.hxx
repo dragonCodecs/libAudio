@@ -128,6 +128,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchADDA(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchADDI(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchADDQ(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchADDX(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchAND(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchANDI(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchANDISpecialCCR(const decodedOperation_t &insn) noexcept;

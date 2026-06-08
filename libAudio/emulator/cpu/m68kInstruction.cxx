@@ -252,6 +252,16 @@ void decodedOperation_t::display(const uint32_t programCounter) const noexcept
 			displayEA(mode, ry);
 			console.output();
 			break;
+		case instruction_t::addx:
+		{
+			const auto mode{flags.includes(operationFlags_t::memoryNotRegister) ? 4U : 0U};
+			console.output("addx."sv, operandSize(unpackSize(operationSize)), " "sv, nullptr);
+			displayEA(mode, ry);
+			console.output(", "sv, nullptr);
+			displayEA(mode, rx);
+			console.output();
+			break;
+		}
 		case instruction_t::andi:
 			switch (ry)
 			{
