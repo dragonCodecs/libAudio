@@ -401,6 +401,11 @@ void decodedOperation_t::display(const uint32_t programCounter) const noexcept
 			displayEA(mode, ry);
 			console.output(", d"sv, rx);
 			break;
+		case instruction_t::eor:
+			console.output("eor."sv, operandSize(unpackSize(operationSize)), " d"sv, rx, ", "sv, nullptr);
+			displayEA(mode, ry);
+			console.output();
+			break;
 		case instruction_t::eori:
 			console.output("eori."sv, operandSize(unpackSize(operationSize)), " #<val>, "sv, nullptr);
 			displayEA(mode, ry);

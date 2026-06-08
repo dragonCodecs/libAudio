@@ -149,6 +149,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchDBcc(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchDIVS(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchDIVU(const decodedOperation_t &insn) noexcept;
+	[[nodiscard]] stepResult_t dispatchEOR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchEORI(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchEORISpecialCCR(const decodedOperation_t &insn) noexcept;
 	[[nodiscard]] stepResult_t dispatchEXT(const decodedOperation_t &insn) noexcept;

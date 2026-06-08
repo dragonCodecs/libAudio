@@ -2633,6 +2633,8 @@ stepResult_t motorola68000_t::step() noexcept
 			return dispatchDIVS(instruction);
 		case instruction_t::divu:
 			return dispatchDIVU(instruction);
+		case instruction_t::eor:
+			return dispatchEOR(instruction);
 		case instruction_t::eori:
 			return dispatchEORI(instruction);
 		case instruction_t::ext:
@@ -4099,6 +4101,41 @@ stepResult_t motorola68000_t::dispatchDIVU(const decodedOperation_t &insn) noexc
 		dataRegister(insn.rx) = static_cast<uint16_t>(quotient) | (static_cast<uint16_t>(remainder) << 16U);
 	}
 	// Figure out how long that took an return
+	return {true, false, 0U};
+}
+
+stepResult_t motorola68000_t::dispatchEOR(const decodedOperation_t &insn) noexcept
+{
+	// Unpack the operation size to a value in bytes
+	const auto operationSize{unpackSize(insn.operationSize)};
+	// Figure out the effective address operand as much as possible so we know where to go poking
+	const auto effectiveAddress{computeEffectiveAddress(insn.mode, insn.ry, operationSize)};
+	// Grab the LHS using the computed address
+	const auto lhs{readValue<uint32_t>(insn.mode, insn.ry, effectiveAddress, operationSize)};
+	// Grab the data to use for the RHS
+	const auto rhs{readDataRegister(insn.rx)};
+	// Apply the exclusive or operation
+	const auto result{lhs ^ rhs};
+
+	// Compute which bit is the sign bit of the result
+	const auto signBit{1U << ((8U * operationSize) - 1U)};
+	// Recompute all the flags, starting with the negative bit
+	if (result & signBit)
+		status.set(m68kStatusBits_t::negative);
+	else
+		status.clear(m68kStatusBits_t::negative);
+	// Then the zero bit
+	if (result == 0U)
+		status.set(m68kStatusBits_t::zero);
+	else
+		status.clear(m68kStatusBits_t::zero);
+	// The overflow and carry bits are always cleared by this instruction
+	status.clear(m68kStatusBits_t::carry, m68kStatusBits_t::overflow);
+
+	// Store the result back
+	writeValue(insn.mode, insn.ry, effectiveAddress, operationSize, result);
+
+	// Return how many cycles that took
 	return {true, false, 0U};
 }
 
