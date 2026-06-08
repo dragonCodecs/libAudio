@@ -2970,12 +2970,25 @@ uint32_t motorola68000_t::computeEffectiveAddress(const uint8_t mode, const uint
 		case 3U: // (An)+
 		{
 			const auto ptr{addrRegister(reg)};
-			addrRegister(reg) = ptr + static_cast<uint32_t>(operandSize);
+			// Special-case for the stack pointer to maintain alignment
+			if (reg == 7U && operandSize == 1U)
+				addrRegister(reg) = ptr + 2U;
+			else
+				addrRegister(reg) = ptr + static_cast<uint32_t>(operandSize);
 			return ptr;
 		}
 		case 4U: // -(An)
 		{
-			const auto ptr{addrRegister(reg) - static_cast<uint32_t>(operandSize)};
+			const auto ptr
+			{
+				addrRegister(reg) - [&]()
+				{
+					// Special-case fo the stack pointer to maintain alignment
+					if (reg == 7U && operandSize == 1U)
+						return 2U;
+					return static_cast<uint32_t>(operandSize);
+				}()
+			};
 			addrRegister(reg) = ptr;
 			return ptr;
 		}
