@@ -43,8 +43,11 @@ void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {
 	info.title(std::move(metadata.title));
 	info.artist(std::move(metadata.artist));
+	// If the song includes frame-based lenght data for the tune we'll play, populate that
+	if (metadata.tuneFrameCounts)
+		info.totalTime(metadata.tuneFrameCounts[metadata.defaultTune - 1U] * (info.bitRate() / metadata.timerFrequency));
 	// If the song includes length data for the tune we'll play, populate that
-	if (metadata.tuneTimes)
+	else if (metadata.tuneTimes)
 		info.totalTime(metadata.tuneTimes[metadata.defaultTune - 1U]);
 
 	// The playback engine is written to generate data in 16-bit, one channel
@@ -66,8 +69,8 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 
 	// Copy the metadata for this SNDH into the fileInfo_t, and then copy the decrunched SNDH into emulator memory
-	loadFileInfo(info, metadata);
 	info.bitRate(ctx.emulator.sampleRate);
+	loadFileInfo(info, metadata);
 	// If there was a total play length set as a result, convert that into a total samples count
 	if (info.totalTime())
 		ctx.totalPlaybackSamples = static_cast<uint32_t>(info.totalTime()) * ctx.emulator.sampleRate;
