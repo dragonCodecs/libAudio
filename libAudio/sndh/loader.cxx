@@ -26,6 +26,7 @@ constexpr std::array<char, 2> typeTimerVBL{'!', 'V'};
 constexpr std::array<char, 4> typeYear{'Y', 'E', 'A', 'R'};
 constexpr std::array<char, 4> typeTime{'T', 'I', 'M', 'E'};
 constexpr std::array<char, 4> typeFrames{'F', 'R', 'M', 'S'};
+constexpr std::array<char, 4> typeFlags{'F', 'L', 'A', 'G'};
 constexpr std::array<char, 4> typeEnd{'H', 'D', 'N', 'S'};
 
 template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeB < sizeA, bool>
@@ -145,6 +146,24 @@ bool sndhLoader_t::readMeta()
 			for (auto &frames: _metadata.tuneFrameCounts)
 			{
 				if (!_data.readBE(frames))
+					return false;
+			}
+		}
+		else if (tagType == typeFlags)
+		{
+			// For now just read and discard the flags..
+			char flag{};
+			if (!_data.read(flag) || flag != '~')
+				return false;
+			while (flag != '\0')
+			{
+				if (!_data.read(flag))
+					return false;
+			}
+			// If there are trailing NUL's after the flags, chew through them
+			while (_data.peak() == '\0')
+			{
+				if (!_data.read(flag))
 					return false;
 			}
 		}
