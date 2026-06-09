@@ -73,7 +73,19 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	loadFileInfo(info, metadata);
 	// If there was a total play length set as a result, convert that into a total samples count
 	if (info.totalTime())
-		ctx.totalPlaybackSamples = static_cast<uint32_t>(info.totalTime()) * ctx.emulator.sampleRate;
+	{
+		// If the total play time is set by the frame time info, then use that more directly to calc this
+		if (metadata.tuneFrameCounts)
+		{
+			// Extract the frame count for the tune to play
+			ctx.totalPlaybackSamples = metadata.tuneFrameCounts[metadata.defaultTune - 1U];
+			// Convert that into samples by factoring the sample rate against the number of
+			// samples per "frame" (timer cadence)
+			ctx.totalPlaybackSamples *= ctx.emulator.sampleRate / metadata.timerFrequency;
+		}
+		else
+			ctx.totalPlaybackSamples = static_cast<uint32_t>(info.totalTime()) * ctx.emulator.sampleRate;
+	}
 	// Tell the emulator which timer this tune uses, and at what rate
 	ctx.emulator.configureTimer(metadata.timer, metadata.timerFrequency);
 	if (!loader.copyToRAM(ctx.emulator) ||
