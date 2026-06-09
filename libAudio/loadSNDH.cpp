@@ -45,7 +45,7 @@ void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 	info.artist(std::move(metadata.artist));
 	// If the song includes frame-based lenght data for the tune we'll play, populate that
 	if (metadata.tuneFrameCounts)
-		info.totalTime(metadata.tuneFrameCounts[metadata.defaultTune - 1U] * (info.bitRate() / metadata.timerFrequency));
+		info.totalTime(metadata.tuneFrameCounts[metadata.defaultTune - 1U] / metadata.timerFrequency);
 	// If the song includes length data for the tune we'll play, populate that
 	else if (metadata.tuneTimes)
 		info.totalTime(metadata.tuneTimes[metadata.defaultTune - 1U]);

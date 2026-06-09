@@ -140,7 +140,9 @@ bool sndhLoader_t::readMeta()
 		{
 			if (_metadata.tuneFrameCounts.valid())
 				return false;
-			_metadata.tuneFrameCounts = {_metadata.tuneCount};
+			// If the tune count is 0 (because we never saw ##) then assume 1 tune
+			const auto tunes{_metadata.tuneCount == 0U ? 1U : _metadata.tuneCount};
+			_metadata.tuneFrameCounts = {tunes};
 			if (!_metadata.tuneFrameCounts.valid())
 				return false;
 			for (auto &frames: _metadata.tuneFrameCounts)
