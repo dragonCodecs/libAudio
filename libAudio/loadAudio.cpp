@@ -59,6 +59,7 @@ const std::map<fileIs_t, fileOpenR_t> loaders
 #ifdef ENABLE_SID
 	{isSID, sidOpenR},
 #endif
+	{isAIFF, aiffOpenR},
 };
 
 /*!

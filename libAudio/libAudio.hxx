@@ -61,7 +61,8 @@ enum class audioType_t : uint8_t
 	moduleFC1x = 17,
 	oggOpus = 18,
 	sndh = 19,
-	sid = 20
+	sid = 20,
+	aiff = 21,
 };
 
 using fileIs_t = bool (*)(const char *);
@@ -489,5 +490,33 @@ public:
 	int64_t fillBuffer(void *buffer, uint32_t length) final;
 };
 #endif // ENABLE_OptimFROG
+
+struct aiff_t final : public audioFile_t
+{
+private:
+	struct decoderContext_t;
+	std::unique_ptr<decoderContext_t> decoderCtx;
+	bool _isAIFFC;
+
+	libAUDIO_NO_DISCARD(uint32_t readChunk() noexcept);
+	libAUDIO_NO_DISCARD(bool readInfo(uint32_t containerSize) noexcept);
+
+#ifdef HAVE_LIBID3_TAG
+	libAUDIO_NO_DISCARD(bool readID3Chunk() noexcept);
+#endif
+
+	void ensurePlayable() noexcept override;
+
+public:
+	aiff_t() noexcept;
+	aiff_t(fd_t &&fd) noexcept;
+	static aiff_t *openR(const char *fileName) noexcept;
+	static bool isAIFF(const char *fileName) noexcept;
+	static bool isAIFF(int32_t fd) noexcept;
+	decoderContext_t *context() const noexcept { return decoderCtx.get(); }
+	bool valid() const noexcept { return bool(decoderCtx) && _fd.valid(); }
+
+	int64_t fillBuffer(void *buffer, uint32_t length) final;
+};
 
 #endif /*LIBAUDIO_HXX*/

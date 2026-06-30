@@ -308,6 +308,11 @@ if cxx.has_header_symbol('stdio.h', 'fseeko64')
 	confData.set10('HAVE_FSEEKO64', true)
 endif
 
+if libID3Tag.found()
+	confData.set10('HAVE_LIBID3_TAG', true)
+	extraDeps += [libID3Tag]
+endif
+
 if libOpenAL.type_name() != 'internal'
 	if not cxx.has_header('AL/al.h', dependencies: libOpenAL)
 		confData.set10('USE_CMAKE_OPENAL', true)
@@ -325,6 +330,7 @@ formats += {
 	'STM': true,
 	'IT': true,
 	'WAV': true,
+	'AIFF': true,
 }
 
 emulatorSrcs = [
@@ -359,6 +365,7 @@ genericModuleSrcs = [
 	'loadS3M.cpp',
 	'loadSTM.cpp',
 	'loadIT.cpp',
+	'loadAIFF.cpp',
 ]
 
 libAudioSrcs = [
