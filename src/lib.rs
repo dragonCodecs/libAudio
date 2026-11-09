@@ -2,3 +2,5 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 #![allow(non_snake_case)]
+
+pub mod sndh;
