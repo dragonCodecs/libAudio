@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::fmt::{self, Display};
 use std::fs::File;
 use std::io::{self, Read};
 use std::ops::{Add, Range, SubAssign};
@@ -372,5 +373,15 @@ impl From<io::Error> for Error
 	fn from(error: io::Error) -> Self
 	{
 		Error::Io(error)
+	}
+}
+
+impl Display for Error
+{
+	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result
+	{
+		match self {
+			Self::Io(error) => write!(fmt, "IO error: {error}"),
+		}
 	}
 }
