@@ -67,16 +67,36 @@ const INT16_OFFSETS: [i16; 5] = [2820, 1792, 287, -1, 31];
 
 impl SndhDecruncher
 {
-	pub fn depack(&mut self, file: File) -> Result<(), Error>
+	pub fn new(unpacked_length: usize) -> Self
+	{
+		let data = Box::new_zeroed_slice(unpacked_length);
+		Self {
+			data: unsafe { data.assume_init() },
+			offset: 0,
+		}
+	}
+
+	pub fn depack(&mut self, file: &File) -> Result<(), Error>
 	{
 		let decruncher = Decruncher::new(file, &mut self.data)?;
-		Ok(decruncher.decrunch())
+		decruncher.decrunch();
+		Ok(())
+	}
+
+	pub fn data(&self) -> &[u8]
+	{
+		&self.data
+	}
+
+	pub fn data_mut(&mut self) -> &mut [u8]
+	{
+		&mut self.data
 	}
 }
 
 impl<'a> Decruncher<'a>
 {
-	pub fn new(mut file: File, data: &'a mut Box<[u8]>) -> Result<Self, Error>
+	pub fn new(mut file: &File, data: &'a mut Box<[u8]>) -> Result<Self, Error>
 	{
 		let crunched_data = {
 			// Compute how big the file is, if possible
