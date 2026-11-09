@@ -1,23 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# SPDX-FileCopyrightText: 2018-2023 Rachel Mant <git@dragonmux.network>
+# SPDX-FileCopyrightText: 2018-2026 Rachel Mant <git@dragonmux.network>
 project(
 	'libAudio',
-	'cpp',
+	['cpp', 'rust'],
 	default_options: [
 		'cpp_std=c++17',
+		'rust_std=2024',
 		'warning_level=3',
 		'buildtype=release',
 		'strip=true',
 		'b_ndebug=if-release',
 		'b_lto=true'
 	],
-	version: '0.6.0',
-	meson_version: '>= 0.56',
+	version: '0.7.0',
+	meson_version: '>= 1.0',
 	subproject_dir: 'deps',
 	license: 'BSD-3-Clause'
 )
 
 cxx = meson.get_compiler('cpp')
+rust = import('rust')
 python = import('python')
 python = python.find_installation('python3', required: host_machine.system() == 'darwin')
 debug = get_option('debug')
@@ -92,7 +94,7 @@ if not meson.is_subproject() and buildUtilities
 	subdir('player')
 	subdir('transcoder')
 endif
-subdir('test', if_found: crunchMake)
+subdir('test', if_found: [crunchMake])
 if not meson.is_subproject()
 	subdir('harness')
 	if get_option('bindings')

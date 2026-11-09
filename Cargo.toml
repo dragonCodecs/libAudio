@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
+
+[package]
+name = "libAudio"
+version = "0.7.0"
+description = "High performance audio format handling library"
+license = "BSD-3-Clause"
+authors = ["Rachel Mant <git@dragonmux.network>"]
+edition = "2024"
+
+[lib]
+crate-type = ["staticlib"]
+
+[workspace]
+resolver = "2"
+members = [
+	"."
+]

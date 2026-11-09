@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# SPDX-FileCopyrightText: 2018-2023 Rachel Mant <git@dragonmux.network>
+# SPDX-FileCopyrightText: 2018-2026 Rachel Mant <git@dragonmux.network>
 
 # Forced fallbacks
 forcedFallback = get_option('wrap_mode') == 'forcefallback'
@@ -407,10 +407,15 @@ summary(
 	section: 'Formats'
 )
 
+libAudioWorkspace = rust.workspace()
+libAudioPackage = libAudioWorkspace.package()
+libAudioRS = libAudioPackage.library(rust_abi: 'c')
+
 libAudioLibrary = library(
 	'libAudio',
 	libAudioSrcs + extraSrcs,
 	dependencies: requiredDependencies + extraDeps,
+	link_with: [libAudioRS],
 	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'] + extraArgs,
 	cpp_static_args: ['-DlibAUDIO_STATIC'],
 	include_directories: includes,
