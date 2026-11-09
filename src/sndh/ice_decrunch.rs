@@ -3,6 +3,7 @@
 
 use std::fs::File;
 use std::io::{self, Read};
+use std::ops::SubAssign;
 
 pub struct SndhDecruncher
 {
@@ -97,6 +98,7 @@ impl<'a> Decruncher<'a>
 		})
 	}
 
+	/// Decrunch the input data to the output buffer
 	pub fn decrunch(mut self)
 	{
 		// Decrunching starts at the end of the input and works backwards
@@ -104,6 +106,91 @@ impl<'a> Decruncher<'a>
 		self.output_offset = self.decrunched_data.len();
 		// Grab our first working data information if possible
 		self.working_data = self.crunched_data[self.input_offset.next()] as u16;
+
+		while self.output_offset != 0 {
+			if self.read_bit() {
+				self.copy_bytes()
+			}
+		}
+	}
+
+	/// Read a single bit from the input
+	#[must_use]
+	fn read_bit(&mut self) -> bool
+	{
+		// Extract the bit we need
+		let mut result = (self.working_data & 0xff) << 1;
+		// Now see if our next-byte condition has been met
+		if (result & 0xff) == 0 {
+			// If it has, then wiggle things about in the result value to get the next byte
+			result >>= 8;
+			result += (self.crunched_data[self.input_offset.next()] as u16) << 1;
+		}
+		// Update the working data area for the next call
+		self.working_data &= 0xff00;
+		self.working_data |= result & 0xff;
+		(result >> 8) != 0
+	}
+
+	/// Read `bits` bits from the input
+	#[must_use]
+	fn read_bits(&mut self, bits: u16) -> u32
+	{
+		let mut data = self.working_data;
+		let mut result: u32 = 0;
+
+		// Loop through for the requested number of bits
+		for _ in 0..=bits {
+			// Try and extract a bit, and if we're at a next-byte condition, handle that
+			data &= 0xff;
+			data <<= 1;
+			if (data & 0xff) == 0 {
+				data >>= 8;
+				data += (self.crunched_data[self.input_offset.next()] as u16) << 1;
+			}
+
+			// Update the result with the next bit
+			result <<= 1;
+			result += (data >> 8) as u32;
+		}
+
+		// Update the working data area for the next call
+		self.working_data &= 0xff00;
+		self.working_data |= data & 0xff;
+		result
+	}
+
+	fn copy_bytes(&mut self)
+	{
+		// Keep track of how many bytes we've copied
+		let mut count = 1;
+		// Check if this is a signle byte copy or a multi-byte
+		if self.read_bit() {
+			// Base case is that the chunk table won't be satisfied
+			let mut index = 5;
+			for (i, chunk) in CHUNK_TABLE.iter().enumerate() {
+				// Read the next block count and check if the result satisfies the chunk mask
+				count = self.read_bits(chunk.bits) as u16;
+				if ((chunk.mask ^ count) & 0xffff) != 0 {
+					// If it does, note the chunk table index
+					index = i;
+					break;
+				}
+			}
+			// If the chunk table was satisfied, update the count with the number of extra
+			// bytes needed for this chunk, otherwise by 1
+			count += if index < 5 {
+				EXTRA_BYTES[index]
+			} else {
+				1
+			};
+		}
+
+		// Update the offset counters, and copy the chunk from input to output
+		self.input_offset -= count;
+		self.output_offset -= count as usize;
+		self.decrunched_data[self.output_offset..self.output_offset + count]
+			.copy_from_slice(self.crunched_data[self.input_offset..self.input_offset + count]);
 	}
 }
 
@@ -126,6 +213,14 @@ impl Default for Downcounter
 	fn default() -> Self
 	{
 		Self::new(0)
+	}
+}
+
+impl SubAssign<u16> for Downcounter
+{
+	fn sub_assign(&mut self, rhs: u16)
+	{
+		self.0 -= rhs as usize;
 	}
 }
 
