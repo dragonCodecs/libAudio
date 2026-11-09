@@ -117,6 +117,15 @@ impl<'a> Decruncher<'a>
 			}
 			self.unpack_from_offset();
 		}
+
+		if self.read_bit() {
+			let blocks = if self.read_bit() {
+				self.read_bits(15) as u16
+			} else {
+				0x0f9f
+			};
+			self.unshuffle(blocks)
+		}
 	}
 
 	/// Read a single bit from the input
@@ -272,6 +281,44 @@ impl<'a> Decruncher<'a>
 		let offset = self.read_bits(bits) as i16;
 		// Apply the adjustment and return the resulting offset
 		offset + adjustment
+	}
+
+	fn unshuffle(&mut self, blocks: u16)
+	{
+		let mut offset = self.decrunched_data.len();
+		for _ in 0..blocks {
+			let mut state = [0; 4];
+			// Construct the state for this block
+			for index in 0..4 {
+				offset -= 2;
+				// Grab a big endian u16 chunk of data from the buffer
+				let mut chunk = u16::from_be_bytes(
+					*self.decrunched_data[offset + 0..offset + 2]
+						.as_array::<2>()
+						.expect("Slice of 2 bytes converts to array of 2 bytes"),
+				);
+
+				// Do the state unshuffle on it to integrate it properly (stripes the bits for this u16 across the state
+				// over 4 iterations, 4 bits at a time)
+				for iter in 0..4 {
+					let shift = ((3 - index) * 4) + iter;
+					state[3] |= (chunk & 1) << shift;
+					chunk >>= 1;
+					state[2] |= (chunk & 1) << shift;
+					chunk >>= 1;
+					state[1] |= (chunk & 1) << shift;
+					chunk >>= 1;
+					state[0] |= (chunk & 1) << shift;
+					chunk >>= 1;
+				}
+			}
+
+			// Write the unshuffled state back to the buffer as a series of big endian u16's
+			self.decrunched_data[offset + 0..offset + 2].copy_from_slice(&state[0].to_be_bytes());
+			self.decrunched_data[offset + 2..offset + 4].copy_from_slice(&state[1].to_be_bytes());
+			self.decrunched_data[offset + 4..offset + 6].copy_from_slice(&state[2].to_be_bytes());
+			self.decrunched_data[offset + 6..offset + 8].copy_from_slice(&state[3].to_be_bytes());
+		}
 	}
 }
 
