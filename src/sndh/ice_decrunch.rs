@@ -3,7 +3,7 @@
 
 use std::fs::File;
 use std::io::{self, Read};
-use std::ops::SubAssign;
+use std::ops::{Add, Range, SubAssign};
 
 pub struct SndhDecruncher
 {
@@ -27,6 +27,7 @@ struct Decruncher<'a>
 	working_data: u16,
 }
 
+#[derive(Clone, Copy)]
 struct Downcounter(usize);
 
 pub enum Error
@@ -109,8 +110,12 @@ impl<'a> Decruncher<'a>
 
 		while self.output_offset != 0 {
 			if self.read_bit() {
-				self.copy_bytes()
+				self.copy_bytes();
 			}
+			if self.output_offset == 0 {
+				break;
+			}
+			self.unpack_from_offset();
 		}
 	}
 
@@ -189,8 +194,84 @@ impl<'a> Decruncher<'a>
 		// Update the offset counters, and copy the chunk from input to output
 		self.input_offset -= count;
 		self.output_offset -= count as usize;
-		self.decrunched_data[self.output_offset..self.output_offset + count]
-			.copy_from_slice(self.crunched_data[self.input_offset..self.input_offset + count]);
+		self.decrunched_data[self.output_offset..self.output_offset + count as usize]
+			.copy_from_slice(&self.crunched_data[self.input_offset.range_for(count)]);
+	}
+
+	fn unpack_bytes(&mut self, offset: i16, count: usize)
+	{
+		let from_offset = self.output_offset.strict_add_signed(offset as isize) + count;
+		let to_offset = self.output_offset;
+		for index in 1..=count {
+			self.decrunched_data[to_offset - index] = self.decrunched_data[from_offset - index];
+		}
+		self.output_offset -= count;
+	}
+
+	fn unpack_from_offset(&mut self)
+	{
+		// Figure out the table index to use
+		let mut index = 4;
+		for i in 0..4 {
+			// Check if this is the table index to use
+			if !self.read_bit() {
+				index = i;
+				break;
+			}
+		}
+
+		// Calculate the length adjustment needed
+		let bits = LENGTH_TABLE[4 - index] as u8;
+		let length_adjustment = if (bits & 0x80) == 0 {
+			self.read_bits(bits as u16)
+		} else {
+			0
+		};
+
+		// Figure out how much and from where to unpack
+		let length = length_adjustment + (LENGTH_TABLE[9 - index] + 1) as u32;
+		let offset = if length > 1 {
+			self.offset_from_table(length - 1)
+		} else {
+			self.offset_from_calculation()
+		};
+		self.unpack_bytes(offset, (length + 1) as usize)
+	}
+
+	fn offset_from_table(&mut self, length: u32) -> i16
+	{
+		// Figure out the table index to use
+		let mut index = 2;
+		for i in 0..2 {
+			// Check if this is the table index to use
+			if !self.read_bit() {
+				index = i;
+				break;
+			}
+		}
+		// Read the base offset from the file
+		let mut offset = self.read_bits(INT8_OFFSETS[2 - index] as u16) as i32;
+		// Adjust it properly
+		offset += INT16_OFFSETS[4 - index] as i32;
+		if offset < 0 {
+			offset -= length as i32;
+		}
+		// and return the result
+		offset as i16
+	}
+
+	fn offset_from_calculation(&mut self) -> i16
+	{
+		// Figure out how many bits and what adjustment to use
+		let (bits, adjustment) = if self.read_bit() {
+			(8, 63)
+		} else {
+			(5, -1)
+		};
+		// Read the offset from the input and turn it into an i16
+		let offset = self.read_bits(bits) as i16;
+		// Apply the adjustment and return the resulting offset
+		offset + adjustment
 	}
 }
 
@@ -205,6 +286,11 @@ impl Downcounter
 	{
 		self.0 = self.0.saturating_sub(1);
 		self.0
+	}
+
+	pub fn range_for(&self, count: u16) -> Range<usize>
+	{
+		self.0..self.0 + count as usize
 	}
 }
 
@@ -221,6 +307,16 @@ impl SubAssign<u16> for Downcounter
 	fn sub_assign(&mut self, rhs: u16)
 	{
 		self.0 -= rhs as usize;
+	}
+}
+
+impl Add<u16> for Downcounter
+{
+	type Output = Self;
+
+	fn add(self, rhs: u16) -> Self
+	{
+		Self(self.0 + rhs as usize)
 	}
 }
 
