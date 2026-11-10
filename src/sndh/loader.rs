@@ -58,6 +58,11 @@ pub enum Error
 }
 
 const TYPE_HEADER: [u8; 4] = *b"SNDH";
+const TYPE_TITLE: [u8; 4] = *b"TITL";
+const TYPE_COMPOSER: [u8; 4] = *b"COMM";
+const TYPE_RIPPER: [u8; 4] = *b"RIPP";
+const TYPE_CONVERTER: [u8; 4] = *b"CONV";
+const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
 {
@@ -70,6 +75,30 @@ impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
 			exit: decruncher.read_be_u32()?,
 			play: decruncher.read_be_u32()?,
 		})
+	}
+}
+
+impl SndhMetadata
+{
+	fn read_from(&mut self, decruncher: &mut SndhDecruncher) -> Result<(), Error>
+	{
+		let mut tag_type = [0; 4];
+		while tag_type != TYPE_END {
+			decruncher.read(&mut tag_type)?;
+			if tag_type == TYPE_TITLE {
+				self.title = decruncher.read_string()?;
+			}
+			if tag_type == TYPE_COMPOSER {
+				self.artist = decruncher.read_string()?;
+			}
+			if tag_type == TYPE_RIPPER {
+				self.ripper = decruncher.read_string()?;
+			}
+			if tag_type == TYPE_CONVERTER {
+				self.converter = decruncher.read_string()?;
+			}
+		}
+		Ok(())
 	}
 }
 
@@ -91,6 +120,18 @@ impl Default for SndhMetadata
 			tune_frame_counts: Box::new([]),
 			tune_names: Box::new([]),
 		}
+	}
+}
+
+impl TryFrom<&mut SndhDecruncher> for SndhMetadata
+{
+	type Error = Error;
+
+	fn try_from(decruncher: &mut SndhDecruncher) -> Result<Self, Error>
+	{
+		let mut metadata = SndhMetadata::default();
+		metadata.read_from(decruncher)?;
+		Ok(metadata)
 	}
 }
 
