@@ -206,7 +206,7 @@ impl<'a> Decruncher<'a>
 			for (i, chunk) in CHUNK_TABLE.iter().enumerate() {
 				// Read the next block count and check if the result satisfies the chunk mask
 				count = self.read_bits(chunk.bits) as u16;
-				if ((chunk.mask ^ count) & 0xffff) != 0 {
+				if (chunk.mask ^ count) != 0 {
 					// If it does, note the chunk table index
 					index = i;
 					break;
@@ -314,7 +314,7 @@ impl<'a> Decruncher<'a>
 				offset -= 2;
 				// Grab a big endian u16 chunk of data from the buffer
 				let mut chunk = u16::from_be_bytes(
-					*self.decrunched_data[offset + 0..offset + 2]
+					*self.decrunched_data[offset..offset + 2]
 						.as_array::<2>()
 						.expect("Slice of 2 bytes converts to array of 2 bytes"),
 				);
@@ -335,7 +335,7 @@ impl<'a> Decruncher<'a>
 			}
 
 			// Write the unshuffled state back to the buffer as a series of big endian u16's
-			self.decrunched_data[offset + 0..offset + 2].copy_from_slice(&state[0].to_be_bytes());
+			self.decrunched_data[offset..offset + 2].copy_from_slice(&state[0].to_be_bytes());
 			self.decrunched_data[offset + 2..offset + 4].copy_from_slice(&state[1].to_be_bytes());
 			self.decrunched_data[offset + 4..offset + 6].copy_from_slice(&state[2].to_be_bytes());
 			self.decrunched_data[offset + 6..offset + 8].copy_from_slice(&state[3].to_be_bytes());
