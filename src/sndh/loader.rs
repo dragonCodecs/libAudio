@@ -3,6 +3,7 @@
 
 use std::fmt::{self, Display};
 use std::fs::File;
+use std::mem::MaybeUninit;
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
 
@@ -66,6 +67,7 @@ const TYPE_TITLE: [u8; 4] = *b"TITL";
 const TYPE_COMPOSER: [u8; 4] = *b"COMM";
 const TYPE_RIPPER: [u8; 4] = *b"RIPP";
 const TYPE_CONVERTER: [u8; 4] = *b"CONV";
+const TYPE_TUNE_COUNT: [u8; 2] = *b"##";
 const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
@@ -96,11 +98,31 @@ impl SndhMetadata
 				TYPE_COMPOSER => self.artist = decruncher.read_string()?,
 				TYPE_RIPPER => self.ripper = decruncher.read_string()?,
 				TYPE_CONVERTER => self.converter = decruncher.read_string()?,
-				// If it did not match one of the known types, most likely we're in a SNDH v1.1 file
-				// and came to the end of the header (does not end HDNS) so we're done
-				_ => {
-					decruncher.seek_back(4)?;
-					break;
+				TYPE_END => break,
+				// Try and match 2 byte metdata tags next
+				// This chunking is safe as the tag type is guaranteed to be 4 bytes, thus no remainder
+				_ => match unsafe { tag_type.as_chunks_unchecked::<2>() } {
+					[TYPE_TUNE_COUNT, count] => {
+						// Reconstruct the tune count from the 2 bytes we get from the tag, and any remaining
+						// after that if we try and read a string from the SNDH data
+						let count = String::from_utf8(count.to_vec())? + &decruncher.read_string()?;
+						// Now try and parse the resulting value to a u8
+						self.tune_count = count.parse()?;
+						// Pre-init the tune times and names to have sufficient storage
+						let tune_times = Box::new_zeroed_slice(self.tune_count as usize);
+						self.tune_times = unsafe { tune_times.assume_init() };
+						let mut tune_names = Box::new_uninit_slice(self.tune_count as usize);
+						for tune_name in tune_names.iter_mut() {
+							*tune_name = MaybeUninit::new(String::new());
+						}
+						self.tune_names = unsafe { tune_names.assume_init() };
+					},
+					_ => {
+						// If it did not match one of the known types, most likely we're in a SNDH v1.1 file
+						// and came to the end of the header (does not end HDNS) so we're done
+						decruncher.seek_back(4)?;
+						break;
+					},
 				},
 			};
 		}
