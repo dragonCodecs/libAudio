@@ -14,6 +14,8 @@
 using substrate::fd_t;
 using substrate::fixedVector_t;
 
+struct SndhLoader;
+
 struct sndhEntryPoints_t final
 {
 	uint32_t init;
@@ -37,17 +39,19 @@ struct sndhMetadata_t final
 	fixedVector_t<std::unique_ptr<char []>> tuneNames;
 };
 
-struct sndhLoader_t
+struct sndhLoader_t final
 {
 private:
-	sndhDecruncher_t _data;
-	sndhEntryPoints_t _entryPoints;
-	sndhMetadata_t _metadata;
+	SndhLoader *_loader{nullptr};
+	sndhDecruncher_t _data{};
+	sndhEntryPoints_t _entryPoints{};
+	sndhMetadata_t _metadata{};
 
 	bool readMeta();
 
 public:
 	sndhLoader_t(const fd_t &file);
+	~sndhLoader_t();
 	[[nodiscard]] const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
 	[[nodiscard]] sndhMetadata_t &metadata() noexcept { return _metadata; }
 	[[nodiscard]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }

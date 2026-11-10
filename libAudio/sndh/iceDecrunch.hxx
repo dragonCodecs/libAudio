@@ -19,11 +19,11 @@ struct sndhDecruncher_t final
 private:
 	SndhDecruncher *_decruncher{nullptr};
 	substrate::span<uint8_t> _data{};
-	size_t *_offset;
+	size_t *_offset{nullptr};
 
 public:
-	sndhDecruncher_t(const fd_t &file);
-	~sndhDecruncher_t();
+	sndhDecruncher_t() = default;
+	sndhDecruncher_t(SndhDecruncher *decruncher);
 	[[nodiscard]] bool valid() const noexcept { return _decruncher != nullptr; }
 
 	[[nodiscard]] SndhDecruncher *decruncher() { return _decruncher; }

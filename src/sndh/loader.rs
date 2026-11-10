@@ -117,6 +117,11 @@ impl SndhLoader
 		Ok(this)
 	}
 
+	pub fn entry_points(&self) -> &SndhEntryPoints
+	{
+		&self.entry_points
+	}
+
 	pub fn decruncher_mut(&mut self) -> &mut SndhDecruncher
 	{
 		&mut self.decruncher

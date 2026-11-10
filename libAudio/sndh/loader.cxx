@@ -7,10 +7,10 @@
 #include "atariASCII.hxx"
 #include "../conversions.hxx"
 #include "../string.hxx"
+#include "console.hxx"
 
 using namespace libAudio::conversions;
 
-constexpr std::array<char, 4> typeHeader{'S', 'N', 'D', 'H'};
 constexpr std::array<char, 4> typeTitle{'T', 'I', 'T', 'L'};
 constexpr std::array<char, 4> typeComposer{'C', 'O', 'M', 'M'};
 constexpr std::array<char, 4> typeRipper{'R', 'I', 'P', 'P'};
@@ -39,17 +39,34 @@ template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeA < sizeB,
 
 extern "C"
 {
-	bool sndh_loader_entry_points(SndhDecruncher *, sndhEntryPoints_t *);
+	SndhLoader *sndh_loader_new(int32_t fd);
+	void sndh_loader_drop(SndhLoader *);
+
+	SndhDecruncher *sndh_loader_decruncher(SndhLoader *);
+	sndhEntryPoints_t *sndh_loader_entry_points(SndhLoader *);
+
+	void console_error(const char *message)
+	{
+		console.error(message);
+	}
 }
 
-sndhLoader_t::sndhLoader_t(const fd_t &file) : _data{file}, _entryPoints{}, _metadata{}
+sndhLoader_t::sndhLoader_t(const fd_t &file)
 {
-	std::array<char, 4> magic{};
-	if (!sndh_loader_entry_points(_data.decruncher(), &_entryPoints) ||
-		!_data.read(magic) ||
-		magic != typeHeader ||
-		!readMeta())
+	_loader = sndh_loader_new(file);
+	if (_loader == nullptr)
 		throw std::exception{};
+	_data = {sndh_loader_decruncher(_loader)};
+	_entryPoints = *sndh_loader_entry_points(_loader);
+
+	if (!readMeta())
+		throw std::exception{};
+}
+
+sndhLoader_t::~sndhLoader_t()
+{
+	if (_loader)
+		sndh_loader_drop(_loader);
 }
 
 std::string readString(sndhDecruncher_t &file)
