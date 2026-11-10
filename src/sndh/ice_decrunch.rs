@@ -145,6 +145,13 @@ impl SndhDecruncher
 		}
 	}
 
+	pub fn read_be_u16(&mut self) -> Result<u16, Error>
+	{
+		let mut data = [0; 2];
+		self.read(&mut data)?;
+		Ok(u16::from_be_bytes(data))
+	}
+
 	pub fn read_be_u32(&mut self) -> Result<u32, Error>
 	{
 		let mut data = [0; 4];

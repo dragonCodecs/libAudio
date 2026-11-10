@@ -77,6 +77,7 @@ const TYPE_TIMER_C: [u8; 2] = *b"TC";
 const TYPE_TIMER_D: [u8; 2] = *b"TD";
 const TYPE_TIMER_VBL: [u8; 2] = *b"!V";
 const TYPE_YEAR: [u8; 4] = *b"YEAR";
+const TYPE_TIME: [u8; 4] = *b"TIME";
 const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
@@ -121,6 +122,16 @@ impl SndhMetadata
 					// try to read the year number that follows this tag and then parse it into a u32
 					let year = decruncher.read_string()?;
 					self.year = year.parse()?;
+				},
+				TYPE_TIME => {
+					// Make sure we allocated space for the tune times (meaning tune count was consumed)
+					if self.tune_times.is_empty() {
+						return Err(Error::InvalidSNDH);
+					}
+					// Then consume each of the tune times one big endian u16 at a time and stuff them into storage
+					for tune_time in self.tune_times.iter_mut() {
+						*tune_time = decruncher.read_be_u16()?;
+					}
 				},
 				TYPE_END => break,
 				// Try and match 2 byte metdata tags next
