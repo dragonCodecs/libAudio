@@ -24,14 +24,14 @@ struct decrunchingError_t : std::exception
 
 sndhDecruncher_t::sndhDecruncher_t(const fd_t &file)
 {
-	decruncher = sndh_decruncher_new(file);
-	if (decruncher == nullptr)
+	_decruncher = sndh_decruncher_new(file);
+	if (_decruncher == nullptr)
 		throw decrunchingError_t{};
-	_data = {sndh_decruncher_data(decruncher), sndh_decruncher_length(decruncher)};
+	_data = {sndh_decruncher_data(_decruncher), sndh_decruncher_length(_decruncher)};
 }
 
 sndhDecruncher_t::~sndhDecruncher_t()
 {
-	if (decruncher)
-		sndh_decruncher_drop(decruncher);
+	if (_decruncher)
+		sndh_decruncher_drop(_decruncher);
 }

@@ -17,14 +17,16 @@ struct SndhDecruncher;
 struct sndhDecruncher_t final
 {
 private:
-	SndhDecruncher *decruncher{nullptr};
+	SndhDecruncher *_decruncher{nullptr};
 	substrate::span<uint8_t> _data{};
 	size_t _offset{};
 
 public:
 	sndhDecruncher_t(const fd_t &file);
 	~sndhDecruncher_t();
-	[[nodiscard]] bool valid() const noexcept { return decruncher != nullptr; }
+	[[nodiscard]] bool valid() const noexcept { return _decruncher != nullptr; }
+
+	[[nodiscard]] SndhDecruncher *decruncher() { return _decruncher; }
 
 	size_t seek(const off_t offset, const int32_t whence) noexcept
 	{
