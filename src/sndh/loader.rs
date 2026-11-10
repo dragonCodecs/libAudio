@@ -5,7 +5,7 @@ use std::fmt::{self, Display};
 use std::fs::File;
 use std::mem::MaybeUninit;
 use std::num::ParseIntError;
-use std::string::FromUtf8Error;
+use std::str::Utf8Error;
 
 use crate::sndh::ice_decrunch::{self, SndhDecruncher};
 
@@ -57,7 +57,7 @@ pub struct SndhLoader
 pub enum Error
 {
 	Decrunch(ice_decrunch::Error),
-	String(FromUtf8Error),
+	String(Utf8Error),
 	IntConversion(ParseIntError),
 	InvalidSNDH,
 }
@@ -67,7 +67,9 @@ const TYPE_TITLE: [u8; 4] = *b"TITL";
 const TYPE_COMPOSER: [u8; 4] = *b"COMM";
 const TYPE_RIPPER: [u8; 4] = *b"RIPP";
 const TYPE_CONVERTER: [u8; 4] = *b"CONV";
+const TYPE_TUNE_NAMES: [u8; 4] = *b"#!SN";
 const TYPE_TUNE_COUNT: [u8; 2] = *b"##";
+const TYPE_DEFAULT_TUNE: [u8; 2] = *b"!#";
 const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
@@ -98,6 +100,14 @@ impl SndhMetadata
 				TYPE_COMPOSER => self.artist = decruncher.read_string()?,
 				TYPE_RIPPER => self.ripper = decruncher.read_string()?,
 				TYPE_CONVERTER => self.converter = decruncher.read_string()?,
+				TYPE_TUNE_NAMES => {
+					if self.tune_names.is_empty() {
+						return Err(Error::InvalidSNDH);
+					}
+					for tune_name in self.tune_names.iter_mut() {
+						*tune_name = decruncher.read_string()?;
+					}
+				},
 				TYPE_END => break,
 				// Try and match 2 byte metdata tags next
 				// This chunking is safe as the tag type is guaranteed to be 4 bytes, thus no remainder
@@ -105,7 +115,7 @@ impl SndhMetadata
 					[TYPE_TUNE_COUNT, count] => {
 						// Reconstruct the tune count from the 2 bytes we get from the tag, and any remaining
 						// after that if we try and read a string from the SNDH data
-						let count = String::from_utf8(count.to_vec())? + &decruncher.read_string()?;
+						let count = str::from_utf8(count)?.to_owned() + &decruncher.read_string()?;
 						// Now try and parse the resulting value to a u8
 						self.tune_count = count.parse()?;
 						// Pre-init the tune times and names to have sufficient storage
@@ -116,6 +126,13 @@ impl SndhMetadata
 							*tune_name = MaybeUninit::new(String::new());
 						}
 						self.tune_names = unsafe { tune_names.assume_init() };
+					},
+					[TYPE_DEFAULT_TUNE, value] => {
+						// Reconstruct the default tune number from the 2 bytes we get from the tag, and
+						// any remaining after that if we try and read a string from the SNDH data
+						let value = str::from_utf8(value)?.to_owned() + &decruncher.read_string()?;
+						// Now try and parse the resulting vaue to a u8
+						self.default_tune = value.parse()?;
 					},
 					_ => {
 						// If it did not match one of the known types, most likely we're in a SNDH v1.1 file
@@ -205,9 +222,9 @@ impl From<ice_decrunch::Error> for Error
 	}
 }
 
-impl From<FromUtf8Error> for Error
+impl From<Utf8Error> for Error
 {
-	fn from(error: FromUtf8Error) -> Self
+	fn from(error: Utf8Error) -> Self
 	{
 		Error::String(error)
 	}
