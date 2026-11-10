@@ -34,6 +34,8 @@ struct Downcounter(usize);
 pub enum Error
 {
 	Io(io::Error),
+	FileToBig,
+	InvalidPackIceHeader,
 }
 
 const CHUNK_TABLE: [ByteBlock; 5] = [
@@ -400,8 +402,11 @@ impl Display for Error
 {
 	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
+		write!(fmt, "Error while decrunching file - ")?;
 		match self {
 			Self::Io(error) => write!(fmt, "IO error: {error}"),
+			Self::FileToBig => write!(fmt, "input file too large (> 4MiB)"),
+			Self::InvalidPackIceHeader => write!(fmt, "appears to be Pack Ice'd, but invalid header"),
 		}
 	}
 }
