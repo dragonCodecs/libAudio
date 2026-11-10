@@ -63,12 +63,12 @@ impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
 {
 	type Error = Error;
 
-	fn try_from(value: &mut SndhDecruncher) -> Result<Self, Error>
+	fn try_from(decruncher: &mut SndhDecruncher) -> Result<Self, Error>
 	{
 		Ok(Self {
-			init: value.read_be_u32()?,
-			exit: value.read_be_u32()?,
-			play: value.read_be_u32()?,
+			init: decruncher.read_be_u32()?,
+			exit: decruncher.read_be_u32()?,
+			play: decruncher.read_be_u32()?,
 		})
 	}
 }
