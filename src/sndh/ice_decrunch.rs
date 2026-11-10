@@ -128,7 +128,7 @@ impl SndhDecruncher
 		Ok(self)
 	}
 
-	fn read<T: Sized + Copy>(&mut self, value: &mut T) -> Result<(), Error>
+	pub fn read<T: Sized + Copy>(&mut self, value: &mut T) -> Result<(), Error>
 	{
 		let length = size_of_val(value);
 		if self.offset + length > self.data.len() {

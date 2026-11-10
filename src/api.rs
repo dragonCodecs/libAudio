@@ -7,9 +7,9 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
 use crate::sndh::ice_decrunch::SndhDecruncher;
-use crate::sndh::loader::SndhEntryPoints;
+use crate::sndh::loader::{SndhEntryPoints, SndhLoader};
 
-/// Allocate a new SndhDecruncher and "leak" that pointer into C++ land
+/// Allocate a new [`SndhDecruncher`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
 pub fn sndh_decruncher_new(fd: i32) -> *mut SndhDecruncher
 {
@@ -88,6 +88,25 @@ pub unsafe fn sndh_loader_entry_points(decruncher: *mut SndhDecruncher, entry_po
 		Err(error) => {
 			console::error(format!("{error}"));
 			false
+		},
+	}
+}
+
+/// Allocate a new [`SndhLoader`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
+{
+	let mut file = unsafe { File::from_raw_fd(fd) };
+	let loader = SndhLoader::new(&mut file);
+	let _fd = file.into_raw_fd();
+	match loader {
+		Ok(loader) => {
+			let loader = Box::new(loader);
+			Box::into_raw(loader)
+		},
+		Err(error) => {
+			console::error(format!("{error}"));
+			null_mut()
 		},
 	}
 }
