@@ -19,7 +19,7 @@ struct sndhDecruncher_t final
 private:
 	SndhDecruncher *_decruncher{nullptr};
 	substrate::span<uint8_t> _data{};
-	size_t _offset{};
+	size_t *_offset;
 
 public:
 	sndhDecruncher_t(const fd_t &file);
@@ -34,24 +34,24 @@ public:
 		if (whence == SEEK_SET)
 		{
 			if (offset < 0 || static_cast<size_t>(offset) > length)
-				return _offset;
-			_offset = offset;
+				return *_offset;
+			*_offset = offset;
 		}
 		else if (whence == SEEK_CUR)
 		{
-			const off_t newOffset{static_cast<off_t>(_offset) + offset};
+			const off_t newOffset{static_cast<off_t>(*_offset) + offset};
 			if (static_cast<size_t>(newOffset) > length || newOffset < 0)
-				return _offset;
-			_offset += offset;
+				return *_offset;
+			*_offset += offset;
 		}
 		else if (whence == SEEK_END)
 		{
 			const off_t newOffset{static_cast<off_t>(length) - offset};
 			if (static_cast<size_t>(newOffset) > length || newOffset < 0)
-				return _offset;
-			_offset = length - offset;
+				return *_offset;
+			*_offset = length - offset;
 		}
-		return _offset;
+		return *_offset;
 	}
 
 	[[nodiscard]] bool head() noexcept { return seek(0, SEEK_SET) == 0; }
@@ -59,20 +59,20 @@ public:
 
 	[[nodiscard]] bool seekRel(const off_t offset) noexcept
 	{
-		const auto currentOffset{_offset};
+		const auto currentOffset{*_offset};
 		return seek(offset, SEEK_CUR) == currentOffset + offset;
 	}
 
 	[[nodiscard]] size_t length() const noexcept { return _data.size_bytes(); }
-	[[nodiscard]] size_t tell() const noexcept { return _offset; }
-	[[nodiscard]] char peak() const noexcept { return _data[_offset]; }
+	[[nodiscard]] size_t tell() const noexcept { return *_offset; }
+	[[nodiscard]] char peak() const noexcept { return _data[*_offset]; }
 
 	[[nodiscard]] bool read(void *const value, const size_t valueLen) noexcept
 	{
-		if (_offset + valueLen > _data.size())
+		if (*_offset + valueLen > _data.size())
 			return false;
-		std::memcpy(value, _data.data() + _offset, valueLen);
-		_offset += valueLen;
+		std::memcpy(value, _data.data() + *_offset, valueLen);
+		*_offset += valueLen;
 		return true;
 	}
 

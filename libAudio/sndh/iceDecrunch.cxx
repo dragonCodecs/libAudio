@@ -10,6 +10,7 @@ extern "C"
 
 	uint8_t *sndh_decruncher_data(SndhDecruncher *);
 	size_t sndh_decruncher_length(SndhDecruncher *);
+	size_t *sndh_decruncher_offset(SndhDecruncher *);
 
 	void console_error(const char *message)
 	{
@@ -28,6 +29,7 @@ sndhDecruncher_t::sndhDecruncher_t(const fd_t &file)
 	if (_decruncher == nullptr)
 		throw decrunchingError_t{};
 	_data = {sndh_decruncher_data(_decruncher), sndh_decruncher_length(_decruncher)};
+	_offset = sndh_decruncher_offset(_decruncher);
 }
 
 sndhDecruncher_t::~sndhDecruncher_t()

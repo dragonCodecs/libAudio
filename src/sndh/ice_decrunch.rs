@@ -10,7 +10,6 @@ use std::ops::{Add, Range, SubAssign};
 pub struct SndhDecruncher
 {
 	data: Box<[u8]>,
-	#[allow(unused)]
 	offset: usize,
 }
 
@@ -158,6 +157,11 @@ impl SndhDecruncher
 	pub fn data_mut(&mut self) -> &mut [u8]
 	{
 		&mut self.data
+	}
+
+	pub fn offset(&self) -> &usize
+	{
+		&self.offset
 	}
 }
 

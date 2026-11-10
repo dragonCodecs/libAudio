@@ -61,6 +61,16 @@ pub unsafe fn sndh_decruncher_length(decruncher: *mut SndhDecruncher) -> usize
 	unsafe { decruncher.as_ref() }.data().len()
 }
 
+/// Using the pointer from `sndh_decruncher_new`, get a pointer to the read offset in the decrunched SNDH file data
+/// # Safety
+/// As long as the pointer given is from `sndh_decrunch_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn sndh_decruncher_offset(decruncher: *mut SndhDecruncher) -> *const usize
+{
+	let decruncher = unsafe { NonNull::new_unchecked(decruncher) };
+	unsafe { decruncher.as_ref().offset() as *const usize }
+}
+
 /// Using the pointer from `sndh_decruncher_new`, read the entry points from the SNDH data into the [`SndhEntryPoints`]
 /// struct
 /// # Safety
