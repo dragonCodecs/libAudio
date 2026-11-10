@@ -7,6 +7,7 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
 use crate::sndh::ice_decrunch::SndhDecruncher;
+use crate::sndh::loader::SndhEntryPoints;
 
 /// Allocate a new SndhDecruncher and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
@@ -27,7 +28,7 @@ pub fn sndh_decruncher_new(fd: i32) -> *mut SndhDecruncher
 	}
 }
 
-/// Consume the pointer for a SndhDecruncher allocated with `sndh_decruncher_new`
+/// Consume the pointer for a [`SndhDecruncher`] allocated with `sndh_decruncher_new`
 /// and deallocate it cleanly
 /// # Safety
 /// As long as the pointer given is from `sndh_decruncher_new`, this is safe
@@ -58,6 +59,27 @@ pub unsafe fn sndh_decruncher_length(decruncher: *mut SndhDecruncher) -> usize
 {
 	let decruncher = unsafe { NonNull::new_unchecked(decruncher) };
 	unsafe { decruncher.as_ref() }.data().len()
+}
+
+/// Using the pointer from `sndh_decruncher_new`, read the entry points from the SNDH data into the [`SndhEntryPoints`]
+/// struct
+/// # Safety
+/// As long as the pointer given is from `sndh_decrunch_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn sndh_loader_entry_points(decruncher: *mut SndhDecruncher, entry_points: *mut SndhEntryPoints) -> bool
+{
+	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
+	let mut entry_points = unsafe { NonNull::new_unchecked(entry_points) };
+	match SndhEntryPoints::try_from(unsafe { decruncher.as_mut() }) {
+		Ok(result) => {
+			*unsafe { entry_points.as_mut() } = result;
+			true
+		},
+		Err(error) => {
+			console::error(format!("{error}"));
+			false
+		},
+	}
 }
 
 mod console
