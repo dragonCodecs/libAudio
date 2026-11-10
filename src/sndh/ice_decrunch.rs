@@ -40,6 +40,7 @@ pub enum Error
 	FileToBig,
 	InvalidPackIceHeader,
 	NoMoreData,
+	InvalidSeek,
 }
 
 const PACK_ICE_MAGIC: [u8; 4] = *b"ICE!";
@@ -180,6 +181,21 @@ impl SndhDecruncher
 		// Copy the new read offset back for the next time
 		self.offset = end;
 		Ok(result)
+	}
+
+	pub fn seek_back(&mut self, bytes: usize) -> Result<(), Error>
+	{
+		if self.offset < bytes {
+			Err(Error::InvalidSeek)
+		} else {
+			self.offset -= bytes;
+			Ok(())
+		}
+	}
+
+	pub fn seek_start(&mut self)
+	{
+		self.offset = 0;
 	}
 
 	pub fn data(&self) -> &[u8]
@@ -510,6 +526,7 @@ impl Display for Error
 			Self::FileToBig => write!(fmt, "input file too large (> 4MiB)"),
 			Self::InvalidPackIceHeader => write!(fmt, "appears to be Pack Ice'd, but invalid header"),
 			Self::NoMoreData => write!(fmt, "decrunched data exhausted"),
+			Self::InvalidSeek => write!(fmt, "invalid seek attempted within SNDH data"),
 		}
 	}
 }

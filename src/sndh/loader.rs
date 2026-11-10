@@ -84,19 +84,21 @@ impl SndhMetadata
 	{
 		let mut tag_type = [0; 4];
 		while tag_type != TYPE_END {
+			// Try to read the next metadata tag
 			decruncher.read(&mut tag_type)?;
-			if tag_type == TYPE_TITLE {
-				self.title = decruncher.read_string()?;
-			}
-			if tag_type == TYPE_COMPOSER {
-				self.artist = decruncher.read_string()?;
-			}
-			if tag_type == TYPE_RIPPER {
-				self.ripper = decruncher.read_string()?;
-			}
-			if tag_type == TYPE_CONVERTER {
-				self.converter = decruncher.read_string()?;
-			}
+			// And match it to the list of known metdata tags
+			match tag_type {
+				TYPE_TITLE => self.title = decruncher.read_string()?,
+				TYPE_COMPOSER => self.artist = decruncher.read_string()?,
+				TYPE_RIPPER => self.ripper = decruncher.read_string()?,
+				TYPE_CONVERTER => self.converter = decruncher.read_string()?,
+				// If it did not match one of the known types, most likely we're in a SNDH v1.1 file
+				// and came to the end of the header (does not end HDNS) so we're done
+				_ => {
+					decruncher.seek_back(4)?;
+					break;
+				},
+			};
 		}
 		Ok(())
 	}
