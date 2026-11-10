@@ -9,6 +9,7 @@ use std::ops::{Add, Range, SubAssign};
 pub struct SndhDecruncher
 {
 	data: Box<[u8]>,
+	#[allow(unused)]
 	offset: usize,
 }
 
@@ -37,6 +38,10 @@ pub enum Error
 	FileToBig,
 	InvalidPackIceHeader,
 }
+
+const PACK_ICE_MAGIC: [u8; 4] = *b"ICE!";
+// Because of Atari STe RAM limitations, assume no file can be larger than 4MiB
+const MAX_FILE_LENGTH: u64 = 4 * 1024 * 1024;
 
 const CHUNK_TABLE: [ByteBlock; 5] = [
 	ByteBlock {
@@ -67,22 +72,59 @@ const LENGTH_TABLE: [i8; 10] = [9, 1, 0, -1, -1, 8, 4, 2, 1, 0];
 const INT8_OFFSETS: [i8; 10] = [11, 4, 7, 0, 1, 31, -1, -1, 0, 31];
 const INT16_OFFSETS: [i16; 5] = [2820, 1792, 287, -1, 31];
 
+fn read_be_u32(file: &mut File) -> Result<u32, Error>
+{
+	let mut data = [0; 4];
+	file.read_exact(&mut data)?;
+	Ok(u32::from_be_bytes(data))
+}
+
 impl SndhDecruncher
 {
-	pub fn new(unpacked_length: usize) -> Self
+	pub fn new(file: &mut File) -> Result<Self, Error>
 	{
-		let data = Box::new_zeroed_slice(unpacked_length);
-		Self {
-			data: unsafe { data.assume_init() },
-			offset: 0,
+		let mut magic = [0; 4];
+		file.read_exact(&mut magic)?;
+		let file_length = file.metadata()?.len();
+
+		// If this is not an ICE Pack packed file, just copy the contents into memory having made sure it's not too big
+		if magic != PACK_ICE_MAGIC {
+			if file_length > MAX_FILE_LENGTH {
+				return Err(Error::FileToBig);
+			}
+			// Allocate enough memory to hold the entire file
+			let data = Box::new_zeroed_slice(file_length as usize);
+			let mut data = unsafe { data.assume_init() };
+			// Copy in the header we already consumed, then copy in the rest of the file's data
+			data[0..4].copy_from_slice(&magic);
+			file.read_exact(&mut data[4..])?;
+			Ok(Self {
+				data,
+				offset: 0,
+			})
+		} else {
+			// Read the two lengths that follow the Pack Ice magic
+			let packed_length = read_be_u32(file)?;
+			let unpacked_length = read_be_u32(file)?;
+			// Validate them to make sure they're sane
+			if packed_length != file_length as u32 || unpacked_length > MAX_FILE_LENGTH as u32 {
+				return Err(Error::InvalidPackIceHeader);
+			}
+
+			let data = Box::new_zeroed_slice(unpacked_length as usize);
+			let this = Self {
+				data: unsafe { data.assume_init() },
+				offset: 0,
+			};
+			this.unpack(file)
 		}
 	}
 
-	pub fn depack(&mut self, file: &File) -> Result<(), Error>
+	fn unpack(mut self, file: &File) -> Result<Self, Error>
 	{
 		let decruncher = Decruncher::new(file, &mut self.data)?;
 		decruncher.decrunch();
-		Ok(())
+		Ok(self)
 	}
 
 	pub fn data(&self) -> &[u8]

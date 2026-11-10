@@ -18,15 +18,13 @@ struct sndhDecruncher_t final
 {
 private:
 	SndhDecruncher *decruncher{nullptr};
-	fixedVector_t<char> _data{};
+	substrate::span<uint8_t> _data{};
 	size_t _offset{};
-
-	bool depack(const fd_t &file) noexcept;
 
 public:
 	sndhDecruncher_t(const fd_t &file);
 	~sndhDecruncher_t();
-	[[nodiscard]] bool valid() const noexcept { return _data.valid(); }
+	[[nodiscard]] bool valid() const noexcept { return decruncher != nullptr; }
 
 	size_t seek(const off_t offset, const int32_t whence) noexcept
 	{
@@ -63,7 +61,7 @@ public:
 		return seek(offset, SEEK_CUR) == currentOffset + offset;
 	}
 
-	[[nodiscard]] size_t length() const noexcept { return _data.length(); }
+	[[nodiscard]] size_t length() const noexcept { return _data.size_bytes(); }
 	[[nodiscard]] size_t tell() const noexcept { return _offset; }
 	[[nodiscard]] char peak() const noexcept { return _data[_offset]; }
 

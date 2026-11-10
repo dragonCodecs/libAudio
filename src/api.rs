@@ -4,16 +4,27 @@
 use std::ffi::c_char;
 use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
-use std::ptr::NonNull;
+use std::ptr::{NonNull, null_mut};
 
 use crate::sndh::ice_decrunch::SndhDecruncher;
 
 /// Allocate a new SndhDecruncher and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn sndh_decruncher_new(unpacked_size: usize) -> *mut SndhDecruncher
+pub fn sndh_decruncher_new(fd: i32) -> *mut SndhDecruncher
 {
-	let decruncher = Box::new(SndhDecruncher::new(unpacked_size));
-	Box::into_raw(decruncher)
+	let mut file = unsafe { File::from_raw_fd(fd) };
+	let decruncher = SndhDecruncher::new(&mut file);
+	let _fd = file.into_raw_fd();
+	match decruncher {
+		Ok(decruncher) => {
+			let decruncher = Box::new(decruncher);
+			Box::into_raw(decruncher)
+		},
+		Err(error) => {
+			console::error(format!("{error}"));
+			null_mut()
+		},
+	}
 }
 
 /// Consume the pointer for a SndhDecruncher allocated with `sndh_decruncher_new`
@@ -25,24 +36,6 @@ pub unsafe fn sndh_decruncher_drop(decruncher: *mut SndhDecruncher)
 {
 	let decruncher = unsafe { Box::from_raw(decruncher) };
 	drop(decruncher);
-}
-
-/// Using the pointer from `sndh_decruncher_new`, decrunch the contents of the file passed
-/// # Safety
-/// As long as the pointer given is from `sndh_decrunch_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn sndh_decruncher_depack(decruncher: *mut SndhDecruncher, fd: i32) -> bool
-{
-	let file = unsafe { File::from_raw_fd(fd) };
-	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	let result = unsafe { decruncher.as_mut() }.depack(&file);
-	let _fd = file.into_raw_fd();
-	if let Err(err) = result {
-		console::error(format!("{err}"));
-		false
-	} else {
-		true
-	}
 }
 
 /// Using the pointer from `sndh_decruncher_new`, get a pointer to the data buffer containing
