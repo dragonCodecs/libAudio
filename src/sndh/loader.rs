@@ -34,23 +34,23 @@ pub struct SndhMetadata
 	tune_names: Box<[String]>,
 }
 
+#[derive(Default)]
 #[repr(u8)]
-#[allow(unused)]
 pub enum SndhTimer
 {
-	Invalid = b'\0',
 	A = b'A',
 	B = b'B',
+	#[default]
 	C = b'C',
 	D = b'D',
 	Vbl = b'V',
 }
 
-#[allow(unused)]
 pub struct SndhLoader
 {
 	decruncher: SndhDecruncher,
 	entry_points: SndhEntryPoints,
+	#[allow(unused)]
 	metadata: SndhMetadata,
 }
 
@@ -60,6 +60,7 @@ pub enum Error
 	String(Utf8Error),
 	IntConversion(ParseIntError),
 	InvalidSNDH,
+	InvalidTimer(char),
 }
 
 const TYPE_HEADER: [u8; 4] = *b"SNDH";
@@ -70,6 +71,11 @@ const TYPE_CONVERTER: [u8; 4] = *b"CONV";
 const TYPE_TUNE_NAMES: [u8; 4] = *b"#!SN";
 const TYPE_TUNE_COUNT: [u8; 2] = *b"##";
 const TYPE_DEFAULT_TUNE: [u8; 2] = *b"!#";
+const TYPE_TIMER_A: [u8; 2] = *b"TA";
+const TYPE_TIMER_B: [u8; 2] = *b"TB";
+const TYPE_TIMER_C: [u8; 2] = *b"TC";
+const TYPE_TIMER_D: [u8; 2] = *b"TD";
+const TYPE_TIMER_VBL: [u8; 2] = *b"!V";
 const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
@@ -134,6 +140,19 @@ impl SndhMetadata
 						// Now try and parse the resulting vaue to a u8
 						self.default_tune = value.parse()?;
 					},
+					[TYPE_TIMER_A, frequency] |
+					[TYPE_TIMER_B, frequency] |
+					[TYPE_TIMER_C, frequency] |
+					[TYPE_TIMER_D, frequency] |
+					[TYPE_TIMER_VBL, frequency] => {
+						// Try and convert the timer tag into a [`SndhTimer`] value
+						self.timer = tag_type[1].try_into()?;
+						// Reconstruct the frequency to run the tune at from the 2 bytes we get in the tag,
+						// and any remaining after that if we try and read a string from the SNDH data
+						let frequency = str::from_utf8(frequency)?.to_owned() + &decruncher.read_string()?;
+						// Now try and parse the resulting value to a u16
+						self.timer_frequency = frequency.parse()?;
+					},
 					_ => {
 						// If it did not match one of the known types, most likely we're in a SNDH v1.1 file
 						// and came to the end of the header (does not end HDNS) so we're done
@@ -158,9 +177,10 @@ impl Default for SndhMetadata
 			converter: String::new(),
 			tune_count: 0,
 			default_tune: 1,
-			timer_frequency: 0,
+			// Default is 50Hz on timer C
+			timer_frequency: 50,
 			year: 0,
-			timer: SndhTimer::Invalid,
+			timer: SndhTimer::C,
 			tune_times: Box::new([]),
 			tune_frame_counts: Box::new([]),
 			tune_names: Box::new([]),
@@ -177,6 +197,23 @@ impl TryFrom<&mut SndhDecruncher> for SndhMetadata
 		let mut metadata = SndhMetadata::default();
 		metadata.read_from(decruncher)?;
 		Ok(metadata)
+	}
+}
+
+impl TryFrom<u8> for SndhTimer
+{
+	type Error = Error;
+
+	fn try_from(timer: u8) -> Result<Self, Error>
+	{
+		match timer {
+			b'A' => Ok(Self::A),
+			b'B' => Ok(Self::B),
+			b'C' => Ok(Self::C),
+			b'D' => Ok(Self::D),
+			b'V' => Ok(Self::Vbl),
+			_ => Err(Error::InvalidTimer(timer as char)),
+		}
 	}
 }
 
@@ -248,6 +285,7 @@ impl Display for Error
 			Self::String(error) => write!(fmt, "{error}"),
 			Self::IntConversion(error) => write!(fmt, "{error}"),
 			Self::InvalidSNDH => write!(fmt, "Invalid SNDH header"),
+			Self::InvalidTimer(timer) => write!(fmt, "Invalid timer specified: '{timer}'"),
 		}
 	}
 }
