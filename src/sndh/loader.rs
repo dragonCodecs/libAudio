@@ -78,6 +78,7 @@ const TYPE_TIMER_D: [u8; 2] = *b"TD";
 const TYPE_TIMER_VBL: [u8; 2] = *b"!V";
 const TYPE_YEAR: [u8; 4] = *b"YEAR";
 const TYPE_TIME: [u8; 4] = *b"TIME";
+const TYPE_FRAMES: [u8; 4] = *b"FRMS";
 const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
@@ -108,6 +109,7 @@ impl SndhMetadata
 				TYPE_COMPOSER => self.artist = decruncher.read_string()?,
 				TYPE_RIPPER => self.ripper = decruncher.read_string()?,
 				TYPE_CONVERTER => self.converter = decruncher.read_string()?,
+				// SNDHv2.1 metadata tag
 				TYPE_TUNE_NAMES => {
 					// Make sure we allocated space for the tune names (meaning tune count was consumed)
 					if self.tune_names.is_empty() {
@@ -118,11 +120,13 @@ impl SndhMetadata
 						*tune_name = decruncher.read_string()?;
 					}
 				},
+				// SNDHv2.0 metadata tag
 				TYPE_YEAR => {
 					// try to read the year number that follows this tag and then parse it into a u32
 					let year = decruncher.read_string()?;
 					self.year = year.parse()?;
 				},
+				// SNDHv2.0 metadata tag
 				TYPE_TIME => {
 					// Make sure we allocated space for the tune times (meaning tune count was consumed)
 					if self.tune_times.is_empty() {
@@ -133,6 +137,28 @@ impl SndhMetadata
 						*tune_time = decruncher.read_be_u16()?;
 					}
 				},
+				// SNDHv2.2 metadata tag
+				TYPE_FRAMES => {
+					// Make sure we've not seen this tag before
+					if !self.tune_frame_counts.is_empty() {
+						// As it's an error to see it more than once
+						return Err(Error::InvalidSNDH);
+					}
+					// If the tune count is 0 (because we never saw ##) then assume there's only 1 tune
+					let tunes = if self.tune_count > 0 {
+						self.tune_count
+					} else {
+						1
+					} as usize;
+					// Allocate enough storage for the frame counts
+					let frame_counts = Box::new_zeroed_slice(tunes);
+					self.tune_frame_counts = unsafe { frame_counts.assume_init() };
+					// Then loop through and try and read the frame counts from the SNDH data
+					for frame_count in self.tune_frame_counts.iter_mut() {
+						*frame_count = decruncher.read_be_u32()?;
+					}
+				},
+				// SNDHv2.0 metadata tag marking the end of the metadata block
 				TYPE_END => break,
 				// Try and match 2 byte metdata tags next
 				// This chunking is safe as the tag type is guaranteed to be 4 bytes, thus no remainder
@@ -152,6 +178,7 @@ impl SndhMetadata
 						}
 						self.tune_names = unsafe { tune_names.assume_init() };
 					},
+					// SNDHv2.1 metadata tag
 					[TYPE_DEFAULT_TUNE, value] => {
 						// Reconstruct the default tune number from the 2 bytes we get from the tag, and
 						// any remaining after that if we try and read a string from the SNDH data
