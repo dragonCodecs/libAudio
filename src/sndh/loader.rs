@@ -3,6 +3,8 @@
 
 use std::fmt::{self, Display};
 use std::fs::File;
+use std::num::ParseIntError;
+use std::string::FromUtf8Error;
 
 use crate::sndh::ice_decrunch::{self, SndhDecruncher};
 
@@ -54,6 +56,8 @@ pub struct SndhLoader
 pub enum Error
 {
 	Decrunch(ice_decrunch::Error),
+	String(FromUtf8Error),
+	IntConversion(ParseIntError),
 	InvalidSNDH,
 }
 
@@ -179,6 +183,22 @@ impl From<ice_decrunch::Error> for Error
 	}
 }
 
+impl From<FromUtf8Error> for Error
+{
+	fn from(error: FromUtf8Error) -> Self
+	{
+		Error::String(error)
+	}
+}
+
+impl From<ParseIntError> for Error
+{
+	fn from(error: ParseIntError) -> Self
+	{
+		Error::IntConversion(error)
+	}
+}
+
 impl Display for Error
 {
 	fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result
@@ -186,6 +206,8 @@ impl Display for Error
 		writeln!(fmt, "Error loading SNDH file")?;
 		match self {
 			Self::Decrunch(error) => write!(fmt, "{error}"),
+			Self::String(error) => write!(fmt, "{error}"),
+			Self::IntConversion(error) => write!(fmt, "{error}"),
 			Self::InvalidSNDH => write!(fmt, "Invalid SNDH header"),
 		}
 	}
