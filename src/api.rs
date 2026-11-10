@@ -111,6 +111,16 @@ pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
 	}
 }
 
+/// Using the pointer from `sndh_loader_new`, extract the associated [`SndhDecruncher`]
+/// # Safety
+/// As long as the pointer given is from `SndhDecruncher`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn sndh_loader_decruncher(loader: *mut SndhLoader) -> *mut SndhDecruncher
+{
+	let mut loader = unsafe { NonNull::new_unchecked(loader) };
+	unsafe { loader.as_mut() }.decruncher_mut() as *mut SndhDecruncher
+}
+
 mod console
 {
 	use std::ffi::CString;

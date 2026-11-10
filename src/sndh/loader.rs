@@ -116,6 +116,11 @@ impl SndhLoader
 
 		Ok(this)
 	}
+
+	pub fn decruncher_mut(&mut self) -> &mut SndhDecruncher
+	{
+		&mut self.decruncher
+	}
 }
 
 impl From<ice_decrunch::Error> for Error
