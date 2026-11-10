@@ -12,9 +12,12 @@
 using substrate::fd_t;
 using substrate::fixedVector_t;
 
+struct SndhDecruncher;
+
 struct sndhDecruncher_t final
 {
 private:
+	SndhDecruncher *decruncher{nullptr};
 	fixedVector_t<char> _data{};
 	size_t _offset{};
 
@@ -22,6 +25,7 @@ private:
 
 public:
 	sndhDecruncher_t(const fd_t &file);
+	~sndhDecruncher_t();
 	[[nodiscard]] bool valid() const noexcept { return _data.valid(); }
 
 	size_t seek(const off_t offset, const int32_t whence) noexcept

@@ -11,6 +11,21 @@ using substrate::span;
 constexpr static std::array<char, 4> magic{{'I', 'C', 'E', '!'}};
 constexpr static size_t maxFileLength{4_MiB};
 
+extern "C"
+{
+	SndhDecruncher *sndh_decruncher_new(size_t unpacked_size);
+	void sndh_decruncher_drop(SndhDecruncher *);
+
+	bool sndh_decruncher_depack(SndhDecruncher *, int32_t);
+	uint8_t *sndh_decruncher_data(SndhDecruncher *);
+	size_t sndh_decruncher_length(SndhDecruncher *);
+
+	void console_error(const char *message)
+	{
+		console.error(message);
+	}
+}
+
 struct decrunchingError_t : std::exception
 {
 	const char *what() const noexcept override { return "Error while decrunching file"; }
@@ -271,6 +286,7 @@ sndhDecruncher_t::sndhDecruncher_t(const fd_t &file)
 		unpackedLength > maxFileLength)
 		throw std::exception{};
 
+	decruncher = sndh_decruncher_new(unpackedLength);
 	_data = {unpackedLength};
 	if (!depack(file))
 	{
@@ -279,14 +295,17 @@ sndhDecruncher_t::sndhDecruncher_t(const fd_t &file)
 	}
 }
 
-bool sndhDecruncher_t::depack(const fd_t &file) noexcept try
+sndhDecruncher_t::~sndhDecruncher_t()
 {
-	decruncher_t decruncher{file, {reinterpret_cast<uint8_t *>(_data.data()), _data.size()}};
-	decruncher.decrunch();
-	return true;
+	if (decruncher)
+		sndh_decruncher_drop(decruncher);
 }
-catch (const decrunchingError_t &error)
+
+bool sndhDecruncher_t::depack(const fd_t &file) noexcept
 {
-	console.error(error.what());
-	return false;
+	const auto result{sndh_decruncher_depack(decruncher, file)};
+	const auto data{sndh_decruncher_data(decruncher)};
+	const auto size{sndh_decruncher_length(decruncher)};
+	std::memcpy(_data.data(), data, size);
+	return result;
 }
