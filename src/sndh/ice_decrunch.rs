@@ -7,6 +7,8 @@ use std::io::{self, Read};
 use std::mem;
 use std::ops::{Add, Range, SubAssign};
 
+use super::atari_ascii::ATARI_CHARSET;
+
 pub struct SndhDecruncher
 {
 	data: Box<[u8]>,
@@ -147,6 +149,37 @@ impl SndhDecruncher
 		let mut data = [0; 4];
 		self.read(&mut data)?;
 		Ok(u32::from_be_bytes(data))
+	}
+
+	pub fn read_string(&mut self) -> Result<String, Error>
+	{
+		// Start by finding the extents of the string
+		let begin = self.offset;
+		if begin >= self.data.len() {
+			return Err(Error::NoMoreData);
+		}
+		let mut end = begin;
+		while self.data[end] != 0 {
+			end += 1;
+			if end >= self.data.len() {
+				return Err(Error::NoMoreData);
+			}
+		}
+		// Now select the slice and feed it through the Atari characterset mapper
+		let result = self.data[begin..end]
+			.iter()
+			.map(|&char| ATARI_CHARSET[char as usize])
+			.collect();
+		// Chew through any remaining NUL characters after the string
+		while self.data[end] == 0 {
+			end += 1;
+			if end > self.data.len() {
+				return Err(Error::NoMoreData);
+			}
+		}
+		// Copy the new read offset back for the next time
+		self.offset = end;
+		Ok(result)
 	}
 
 	pub fn data(&self) -> &[u8]
