@@ -79,6 +79,7 @@ const TYPE_TIMER_VBL: [u8; 2] = *b"!V";
 const TYPE_YEAR: [u8; 4] = *b"YEAR";
 const TYPE_TIME: [u8; 4] = *b"TIME";
 const TYPE_FRAMES: [u8; 4] = *b"FRMS";
+const TYPE_FLAGS: [u8; 4] = *b"FLAG";
 const TYPE_END: [u8; 4] = *b"HDNS";
 
 impl TryFrom<&mut SndhDecruncher> for SndhEntryPoints
@@ -156,6 +157,23 @@ impl SndhMetadata
 					// Then loop through and try and read the frame counts from the SNDH data
 					for frame_count in self.tune_frame_counts.iter_mut() {
 						*frame_count = decruncher.read_be_u32()?;
+					}
+				},
+				TYPE_FLAGS => {
+					// For the time being, just read and discard the flags..
+					let mut flag = 0;
+					decruncher.read(&mut flag)?;
+					// The flags must begin with the `~` character to be valid
+					if flag != b'~' {
+						return Err(Error::InvalidSNDH);
+					}
+					// Try and read flags till we hit a NUL byte
+					while flag != 0 {
+						decruncher.read(&mut flag)?;
+					}
+					// And then read till we stop reading NULL bytes
+					while flag == 0 {
+						decruncher.read(&mut flag)?;
 					}
 				},
 				// SNDHv2.0 metadata tag marking the end of the metadata block
