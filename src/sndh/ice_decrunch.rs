@@ -4,6 +4,7 @@
 use std::fmt::{self, Display};
 use std::fs::File;
 use std::io::{self, Read};
+use std::mem;
 use std::ops::{Add, Range, SubAssign};
 
 pub struct SndhDecruncher
@@ -37,6 +38,7 @@ pub enum Error
 	Io(io::Error),
 	FileToBig,
 	InvalidPackIceHeader,
+	NoMoreData,
 }
 
 const PACK_ICE_MAGIC: [u8; 4] = *b"ICE!";
@@ -125,6 +127,27 @@ impl SndhDecruncher
 		let decruncher = Decruncher::new(file, &mut self.data)?;
 		decruncher.decrunch();
 		Ok(self)
+	}
+
+	fn read<T: Sized + Copy>(&mut self, value: &mut T) -> Result<(), Error>
+	{
+		let length = size_of_val(value);
+		if self.offset + length > self.data.len() {
+			Err(Error::NoMoreData)
+		} else {
+			// This is safe because we ensure the amount of data copied in matches the size of T
+			// and we guarantee that T is Copy, so memcpy()-safe
+			*value = unsafe { mem::transmute_copy(&self.data[self.offset..self.offset + length]) };
+			self.offset += length;
+			Ok(())
+		}
+	}
+
+	pub fn read_be_u32(&mut self) -> Result<u32, Error>
+	{
+		let mut data = [0; 4];
+		self.read(&mut data)?;
+		Ok(u32::from_be_bytes(data))
 	}
 
 	pub fn data(&self) -> &[u8]
@@ -449,6 +472,7 @@ impl Display for Error
 			Self::Io(error) => write!(fmt, "IO error: {error}"),
 			Self::FileToBig => write!(fmt, "input file too large (> 4MiB)"),
 			Self::InvalidPackIceHeader => write!(fmt, "appears to be Pack Ice'd, but invalid header"),
+			Self::NoMoreData => write!(fmt, "decrunched data exhausted"),
 		}
 	}
 }
