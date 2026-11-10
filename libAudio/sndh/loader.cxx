@@ -37,12 +37,15 @@ template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeA < sizeB,
 	operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
 	{ return std::equal(a.begin(), a.end(), b.begin()); }
 
+extern "C"
+{
+	bool sndh_loader_entry_points(SndhDecruncher *, sndhEntryPoints_t *);
+}
+
 sndhLoader_t::sndhLoader_t(const fd_t &file) : _data{file}, _entryPoints{}, _metadata{}
 {
 	std::array<char, 4> magic{};
-	if (!_data.readBE(_entryPoints.init) ||
-		!_data.readBE(_entryPoints.exit) ||
-		!_data.readBE(_entryPoints.play) ||
+	if (!sndh_loader_entry_points(_data.decruncher(), &_entryPoints) ||
 		!_data.read(magic) ||
 		magic != typeHeader ||
 		!readMeta())
