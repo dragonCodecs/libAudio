@@ -3,4 +3,5 @@
 
 #![allow(non_snake_case)]
 
-pub mod sndh;
+pub mod api;
+pub(crate) mod sndh;
