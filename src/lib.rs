@@ -4,4 +4,5 @@
 #![allow(non_snake_case)]
 
 pub mod api;
+pub(crate) mod emulator;
 pub(crate) mod sndh;
