@@ -39,7 +39,7 @@ namespace libAudio::sndh
 sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd)},
 	decoderCtx{make_unique_nothrow<decoderContext_t>()} { }
 
-void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
+void loadFileInfo(fileInfo_t &info, const sndhMetadata_t &metadata) noexcept
 {
 	info.title(metadata.title.clone());
 	info.artist(metadata.artist.clone());
@@ -64,7 +64,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	fileInfo_t &info = file->fileInfo();
 	sndhLoader_t loader{file->_fd};
 
-	auto &metadata = loader.metadata();
+	const auto &metadata = loader.metadata();
 	console.debug("SNDH metadata"sv);
 	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 

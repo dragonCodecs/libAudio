@@ -24,7 +24,7 @@ testObjectMap = {
 			'emulator/timing/mc68901.cxx',
 			'emulator/cpu/m68k.cxx',
 			'emulator/clockManager.cxx',
-			'sndh/iceDecrunch.cxx',
+			'sndh/loader.cxx',
 			'console.cxx',
 		]
 	},

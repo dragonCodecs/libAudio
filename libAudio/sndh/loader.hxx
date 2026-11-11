@@ -83,7 +83,6 @@ public:
 	sndhLoader_t(const fd_t &file);
 	~sndhLoader_t();
 	[[nodiscard]] const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
-	[[nodiscard]] sndhMetadata_t &metadata() noexcept { return _metadata; }
 	[[nodiscard]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }
 	[[nodiscard]] bool copyToRAM(atariSTe_t &emulator) noexcept;
 };
