@@ -341,7 +341,6 @@ sndhSrcs = [
 	'emulator/sound/steDAC.cxx',
 	'emulator/timing/mc68901.cxx',
 	'sndh/loader.cxx',
-	'sndh/iceDecrunch.cxx',
 	'loadSNDH.cpp',
 ]
 

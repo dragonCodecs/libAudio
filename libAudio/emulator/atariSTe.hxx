@@ -10,7 +10,13 @@
 #include "sound/steDAC.hxx"
 #include "timing/mc68901.hxx"
 #include "unitsHelpers.hxx"
-#include "sndh/iceDecrunch.hxx"
+
+struct SndhDecruncher final
+{
+	size_t length() const;
+	bool seek_start();
+	bool read(substrate::span<uint8_t> span);
+};
 
 // M68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.
 struct atariSTe_t : protected memoryMap_t<uint32_t, 0x00ffffffU>

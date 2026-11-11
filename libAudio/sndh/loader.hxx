@@ -4,11 +4,9 @@
 #define SNDH_LOADER_HXX
 
 #include <cstdint>
-#include <memory>
-#include <vector>
+#include <substrate/span>
 #include <substrate/fd>
 #include <substrate/fixed_vector>
-#include "iceDecrunch.hxx"
 #include "emulator/atariSTe.hxx"
 
 using substrate::fd_t;

@@ -10,7 +10,7 @@
 #include "sound/steDAC.hxx"
 #include "timing/mc68901.hxx"
 #include "unitsHelpers.hxx"
-#include "sndh/iceDecrunch.hxx"
+#include "sndh/loader.hxx"
 #include "console.hxx"
 
 using namespace std::literals::string_view_literals;
