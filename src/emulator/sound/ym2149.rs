@@ -278,7 +278,7 @@ impl Ym2149
 
 		let mut levels = [0; 3];
 		// Go through each channel and compute the volume level associated with it
-		for (channel, state) in self.channel_state.into_iter().enumerate() {
+		for (channel, &state) in self.channel_state.iter().enumerate() {
 			let level = {
 				if state {
 					// Extract the level information from the channel
@@ -305,7 +305,7 @@ impl Ym2149
 			levels[channel] = LOG_LEVEL[level as usize] >> shift;
 		}
 		// Compute and store the final level using the logarithm table for the chip
-		self.dc_adjust(levels.iter().sum())
+		self.dc_adjust(levels.into_iter().sum())
 	}
 
 	fn compute_envelope_level(&self) -> u8
@@ -337,7 +337,7 @@ impl Ym2149
 					if state != 0 {
 						0x1f
 					} else {
-						0x00
+						0
 					}
 				}
 				// If the alternate bit is set, then ramp the opposite direction to before
@@ -369,7 +369,7 @@ impl Ym2149
 					if state != 0 {
 						0x1f
 					} else {
-						0x00
+						0
 					}
 				}
 				// Ramp in the original direction regardless of alternate bit
