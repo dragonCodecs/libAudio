@@ -54,6 +54,51 @@ impl Ym2149
 		}
 	}
 
+	pub fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		// Only admit 8- and 16-bit reads
+		if data.len() > 2 {
+			return;
+		}
+		// We only respond to reads on address 0
+		if address != 0 {
+			return;
+		}
+		// Where to read from depends on the register selection, so..
+		match self.selected_register {
+			// Current channel frequency rough/fine
+			0..=5 => {
+				// Turn the register selection into a channel number and rough adjustment indicator
+				let channel = (self.selected_register >> 1) as usize;
+				let rough_adjustment = (self.selected_register & 1) != 0;
+				data[0] = self.channels[channel].read_frequency(rough_adjustment);
+			},
+			// Current noise frequency
+			6 => data[0] = self.noise_period,
+			// Current mixer configuration
+			7 => data[0] = self.mixer_config,
+			// Current channel level
+			8..=10 => {
+				// Turn the register selection into a channel number
+				let channel = (self.selected_register - 8) as usize;
+				data[0] = self.channels[channel].level;
+			},
+			// Envelope frequency fine adjustment
+			11 => data[0] = (self.envelope_period & 0xff) as u8,
+			// Envelope frequency rough adjustment
+			12 => data[0] = (self.envelope_period >> 8) as u8,
+			// Envelope shape adjustment
+			13 => data[0] = self.envelope_shape,
+			// I/O port data
+			14 | 15 => {
+				// Turn the register selection into a port number (repesenting A vs B)
+				let port = (self.selected_register & 1) as usize;
+				data[0] = self.io_port[port];
+			},
+			_ => unreachable!(),
+		}
+	}
+
 	fn update_fsm(&mut self)
 	{
 		// Update the channel states to reflect the current chip state
@@ -116,9 +161,9 @@ impl Ym2149Channel
 		self.edge_state = state;
 	}
 
-	pub fn write_frequency(&mut self, value: u8, rough_adjust: bool)
+	pub fn write_frequency(&mut self, value: u8, rough_adjustment: bool)
 	{
-		if rough_adjust {
+		if rough_adjustment {
 			self.period &= 0x00ff;
 			// Only 4 bits are valid, throw away the upper 4
 			self.period |= ((value & 0x0f) as u16) << 8;
@@ -128,9 +173,9 @@ impl Ym2149Channel
 		}
 	}
 
-	pub fn read_frequency(&self, rough_adjust: bool) -> u8
+	pub fn read_frequency(&self, rough_adjustment: bool) -> u8
 	{
-		if rough_adjust {
+		if rough_adjustment {
 			(self.period >> 8) as u8
 		} else {
 			(self.period & 0x00ff) as u8
