@@ -51,12 +51,12 @@ ym2149_t::~ym2149_t() noexcept
 
 void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
 {
-	ym2149_read_address(self, address, {data.data(), data.size()});
+	ym2149_read_address(self, address, {data.data(), data.size_bytes()});
 }
 
 void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_t> &data) noexcept
 {
-	ym2149_write_address(self, address, {data.data(), data.size()});
+	ym2149_write_address(self, address, {data.data(), data.size_bytes()});
 }
 
 bool ym2149_t::clockCycle() noexcept
