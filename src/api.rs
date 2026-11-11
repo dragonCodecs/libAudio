@@ -8,7 +8,7 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
 use crate::sndh::ice_decrunch::SndhDecruncher;
-use crate::sndh::loader::{SndhEntryPoints, SndhLoader, SndhMetadata, SndhTimer};
+use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
 #[repr(C)]
 pub struct Slice<T>
@@ -123,16 +123,6 @@ pub unsafe fn sndh_loader_decruncher(loader: *mut SndhLoader) -> *mut SndhDecrun
 {
 	let mut loader = unsafe { NonNull::new_unchecked(loader) };
 	unsafe { loader.as_mut() }.decruncher_mut() as *mut SndhDecruncher
-}
-
-/// Using the pointer from `sndh_loader_new`, extract the associated [`SndhEntryPoints`]
-/// # Safety
-/// As long as the pointer given is from `sndh_loader_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn sndh_loader_entry_points(loader: *mut SndhLoader) -> *const SndhEntryPoints
-{
-	let loader = unsafe { NonNull::new_unchecked(loader) };
-	unsafe { loader.as_ref() }.entry_points() as *const SndhEntryPoints
 }
 
 /// Using the pointer from `sndh_loader_new`, extract the associated [`SndhMetadata`]

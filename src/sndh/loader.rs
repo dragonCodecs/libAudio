@@ -9,8 +9,8 @@ use std::str::Utf8Error;
 
 use super::ice_decrunch::{self, SndhDecruncher};
 
-#[repr(C)]
-pub struct SndhEntryPoints
+#[allow(unused)]
+struct SndhEntryPoints
 {
 	init: u32,
 	exit: u32,
@@ -48,7 +48,6 @@ pub enum SndhTimer
 pub struct SndhLoader
 {
 	decruncher: SndhDecruncher,
-	entry_points: SndhEntryPoints,
 	#[allow(unused)]
 	metadata: SndhMetadata,
 }
@@ -347,7 +346,7 @@ impl SndhLoader
 		// Try decrunching the file given to extract the SNDH data into memory
 		let mut decruncher = SndhDecruncher::new(file)?;
 		// Try then and extract the entrypoints for the SNDH file from the resulting data
-		let entry_points = SndhEntryPoints::try_from(&mut decruncher)?;
+		let _entry_points = SndhEntryPoints::try_from(&mut decruncher)?;
 		// Try and read the magic number that follows them and validate that
 		let mut magic = [0; 4];
 		decruncher.read(&mut magic)?;
@@ -357,15 +356,9 @@ impl SndhLoader
 		let metadata = SndhMetadata::try_from(&mut decruncher)?;
 		let this = Self {
 			decruncher,
-			entry_points,
 			metadata,
 		};
 		Ok(this)
-	}
-
-	pub fn entry_points(&self) -> &SndhEntryPoints
-	{
-		&self.entry_points
 	}
 
 	pub fn metadata(&self) -> &SndhMetadata

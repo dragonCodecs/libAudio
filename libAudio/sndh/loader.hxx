@@ -15,13 +15,6 @@ using substrate::fixedVector_t;
 struct SndhLoader;
 struct SndhMetadata;
 
-struct sndhEntryPoints_t final
-{
-	uint32_t init;
-	uint32_t exit;
-	uint32_t play;
-};
-
 struct stringSlice_t
 {
 	uint8_t *ptr;
@@ -76,13 +69,11 @@ struct sndhLoader_t final
 private:
 	SndhLoader *_loader{nullptr};
 	SndhDecruncher *_data{nullptr};
-	sndhEntryPoints_t _entryPoints{};
 	sndhMetadata_t _metadata{};
 
 public:
 	sndhLoader_t(const fd_t &file);
 	~sndhLoader_t();
-	[[nodiscard]] const sndhEntryPoints_t &entryPoints() const noexcept { return _entryPoints; }
 	[[nodiscard]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }
 	[[nodiscard]] bool copyToRAM(atariSTe_t &emulator) noexcept;
 };

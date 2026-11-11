@@ -14,7 +14,6 @@ extern "C"
 	void sndh_loader_drop(SndhLoader *);
 
 	SndhDecruncher *sndh_loader_decruncher(SndhLoader *);
-	sndhEntryPoints_t *sndh_loader_entry_points(SndhLoader *);
 	const SndhMetadata *sndh_loader_metadata(SndhLoader *);
 
 	size_t sndh_decruncher_length(const SndhDecruncher *);
@@ -47,7 +46,6 @@ sndhLoader_t::sndhLoader_t(const fd_t &file)
 	if (_loader == nullptr)
 		throw std::exception{};
 	_data = sndh_loader_decruncher(_loader);
-	_entryPoints = *sndh_loader_entry_points(_loader);
 	_metadata = {sndh_loader_metadata(_loader)};
 }
 
