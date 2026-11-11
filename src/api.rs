@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use core::slice;
-use std::ffi::c_char;
+use std::ffi::{c_char, c_void};
 use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
@@ -35,6 +35,11 @@ impl<T> Slice<T>
 			ptr: data.as_ptr(),
 			len: data.len(),
 		}
+	}
+
+	pub fn as_slice(&self) -> &[T]
+	{
+		unsafe { slice::from_raw_parts(self.ptr, self.len) }
 	}
 }
 
@@ -295,6 +300,56 @@ pub unsafe fn ym2149_channel(ym2149: *mut Ym2149, index: usize) -> *mut Ym2149Ch
 	unsafe { ym2149.as_mut() }.channel_mut(index) as *mut Ym2149Channel
 }
 
+/// Using the pointer from `ym2149_new`, read data into the slice from the requested address
+/// # Safety
+/// As long as the pointer given is from `ym2149_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ym2149_read_address(ym2149: *mut Ym2149, address: u32, mut slice: MutSlice<u8>)
+{
+	let ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
+	unsafe { ym2149.as_ref() }.read_address(address, slice.as_mut_slice());
+}
+
+/// Using the pointer from `ym2149_new`, write data into the slice to the requested address
+/// # Safety
+/// As long as the pointer given is from `ym2149_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ym2149_write_address(ym2149: *mut Ym2149, address: u32, slice: Slice<u8>)
+{
+	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
+	unsafe { ym2149.as_mut() }.write_address(address, slice.as_slice());
+}
+
+/// Using the pointer from `ym2149_new`, check if the YM2149 has a new sample ready
+/// # Safety
+/// As long as the pointer given is from `ym2149_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ym2149_sample_ready(ym2149: *mut Ym2149) -> bool
+{
+	let ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
+	unsafe { ym2149.as_ref() }.sample_ready()
+}
+
+/// Using the pointer from `ym2149_new`, generate a new sample
+/// # Safety
+/// As long as the pointer given is from `ym2149_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ym2149_sample(ym2149: *mut Ym2149) -> i16
+{
+	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
+	unsafe { ym2149.as_mut() }.sample()
+}
+
+/// Using the pointer from `ym2149_new`, run a clock cycle
+/// # Safety
+/// As long as the pointer given is from `ym2149_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149, this: *mut c_void) -> bool
+{
+	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
+	unsafe { ym2149.as_mut() }.clock_cycle(this)
+}
+
 /// Using the pointer from `ym2149_channel_new`, reset the edge state for the channel
 /// # Safety
 /// As long as the pointer given is from `ym2149_channel_new`, this is safe
@@ -305,56 +360,6 @@ pub unsafe fn ym2149_channel_reset_edge_state(channel: *mut Ym2149Channel, state
 	unsafe { channel.as_mut() }.reset_edge_state(state);
 }
 
-/// Using the pointer from `ym2149_channel_new`, write the note frequency for the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_write_frequency(channel: *mut Ym2149Channel, value: u8, rough_adjust: bool)
-{
-	let mut channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_mut() }.write_frequency(value, rough_adjust);
-}
-
-/// Using the pointer from `ym2149_channel_new`, read the note frequency for the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_read_frequency(channel: *mut Ym2149Channel, rough_adjust: bool) -> u8
-{
-	let channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_ref() }.read_frequency(rough_adjust)
-}
-
-/// Using the pointer from `ym2149_channel_new`, run a time step for the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_step(channel: *mut Ym2149Channel)
-{
-	let mut channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_mut() }.step();
-}
-
-/// Using the pointer from `ym2149_channel_new`, read the edge state for the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_state(channel: *mut Ym2149Channel, tone_inhibit: bool) -> bool
-{
-	let channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_ref() }.state(tone_inhibit)
-}
-
-/// Using the pointer from `ym2149_channel_new`, check whether a shift is required for the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_shift_required(channel: *mut Ym2149Channel) -> bool
-{
-	let channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_ref() }.shift_required()
-}
-
 /// Using the pointer from `ym2149_channel_new`, force the edge state for the channel
 /// # Safety
 /// As long as the pointer given is from `ym2149_channel_new`, this is safe
@@ -363,26 +368,6 @@ pub unsafe fn ym2149_channel_force_edge_state(channel: *mut Ym2149Channel, state
 {
 	let mut channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
 	unsafe { channel.as_mut() }.force_edge_state(state);
-}
-
-/// Using the pointer from `ym2149_channel_new`, get the level of the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_get_level(channel: *mut Ym2149Channel) -> u8
-{
-	let channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_ref() }.level
-}
-
-/// Using the pointer from `ym2149_channel_new`, set the level of the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_set_level(channel: *mut Ym2149Channel, level: u8)
-{
-	let mut channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_mut() }.level = level;
 }
 
 mod console

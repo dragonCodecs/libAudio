@@ -264,6 +264,11 @@ impl Ym2149
 		}
 	}
 
+	pub fn sample_ready(&self) -> bool
+	{
+		self.ready && !self.read
+	}
+
 	pub fn sample(&mut self) -> i16
 	{
 		self.read = true;

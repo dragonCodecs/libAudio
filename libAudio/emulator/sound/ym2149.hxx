@@ -24,40 +24,12 @@ private:
 
 	Ym2149 *self{nullptr};
 
-	uint8_t selectedRegister{0U};
-	uint8_t cyclesTillUpdate{0U};
-
 	std::array<Ym2149Channel *, 3U> channels{};
-	std::array<bool, 3U> channelState{};
-	uint8_t noisePeriod{0U};
-	uint8_t noiseCounter{0U};
-	// Default to no output from any channel of any kind
-	uint8_t mixerConfig{0x3fU};
-	uint16_t envelopePeriod{0U};
-	uint16_t envelopeCounter{0U};
-	uint8_t envelopeShape{0U};
-	uint8_t envelopePosition{64U};
-	std::array<uint8_t, 2U> ioPort{};
-
-	bool noiseState{0U};
-	uint32_t noiseLFSR{1U};
 
 	clockManager_t clockManager;
-	bool ready{false};
-	bool read{false};
-
-	// Have enough space for 2048 samples of adjustment history
-	constexpr static size_t dcAdjustmentLengthLog2{11U};
-	std::array<uint16_t, 1U << dcAdjustmentLengthLog2> dcAdjustmentBuffer{};
-	size_t dcAdjustmentPosition{0U};
-	uint32_t dcAdjustmentSum{0U};
 
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept final;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
-
-	void updateFSM() noexcept;
-	[[nodiscard]] uint8_t computeEnvelopeLevel() const noexcept;
-	[[nodiscard]] int16_t dcAdjust(uint16_t sample) noexcept;
 
 public:
 	ym2149_t(uint32_t clockFrequency, uint32_t sampleFrequency) noexcept;
@@ -70,6 +42,8 @@ public:
 	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] bool sampleReady() const noexcept;
 	[[nodiscard]] int16_t sample() noexcept;
+
+	[[nodiscard]] bool advanceCycle() noexcept;
 
 	// NB, only use for testing
 	void forceChannelStates(bool edgeState) noexcept;
