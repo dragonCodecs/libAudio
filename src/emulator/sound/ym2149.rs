@@ -213,6 +213,81 @@ impl Ym2149
 		}
 	}
 
+	fn compute_envelope_level(&self) -> u8
+	{
+		// Extract out the actual position and phase data (32 unique positions, 4 phases)
+		let position = self.envelope_position & 0x1f;
+		let phase = self.envelope_position >> 5;
+		match phase {
+			// Initial envelope phase, behaviour determined by attack bit
+			0 => {
+				// If the attack bit is set, the envelope level is the position value, otherwise
+				// the ramp runs backwards, so invert the position to make the level.
+				if (self.envelope_shape & 4) != 0 {
+					position
+				} else {
+					0x1f - position
+				}
+			},
+			// The 2nd and 4th phase is determined identically by the rest of the shape bits
+			1 | 3 => {
+				// If this is not a continuous envelope, the level is low permanently
+				if (self.envelope_shape & 0x8) == 0 {
+					0
+				}
+				// Otherwise, if the envelope should hold its value
+				else if (self.envelope_shape & 0x1) != 0 {
+					// Low or high determined by attack and alternate bits xor'd together
+					let state = (self.envelope_shape & 0x2) ^ ((self.envelope_shape & 0x4) >> 1);
+					if state != 0 {
+						0x1f
+					} else {
+						0x00
+					}
+				}
+				// If the alternate bit is set, then ramp the opposite direction to before
+				else if (self.envelope_shape & 0x2) != 0 {
+					if (self.envelope_shape & 0x4) != 0 {
+						0x1f - position
+					} else {
+						position
+					}
+				}
+				// Otherwise, ramp the same as before
+				else if (self.envelope_shape & 4) != 0 {
+					position
+				} else {
+					0x1f - position
+				}
+			},
+			// The 3rd phase is also determined by the rest of the shape bits, but has the opposite
+			// logic for the alternate-controlled ramping when alternate set
+			2 => {
+				// If this is not a continuous envelope, the level is low permanently
+				if (self.envelope_shape & 0x8) == 0 {
+					0
+				}
+				// Otherwise, if the envelope should hold its value
+				else if (self.envelope_shape & 0x1) != 0 {
+					// Low or high determined by attack and alternate bits xor'd together
+					let state = (self.envelope_shape & 0x2) ^ ((self.envelope_shape & 0x4) >> 1);
+					if state != 0 {
+						0x1f
+					} else {
+						0x00
+					}
+				}
+				// Ramp in the original direction regardless of alternate bit
+				else if (self.envelope_shape & 4) != 0 {
+					position
+				} else {
+					0x1f - position
+				}
+			},
+			_ => unreachable!(),
+		}
+	}
+
 	pub fn channel_mut(&mut self, index: usize) -> &mut Ym2149Channel
 	{
 		&mut self.channels[index]
