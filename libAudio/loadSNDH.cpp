@@ -43,7 +43,7 @@ void loadFileInfo(fileInfo_t &info, const sndhMetadata_t &metadata) noexcept
 {
 	info.title(metadata.title.clone());
 	info.artist(metadata.artist.clone());
-	// If the song includes frame-based lenght data for the tune we'll play, populate that
+	// If the song includes frame-based length data for the tune we'll play, populate that
 	if (!metadata.tuneFrameCounts.isEmpty())
 		info.totalTime(metadata.tuneFrameCounts[metadata.defaultTune - 1U] / metadata.timerFrequency);
 	// If the song includes length data for the tune we'll play, populate that
@@ -65,8 +65,6 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	sndhLoader_t loader{file->_fd};
 
 	const auto &metadata = loader.metadata();
-	console.debug("SNDH metadata"sv);
-	console.debug(" -> using timer "sv, metadata.timer, " at "sv, metadata.timerFrequency, "Hz"sv);
 
 	// Copy the metadata for this SNDH into the fileInfo_t, and then copy the decrunched SNDH into emulator memory
 	info.bitRate(ctx.emulator.sampleRate);
