@@ -8,42 +8,13 @@
 #include <substrate/fd>
 #include <substrate/fixed_vector>
 #include "emulator/atariSTe.hxx"
+#include "rustAPI.hxx"
 
 using substrate::fd_t;
 using substrate::fixedVector_t;
 
 struct SndhLoader;
 struct SndhMetadata;
-
-struct stringSlice_t
-{
-	uint8_t *ptr;
-	size_t len;
-
-	[[nodiscard]] std::unique_ptr<char []> clone() const
-	{
-		auto result = std::make_unique<char []>(len + 1);
-		std::memcpy(result.get(), ptr, len);
-		result[len] = '\0';
-		return result;
-	}
-};
-
-template<typename T> struct slice_t
-{
-	T *ptr;
-	size_t len;
-
-	[[nodiscard]] bool isEmpty() const
-	{
-		return ptr == nullptr || len == 0U;
-	}
-
-	T &operator [](const size_t index) const
-	{
-		return ptr[index];
-	}
-};
 
 struct sndhMetadata_t final
 {
