@@ -7,7 +7,7 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
-use crate::emulator::sound::ym2149::Ym2149Channel;
+use crate::emulator::sound::ym2149::{Ym2149, Ym2149Channel};
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
@@ -264,6 +264,25 @@ pub unsafe fn sndh_metadata_tune_name(metadata: *mut SndhMetadata, index: usize)
 {
 	let metadata = unsafe { NonNull::new_unchecked(metadata) };
 	Slice::from_slice(unsafe { metadata.as_ref() }.tune_names()[index].as_bytes())
+}
+
+/// Allocate a new [`Ym2149`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn ym2149_new() -> *mut Ym2149
+{
+	let ym2149 = Box::new(Ym2149::new());
+	Box::into_raw(ym2149)
+}
+
+/// Consume the pointer for a [`Ym2149`] allocated with `ym2149_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `ym2149_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ym2149_drop(ym2149: *mut Ym2149)
+{
+	let ym2149 = unsafe { Box::from_raw(ym2149) };
+	drop(ym2149);
 }
 
 /// Allocate a new [`Ym2149Channel`] and "leak" that pointer into C++ land
