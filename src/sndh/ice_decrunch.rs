@@ -204,6 +204,11 @@ impl SndhDecruncher
 		Ok(result)
 	}
 
+	pub fn peek(&self) -> u8
+	{
+		self.data[self.offset]
+	}
+
 	pub fn seek_back(&mut self, bytes: usize) -> Result<(), Error>
 	{
 		if self.offset < bytes {

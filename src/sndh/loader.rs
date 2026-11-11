@@ -7,7 +7,7 @@ use std::mem::MaybeUninit;
 use std::num::ParseIntError;
 use std::str::Utf8Error;
 
-use crate::sndh::ice_decrunch::{self, SndhDecruncher};
+use super::ice_decrunch::{self, SndhDecruncher};
 
 #[repr(C)]
 pub struct SndhEntryPoints
@@ -171,7 +171,7 @@ impl SndhMetadata
 						decruncher.read(&mut flag)?;
 					}
 					// And then read till we stop reading NULL bytes
-					while flag == 0 {
+					while decruncher.peek() == 0 {
 						decruncher.read(&mut flag)?;
 					}
 				},
