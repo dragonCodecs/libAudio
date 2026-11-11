@@ -12,7 +12,6 @@ pub struct Ym2149
 	channel_state: [bool; 3],
 	noise_period: u8,
 	noise_counter: u8,
-	// Default to no output from any channel of any kind
 	mixer_config: u8,
 	envelope_period: u16,
 	envelope_counter: u16,
@@ -63,12 +62,14 @@ impl Ym2149
 			channel_state: [false; 3],
 			noise_period: 0,
 			noise_counter: 0,
+			// Default to no output from any channel of any kind
 			mixer_config: 0x3f,
 			envelope_period: 0,
 			envelope_counter: 0,
 			envelope_shape: 0,
 			envelope_position: 64,
 			io_port: [0; 2],
+
 			noise_state: false,
 			noise_lfsr: 1,
 
@@ -131,12 +132,12 @@ impl Ym2149
 		// 32-bit writes must be split into two 16-bit ones
 		if data.len() == 4 {
 			self.write_address(address, &data[0..2]);
-			self.write_address(address + 2, &data[2..]);
+			self.write_address(address + 2, &data[2..4]);
 			return;
 		}
 		// The address to write determines if we're making a register selection or writing a register
 		match address {
-			// Register selection
+			// Register selection, only the bottom 4 bits of the selection are valid/used
 			0 => self.selected_register = data[0] & 0x0f,
 			// Register write - where we write depends on the register selection, so..
 			2 => match self.selected_register {
@@ -209,8 +210,8 @@ impl Ym2149
 			self.update_fsm();
 		}
 		// The internal state machine runs at 1/8th the device clock speed
-		// (presume that ~SEL is low, yielding f(T) = (f(Master) / 2) / (16 * TP)
-		// which simplifies to f(T) = f(Master) / (8 * TP))
+		// (presume that ~SEL is low, yielding `f(T) = (f(Master) / 2) / (16 * TP)`
+		// which simplifies to `f(T) = f(Master) / (8 * TP)``)
 		self.cycles_till_update = (self.cycles_till_update + 1) & 7;
 		true
 	}
@@ -277,9 +278,9 @@ impl Ym2149
 
 		let mut levels = [0; 3];
 		// Go through each channel and compute the volume level associated with it
-		for (channel, channel_enabled) in self.channel_state.into_iter().enumerate() {
+		for (channel, state) in self.channel_state.into_iter().enumerate() {
 			let level = {
-				if channel_enabled {
+				if state {
 					// Extract the level information from the channel
 					let raw_level = self.channels[channel].level;
 					// If it indicates the level is controlled by the envelope, use that
@@ -295,7 +296,7 @@ impl Ym2149
 				}
 			};
 			// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
-			let shift = if self.channels[channel].shift_required() {
+			let shift: usize = if self.channels[channel].shift_required() {
 				1
 			} else {
 				0
@@ -317,7 +318,7 @@ impl Ym2149
 			0 => {
 				// If the attack bit is set, the envelope level is the position value, otherwise
 				// the ramp runs backwards, so invert the position to make the level.
-				if (self.envelope_shape & 4) != 0 {
+				if (self.envelope_shape & 0x4) != 0 {
 					position
 				} else {
 					0x1f - position
@@ -348,7 +349,7 @@ impl Ym2149
 					}
 				}
 				// Otherwise, ramp the same as before
-				else if (self.envelope_shape & 4) != 0 {
+				else if (self.envelope_shape & 0x4) != 0 {
 					position
 				} else {
 					0x1f - position
@@ -372,7 +373,7 @@ impl Ym2149
 					}
 				}
 				// Ramp in the original direction regardless of alternate bit
-				else if (self.envelope_shape & 4) != 0 {
+				else if (self.envelope_shape & 0x4) != 0 {
 					position
 				} else {
 					0x1f - position
