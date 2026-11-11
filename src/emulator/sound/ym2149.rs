@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-#[allow(unused)]
+use std::ffi::c_void;
+
 pub struct Ym2149
 {
 	selected_register: u8,
@@ -188,6 +189,30 @@ impl Ym2149
 			// If it's not one of the known peripheral register addresses, ignore the write
 			_ => {},
 		}
+	}
+
+	pub fn clock_cycle(&mut self, this: *mut c_void) -> bool
+	{
+		// Reset the channel states if ready was true
+		if self.ready {
+			self.read = false;
+			for state in self.channel_state.iter_mut() {
+				*state = false;
+			}
+		}
+
+		// See if a sample should be ready this cycle or not
+		self.ready = unsafe { ym2149_advance_cycle(this) };
+
+		// If we should update the FSM in this cycle, do so
+		if self.cycles_till_update == 0 {
+			self.update_fsm();
+		}
+		// The internal state machine runs at 1/8th the device clock speed
+		// (presume that ~SEL is low, yielding f(T) = (f(Master) / 2) / (16 * TP)
+		// which simplifies to f(T) = f(Master) / (8 * TP))
+		self.cycles_till_update = (self.cycles_till_update + 1) & 7;
+		true
 	}
 
 	fn update_fsm(&mut self)
@@ -424,4 +449,8 @@ impl Ym2149Channel
 	{
 		self.edge_state = state;
 	}
+}
+
+unsafe extern "C" {
+	fn ym2149_advance_cycle(this: *mut c_void) -> bool;
 }
