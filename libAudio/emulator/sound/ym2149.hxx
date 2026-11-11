@@ -9,6 +9,8 @@
 #include <substrate/span>
 #include "../memoryMap.hxx"
 
+struct Ym2149;
+
 struct Ym2149Channel final
 {
 	void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept;
@@ -19,6 +21,8 @@ struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 private:
 	std::minstd_rand rng;
 	std::uniform_int_distribution<uint16_t> rngDistribution{};
+
+	Ym2149 *self{nullptr};
 
 	uint8_t selectedRegister{0U};
 	uint8_t cyclesTillUpdate{0U};

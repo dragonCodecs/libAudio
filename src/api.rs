@@ -286,22 +286,13 @@ pub unsafe fn ym2149_drop(ym2149: *mut Ym2149)
 }
 
 /// Allocate a new [`Ym2149Channel`] and "leak" that pointer into C++ land
-#[unsafe(no_mangle)]
-pub fn ym2149_channel_new() -> *mut Ym2149Channel
-{
-	let channel = Box::new(Ym2149Channel::default());
-	Box::into_raw(channel)
-}
-
-/// Consume the pointer for a [`Ym2149Channel`] allocated with `ym2149_channel_new`
-/// and deallocate it cleanly
 /// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
+/// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_drop(channel: *mut Ym2149Channel)
+pub unsafe fn ym2149_channel(ym2149: *mut Ym2149, index: usize) -> *mut Ym2149Channel
 {
-	let channel = unsafe { Box::from_raw(channel) };
-	drop(channel);
+	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
+	unsafe { ym2149.as_mut() }.channel_mut(index) as *mut Ym2149Channel
 }
 
 /// Using the pointer from `ym2149_channel_new`, reset the edge state for the channel

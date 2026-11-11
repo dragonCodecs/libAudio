@@ -11,8 +11,10 @@
 
 extern "C"
 {
-	Ym2149Channel *ym2149_channel_new();
-	void ym2149_channel_drop(Ym2149Channel *);
+	Ym2149 *ym2149_new();
+	void ym2149_drop(Ym2149 *);
+
+	Ym2149Channel *ym2149_channel(Ym2149 *, size_t);
 
 	void ym2149_channel_reset_edge_state(Ym2149Channel *, bool);
 	void ym2149_channel_write_frequency(Ym2149Channel *, uint8_t, bool);
@@ -29,17 +31,18 @@ ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency
 	clockedPeripheral_t<uint32_t>{clockFrequency}, rng{std::random_device{}()}, rngDistribution{0U, 1U},
 	clockManager{clockFrequency, sampleFrequency}
 {
-	for (auto &channel : channels)
+	self = ym2149_new();
+	for (auto [index, channel] : substrate::indexedIterator_t{channels})
 	{
-		channel = ym2149_channel_new();
+		channel = ym2149_channel(self, index);
 		channel->resetEdgeState(rng, rngDistribution);
 	}
 }
 
 ym2149_t::~ym2149_t() noexcept
 {
-	for (auto channel : channels)
-		ym2149_channel_drop(channel);
+	if (self)
+		ym2149_drop(self);
 }
 
 void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept

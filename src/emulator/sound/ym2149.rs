@@ -53,6 +53,11 @@ impl Ym2149
 			noise_lfsr: 1,
 		}
 	}
+
+	pub fn channel_mut(&mut self, index: usize) -> &mut Ym2149Channel
+	{
+		&mut self.channels[index]
+	}
 }
 
 impl Ym2149Channel
