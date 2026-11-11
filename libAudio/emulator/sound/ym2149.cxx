@@ -39,7 +39,7 @@ ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency
 	for (auto [index, channel] : substrate::indexedIterator_t{channels})
 	{
 		channel = ym2149_channel(self, index);
-		channel->resetEdgeState(rng, rngDistribution);
+		ym2149_channel_reset_edge_state(channel, static_cast<bool>(rngDistribution(rng)));
 	}
 }
 
@@ -114,9 +114,4 @@ void ym2149_t::forceChannelStates(const bool edgeState) noexcept
 {
 	for (auto &channel : channels)
 		ym2149_channel_force_edge_state(channel, edgeState);
-}
-
-void Ym2149Channel::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept
-{
-	ym2149_channel_reset_edge_state(this, static_cast<bool>(dist(rng)));
 }
