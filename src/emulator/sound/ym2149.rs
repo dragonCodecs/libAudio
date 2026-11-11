@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+const DC_ADJUSTMENT_LENGTH_LOG2: usize = 11;
+
 #[allow(unused)]
 pub struct Ym2149
 {
@@ -21,6 +23,11 @@ pub struct Ym2149
 
 	noise_state: bool,
 	noise_lfsr: u32,
+
+	// Have enough space for 2048 samples of adjustment history
+	dc_adjustment_buffer: [u16; 1 << DC_ADJUSTMENT_LENGTH_LOG2],
+	dc_adjustment_position: usize,
+	dc_adjustment_sum: u32,
 }
 
 #[derive(Default, Clone, Copy)]
@@ -51,6 +58,10 @@ impl Ym2149
 			io_port: [0; 2],
 			noise_state: false,
 			noise_lfsr: 1,
+
+			dc_adjustment_buffer: [0; 1 << DC_ADJUSTMENT_LENGTH_LOG2],
+			dc_adjustment_position: 0,
+			dc_adjustment_sum: 0,
 		}
 	}
 
@@ -286,6 +297,19 @@ impl Ym2149
 			},
 			_ => unreachable!(),
 		}
+	}
+
+	fn dc_adjust(&mut self, sample: u16) -> i16
+	{
+		// First adjust the DC ballancing adjustment sum
+		self.dc_adjustment_sum -= self.dc_adjustment_buffer[self.dc_adjustment_position] as u32;
+		self.dc_adjustment_sum += sample as u32;
+		// Then store this sample in the buffer
+		self.dc_adjustment_buffer[self.dc_adjustment_position] = sample;
+		// Update the adjustment position to make this a circular buffer
+		self.dc_adjustment_position = (self.dc_adjustment_position + 1) & (self.dc_adjustment_buffer.len() - 1);
+		// Now scale the sum and apply it to the sample to get the final sample
+		((sample as i32) - (self.dc_adjustment_sum >> DC_ADJUSTMENT_LENGTH_LOG2) as i32) as i16
 	}
 
 	pub fn channel_mut(&mut self, index: usize) -> &mut Ym2149Channel
