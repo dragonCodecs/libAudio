@@ -225,7 +225,7 @@ impl Ym2149
 			// Followed by noise generation for the channel
 			let noise_state = self.noise_state || ((self.mixer_config >> (index + 3)) & 1) != 0;
 			// Combine it all together and update the channel state
-			self.channel_state[index] = channel_state && noise_state;
+			self.channel_state[index] |= channel_state && noise_state;
 		}
 
 		// Step all the channels forward one internal cycle
