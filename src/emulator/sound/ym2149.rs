@@ -54,6 +54,55 @@ impl Ym2149
 		}
 	}
 
+	fn update_fsm(&mut self)
+	{
+		// Update the channel states to reflect the current chip state
+		for (index, channel) in self.channels.iter().enumerate() {
+			// Check to see the state for tone generation
+			let channel_state = channel.state(((self.mixer_config >> index) & 1) != 0);
+			// Followed by noise generation for the channel
+			let noise_state = self.noise_state || ((self.mixer_config >> (index + 3)) & 1) != 0;
+			// Combine it all together and update the channel state
+			self.channel_state[index] = channel_state && noise_state;
+		}
+
+		// Step all the channels forward one internal cycle
+		for channel in self.channels.iter_mut() {
+			channel.step();
+		}
+
+		// Step the envelope generator forward one internal cycle
+		// If the envelope counter exceeds the period of the envelope
+		self.envelope_counter += 1;
+		if self.envelope_counter >= self.envelope_period {
+			// Reset the counter
+			self.envelope_counter = 0;
+			// Update the envelope position (128 possible positions, the last 64 loop)
+			self.envelope_position += 1;
+			if self.envelope_position > 64 {
+				self.envelope_position = (self.envelope_position & 0x3f) | 0x40;
+			}
+		}
+
+		// Step the noise generator forward one internal cycle, noting it runs
+		// at half speed to everything else. If the noise counter exceeds the
+		// period of the noise to be generated
+		self.noise_counter += 1;
+		if self.noise_counter >= self.noise_period {
+			// Reset the counter
+			self.noise_counter = 0;
+			// Set the noise state if the 0th and 2nd bits of the noise LFSR are not the same value as each other
+			self.noise_state = ((self.noise_lfsr ^ (self.noise_lfsr >> 2)) & 1) != 0;
+			// Shift the new noise state in as single bit on the LHS of the noise LFSR
+			self.noise_lfsr >>= 1;
+			self.noise_lfsr |= if self.noise_state {
+				1 << 16
+			} else {
+				0
+			};
+		}
+	}
+
 	pub fn channel_mut(&mut self, index: usize) -> &mut Ym2149Channel
 	{
 		&mut self.channels[index]
