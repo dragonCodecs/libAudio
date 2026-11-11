@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-const DC_ADJUSTMENT_LENGTH_LOG2: usize = 11;
-
 #[allow(unused)]
 pub struct Ym2149
 {
@@ -24,6 +22,9 @@ pub struct Ym2149
 	noise_state: bool,
 	noise_lfsr: u32,
 
+	ready: bool,
+	read: bool,
+
 	// Have enough space for 2048 samples of adjustment history
 	dc_adjustment_buffer: [u16; 1 << DC_ADJUSTMENT_LENGTH_LOG2],
 	dc_adjustment_position: usize,
@@ -39,6 +40,16 @@ pub struct Ym2149Channel
 	pub level: u8,
 }
 
+const DC_ADJUSTMENT_LENGTH_LOG2: usize = 11;
+
+#[rustfmt::skip]
+const LOG_LEVEL: [u16; 32] = [
+	0x0032, 0x003c, 0x0047, 0x0055, 0x0065, 0x0078, 0x008f, 0x00aa,
+	0x00ca, 0x00f1, 0x011f, 0x0155, 0x0195, 0x01e2, 0x023e, 0x02aa,
+	0x032b, 0x03c5, 0x047c, 0x0555, 0x0657, 0x078a, 0x08f8, 0x0aaa,
+	0x0caf, 0x0f15, 0x11f0, 0x1555, 0x195e, 0x1e2b, 0x23e0, 0x2aaa,
+];
+
 impl Ym2149
 {
 	pub fn new() -> Self
@@ -46,6 +57,7 @@ impl Ym2149
 		Self {
 			selected_register: 0,
 			cycles_till_update: 0,
+
 			channels: [Ym2149Channel::default(); 3],
 			channel_state: [false; 3],
 			noise_period: 0,
@@ -58,6 +70,9 @@ impl Ym2149
 			io_port: [0; 2],
 			noise_state: false,
 			noise_lfsr: 1,
+
+			ready: false,
+			read: false,
 
 			dc_adjustment_buffer: [0; 1 << DC_ADJUSTMENT_LENGTH_LOG2],
 			dc_adjustment_position: 0,
@@ -222,6 +237,44 @@ impl Ym2149
 				0
 			};
 		}
+	}
+
+	pub fn sample(&mut self) -> i16
+	{
+		self.read = true;
+		// Grab the current envelope level
+		let envelope_level = self.compute_envelope_level();
+
+		let mut levels = [0; 3];
+		// Go through each channel and compute the volume level associated with it
+		for (channel, channel_enabled) in self.channel_state.into_iter().enumerate() {
+			let level = {
+				if channel_enabled {
+					// Extract the level information from the channel
+					let raw_level = self.channels[channel].level;
+					// If it indicates the level is controlled by the envelope, use that
+					if (raw_level & 0x10) != 0 {
+						envelope_level
+					}
+					// Otherwise, use the raw level for the channel, scaled appropriately
+					else {
+						raw_level << 1
+					}
+				} else {
+					0
+				}
+			};
+			// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
+			let shift = if self.channels[channel].shift_required() {
+				1
+			} else {
+				0
+			};
+			// Compute and store the final level using the logarithm table for the chip
+			levels[channel] = LOG_LEVEL[level as usize] >> shift;
+		}
+		// Compute and store the final level using the logarithm table for the chip
+		self.dc_adjust(levels.iter().sum())
 	}
 
 	fn compute_envelope_level(&self) -> u8
