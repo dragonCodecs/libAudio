@@ -99,6 +99,71 @@ impl Ym2149
 		}
 	}
 
+	pub fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		// 32-bit writes must be split into two 16-bit ones
+		if data.len() == 4 {
+			self.write_address(address, &data[0..2]);
+			self.write_address(address + 2, &data[2..]);
+			return;
+		}
+		// The address to write determines if we're making a register selection or writing a register
+		match address {
+			// Register selection
+			0 => self.selected_register = data[0] & 0x0f,
+			// Register write - where we write depends on the register selection, so..
+			2 => match self.selected_register {
+				// Channel frequency rough/fine adjustment
+				0..=5 => {
+					// Turn the register selection into a channel number and rough adjustment indicator
+					let channel = (self.selected_register >> 1) as usize;
+					let rough_adjustment = (self.selected_register & 1) != 0;
+					// Select the channel and write the adjustment
+					self.channels[channel].write_frequency(data[0], rough_adjustment);
+				},
+				// Noise frequency adjustment
+				6 => {
+					// Register is actually only 5 bit, so discard the upper 3
+					self.noise_period = data[0] & 0x1f
+				},
+				// Mixer configuration adjustment
+				7 => self.mixer_config = data[0],
+				// Channel level adjustment
+				8..=10 => {
+					// Turn the register selection into a channel number
+					let channel = (self.selected_register - 8) as usize;
+					// Adjust that channel's levels (only 5 bits valid, discard the upper 3)
+					self.channels[channel].level = data[0] & 0x1f;
+				},
+				// Envelope frequency fine adjustment
+				11 => {
+					self.envelope_period &= 0xff00;
+					self.envelope_period |= data[0] as u16;
+				},
+				// Envelope frequency rough adjustment
+				12 => {
+					self.envelope_position &= 0x00ff;
+					self.envelope_period |= (data[0] as u16) << 8;
+				},
+				// Envelope shape adjustment
+				13 => {
+					self.envelope_shape = data[0] & 0x0f;
+					// Reset where we are in the envelope as a result
+					self.envelope_position = 0;
+				},
+				// I/O port data
+				14 | 15 => {
+					// Turn the register selection into a port number (repesenting A vs B)
+					let port = (self.selected_register & 1) as usize;
+					self.io_port[port] = data[0];
+				},
+				_ => unreachable!(),
+			},
+			// If it's not one of the known peripheral register addresses, ignore the write
+			_ => {},
+		}
+	}
+
 	fn update_fsm(&mut self)
 	{
 		// Update the channel states to reflect the current chip state
