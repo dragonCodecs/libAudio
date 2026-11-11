@@ -5,37 +5,9 @@
 #include <type_traits>
 #include "loader.hxx"
 #include "atariASCII.hxx"
-#include "../conversions.hxx"
 #include "../string.hxx"
 #include "console.hxx"
-
-using namespace libAudio::conversions;
-
-constexpr std::array<char, 4> typeTitle{'T', 'I', 'T', 'L'};
-constexpr std::array<char, 4> typeComposer{'C', 'O', 'M', 'M'};
-constexpr std::array<char, 4> typeRipper{'R', 'I', 'P', 'P'};
-constexpr std::array<char, 4> typeConverter{'C', 'O', 'N', 'V'};
-constexpr std::array<char, 4> typeTuneNames{'#', '!', 'S', 'N'};
-constexpr std::array<char, 2> typeTuneCount{'#', '#'};
-constexpr std::array<char, 2> typeTuneDefault{'!', '#'};
-constexpr std::array<char, 2> typeTimerA{'T', 'A'};
-constexpr std::array<char, 2> typeTimerB{'T', 'B'};
-constexpr std::array<char, 2> typeTimerC{'T', 'C'};
-constexpr std::array<char, 2> typeTimerD{'T', 'D'};
-constexpr std::array<char, 2> typeTimerVBL{'!', 'V'};
-constexpr std::array<char, 4> typeYear{'Y', 'E', 'A', 'R'};
-constexpr std::array<char, 4> typeTime{'T', 'I', 'M', 'E'};
-constexpr std::array<char, 4> typeFrames{'F', 'R', 'M', 'S'};
-constexpr std::array<char, 4> typeFlags{'F', 'L', 'A', 'G'};
-constexpr std::array<char, 4> typeEnd{'H', 'D', 'N', 'S'};
-
-template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeB < sizeA, bool>
-	operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
-	{ return std::equal(b.begin(), b.end(), a.begin()); }
-
-template<typename T, size_t sizeA, size_t sizeB> std::enable_if_t<sizeA < sizeB, bool>
-	operator ==(const std::array<T, sizeA> &a, const std::array<T, sizeB> &b) noexcept
-	{ return std::equal(a.begin(), a.end(), b.begin()); }
+#include <substrate/indexed_iterator>
 
 extern "C"
 {
@@ -44,6 +16,21 @@ extern "C"
 
 	SndhDecruncher *sndh_loader_decruncher(SndhLoader *);
 	sndhEntryPoints_t *sndh_loader_entry_points(SndhLoader *);
+	const SndhMetadata *sndh_loader_metadata(SndhLoader *);
+
+	stringSlice_t sndh_metadata_title(const SndhMetadata *);
+	stringSlice_t sndh_metadata_artist(const SndhMetadata *);
+	stringSlice_t sndh_metadata_ripper(const SndhMetadata *);
+	stringSlice_t sndh_metadata_converter(const SndhMetadata *);
+	uint8_t sndh_metadata_tune_count(const SndhMetadata *);
+	uint8_t sndh_metadata_default_tune(const SndhMetadata *);
+	uint8_t sndh_metadata_timer_frequency(const SndhMetadata *);
+	uint8_t sndh_metadata_year(const SndhMetadata *);
+	char sndh_metadata_timer(const SndhMetadata *);
+	slice_t<uint16_t> sndh_metadata_tune_times(const SndhMetadata *);
+	slice_t<uint32_t> sndh_metadata_tune_frame_counts(const SndhMetadata *);
+	size_t sndh_metadata_tune_names_count(const SndhMetadata *);
+	stringSlice_t sndh_metadata_tune_name(const SndhMetadata *, size_t);
 
 	void console_error(const char *message)
 	{
@@ -58,9 +45,7 @@ sndhLoader_t::sndhLoader_t(const fd_t &file)
 		throw std::exception{};
 	_data = {sndh_loader_decruncher(_loader)};
 	_entryPoints = *sndh_loader_entry_points(_loader);
-
-	if (!readMeta())
-		throw std::exception{};
+	_metadata = {sndh_loader_metadata(_loader)};
 }
 
 sndhLoader_t::~sndhLoader_t()
@@ -69,132 +54,23 @@ sndhLoader_t::~sndhLoader_t()
 		sndh_loader_drop(_loader);
 }
 
-std::string readString(sndhDecruncher_t &file)
+sndhMetadata_t::sndhMetadata_t(const SndhMetadata *metadata)
 {
-	std::string result{};
-	uint8_t value{255U};
-	while (value != 0U)
-	{
-		if (!file.read(value))
-			throw std::exception{};
-		result += atariChars[value];
-	}
-	// If there are trailing NUL's after the string, chew through them
-	while (file.peak() == '\0')
-	{
-		if (!file.read(value))
-			throw std::exception{};
-	}
-	return result;
-}
-
-void readString(sndhDecruncher_t &file, std::unique_ptr<char []> &dst)
-{
-	const std::string result{readString(file)};
-	copyComment(dst, result.data());
-}
-
-bool sndhLoader_t::readMeta()
-{
-	std::array<char, 4U> tagType{};
-	while (tagType != typeEnd)
-	{
-		if (!_data.read(tagType))
-			return false;
-		else if (tagType == typeTitle)
-			readString(_data, _metadata.title);
-		else if (tagType == typeComposer)
-			readString(_data, _metadata.artist);
-		else if (tagType == typeRipper)
-			readString(_data, _metadata.ripper);
-		else if (tagType == typeConverter)
-			readString(_data, _metadata.converter);
-		else if (tagType == typeTuneCount)
-		{
-			auto count = readString(_data);
-			count.insert(0U, tagType.data() + 2, 2U);
-			_metadata.tuneCount = toInt_t<uint8_t>{count.c_str()}.fromInt();
-			_metadata.tuneTimes = {_metadata.tuneCount};
-			_metadata.tuneNames = {_metadata.tuneCount};
-		}
-		else if (tagType == typeTuneNames)
-		{
-			if (!_metadata.tuneTimes.valid())
-				return false;
-			for (auto &tuneName: _metadata.tuneNames)
-				readString(_data, tuneName);
-		}
-		else if (tagType == typeTuneDefault)
-		{
-			auto number = readString(_data);
-			number.insert(0U, tagType.data() + 2, 2U);
-			const toInt_t<uint8_t> converter{number.c_str()};
-			// Make sure the value is a valid number before using it
-			if (converter.isInt())
-				_metadata.defaultTune = converter.fromInt();
-		}
-		else if (tagType == typeTimerA || tagType == typeTimerB || tagType == typeTimerC ||
-			tagType == typeTimerD || tagType == typeTimerVBL)
-		{
-			_metadata.timer = tagType[1];
-			auto frequency = readString(_data);
-			frequency.insert(0U, tagType.data() + 2, 2U);
-			_metadata.timerFrequency = toInt_t<uint16_t>{frequency.c_str()}.fromInt();
-		}
-		else if (tagType == typeYear)
-		{
-			std::string year{readString(_data)};
-			_metadata.year = toInt_t<uint32_t>{year.c_str()}.fromInt();
-		}
-		else if (tagType == typeTime)
-		{
-			if (!_metadata.tuneTimes.valid())
-				return false;
-			for (auto &time : _metadata.tuneTimes)
-			{
-				if (!_data.readBE(time))
-					return false;
-			}
-		}
-		else if (tagType == typeFrames)
-		{
-			if (_metadata.tuneFrameCounts.valid())
-				return false;
-			// If the tune count is 0 (because we never saw ##) then assume 1 tune
-			const auto tunes{_metadata.tuneCount == 0U ? 1U : _metadata.tuneCount};
-			_metadata.tuneFrameCounts = {tunes};
-			if (!_metadata.tuneFrameCounts.valid())
-				return false;
-			for (auto &frames: _metadata.tuneFrameCounts)
-			{
-				if (!_data.readBE(frames))
-					return false;
-			}
-		}
-		else if (tagType == typeFlags)
-		{
-			// For now just read and discard the flags..
-			char flag{};
-			if (!_data.read(flag) || flag != '~')
-				return false;
-			while (flag != '\0')
-			{
-				if (!_data.read(flag))
-					return false;
-			}
-			// If there are trailing NUL's after the flags, chew through them
-			while (_data.peak() == '\0')
-			{
-				if (!_data.read(flag))
-					return false;
-			}
-		}
-		// If none of the above tags matched, we're in a SNDH v1.1 file and came to the end of the header
-		else if (tagType != typeEnd)
-			// Put the non-header data back and get out of here
-			return _data.seekRel(static_cast<off_t>(-4));
-	}
-	return true;
+	// Extract all the metadata from the Rust side
+	title = sndh_metadata_title(metadata);
+	artist = sndh_metadata_artist(metadata);
+	ripper = sndh_metadata_ripper(metadata);
+	converter = sndh_metadata_converter(metadata);
+	tuneCount = sndh_metadata_tune_count(metadata);
+	defaultTune = sndh_metadata_default_tune(metadata);
+	timerFrequency = sndh_metadata_timer_frequency(metadata);
+	year = sndh_metadata_year(metadata);
+	timer = sndh_metadata_timer(metadata);
+	tuneTimes = sndh_metadata_tune_times(metadata);
+	tuneFrameCounts = sndh_metadata_tune_frame_counts(metadata);
+	tuneNames = {sndh_metadata_tune_names_count(metadata)};
+	for (auto [index, tuneName] : substrate::indexedIterator_t{tuneNames})
+		tuneName = sndh_metadata_tune_name(metadata, index);
 }
 
 // Defer copying the SNDH data to the Atari ST's RAM to the emulation itself

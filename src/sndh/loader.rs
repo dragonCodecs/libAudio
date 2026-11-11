@@ -17,7 +17,6 @@ pub struct SndhEntryPoints
 	play: u32,
 }
 
-#[allow(unused)]
 pub struct SndhMetadata
 {
 	title: String,
@@ -34,7 +33,7 @@ pub struct SndhMetadata
 	tune_names: Box<[String]>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 #[repr(u8)]
 pub enum SndhTimer
 {
@@ -228,6 +227,66 @@ impl SndhMetadata
 		}
 		Ok(())
 	}
+
+	pub fn title(&self) -> &str
+	{
+		&self.title
+	}
+
+	pub fn artist(&self) -> &str
+	{
+		&self.artist
+	}
+
+	pub fn ripper(&self) -> &str
+	{
+		&self.ripper
+	}
+
+	pub fn converter(&self) -> &str
+	{
+		&self.converter
+	}
+
+	pub fn tune_count(&self) -> u8
+	{
+		self.tune_count
+	}
+
+	pub fn default_tune(&self) -> u8
+	{
+		self.default_tune
+	}
+
+	pub fn timer_frequency(&self) -> u16
+	{
+		self.timer_frequency
+	}
+
+	pub fn year(&self) -> u32
+	{
+		self.year
+	}
+
+	pub fn timer(&self) -> SndhTimer
+	{
+		self.timer
+	}
+
+	pub fn tune_times(&self) -> &[u16]
+	{
+		&self.tune_times
+	}
+
+	pub fn tune_frame_counts(&self) -> &[u32]
+	{
+		&self.tune_frame_counts
+	}
+
+	pub fn tune_names(&self) -> &[String]
+	{
+		&self.tune_names
+	}
 }
 
 impl Default for SndhMetadata
@@ -295,18 +354,23 @@ impl SndhLoader
 		if magic != TYPE_HEADER {
 			return Err(Error::InvalidSNDH);
 		}
+		let metadata = SndhMetadata::try_from(&mut decruncher)?;
 		let this = Self {
 			decruncher,
 			entry_points,
-			metadata: SndhMetadata::default(),
+			metadata,
 		};
-
 		Ok(this)
 	}
 
 	pub fn entry_points(&self) -> &SndhEntryPoints
 	{
 		&self.entry_points
+	}
+
+	pub fn metadata(&self) -> &SndhMetadata
+	{
+		&self.metadata
 	}
 
 	pub fn decruncher_mut(&mut self) -> &mut SndhDecruncher

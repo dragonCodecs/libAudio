@@ -41,13 +41,13 @@ sndh_t::sndh_t(fd_t &&fd) noexcept : audioFile_t{audioType_t::sndh, std::move(fd
 
 void loadFileInfo(fileInfo_t &info, sndhMetadata_t &metadata) noexcept
 {
-	info.title(std::move(metadata.title));
-	info.artist(std::move(metadata.artist));
+	info.title(metadata.title.clone());
+	info.artist(metadata.artist.clone());
 	// If the song includes frame-based lenght data for the tune we'll play, populate that
-	if (metadata.tuneFrameCounts)
+	if (!metadata.tuneFrameCounts.isEmpty())
 		info.totalTime(metadata.tuneFrameCounts[metadata.defaultTune - 1U] / metadata.timerFrequency);
 	// If the song includes length data for the tune we'll play, populate that
-	else if (metadata.tuneTimes)
+	else if (!metadata.tuneTimes.isEmpty())
 		info.totalTime(metadata.tuneTimes[metadata.defaultTune - 1U]);
 
 	// The playback engine is written to generate data in 16-bit, one channel
@@ -75,7 +75,7 @@ sndh_t *sndh_t::openR(const char *const fileName) noexcept try
 	if (info.totalTime())
 	{
 		// If the total play time is set by the frame time info, then use that more directly to calc this
-		if (metadata.tuneFrameCounts)
+		if (!metadata.tuneFrameCounts.isEmpty())
 		{
 			// Extract the frame count for the tune to play
 			ctx.totalPlaybackSamples = metadata.tuneFrameCounts[metadata.defaultTune - 1U];

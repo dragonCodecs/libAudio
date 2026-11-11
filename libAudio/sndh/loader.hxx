@@ -15,6 +15,7 @@ using substrate::fd_t;
 using substrate::fixedVector_t;
 
 struct SndhLoader;
+struct SndhMetadata;
 
 struct sndhEntryPoints_t final
 {
@@ -23,20 +24,55 @@ struct sndhEntryPoints_t final
 	uint32_t play;
 };
 
+struct stringSlice_t
+{
+	uint8_t *ptr;
+	size_t len;
+
+	[[nodiscard]] std::unique_ptr<char []> clone() const
+	{
+		auto result = std::make_unique<char []>(len + 1);
+		std::memcpy(result.get(), ptr, len);
+		result[len] = '\0';
+		return result;
+	}
+};
+
+template<typename T> struct slice_t
+{
+	T *ptr;
+	size_t len;
+
+	[[nodiscard]] bool isEmpty() const
+	{
+		return ptr == nullptr || len == 0U;
+	}
+
+	T &operator [](const size_t index) const
+	{
+		return ptr[index];
+	}
+};
+
 struct sndhMetadata_t final
 {
-	std::unique_ptr<char []> title;
-	std::unique_ptr<char []> artist;
-	std::unique_ptr<char []> ripper;
-	std::unique_ptr<char []> converter;
+	stringSlice_t title;
+	stringSlice_t artist;
+	stringSlice_t ripper;
+	stringSlice_t converter;
 	uint8_t tuneCount;
 	uint8_t defaultTune{1U};
 	uint16_t timerFrequency;
 	uint32_t year;
 	char timer; // A, B, C, D or V(BL).
-	fixedVector_t<uint16_t> tuneTimes;
-	fixedVector_t<uint32_t> tuneFrameCounts;
-	fixedVector_t<std::unique_ptr<char []>> tuneNames;
+	slice_t<uint16_t> tuneTimes;
+	slice_t<uint32_t> tuneFrameCounts;
+	fixedVector_t<stringSlice_t> tuneNames;
+
+	sndhMetadata_t() = default;
+	sndhMetadata_t(const SndhMetadata *metadata);
+
+
 };
 
 struct sndhLoader_t final
@@ -46,8 +82,6 @@ private:
 	sndhDecruncher_t _data{};
 	sndhEntryPoints_t _entryPoints{};
 	sndhMetadata_t _metadata{};
-
-	bool readMeta();
 
 public:
 	sndhLoader_t(const fd_t &file);
