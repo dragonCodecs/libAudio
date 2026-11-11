@@ -9,12 +9,37 @@
 #include <substrate/indexed_iterator>
 #include "ym2149.hxx"
 
+extern "C"
+{
+	Ym2149Channel *ym2149_channel_new();
+	void ym2149_channel_drop(Ym2149Channel *);
+
+	void ym2149_channel_reset_edge_state(Ym2149Channel *, bool);
+	void ym2149_channel_write_frequency(Ym2149Channel *, uint8_t, bool);
+	uint8_t ym2149_channel_read_frequency(const Ym2149Channel *, bool);
+	void ym2149_channel_step(Ym2149Channel *);
+	bool ym2149_channel_state(const Ym2149Channel *, bool);
+	bool ym2149_channel_shift_required(const Ym2149Channel *);
+	void ym2149_channel_force_edge_state(Ym2149Channel *, bool);
+	uint8_t ym2149_channel_get_level(Ym2149Channel *);
+	void ym2149_channel_set_level(Ym2149Channel *, uint8_t);
+}
+
 ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency) noexcept :
 	clockedPeripheral_t<uint32_t>{clockFrequency}, rng{std::random_device{}()}, rngDistribution{0U, 1U},
 	clockManager{clockFrequency, sampleFrequency}
 {
 	for (auto &channel : channels)
-		channel.resetEdgeState(rng, rngDistribution);
+	{
+		channel = ym2149_channel_new();
+		channel->resetEdgeState(rng, rngDistribution);
+	}
+}
+
+ym2149_t::~ym2149_t() noexcept
+{
+	for (auto channel : channels)
+		ym2149_channel_drop(channel);
 }
 
 void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
@@ -39,7 +64,7 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 			// Turn the register selection into a channel number and rough adjustment indicator
 			const auto channel{static_cast<size_t>(selectedRegister >> 1U)};
 			const auto roughAdjustment{(selectedRegister & 1U) != 0U};
-			data[0U] = channels[channel].readFrequency(roughAdjustment);
+			data[0U] = ym2149_channel_read_frequency(channels[channel], roughAdjustment);
 			break;
 		}
 		// Current noise frequency
@@ -57,7 +82,7 @@ void ym2149_t::readAddress(const uint32_t address, substrate::span<uint8_t> data
 		{
 			// Turn the register selection into a channel number
 			const size_t channel{selectedRegister - 8U};
-			data[0U] = channels[channel].level;
+			data[0U] = ym2149_channel_get_level(channels[channel]);
 			break;
 		}
 		// Envelope frequency fine adjustment
@@ -116,7 +141,7 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 					const auto channel{static_cast<size_t>(selectedRegister >> 1U)};
 					const auto roughAdjustment{(selectedRegister & 1U) != 0U};
 					// Select the channel and write the adjustment
-					channels[channel].writeFrequency(data[0U], roughAdjustment);
+					ym2149_channel_write_frequency(channels[channel], data[0U], roughAdjustment);
 					break;
 				}
 				// Noise frequency adjustment
@@ -136,7 +161,7 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 					// Turn the register selection into a channel number
 					const size_t channel{selectedRegister - 8U};
 					// Adjust that channel's levels (only 5 bits valid, discard the upper 3)
-					channels[channel].level = data[0U] & 0x1fU;
+					ym2149_channel_set_level(channels[channel], data[0U] & 0x1fU);
 					break;
 				}
 				// Envelope frequency fine adjustment
@@ -198,7 +223,7 @@ void ym2149_t::updateFSM() noexcept
 	for (const auto &[idx, channel] : substrate::indexedIterator_t{channels})
 	{
 		// Check to see the state for tone generation
-		const auto channelToneState{channel.state((mixerConfig >> idx) & 1U)};
+		const auto channelToneState{ym2149_channel_state(channel, (mixerConfig >> idx) & 1U)};
 		// Followed by noise generation for the channel
 		const auto channelNoiseState{noiseState || bool((mixerConfig >> (idx + 3U)) & 1U)};
 		// Combine it all together and update the channel state
@@ -207,7 +232,7 @@ void ym2149_t::updateFSM() noexcept
 
 	// Step all the channels forward one internal cycle
 	for (auto &channel : channels)
-		channel.step();
+		ym2149_channel_step(channel);
 
 	// Step the envelope generator forward one internal cycle
 	// If the envelope counter exceeds the period of the envelope
@@ -298,7 +323,7 @@ int16_t ym2149_t::sample() noexcept
 				if (channelEnabled)
 				{
 					// Extract the level information from the channel
-					const auto rawLevel{channels[index].level};
+					const auto rawLevel{ym2149_channel_get_level(channels[index])};
 					// If it indicates the level is controlled by the envelope, use that
 					if (rawLevel & 0x10U)
 						return envelopeLevel;
@@ -310,7 +335,7 @@ int16_t ym2149_t::sample() noexcept
 			}(channel, state)
 		};
 		// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
-		const auto shift{static_cast<size_t>(channels[channel].shiftRequired())};
+		const auto shift{static_cast<size_t>(ym2149_channel_shift_required(channels[channel]))};
 		// Compute and store the final level using the logarithm table for the chip
 		levels[channel] = ym2149::logLevel[level] >> shift;
 	}
@@ -395,54 +420,10 @@ int16_t ym2149_t::dcAdjust(uint16_t sample) noexcept
 void ym2149_t::forceChannelStates(const bool edgeState) noexcept
 {
 	for (auto &channel : channels)
-		channel.forceEdgeState(edgeState);
+		ym2149_channel_force_edge_state(channel, edgeState);
 }
 
-namespace ym2149
+void Ym2149Channel::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept
 {
-	void channel_t::resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept
-		{ edgeState = static_cast<bool>(dist(rng)); }
-
-	void channel_t::writeFrequency(const uint8_t value, const bool roughAdjust) noexcept
-	{
-		if (roughAdjust)
-		{
-			period &= 0x000ffU;
-			// Only 4 bits valid, throw away the upper 4
-			period |= (value & 0x0fU) << 8U;
-		}
-		else
-		{
-			period &= 0xff00U;
-			period |= value;
-		}
-	}
-
-	uint8_t channel_t::readFrequency(const bool roughAdjust) const noexcept
-	{
-		if (roughAdjust)
-			return static_cast<uint8_t>(period >> 8U);
-		else
-			return static_cast<uint8_t>(period);
-	}
-
-	void channel_t::step() noexcept
-	{
-		// If our channel's period counter exceeds the period of the current tone frequency
-		if (++counter >= period)
-		{
-			// Reset the counter and update the edge states
-			counter = 0U;
-			edgeState = !edgeState;
-		}
-	}
-
-	bool channel_t::state(const bool toneInhibit) const noexcept
-		{ return edgeState || toneInhibit; }
-
-	bool channel_t::shiftRequired() const noexcept
-		{ return period <= 1U; }
-
-	void channel_t::forceEdgeState(const bool state) noexcept
-		{ edgeState = state; }
-} // namespace ym2149
+	ym2149_channel_reset_edge_state(this, static_cast<bool>(dist(rng)));
+}

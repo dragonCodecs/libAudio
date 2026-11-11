@@ -9,29 +9,10 @@
 #include <substrate/span>
 #include "../memoryMap.hxx"
 
-namespace ym2149
+struct Ym2149Channel final
 {
-	struct channel_t final
-	{
-	private:
-		uint16_t period{0U};
-		uint16_t counter{0U};
-		bool edgeState;
-
-	public:
-		uint8_t level{0U};
-
-		void writeFrequency(uint8_t value, bool roughAdjust) noexcept;
-		uint8_t readFrequency(bool roughAdjust) const noexcept;
-
-		void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept;
-		void step() noexcept;
-		[[nodiscard]] bool state(bool toneInhibit) const noexcept;
-		[[nodiscard]] bool shiftRequired() const noexcept;
-
-		void forceEdgeState(bool state) noexcept;
-	};
-} // namespace ym2149
+	void resetEdgeState(std::minstd_rand &rng, std::uniform_int_distribution<uint16_t> &dist) noexcept;
+};
 
 struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 {
@@ -42,7 +23,7 @@ private:
 	uint8_t selectedRegister{0U};
 	uint8_t cyclesTillUpdate{0U};
 
-	std::array<ym2149::channel_t, 3U> channels{};
+	std::array<Ym2149Channel *, 3U> channels{};
 	std::array<bool, 3U> channelState{};
 	uint8_t noisePeriod{0U};
 	uint8_t noiseCounter{0U};
@@ -80,7 +61,7 @@ public:
 	ym2149_t(ym2149_t &&) noexcept = delete;
 	ym2149_t &operator =(const ym2149_t &) noexcept = delete;
 	ym2149_t &operator =(ym2149_t &&) noexcept = delete;
-	~ym2149_t() noexcept final = default;
+	~ym2149_t() noexcept final;
 
 	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] bool sampleReady() const noexcept;
