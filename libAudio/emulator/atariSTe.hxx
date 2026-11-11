@@ -32,7 +32,7 @@ public:
 	atariSTe_t() noexcept;
 
 	void configureTimer(char timer, uint16_t timerFrequency) noexcept;
-	[[nodiscard]] bool copyToRAM(sndhDecruncher_t &data) noexcept;
+	[[nodiscard]] bool copyToRAM(SndhDecruncher &data) noexcept;
 	[[nodiscard]] bool init(uint16_t subtune) noexcept;
 	[[nodiscard]] bool exit() noexcept;
 

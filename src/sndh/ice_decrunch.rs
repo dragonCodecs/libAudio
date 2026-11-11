@@ -145,6 +145,20 @@ impl SndhDecruncher
 		}
 	}
 
+	pub fn read_slice(&mut self, value: &mut [u8]) -> Result<(), Error>
+	{
+		let length = value.len();
+		if self.offset + length > self.data.len() {
+			Err(Error::NoMoreData)
+		} else {
+			// This is safe because we ensure the amount of data copied in matches the size of T
+			// and we guarantee that T is Copy, so memcpy()-safe
+			value.copy_from_slice(&self.data[self.offset..self.offset + length]);
+			self.offset += length;
+			Ok(())
+		}
+	}
+
 	pub fn read_be_u16(&mut self) -> Result<u16, Error>
 	{
 		let mut data = [0; 2];
@@ -205,19 +219,9 @@ impl SndhDecruncher
 		self.offset = 0;
 	}
 
-	pub fn data(&self) -> &[u8]
+	pub fn length(&self) -> usize
 	{
-		&self.data
-	}
-
-	pub fn data_mut(&mut self) -> &mut [u8]
-	{
-		&mut self.data
-	}
-
-	pub fn offset(&self) -> &usize
-	{
-		&self.offset
+		self.data.len()
 	}
 }
 

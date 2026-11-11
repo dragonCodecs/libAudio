@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use core::slice;
 use std::ffi::c_char;
 use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
@@ -16,6 +17,15 @@ pub struct Slice<T>
 	len: usize,
 }
 
+#[repr(C)]
+pub struct MutSlice<T>
+where
+	T: Sized + Copy,
+{
+	ptr: *mut T,
+	len: usize,
+}
+
 impl<T> Slice<T>
 {
 	pub fn from_slice(data: &[T]) -> Self
@@ -27,36 +37,52 @@ impl<T> Slice<T>
 	}
 }
 
-/// Using the pointer from `sndh_decruncher_new`, get a pointer to the data buffer containing
-/// the decrunched SNDH file data
-/// # Safety
-/// As long as the pointer given is from `sndh_decrunch_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn sndh_decruncher_data(decruncher: *mut SndhDecruncher) -> *mut u8
+impl<T> MutSlice<T>
+where
+	T: Sized + Copy,
 {
-	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	unsafe { decruncher.as_mut() }.data_mut().as_mut_ptr()
+	pub fn as_mut_slice(&mut self) -> &mut [T]
+	{
+		unsafe { slice::from_raw_parts_mut(self.ptr, self.len) }
+	}
 }
 
-/// Using the pointer from `sndh_decruncher_new`, get the length of the data buffer containing
+/// Using the pointer from `sndh_loader_decruncher`, get the length of the data buffer containing
 /// the decrunched SNDH file data
 /// # Safety
-/// As long as the pointer given is from `sndh_decrunch_new`, this is safe
+/// As long as the pointer given is from `sndh_loader_decruncher`, this is safe
 #[unsafe(no_mangle)]
 pub unsafe fn sndh_decruncher_length(decruncher: *mut SndhDecruncher) -> usize
 {
 	let decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	unsafe { decruncher.as_ref() }.data().len()
+	unsafe { decruncher.as_ref() }.length()
 }
 
-/// Using the pointer from `sndh_decruncher_new`, get a pointer to the read offset in the decrunched SNDH file data
+/// Using the pointer from `sndh_loader_decruncher`, seek the read position back to the start of the
+/// decrunched SNDH file data
 /// # Safety
-/// As long as the pointer given is from `sndh_decrunch_new`, this is safe
+/// As long as the pointer given is from `sndh_loader_decruncher`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn sndh_decruncher_offset(decruncher: *mut SndhDecruncher) -> *const usize
+pub unsafe fn sndh_decruncher_seek_start(decruncher: *mut SndhDecruncher)
 {
-	let decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	unsafe { decruncher.as_ref().offset() as *const usize }
+	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
+	unsafe { decruncher.as_mut() }.seek_start()
+}
+
+/// Using the pointer from `sndh_loader_decruncher`, read a span of data from the SNDH file data
+/// # Safety
+/// As long as the pointer given is from `sndh_loader_decruncher`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn sndh_decruncher_read(decruncher: *mut SndhDecruncher, mut slice: MutSlice<u8>) -> bool
+{
+	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
+	match unsafe { decruncher.as_mut() }.read_slice(slice.as_mut_slice()) {
+		Ok(()) => true,
+		Err(error) => {
+			console::error(format!("{error}"));
+			false
+		},
+	}
 }
 
 /// Allocate a new [`SndhLoader`] and "leak" that pointer into C++ land

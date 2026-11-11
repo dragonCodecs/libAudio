@@ -71,15 +71,13 @@ struct sndhMetadata_t final
 
 	sndhMetadata_t() = default;
 	sndhMetadata_t(const SndhMetadata *metadata);
-
-
 };
 
 struct sndhLoader_t final
 {
 private:
 	SndhLoader *_loader{nullptr};
-	sndhDecruncher_t _data{};
+	SndhDecruncher *_data{nullptr};
 	sndhEntryPoints_t _entryPoints{};
 	sndhMetadata_t _metadata{};
 

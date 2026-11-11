@@ -242,14 +242,14 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 }
 
 // Copy the contents of a decrunched SNDH into the ST's RAM
-bool atariSTe_t::copyToRAM(sndhDecruncher_t &data) noexcept
+bool atariSTe_t::copyToRAM(SndhDecruncher &data) noexcept
 {
 	stRAM_t &systemRAM{*dynamic_cast<stRAM_t *>(addressMap[{0x000000U, 0x800000U}].get())};
 	// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
 	// But that also excludes the heap and stack spaces
 	auto destination{systemRAM.subspan(0U, stackBase).subspan(0x010000U, data.length())};
 	// Now make sure we're at the start of the data and copy it all in
-	return data.head() && data.read(destination);
+	return data.seek_start() && data.read(destination);
 }
 
 bool atariSTe_t::init(const uint16_t subtune) noexcept

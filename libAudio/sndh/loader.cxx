@@ -43,7 +43,7 @@ sndhLoader_t::sndhLoader_t(const fd_t &file)
 	_loader = sndh_loader_new(file);
 	if (_loader == nullptr)
 		throw std::exception{};
-	_data = {sndh_loader_decruncher(_loader)};
+	_data = sndh_loader_decruncher(_loader);
 	_entryPoints = *sndh_loader_entry_points(_loader);
 	_metadata = {sndh_loader_metadata(_loader)};
 }
@@ -75,4 +75,4 @@ sndhMetadata_t::sndhMetadata_t(const SndhMetadata *metadata)
 
 // Defer copying the SNDH data to the Atari ST's RAM to the emulation itself
 bool sndhLoader_t::copyToRAM(atariSTe_t &emulator) noexcept
-	{ return emulator.copyToRAM(_data); }
+	{ return emulator.copyToRAM(*_data); }

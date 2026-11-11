@@ -1,16 +1,28 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2022-2023 Rachel Mant <git@dragonmux.network>
 #include "iceDecrunch.hxx"
+#include "loader.hxx"
 
 extern "C"
 {
-	uint8_t *sndh_decruncher_data(SndhDecruncher *);
-	size_t sndh_decruncher_length(SndhDecruncher *);
-	size_t *sndh_decruncher_offset(SndhDecruncher *);
+	size_t sndh_decruncher_length(const SndhDecruncher *);
+	void sndh_decruncher_seek_start(SndhDecruncher *);
+	bool sndh_decruncher_read(SndhDecruncher *, slice_t<uint8_t>);
 }
 
-sndhDecruncher_t::sndhDecruncher_t(SndhDecruncher *decruncher) : _decruncher{decruncher}
+size_t SndhDecruncher::length() const
 {
-	_data = {sndh_decruncher_data(_decruncher), sndh_decruncher_length(_decruncher)};
-	_offset = sndh_decruncher_offset(_decruncher);
+	return sndh_decruncher_length(this);
+}
+
+bool SndhDecruncher::seek_start()
+{
+	sndh_decruncher_seek_start(this);
+	return true;
+}
+
+bool SndhDecruncher::read(substrate::span<uint8_t> span)
+{
+	slice_t<uint8_t> slice{span.data(), span.size()};
+	return sndh_decruncher_read(this, slice);
 }
