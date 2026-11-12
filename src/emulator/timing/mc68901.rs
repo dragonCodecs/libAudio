@@ -420,4 +420,7 @@ unsafe extern "C" {
 }
 
 #[cfg(test)]
-mod tests;
+mod tests
+{
+	include!("tests/mc68901.rs");
+}
