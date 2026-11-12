@@ -170,7 +170,7 @@ impl Ym2149
 				},
 				// Envelope frequency rough adjustment
 				12 => {
-					self.envelope_position &= 0x00ff;
+					self.envelope_period &= 0x00ff;
 					self.envelope_period |= (data[0] as u16) << 8;
 				},
 				// Envelope shape adjustment
