@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::ffi::c_void;
-
 use rand::RngExt;
 use rand::rngs::StdRng;
 
 use crate::emulator::Peripheral;
+use crate::emulator::clock_manager::ClockManager;
 
 pub struct Ym2149
 {
@@ -27,6 +26,7 @@ pub struct Ym2149
 	noise_state: bool,
 	noise_lfsr: u32,
 
+	clock_manager: ClockManager,
 	ready: bool,
 	read: bool,
 
@@ -57,7 +57,7 @@ const LOG_LEVEL: [u16; 32] = [
 
 impl Ym2149
 {
-	pub fn new() -> Self
+	pub fn new(clock_frequency: u32, sample_frequency: u32) -> Self
 	{
 		let mut this = Self {
 			selected_register: 0,
@@ -78,6 +78,7 @@ impl Ym2149
 			noise_state: false,
 			noise_lfsr: 1,
 
+			clock_manager: ClockManager::new(clock_frequency, sample_frequency),
 			ready: false,
 			read: false,
 
@@ -93,7 +94,7 @@ impl Ym2149
 		this
 	}
 
-	pub fn clock_cycle(&mut self, this: *mut c_void) -> bool
+	pub fn clock_cycle(&mut self) -> bool
 	{
 		// Reset the channel states if ready was true
 		if self.ready {
@@ -104,7 +105,7 @@ impl Ym2149
 		}
 
 		// See if a sample should be ready this cycle or not
-		self.ready = unsafe { ym2149_advance_cycle(this) };
+		self.ready = self.clock_manager.advance_cycle();
 
 		// If we should update the FSM in this cycle, do so
 		if self.cycles_till_update == 0 {
@@ -462,8 +463,4 @@ impl Ym2149Channel
 	{
 		self.period <= 1
 	}
-}
-
-unsafe extern "C" {
-	fn ym2149_advance_cycle(this: *mut c_void) -> bool;
 }

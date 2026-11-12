@@ -12,26 +12,21 @@
 
 extern "C"
 {
-	Ym2149 *ym2149_new();
+	Ym2149 *ym2149_new(uint32_t, uint32_t);
 	void ym2149_drop(Ym2149 *);
 
 	void ym2149_read_address(const Ym2149 *, uint32_t,  slice_t<uint8_t>);
 	void ym2149_write_address(Ym2149 *, uint32_t, const slice_t<uint8_t>);
 	bool ym2149_sample_ready(const Ym2149 *);
 	int16_t ym2149_sample(Ym2149 *);
-	bool ym2149_clock_cycle(Ym2149 *, ym2149_t *);
+	bool ym2149_clock_cycle(Ym2149 *);
 	void ym2149_force_edge_state(Ym2149 *, bool);
-
-	bool ym2149_advance_cycle(ym2149_t *self)
-	{
-		return self->advanceCycle();
-	}
 }
 
 ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency) noexcept :
-	clockedPeripheral_t<uint32_t>{clockFrequency}, clockManager{clockFrequency, sampleFrequency}
+	clockedPeripheral_t<uint32_t>{clockFrequency}
 {
-	self = ym2149_new();
+	self = ym2149_new(clockFrequency, sampleFrequency);
 }
 
 ym2149_t::~ym2149_t() noexcept
@@ -52,12 +47,7 @@ void ym2149_t::writeAddress(const uint32_t address, const substrate::span<uint8_
 
 bool ym2149_t::clockCycle() noexcept
 {
-	return ym2149_clock_cycle(self, this);
-}
-
-bool ym2149_t::advanceCycle() noexcept
-{
-	return clockManager.advanceCycle();
+	return ym2149_clock_cycle(self);
 }
 
 bool ym2149_t::sampleReady() const noexcept { return ym2149_sample_ready(self); }

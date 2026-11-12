@@ -275,9 +275,9 @@ pub unsafe fn sndh_metadata_tune_name(metadata: *mut SndhMetadata, index: usize)
 
 /// Allocate a new [`Ym2149`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn ym2149_new() -> *mut Ym2149
+pub fn ym2149_new(clock_frequency: u32, sample_frequency: u32) -> *mut Ym2149
 {
-	let ym2149 = Box::new(Ym2149::new());
+	let ym2149 = Box::new(Ym2149::new(clock_frequency, sample_frequency));
 	Box::into_raw(ym2149)
 }
 
@@ -336,10 +336,10 @@ pub unsafe fn ym2149_sample(ym2149: *mut Ym2149) -> i16
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149, this: *mut c_void) -> bool
+pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149) -> bool
 {
 	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_mut() }.clock_cycle(this)
+	unsafe { ym2149.as_mut() }.clock_cycle()
 }
 
 /// Using the pointer from `ym2149_new`, force the edge state for all channels

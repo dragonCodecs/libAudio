@@ -15,8 +15,6 @@ struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 private:
 	Ym2149 *self{nullptr};
 
-	clockManager_t clockManager;
-
 	void readAddress(uint32_t address, substrate::span<uint8_t> data) const noexcept final;
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
 
@@ -31,8 +29,6 @@ public:
 	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] bool sampleReady() const noexcept;
 	[[nodiscard]] int16_t sample() noexcept;
-
-	[[nodiscard]] bool advanceCycle() noexcept;
 
 	// NB, only use for testing
 	void forceChannelStates(bool edgeState) noexcept;
