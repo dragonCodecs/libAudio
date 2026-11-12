@@ -15,8 +15,8 @@ extern "C"
 	Ym2149 *ym2149_new();
 	void ym2149_drop(Ym2149 *);
 
-	void ym2149_read_address(Ym2149 *, uint32_t,  slice_t<uint8_t>);
-	void ym2149_write_address(const Ym2149 *, uint32_t, const slice_t<uint8_t>);
+	void ym2149_read_address(const Ym2149 *, uint32_t,  slice_t<uint8_t>);
+	void ym2149_write_address(Ym2149 *, uint32_t, const slice_t<uint8_t>);
 	bool ym2149_sample_ready(const Ym2149 *);
 	int16_t ym2149_sample(Ym2149 *);
 	bool ym2149_clock_cycle(Ym2149 *, ym2149_t *);
