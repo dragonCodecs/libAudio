@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use crate::emulator::Peripheral;
 use crate::emulator::clock_manager::ClockManager;
 
 #[allow(unused)]
@@ -55,6 +56,79 @@ impl MC68901
 
 			timers: [Timer::new(clock_frequency); 4],
 		}
+	}
+}
+
+impl Peripheral for MC68901
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		// Extract how wide an access this is
+		let access_width = data.len();
+		// Only admit 8- and 16-bit reads
+		if access_width > 2 {
+			return;
+		}
+		// Adjust the address to take into account u16 vs u8 accesses to odd bytes
+		let adjusted_address = if access_width == 1 {
+			address
+		} else {
+			address + 1
+		};
+		// If the resulting address is not odd, we're done
+		if (adjusted_address & 1) == 0 {
+			return;
+		}
+		// Extract out the byte to read into
+		let value = if access_width == 1 {
+			&mut data[0]
+		} else {
+			&mut data[1]
+		};
+		// Chop off the now unused bit of the address to make selection easier
+		match adjusted_address >> 1 {
+			0 => *value = self.gpio,
+			1 => *value = self.active_edge,
+			2 => *value = self.data_direction,
+			// itrEnableA is the upper half of the enable register
+			3 => *value = (self.itr_enable >> 8) as u8,
+			// itrEnableB is the lower half of the enable register
+			4 => *value = (self.itr_enable & 0xff) as u8,
+			// itrPendingA is the upper half of the pending register
+			5 => *value = (self.itr_pending >> 8) as u8,
+			// itrPendingB is the lower half of the pending register
+			6 => *value = (self.itr_pending & 0xff) as u8,
+			// itrServicingA is the upper half of the servicing register
+			7 => *value = (self.itr_servicing >> 8) as u8,
+			// itrServicingB is the lower half of the servicing register
+			8 => *value = (self.itr_servicing & 0xff) as u8,
+			// itrMaskA is the upper half of the mask register
+			9 => *value = (self.itr_mask >> 8) as u8,
+			// itrMaskB is the lower half of the mask register
+			10 => *value = (self.itr_mask & 0xff) as u8,
+			11 => *value = self.vector_reg,
+			12 => *value = self.timers[0].read_ctrl(),
+			13 => *value = self.timers[1].read_ctrl(),
+			// Read is from 2 timers, C's control value is in the upper nibble,
+			// and D's is in the lower - neither can have more than 3 bits set
+			// so just combine
+			14 => *value = (self.timers[2].read_ctrl() << 4) | self.timers[3].read_ctrl(),
+			// Extract the given timer's counter value
+			15..=18 => *value = self.timers[(adjusted_address >> 1) as usize - 15].read_data(),
+			19 => *value = self.sync_char,
+			20 => *value = self.usart_ctrl,
+			21 => *value = self.rx_status,
+			22 => *value = self.tx_status,
+			23 => *value = self.usart_data,
+			_ => {},
+		}
+	}
+
+	fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		// Extract how wide an access this is
+		let access_width = data.len();
+		//
 	}
 }
 
