@@ -410,6 +410,8 @@ libAudioWorkspace = rust.workspace()
 libAudioPackage = libAudioWorkspace.package()
 libAudioRS = libAudioPackage.library(rust_abi: 'c')
 
+rust.test('libAudio-rs', libAudioRS)
+
 libAudioLibrary = library(
 	'libAudio',
 	libAudioSrcs + extraSrcs,

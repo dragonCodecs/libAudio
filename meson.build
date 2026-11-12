@@ -6,6 +6,7 @@ project(
 	default_options: [
 		'cpp_std=c++17',
 		'rust_std=2024',
+		'rust_nightly=disabled',
 		'warning_level=3',
 		'buildtype=release',
 		'strip=true',
