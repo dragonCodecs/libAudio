@@ -371,6 +371,56 @@ pub unsafe fn ste_dac_drop(ste_dac: *mut STeDac)
 	drop(ste_dac);
 }
 
+/// Using the pointer from `ste_dac_new`, read data into the slice from the requested address
+/// # Safety
+/// As long as the pointer given is from `ste_dac_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_dac_read_address(ste_dac: *mut STeDac, address: u32, mut slice: MutSlice<u8>)
+{
+	let ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
+	unsafe { ste_dac.as_ref() }.read_address(address, slice.as_mut_slice());
+}
+
+/// Using the pointer from `ste_dac_new`, write data into the slice to the requested address
+/// # Safety
+/// As long as the pointer given is from `ste_dac_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_dac_write_address(ste_dac: *mut STeDac, address: u32, slice: Slice<u8>)
+{
+	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
+	unsafe { ste_dac.as_mut() }.write_address(address, slice.as_slice());
+}
+
+/// Using the pointer from `ste_dac_new`, generate a new sample
+/// # Safety
+/// As long as the pointer given is from `ste_dac_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_dac_sample(ste_dac: *mut STeDac, memory_map: *const c_void) -> i16
+{
+	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
+	unsafe { ste_dac.as_mut() }.sample(memory_map)
+}
+
+/// Using the pointer from `ste_dac_new`, run a clock cycle
+/// # Safety
+/// As long as the pointer given is from `ste_dac_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_dac_clock_cycle(ste_dac: *mut STeDac) -> bool
+{
+	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
+	unsafe { ste_dac.as_mut() }.clock_cycle()
+}
+
+/// Using the pointer from `ste_dac_new`, get the currently configured output level
+/// # Safety
+/// As long as the pointer given is from `ste_dac_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_dac_output_level(ste_dac: *mut STeDac) -> u8
+{
+	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
+	unsafe { ste_dac.as_mut() }.output_level()
+}
+
 mod console
 {
 	use std::ffi::CString;

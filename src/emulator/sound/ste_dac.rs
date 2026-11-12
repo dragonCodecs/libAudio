@@ -194,6 +194,11 @@ impl STeDac
 			0
 		}
 	}
+
+	pub fn output_level(&self) -> u8
+	{
+		self.main_volume
+	}
 }
 
 impl Peripheral for STeDac
