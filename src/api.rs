@@ -7,6 +7,7 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
+use crate::emulator::Peripheral;
 use crate::emulator::sound::ym2149::{Ym2149, Ym2149Channel};
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
