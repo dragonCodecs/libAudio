@@ -104,6 +104,46 @@ impl MC68901
 		}
 		true
 	}
+
+	pub fn fire_dma_event(&mut self)
+	{
+		// Try to mark timer A for external event
+		self.timers[0].mark_external_event();
+		// Also try to mark GPIO7 as having had an external event
+		if (self.itr_enable & (1 << 15)) != 0 {
+			self.itr_pending |= 1 << 15;
+		}
+	}
+
+	pub fn irq_cause(&mut self) -> u8
+	{
+		// Compute which IRQs are not masked
+		let interrupts = self.itr_pending & self.itr_mask;
+		// Look through the pending IRQs and find the highest priority one
+		let channel = (|| {
+			// For each interrupt request bit
+			for irq in 0..16 {
+				// Calculate the channel for this IRQ
+				let irq_channel = 15 - irq;
+				// If the channel has a pending IRQ set, then use it as the cause
+				if (interrupts & (1 << irq_channel)) != 0 {
+					return irq_channel;
+				}
+			}
+			16
+		})();
+		// If there was no reason to call this function, indicate a spurious interrupt error
+		if channel >= 16 {
+			return 0x18;
+		}
+		// Otherwise, clear pending on this IRQ and generate the vector number value
+		self.itr_pending &= !(1 << channel);
+		// Re-queue IRQ if there are still pending
+		if (self.itr_pending & self.itr_mask) != 0 {
+			unsafe { mc68901_request_interrupt(self.this) };
+		}
+		(self.vector_reg & 0xf0) | channel
+	}
 }
 
 impl Peripheral for MC68901
