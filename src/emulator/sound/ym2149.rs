@@ -12,7 +12,7 @@ pub struct Ym2149
 	selected_register: u8,
 	cycles_till_update: u8,
 
-	channels: [Ym2149Channel; 3],
+	channels: [Channel; 3],
 	channel_state: [bool; 3],
 	noise_period: u8,
 	noise_counter: u8,
@@ -37,7 +37,7 @@ pub struct Ym2149
 }
 
 #[derive(Default, Clone, Copy)]
-struct Ym2149Channel
+struct Channel
 {
 	period: u16,
 	counter: u16,
@@ -63,7 +63,7 @@ impl Ym2149
 			selected_register: 0,
 			cycles_till_update: 0,
 
-			channels: [Ym2149Channel::default(); 3],
+			channels: [Channel::default(); 3],
 			channel_state: [false; 3],
 			noise_period: 0,
 			noise_counter: 0,
@@ -415,7 +415,7 @@ impl Peripheral for Ym2149
 	}
 }
 
-impl Ym2149Channel
+impl Channel
 {
 	pub fn reset_edge_state(&mut self, state: bool)
 	{
