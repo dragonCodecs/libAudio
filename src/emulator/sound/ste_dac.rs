@@ -35,7 +35,7 @@ pub struct STeDac
 	main_volume: u8,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 struct Register24b
 {
 	value: u32,
@@ -199,6 +199,37 @@ impl Peripheral for STeDac
 				},
 				// Redirect everything else to 8-bit access
 				_ => self.write_address(address + 1, &data[1..2]),
+			}
+		}
+		// The rest of the registers are only accessible as u8's
+		else if access_width == 1 {
+			// Registers in this peripheral are on the odd byte
+			if (address & 1) != 1 {
+				return;
+			}
+
+			// Handle DMA sound system register accesses
+			match address >> 1 {
+				0 => {
+					// If playback state is being switched, reset the sample address
+					if (self.control & (1 << 0)) != (data[0] & (1 << 0)) {
+						self.sample_address = self.begin_address;
+					}
+					// Only the bottom two bits of the control byte are valid
+					self.control = data[0] & 0x03;
+				},
+				1..=3 => self.begin_address.write_byte(((address >> 1) - 1) as u8, data[0]),
+				4..=6 => self.sample_address.write_byte(((address >> 1) - 4) as u8, data[0]),
+				7..=9 => self.end_address.write_byte(((address >> 1) - 7) as u8, data[0]),
+				10 => {
+					// Determine whether the new mode should be mono or stereo
+					self.sample_mono = (data[0] & (1 << 7)) == (1 << 7);
+					// Grab the frequency bits and turn them into a divider (3 == 2^3, 0 == 2^0)
+					self.sample_rate_divider = 3 - (data[0] & 0x03);
+					// Reset the rate counter to adjust for the new sample rate
+					self.sample_rate_counter = 0;
+				},
+				_ => {},
 			}
 		}
 	}
