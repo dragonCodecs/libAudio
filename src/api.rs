@@ -10,6 +10,7 @@ use std::ptr::{NonNull, null_mut};
 use crate::emulator::Peripheral;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
+use crate::emulator::timing::mc68901;
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
@@ -419,6 +420,25 @@ pub unsafe fn ste_dac_output_level(ste_dac: *mut STeDac) -> u8
 {
 	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
 	unsafe { ste_dac.as_mut() }.output_level()
+}
+
+/// Allocate a new [`mc68901::Timer`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn mc68901_timer_new(base_frequency: u32) -> *mut mc68901::Timer
+{
+	let timer = Box::new(mc68901::Timer::new(base_frequency));
+	Box::into_raw(timer)
+}
+
+/// Consume the pointer for a [`mc68901::Timer`] allocated with `mc68901_timer_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_drop(timer: *mut mc68901::Timer)
+{
+	let timer = unsafe { Box::from_raw(timer) };
+	drop(timer);
 }
 
 mod console
