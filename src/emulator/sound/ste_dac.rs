@@ -16,7 +16,6 @@ use std::ops::AddAssign;
 
 use crate::emulator::Peripheral;
 
-#[allow(unused)]
 pub struct STeDac
 {
 	// Values that control the DMA engine
@@ -37,7 +36,6 @@ pub struct STeDac
 }
 
 #[derive(Default)]
-#[allow(unused)]
 struct Register24b
 {
 	value: u32,
@@ -99,6 +97,24 @@ impl Peripheral for STeDac
 				0x24 => data.copy_from_slice(&self.microwire_cycle().to_be_bytes()),
 				// Redirect everything else to 8-bit access
 				_ => self.read_address(address + 1, &mut data[1..2]),
+			}
+		}
+		// The rest of the registers are only accessible as u8's
+		else if access_width == 1 {
+			// Registers in this peripheral are on the odd byte
+			if (address & 1) != 1 {
+				return;
+			}
+
+			// Handle DMA sound system register accesses
+			match address >> 1 {
+				0 => data[0] = self.control,
+				1..=3 => data[0] = self.begin_address.read_byte(((address >> 1) - 1) as u8),
+				4..=6 => data[0] = self.sample_address.read_byte(((address >> 1) - 4) as u8),
+				7..=9 => data[0] = self.end_address.read_byte(((address >> 1) - 7) as u8),
+				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
+				10 => data[0] = ((self.sample_mono as u8) << 7) | (3 - self.sample_rate_divider),
+				_ => {},
 			}
 		}
 	}
