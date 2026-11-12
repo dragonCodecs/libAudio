@@ -14,6 +14,8 @@
 use std::cell::RefCell;
 use std::ops::AddAssign;
 
+use crate::emulator::Peripheral;
+
 #[allow(unused)]
 pub struct STeDac
 {
@@ -60,6 +62,48 @@ impl STeDac
 			main_volume: 64,
 		}
 	}
+
+	fn microwire_cycle(&self) -> u16
+	{
+		// If there are still cycles to do
+		if *self.microwire_cycles.borrow() != 0 {
+			*self.microwire_cycles.borrow_mut() -= 1;
+			// Rotate the mask one more bit left
+			let mut microwire_mask = self.microwire_mask.borrow_mut();
+			*microwire_mask = microwire_mask.rotate_left(1);
+		}
+		*self.microwire_mask.borrow()
+	}
+}
+
+impl Peripheral for STeDac
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		// Extract how wide an access this is
+		let access_width = data.len();
+		// Only admit 8- and 16-bit reads
+		if access_width > 2 {
+			return;
+		}
+		// Microwire registers are only accessible as u16's
+		if access_width == 2 {
+			// u16 accesses must be to even addresses
+			if (address & 1) != 0 {
+				return;
+			}
+
+			// Handle microwire address accesses
+			match address {
+				0x22 => data.copy_from_slice(&self.microwire_data.to_be_bytes()),
+				0x24 => data.copy_from_slice(&self.microwire_cycle().to_be_bytes()),
+				// Redirect everything else to 8-bit access
+				_ => self.read_address(address + 1, &mut data[1..2]),
+			}
+		}
+	}
+
+	fn write_address(&mut self, address: u32, data: &[u8]) {}
 }
 
 impl Register24b
