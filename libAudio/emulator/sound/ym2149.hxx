@@ -5,7 +5,6 @@
 
 #include <cstdint>
 #include <array>
-#include <random>
 #include <substrate/span>
 #include "../memoryMap.hxx"
 
@@ -15,9 +14,6 @@ struct Ym2149Channel;
 struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
-	std::minstd_rand rng;
-	std::uniform_int_distribution<uint16_t> rngDistribution{};
-
 	Ym2149 *self{nullptr};
 
 	std::array<Ym2149Channel *, 3U> channels{};

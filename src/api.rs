@@ -351,16 +351,6 @@ pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149, this: *mut c_void) -> bool
 	unsafe { ym2149.as_mut() }.clock_cycle(this)
 }
 
-/// Using the pointer from `ym2149_channel_new`, reset the edge state for the channel
-/// # Safety
-/// As long as the pointer given is from `ym2149_channel_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_channel_reset_edge_state(channel: *mut Ym2149Channel, state: bool)
-{
-	let mut channel: NonNull<_> = unsafe { NonNull::new_unchecked(channel) };
-	unsafe { channel.as_mut() }.reset_edge_state(state);
-}
-
 /// Using the pointer from `ym2149_channel_new`, force the edge state for the channel
 /// # Safety
 /// As long as the pointer given is from `ym2149_channel_new`, this is safe

@@ -17,3 +17,6 @@ resolver = "2"
 members = [
 	"."
 ]
+
+[dependencies]
+rand = "0.10.3"

@@ -22,7 +22,6 @@ extern "C"
 	int16_t ym2149_sample(Ym2149 *);
 	bool ym2149_clock_cycle(Ym2149 *, ym2149_t *);
 
-	void ym2149_channel_reset_edge_state(Ym2149Channel *, bool);
 	void ym2149_channel_force_edge_state(Ym2149Channel *, bool);
 
 	bool ym2149_advance_cycle(ym2149_t *self)
@@ -32,15 +31,11 @@ extern "C"
 }
 
 ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency) noexcept :
-	clockedPeripheral_t<uint32_t>{clockFrequency}, rng{std::random_device{}()}, rngDistribution{0U, 1U},
-	clockManager{clockFrequency, sampleFrequency}
+	clockedPeripheral_t<uint32_t>{clockFrequency}, clockManager{clockFrequency, sampleFrequency}
 {
 	self = ym2149_new();
 	for (auto [index, channel] : substrate::indexedIterator_t{channels})
-	{
 		channel = ym2149_channel(self, index);
-		ym2149_channel_reset_edge_state(channel, static_cast<bool>(rngDistribution(rng)));
-	}
 }
 
 ym2149_t::~ym2149_t() noexcept

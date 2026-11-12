@@ -3,6 +3,9 @@
 
 use std::ffi::c_void;
 
+use rand::RngExt;
+use rand::rngs::StdRng;
+
 use crate::emulator::Peripheral;
 
 pub struct Ym2149
@@ -56,7 +59,7 @@ impl Ym2149
 {
 	pub fn new() -> Self
 	{
-		Self {
+		let mut this = Self {
 			selected_register: 0,
 			cycles_till_update: 0,
 
@@ -81,7 +84,13 @@ impl Ym2149
 			dc_adjustment_buffer: [0; 1 << DC_ADJUSTMENT_LENGTH_LOG2],
 			dc_adjustment_position: 0,
 			dc_adjustment_sum: 0,
+		};
+		// Set up random start states for each channel, just like happens in the real YM2149
+		let mut rng: StdRng = rand::make_rng();
+		for channel in this.channels.iter_mut() {
+			channel.reset_edge_state(rng.random_bool(0.5));
 		}
+		this
 	}
 
 	pub fn clock_cycle(&mut self, this: *mut c_void) -> bool
