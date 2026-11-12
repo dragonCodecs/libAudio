@@ -8,6 +8,7 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
 use crate::emulator::Peripheral;
+use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
@@ -349,6 +350,25 @@ pub unsafe fn ym2149_force_edge_state(ym2149: *mut Ym2149, state: bool)
 {
 	let mut ym2149: NonNull<_> = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_mut() }.force_edge_state(state);
+}
+
+/// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn ste_dac_new() -> *mut STeDac
+{
+	let ste_dac = Box::new(STeDac::new());
+	Box::into_raw(ste_dac)
+}
+
+/// Consume the pointer for a [`STeDac`] allocated with `ste_dac_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `ste_dac_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_dac_drop(ste_dac: *mut STeDac)
+{
+	let ste_dac = unsafe { Box::from_raw(ste_dac) };
+	drop(ste_dac);
 }
 
 mod console
