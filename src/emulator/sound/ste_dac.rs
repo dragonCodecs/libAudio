@@ -237,12 +237,12 @@ impl Peripheral for STeDac
 
 			// Handle DMA sound system register accesses
 			match address >> 1 {
-				0 => data[0] = self.control,
-				1..=3 => data[0] = self.begin_address.read_byte(((address >> 1) - 1) as u8),
-				4..=6 => data[0] = self.sample_address.read_byte(((address >> 1) - 4) as u8),
-				7..=9 => data[0] = self.end_address.read_byte(((address >> 1) - 7) as u8),
+				0x00 => data[0] = self.control,
+				0x01..=0x03 => data[0] = self.begin_address.read_byte(((address >> 1) - 1) as u8),
+				0x04..=0x06 => data[0] = self.sample_address.read_byte(((address >> 1) - 4) as u8),
+				0x07..=0x09 => data[0] = self.end_address.read_byte(((address >> 1) - 7) as u8),
 				// Convert the sample channel count and rate divider back into their forms for the peripheral interface
-				10 => data[0] = ((self.sample_mono as u8) << 7) | (3 - self.sample_rate_divider),
+				0x10 => data[0] = ((self.sample_mono as u8) << 7) | (3 - self.sample_rate_divider),
 				_ => {},
 			}
 		}
@@ -293,7 +293,7 @@ impl Peripheral for STeDac
 
 			// Handle DMA sound system register accesses
 			match address >> 1 {
-				0 => {
+				0x00 => {
 					// If playback state is being switched, reset the sample address
 					if (self.control & (1 << 0)) != (data[0] & (1 << 0)) {
 						self.sample_address = self.begin_address;
@@ -301,10 +301,10 @@ impl Peripheral for STeDac
 					// Only the bottom two bits of the control byte are valid
 					self.control = data[0] & 0x03;
 				},
-				1..=3 => self.begin_address.write_byte(((address >> 1) - 1) as u8, data[0]),
-				4..=6 => self.sample_address.write_byte(((address >> 1) - 4) as u8, data[0]),
-				7..=9 => self.end_address.write_byte(((address >> 1) - 7) as u8, data[0]),
-				10 => {
+				0x01..=0x03 => self.begin_address.write_byte(((address >> 1) - 1) as u8, data[0]),
+				0x04..=0x06 => self.sample_address.write_byte(((address >> 1) - 4) as u8, data[0]),
+				0x07..=0x09 => self.end_address.write_byte(((address >> 1) - 7) as u8, data[0]),
+				0x10 => {
 					// Determine whether the new mode should be mono or stereo
 					self.sample_mono = (data[0] & (1 << 7)) == (1 << 7);
 					// Grab the frequency bits and turn them into a divider (3 == 2^3, 0 == 2^0)
@@ -322,7 +322,7 @@ impl Register24b
 {
 	pub fn write_byte(&mut self, position: u8, byte: u8)
 	{
-		let shift = 8 * (2 - position as usize);
+		let shift = 8 * (2 - position) as usize;
 		self.value &= !(0xff << shift);
 		self.value |= (byte as u32) << shift;
 		// The bottom most bit in these registers must remain 0, as must the top 8
@@ -331,7 +331,7 @@ impl Register24b
 
 	pub fn read_byte(&self, position: u8) -> u8
 	{
-		let shift = 8 * (2 - position as usize);
+		let shift = 8 * (2 - position) as usize;
 		(self.value >> shift) as u8
 	}
 }
