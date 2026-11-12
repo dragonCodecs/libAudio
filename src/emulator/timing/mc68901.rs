@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::ffi::c_void;
+
 use crate::emulator::Peripheral;
 use crate::emulator::clock_manager::ClockManager;
 
-#[allow(unused)]
 pub struct MC68901
 {
+	this: *const c_void,
+
 	gpio: u8,
 	active_edge: u8,
 	data_direction: u8,
@@ -36,9 +39,11 @@ pub struct Timer
 
 impl MC68901
 {
-	pub fn new(clock_frequency: u32) -> Self
+	pub fn new(this: *const c_void, clock_frequency: u32) -> Self
 	{
 		Self {
+			this,
+
 			gpio: 0,
 			active_edge: 0,
 			data_direction: 0,
@@ -128,7 +133,93 @@ impl Peripheral for MC68901
 	{
 		// Extract how wide an access this is
 		let access_width = data.len();
-		//
+		// Only admit 8- and 16-bit reads
+		if access_width > 2 {
+			return;
+		}
+		// Adjust the address to take into account u16 vs u8 accesses to odd bytes
+		let adjusted_address = if access_width == 1 {
+			address
+		} else {
+			address + 1
+		};
+		// If the resulting address is not odd, we're done
+		if (adjusted_address & 1) == 0 {
+			return;
+		}
+		// Extract out the byte from the write to use
+		let value = if access_width == 1 {
+			data[0]
+		} else {
+			data[1]
+		};
+		// Chop off the now unused bit of the address to make selection easier
+		match adjusted_address >> 1 {
+			0 => self.gpio = value,
+			1 => self.active_edge = value,
+			2 => self.data_direction = value,
+			3 => {
+				// itrEnableA is the upper half of the enable register
+				self.itr_enable &= 0x00ff;
+				self.itr_enable |= (value as u16) << 8;
+			},
+			4 => {
+				// itrEnableB is the lower half of the enable register
+				self.itr_enable &= 0xff00;
+				self.itr_enable |= value as u16;
+			},
+			5 => {
+				// itrPendingA is the upper half of the pending register
+				self.itr_pending &= 0x00ff;
+				self.itr_pending |= (value as u16) << 8;
+			},
+			6 => {
+				// itrPendingB is the lower half of the pending register
+				self.itr_pending &= 0xff00;
+				self.itr_pending |= value as u16;
+			},
+			7 => {
+				// itrServicingA is the upper half of the servicing register
+				self.itr_servicing &= 0x00ff;
+				self.itr_servicing |= (value as u16) << 8;
+			},
+			8 => {
+				// itrServicingB is the lower half of the servicing register
+				self.itr_servicing &= 0xff00;
+				self.itr_servicing |= value as u16;
+			},
+			9 => {
+				// itrMaskA is the upper half of the mask register
+				self.itr_mask &= 0x00ff;
+				self.itr_mask |= (value as u16) << 8;
+			},
+			10 => {
+				// itrMaskB is the lower half of the mask register
+				self.itr_mask &= 0xff00;
+				self.itr_mask |= value as u16;
+			},
+			// The bottom 3 bits of the vector register are unused (RAZ)
+			11 => self.vector_reg = value & 0xf8,
+			// Only 5 bits used, mask off the upper 3
+			12 => self.timers[0].write_ctrl(value & 0x1f, unsafe { mc68901_clock_frequency(self.this) }),
+			// Only 5 bits used, mask off the upper 3
+			13 => self.timers[1].write_ctrl(value & 0x1f, unsafe { mc68901_clock_frequency(self.this) }),
+			14 => {
+				// Write controls 2 timers, C's control value is in the upper nibble,
+				// but the timer doesn't support event modes or reset output, so only 3 bits used
+				self.timers[2].write_ctrl((value >> 4) & 0x07, unsafe { mc68901_clock_frequency(self.this) });
+				// D's control value is in the lower nibble and has the same support restrictions
+				self.timers[3].write_ctrl(value & 0x07, unsafe { mc68901_clock_frequency(self.this) });
+			},
+			// Update the given timer's counter value
+			15..=18 => self.timers[(adjusted_address >> 1) as usize - 15].write_data(value),
+			19 => self.sync_char = value,
+			20 => self.usart_ctrl = value,
+			21 => self.rx_status = value,
+			22 => self.tx_status = value,
+			23 => self.usart_data = value,
+			_ => {},
+		}
 	}
 }
 
@@ -239,6 +330,10 @@ impl Timer
 			_ => unreachable!(),
 		}
 	}
+}
+
+unsafe extern "C" {
+	fn mc68901_clock_frequency(mc68901: *const c_void) -> u32;
 }
 
 #[cfg(test)]
