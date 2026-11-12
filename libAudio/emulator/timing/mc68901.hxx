@@ -9,7 +9,7 @@
 #include "../memoryMap.hxx"
 #include "../cpu/m68kIRQ.hxx"
 
-struct Mc68901Timer;
+struct MC68901Timer;
 
 extern "C"
 {
@@ -37,7 +37,7 @@ private:
 	uint8_t txStatus{0U};
 	uint8_t usartData{0U};
 
-	std::array<Mc68901Timer *, 4U> timers;
+	std::array<MC68901Timer *, 4U> timers;
 
 public:
 	mc68901_t(uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept;

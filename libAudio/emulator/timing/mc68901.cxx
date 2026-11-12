@@ -8,14 +8,14 @@
 
 extern "C"
 {
-	Mc68901Timer *mc68901_timer_new(uint32_t);
-	void mc68901_timer_drop(Mc68901Timer *);
-	uint8_t mc68901_timer_read_ctrl(const Mc68901Timer *);
-	uint8_t mc68901_timer_read_data(const Mc68901Timer *);
-	void mc68901_timer_write_ctrl(Mc68901Timer *, uint8_t, uint32_t);
-	void mc68901_timer_write_data(Mc68901Timer *, uint8_t);
-	void mc68901_timer_mark_external_event(Mc68901Timer *);
-	bool mc68901_timer_clock_cycle(Mc68901Timer *);
+	MC68901Timer *mc68901_timer_new(uint32_t);
+	void mc68901_timer_drop(MC68901Timer *);
+	uint8_t mc68901_timer_read_ctrl(const MC68901Timer *);
+	uint8_t mc68901_timer_read_data(const MC68901Timer *);
+	void mc68901_timer_write_ctrl(MC68901Timer *, uint8_t, uint32_t);
+	void mc68901_timer_write_data(MC68901Timer *, uint8_t);
+	void mc68901_timer_mark_external_event(MC68901Timer *);
+	bool mc68901_timer_clock_cycle(MC68901Timer *);
 
 	void mc68901_fire_dma_event(mc68901_t *self)
 	{
