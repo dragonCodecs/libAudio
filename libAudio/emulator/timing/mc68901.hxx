@@ -51,6 +51,8 @@ public:
 	void fireDMAEvent() noexcept;
 
 	void configureTimer(size_t timerIndex, uint8_t reloadValue, uint8_t mode) noexcept;
+
+	void requestCPUInterrupt() noexcept;
 };
 
 #endif /*EMULATOR_TIMING_MC68901_HXX*/

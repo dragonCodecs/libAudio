@@ -8,7 +8,7 @@ use crate::emulator::clock_manager::ClockManager;
 
 pub struct MC68901
 {
-	this: *const c_void,
+	this: *mut c_void,
 
 	gpio: u8,
 	active_edge: u8,
@@ -39,7 +39,7 @@ pub struct Timer
 
 impl MC68901
 {
-	pub fn new(this: *const c_void, clock_frequency: u32) -> Self
+	pub fn new(this: *mut c_void, clock_frequency: u32) -> Self
 	{
 		Self {
 			this,
@@ -61,6 +61,48 @@ impl MC68901
 
 			timers: [Timer::new(clock_frequency); 4],
 		}
+	}
+
+	pub fn configure_timer(&mut self, timer_index: usize, reload_value: u8, mode: u8)
+	{
+		// Check this isn't a request for a completely nuts timer value
+		if timer_index >= self.timers.len() {
+			return;
+		}
+		// Extract the timer we care about
+		let timer = &mut self.timers[timer_index];
+		// Configure the reload value and mode
+		timer.write_data(reload_value);
+		timer.write_ctrl(mode, unsafe { mc68901_clock_frequency(self.this) });
+	}
+
+	pub fn clock_cycle(&mut self) -> bool
+	{
+		// Go through each timer and try to advance them a clock cycle
+		for (index, timer) in self.timers.iter_mut().enumerate() {
+			// Translate the timer number into an interrupt register bit
+			let itr_bit = 1 <<
+				// Dispatch the timer to the bit number for it
+				match index {
+					0 => 13,
+					1 => 8,
+					2 => 5,
+					3 => 4,
+					_ => unreachable!(),
+				};
+			// If the clock cycle on the timer triggered an interrupt causing event
+			if timer.clock_cycle() {
+				// If interrupts are enabled for the timer, set the pending bit
+				if (self.itr_enable & itr_bit) == itr_bit {
+					self.itr_pending |= itr_bit;
+				}
+			}
+		}
+		// If we have any pending IRQs as a result of this cycle, request handling by the CPU
+		if (self.itr_pending & self.itr_mask) != 0 {
+			unsafe { mc68901_request_interrupt(self.this) };
+		}
+		true
 	}
 }
 
@@ -334,6 +376,7 @@ impl Timer
 
 unsafe extern "C" {
 	fn mc68901_clock_frequency(mc68901: *const c_void) -> u32;
+	fn mc68901_request_interrupt(mc68901: *mut c_void);
 }
 
 #[cfg(test)]

@@ -17,6 +17,16 @@ extern "C"
 	void mc68901_timer_mark_external_event(MC68901Timer *);
 	bool mc68901_timer_clock_cycle(MC68901Timer *);
 
+	uint32_t mc68901_clock_frequency(const mc68901_t *self)
+	{
+		return self->clockFrequency();
+	}
+
+	void mc68901_request_interrupt(mc68901_t *self)
+	{
+		self->requestCPUInterrupt();
+	}
+
 	void mc68901_fire_dma_event(mc68901_t *self)
 	{
 		return self->fireDMAEvent();
@@ -345,6 +355,11 @@ void mc68901_t::fireDMAEvent() noexcept
 	// Also try to mark GPIO7 as having had an external event
 	if (itrEnable & (1U << 15U))
 		itrPending |= (1U << 15U);
+}
+
+void mc68901_t::requestCPUInterrupt() noexcept
+{
+	requestInterrupt();
 }
 
 uint8_t mc68901_t::irqCause() noexcept

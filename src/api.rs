@@ -424,7 +424,7 @@ pub unsafe fn ste_dac_output_level(ste_dac: *mut STeDac) -> u8
 
 /// Allocate a new [`MC68901`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn mc68901_new(this: *const c_void, clock_frequency: u32) -> *mut MC68901
+pub fn mc68901_new(this: *mut c_void, clock_frequency: u32) -> *mut MC68901
 {
 	let mc68901 = Box::new(MC68901::new(this, clock_frequency));
 	Box::into_raw(mc68901)
