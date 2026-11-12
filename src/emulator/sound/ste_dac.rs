@@ -12,6 +12,7 @@
 // - STe and other schematics: https://docs.dev-docs.org/htm/search.php?find=_s
 
 use std::cell::RefCell;
+use std::ops::AddAssign;
 
 #[allow(unused)]
 pub struct STeDac
@@ -58,5 +59,31 @@ impl STeDac
 			microwire_cycles: RefCell::new(0),
 			main_volume: 64,
 		}
+	}
+}
+
+impl Register24b
+{
+	pub fn write_byte(&mut self, position: u8, byte: u8)
+	{
+		let shift = 8 * (2 - position as usize);
+		self.value &= !(0xff << shift);
+		self.value |= (byte as u32) << shift;
+		// The bottom most bit in these registers must remain 0, as must the top 8
+		self.value &= 0x00fffffe;
+	}
+
+	pub fn read_byte(&self, position: u8) -> u8
+	{
+		let shift = 8 * (2 - position as usize);
+		(self.value >> shift) as u8
+	}
+}
+
+impl AddAssign<u32> for Register24b
+{
+	fn add_assign(&mut self, rhs: u32)
+	{
+		self.value += rhs;
 	}
 }
