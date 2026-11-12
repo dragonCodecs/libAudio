@@ -120,3 +120,6 @@ impl Timer
 		}
 	}
 }
+
+#[cfg(test)]
+mod tests;

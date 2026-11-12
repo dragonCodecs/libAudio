@@ -265,19 +265,6 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 		assertEqual(readRegister<uint8_t>(mfp, 0x0bU), 0x20U);
 	}
 
-	void testPrescalingMapping()
-	{
-		assertEqual(mc68901::timer_t::prescalingFor(0U), 1U);
-		assertEqual(mc68901::timer_t::prescalingFor(1U), 4U);
-		assertEqual(mc68901::timer_t::prescalingFor(2U), 10U);
-		assertEqual(mc68901::timer_t::prescalingFor(3U), 16U);
-		assertEqual(mc68901::timer_t::prescalingFor(4U), 50U);
-		assertEqual(mc68901::timer_t::prescalingFor(5U), 64U);
-		assertEqual(mc68901::timer_t::prescalingFor(6U), 100U);
-		assertEqual(mc68901::timer_t::prescalingFor(7U), 200U);
-		assertEqual(mc68901::timer_t::prescalingFor(8U), UINT32_MAX);
-	}
-
 public:
 	testMC68901() noexcept : testsuite{}, m68kMemoryMap_t{} { }
 
@@ -289,7 +276,6 @@ public:
 		CXX_TEST(testIRQGeneration)
 		CXX_TEST(testGPIO7Events)
 		CXX_TEST(testTimerAEventCounting)
-		CXX_TEST(testPrescalingMapping)
 	}
 };
 
