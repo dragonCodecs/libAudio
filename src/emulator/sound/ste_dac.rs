@@ -13,7 +13,7 @@
 
 use std::cell::RefCell;
 use std::ffi::c_void;
-use std::ops::AddAssign;
+use std::ops::{Add, AddAssign, Deref};
 
 use crate::emulator::Peripheral;
 
@@ -173,6 +173,27 @@ impl STeDac
 		}
 		*self.microwire_mask.borrow()
 	}
+
+	pub fn sample(&self, memory_map: *const c_void) -> i16
+	{
+		// If the DMA engine is currently active, grab a sample back and mix down to mono, otherwise return an idle
+		// value
+		if (self.control & 0x01) != 0 {
+			// Grab the sample for the first channel
+			let left = unsafe { memory_map_read_address_i8(memory_map, *self.sample_address) as i16 };
+			// Then grab the sample for the second
+			let right = {
+				if self.sample_mono {
+					left
+				} else {
+					unsafe { memory_map_read_address_i8(memory_map, *(self.sample_address + 1)) as i16 }
+				}
+			};
+			(left + right) * 32
+		} else {
+			0
+		}
+	}
 }
 
 impl Peripheral for STeDac
@@ -316,6 +337,30 @@ impl AddAssign<u32> for Register24b
 	}
 }
 
+impl Add<u32> for Register24b
+{
+	type Output = Self;
+
+	fn add(self, rhs: u32) -> Self
+	{
+		Self {
+			value: self.value + rhs,
+		}
+	}
+}
+
+impl Deref for Register24b
+{
+	type Target = u32;
+
+	fn deref(&self) -> &Self::Target
+	{
+		&self.value
+	}
+}
+
 unsafe extern "C" {
 	fn mc68901_fire_dma_event(this: *mut c_void);
+
+	fn memory_map_read_address_i8(this: *const c_void, address: u32) -> i8;
 }

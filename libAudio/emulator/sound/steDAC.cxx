@@ -7,6 +7,14 @@
 #include <substrate/buffer_utils>
 #include "steDAC.hxx"
 
+extern "C"
+{
+	int8_t memory_map_read_address_i8(const memoryMap_t<uint32_t, 0x00ffffffU> *self, const uint32_t address)
+	{
+		return self->readAddress<int8_t>(address);
+	}
+}
+
 /*
  * Implements the Atari STe's Sound DMA, Microwire and DAC interfaces
  *
