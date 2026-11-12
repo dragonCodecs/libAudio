@@ -9,31 +9,7 @@
 #include "../memoryMap.hxx"
 #include "../cpu/m68kIRQ.hxx"
 
-namespace mc68901
-{
-	struct timer_t final
-	{
-	private:
-		uint8_t control{0U};
-		uint8_t counter{0U};
-		uint8_t reloadValue{0U};
-		clockManager_t clockManager;
-		bool externalEvent{false};
-
-	public:
-		timer_t(uint32_t baseClockFrequency) noexcept;
-
-		[[nodiscard]] uint8_t ctrl() const noexcept;
-		void ctrl(uint8_t value, uint32_t baseClockFrequency) noexcept;
-		[[nodiscard]] uint8_t data() const noexcept;
-		void data(uint8_t value) noexcept;
-		void markExternalEvent() noexcept;
-
-		[[nodiscard]] bool clockCycle() noexcept;
-
-		[[nodiscard]] static uint32_t prescalingFor(uint8_t mode) noexcept;
-	};
-} // namespace mc68901
+struct Mc68901Timer;
 
 struct mc68901_t final : public clockedPeripheral_t<uint32_t>, m68k::irqRequester_t
 {
@@ -56,7 +32,7 @@ private:
 	uint8_t txStatus{0U};
 	uint8_t usartData{0U};
 
-	std::array<mc68901::timer_t, 4> timers;
+	std::array<Mc68901Timer *, 4U> timers;
 
 public:
 	mc68901_t(uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept;
@@ -64,7 +40,7 @@ public:
 	mc68901_t(mc68901_t &&) noexcept = delete;
 	mc68901_t &operator =(const mc68901_t &) noexcept = delete;
 	mc68901_t &operator =(mc68901_t &&) noexcept = delete;
-	~mc68901_t() noexcept final = default;
+	~mc68901_t() noexcept final;
 
 	[[nodiscard]] bool clockCycle() noexcept final;
 	void fireDMAEvent() noexcept;

@@ -441,6 +441,66 @@ pub unsafe fn mc68901_timer_drop(timer: *mut mc68901::Timer)
 	drop(timer);
 }
 
+/// Using the pointer from `mc68901_timer_new`, read the control register back
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_read_ctrl(timer: *mut mc68901::Timer) -> u8
+{
+	let timer = unsafe { NonNull::new_unchecked(timer) };
+	unsafe { timer.as_ref() }.read_ctrl()
+}
+
+/// Using the pointer from `mc68901_timer_new`, read the data register back
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_read_data(timer: *mut mc68901::Timer) -> u8
+{
+	let timer = unsafe { NonNull::new_unchecked(timer) };
+	unsafe { timer.as_ref() }.read_data()
+}
+
+/// Using the pointer from `mc68901_timer_new`, write to the control register
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_write_ctrl(timer: *mut mc68901::Timer, value: u8, base_frequency: u32)
+{
+	let mut timer = unsafe { NonNull::new_unchecked(timer) };
+	unsafe { timer.as_mut() }.write_ctrl(value, base_frequency);
+}
+
+/// Using the pointer from `mc68901_timer_new`, write to the data register
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_write_data(timer: *mut mc68901::Timer, value: u8)
+{
+	let mut timer = unsafe { NonNull::new_unchecked(timer) };
+	unsafe { timer.as_mut() }.write_data(value);
+}
+
+/// Using the pointer from `mc68901_timer_new`, mark an external event occuring on the timer
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_mark_external_event(timer: *mut mc68901::Timer)
+{
+	let mut timer = unsafe { NonNull::new_unchecked(timer) };
+	unsafe { timer.as_mut() }.mark_external_event();
+}
+
+/// Using the pointer from `mc68901_timer_new`, run a clock cycle
+/// # Safety
+/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn mc68901_timer_clock_cycle(timer: *mut mc68901::Timer) -> bool
+{
+	let mut timer = unsafe { NonNull::new_unchecked(timer) };
+	unsafe { timer.as_mut() }.clock_cycle()
+}
+
 mod console
 {
 	use std::ffi::CString;

@@ -8,6 +8,15 @@
 
 extern "C"
 {
+	Mc68901Timer *mc68901_timer_new(uint32_t);
+	void mc68901_timer_drop(Mc68901Timer *);
+	uint8_t mc68901_timer_read_ctrl(const Mc68901Timer *);
+	uint8_t mc68901_timer_read_data(const Mc68901Timer *);
+	void mc68901_timer_write_ctrl(Mc68901Timer *, uint8_t, uint32_t);
+	void mc68901_timer_write_data(Mc68901Timer *, uint8_t);
+	void mc68901_timer_mark_external_event(Mc68901Timer *);
+	bool mc68901_timer_clock_cycle(Mc68901Timer *);
+
 	void mc68901_fire_dma_event(mc68901_t *self)
 	{
 		return self->fireDMAEvent();
@@ -16,11 +25,23 @@ extern "C"
 
 mc68901_t::mc68901_t(const uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept :
 	clockedPeripheral_t<uint32_t>{clockFrequency}, m68k::irqRequester_t{cpu, level},
-	timers{{{clockFrequency}, {clockFrequency}, {clockFrequency}, {clockFrequency}}}
+	timers
+	{{
+		mc68901_timer_new(clockFrequency),
+		mc68901_timer_new(clockFrequency),
+		mc68901_timer_new(clockFrequency),
+		mc68901_timer_new(clockFrequency),
+	}}
 {
 	// Timer C interrupts should be enabled and unmasked by default
 	itrEnable |= 1U << 5U;
 	itrMask |= 1U << 5U;
+}
+
+mc68901_t::~mc68901_t() noexcept
+{
+	for (auto timer : timers)
+		mc68901_timer_drop(timer);
 }
 
 void mc68901_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
@@ -101,23 +122,23 @@ void mc68901_t::readAddress(const uint32_t address, substrate::span<uint8_t> dat
 			value = vectorReg;
 			break;
 		case 12U:
-			value = timers[0].ctrl();
+			value = mc68901_timer_read_ctrl(timers[0]);
 			break;
 		case 13U:
-			value = timers[1].ctrl();
+			value = mc68901_timer_read_ctrl(timers[1]);
 			break;
 		case 14U:
 			// Read is from 2 timers, C's control value is in the upper nibble,
 			// and D's is in the lower - neither can have more than 3 bits set
 			// so just combine
-			value = (timers[2].ctrl() << 4U) | timers[3].ctrl();
+			value = (mc68901_timer_read_ctrl(timers[2]) << 4U) | mc68901_timer_read_ctrl(timers[3]);
 			break;
 		case 15U:
 		case 16U:
 		case 17U:
 		case 18U:
 			// Extract the given timer's counter value
-			value = timers[(adjustedAddress >> 1U) - 15U].data();
+			value = mc68901_timer_read_data(timers[(adjustedAddress >> 1U) - 15U]);
 			break;
 		case 19U:
 			value = syncChar;
@@ -225,25 +246,25 @@ void mc68901_t::writeAddress(const uint32_t address, const substrate::span<uint8
 			break;
 		case 12U:
 			// Only 5 bits used, mask off the upper 3
-			timers[0].ctrl(value & 0x1fU, clockFrequency());
+			mc68901_timer_write_ctrl(timers[0], value & 0x1fU, clockFrequency());
 			break;
 		case 13U:
 			// Only 5 bits used, mask off the upper 3
-			timers[1].ctrl(value & 0x1fU, clockFrequency());
+			mc68901_timer_write_ctrl(timers[1], value & 0x1fU, clockFrequency());
 			break;
 		case 14U:
 			// Write controls 2 timers, C's control value is in the upper nibble,
 			// but the timer doesn't support event modes or reset output, so only 3 bits used
-			timers[2].ctrl((value >> 4U) & 0x07U, clockFrequency());
+			mc68901_timer_write_ctrl(timers[2], (value >> 4U) & 0x07U, clockFrequency());
 			// D's control value is in the lower nibble and has the same support restrictions
-			timers[3].ctrl(value & 0x07U, clockFrequency());
+			mc68901_timer_write_ctrl(timers[3], value & 0x07U, clockFrequency());
 			break;
 		case 15U:
 		case 16U:
 		case 17U:
 		case 18U:
 			// Update the given timer's counter value
-			timers[(adjustedAddress >> 1U) - 15U].data(value);
+			mc68901_timer_write_data(timers[(adjustedAddress >> 1U) - 15U], value);
 			break;
 		case 19U:
 			syncChar = value;
@@ -271,8 +292,8 @@ void mc68901_t::configureTimer(const size_t timerIndex, const uint8_t reloadValu
 	// Extract the timer we care about
 	auto &timer{timers[timerIndex]};
 	// Configure the reload value and mode
-	timer.data(reloadValue);
-	timer.ctrl(mode, clockFrequency());
+	mc68901_timer_write_data(timer, reloadValue);
+	mc68901_timer_write_ctrl(timer, mode, clockFrequency());
 }
 
 bool mc68901_t::clockCycle() noexcept
@@ -304,7 +325,7 @@ bool mc68901_t::clockCycle() noexcept
 			}()
 		};
 		// If the clock cycle on the timer triggered an interrupt causing event
-		if (timer.clockCycle())
+		if (mc68901_timer_clock_cycle(timer))
 		{
 			// If interrupts are enabled for the timer, set the pending bit
 			if (itrEnable & itrBit)
@@ -320,7 +341,7 @@ bool mc68901_t::clockCycle() noexcept
 void mc68901_t::fireDMAEvent() noexcept
 {
 	// Try to mark timer A for external event
-	timers[0].markExternalEvent();
+	mc68901_timer_mark_external_event(timers[0]);
 	// Also try to mark GPIO7 as having had an external event
 	if (itrEnable & (1U << 15U))
 		itrPending |= (1U << 15U);
@@ -358,105 +379,3 @@ uint8_t mc68901_t::irqCause() noexcept
 		requestInterrupt();
 	return (vectorReg & 0xf0U) | static_cast<uint8_t>(channel);
 }
-
-namespace mc68901
-{
-	timer_t::timer_t(const uint32_t baseClockFrequency) noexcept :
-		clockManager{baseClockFrequency, baseClockFrequency} { }
-
-	uint8_t timer_t::ctrl() const noexcept { return control; }
-	uint8_t timer_t::data() const noexcept { return counter; }
-
-	void timer_t::ctrl(const uint8_t value, const uint32_t baseClockFrequency) noexcept
-	{
-		control = value;
-		// Turn the operation mode into a prescaling value
-		const auto prescale{prescalingFor(value & 0x07U)};
-		// Convert that into a clock ratio for the clock manager, and reinitialise the
-		// clock manager accordingly so we get the right generated frequency
-		clockManager = {baseClockFrequency, baseClockFrequency / prescale};
-	}
-
-	void timer_t::data(const uint8_t value) noexcept
-	{
-		// Always store the new value as the reload value
-		reloadValue = value;
-		// If the counter is stopped, also store it as the new counter value
-		if ((control & 0x0fU) == 0U)
-			counter = value;
-	}
-
-	void timer_t::markExternalEvent() noexcept
-	{
-		if ((control & 0x0f) == 0x08U)
-			externalEvent = true;
-	}
-
-	bool timer_t::clockCycle() noexcept
-	{
-		// Check if the timer is stopped
-		if ((control & 0x0fU) == 0U)
-			return false;
-		// If it is not, check if this is a clock advancement cycle
-		if (!clockManager.advanceCycle())
-			return false;
-		// Check if the timer is in a counting mode
-		if ((control & 0x08U) == 0U)
-		{
-			// Apply a clock pulse to the counter, and if that counter is now 0, reload it to the value in reloadValue
-			if (--counter == 0U)
-			{
-				counter = reloadValue;
-				// Signal that this was an interrupt generating cycle
-				return true;
-			}
-		}
-		// Check if the timer is in event count mode
-		else if ((control & 0x0fU) == 0x08U)
-		{
-			// If there is a pending external event
-			if (!externalEvent)
-				return false;
-			// Clear the event marker
-			externalEvent = false;
-			// Apply a clock pulse to the counter, and if that counter is now 0, reload it to the value in reloadValue
-			if (--counter == 0U)
-			{
-				counter = reloadValue;
-				// Signal that this was an interrupt generating cycle
-				return true;
-			}
-		}
-		else
-		{
-			// For now we don't support the PWM modes
-		}
-		// Signal that this was not an interrupt generating cycle
-		return false;
-	}
-
-	uint32_t timer_t::prescalingFor(const uint8_t mode) noexcept
-	{
-		switch (mode)
-		{
-			case 0U:
-				return 1U;
-			case 1U:
-				return 4U;
-			case 2U:
-				return 10U;
-			case 3U:
-				return 16U;
-			case 4U:
-				return 50U;
-			case 5U:
-				return 64U;
-			case 6U:
-				return 100U;
-			case 7U:
-				return 200U;
-		}
-		// Should not be possible, but just in case
-		return UINT32_MAX;
-	}
-} // namespace mc68901
