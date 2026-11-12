@@ -6,6 +6,14 @@
 #include "mc68901.hxx"
 #include "../unitsHelpers.hxx"
 
+extern "C"
+{
+	void mc68901_fire_dma_event(mc68901_t *self)
+	{
+		return self->fireDMAEvent();
+	}
+}
+
 mc68901_t::mc68901_t(const uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept :
 	clockedPeripheral_t<uint32_t>{clockFrequency}, m68k::irqRequester_t{cpu, level},
 	timers{{{clockFrequency}, {clockFrequency}, {clockFrequency}, {clockFrequency}}}

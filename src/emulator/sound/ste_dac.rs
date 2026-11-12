@@ -12,12 +12,15 @@
 // - STe and other schematics: https://docs.dev-docs.org/htm/search.php?find=_s
 
 use std::cell::RefCell;
+use std::ffi::c_void;
 use std::ops::AddAssign;
 
 use crate::emulator::Peripheral;
 
 pub struct STeDac
 {
+	mfp: *mut c_void,
+
 	// Values that control the DMA engine
 	begin_address: Register24b,
 	end_address: Register24b,
@@ -35,7 +38,7 @@ pub struct STeDac
 	main_volume: u8,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
 struct Register24b
 {
 	value: u32,
@@ -43,9 +46,11 @@ struct Register24b
 
 impl STeDac
 {
-	pub fn new() -> Self
+	pub fn new(mfp: *mut c_void) -> Self
 	{
 		Self {
+			mfp,
+
 			begin_address: Register24b::default(),
 			end_address: Register24b::default(),
 			sample_address: Register24b::default(),
@@ -59,6 +64,56 @@ impl STeDac
 			microwire_cycles: RefCell::new(0),
 			main_volume: 64,
 		}
+	}
+
+	pub fn clock_cycle(&mut self) -> bool
+	{
+		// Check if there's anything playing or not, and if not then exit early
+		if (self.control & (1 << 0)) == 0x00 {
+			return true;
+		}
+
+		// Calculate the current sample rate tick count to hit the required play rate
+		let sample_rate_ticks = {
+			let ticks = 1 << self.sample_rate_divider;
+			if self.sample_mono {
+				ticks
+			} else {
+				// Stero playback requires us stretch the tick rate to half to get the correct cadence
+				ticks << 1
+			}
+		};
+		// Something's playing, great.. step the rate counter to see if we should do something
+		// in this cycle, and check if the counter overflowed
+		self.sample_rate_counter += 1;
+		if self.sample_rate_counter == sample_rate_ticks {
+			// Yes, so reset it
+			self.sample_rate_counter = 0;
+		} else {
+			// No, okay - we're done.. exit early
+			return true;
+		}
+
+		// Step the sample counter based on whether we're playing mono or stereo
+		self.sample_address += if self.sample_mono {
+			1
+		} else {
+			2
+		};
+
+		// If the sample address equals the end address
+		if self.sample_address == self.end_address {
+			// Reset the counter back to the start
+			self.sample_address = self.begin_address;
+			// If we're not looping playback, disable DMA
+			if (self.control & (1 << 1)) == 0x00 {
+				self.control &= 0xfe;
+			}
+			// Ping the MFP with the completion event
+			unsafe { mc68901_fire_dma_event(self.mfp) };
+		}
+
+		true
 	}
 
 	fn run_microwire_transaction(&mut self)
@@ -259,4 +314,8 @@ impl AddAssign<u32> for Register24b
 	{
 		self.value += rhs;
 	}
+}
+
+unsafe extern "C" {
+	fn mc68901_fire_dma_event(this: *mut c_void);
 }

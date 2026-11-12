@@ -354,9 +354,9 @@ pub unsafe fn ym2149_force_edge_state(ym2149: *mut Ym2149, state: bool)
 
 /// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn ste_dac_new() -> *mut STeDac
+pub fn ste_dac_new(mfp: *mut c_void) -> *mut STeDac
 {
-	let ste_dac = Box::new(STeDac::new());
+	let ste_dac = Box::new(STeDac::new(mfp));
 	Box::into_raw(ste_dac)
 }
 
