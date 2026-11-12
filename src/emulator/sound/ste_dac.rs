@@ -61,6 +61,52 @@ impl STeDac
 		}
 	}
 
+	fn run_microwire_transaction(&mut self)
+	{
+		// Every microwire transaction is 16 cycles
+		let microwire_cycles = 16;
+		*self.microwire_cycles.borrow_mut() = microwire_cycles;
+		let microwire_mask = *self.microwire_mask.borrow();
+		// Cycle through the bits and count the number actually used by the mask,
+		// building a condensed value to work with
+		let (value, bitsUsed) = {
+			let mut data = 0;
+			let mut bits = 0usize;
+			// Loop through all the bits
+			for bit in 0..microwire_cycles {
+				// If this bit is used per the mask
+				if (microwire_mask & (1 << bit)) != 0 {
+					// Then copy the value of the data into our local and count it
+					data |= ((self.microwire_data >> bit) & 1) << bits;
+					bits += 1;
+				}
+			}
+			(data, bits)
+		};
+		// Now check for a specific write of a specific width representing an access
+		// to the main volume control register for the DAC
+		if bitsUsed == 1 && (value >> 9) == 2 {
+			// Extract out the write data and the write address
+			let data = value & 0x3f;
+			let address = (value >> 6) & 0x07;
+			// And see where the write is targeted
+			#[allow(clippy::single_match)]
+			match address {
+				// DAC main volume register
+				3 => {
+					if data > 40 {
+						// If the value of the write is more than the max allowed volume, cap it
+						self.main_volume = 64;
+					} else {
+						// Otherwise rescale it to our internal 0-64 levels
+						self.main_volume = ((data * 64) / 40) as u8;
+					}
+				},
+				_ => {},
+			};
+		}
+	}
+
 	fn microwire_cycle(&self) -> u16
 	{
 		// If there are still cycles to do
@@ -119,7 +165,43 @@ impl Peripheral for STeDac
 		}
 	}
 
-	fn write_address(&mut self, address: u32, data: &[u8]) {}
+	fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		// Extract how wide an access this is
+		let access_width = data.len();
+		// Only admit 8- and 16-bit reads
+		if access_width > 2 {
+			return;
+		}
+		// Microwire registers are only accessible as u16's
+		if access_width == 2 {
+			// u16 accesses must be to even addresses
+			if (address & 1) != 0 {
+				return;
+			}
+
+			// Handle microwire address accesses
+			match address {
+				0x22 => {
+					self.microwire_data = u16::from_be_bytes(
+						*data
+							.as_array::<2>()
+							.expect("Slice of 2 bytes converts to array of 2 bytes"),
+					);
+					self.run_microwire_transaction();
+				},
+				0x24 => {
+					*self.microwire_mask.borrow_mut() = u16::from_be_bytes(
+						*data
+							.as_array::<2>()
+							.expect("Slice of 2 bytes converts to array of 2 bytes"),
+					)
+				},
+				// Redirect everything else to 8-bit access
+				_ => self.write_address(address + 1, &data[1..2]),
+			}
+		}
+	}
 }
 
 impl Register24b
