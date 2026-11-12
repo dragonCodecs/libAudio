@@ -14,12 +14,14 @@
 use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ops::{Add, AddAssign, Deref};
+use std::ptr::NonNull;
 
 use crate::emulator::Peripheral;
+use crate::emulator::timing::mc68901::MC68901;
 
 pub struct STeDac
 {
-	mfp: *mut c_void,
+	mfp: NonNull<MC68901>,
 
 	// Values that control the DMA engine
 	begin_address: Register24b,
@@ -46,7 +48,7 @@ struct Register24b
 
 impl STeDac
 {
-	pub fn new(mfp: *mut c_void) -> Self
+	pub fn new(mfp: NonNull<MC68901>) -> Self
 	{
 		Self {
 			mfp,
@@ -110,7 +112,7 @@ impl STeDac
 				self.control &= 0xfe;
 			}
 			// Ping the MFP with the completion event
-			unsafe { mc68901_fire_dma_event(self.mfp) };
+			unsafe { self.mfp.as_mut().fire_dma_event() };
 		}
 
 		true
@@ -365,7 +367,5 @@ impl Deref for Register24b
 }
 
 unsafe extern "C" {
-	fn mc68901_fire_dma_event(this: *mut c_void);
-
 	fn memory_map_read_address_i8(this: *const c_void, address: u32) -> i8;
 }

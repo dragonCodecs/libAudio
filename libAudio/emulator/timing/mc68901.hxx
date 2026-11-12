@@ -9,7 +9,7 @@
 #include "../memoryMap.hxx"
 #include "../cpu/m68kIRQ.hxx"
 
-struct MC68901Timer;
+struct MC68901;
 
 extern "C"
 {
@@ -23,21 +23,7 @@ private:
 	void writeAddress(uint32_t address, const substrate::span<uint8_t> &data) noexcept final;
 	uint8_t irqCause() noexcept final;
 
-	uint8_t gpio{0U};
-	uint8_t activeEdge{0U};
-	uint8_t dataDirection{0U};
-	uint16_t itrEnable{0U};
-	uint16_t itrPending{0U};
-	uint16_t itrServicing{0U};
-	uint16_t itrMask{0U};
-	uint8_t vectorReg{0U};
-	uint8_t syncChar{0U};
-	uint8_t usartCtrl{0U};
-	uint8_t rxStatus{0U};
-	uint8_t txStatus{0U};
-	uint8_t usartData{0U};
-
-	std::array<MC68901Timer *, 4U> timers;
+	MC68901 *self{nullptr};
 
 public:
 	mc68901_t(uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept;
@@ -48,11 +34,12 @@ public:
 	~mc68901_t() noexcept final;
 
 	[[nodiscard]] bool clockCycle() noexcept final;
-	void fireDMAEvent() noexcept;
 
 	void configureTimer(size_t timerIndex, uint8_t reloadValue, uint8_t mode) noexcept;
 
 	void requestCPUInterrupt() noexcept;
+
+	MC68901 *inner() noexcept { return self; }
 };
 
 #endif /*EMULATOR_TIMING_MC68901_HXX*/

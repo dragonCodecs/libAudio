@@ -349,14 +349,17 @@ pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149) -> bool
 #[unsafe(no_mangle)]
 pub unsafe fn ym2149_force_edge_state(ym2149: *mut Ym2149, state: bool)
 {
-	let mut ym2149: NonNull<_> = unsafe { NonNull::new_unchecked(ym2149) };
+	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_mut() }.force_edge_state(state);
 }
 
 /// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
+/// # Safety
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub fn ste_dac_new(mfp: *mut c_void) -> *mut STeDac
+pub unsafe fn ste_dac_new(mfp: *mut MC68901) -> *mut STeDac
 {
+	let mfp = unsafe { NonNull::new_unchecked(mfp) };
 	let ste_dac = Box::new(STeDac::new(mfp));
 	Box::into_raw(ste_dac)
 }
@@ -441,83 +444,64 @@ pub unsafe fn mc68901_drop(mc68901: *mut MC68901)
 	drop(mc68901);
 }
 
-/// Allocate a new [`mc68901::Timer`] and "leak" that pointer into C++ land
+/// Using the pointer from `mc68901_new`, read data into the slice from the requested address
+/// # Safety
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub fn mc68901_timer_new(base_frequency: u32) -> *mut mc68901::Timer
+pub unsafe fn mc68901_read_address(mc68901: *mut MC68901, address: u32, mut slice: MutSlice<u8>)
 {
-	let timer = Box::new(mc68901::Timer::new(base_frequency));
-	Box::into_raw(timer)
+	let mc68901 = unsafe { NonNull::new_unchecked(mc68901) };
+	unsafe { mc68901.as_ref() }.read_address(address, slice.as_mut_slice());
 }
 
-/// Consume the pointer for a [`mc68901::Timer`] allocated with `mc68901_timer_new`
-/// and deallocate it cleanly
+/// Using the pointer from `mc68901_new`, write data into the slice to the requested address
 /// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_drop(timer: *mut mc68901::Timer)
+pub unsafe fn mc68901_write_address(mc68901: *mut MC68901, address: u32, slice: Slice<u8>)
 {
-	let timer = unsafe { Box::from_raw(timer) };
-	drop(timer);
+	let mut mc68901 = unsafe { NonNull::new_unchecked(mc68901) };
+	unsafe { mc68901.as_mut() }.write_address(address, slice.as_slice());
 }
 
-/// Using the pointer from `mc68901_timer_new`, read the control register back
+/// Using the pointer from `mc68901_new`, configure one of the timers
 /// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_read_ctrl(timer: *mut mc68901::Timer) -> u8
+pub unsafe fn mc68901_configure_timer(mc68901: *mut MC68901, timer_index: usize, reload_value: u8, mode: u8)
 {
-	let timer = unsafe { NonNull::new_unchecked(timer) };
-	unsafe { timer.as_ref() }.read_ctrl()
+	let mut mc68901 = unsafe { NonNull::new_unchecked(mc68901) };
+	unsafe { mc68901.as_mut() }.configure_timer(timer_index, reload_value, mode);
 }
 
-/// Using the pointer from `mc68901_timer_new`, read the data register back
+/// Using the pointer from `mc68901_new`, run a clock cycle
 /// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_read_data(timer: *mut mc68901::Timer) -> u8
+pub unsafe fn mc68901_clock_cycle(mc68901: *mut MC68901) -> bool
 {
-	let timer = unsafe { NonNull::new_unchecked(timer) };
-	unsafe { timer.as_ref() }.read_data()
+	let mut mc68901 = unsafe { NonNull::new_unchecked(mc68901) };
+	unsafe { mc68901.as_mut() }.clock_cycle()
 }
 
-/// Using the pointer from `mc68901_timer_new`, write to the control register
+/// Using the pointer from `mc68901_new`, fire a DMA event
 /// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_write_ctrl(timer: *mut mc68901::Timer, value: u8, base_frequency: u32)
+pub unsafe fn mc68901_fire_dma_event(mc68901: *mut MC68901)
 {
-	let mut timer = unsafe { NonNull::new_unchecked(timer) };
-	unsafe { timer.as_mut() }.write_ctrl(value, base_frequency);
+	let mut mc68901 = unsafe { NonNull::new_unchecked(mc68901) };
+	unsafe { mc68901.as_mut() }.fire_dma_event();
 }
 
-/// Using the pointer from `mc68901_timer_new`, write to the data register
+/// Using the pointer from `mc68901_new`, retrieve the cause of an IRQ
 /// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
+/// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_write_data(timer: *mut mc68901::Timer, value: u8)
+pub unsafe fn mc68901_irq_cause(mc68901: *mut MC68901) -> u8
 {
-	let mut timer = unsafe { NonNull::new_unchecked(timer) };
-	unsafe { timer.as_mut() }.write_data(value);
-}
-
-/// Using the pointer from `mc68901_timer_new`, mark an external event occuring on the timer
-/// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_mark_external_event(timer: *mut mc68901::Timer)
-{
-	let mut timer = unsafe { NonNull::new_unchecked(timer) };
-	unsafe { timer.as_mut() }.mark_external_event();
-}
-
-/// Using the pointer from `mc68901_timer_new`, run a clock cycle
-/// # Safety
-/// As long as the pointer given is from `mc68901_timer_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn mc68901_timer_clock_cycle(timer: *mut mc68901::Timer) -> bool
-{
-	let mut timer = unsafe { NonNull::new_unchecked(timer) };
-	unsafe { timer.as_mut() }.clock_cycle()
+	let mut mc68901 = unsafe { NonNull::new_unchecked(mc68901) };
+	unsafe { mc68901.as_mut() }.irq_cause()
 }
 
 /// Calculate the prescaling for the given timer mode
