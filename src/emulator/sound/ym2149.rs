@@ -37,7 +37,7 @@ pub struct Ym2149
 }
 
 #[derive(Default, Clone, Copy)]
-pub struct Ym2149Channel
+struct Ym2149Channel
 {
 	period: u16,
 	counter: u16,
@@ -293,9 +293,11 @@ impl Ym2149
 		((sample as i32) - (self.dc_adjustment_sum >> DC_ADJUSTMENT_LENGTH_LOG2) as i32) as i16
 	}
 
-	pub fn channel_mut(&mut self, index: usize) -> &mut Ym2149Channel
+	pub fn force_edge_state(&mut self, edge_state: bool)
 	{
-		&mut self.channels[index]
+		for channel in self.channels.iter_mut() {
+			channel.reset_edge_state(edge_state);
+		}
 	}
 }
 
@@ -459,11 +461,6 @@ impl Ym2149Channel
 	pub fn shift_required(&self) -> bool
 	{
 		self.period <= 1
-	}
-
-	pub fn force_edge_state(&mut self, state: bool)
-	{
-		self.edge_state = state;
 	}
 }
 

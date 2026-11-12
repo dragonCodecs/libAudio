@@ -15,14 +15,12 @@ extern "C"
 	Ym2149 *ym2149_new();
 	void ym2149_drop(Ym2149 *);
 
-	Ym2149Channel *ym2149_channel(Ym2149 *, size_t);
 	void ym2149_read_address(Ym2149 *, uint32_t,  slice_t<uint8_t>);
 	void ym2149_write_address(const Ym2149 *, uint32_t, const slice_t<uint8_t>);
 	bool ym2149_sample_ready(const Ym2149 *);
 	int16_t ym2149_sample(Ym2149 *);
 	bool ym2149_clock_cycle(Ym2149 *, ym2149_t *);
-
-	void ym2149_channel_force_edge_state(Ym2149Channel *, bool);
+	void ym2149_force_edge_state(Ym2149 *, bool);
 
 	bool ym2149_advance_cycle(ym2149_t *self)
 	{
@@ -34,8 +32,6 @@ ym2149_t::ym2149_t(const uint32_t clockFrequency, const uint32_t sampleFrequency
 	clockedPeripheral_t<uint32_t>{clockFrequency}, clockManager{clockFrequency, sampleFrequency}
 {
 	self = ym2149_new();
-	for (auto [index, channel] : substrate::indexedIterator_t{channels})
-		channel = ym2149_channel(self, index);
 }
 
 ym2149_t::~ym2149_t() noexcept
@@ -107,6 +103,5 @@ int16_t ym2149_t::sample() noexcept
 
 void ym2149_t::forceChannelStates(const bool edgeState) noexcept
 {
-	for (auto &channel : channels)
-		ym2149_channel_force_edge_state(channel, edgeState);
+	ym2149_force_edge_state(self, edgeState);
 }

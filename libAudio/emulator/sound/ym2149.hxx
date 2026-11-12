@@ -9,14 +9,11 @@
 #include "../memoryMap.hxx"
 
 struct Ym2149;
-struct Ym2149Channel;
 
 struct ym2149_t final : public clockedPeripheral_t<uint32_t>
 {
 private:
 	Ym2149 *self{nullptr};
-
-	std::array<Ym2149Channel *, 3U> channels{};
 
 	clockManager_t clockManager;
 
