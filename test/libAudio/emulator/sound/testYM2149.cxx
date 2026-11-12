@@ -89,57 +89,6 @@ constexpr static auto toneSamples
 
 class testYM2149 final : public testsuite
 {
-	void testRegisterIO()
-	{
-		// Set up a dummy PSG
-		ym2149_t psg{2_MHz, 48_kHz};
-		// For each register, try to write and then read back some value
-		// Channel A frequency
-		writeRegister(psg, 0U, 0xffU);
-		assertEqual(readRegister(psg, 0U), 0xffU);
-		writeRegister(psg, 1U, 0xffU);
-		assertEqual(readRegister(psg, 0U), 0xffU);
-		assertEqual(readRegister(psg, 1U), 0x0fU);
-		// Channel B frequency
-		writeRegister(psg, 2U, 0xffU);
-		assertEqual(readRegister(psg, 2U), 0xffU);
-		writeRegister(psg, 3U, 0xffU);
-		assertEqual(readRegister(psg, 2U), 0xffU);
-		assertEqual(readRegister(psg, 3U), 0x0fU);
-		// Channel C frequency
-		writeRegister(psg, 4U, 0xffU);
-		assertEqual(readRegister(psg, 4U), 0xffU);
-		writeRegister(psg, 5U, 0xffU);
-		assertEqual(readRegister(psg, 4U), 0xffU);
-		assertEqual(readRegister(psg, 5U), 0x0fU);
-		// Noise frequency
-		writeRegister(psg, 6U, 0xffU);
-		assertEqual(readRegister(psg, 6U), 0x1fU);
-		// Mixer settings
-		writeRegister(psg, 7U, 0xffU);
-		assertEqual(readRegister(psg, 7U), 0xffU);
-		// Channel level settings
-		writeRegister(psg, 8U, 0xffU);
-		assertEqual(readRegister(psg, 8U), 0x1fU);
-		writeRegister(psg, 9U, 0xffU);
-		assertEqual(readRegister(psg, 9U), 0x1fU);
-		writeRegister(psg, 10U, 0xffU);
-		assertEqual(readRegister(psg, 10U), 0x1fU);
-		// Envelope frequency
-		writeRegister(psg, 11U, 0xffU);
-		assertEqual(readRegister(psg, 11U), 0xffU);
-		writeRegister(psg, 12U, 0xffU);
-		assertEqual(readRegister(psg, 12U), 0xffU);
-		// Envelope shape
-		writeRegister(psg, 13U, 0xffU);
-		assertEqual(readRegister(psg, 13U), 0x0fU);
-		// GPIO ports
-		writeRegister(psg, 14U, 0xffU);
-		assertEqual(readRegister(psg, 14U), 0xffU);
-		writeRegister(psg, 15U, 0xffU);
-		assertEqual(readRegister(psg, 15U), 0xffU);
-	}
-
 	void testBadRegisterIO()
 	{
 		// Set up a dummy PSG and get access to its register I/O interface
@@ -240,7 +189,6 @@ class testYM2149 final : public testsuite
 public:
 	void registerTests() final
 	{
-		CXX_TEST(testRegisterIO)
 		CXX_TEST(testBadRegisterIO)
 		CXX_TEST(testToneWithEnvelope)
 	}

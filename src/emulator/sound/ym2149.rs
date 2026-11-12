@@ -464,3 +464,9 @@ impl Channel
 		self.period <= 1
 	}
 }
+
+#[cfg(test)]
+mod tests
+{
+	include!("tests/ym2149.rs");
+}
