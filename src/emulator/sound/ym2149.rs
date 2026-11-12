@@ -296,11 +296,7 @@ impl Ym2149
 				}
 			};
 			// Check to see what shift should be applied (1 if there is one needed, 0 otherwise)
-			let shift: usize = if self.channels[channel].shift_required() {
-				1
-			} else {
-				0
-			};
+			let shift = self.channels[channel].shift_required() as usize;
 			// Compute and store the final level using the logarithm table for the chip
 			levels[channel] = LOG_LEVEL[level as usize] >> shift;
 		}
