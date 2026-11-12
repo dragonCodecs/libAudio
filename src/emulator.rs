@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+mod clock_manager;
 pub mod sound;
 pub mod timing;
 
