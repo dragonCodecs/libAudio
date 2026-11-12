@@ -11,6 +11,11 @@
 
 struct Mc68901Timer;
 
+extern "C"
+{
+	uint32_t mc68901_timer_prescaling_for(uint8_t);
+}
+
 struct mc68901_t final : public clockedPeripheral_t<uint32_t>, m68k::irqRequester_t
 {
 private:

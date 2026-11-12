@@ -501,6 +501,13 @@ pub unsafe fn mc68901_timer_clock_cycle(timer: *mut mc68901::Timer) -> bool
 	unsafe { timer.as_mut() }.clock_cycle()
 }
 
+/// Calculate the prescaling for the given timer mode
+#[unsafe(no_mangle)]
+pub fn mc68901_timer_prescaling_for(mode: u8) -> u32
+{
+	mc68901::Timer::prescaling_for(mode)
+}
+
 mod console
 {
 	use std::ffi::CString;

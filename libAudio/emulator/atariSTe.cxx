@@ -158,7 +158,7 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 			for (const auto &factor : substrate::indexSequence_t{8U})
 			{
 				// Calculate if this amount of prescaling results in a value that fits the timer counter
-				const udiv_t counter{cycleRate.quotient, mc68901::timer_t::prescalingFor(static_cast<uint8_t>(factor))};
+				const udiv_t counter{cycleRate.quotient, mc68901_timer_prescaling_for(static_cast<uint8_t>(factor))};
 				// If it does and the error is less than the previously calculated value,
 				// note the factor and store the value
 				if (counter.quotient < 256U && counter.remainder < scaledRate.remainder)
@@ -174,7 +174,7 @@ void atariSTe_t::configureTimer(const char timer, const uint16_t timerFrequency)
 
 	// With a scale factor picked, write the counter value, prescaling, and error into memory for the
 	// timer IRQ handler to use to adjust for the error and maintain frequency accuracy
-	const auto prescaler{mc68901::timer_t::prescalingFor(mode)};
+	const auto prescaler{mc68901_timer_prescaling_for(mode)};
 	const udiv_t counter{cycleRate.quotient, prescaler};
 	writeAddress(0x001000U, static_cast<uint8_t>(prescaler));
 	writeAddress(0x001001U, static_cast<uint8_t>(counter.quotient)); // Reload value

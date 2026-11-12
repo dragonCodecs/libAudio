@@ -105,7 +105,7 @@ impl Timer
 		}
 	}
 
-	fn prescaling_for(mode: u8) -> u32
+	pub fn prescaling_for(mode: u8) -> u32
 	{
 		match mode {
 			0 => 1,
