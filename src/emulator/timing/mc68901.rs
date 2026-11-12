@@ -3,6 +3,27 @@
 
 use crate::emulator::clock_manager::ClockManager;
 
+#[allow(unused)]
+pub struct MC68901
+{
+	gpio: u8,
+	active_edge: u8,
+	data_direction: u8,
+	itr_enable: u16,
+	itr_pending: u16,
+	itr_servicing: u16,
+	itr_mask: u16,
+	vector_reg: u8,
+	sync_char: u8,
+	usart_ctrl: u8,
+	rx_status: u8,
+	tx_status: u8,
+	usart_data: u8,
+
+	timers: [Timer; 4],
+}
+
+#[derive(Clone, Copy)]
 pub struct Timer
 {
 	control: u8,
@@ -10,6 +31,31 @@ pub struct Timer
 	reload_value: u8,
 	clock_manager: ClockManager,
 	external_event: bool,
+}
+
+impl MC68901
+{
+	pub fn new(clock_frequency: u32) -> Self
+	{
+		Self {
+			gpio: 0,
+			active_edge: 0,
+			data_direction: 0,
+			// Timer C interrupts should be enabled and unmasked by default
+			itr_enable: 1 << 5,
+			itr_pending: 0,
+			itr_servicing: 0,
+			itr_mask: 1 << 5,
+			vector_reg: 0,
+			sync_char: 0,
+			usart_ctrl: 0,
+			rx_status: 0,
+			tx_status: 0,
+			usart_data: 0,
+
+			timers: [Timer::new(clock_frequency); 4],
+		}
+	}
 }
 
 impl Timer

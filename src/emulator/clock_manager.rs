@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct ClockManager
 {
 	/// The base clock frequency the manager will be called at
