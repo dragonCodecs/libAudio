@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 pub mod sound;
+pub mod timing;
 
 pub trait Peripheral
 {
