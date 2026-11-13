@@ -7,7 +7,7 @@ use rand::rngs::StdRng;
 use crate::emulator::clock_manager::ClockManager;
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
-pub struct Ym2149
+pub struct YM2149
 {
 	clock_frequency: u32,
 
@@ -57,7 +57,7 @@ const LOG_LEVEL: [u16; 32] = [
 	0x0caf, 0x0f15, 0x11f0, 0x1555, 0x195e, 0x1e2b, 0x23e0, 0x2aaa,
 ];
 
-impl Ym2149
+impl YM2149
 {
 	pub fn new(clock_frequency: u32, sample_frequency: u32) -> Self
 	{
@@ -283,7 +283,7 @@ impl Ym2149
 	}
 }
 
-impl Peripheral<u32> for Ym2149
+impl Peripheral<u32> for YM2149
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -396,7 +396,7 @@ impl Peripheral<u32> for Ym2149
 	}
 }
 
-impl ClockedPeripheral<u32> for Ym2149
+impl ClockedPeripheral<u32> for YM2149
 {
 	fn clock_frequency(&self) -> u32
 	{

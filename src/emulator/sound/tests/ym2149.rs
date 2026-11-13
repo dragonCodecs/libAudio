@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use super::Ym2149;
+use super::YM2149;
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
 fn write_register(psg: &mut impl Peripheral<u32>, reg: u8, value: u8)
@@ -22,7 +22,7 @@ fn read_register(psg: &mut impl Peripheral<u32>, reg: u8) -> u8
 fn register_io()
 {
 	// Set up a dummy PSG
-	let mut psg = Ym2149::new(2_000_000, 48_000);
+	let mut psg = YM2149::new(2_000_000, 48_000);
 	// Make sure it's running at the right clock frequency
 	assert_eq!(psg.clock_frequency(), 2_000_000);
 	// For each register, try to write and then read back some value
@@ -92,7 +92,7 @@ fn register_io()
 fn bad_register_io()
 {
 	// Set up a dummy PSG
-	let mut psg = Ym2149::new(2_000_000, 48_000);
+	let mut psg = YM2149::new(2_000_000, 48_000);
 	// Set up a byte working area
 	let mut data = [0x5a];
 	// Try to read something other than register 0
@@ -196,7 +196,7 @@ const TONE_SAMPLES: [u16; 463] = [
 fn tone_with_envelope()
 {
 	// Set up a PSG to generate 44.1kHz audio, and configure the channels and mixer settings
-	let mut psg = Ym2149::new(2_000_000, 44_100);
+	let mut psg = YM2149::new(2_000_000, 44_100);
 	// Make the test deterministic by forcing the edge states into a known state
 	psg.force_channel_states(true);
 	// Write channel configs, A = 638, B = 0, C = 0

@@ -10,7 +10,7 @@ use std::ptr::{NonNull, null_mut};
 use crate::emulator::atari_ste_roms::AtariSTeROMs;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
-use crate::emulator::sound::ym2149::Ym2149;
+use crate::emulator::sound::ym2149::YM2149;
 use crate::emulator::timing::mc68901::{self, MC68901};
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
@@ -286,9 +286,9 @@ pub unsafe fn sndh_metadata_tune_name(metadata: *mut SndhMetadata, index: usize)
 
 /// Allocate a new [`Ym2149`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn ym2149_new(clock_frequency: u32, sample_frequency: u32) -> *mut Ym2149
+pub fn ym2149_new(clock_frequency: u32, sample_frequency: u32) -> *mut YM2149
 {
-	let ym2149 = Box::new(Ym2149::new(clock_frequency, sample_frequency));
+	let ym2149 = Box::new(YM2149::new(clock_frequency, sample_frequency));
 	Box::into_raw(ym2149)
 }
 
@@ -297,7 +297,7 @@ pub fn ym2149_new(clock_frequency: u32, sample_frequency: u32) -> *mut Ym2149
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_drop(ym2149: *mut Ym2149)
+pub unsafe fn ym2149_drop(ym2149: *mut YM2149)
 {
 	let ym2149 = unsafe { Box::from_raw(ym2149) };
 	drop(ym2149);
@@ -307,7 +307,7 @@ pub unsafe fn ym2149_drop(ym2149: *mut Ym2149)
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_read_address(ym2149: *mut Ym2149, address: u32, mut slice: MutSlice<u8>)
+pub unsafe fn ym2149_read_address(ym2149: *mut YM2149, address: u32, mut slice: MutSlice<u8>)
 {
 	let ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_ref() }.read_address(address, slice.as_mut_slice());
@@ -317,7 +317,7 @@ pub unsafe fn ym2149_read_address(ym2149: *mut Ym2149, address: u32, mut slice: 
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_write_address(ym2149: *mut Ym2149, address: u32, slice: Slice<u8>)
+pub unsafe fn ym2149_write_address(ym2149: *mut YM2149, address: u32, slice: Slice<u8>)
 {
 	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_mut() }.write_address(address, slice.as_slice());
@@ -327,7 +327,7 @@ pub unsafe fn ym2149_write_address(ym2149: *mut Ym2149, address: u32, slice: Sli
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_sample_ready(ym2149: *mut Ym2149) -> bool
+pub unsafe fn ym2149_sample_ready(ym2149: *mut YM2149) -> bool
 {
 	let ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_ref() }.sample_ready()
@@ -337,7 +337,7 @@ pub unsafe fn ym2149_sample_ready(ym2149: *mut Ym2149) -> bool
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_sample(ym2149: *mut Ym2149) -> i16
+pub unsafe fn ym2149_sample(ym2149: *mut YM2149) -> i16
 {
 	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_mut() }.sample()
@@ -347,7 +347,7 @@ pub unsafe fn ym2149_sample(ym2149: *mut Ym2149) -> i16
 /// # Safety
 /// As long as the pointer given is from `ym2149_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149) -> bool
+pub unsafe fn ym2149_clock_cycle(ym2149: *mut YM2149) -> bool
 {
 	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
 	unsafe { ym2149.as_mut() }.clock_cycle()
