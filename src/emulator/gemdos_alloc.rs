@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::cmp::Ordering;
+
 pub struct GemdosAllocator
 {
 	heap_begin: u32,
@@ -143,6 +145,30 @@ impl GemdosAllocator
 			Some(chunk.base)
 		} else {
 			None
+		}
+	}
+
+	pub fn free(&mut self, ptr: u32) -> bool
+	{
+		// Find the chunk for this pointer from the alloc list
+		let node = self.alloc_list.iter().position(|chunk| chunk.base == ptr);
+		match node {
+			// If it's not in this list, something is wrong but we're also done here
+			None => false,
+			Some(index) => {
+				// Otherwise, extract it from the alloc list and find where to insert it in the free list
+				// (strict requirement: free block list must remain sorted!)
+				let chunk = self.alloc_list.remove(index);
+				let index = self
+					.free_list
+					.binary_search_by(|chunk| match chunk.base.cmp(&ptr) {
+						Ordering::Equal => Ordering::Greater,
+						ord => ord,
+					})
+					.expect_err("Insertion position search never fails");
+				self.free_list.insert(index, chunk);
+				true
+			},
 		}
 	}
 }
