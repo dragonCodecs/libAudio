@@ -47,6 +47,9 @@ public:
 	~sndhLoader_t();
 	[[nodiscard]] const sndhMetadata_t &metadata() const noexcept { return _metadata; }
 	[[nodiscard]] bool copyToRAM(atariSTe_t &emulator) noexcept;
+
+	// NB: for test use only
+	[[nodiscard]] SndhLoader *loader() const noexcept { return _loader; }
 };
 
 #endif /*SNDH_LOADER_HXX*/
