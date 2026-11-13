@@ -10,7 +10,7 @@ use std::ptr::{NonNull, null_mut};
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
 use crate::emulator::timing::mc68901::{self, MC68901};
-use crate::emulator::{ClockedPeripheral, Peripheral};
+use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
@@ -499,6 +499,25 @@ pub unsafe fn mc68901_irq_cause(mc68901: *mut MC68901) -> u8
 pub fn mc68901_timer_prescaling_for(mode: u8) -> u32
 {
 	mc68901::Timer::prescaling_for(mode)
+}
+
+/// Allocate a new [`MemoryMap<u32>`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn memory_map_u32_new(valid_address_mask: u32) -> *mut MemoryMap<u32>
+{
+	let memory_map = Box::new(MemoryMap::new(valid_address_mask));
+	Box::into_raw(memory_map)
+}
+
+/// Consume the pointer for a [`MemoryMap<u32>`] allocated with `memory_map_u32_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `memory_map_u32_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_u32_drop(memory_map: *mut MemoryMap<u32>)
+{
+	let memory_map = unsafe { Box::from_raw(memory_map) };
+	drop(memory_map);
 }
 
 mod console
