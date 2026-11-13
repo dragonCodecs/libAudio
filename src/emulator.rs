@@ -7,17 +7,17 @@ mod clock_manager;
 pub mod sound;
 pub mod timing;
 
-pub trait Peripheral<T>
+pub trait Peripheral<Address>
 where
-	T: Unsigned,
+	Address: Unsigned,
 {
-	fn read_address(&self, address: T, data: &mut [u8]);
-	fn write_address(&mut self, address: T, data: &[u8]);
+	fn read_address(&self, address: Address, data: &mut [u8]);
+	fn write_address(&mut self, address: Address, data: &[u8]);
 }
 
-pub trait ClockedPeripheral<T>: Peripheral<T>
+pub trait ClockedPeripheral<Address>: Peripheral<Address>
 where
-	T: Unsigned,
+	Address: Unsigned,
 {
 	#[allow(unused)]
 	#[must_use]
