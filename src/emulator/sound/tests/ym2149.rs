@@ -13,7 +13,7 @@ fn write_register(psg: &mut impl Peripheral, reg: u8, value: u8)
 fn read_register(psg: &mut impl Peripheral, reg: u8) -> u8
 {
 	psg.write_address(0, &[reg]);
-	let mut result = [0; 1];
+	let mut result = [0];
 	psg.read_address(0, &mut result);
 	result[0]
 }
@@ -84,4 +84,46 @@ fn register_io()
 	assert_eq!(read_register(&mut psg, 15), 0x00);
 	write_register(&mut psg, 15, 0xff);
 	assert_eq!(read_register(&mut psg, 15), 0xff);
+}
+
+#[test]
+fn bad_register_io()
+{
+	// Set up a dummy PSG
+	let mut psg = Ym2149::new(2_000_000, 48_000);
+	// Set up a byte working area
+	let mut data = [0x5a];
+	// Try to read something other than register 0
+	psg.read_address(2, &mut data);
+	assert_eq!(data[0], 0x5a);
+	// Try writing to an odd register (should be ignored)
+	data[0] = 0xff;
+	psg.write_address(1, &data);
+	data[0] = 0x5a;
+	psg.read_address(1, &mut data);
+	assert_eq!(data[0], 0x5a);
+	// Set up a 2 byte working area
+	let data = [0xff; 2];
+	// Try to do a write (should be to register 15)
+	psg.write_address(0, &data);
+	psg.write_address(2, &data);
+	// Check that it worked
+	let mut data = [0; 2];
+	psg.read_address(0, &mut data);
+	assert_eq!(data, [0xff, 0x00]);
+	// Set up a 4 byte working area
+	let data = [0x00, 0xff, 0xff, 0xff];
+	// Try to do a 4 byte write (should be rejected, if not it'll put us on reg 0)
+	psg.write_address(0, &data);
+	let mut data = [0x5a];
+	// Check what we read back is still register 15's data (register 0 is 0)
+	psg.read_address(0, &mut data);
+	assert_eq!(data[0], 0xff);
+	// Reset the byte in reg 15 to zero
+	data[0] = 0;
+	psg.write_address(2, &data);
+	// Try to do a 32-bit read (should be rejected)
+	let mut data = [0xff; 4];
+	psg.read_address(0, &mut data);
+	assert_eq!(data, [0xff; 4]);
 }
