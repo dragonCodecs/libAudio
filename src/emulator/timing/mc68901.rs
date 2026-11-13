@@ -393,6 +393,21 @@ impl MC68901Inner
 	}
 }
 
+pub fn timer_prescaling_for(mode: u8) -> u32
+{
+	match mode {
+		0 => 1,
+		1 => 4,
+		2 => 10,
+		3 => 16,
+		4 => 50,
+		5 => 64,
+		6 => 100,
+		7 => 200,
+		_ => unreachable!(),
+	}
+}
+
 impl Timer
 {
 	pub fn new(base_frequency: u32) -> Self
@@ -420,7 +435,7 @@ impl Timer
 	{
 		self.control = value;
 		// Turn the operation mode into a prescaling value
-		let prescale = Self::prescaling_for(value & 0x07);
+		let prescale = timer_prescaling_for(value & 0x07);
 		// Convert that into a clock ratio for the clock manager, and reinitialise the
 		// clock manager accordingly so we get the right generated frequency
 		self.clock_manager = ClockManager::new(base_frequency, base_frequency / prescale);
@@ -483,21 +498,6 @@ impl Timer
 			// For now we don't support the PWM modes
 			// Signal that this was not an interrupt generating cycle
 			false
-		}
-	}
-
-	pub fn prescaling_for(mode: u8) -> u32
-	{
-		match mode {
-			0 => 1,
-			1 => 4,
-			2 => 10,
-			3 => 16,
-			4 => 50,
-			5 => 64,
-			6 => 100,
-			7 => 200,
-			_ => unreachable!(),
 		}
 	}
 }

@@ -484,7 +484,7 @@ pub fn mc68901_irq_cause(mc68901: &mut MC68901) -> u8
 #[unsafe(no_mangle)]
 pub fn mc68901_timer_prescaling_for(mode: u8) -> u32
 {
-	mc68901::Timer::prescaling_for(mode)
+	mc68901::timer_prescaling_for(mode)
 }
 
 const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
