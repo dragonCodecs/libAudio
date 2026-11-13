@@ -10,7 +10,7 @@ foreach test : cpuTests
 	map = testObjectMap.get(test, {})
 	libAudioObjs = map.has_key('libAudio') ? [libAudioLibrary.extract_objects(map['libAudio'])] : []
 	#testObjs = map.has_key('test') ? [testHelpers.extract_objects(map['test'])] : []
-	testLibs = map.get('libs', [])
+	testLibs = map.get('libs', []) + [libAudioRS]
 	testDeps = map.get('deps', [])
 	custom_target(
 		test,
