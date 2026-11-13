@@ -7,10 +7,10 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
-use crate::emulator::Peripheral;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
 use crate::emulator::timing::mc68901::{self, MC68901};
+use crate::emulator::{ClockedPeripheral, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
@@ -347,10 +347,10 @@ pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149) -> bool
 /// # Safety
 /// As long as the pointer given is from `mc68901_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ste_dac_new(mfp: *mut MC68901) -> *mut STeDac
+pub unsafe fn ste_dac_new(clock_frequency: u32, mfp: *mut MC68901) -> *mut STeDac
 {
 	let mfp = unsafe { NonNull::new_unchecked(mfp) };
-	let ste_dac = Box::new(STeDac::new(mfp));
+	let ste_dac = Box::new(STeDac::new(clock_frequency, mfp));
 	Box::into_raw(ste_dac)
 }
 

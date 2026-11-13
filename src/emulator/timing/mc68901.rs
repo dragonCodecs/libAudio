@@ -3,12 +3,13 @@
 
 use std::ffi::c_void;
 
-use crate::emulator::Peripheral;
 use crate::emulator::clock_manager::ClockManager;
+use crate::emulator::{ClockedPeripheral, Peripheral};
 
 pub struct MC68901
 {
 	this: *mut c_void,
+	clock_frequency: u32,
 
 	gpio: u8,
 	active_edge: u8,
@@ -43,6 +44,7 @@ impl MC68901
 	{
 		Self {
 			this,
+			clock_frequency,
 
 			gpio: 0,
 			active_edge: 0,
@@ -74,35 +76,6 @@ impl MC68901
 		// Configure the reload value and mode
 		timer.write_data(reload_value);
 		timer.write_ctrl(mode, unsafe { mc68901_clock_frequency(self.this) });
-	}
-
-	pub fn clock_cycle(&mut self) -> bool
-	{
-		// Go through each timer and try to advance them a clock cycle
-		for (index, timer) in self.timers.iter_mut().enumerate() {
-			// Translate the timer number into an interrupt register bit
-			let itr_bit = 1 <<
-				// Dispatch the timer to the bit number for it
-				match index {
-					0 => 13,
-					1 => 8,
-					2 => 5,
-					3 => 4,
-					_ => unreachable!(),
-				};
-			// If the clock cycle on the timer triggered an interrupt causing event
-			if timer.clock_cycle() {
-				// If interrupts are enabled for the timer, set the pending bit
-				if (self.itr_enable & itr_bit) == itr_bit {
-					self.itr_pending |= itr_bit;
-				}
-			}
-		}
-		// If we have any pending IRQs as a result of this cycle, request handling by the CPU
-		if (self.itr_pending & self.itr_mask) != 0 {
-			unsafe { mc68901_request_interrupt(self.this) };
-		}
-		true
 	}
 
 	pub fn fire_dma_event(&mut self)
@@ -302,6 +275,43 @@ impl Peripheral<u32> for MC68901
 			23 => self.usart_data = value,
 			_ => {},
 		}
+	}
+}
+
+impl ClockedPeripheral<u32> for MC68901
+{
+	fn clock_frequency(&self) -> u32
+	{
+		self.clock_frequency
+	}
+
+	fn clock_cycle(&mut self) -> bool
+	{
+		// Go through each timer and try to advance them a clock cycle
+		for (index, timer) in self.timers.iter_mut().enumerate() {
+			// Translate the timer number into an interrupt register bit
+			let itr_bit = 1 <<
+				// Dispatch the timer to the bit number for it
+				match index {
+					0 => 13,
+					1 => 8,
+					2 => 5,
+					3 => 4,
+					_ => unreachable!(),
+				};
+			// If the clock cycle on the timer triggered an interrupt causing event
+			if timer.clock_cycle() {
+				// If interrupts are enabled for the timer, set the pending bit
+				if (self.itr_enable & itr_bit) == itr_bit {
+					self.itr_pending |= itr_bit;
+				}
+			}
+		}
+		// If we have any pending IRQs as a result of this cycle, request handling by the CPU
+		if (self.itr_pending & self.itr_mask) != 0 {
+			unsafe { mc68901_request_interrupt(self.this) };
+		}
+		true
 	}
 }
 

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use super::Ym2149;
-use crate::emulator::Peripheral;
+use crate::emulator::{ClockedPeripheral, Peripheral};
 
 fn write_register(psg: &mut impl Peripheral<u32>, reg: u8, value: u8)
 {
@@ -23,6 +23,8 @@ fn register_io()
 {
 	// Set up a dummy PSG
 	let mut psg = Ym2149::new(2_000_000, 48_000);
+	// Make sure it's running at the right clock frequency
+	assert_eq!(psg.clock_frequency(), 2_000_000);
 	// For each register, try to write and then read back some value
 	// Channel A frequency
 	assert_eq!(read_register(&mut psg, 0), 0x00);

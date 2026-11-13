@@ -10,7 +10,7 @@
 
 extern "C"
 {
-	STeDac *ste_dac_new(MC68901 *);
+	STeDac *ste_dac_new(uint32_t, MC68901 *);
 	void ste_dac_drop(STeDac *);
 
 	void ste_dac_read_address(const STeDac *, uint32_t, slice_t<uint8_t>);
@@ -39,7 +39,7 @@ extern "C"
  */
 
 steDAC_t::steDAC_t(const uint32_t clockFrequency, mc68901_t &mfp) noexcept :
-	clockedPeripheral_t<uint32_t>{clockFrequency}, self{ste_dac_new(mfp.inner())} { }
+	clockedPeripheral_t<uint32_t>{clockFrequency}, self{ste_dac_new(clockFrequency, mfp.inner())} { }
 
 steDAC_t::~steDAC_t() noexcept
 {

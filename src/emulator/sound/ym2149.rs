@@ -4,11 +4,13 @@
 use rand::RngExt;
 use rand::rngs::StdRng;
 
-use crate::emulator::Peripheral;
 use crate::emulator::clock_manager::ClockManager;
+use crate::emulator::{ClockedPeripheral, Peripheral};
 
 pub struct Ym2149
 {
+	clock_frequency: u32,
+
 	selected_register: u8,
 	cycles_till_update: u8,
 
@@ -60,6 +62,8 @@ impl Ym2149
 	pub fn new(clock_frequency: u32, sample_frequency: u32) -> Self
 	{
 		let mut this = Self {
+			clock_frequency,
+
 			selected_register: 0,
 			cycles_till_update: 0,
 
@@ -92,30 +96,6 @@ impl Ym2149
 			channel.reset_edge_state(rng.random_bool(0.5));
 		}
 		this
-	}
-
-	pub fn clock_cycle(&mut self) -> bool
-	{
-		// Reset the channel states if ready was true
-		if self.ready {
-			self.read = false;
-			for state in self.channel_state.iter_mut() {
-				*state = false;
-			}
-		}
-
-		// See if a sample should be ready this cycle or not
-		self.ready = self.clock_manager.advance_cycle();
-
-		// If we should update the FSM in this cycle, do so
-		if self.cycles_till_update == 0 {
-			self.update_fsm();
-		}
-		// The internal state machine runs at 1/8th the device clock speed
-		// (presume that ~SEL is low, yielding `f(T) = (f(Master) / 2) / (16 * TP)`
-		// which simplifies to `f(T) = f(Master) / (8 * TP)``)
-		self.cycles_till_update = (self.cycles_till_update + 1) & 7;
-		true
 	}
 
 	fn update_fsm(&mut self)
@@ -413,6 +393,38 @@ impl Peripheral<u32> for Ym2149
 			// If it's not one of the known peripheral register addresses, ignore the write
 			_ => {},
 		}
+	}
+}
+
+impl ClockedPeripheral<u32> for Ym2149
+{
+	fn clock_frequency(&self) -> u32
+	{
+		self.clock_frequency
+	}
+
+	fn clock_cycle(&mut self) -> bool
+	{
+		// Reset the channel states if ready was true
+		if self.ready {
+			self.read = false;
+			for state in self.channel_state.iter_mut() {
+				*state = false;
+			}
+		}
+
+		// See if a sample should be ready this cycle or not
+		self.ready = self.clock_manager.advance_cycle();
+
+		// If we should update the FSM in this cycle, do so
+		if self.cycles_till_update == 0 {
+			self.update_fsm();
+		}
+		// The internal state machine runs at 1/8th the device clock speed
+		// (presume that ~SEL is low, yielding `f(T) = (f(Master) / 2) / (16 * TP)`
+		// which simplifies to `f(T) = f(Master) / (8 * TP)``)
+		self.cycles_till_update = (self.cycles_till_update + 1) & 7;
+		true
 	}
 }
 

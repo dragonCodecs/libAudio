@@ -14,3 +14,14 @@ where
 	fn read_address(&self, address: T, data: &mut [u8]);
 	fn write_address(&mut self, address: T, data: &[u8]);
 }
+
+pub trait ClockedPeripheral<T>: Peripheral<T>
+where
+	T: Unsigned,
+{
+	#[allow(unused)]
+	#[must_use]
+	fn clock_frequency(&self) -> u32;
+	#[must_use]
+	fn clock_cycle(&mut self) -> bool;
+}
