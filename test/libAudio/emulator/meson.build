@@ -36,7 +36,7 @@ foreach test : emulatorTests
 	map = testObjectMap.get(test, {})
 	libAudioObjs = map.has_key('libAudio') ? [libAudioLibrary.extract_objects(map['libAudio'])] : []
 	#testObjs = map.has_key('test') ? [testHelpers.extract_objects(map['test'])] : []
-	testLibs = map.get('libs', [])
+	testLibs = map.get('libs', []) + [libAudioRS]
 	custom_target(
 		test,
 		command: [
