@@ -28,15 +28,21 @@ impl ClockManager
 	pub fn advance_cycle(&mut self) -> bool
 	{
 		// Advance the time since the last managed cycle
-		self.cycle_counter += self.target_frequency;
+		self.cycle_counter = self.cycle_counter.wrapping_add(self.target_frequency);
 
 		// Check if enough base clock cycles have happened
 		if self.base_frequency - self.cycle_counter < self.target_frequency {
 			// Issue a cycle and take into account the ratio between the frequencies
-			self.cycle_counter -= self.base_frequency;
+			self.cycle_counter = self.cycle_counter.wrapping_sub(self.base_frequency);
 			true
 		} else {
 			false
 		}
 	}
+}
+
+#[cfg(test)]
+mod tests
+{
+	include!("tests/clock_manager.rs");
 }

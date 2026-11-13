@@ -1,11 +1,9 @@
 emulatorTests = [
-	'testClockManager',
 	'testAtariSTeROMs',
 	'testAtariSTe',
 ]
 
 testObjectMap = {
-	'testClockManager': {'libAudio': ['emulator/clockManager.cxx']},
 	'testAtariSTeROMs': {
 		'libAudio': [
 			'emulator/atariSTeROMs.cxx',
