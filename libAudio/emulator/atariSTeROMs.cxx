@@ -5,81 +5,56 @@
 #include <substrate/buffer_utils>
 #include "atariSTeROMs.hxx"
 #include "cpu/m68k.hxx"
+#include "rustAPI.hxx"
+
+extern "C"
+{
+	AtariSTeROMs *atari_ste_roms_new(motorola68000_t *, memoryMap_t<uint32_t, 0x00ffffffU> *,
+		uint32_t, uint32_t);
+	void atari_ste_roms_drop(AtariSTeROMs *);
+
+	void atari_ste_roms_read_address(const AtariSTeROMs *, uint32_t, slice_t<uint8_t>);
+	void atari_ste_roms_write_address(AtariSTeROMs *, uint32_t, const slice_t<uint8_t>);
+
+	uint32_t cpu_read_addr_register(motorola68000_t *cpu, size_t reg)
+	{
+		return cpu->readAddrRegister(reg);
+	}
+
+	void cpu_write_data_register(motorola68000_t *cpu, size_t reg, uint32_t value)
+	{
+		cpu->writeDataRegister(reg, value);
+	}
+
+	uint16_t peripherals_read_address_u16(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
+	{
+		return peripherals->readAddress<uint16_t>(address);
+	}
+
+	int32_t peripherals_read_address_i32(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
+	{
+		return peripherals->readAddress<int32_t>(address);
+	}
+
+	uint32_t peripherals_read_address_u32(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
+	{
+		return peripherals->readAddress<uint32_t>(address);
+	}
+}
 
 atariSTeROMs_t::atariSTeROMs_t(motorola68000_t &cpu, memoryMap_t<uint32_t, 0x00ffffffU> &peripherals,
-	const uint32_t heapBase, const uint32_t heapSize) noexcept : peripheral_t<uint32_t>{}, _cpu{cpu},
-	_peripherals{peripherals}, allocator{heapBase, heapSize} { }
+	const uint32_t heapBase, const uint32_t heapSize) noexcept : peripheral_t<uint32_t>{},
+	self{atari_ste_roms_new(&cpu, &peripherals, heapBase, heapSize)} { }
+
+atariSTeROMs_t::~atariSTeROMs_t() noexcept
+	{ atari_ste_roms_drop(self); }
 
 void atariSTeROMs_t::readAddress(const uint32_t address, substrate::span<uint8_t> data) const noexcept
 {
-	// Extract how wide an access this is
-	const auto accessWidth{data.size_bytes()};
-	// We only support u16 access to the "ROM"
-	if (accessWidth != 2U)
-		return;
-	// If this is an access to GEMDOS via a `trap` instruction, dispatch that
-	if (address == handlerAddressGEMDOS)
-	{
-		handleGEMDOSAccess();
-		// And then load an RTE as the result of this read
-		writeBE(uint16_t{0x4e73U}, data);
-	}
+	atari_ste_roms_read_address(self, address, {data.data(), data.size_bytes()});
 }
 
-void atariSTeROMs_t::writeAddress(const uint32_t, const substrate::span<uint8_t> &) noexcept
+void atariSTeROMs_t::writeAddress(const uint32_t address, const substrate::span<uint8_t> &data) noexcept
 {
-	// This function is intentionally a no-op as this is a ROM!
-}
-
-void atariSTeROMs_t::handleGEMDOSAccess() const noexcept
-{
-	// Extract the current stack pointer
-	const auto stackPointer{_cpu.readAddrRegister(7U)};
-	// Figure out where on the stack the opcode value is and extract it
-	const auto opcode{_peripherals.readAddress<uint16_t>(stackPointer + 8U)};
-	// Dispatch the opcode requested
-	switch (opcode)
-	{
-		case 0x30U: // GEMDOS version number
-			// Respond with being version 0.30 via D0
-			_cpu.writeDataRegister(0U, 0x3000U);
-			break;
-		case 0x44U: // mxalloc (we ignore the mode value.. sp + 14U)
-		case 0x48U: // malloc
-		{
-			// Set D0 in case of failure to a NULL pointer for the platform
-			_cpu.writeDataRegister(0U, 0U);
-			// Extract how large and allocation is being requested
-			const auto amount{_peripherals.readAddress<int32_t>(stackPointer + 10U)};
-			// If the amount requested is the special value -1, return the largest free block
-			if (amount == -1)
-				_cpu.writeDataRegister(0U, allocator.largestFreeBlock());
-			// Otherwise if it's a non-zero positive amount to allocate, actually try to
-			else if (amount > 0)
-			{
-				const auto result{allocator.alloc(static_cast<size_t>(amount))};
-				// Check if it succeeded, and if so then write the new pointer into D0
-				if (result != std::nullopt)
-					_cpu.writeDataRegister(0U, *result);
-			}
-			break;
-		}
-		case 0x49U: // free
-		{
-			// Extract the pointer for the allocation being released
-			const auto ptr{_peripherals.readAddress<int32_t>(stackPointer + 10U)};
-			// Execute on that with our actual allocator
-			if (allocator.free(ptr))
-				// Deallocation succeeded, so return 0 (E_OK)
-				_cpu.writeDataRegister(0U, 0U);
-			else
-				// Deallocation failed, signal this with a failure code
-				_cpu.writeDataRegister(0U, UINT16_MAX);
-			break;
-		}
-		default:
-			// Unimplemented GEMDOS operation, explode
-			// NOLINTNEXTLINE(clang-diagnostic-exceptions)
-			throw std::exception{};
-	}
+	atari_ste_roms_write_address(self, address, {data.data(), data.size_bytes()});
 }

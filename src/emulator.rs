@@ -8,7 +8,7 @@ use num_traits::sign::Unsigned;
 
 pub mod atari_ste_roms;
 mod clock_manager;
-pub mod gemdos_alloc;
+mod gemdos_alloc;
 pub mod ram;
 pub mod sound;
 pub mod timing;

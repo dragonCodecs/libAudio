@@ -8,7 +8,6 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
 use crate::emulator::atari_ste_roms::AtariSTeROMs;
-use crate::emulator::gemdos_alloc::GemdosAllocator;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
@@ -576,10 +575,10 @@ pub fn atari_ste_roms_new(
 	Box::into_raw(roms)
 }
 
-/// Consume the pointer for a [`AtariSTeROMs`] allocated with `gemdos_allocator_new`
+/// Consume the pointer for a [`AtariSTeROMs`] allocated with `atari_ste_roms_new`
 /// and deallocate it cleanly
 /// # Safety
-/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+/// As long as the pointer given is from `atari_ste_roms_new`, this is safe
 #[unsafe(no_mangle)]
 pub unsafe fn atari_ste_roms_drop(roms: *mut AtariSTeROMs)
 {
@@ -587,53 +586,24 @@ pub unsafe fn atari_ste_roms_drop(roms: *mut AtariSTeROMs)
 	drop(roms);
 }
 
-/// Allocate a new [`GemdosAllocator`] and "leak" that pointer into C++ land
+/// Using the pointer from `atari_ste_roms_new`, read data into the slice from the requested address
+/// # Safety
+/// As long as the pointer given is from `atari_ste_roms_new`, this is safe
 #[unsafe(no_mangle)]
-pub fn gemdos_allocator_new(base: u32, size: u32) -> *mut GemdosAllocator
+pub unsafe fn atari_ste_roms_read_address(roms: *mut AtariSTeROMs, address: u32, mut slice: MutSlice<u8>)
 {
-	let allocator = Box::new(GemdosAllocator::new(base, size));
-	Box::into_raw(allocator)
+	let roms = unsafe { NonNull::new_unchecked(roms) };
+	unsafe { roms.as_ref() }.read_address(address, slice.as_mut_slice());
 }
 
-/// Consume the pointer for a [`GemdosAllocator`] allocated with `gemdos_allocator_new`
-/// and deallocate it cleanly
+/// Using the pointer from `atari_ste_roms_new`, write data into the slice to the requested address
 /// # Safety
-/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+/// As long as the pointer given is from `atari_ste_roms_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn gemdos_allocator_drop(allocator: *mut GemdosAllocator)
+pub unsafe fn atari_ste_roms_write_address(roms: *mut AtariSTeROMs, address: u32, slice: Slice<u8>)
 {
-	let allocator = unsafe { Box::from_raw(allocator) };
-	drop(allocator);
-}
-
-/// Using the pointer from `gemdos_allocator_new`, allocate some memory on the GEMDOS heap
-/// # Safety
-/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn gemdos_allocator_alloc(allocator: *mut GemdosAllocator, size: usize) -> u32
-{
-	let mut allocator = unsafe { NonNull::new_unchecked(allocator) };
-	unsafe { allocator.as_mut() }.alloc(size).unwrap_or(u32::MAX)
-}
-
-/// Using the pointer from `gemdos_allocator_new`, free some memory back to the GEMDOS heap
-/// # Safety
-/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn gemdos_allocator_free(allocator: *mut GemdosAllocator, ptr: u32) -> bool
-{
-	let mut allocator = unsafe { NonNull::new_unchecked(allocator) };
-	unsafe { allocator.as_mut() }.free(ptr)
-}
-
-/// Using the pointer from `gemdos_allocator_new`, find the largest free block on the GEMDOS heap
-/// # Safety
-/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn gemdos_allocator_largest_free_block(allocator: *mut GemdosAllocator) -> u32
-{
-	let allocator = unsafe { NonNull::new_unchecked(allocator) };
-	unsafe { allocator.as_ref() }.largest_free_block()
+	let mut roms = unsafe { NonNull::new_unchecked(roms) };
+	unsafe { roms.as_mut() }.write_address(address, slice.as_slice());
 }
 
 /// Allocate a new [`MemoryMap<u32>`] and "leak" that pointer into C++ land
