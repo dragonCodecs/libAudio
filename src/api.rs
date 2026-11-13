@@ -51,6 +51,14 @@ impl<T> MutSlice<T>
 where
 	T: Sized + Copy,
 {
+	pub fn from_mut_slice(data: &mut [T]) -> Self
+	{
+		Self {
+			ptr: data.as_mut_ptr(),
+			len: data.len(),
+		}
+	}
+
 	pub fn as_mut_slice(&mut self) -> &mut [T]
 	{
 		unsafe { slice::from_raw_parts_mut(self.ptr, self.len) }
@@ -541,6 +549,16 @@ pub unsafe fn ste_ram_write_address(ste_ram: *mut Ram<STE_RAM_SIZE>, address: u3
 {
 	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
 	unsafe { ste_ram.as_mut() }.write_address(address, slice.as_slice());
+}
+
+/// Using the pointer from `ste_ram_new`, grab a slice of the memory
+/// # Safety
+/// As long as the pointer given is from `ste_ram_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_ram_slice(ste_ram: *mut Ram<STE_RAM_SIZE>, begin: usize, end: usize) -> MutSlice<u8>
+{
+	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
+	MutSlice::from_mut_slice(&mut unsafe { ste_ram.as_mut() }[begin..end])
 }
 
 /// Allocate a new [`MemoryMap<u32>`] and "leak" that pointer into C++ land

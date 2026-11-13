@@ -9,22 +9,39 @@
 #include <substrate/indexed_iterator>
 #include <substrate/span>
 #include "memoryMap.hxx"
+#include "rustAPI.hxx"
+
+struct STeRam;
+
+struct u8Slice
+{
+	uint8_t *ptr;
+	size_t len;
+};
+
+extern "C"
+{
+	STeRam *ste_ram_new();
+	void ste_ram_drop(STeRam *);
+
+	void ste_ram_read_address(const STeRam *, uint32_t, slice_t<uint8_t>);
+	void ste_ram_write_address(STeRam *, uint32_t, const slice_t<uint8_t>);
+	u8Slice ste_ram_slice(STeRam *, size_t, size_t);
+}
 
 template<typename address_t, size_t size> struct ram_t final : public peripheral_t<address_t>
 {
 private:
-	std::array<uint8_t, size> memory{};
+	STeRam *self{ste_ram_new()};
 
 	void readAddress(address_t address, substrate::span<uint8_t> data) const noexcept override
 	{
-		for (auto [idx, byte] : substrate::indexedIterator_t{data})
-			byte = memory[address + idx];
+		ste_ram_read_address(self, address, {data.data(), data.size_bytes()});
 	}
 
 	void writeAddress(address_t address, const substrate::span<uint8_t> &data) noexcept override
 	{
-		for (const auto &[idx, byte] : substrate::indexedIterator_t{data})
-			memory[address + idx] = byte;
+		ste_ram_write_address(self, address, {data.data(), data.size_bytes()});
 	}
 
 public:
@@ -33,10 +50,13 @@ public:
 	ram_t(ram_t &&) = default;
 	ram_t &operator =(const ram_t &) = default;
 	ram_t &operator =(ram_t &&) = default;
-	~ram_t() noexcept override = default;
+	~ram_t() noexcept override { ste_ram_drop(self); };
 
 	substrate::span<uint8_t> subspan(const size_t offset = 0U, const size_t length = SIZE_MAX) noexcept
-		{ return substrate::span{memory}.subspan(offset, length); }
+	{
+		auto slice = ste_ram_slice(self, offset, offset + length);
+		return substrate::span{slice.ptr, slice.len};
+	}
 };
 
 #endif /*EMULATOR_RAM_HXX*/
