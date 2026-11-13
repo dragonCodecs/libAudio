@@ -171,4 +171,12 @@ impl GemdosAllocator
 			},
 		}
 	}
+
+	pub fn largest_free_block(&self) -> u32
+	{
+		// Start with the size of the heap remaining to be allocated
+		let heap_free = self.heap_end - self.heap_current;
+		// And see if anything in the free list is larger, returning whatever we can find
+		self.free_list.iter().fold(heap_free, |a, b| a.max(b.size))
+	}
 }

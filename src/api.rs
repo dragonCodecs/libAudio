@@ -581,6 +581,36 @@ pub unsafe fn gemdos_allocator_drop(allocator: *mut GemdosAllocator)
 	drop(allocator);
 }
 
+/// Using the pointer from `gemdos_allocator_new`, allocate some memory on the GEMDOS heap
+/// # Safety
+/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn gemdos_allocator_alloc(allocator: *mut GemdosAllocator, size: usize) -> u32
+{
+	let mut allocator = unsafe { NonNull::new_unchecked(allocator) };
+	unsafe { allocator.as_mut() }.alloc(size).unwrap_or(u32::MAX)
+}
+
+/// Using the pointer from `gemdos_allocator_new`, free some memory back to the GEMDOS heap
+/// # Safety
+/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn gemdos_allocator_free(allocator: *mut GemdosAllocator, ptr: u32) -> bool
+{
+	let mut allocator = unsafe { NonNull::new_unchecked(allocator) };
+	unsafe { allocator.as_mut() }.free(ptr)
+}
+
+/// Using the pointer from `gemdos_allocator_new`, find the largest free block on the GEMDOS heap
+/// # Safety
+/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn gemdos_allocator_largest_free_block(allocator: *mut GemdosAllocator) -> u32
+{
+	let allocator = unsafe { NonNull::new_unchecked(allocator) };
+	unsafe { allocator.as_ref() }.largest_free_block()
+}
+
 /// Allocate a new [`MemoryMap<u32>`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
 pub fn memory_map_u32_new(valid_address_mask: u32) -> *mut MemoryMap<u32>
