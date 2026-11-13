@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::cell::RefCell;
 use std::ffi::c_void;
+use std::rc::Rc;
 
 use crate::emulator::clock_manager::ClockManager;
-use crate::emulator::cpu::m68k::{self, IrqRequester};
+use crate::emulator::cpu::m68k::{self};
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
+#[derive(Clone)]
+#[repr(C)]
 pub struct MC68901
+{
+	inner: Rc<RefCell<MC68901Inner>>,
+}
+
+struct MC68901Inner
 {
 	clock_frequency: u32,
 
@@ -46,6 +55,70 @@ impl MC68901
 	pub fn new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> Self
 	{
 		Self {
+			inner: Rc::new(RefCell::new(MC68901Inner::new(clock_frequency, cpu, level))),
+		}
+	}
+
+	pub fn configure_timer(&mut self, timer_index: usize, reload_value: u8, mode: u8)
+	{
+		self.inner.borrow_mut().configure_timer(timer_index, reload_value, mode);
+	}
+
+	pub fn fire_dma_event(&mut self)
+	{
+		self.inner.borrow_mut().fire_dma_event();
+	}
+}
+
+impl Peripheral<u32> for MC68901
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		self.inner.borrow().read_address(address, data);
+	}
+
+	fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		self.inner.borrow_mut().write_address(address, data);
+	}
+}
+
+impl ClockedPeripheral<u32> for MC68901
+{
+	fn clock_frequency(&self) -> u32
+	{
+		self.inner.borrow().clock_frequency()
+	}
+
+	fn clock_cycle(&mut self) -> bool
+	{
+		self.inner.borrow_mut().clock_cycle()
+	}
+}
+
+impl m68k::IrqRequester for MC68901
+{
+	fn request_interrupt(&mut self)
+	{
+		self.inner.borrow_mut().request_interrupt()
+	}
+
+	fn irq_cause(&mut self) -> u8
+	{
+		self.inner.borrow_mut().irq_cause()
+	}
+
+	fn irq_level(&self) -> u8
+	{
+		self.inner.borrow().level
+	}
+}
+
+impl MC68901Inner
+{
+	pub fn new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> Self
+	{
+		Self {
 			clock_frequency,
 
 			cpu,
@@ -70,34 +143,7 @@ impl MC68901
 		}
 	}
 
-	pub fn configure_timer(&mut self, timer_index: usize, reload_value: u8, mode: u8)
-	{
-		// Check this isn't a request for a completely nuts timer value
-		if timer_index >= self.timers.len() {
-			return;
-		}
-		let clock_frequency = self.clock_frequency();
-		// Extract the timer we care about
-		let timer = &mut self.timers[timer_index];
-		// Configure the reload value and mode
-		timer.write_data(reload_value);
-		timer.write_ctrl(mode, clock_frequency);
-	}
-
-	pub fn fire_dma_event(&mut self)
-	{
-		// Try to mark timer A for external event
-		self.timers[0].mark_external_event();
-		// Also try to mark GPIO7 as having had an external event
-		if (self.itr_enable & (1 << 15)) != 0 {
-			self.itr_pending |= 1 << 15;
-		}
-	}
-}
-
-impl Peripheral<u32> for MC68901
-{
-	fn read_address(&self, address: u32, data: &mut [u8])
+	pub fn read_address(&self, address: u32, data: &mut [u8])
 	{
 		// Extract how wide an access this is
 		let access_width = data.len();
@@ -160,7 +206,7 @@ impl Peripheral<u32> for MC68901
 		}
 	}
 
-	fn write_address(&mut self, address: u32, data: &[u8])
+	pub fn write_address(&mut self, address: u32, data: &[u8])
 	{
 		// Extract how wide an access this is
 		let access_width = data.len();
@@ -252,16 +298,27 @@ impl Peripheral<u32> for MC68901
 			_ => {},
 		}
 	}
-}
 
-impl ClockedPeripheral<u32> for MC68901
-{
-	fn clock_frequency(&self) -> u32
+	pub fn configure_timer(&mut self, timer_index: usize, reload_value: u8, mode: u8)
+	{
+		// Check this isn't a request for a completely nuts timer value
+		if timer_index >= self.timers.len() {
+			return;
+		}
+		let clock_frequency = self.clock_frequency();
+		// Extract the timer we care about
+		let timer = &mut self.timers[timer_index];
+		// Configure the reload value and mode
+		timer.write_data(reload_value);
+		timer.write_ctrl(mode, clock_frequency);
+	}
+
+	pub fn clock_frequency(&self) -> u32
 	{
 		self.clock_frequency
 	}
 
-	fn clock_cycle(&mut self) -> bool
+	pub fn clock_cycle(&mut self) -> bool
 	{
 		// Go through each timer and try to advance them a clock cycle
 		for (index, timer) in self.timers.iter_mut().enumerate() {
@@ -289,16 +346,23 @@ impl ClockedPeripheral<u32> for MC68901
 		}
 		true
 	}
-}
 
-impl m68k::IrqRequester for MC68901
-{
-	fn request_interrupt(&mut self)
+	pub fn fire_dma_event(&mut self)
+	{
+		// Try to mark timer A for external event
+		self.timers[0].mark_external_event();
+		// Also try to mark GPIO7 as having had an external event
+		if (self.itr_enable & (1 << 15)) != 0 {
+			self.itr_pending |= 1 << 15;
+		}
+	}
+
+	pub fn request_interrupt(&mut self)
 	{
 		unsafe { cpu_request_interrupt(self.cpu, self.level) };
 	}
 
-	fn irq_cause(&mut self) -> u8
+	pub fn irq_cause(&mut self) -> u8
 	{
 		// Compute which IRQs are not masked
 		let interrupts = self.itr_pending & self.itr_mask;
@@ -326,11 +390,6 @@ impl m68k::IrqRequester for MC68901
 			self.request_interrupt();
 		}
 		(self.vector_reg & 0xf0) | channel
-	}
-
-	fn irq_level(&self) -> u8
-	{
-		self.level
 	}
 }
 

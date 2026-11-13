@@ -10,7 +10,7 @@
 
 extern "C"
 {
-	STeDac *ste_dac_new(uint32_t, MC68901 *);
+	STeDac *ste_dac_new(uint32_t, MC68901);
 	void ste_dac_drop(STeDac *);
 
 	void ste_dac_read_address(const STeDac *, uint32_t, slice_t<uint8_t>);

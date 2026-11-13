@@ -14,7 +14,6 @@
 use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ops::{Add, AddAssign, Deref};
-use std::ptr::NonNull;
 
 use crate::emulator::timing::mc68901::MC68901;
 use crate::emulator::{ClockedPeripheral, Peripheral};
@@ -22,7 +21,7 @@ use crate::emulator::{ClockedPeripheral, Peripheral};
 pub struct STeDac
 {
 	clock_frequency: u32,
-	mfp: NonNull<MC68901>,
+	mfp: MC68901,
 
 	// Values that control the DMA engine
 	begin_address: Register24b,
@@ -49,7 +48,7 @@ struct Register24b
 
 impl STeDac
 {
-	pub fn new(clock_frequency: u32, mfp: NonNull<MC68901>) -> Self
+	pub fn new(clock_frequency: u32, mfp: MC68901) -> Self
 	{
 		Self {
 			clock_frequency,
@@ -321,7 +320,7 @@ impl ClockedPeripheral<u32> for STeDac
 				self.control &= 0xfe;
 			}
 			// Ping the MFP with the completion event
-			unsafe { self.mfp.as_mut().fire_dma_event() };
+			self.mfp.fire_dma_event();
 		}
 
 		true
