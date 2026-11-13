@@ -9,7 +9,7 @@
 
 extern "C"
 {
-	MC68901 *mc68901_new(const mc68901_t *, uint32_t);
+	MC68901 *mc68901_new(uint32_t, motorola68000_t *, uint8_t);
 	void mc68901_drop(MC68901 *);
 
 	void mc68901_read_address(const MC68901 *, uint32_t, slice_t<uint8_t>);
@@ -19,15 +19,15 @@ extern "C"
 	void mc68901_fire_dma_event(MC68901 *);
 	uint8_t mc68901_irq_cause(MC68901 *);
 
-	void mc68901_request_interrupt(mc68901_t *self)
+	void cpu_request_interrupt(motorola68000_t *cpu, uint8_t level)
 	{
-		self->requestCPUInterrupt();
+		cpu->requestInterrupt(level);
 	}
 }
 
 mc68901_t::mc68901_t(const uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept :
 	clockedPeripheral_t<uint32_t>{clockFrequency}, m68k::irqRequester_t{cpu, level},
-	self{mc68901_new(this, clockFrequency)} { }
+	self{mc68901_new(clockFrequency, &cpu, level)} { }
 
 mc68901_t::~mc68901_t() noexcept
 {
@@ -58,11 +58,6 @@ bool mc68901_t::clockCycle() noexcept
 void mc68901_t::fireDMAEvent() noexcept
 {
 	mc68901_fire_dma_event(self);
-}
-
-void mc68901_t::requestCPUInterrupt() noexcept
-{
-	requestInterrupt();
 }
 
 uint8_t mc68901_t::irqCause() noexcept

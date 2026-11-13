@@ -38,8 +38,6 @@ public:
 
 	void configureTimer(size_t timerIndex, uint8_t reloadValue, uint8_t mode) noexcept;
 
-	void requestCPUInterrupt() noexcept;
-
 	MC68901 *inner() noexcept { return self; }
 };
 

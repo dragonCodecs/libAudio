@@ -4,12 +4,15 @@
 use std::ffi::c_void;
 
 use crate::emulator::clock_manager::ClockManager;
+use crate::emulator::cpu::m68k::{self, IrqRequester};
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
 pub struct MC68901
 {
-	this: *mut c_void,
 	clock_frequency: u32,
+
+	cpu: *mut c_void,
+	level: u8,
 
 	gpio: u8,
 	active_edge: u8,
@@ -40,11 +43,13 @@ pub struct Timer
 
 impl MC68901
 {
-	pub fn new(this: *mut c_void, clock_frequency: u32) -> Self
+	pub fn new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> Self
 	{
 		Self {
-			this,
 			clock_frequency,
+
+			cpu,
+			level,
 
 			gpio: 0,
 			active_edge: 0,
@@ -87,36 +92,6 @@ impl MC68901
 		if (self.itr_enable & (1 << 15)) != 0 {
 			self.itr_pending |= 1 << 15;
 		}
-	}
-
-	pub fn irq_cause(&mut self) -> u8
-	{
-		// Compute which IRQs are not masked
-		let interrupts = self.itr_pending & self.itr_mask;
-		// Look through the pending IRQs and find the highest priority one
-		let channel = (|| {
-			// For each interrupt request bit
-			for irq in 0..16 {
-				// Calculate the channel for this IRQ
-				let irq_channel = 15 - irq;
-				// If the channel has a pending IRQ set, then use it as the cause
-				if (interrupts & (1 << irq_channel)) != 0 {
-					return irq_channel;
-				}
-			}
-			16
-		})();
-		// If there was no reason to call this function, indicate a spurious interrupt error
-		if channel >= 16 {
-			return 0x18;
-		}
-		// Otherwise, clear pending on this IRQ and generate the vector number value
-		self.itr_pending &= !(1 << channel);
-		// Re-queue IRQ if there are still pending
-		if (self.itr_pending & self.itr_mask) != 0 {
-			unsafe { mc68901_request_interrupt(self.this) };
-		}
-		(self.vector_reg & 0xf0) | channel
 	}
 }
 
@@ -310,9 +285,52 @@ impl ClockedPeripheral<u32> for MC68901
 		}
 		// If we have any pending IRQs as a result of this cycle, request handling by the CPU
 		if (self.itr_pending & self.itr_mask) != 0 {
-			unsafe { mc68901_request_interrupt(self.this) };
+			self.request_interrupt();
 		}
 		true
+	}
+}
+
+impl m68k::IrqRequester for MC68901
+{
+	fn request_interrupt(&mut self)
+	{
+		unsafe { cpu_request_interrupt(self.cpu, self.level) };
+	}
+
+	fn irq_cause(&mut self) -> u8
+	{
+		// Compute which IRQs are not masked
+		let interrupts = self.itr_pending & self.itr_mask;
+		// Look through the pending IRQs and find the highest priority one
+		let channel = (|| {
+			// For each interrupt request bit
+			for irq in 0..16 {
+				// Calculate the channel for this IRQ
+				let irq_channel = 15 - irq;
+				// If the channel has a pending IRQ set, then use it as the cause
+				if (interrupts & (1 << irq_channel)) != 0 {
+					return irq_channel;
+				}
+			}
+			16
+		})();
+		// If there was no reason to call this function, indicate a spurious interrupt error
+		if channel >= 16 {
+			return 0x18;
+		}
+		// Otherwise, clear pending on this IRQ and generate the vector number value
+		self.itr_pending &= !(1 << channel);
+		// Re-queue IRQ if there are still pending
+		if (self.itr_pending & self.itr_mask) != 0 {
+			self.request_interrupt();
+		}
+		(self.vector_reg & 0xf0) | channel
+	}
+
+	fn irq_level(&self) -> u8
+	{
+		self.level
 	}
 }
 
@@ -426,7 +444,7 @@ impl Timer
 }
 
 unsafe extern "C" {
-	fn mc68901_request_interrupt(mc68901: *mut c_void);
+	fn cpu_request_interrupt(cpu: *mut c_void, level: u8);
 }
 
 #[cfg(test)]

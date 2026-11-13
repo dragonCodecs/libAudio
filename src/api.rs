@@ -8,6 +8,7 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
 use crate::emulator::atari_ste_roms::AtariSTeROMs;
+use crate::emulator::cpu::m68k::IrqRequester;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
@@ -427,9 +428,9 @@ pub unsafe fn ste_dac_output_level(ste_dac: *mut STeDac) -> u8
 
 /// Allocate a new [`MC68901`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn mc68901_new(this: *mut c_void, clock_frequency: u32) -> *mut MC68901
+pub fn mc68901_new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> *mut MC68901
 {
-	let mc68901 = Box::new(MC68901::new(this, clock_frequency));
+	let mc68901 = Box::new(MC68901::new(clock_frequency, cpu, level));
 	Box::into_raw(mc68901)
 }
 
