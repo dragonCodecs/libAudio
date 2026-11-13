@@ -203,7 +203,7 @@ impl STeDac
 	}
 }
 
-impl Peripheral for STeDac
+impl Peripheral<u32> for STeDac
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{

@@ -146,7 +146,7 @@ impl MC68901
 	}
 }
 
-impl Peripheral for MC68901
+impl Peripheral<u32> for MC68901
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{

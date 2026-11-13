@@ -4,13 +4,13 @@
 use super::Ym2149;
 use crate::emulator::Peripheral;
 
-fn write_register(psg: &mut impl Peripheral, reg: u8, value: u8)
+fn write_register(psg: &mut impl Peripheral<u32>, reg: u8, value: u8)
 {
 	psg.write_address(0, &[reg]);
 	psg.write_address(2, &[value]);
 }
 
-fn read_register(psg: &mut impl Peripheral, reg: u8) -> u8
+fn read_register(psg: &mut impl Peripheral<u32>, reg: u8) -> u8
 {
 	psg.write_address(0, &[reg]);
 	let mut result = [0];

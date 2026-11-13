@@ -303,7 +303,7 @@ impl Ym2149
 	}
 }
 
-impl Peripheral for Ym2149
+impl Peripheral<u32> for Ym2149
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
