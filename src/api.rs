@@ -7,6 +7,7 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
+use crate::emulator::gemdos_alloc::GemdosAllocator;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
@@ -559,6 +560,25 @@ pub unsafe fn ste_ram_slice(ste_ram: *mut Ram<STE_RAM_SIZE>, begin: usize, end: 
 {
 	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
 	MutSlice::from_mut_slice(&mut unsafe { ste_ram.as_mut() }[begin..end])
+}
+
+/// Allocate a new [`GemdosAllocator`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn gemdos_allocator_new(base: u32, size: u32) -> *mut GemdosAllocator
+{
+	let allocator = Box::new(GemdosAllocator::new(base, size));
+	Box::into_raw(allocator)
+}
+
+/// Consume the pointer for a [`GemdosAllocator`] allocated with `gemdos_allocator_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn gemdos_allocator_drop(allocator: *mut GemdosAllocator)
+{
+	let allocator = unsafe { Box::from_raw(allocator) };
+	drop(allocator);
 }
 
 /// Allocate a new [`MemoryMap<u32>`] and "leak" that pointer into C++ land

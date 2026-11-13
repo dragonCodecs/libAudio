@@ -7,6 +7,7 @@ use std::ops::{BitAnd, Range};
 use num_traits::sign::Unsigned;
 
 mod clock_manager;
+pub mod gemdos_alloc;
 pub mod ram;
 pub mod sound;
 pub mod timing;
