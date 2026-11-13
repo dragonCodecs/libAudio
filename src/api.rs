@@ -7,6 +7,7 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
+use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::Ym2149;
 use crate::emulator::timing::mc68901::{self, MC68901};
@@ -345,7 +346,7 @@ pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149) -> bool
 
 /// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
 /// # Safety
-/// As long as the pointer given is from `mc68901_new`, this is safe
+/// As long as the pointer given is from `ste_dac_new`, this is safe
 #[unsafe(no_mangle)]
 pub unsafe fn ste_dac_new(clock_frequency: u32, mfp: *mut MC68901) -> *mut STeDac
 {
@@ -499,6 +500,47 @@ pub unsafe fn mc68901_irq_cause(mc68901: *mut MC68901) -> u8
 pub fn mc68901_timer_prescaling_for(mode: u8) -> u32
 {
 	mc68901::Timer::prescaling_for(mode)
+}
+
+const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
+
+/// Allocate a new [`Ram<STE_RAM_SIZE>`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn ste_ram_new() -> *mut Ram<STE_RAM_SIZE>
+{
+	let ste_ram = Box::new(Ram::new());
+	Box::into_raw(ste_ram)
+}
+
+/// Consume the pointer for a [`Ram<STE_RAM_SIZE>`] allocated with `ste_ram_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `ste_ram_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_ram_drop(ste_ram: *mut Ram<STE_RAM_SIZE>)
+{
+	let ste_ram = unsafe { Box::from_raw(ste_ram) };
+	drop(ste_ram);
+}
+
+/// Using the pointer from `ste_ram_new`, read data into the slice from the requested address
+/// # Safety
+/// As long as the pointer given is from `ste_ram_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_ram_read_address(ste_ram: *mut Ram<STE_RAM_SIZE>, address: u32, mut slice: MutSlice<u8>)
+{
+	let ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
+	unsafe { ste_ram.as_ref() }.read_address(address, slice.as_mut_slice());
+}
+
+/// Using the pointer from `ste_ram_new`, write data into the slice to the requested address
+/// # Safety
+/// As long as the pointer given is from `ste_ram_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn ste_ram_write_address(ste_ram: *mut Ram<STE_RAM_SIZE>, address: u32, slice: Slice<u8>)
+{
+	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
+	unsafe { ste_ram.as_mut() }.write_address(address, slice.as_slice());
 }
 
 /// Allocate a new [`MemoryMap<u32>`] and "leak" that pointer into C++ land
