@@ -71,11 +71,12 @@ impl MC68901
 		if timer_index >= self.timers.len() {
 			return;
 		}
+		let clock_frequency = self.clock_frequency();
 		// Extract the timer we care about
 		let timer = &mut self.timers[timer_index];
 		// Configure the reload value and mode
 		timer.write_data(reload_value);
-		timer.write_ctrl(mode, unsafe { mc68901_clock_frequency(self.this) });
+		timer.write_ctrl(mode, clock_frequency);
 	}
 
 	pub fn fire_dma_event(&mut self)
@@ -256,15 +257,15 @@ impl Peripheral<u32> for MC68901
 			// The bottom 3 bits of the vector register are unused (RAZ)
 			11 => self.vector_reg = value & 0xf8,
 			// Only 5 bits used, mask off the upper 3
-			12 => self.timers[0].write_ctrl(value & 0x1f, unsafe { mc68901_clock_frequency(self.this) }),
+			12 => self.timers[0].write_ctrl(value & 0x1f, self.clock_frequency()),
 			// Only 5 bits used, mask off the upper 3
-			13 => self.timers[1].write_ctrl(value & 0x1f, unsafe { mc68901_clock_frequency(self.this) }),
+			13 => self.timers[1].write_ctrl(value & 0x1f, self.clock_frequency()),
 			14 => {
 				// Write controls 2 timers, C's control value is in the upper nibble,
 				// but the timer doesn't support event modes or reset output, so only 3 bits used
-				self.timers[2].write_ctrl((value >> 4) & 0x07, unsafe { mc68901_clock_frequency(self.this) });
+				self.timers[2].write_ctrl((value >> 4) & 0x07, self.clock_frequency());
 				// D's control value is in the lower nibble and has the same support restrictions
-				self.timers[3].write_ctrl(value & 0x07, unsafe { mc68901_clock_frequency(self.this) });
+				self.timers[3].write_ctrl(value & 0x07, self.clock_frequency());
 			},
 			// Update the given timer's counter value
 			15..=18 => self.timers[(adjusted_address >> 1) as usize - 15].write_data(value),
@@ -425,7 +426,6 @@ impl Timer
 }
 
 unsafe extern "C" {
-	fn mc68901_clock_frequency(mc68901: *const c_void) -> u32;
 	fn mc68901_request_interrupt(mc68901: *mut c_void);
 }
 

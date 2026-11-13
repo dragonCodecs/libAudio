@@ -19,11 +19,6 @@ extern "C"
 	void mc68901_fire_dma_event(MC68901 *);
 	uint8_t mc68901_irq_cause(MC68901 *);
 
-	uint32_t mc68901_clock_frequency(const mc68901_t *self)
-	{
-		return self->clockFrequency();
-	}
-
 	void mc68901_request_interrupt(mc68901_t *self)
 	{
 		self->requestCPUInterrupt();
