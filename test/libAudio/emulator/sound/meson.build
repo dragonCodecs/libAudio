@@ -1,10 +1,8 @@
 soundTests = [
-	'testYM2149',
 	'testSTeDAC'
 ]
 
 testObjectMap = {
-	'testYM2149': {'libAudio': ['emulator/sound/ym2149.cxx', 'emulator/clockManager.cxx']},
 	'testSTeDAC': {
 		'libAudio': [
 			'emulator/sound/steDAC.cxx',

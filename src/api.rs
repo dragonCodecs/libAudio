@@ -343,16 +343,6 @@ pub unsafe fn ym2149_clock_cycle(ym2149: *mut Ym2149) -> bool
 	unsafe { ym2149.as_mut() }.clock_cycle()
 }
 
-/// Using the pointer from `ym2149_new`, force the edge state for all channels
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_force_edge_state(ym2149: *mut Ym2149, state: bool)
-{
-	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_mut() }.force_edge_state(state);
-}
-
 /// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
 /// # Safety
 /// As long as the pointer given is from `mc68901_new`, this is safe

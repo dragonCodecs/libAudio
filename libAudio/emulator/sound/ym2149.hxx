@@ -29,9 +29,6 @@ public:
 	[[nodiscard]] bool clockCycle() noexcept final;
 	[[nodiscard]] bool sampleReady() const noexcept;
 	[[nodiscard]] int16_t sample() noexcept;
-
-	// NB, only use for testing
-	void forceChannelStates(bool edgeState) noexcept;
 };
 
 #endif /*EMULATOR_SOUND_YM2149_HXX*/

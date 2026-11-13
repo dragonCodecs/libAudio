@@ -294,7 +294,8 @@ impl Ym2149
 		((sample as i32) - (self.dc_adjustment_sum >> DC_ADJUSTMENT_LENGTH_LOG2) as i32) as i16
 	}
 
-	pub fn force_edge_state(&mut self, edge_state: bool)
+	#[cfg(test)]
+	pub(self) fn force_channel_states(&mut self, edge_state: bool)
 	{
 		for channel in self.channels.iter_mut() {
 			channel.reset_edge_state(edge_state);

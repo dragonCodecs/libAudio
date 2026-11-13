@@ -90,8 +90,3 @@ int16_t ym2149_t::sample() noexcept
 {
 	return ym2149_sample(self);
 }
-
-void ym2149_t::forceChannelStates(const bool edgeState) noexcept
-{
-	ym2149_force_edge_state(self, edgeState);
-}
