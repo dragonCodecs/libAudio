@@ -4,7 +4,7 @@
 #include <crunch++.h>
 #include <substrate/fd>
 #include <substrate/index_sequence>
-#include "sndh/iceDecrunch.hxx"
+#include "sndh/loader.hxx"
 #include "emulator/atariSTe.hxx"
 
 using namespace std::literals::string_view_literals;

@@ -34,6 +34,7 @@ public:
 	~mc68901_t() noexcept final;
 
 	[[nodiscard]] bool clockCycle() noexcept final;
+	void fireDMAEvent() noexcept;
 
 	void configureTimer(size_t timerIndex, uint8_t reloadValue, uint8_t mode) noexcept;
 

@@ -55,6 +55,11 @@ bool mc68901_t::clockCycle() noexcept
 	return mc68901_clock_cycle(self);
 }
 
+void mc68901_t::fireDMAEvent() noexcept
+{
+	mc68901_fire_dma_event(self);
+}
+
 void mc68901_t::requestCPUInterrupt() noexcept
 {
 	requestInterrupt();
