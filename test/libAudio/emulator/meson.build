@@ -7,7 +7,10 @@ testObjectMap = {
 	'testAtariSTeROMs': {
 		'libAudio': [
 			'emulator/atariSTeROMs.cxx',
+			'emulator/sound/steDAC.cxx',
+			'emulator/timing/mc68901.cxx',
 			'emulator/cpu/m68k.cxx',
+			'sndh/loader.cxx',
 			'console.cxx',
 		]
 	},
