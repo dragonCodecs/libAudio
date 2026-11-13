@@ -40,12 +40,12 @@ fn align(size: usize, alignment: usize) -> usize
 
 impl GemdosAllocator
 {
-	pub fn new(base: u32, size: u32) -> Self
+	pub fn new(heap_base: u32, heap_size: u32) -> Self
 	{
 		Self {
-			heap_begin: base,
-			heap_end: base + size,
-			heap_current: base,
+			heap_begin: heap_base,
+			heap_end: heap_base + heap_size,
+			heap_current: heap_base,
 			free_list: Vec::new(),
 			alloc_list: Vec::new(),
 		}

@@ -7,6 +7,7 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
+use crate::emulator::atari_ste_roms::AtariSTeROMs;
 use crate::emulator::gemdos_alloc::GemdosAllocator;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
@@ -560,6 +561,30 @@ pub unsafe fn ste_ram_slice(ste_ram: *mut Ram<STE_RAM_SIZE>, begin: usize, end: 
 {
 	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
 	MutSlice::from_mut_slice(&mut unsafe { ste_ram.as_mut() }[begin..end])
+}
+
+/// Allocate a new [`AtariSTeROMs`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn atari_ste_roms_new(
+	cpu: *mut c_void,
+	peripherals: *mut c_void,
+	heap_base: u32,
+	heap_size: u32,
+) -> *mut AtariSTeROMs
+{
+	let roms = Box::new(AtariSTeROMs::new(cpu, peripherals, heap_base, heap_size));
+	Box::into_raw(roms)
+}
+
+/// Consume the pointer for a [`AtariSTeROMs`] allocated with `gemdos_allocator_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `gemdos_allocator_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_roms_drop(roms: *mut AtariSTeROMs)
+{
+	let roms = unsafe { Box::from_raw(roms) };
+	drop(roms);
 }
 
 /// Allocate a new [`GemdosAllocator`] and "leak" that pointer into C++ land
