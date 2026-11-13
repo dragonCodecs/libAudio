@@ -138,6 +138,10 @@ impl GemdosAllocator
 					return None;
 				}
 			}
+			// Otherwise, hppy case - set the allocation size
+			else {
+				chunk.size = alloc_size as u32;
+			}
 		}
 		// Happy days, we got some memory - return it!
 		if chunk.size != 0 {
