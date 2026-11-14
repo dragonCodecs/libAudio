@@ -7,6 +7,7 @@ use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::ptr::{NonNull, null_mut};
 
+use crate::emulator::atari_ste::AtariSTe;
 use crate::emulator::atari_ste_roms::AtariSTeROMs;
 use crate::emulator::cpu::m68k::IrqRequester;
 use crate::emulator::ram::Ram;
@@ -580,6 +581,25 @@ pub unsafe fn atari_ste_roms_write_address(roms: *mut AtariSTeROMs, address: u32
 {
 	let mut roms = unsafe { NonNull::new_unchecked(roms) };
 	unsafe { roms.as_mut() }.write_address(address, slice.as_slice());
+}
+
+/// Allocate a new [`AtariSTe`] and "leak" that pointer into C++ land
+#[unsafe(no_mangle)]
+pub fn atari_ste_new<'a>(cpu: *mut c_void) -> *mut AtariSTe<'a>
+{
+	let atari_ste = Box::new(AtariSTe::new(cpu));
+	Box::into_raw(atari_ste)
+}
+
+/// Consume the pointer for a [`AtariSTe`] allocated with `atari_ste_new`
+/// and deallocate it cleanly
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_drop(atari_ste: *mut AtariSTe)
+{
+	let atari_ste = unsafe { Box::from_raw(atari_ste) };
+	drop(atari_ste);
 }
 
 mod console

@@ -9,6 +9,7 @@ use std::rc::Rc;
 
 use num_traits::sign::Unsigned;
 
+pub mod atari_ste;
 pub mod atari_ste_roms;
 mod clock_manager;
 pub mod cpu;
