@@ -14,11 +14,18 @@
 use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ops::{Add, AddAssign, Deref};
+use std::rc::Rc;
 
 use crate::emulator::timing::mc68901::MC68901;
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
+#[derive(Clone)]
 pub struct STeDac
+{
+	inner: Rc<RefCell<STeDacInner>>,
+}
+
+pub struct STeDacInner
 {
 	clock_frequency: u32,
 	mfp: MC68901,
@@ -47,6 +54,68 @@ struct Register24b
 }
 
 impl STeDac
+{
+	pub fn new(clock_frequency: u32, mfp: MC68901) -> Self
+	{
+		Self {
+			inner: Rc::new(RefCell::new(STeDacInner::new(clock_frequency, mfp))),
+		}
+	}
+
+	pub fn sample(&self, memory_map: *const c_void) -> i16
+	{
+		self.inner.borrow().sample(memory_map)
+	}
+
+	pub fn output_level(&self) -> u8
+	{
+		self.inner.borrow().output_level()
+	}
+}
+
+impl Peripheral<u32> for STeDac
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		self.inner.borrow().read_address(address, data);
+	}
+
+	fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		self.inner.borrow_mut().write_address(address, data);
+	}
+}
+
+impl ClockedPeripheral<u32> for STeDac
+{
+	fn clock_frequency(&self) -> u32
+	{
+		self.inner.borrow().clock_frequency()
+	}
+
+	fn clock_cycle(&mut self) -> bool
+	{
+		self.inner.borrow_mut().clock_cycle()
+	}
+}
+
+impl<'a> From<STeDac> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
+{
+	fn from(ste_dac: STeDac) -> Self
+	{
+		ste_dac.inner.clone()
+	}
+}
+
+impl<'a> From<STeDac> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
+{
+	fn from(ste_dac: STeDac) -> Self
+	{
+		ste_dac.inner.clone()
+	}
+}
+
+impl STeDacInner
 {
 	pub fn new(clock_frequency: u32, mfp: MC68901) -> Self
 	{
@@ -154,7 +223,7 @@ impl STeDac
 	}
 }
 
-impl Peripheral<u32> for STeDac
+impl Peripheral<u32> for STeDacInner
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -269,7 +338,7 @@ impl Peripheral<u32> for STeDac
 	}
 }
 
-impl ClockedPeripheral<u32> for STeDac
+impl ClockedPeripheral<u32> for STeDacInner
 {
 	fn clock_frequency(&self) -> u32
 	{
