@@ -221,6 +221,7 @@ where
 		self.address_map.insert(mapping.into(), peripheral);
 	}
 
+	#[allow(unused)]
 	pub fn read_address<Value>(&self, address: Address) -> Value
 	where
 		Value: Default + Unsigned + PeripheralValue,

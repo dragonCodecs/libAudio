@@ -322,6 +322,20 @@ impl TryFrom<&mut SndhDecruncher> for SndhMetadata
 	}
 }
 
+impl SndhTimer
+{
+	pub fn as_index(self) -> Option<usize>
+	{
+		match self {
+			SndhTimer::A => Some(0),
+			SndhTimer::B => Some(1),
+			SndhTimer::C => Some(2),
+			SndhTimer::D => Some(3),
+			SndhTimer::Vbl => None,
+		}
+	}
+}
+
 impl TryFrom<u8> for SndhTimer
 {
 	type Error = Error;
