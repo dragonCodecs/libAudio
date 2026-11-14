@@ -161,7 +161,7 @@ impl STeDacInner
 		};
 		// Now check for a specific write of a specific width representing an access
 		// to the main volume control register for the DAC
-		if bitsUsed == 1 && (value >> 9) == 2 {
+		if bitsUsed == 11 && (value >> 9) == 2 {
 			// Extract out the write data and the write address
 			let data = value & 0x3f;
 			let address = (value >> 6) & 0x07;
