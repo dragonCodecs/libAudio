@@ -535,7 +535,7 @@ pub unsafe fn ste_ram_write_address(ste_ram: *mut Ram<STE_RAM_SIZE>, address: u3
 pub unsafe fn ste_ram_slice(ste_ram: *mut Ram<STE_RAM_SIZE>, begin: usize, end: usize) -> MutSlice<u8>
 {
 	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
-	MutSlice::from_mut_slice(&mut unsafe { ste_ram.as_mut() }[begin..end])
+	MutSlice::from_mut_slice(&mut unsafe { ste_ram.as_mut() }.index_mut(begin..end))
 }
 
 /// Allocate a new [`AtariSTeROMs`] and "leak" that pointer into C++ land
