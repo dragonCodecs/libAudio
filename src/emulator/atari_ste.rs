@@ -14,6 +14,7 @@ use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
 use crate::emulator::timing::mc68901::{MC68901, timer_prescaling_for};
 use crate::emulator::{ClockedPeripheral, MemoryMap};
+use crate::sndh::ice_decrunch::{self, SndhDecruncher};
 use crate::sndh::loader::SndhTimer;
 
 pub struct AtariSTe<'a>
@@ -22,6 +23,7 @@ pub struct AtariSTe<'a>
 	memory_map: Box<MemoryMap<'a, u32>>,
 
 	cpu: *mut c_void,
+	ram: StRam,
 	psg: YM2149,
 	dac: STeDac,
 	mfp: MC68901,
@@ -37,6 +39,7 @@ struct UDiv
 
 const SYSTEM_CLOCK_FREQUENCY: u32 = 8_000_000;
 const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
+type StRam = Ram<STE_RAM_SIZE>;
 
 const TIMER_VECTOR_ADDRESSES: [u32; 4] = [0x000134, 0x000120, 0x000114, 0x000110];
 
@@ -60,6 +63,7 @@ impl<'a> AtariSTe<'a>
 	pub fn new(cpu: *mut c_void) -> Self
 	{
 		// Build instances of all the peripherals, including their interlinking
+		let ram = StRam::new();
 		let psg = YM2149::new(2_000_000, SAMPLE_RATE);
 		let mfp = MC68901::new(2_457_600, cpu, 6);
 		let dac = STeDac::new(50_066, mfp.clone());
@@ -67,7 +71,9 @@ impl<'a> AtariSTe<'a>
 		// Create an instance of the STe to work with
 		let mut this = Self {
 			memory_map: Box::new(MemoryMap::new(0x00ffffff)),
+
 			cpu,
+			ram,
 			psg,
 			dac,
 			mfp,
@@ -78,7 +84,7 @@ impl<'a> AtariSTe<'a>
 
 		// Set up its memory map
 		this.memory_map
-			.add_peripheral_at(0x000000..0x800000, Ram::<STE_RAM_SIZE>::new().into());
+			.add_peripheral_at(0x000000..0x800000, this.ram.clone().into());
 		this.memory_map.add_peripheral_at(
 			0xe00000..0xf00000,
 			AtariSTeROMs::new(cpu, peripherals, HEAP_BASE, HEAP_SIZE).into(),
@@ -240,6 +246,17 @@ impl<'a> AtariSTe<'a>
 
 		// Write the initial timer settings to the timer
 		self.mfp.configure_timer(index, counter.quotient as u8, mode);
+	}
+
+	pub fn copy_to_ram(&mut self, data: &mut SndhDecruncher) -> Result<(), ice_decrunch::Error>
+	{
+		let system_ram = &mut self.ram;
+		// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
+		// But that also excludes the heap and stack spaces
+		let destination = &mut system_ram.index_mut(0..STACK_BASE as usize)[0x0100000..data.length()];
+		// Now make sure we're at the start of the data and copy it all in
+		data.seek_start();
+		data.read_slice(destination)
 	}
 }
 
