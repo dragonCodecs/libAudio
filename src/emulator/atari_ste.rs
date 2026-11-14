@@ -261,7 +261,7 @@ impl<'a> AtariSTe<'a>
 		let system_ram = &mut self.ram;
 		// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
 		// But that also excludes the heap and stack spaces
-		let destination = &mut system_ram.index_mut(0..STACK_BASE as usize)[0x010000..0x010000 + data.length()];
+		let destination = &mut system_ram.index_mut(0x010000..STACK_BASE as usize)[0..data.length()];
 		// Now make sure we're at the start of the data and copy it all in
 		data.seek_start();
 		data.read_slice(destination)
