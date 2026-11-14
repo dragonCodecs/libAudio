@@ -609,19 +609,26 @@ pub unsafe fn atari_ste_drop(atari_ste: *mut AtariSTe)
 	drop(atari_ste);
 }
 
-mod console
+pub(crate) mod console
 {
 	use std::ffi::CString;
 
-	use super::console_error;
+	use super::{console_debug, console_error};
 
-	pub(super) fn error(message: String)
+	pub fn error(message: String)
 	{
 		let message = unsafe { CString::from_vec_unchecked(message.into_bytes()) };
 		unsafe { console_error(message.into_raw()) };
+	}
+
+	pub fn debug(message: String)
+	{
+		let message = unsafe { CString::from_vec_unchecked(message.into_bytes()) };
+		unsafe { console_debug(message.into_raw()) };
 	}
 }
 
 unsafe extern "C" {
 	fn console_error(message: *const c_char);
+	fn console_debug(message: *const c_char);
 }

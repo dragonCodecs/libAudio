@@ -63,6 +63,11 @@ extern "C"
 	{
 		return cpu->executeToReturn(entryAddress, stackTop, asUser);
 	}
+
+	void console_debug(const char *message)
+	{
+		console.debug(message);
+	}
 }
 
 atariSTe_t::atariSTe_t() noexcept
