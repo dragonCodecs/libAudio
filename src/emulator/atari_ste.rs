@@ -71,9 +71,9 @@ impl<'a> AtariSTe<'a>
 		);
 		// Cartridge ROM at 0xfa0000, 128KiB
 		// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
-		this.add_clocked_peripheral(0xff8800..0xff8804, this.psg.to_owned().into());
-		this.add_clocked_peripheral(0xff8900..0xff8926, this.dac.to_owned().into());
-		this.add_clocked_peripheral(0xfffa00..0xfffa40, this.mfp.to_owned().into());
+		this.add_clocked_peripheral(0xff8800..0xff8804, this.psg.clone().into());
+		this.add_clocked_peripheral(0xff8900..0xff8926, this.dac.clone().into());
+		this.add_clocked_peripheral(0xfffa00..0xfffa40, this.mfp.clone().into());
 
 		// Set up our dummy RTE for vector handling
 		this.memory_map.write_address(RTE_ADDRESS, 0x4e73u16);

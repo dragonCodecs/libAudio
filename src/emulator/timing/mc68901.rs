@@ -118,7 +118,7 @@ impl<'a> From<MC68901> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
 	fn from(mfp: MC68901) -> Self
 	{
-		mfp.inner.clone()
+		mfp.inner
 	}
 }
 
@@ -126,7 +126,7 @@ impl<'a> From<MC68901> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
 	fn from(mfp: MC68901) -> Self
 	{
-		mfp.inner.clone()
+		mfp.inner
 	}
 }
 

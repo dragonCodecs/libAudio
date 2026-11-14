@@ -49,7 +49,7 @@ impl<'a> From<AtariSTeROMs> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
 	fn from(roms: AtariSTeROMs) -> Self
 	{
-		roms.inner.clone()
+		roms.inner
 	}
 }
 

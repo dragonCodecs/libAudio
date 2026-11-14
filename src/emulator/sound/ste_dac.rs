@@ -103,7 +103,7 @@ impl<'a> From<STeDac> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
 	fn from(ste_dac: STeDac) -> Self
 	{
-		ste_dac.inner.clone()
+		ste_dac.inner
 	}
 }
 
@@ -111,7 +111,7 @@ impl<'a> From<STeDac> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
 	fn from(ste_dac: STeDac) -> Self
 	{
-		ste_dac.inner.clone()
+		ste_dac.inner
 	}
 }
 

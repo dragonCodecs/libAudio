@@ -60,7 +60,7 @@ where
 {
 	fn from(ram: Ram<N>) -> Self
 	{
-		ram.inner.clone()
+		ram.inner
 	}
 }
 

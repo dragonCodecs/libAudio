@@ -75,11 +75,6 @@ impl YM2149
 		}
 	}
 
-	fn update_fsm(&mut self)
-	{
-		self.inner.borrow_mut().update_fsm();
-	}
-
 	pub fn sample_ready(&self) -> bool
 	{
 		self.inner.borrow().sample_ready()
@@ -127,7 +122,7 @@ impl<'a> From<YM2149> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
 	fn from(psg: YM2149) -> Self
 	{
-		psg.inner.clone()
+		psg.inner
 	}
 }
 
@@ -135,7 +130,7 @@ impl<'a> From<YM2149> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
 	fn from(psg: YM2149) -> Self
 	{
-		psg.inner.clone()
+		psg.inner
 	}
 }
 
