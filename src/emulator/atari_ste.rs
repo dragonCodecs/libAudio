@@ -41,6 +41,9 @@ const SYSTEM_CLOCK_FREQUENCY: u32 = 8_000_000;
 const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
 type StRam = Ram<STE_RAM_SIZE>;
 
+const COOKIE_SND: [u8; 4] = *b"_SND";
+const COOKIE_MCH: [u8; 4] = *b"_MCH";
+
 const TIMER_VECTOR_ADDRESSES: [u32; 4] = [0x000134, 0x000120, 0x000114, 0x000110];
 
 const GPIO7_VECTOR_ADDRESS: u32 = 0x00013c;
@@ -258,6 +261,31 @@ impl<'a> AtariSTe<'a>
 		data.seek_start();
 		data.read_slice(destination)
 	}
+
+	pub fn init(&mut self, subtune: u16) -> bool
+	{
+		// Set up the cookie jar at 0x000600 so replay routines work properly
+		self.memory_map.write_address(0x0005a0, 0x000600u32);
+		self.memory_map.write_address(0x000600, u32::from_be_bytes(COOKIE_SND));
+		// Bit 0 -> PSG, bit 1 -> DMA sound, bit 2 -> CODEC, bit 3 -> DSP
+		self.memory_map.write_address(0x000604, 0x00000003u32);
+		self.memory_map.write_address(0x000608, u32::from_be_bytes(COOKIE_MCH));
+		// Set the machine type to an STe
+		self.memory_map.write_address(0x00060c, 0x00010000u32);
+		// Sentinel that ends the cookie jar
+		self.memory_map.write_address(0x000610, 0u32);
+
+		// Set up the calling context
+		unsafe { cpu_write_data_register(self.cpu, 0, subtune as u32 + 1) };
+		// And run the init entry point to return
+		unsafe { cpu_execute_to_return(self.cpu, 0x010000, STACK_TOP, false) }
+	}
+
+	pub fn exit(&mut self) -> bool
+	{
+		// Run the exit entry point to return
+		unsafe { cpu_execute_to_return(self.cpu, 0x010004, STACK_TOP, false) }
+	}
 }
 
 impl Default for UDiv
@@ -280,5 +308,8 @@ fn div_rem(numerator: u32, denominator: u32) -> UDiv
 }
 
 unsafe extern "C" {
+	#[allow(improper_ctypes)]
 	fn cpu_register_interrupt_requester_mfp(cpu: *mut c_void, mfp: MC68901);
+	fn cpu_write_data_register(cpu: *mut c_void, reg: usize, value: u32);
+	fn cpu_execute_to_return(cpu: *mut c_void, entry_address: u32, stack_top: u32, as_user: bool) -> bool;
 }

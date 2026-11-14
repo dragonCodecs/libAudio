@@ -58,6 +58,11 @@ extern "C"
 	{
 		cpu->registerInterruptRequester(*mfp.irqRequester(*cpu));
 	}
+
+	bool cpu_execute_to_return(motorola68000_t *cpu, uint32_t entryAddress, uint32_t stackTop, bool asUser)
+	{
+		return cpu->executeToReturn(entryAddress, stackTop, asUser);
+	}
 }
 
 atariSTe_t::atariSTe_t() noexcept
