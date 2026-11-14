@@ -36,7 +36,7 @@ where
 	fn clock_cycle(&mut self) -> bool;
 }
 
-#[derive(PartialEq, Eq, Ord)]
+#[derive(PartialEq, Eq)]
 pub struct MemoryRange<Address>
 where
 	Address: Copy + Unsigned + PartialEq + Eq + PartialOrd + Ord,
@@ -167,15 +167,25 @@ where
 {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering>
 	{
+		Some(self.cmp(other))
+	}
+}
+
+impl<Address> Ord for MemoryRange<Address>
+where
+	Address: Copy + Unsigned + PartialEq + Eq + PartialOrd + Ord,
+{
+	fn cmp(&self, other: &Self) -> Ordering
+	{
 		if self.end <= other.begin {
 			// If we end before the other begins, we're before it
-			Some(Ordering::Less)
+			Ordering::Less
 		} else if self.begin >= other.end {
 			// If we begin after the other ends, we're after it
-			Some(Ordering::Greater)
+			Ordering::Greater
 		} else {
 			// If however the ranges somehow overlap then there is no ordering
-			Some(Ordering::Equal)
+			Ordering::Equal
 		}
 	}
 }
