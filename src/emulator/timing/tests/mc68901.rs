@@ -6,39 +6,39 @@ use std::ptr::null_mut;
 use super::MC68901;
 use crate::emulator::Peripheral;
 
-fn write_register_u8(mfp: &mut impl Peripheral<u32>, reg: u32, value: u8)
+fn write_register_u8(periph: &mut impl Peripheral<u32>, reg: u32, value: u8)
 {
-	mfp.write_address(reg, &[value]);
+	periph.write_address(reg, &[value]);
 }
 
-fn read_register_u8(mfp: &impl Peripheral<u32>, reg: u32) -> u8
+fn read_register_u8(periph: &impl Peripheral<u32>, reg: u32) -> u8
 {
 	let mut value = [0; 1];
-	mfp.read_address(reg, &mut value);
+	periph.read_address(reg, &mut value);
 	value[0]
 }
 
-fn write_register_u16(mfp: &mut impl Peripheral<u32>, reg: u32, value: u16)
+fn write_register_u16(periph: &mut impl Peripheral<u32>, reg: u32, value: u16)
 {
-	mfp.write_address(reg, &value.to_be_bytes());
+	periph.write_address(reg, &value.to_be_bytes());
 }
 
-fn read_register_u16(mfp: &impl Peripheral<u32>, reg: u32) -> u16
+fn read_register_u16(periph: &impl Peripheral<u32>, reg: u32) -> u16
 {
 	let mut value = [0; 2];
-	mfp.read_address(reg, &mut value);
+	periph.read_address(reg, &mut value);
 	u16::from_be_bytes(value)
 }
 
-fn write_register_u32(mfp: &mut impl Peripheral<u32>, reg: u32, value: u32)
+fn write_register_u32(periph: &mut impl Peripheral<u32>, reg: u32, value: u32)
 {
-	mfp.write_address(reg, &value.to_be_bytes());
+	periph.write_address(reg, &value.to_be_bytes());
 }
 
-fn read_register_u32(mfp: &impl Peripheral<u32>, reg: u32) -> u32
+fn read_register_u32(periph: &impl Peripheral<u32>, reg: u32) -> u32
 {
 	let mut value = [0; 4];
-	mfp.read_address(reg, &mut value);
+	periph.read_address(reg, &mut value);
 	u32::from_be_bytes(value)
 }
 
