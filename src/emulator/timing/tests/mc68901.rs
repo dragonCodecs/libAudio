@@ -134,6 +134,25 @@ fn bad_begister_io()
 }
 
 #[test]
+fn configure_timer()
+{
+	let mut mfp = MC68901::new(2_457_600, null_mut(), 6);
+
+	// Check that we can configure timer A for ~50Hz operation
+	mfp.configure_timer(0, 245, 7);
+	assert_eq!(read_register_u8(&mfp, 0x19), 0x07);
+	assert_eq!(read_register_u8(&mfp, 0x1f), 245);
+
+	// Check that we can configure timer C for 200Hz operation
+	mfp.configure_timer(2, 192, 5);
+	assert_eq!(read_register_u8(&mfp, 0x1d), 0x50);
+	assert_eq!(read_register_u8(&mfp, 0x23), 192);
+
+	// This call will be a no-op
+	mfp.configure_timer(4, 192, 5);
+}
+
+#[test]
 fn prescaling_mapping()
 {
 	assert_eq!(super::timer_prescaling_for(0), 1);

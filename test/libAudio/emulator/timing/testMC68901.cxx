@@ -35,22 +35,6 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 	motorola68000_t cpu{*this, 8_MHz};
 	mc68901_t mfp{2457600U, cpu, 6U};
 
-	void testConfigureTimer()
-	{
-		// Check that we can configure timer A for ~50Hz operation
-		mfp.configureTimer(0U, 245U, 7U);
-		assertEqual(readRegister<uint8_t>(mfp, 0x19U), 0x07U);
-		assertEqual(readRegister<uint8_t>(mfp, 0x1fU), 245U);
-
-		// Check that we can configure timer C for 200Hz operation
-		mfp.configureTimer(2U, 192U, 5U);
-		assertEqual(readRegister<uint8_t>(mfp, 0x1dU), 0x50U);
-		assertEqual(readRegister<uint8_t>(mfp, 0x23U), 192U);
-
-		// This call will be a no-op
-		mfp.configureTimer(4U, 192U, 5U);
-	}
-
 	void testIRQGeneration()
 	{
 		// Reconfigure the interrupt registers so just timers A and C can generate events
