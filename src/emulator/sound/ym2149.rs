@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use rand::RngExt;
 use rand::rngs::StdRng;
 
 use crate::emulator::clock_manager::ClockManager;
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
+#[derive(Clone)]
 pub struct YM2149
+{
+	inner: Rc<RefCell<YM2149Inner>>,
+}
+
+pub struct YM2149Inner
 {
 	clock_frequency: u32,
 
@@ -58,6 +67,79 @@ const LOG_LEVEL: [u16; 32] = [
 ];
 
 impl YM2149
+{
+	pub fn new(clock_frequency: u32, sample_frequency: u32) -> Self
+	{
+		Self {
+			inner: Rc::new(RefCell::new(YM2149Inner::new(clock_frequency, sample_frequency))),
+		}
+	}
+
+	fn update_fsm(&mut self)
+	{
+		self.inner.borrow_mut().update_fsm();
+	}
+
+	pub fn sample_ready(&self) -> bool
+	{
+		self.inner.borrow().sample_ready()
+	}
+
+	pub fn sample(&mut self) -> i16
+	{
+		self.inner.borrow_mut().sample()
+	}
+
+	#[cfg(test)]
+	pub(self) fn force_channel_states(&mut self, edge_state: bool)
+	{
+		self.inner.borrow_mut().force_channel_states(edge_state);
+	}
+}
+
+impl Peripheral<u32> for YM2149
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		self.inner.borrow().read_address(address, data);
+	}
+
+	fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		self.inner.borrow_mut().write_address(address, data);
+	}
+}
+
+impl ClockedPeripheral<u32> for YM2149
+{
+	fn clock_frequency(&self) -> u32
+	{
+		self.inner.borrow().clock_frequency()
+	}
+
+	fn clock_cycle(&mut self) -> bool
+	{
+		self.inner.borrow_mut().clock_cycle()
+	}
+}
+
+impl<'a> From<YM2149> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
+{
+	fn from(psg: YM2149) -> Self
+	{
+		psg.inner.clone()
+	}
+}
+
+impl<'a> From<YM2149> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
+{
+	fn from(psg: YM2149) -> Self
+	{
+		psg.inner.clone()
+	}
+}
+
+impl YM2149Inner
 {
 	pub fn new(clock_frequency: u32, sample_frequency: u32) -> Self
 	{
@@ -283,7 +365,7 @@ impl YM2149
 	}
 }
 
-impl Peripheral<u32> for YM2149
+impl Peripheral<u32> for YM2149Inner
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -396,7 +478,7 @@ impl Peripheral<u32> for YM2149
 	}
 }
 
-impl ClockedPeripheral<u32> for YM2149
+impl ClockedPeripheral<u32> for YM2149Inner
 {
 	fn clock_frequency(&self) -> u32
 	{
