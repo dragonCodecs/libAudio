@@ -11,45 +11,6 @@
 
 using namespace substrate::buffer_utils;
 
-template<typename address_t> struct memoryRange_t
-{
-private:
-	address_t _begin;
-	address_t _end;
-
-public:
-	memoryRange_t(const address_t begin, const address_t end) : _begin{begin}, _end{end} { }
-
-	// Check if a given address is in this particular address range
-	bool inRange(const address_t address) const
-	{
-		return _begin <= address && address < _end;
-	}
-
-	// Convert the address to one relative to the start of the range
-	address_t relative(const address_t address) const
-	{
-		return address - _begin;
-	}
-
-	address_t begin() const noexcept { return _begin; }
-	address_t end() const noexcept { return _end; }
-
-	bool operator ==(const memoryRange_t &other) const noexcept
-		{ return _begin == other._begin && _end == other._end; }
-};
-
-namespace std
-{
-	template<typename address_t> struct hash<memoryRange_t<address_t>>
-	{
-		size_t operator ()(const memoryRange_t<address_t> &range) const noexcept
-		{
-			return static_cast<size_t>(range.begin());
-		}
-	};
-}
-
 // A generic clockless peripheral
 template<typename address_t> struct peripheral_t
 {
@@ -91,64 +52,92 @@ public:
 	[[nodiscard]] virtual bool clockCycle() noexcept = 0;
 };
 
+struct MemoryMap;
+
+extern "C"
+{
+	int8_t memory_map_read_address_i8(MemoryMap *, uint32_t);
+	uint8_t memory_map_read_address_u8(MemoryMap *, uint32_t);
+	int16_t memory_map_read_address_i16(MemoryMap *, uint32_t);
+	uint16_t memory_map_read_address_u16(MemoryMap *, uint32_t);
+	int32_t memory_map_read_address_i32(MemoryMap *, uint32_t);
+	uint32_t memory_map_read_address_u32(MemoryMap *, uint32_t);
+
+	void memory_map_write_address_i8(MemoryMap *, uint32_t, int8_t);
+	void memory_map_write_address_u8(MemoryMap *, uint32_t, uint8_t);
+	void memory_map_write_address_i16(MemoryMap *, uint32_t, int16_t);
+	void memory_map_write_address_u16(MemoryMap *, uint32_t, uint16_t);
+	void memory_map_write_address_i32(MemoryMap *, uint32_t, int32_t);
+	void memory_map_write_address_u32(MemoryMap *, uint32_t, uint32_t);
+}
+
+template<typename value_t> struct peripheralValue_t
+{
+	static value_t readAddress(MemoryMap *self, uint32_t address);
+	static void writeAddress(MemoryMap *self, uint32_t address, value_t data);
+};
+
+template<> struct peripheralValue_t<int8_t>
+{
+	static int8_t readAddress(MemoryMap *self, uint32_t address)
+		{ return memory_map_read_address_i8(self, address); }
+	static void writeAddress(MemoryMap *self, uint32_t address, int8_t data)
+		{ memory_map_write_address_i8(self, address, data); }
+};
+
+template<> struct peripheralValue_t<uint8_t>
+{
+	static uint8_t readAddress(MemoryMap *self, uint32_t address)
+		{ return memory_map_read_address_u8(self, address); }
+	static void writeAddress(MemoryMap *self, uint32_t address, uint8_t data)
+		{ memory_map_write_address_u8(self, address, data); }
+};
+
+template<> struct peripheralValue_t<int16_t>
+{
+	static int16_t readAddress(MemoryMap *self, uint32_t address)
+		{ return memory_map_read_address_i16(self, address); }
+	static void writeAddress(MemoryMap *self, uint32_t address, int16_t data)
+		{ memory_map_write_address_i16(self, address, data); }
+};
+
+template<> struct peripheralValue_t<uint16_t>
+{
+	static uint16_t readAddress(MemoryMap *self, uint32_t address)
+		{ return memory_map_read_address_u16(self, address); }
+	static void writeAddress(MemoryMap *self, uint32_t address, uint16_t data)
+		{ memory_map_write_address_u16(self, address, data); }
+};
+
+template<> struct peripheralValue_t<int32_t>
+{
+	static int32_t readAddress(MemoryMap *self, uint32_t address)
+		{ return memory_map_read_address_i32(self, address); }
+	static void writeAddress(MemoryMap *self, uint32_t address, int32_t data)
+		{ memory_map_write_address_i32(self, address, data); }
+};
+
+template<> struct peripheralValue_t<uint32_t>
+{
+	static uint32_t readAddress(MemoryMap *self, uint32_t address)
+		{ return memory_map_read_address_u32(self, address); }
+	static void writeAddress(MemoryMap *self, uint32_t address, uint32_t data)
+		{ memory_map_write_address_u32(self, address, data); }
+};
+
 template<typename address_t, address_t validAddressMask = std::numeric_limits<address_t>::max()> struct memoryMap_t
 {
-protected:
-	// Use 16 buckets at minimum.
-	std::unordered_map<memoryRange_t<address_t>, std::unique_ptr<peripheral_t<address_t>>> addressMap{16U};
+private:
+	MemoryMap *_self{nullptr};
 
 public:
+	memoryMap_t(MemoryMap *self) : _self{self} { }
+
 	template<typename value_t> value_t readAddress(const address_t address) const noexcept
-	{
-		const auto adjustedAddres{address & validAddressMask};
-		// Try to find a peripheral mapped for the address
-		for (const auto &[mapping, peripheral] : addressMap)
-		{
-			// If the peripheral's mapping contains this address
-			if (mapping.inRange(adjustedAddres))
-			{
-				// Convert the address to a relative one
-				const auto relativeAddress{mapping.relative(adjustedAddres)};
-				std::array<uint8_t, sizeof(value_t)> value{};
-				// Read the data associated with that address in the peripheral
-				peripheral->readAddress(relativeAddress, value);
-
-				// Now we have data, convert it endian-appropriately to a value_t
-				if constexpr (sizeof(value_t) == 1U)
-					return static_cast<value_t>(value[0]);
-				else
-					return readBE<value_t>(value);
-			}
-		}
-
-		// If we couldn't find the address in any known peripheral, synthesise a value
-		return {};
-	}
+		{ return peripheralValue_t<value_t>::readAddress(_self, address); }
 
 	template<typename value_t> void writeAddress(const address_t address, const value_t data) noexcept
-	{
-		const auto adjustedAddres{address & validAddressMask};
-		// Try to find a peripheral to write the value to
-		for (auto &[mapping, peripheral] : addressMap)
-		{
-			// If the peripheral's mapping contains this address
-			if (mapping.inRange(adjustedAddres))
-			{
-				// Convert the address to a relative one
-				const auto relativeAddress{mapping.relative(adjustedAddres)};
-				std::array<uint8_t, sizeof(value_t)> value{};
-				// Convert the data to write in an endian-appropriate manner from a value_t
-				if constexpr (sizeof(value_t) == 1U)
-					value[0] = static_cast<uint8_t>(data);
-				else
-					writeBE(data, value);
-
-				// Now write the data to the peripheral and get done
-				peripheral->writeAddress(relativeAddress, value);
-				break;
-			}
-		}
-	}
+		{ peripheralValue_t<value_t>::writeAddress(_self, address, data); }
 };
 
 struct clockManager_t

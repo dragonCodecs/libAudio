@@ -68,44 +68,6 @@ where
 	}
 }
 
-/// Using the pointer from `sndh_loader_decruncher`, get the length of the data buffer containing
-/// the decrunched SNDH file data
-/// # Safety
-/// As long as the pointer given is from `sndh_loader_decruncher`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn sndh_decruncher_length(decruncher: *mut SndhDecruncher) -> usize
-{
-	let decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	unsafe { decruncher.as_ref() }.length()
-}
-
-/// Using the pointer from `sndh_loader_decruncher`, seek the read position back to the start of the
-/// decrunched SNDH file data
-/// # Safety
-/// As long as the pointer given is from `sndh_loader_decruncher`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn sndh_decruncher_seek_start(decruncher: *mut SndhDecruncher)
-{
-	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	unsafe { decruncher.as_mut() }.seek_start()
-}
-
-/// Using the pointer from `sndh_loader_decruncher`, read a span of data from the SNDH file data
-/// # Safety
-/// As long as the pointer given is from `sndh_loader_decruncher`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn sndh_decruncher_read(decruncher: *mut SndhDecruncher, mut slice: MutSlice<u8>) -> bool
-{
-	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
-	match unsafe { decruncher.as_mut() }.read_slice(slice.as_mut_slice()) {
-		Ok(()) => true,
-		Err(error) => {
-			console::error(format!("{error}"));
-			false
-		},
-	}
-}
-
 /// Allocate a new [`SndhLoader`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
 pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
@@ -592,9 +554,9 @@ pub unsafe fn atari_ste_roms_write_address(roms: *mut AtariSTeROMs, address: u32
 
 /// Allocate a new [`AtariSTe`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn atari_ste_new<'a>(cpu: *mut c_void) -> *mut AtariSTe<'a>
+pub fn atari_ste_new<'a>() -> *mut AtariSTe<'a>
 {
-	let atari_ste = Box::new(AtariSTe::new(cpu));
+	let atari_ste = Box::new(AtariSTe::new());
 	Box::into_raw(atari_ste)
 }
 
@@ -607,6 +569,213 @@ pub unsafe fn atari_ste_drop(atari_ste: *mut AtariSTe)
 {
 	let atari_ste = unsafe { Box::from_raw(atari_ste) };
 	drop(atari_ste);
+}
+
+/// Using the pointer from `atari_ste_new`, configure a timer
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_configure_timer(atari_ste: *mut AtariSTe, timer: SndhTimer, timer_frequency: u16)
+{
+	let mut atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_mut() }.configure_timer(timer, timer_frequency);
+}
+
+/// Using the pointer from `atari_ste_new`, copy SNDH data from the decruncher to the STe's RAM
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_copy_to_ram(atari_ste: *mut AtariSTe, decruncher: *mut SndhDecruncher) -> bool
+{
+	let mut atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	let mut decruncher = unsafe { NonNull::new_unchecked(decruncher) };
+	match unsafe { atari_ste.as_mut() }.copy_to_ram(unsafe { decruncher.as_mut() }) {
+		Ok(()) => true,
+		Err(error) => {
+			console::error(format!("{error}"));
+			false
+		},
+	}
+}
+
+/// Using the pointer from `atari_ste_new`, init a SNDH's replayer
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_init(atari_ste: *mut AtariSTe, subtune: u16) -> bool
+{
+	let mut atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_mut() }.init(subtune)
+}
+
+/// Using the pointer from `atari_ste_new`, exit a SNDH's replayer
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_exit(atari_ste: *mut AtariSTe) -> bool
+{
+	let mut atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_mut() }.exit()
+}
+
+/// Using the pointer from `atari_ste_new`, advance the machine clock
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_advance_clock(atari_ste: *mut AtariSTe) -> bool
+{
+	let mut atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_mut() }.advance_clock()
+}
+
+/// Using the pointer from `atari_ste_new`, check if a new sample is ready
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_sample_ready(atari_ste: *mut AtariSTe) -> bool
+{
+	let atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_ref() }.sample_ready()
+}
+
+/// Using the pointer from `atari_ste_new`, cread a sample from the machine
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_read_sample(atari_ste: *mut AtariSTe) -> i16
+{
+	let mut atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_mut() }.read_sample()
+}
+
+/// Using the pointer from `atari_ste_new`, display the machine's CPU state
+/// # Safety
+/// As long as the pointer given is from `atari_ste_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn atari_ste_display_cpu_state(atari_ste: *mut AtariSTe)
+{
+	let atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
+	unsafe { atari_ste.as_ref() }.display_cpu_state();
+}
+
+/// Using the pointer from passed to `cpu_new`, read an i8 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_read_address_i8(memory_map: *mut MemoryMap<u32>, address: u32) -> i8
+{
+	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_ref() }.read_address(address)
+}
+
+/// Using the pointer from passed to `cpu_new`, read an u8 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_read_address_u8(memory_map: *mut MemoryMap<u32>, address: u32) -> u8
+{
+	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_ref() }.read_address(address)
+}
+
+/// Using the pointer from passed to `cpu_new`, read an i16 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_read_address_i16(memory_map: *mut MemoryMap<u32>, address: u32) -> i16
+{
+	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_ref() }.read_address(address)
+}
+
+/// Using the pointer from passed to `cpu_new`, read an u16 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_read_address_u16(memory_map: *mut MemoryMap<u32>, address: u32) -> u16
+{
+	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_ref() }.read_address(address)
+}
+
+/// Using the pointer from passed to `cpu_new`, read an i32 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_read_address_i32(memory_map: *mut MemoryMap<u32>, address: u32) -> i32
+{
+	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_ref() }.read_address(address)
+}
+
+/// Using the pointer from passed to `cpu_new`, read an u32 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_read_address_u32(memory_map: *mut MemoryMap<u32>, address: u32) -> u32
+{
+	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_ref() }.read_address(address)
+}
+
+/// Using the pointer from passed to `cpu_new`, write an i8 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_write_address_i8(memory_map: *mut MemoryMap<u32>, address: u32, data: i8)
+{
+	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_mut() }.write_address(address, data);
+}
+
+/// Using the pointer from passed to `cpu_new`, write an u8 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_write_address_u8(memory_map: *mut MemoryMap<u32>, address: u32, data: u8)
+{
+	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_mut() }.write_address(address, data);
+}
+
+/// Using the pointer from passed to `cpu_new`, write an i16 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_write_address_i16(memory_map: *mut MemoryMap<u32>, address: u32, data: i16)
+{
+	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_mut() }.write_address(address, data);
+}
+
+/// Using the pointer from passed to `cpu_new`, write an u16 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_write_address_u16(memory_map: *mut MemoryMap<u32>, address: u32, data: u16)
+{
+	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_mut() }.write_address(address, data);
+}
+
+/// Using the pointer from passed to `cpu_new`, write an i32 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_write_address_i32(memory_map: *mut MemoryMap<u32>, address: u32, data: i32)
+{
+	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_mut() }.write_address(address, data);
+}
+
+/// Using the pointer from passed to `cpu_new`, write an u32 from an address in the memory map
+/// # Safety
+/// As long as the pointer given is from the call to `cpu_new`, this is safe
+#[unsafe(no_mangle)]
+pub unsafe fn memory_map_write_address_u32(memory_map: *mut MemoryMap<u32>, address: u32, data: u32)
+{
+	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
+	unsafe { memory_map.as_mut() }.write_address(address, data);
 }
 
 pub(crate) mod console

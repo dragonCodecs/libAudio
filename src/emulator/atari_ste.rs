@@ -64,8 +64,12 @@ const SAMPLE_RATE: u32 = 48_000;
 
 impl<'a> AtariSTe<'a>
 {
-	pub fn new(cpu: *mut c_void) -> Self
+	pub fn new() -> Self
 	{
+		// Prep a blank memory map and instance the CPU
+		let mut memory_map = Box::new(MemoryMap::new(0x00ffffff));
+		let cpu = unsafe { cpu_new(Box::as_mut_ptr(&mut memory_map)) };
+
 		// Build instances of all the peripherals, including their interlinking
 		let ram = StRam::new();
 		let psg = YM2149::new(2_000_000, SAMPLE_RATE);
@@ -74,7 +78,7 @@ impl<'a> AtariSTe<'a>
 
 		// Create an instance of the STe to work with
 		let mut this = Self {
-			memory_map: Box::new(MemoryMap::new(0x00ffffff)),
+			memory_map,
 
 			cpu,
 			ram,
@@ -86,7 +90,7 @@ impl<'a> AtariSTe<'a>
 		};
 		let peripherals = Box::as_mut_ptr(&mut this.memory_map) as *mut c_void;
 
-		// Set up its memory map
+		// Build the system memory map
 		this.memory_map
 			.add_peripheral_at(0x000000..0x800000, this.ram.clone().into());
 		this.memory_map.add_peripheral_at(
@@ -257,7 +261,7 @@ impl<'a> AtariSTe<'a>
 		let system_ram = &mut self.ram;
 		// Get a span that's past the end of the system variables space, and the length of the decrunched SNDH file
 		// But that also excludes the heap and stack spaces
-		let destination = &mut system_ram.index_mut(0..STACK_BASE as usize)[0x0100000..data.length()];
+		let destination = &mut system_ram.index_mut(0..STACK_BASE as usize)[0x010000..0x010000 + data.length()];
 		// Now make sure we're at the start of the data and copy it all in
 		data.seek_start();
 		data.read_slice(destination)
@@ -340,12 +344,18 @@ impl<'a> AtariSTe<'a>
 		// NB: the max output level is 64, allowing this to be simplified by the compiler and fast
 		(((sample as i32) * (self.dac.output_level() as i32)) / 64) as i16
 	}
+
+	pub fn display_cpu_state(&self)
+	{
+		unsafe { cpu_display_regs(self.cpu) };
+	}
 }
 
 impl<'a> Drop for AtariSTe<'a>
 {
 	fn drop(&mut self)
 	{
+		unsafe { cpu_drop(self.cpu) };
 		for peripheral in self.clocked_peripherals.keys() {
 			let peripheral = unsafe { Rc::from_raw(*peripheral) };
 			drop(peripheral);
@@ -374,9 +384,14 @@ fn div_rem(numerator: u32, denominator: u32) -> UDiv
 
 unsafe extern "C" {
 	#[allow(improper_ctypes)]
+	fn cpu_new<'a>(memory_map: *mut MemoryMap<'a, u32>) -> *mut c_void;
+	fn cpu_drop(cpu: *mut c_void);
+
+	#[allow(improper_ctypes)]
 	fn cpu_register_interrupt_requester_mfp(cpu: *mut c_void, mfp: MC68901);
 	fn cpu_has_pending_interrupts(cpu: *const c_void) -> bool;
 	fn cpu_trapped(cpu: *const c_void) -> bool;
+	fn cpu_display_regs(cpu: *const c_void);
 
 	fn cpu_write_data_register(cpu: *mut c_void, reg: usize, value: u32);
 	fn cpu_read_program_counter(cpu: *const c_void) -> u32;
