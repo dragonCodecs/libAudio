@@ -101,6 +101,23 @@ impl PeripheralValue for u8
 	}
 }
 
+impl PeripheralValue for i16
+{
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
+	where
+		Address: Unsigned,
+	{
+		u16::read_from_be(peripheral, address) as i16
+	}
+
+	fn write_to_be<Address>(&self, peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
+	where
+		Address: Unsigned,
+	{
+		u16::write_to_be(&(*self as u16), peripheral, address);
+	}
+}
+
 impl PeripheralValue for u16
 {
 	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
@@ -121,6 +138,23 @@ impl PeripheralValue for u16
 	}
 }
 
+impl PeripheralValue for i32
+{
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
+	where
+		Address: Unsigned,
+	{
+		u32::read_from_be(peripheral, address) as i32
+	}
+
+	fn write_to_be<Address>(&self, peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
+	where
+		Address: Unsigned,
+	{
+		u32::write_to_be(&(*self as u32), peripheral, address);
+	}
+}
+
 impl PeripheralValue for u32
 {
 	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
@@ -130,26 +164,6 @@ impl PeripheralValue for u32
 		let mut bytes = [0; 4];
 		peripheral.read_address(address, &mut bytes);
 		u32::from_be_bytes(bytes)
-	}
-
-	fn write_to_be<Address>(&self, mut peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
-	where
-		Address: Unsigned,
-	{
-		let bytes = self.to_be_bytes();
-		peripheral.write_address(address, &bytes);
-	}
-}
-
-impl PeripheralValue for u64
-{
-	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
-	where
-		Address: Unsigned,
-	{
-		let mut bytes = [0; 8];
-		peripheral.read_address(address, &mut bytes);
-		u64::from_be_bytes(bytes)
 	}
 
 	fn write_to_be<Address>(&self, mut peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
