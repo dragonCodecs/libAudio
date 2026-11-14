@@ -336,7 +336,6 @@ emulatorSrcs = [
 sndhSrcs = [
 	'emulator/atariSTe.cxx',
 	'emulator/atariSTeROMs.cxx',
-	'emulator/sound/ym2149.cxx',
 	'emulator/sound/steDAC.cxx',
 	'emulator/timing/mc68901.cxx',
 	'sndh/loader.cxx',

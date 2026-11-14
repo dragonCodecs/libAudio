@@ -12,7 +12,6 @@ use crate::emulator::atari_ste_roms::AtariSTeROMs;
 use crate::emulator::cpu::m68k::IrqRequester;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
-use crate::emulator::sound::ym2149::YM2149;
 use crate::emulator::timing::mc68901::{self, MC68901};
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
@@ -246,75 +245,6 @@ pub unsafe fn sndh_metadata_tune_name(metadata: *mut SndhMetadata, index: usize)
 {
 	let metadata = unsafe { NonNull::new_unchecked(metadata) };
 	Slice::from_slice(unsafe { metadata.as_ref() }.tune_names()[index].as_bytes())
-}
-
-/// Allocate a new [`Ym2149`] and "leak" that pointer into C++ land
-#[unsafe(no_mangle)]
-pub fn ym2149_new(clock_frequency: u32, sample_frequency: u32) -> *mut YM2149
-{
-	let ym2149 = Box::new(YM2149::new(clock_frequency, sample_frequency));
-	Box::into_raw(ym2149)
-}
-
-/// Consume the pointer for a [`Ym2149`] allocated with `ym2149_new`
-/// and deallocate it cleanly
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_drop(ym2149: *mut YM2149)
-{
-	let ym2149 = unsafe { Box::from_raw(ym2149) };
-	drop(ym2149);
-}
-
-/// Using the pointer from `ym2149_new`, read data into the slice from the requested address
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_read_address(ym2149: *mut YM2149, address: u32, mut slice: MutSlice<u8>)
-{
-	let ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_ref() }.read_address(address, slice.as_mut_slice());
-}
-
-/// Using the pointer from `ym2149_new`, write data into the slice to the requested address
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_write_address(ym2149: *mut YM2149, address: u32, slice: Slice<u8>)
-{
-	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_mut() }.write_address(address, slice.as_slice());
-}
-
-/// Using the pointer from `ym2149_new`, check if the YM2149 has a new sample ready
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_sample_ready(ym2149: *mut YM2149) -> bool
-{
-	let ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_ref() }.sample_ready()
-}
-
-/// Using the pointer from `ym2149_new`, generate a new sample
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_sample(ym2149: *mut YM2149) -> i16
-{
-	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_mut() }.sample()
-}
-
-/// Using the pointer from `ym2149_new`, run a clock cycle
-/// # Safety
-/// As long as the pointer given is from `ym2149_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ym2149_clock_cycle(ym2149: *mut YM2149) -> bool
-{
-	let mut ym2149 = unsafe { NonNull::new_unchecked(ym2149) };
-	unsafe { ym2149.as_mut() }.clock_cycle()
 }
 
 /// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
