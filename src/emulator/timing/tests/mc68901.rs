@@ -1,6 +1,109 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::ptr::null_mut;
+
+use super::MC68901;
+use crate::emulator::Peripheral;
+
+fn write_register_u8(mfp: &mut impl Peripheral<u32>, reg: u32, value: u8)
+{
+	mfp.write_address(reg, &[value]);
+}
+
+fn read_register_u8(mfp: &impl Peripheral<u32>, reg: u32) -> u8
+{
+	let mut value = [0; 1];
+	mfp.read_address(reg, &mut value);
+	value[0]
+}
+
+fn write_register_u16(mfp: &mut impl Peripheral<u32>, reg: u32, value: u16)
+{
+	mfp.write_address(reg, &value.to_be_bytes());
+}
+
+fn read_register_u16(mfp: &impl Peripheral<u32>, reg: u32) -> u16
+{
+	let mut value = [0; 2];
+	mfp.read_address(reg, &mut value);
+	u16::from_be_bytes(value)
+}
+
+#[test]
+fn register_io()
+{
+	let mut mfp = MC68901::new(2_457_600, null_mut(), 6);
+
+	// Verify the function of the GPIO registers
+	write_register_u16(&mut mfp, 0x00, 0xa55a);
+	assert_eq!(read_register_u16(&mfp, 0x00), 0x005a);
+	assert_eq!(read_register_u8(&mfp, 0x01), 0x5a);
+	write_register_u8(&mut mfp, 0x01, 0xff);
+	assert_eq!(read_register_u8(&mfp, 0x01), 0xff);
+	write_register_u16(&mut mfp, 0x02, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x02), 0x00ff);
+	write_register_u16(&mut mfp, 0x04, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x04), 0x00ff);
+	// Verify the function of the interrupt control registers
+	write_register_u16(&mut mfp, 0x06, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x06), 0x00ff);
+	write_register_u16(&mut mfp, 0x08, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x08), 0x00ff);
+	write_register_u16(&mut mfp, 0x0a, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x0a), 0x00ff);
+	write_register_u16(&mut mfp, 0x0c, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x0c), 0x00ff);
+	write_register_u16(&mut mfp, 0x0e, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x0e), 0x00ff);
+	write_register_u16(&mut mfp, 0x10, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x10), 0x00ff);
+	write_register_u16(&mut mfp, 0x12, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x12), 0x00ff);
+	write_register_u16(&mut mfp, 0x14, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x14), 0x00ff);
+	// Verify the function of the vector register
+	write_register_u16(&mut mfp, 0x16, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x16), 0x00f8);
+	// Verify the function of the timer registers
+	write_register_u16(&mut mfp, 0x18, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x18), 0x001f);
+	write_register_u16(&mut mfp, 0x1e, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x1e), 0x0000);
+	write_register_u8(&mut mfp, 0x19, 0x00);
+	write_register_u16(&mut mfp, 0x1a, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x1a), 0x001f);
+	write_register_u16(&mut mfp, 0x20, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x20), 0x0000);
+	write_register_u8(&mut mfp, 0x1b, 0x00);
+	write_register_u16(&mut mfp, 0x1c, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x1c), 0x0077);
+	write_register_u16(&mut mfp, 0x22, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x22), 0x0000);
+	write_register_u16(&mut mfp, 0x24, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x24), 0x0000);
+	write_register_u8(&mut mfp, 0x1d, 0x00);
+	write_register_u16(&mut mfp, 0x1e, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x1e), 0x00ff);
+	write_register_u16(&mut mfp, 0x20, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x20), 0x00ff);
+	write_register_u16(&mut mfp, 0x22, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x22), 0x00ff);
+	write_register_u16(&mut mfp, 0x24, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x24), 0x00ff);
+	// Verify the function of the UART registers
+	write_register_u16(&mut mfp, 0x26, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x26), 0x00ff);
+	write_register_u16(&mut mfp, 0x28, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x28), 0x00ff);
+	write_register_u16(&mut mfp, 0x2a, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x2a), 0x00ff);
+	write_register_u16(&mut mfp, 0x2c, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x2c), 0x00ff);
+	write_register_u16(&mut mfp, 0x2e, 0xffff);
+	assert_eq!(read_register_u16(&mfp, 0x2e), 0x00ff);
+}
+
 #[test]
 fn prescaling_mapping()
 {
