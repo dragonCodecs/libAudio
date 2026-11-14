@@ -2,11 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::ffi::c_void;
 use std::ops::Range;
 use std::rc::Rc;
 
 use crate::emulator::atari_ste_roms::{self, AtariSTeROMs};
+use crate::emulator::clock_manager::ClockManager;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
@@ -22,8 +24,11 @@ pub struct AtariSTe<'a>
 	psg: YM2149,
 	dac: STeDac,
 	mfp: MC68901,
+
+	clocked_peripherals: BTreeMap<*mut (dyn ClockedPeripheral<u32> + 'a), ClockManager>,
 }
 
+const SYSTEM_CLOCK_FREQUENCY: u32 = 8_000_000;
 const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
 
 const TIMER_VECTOR_ADDRESSES: [u32; 4] = [0x000134, 0x000120, 0x000114, 0x000110];
@@ -59,6 +64,8 @@ impl<'a> AtariSTe<'a>
 			psg,
 			dac,
 			mfp,
+
+			clocked_peripherals: BTreeMap::new(),
 		};
 		let peripherals = Box::as_mut_ptr(&mut this.memory_map) as *mut c_void;
 
@@ -121,7 +128,10 @@ impl<'a> AtariSTe<'a>
 	fn add_clocked_peripheral(&mut self, mapping: Range<u32>, peripheral: Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>)
 	{
 		// Add the device to the clocking map according to the clocking ratio set up
-		// XXX: Clocked peripherals map still needs setting up
+		self.clocked_peripherals.insert(
+			peripheral.as_ptr(),
+			ClockManager::new(SYSTEM_CLOCK_FREQUENCY, peripheral.borrow().clock_frequency()),
+		);
 		// Add the device to the address map
 		self.memory_map.add_peripheral_at(mapping, peripheral);
 	}
