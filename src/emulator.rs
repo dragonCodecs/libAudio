@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::cell::{Ref, RefCell, RefMut};
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::ops::{BitAnd, Range};
+use std::rc::Rc;
 
 use num_traits::sign::Unsigned;
 
@@ -33,7 +36,7 @@ where
 	fn clock_cycle(&mut self) -> bool;
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Ord)]
 pub struct MemoryRange<Address>
 where
 	Address: Copy + Unsigned + PartialEq + Eq + PartialOrd + Ord,
@@ -42,28 +45,28 @@ where
 	end: Address,
 }
 
-pub struct MemoryMap<Address>
+pub struct MemoryMap<'a, Address>
 where
 	Address: Copy + Unsigned + BitAnd<Output = Address> + PartialEq + Eq + PartialOrd + Ord,
 {
 	valid_address_mask: Address,
-	address_map: BTreeMap<MemoryRange<Address>, Box<dyn Peripheral<Address>>>,
+	address_map: BTreeMap<MemoryRange<Address>, Rc<RefCell<dyn Peripheral<Address> + 'a>>>,
 }
 
 pub trait PeripheralValue
 {
-	fn read_from_be<Address>(peripheral: &dyn Peripheral<Address>, address: Address) -> Self
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
 	where
 		Address: Unsigned;
 
-	fn write_to_be<Address>(&self, peripheral: &mut dyn Peripheral<Address>, address: Address)
+	fn write_to_be<Address>(&self, peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
 	where
 		Address: Unsigned;
 }
 
 impl PeripheralValue for u8
 {
-	fn read_from_be<Address>(peripheral: &dyn Peripheral<Address>, address: Address) -> Self
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
 	where
 		Address: Unsigned,
 	{
@@ -72,7 +75,7 @@ impl PeripheralValue for u8
 		bytes[0]
 	}
 
-	fn write_to_be<Address>(&self, peripheral: &mut dyn Peripheral<Address>, address: Address)
+	fn write_to_be<Address>(&self, mut peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
 	where
 		Address: Unsigned,
 	{
@@ -83,7 +86,7 @@ impl PeripheralValue for u8
 
 impl PeripheralValue for u16
 {
-	fn read_from_be<Address>(peripheral: &dyn Peripheral<Address>, address: Address) -> Self
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
 	where
 		Address: Unsigned,
 	{
@@ -92,7 +95,7 @@ impl PeripheralValue for u16
 		u16::from_be_bytes(bytes)
 	}
 
-	fn write_to_be<Address>(&self, peripheral: &mut dyn Peripheral<Address>, address: Address)
+	fn write_to_be<Address>(&self, mut peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
 	where
 		Address: Unsigned,
 	{
@@ -103,7 +106,7 @@ impl PeripheralValue for u16
 
 impl PeripheralValue for u32
 {
-	fn read_from_be<Address>(peripheral: &dyn Peripheral<Address>, address: Address) -> Self
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
 	where
 		Address: Unsigned,
 	{
@@ -112,7 +115,7 @@ impl PeripheralValue for u32
 		u32::from_be_bytes(bytes)
 	}
 
-	fn write_to_be<Address>(&self, peripheral: &mut dyn Peripheral<Address>, address: Address)
+	fn write_to_be<Address>(&self, mut peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
 	where
 		Address: Unsigned,
 	{
@@ -123,7 +126,7 @@ impl PeripheralValue for u32
 
 impl PeripheralValue for u64
 {
-	fn read_from_be<Address>(peripheral: &dyn Peripheral<Address>, address: Address) -> Self
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
 	where
 		Address: Unsigned,
 	{
@@ -132,7 +135,7 @@ impl PeripheralValue for u64
 		u64::from_be_bytes(bytes)
 	}
 
-	fn write_to_be<Address>(&self, peripheral: &mut dyn Peripheral<Address>, address: Address)
+	fn write_to_be<Address>(&self, mut peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
 	where
 		Address: Unsigned,
 	{
@@ -158,6 +161,25 @@ where
 	}
 }
 
+impl<Address> PartialOrd<Self> for MemoryRange<Address>
+where
+	Address: Copy + Unsigned + PartialEq + Eq + PartialOrd + Ord,
+{
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering>
+	{
+		if self.end <= other.begin {
+			// If we end before the other begins, we're before it
+			Some(Ordering::Less)
+		} else if self.begin >= other.end {
+			// If we begin after the other ends, we're after it
+			Some(Ordering::Greater)
+		} else {
+			// If however the ranges somehow overlap then there is no ordering
+			Some(Ordering::Equal)
+		}
+	}
+}
+
 impl<Address> From<Range<Address>> for MemoryRange<Address>
 where
 	Address: Copy + Unsigned + PartialEq + Eq + PartialOrd + Ord,
@@ -171,7 +193,7 @@ where
 	}
 }
 
-impl<Address> MemoryMap<Address>
+impl<'a, Address> MemoryMap<'a, Address>
 where
 	Address: Copy + Unsigned + BitAnd<Output = Address> + PartialEq + Eq + PartialOrd + Ord,
 {
@@ -181,6 +203,11 @@ where
 			valid_address_mask,
 			address_map: BTreeMap::new(),
 		}
+	}
+
+	pub fn add_peripheral_at(&mut self, mapping: Range<Address>, peripheral: Rc<RefCell<dyn Peripheral<Address> + 'a>>)
+	{
+		self.address_map.insert(mapping.into(), peripheral);
 	}
 
 	pub fn read_address<Value>(&self, address: Address) -> Value
@@ -195,7 +222,7 @@ where
 				// Convert the address to a relative one
 				let relative_address = mapping.relative(adjusted_address);
 				// Read the data associated with that address in the peripheral
-				return Value::read_from_be(Box::as_ref(peripheral), relative_address);
+				return Value::read_from_be(peripheral.borrow(), relative_address);
 			}
 		}
 		Value::default()
@@ -213,7 +240,7 @@ where
 				// Convert the address to a relative one
 				let relative_address = mapping.relative(adjusted_address);
 				// Write the data to the associated address in the peripheral
-				data.write_to_be(Box::as_mut(peripheral), relative_address);
+				data.write_to_be(peripheral.borrow_mut(), relative_address);
 				break;
 			}
 		}
