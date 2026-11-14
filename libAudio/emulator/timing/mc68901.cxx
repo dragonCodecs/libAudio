@@ -17,6 +17,7 @@ extern "C"
 	bool mc68901_configure_timer(MC68901 *, size_t, uint8_t, uint8_t);
 	bool mc68901_clock_cycle(MC68901 *);
 	void mc68901_fire_dma_event(MC68901 *);
+	uint8_t mc68901_irq_level(const MC68901 *);
 	uint8_t mc68901_irq_cause(MC68901 *);
 
 	void cpu_request_interrupt(motorola68000_t *cpu, uint8_t level)
@@ -24,6 +25,20 @@ extern "C"
 		cpu->requestInterrupt(level);
 	}
 }
+
+MC68901IRQRequester *MC68901::irqRequester(motorola68000_t &cpu) noexcept
+{
+	return new MC68901IRQRequester{cpu, *this};
+}
+
+MC68901IRQRequester::MC68901IRQRequester(motorola68000_t &cpu, MC68901 self) noexcept :
+	m68k::irqRequester_t{cpu, mc68901_irq_level(&self)}, _self{self} { }
+
+MC68901IRQRequester::~MC68901IRQRequester() noexcept
+	{ mc68901_drop(_self); }
+
+uint8_t MC68901IRQRequester::irqCause() noexcept
+	{ return mc68901_irq_cause(&_self); }
 
 mc68901_t::mc68901_t(const uint32_t clockFrequency, motorola68000_t &cpu, const uint8_t level) noexcept :
 	clockedPeripheral_t<uint32_t>{clockFrequency}, m68k::irqRequester_t{cpu, level},

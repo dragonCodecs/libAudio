@@ -6,7 +6,7 @@ use std::ffi::c_void;
 use std::ops::Range;
 use std::rc::Rc;
 
-use crate::emulator::atari_ste_roms::AtariSTeROMs;
+use crate::emulator::atari_ste_roms::{self, AtariSTeROMs};
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
@@ -25,6 +25,15 @@ pub struct AtariSTe<'a>
 }
 
 const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
+
+const TIMER_VECTOR_ADDRESSES: [u32; 4] = [0x000134, 0x000120, 0x000114, 0x000110];
+
+const GPIO7_VECTOR_ADDRESS: u32 = 0x00013c;
+
+// Private address we stick an RTE instruction at for vector returns and such
+const RTE_ADDRESS: u32 = 0x000700;
+// Private address we stick a STOP instruction at for unimplemented vectors
+const STOP_ADDRESS: u32 = 0x000704;
 
 const STACK_BASE: u32 = 0x600000;
 const STACK_SIZE: u32 = 0x100000;
@@ -66,6 +75,46 @@ impl<'a> AtariSTe<'a>
 		this.add_clocked_peripheral(0xff8900..0xff8926, this.dac.to_owned().into());
 		this.add_clocked_peripheral(0xfffa00..0xfffa40, this.mfp.to_owned().into());
 
+		// Set up our dummy RTE for vector handling
+		this.memory_map.write_address(RTE_ADDRESS, 0x4e73u16);
+		// Set up a dummy STOP for unimplemented vectors
+		this.memory_map.write_address(STOP_ADDRESS, 0x4e72u16);
+		this.memory_map.write_address(STOP_ADDRESS + 2, 0x2700u16);
+
+		// Set up the illegal instruction handler using STOP
+		this.memory_map.write_address(0x000010, STOP_ADDRESS);
+
+		// Set up the TRAP handlers using the dummy STOP for unused ones
+		this.memory_map.write_address(0x000080, STOP_ADDRESS);
+		// Set up the GEMDOS TRAP handler so the ROM will handle it
+		this.memory_map
+			.write_address(0x000084, 0xe00000 + atari_ste_roms::HANDLER_ADDRESS_GEMDOS);
+		this.memory_map.write_address(0x000088, STOP_ADDRESS);
+		this.memory_map.write_address(0x00008c, STOP_ADDRESS);
+		this.memory_map.write_address(0x000090, STOP_ADDRESS);
+		this.memory_map.write_address(0x000094, STOP_ADDRESS);
+		this.memory_map.write_address(0x000098, STOP_ADDRESS);
+		this.memory_map.write_address(0x00009c, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000a0, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000a4, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000a8, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000ac, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000b0, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000b4, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000b8, STOP_ADDRESS);
+		this.memory_map.write_address(0x0000bc, STOP_ADDRESS);
+
+		// Make all timer handlers RTEs for now
+		for address in TIMER_VECTOR_ADDRESSES {
+			this.memory_map.write_address(address, RTE_ADDRESS);
+		}
+		// And the GPIO7 handler too
+		this.memory_map.write_address(GPIO7_VECTOR_ADDRESS, RTE_ADDRESS);
+		// Tell the MFP its vector number information and that we're in automatic mode
+		this.memory_map.write_address(0xfffa17, 0x40u8);
+		// Register it as an interrupt source
+		unsafe { cpu_register_interrupt_requester_mfp(cpu, this.mfp.clone()) };
+
 		this
 	}
 
@@ -76,4 +125,8 @@ impl<'a> AtariSTe<'a>
 		// Add the device to the address map
 		self.memory_map.add_peripheral_at(mapping, peripheral);
 	}
+}
+
+unsafe extern "C" {
+	fn cpu_register_interrupt_requester_mfp(cpu: *mut c_void, mfp: MC68901);
 }

@@ -474,6 +474,13 @@ pub fn mc68901_fire_dma_event(mc68901: &mut MC68901)
 	mc68901.fire_dma_event();
 }
 
+/// Using the pointer from `mc68901_new`, retrieve the priorty level of IRQs for the device
+#[unsafe(no_mangle)]
+pub fn mc68901_irq_level(mc68901: &MC68901) -> u8
+{
+	mc68901.irq_level()
+}
+
 /// Using the pointer from `mc68901_new`, retrieve the cause of an IRQ
 #[unsafe(no_mangle)]
 pub fn mc68901_irq_cause(mc68901: &mut MC68901) -> u8

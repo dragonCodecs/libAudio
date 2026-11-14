@@ -52,6 +52,14 @@ constexpr static uint32_t stackTop{stackBase + stackSize};
 constexpr static uint32_t heapBase{0x700000U};
 constexpr static uint32_t heapSize{0x100000U};
 
+extern "C"
+{
+	void cpu_register_interrupt_requester_mfp(motorola68000_t *cpu, MC68901 mfp)
+	{
+		cpu->registerInterruptRequester(*mfp.irqRequester(*cpu));
+	}
+}
+
 atariSTe_t::atariSTe_t() noexcept
 {
 	const auto addClockedPeripheral

@@ -9,9 +9,25 @@
 #include "../memoryMap.hxx"
 #include "../cpu/m68kIRQ.hxx"
 
+struct MC68901IRQRequester;
+
 struct MC68901 final
 {
 	void *inner{nullptr};
+
+	MC68901IRQRequester *irqRequester(motorola68000_t &cpu) noexcept;
+};
+
+struct MC68901IRQRequester final : m68k::irqRequester_t
+{
+private:
+	MC68901 _self{};
+
+	uint8_t irqCause() noexcept final;
+
+public:
+	MC68901IRQRequester(motorola68000_t &cpu, MC68901 self) noexcept;
+	~MC68901IRQRequester() noexcept;
 };
 
 extern "C"
