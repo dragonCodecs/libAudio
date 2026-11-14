@@ -12,8 +12,9 @@ use crate::emulator::clock_manager::ClockManager;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
-use crate::emulator::timing::mc68901::MC68901;
+use crate::emulator::timing::mc68901::{MC68901, timer_prescaling_for};
 use crate::emulator::{ClockedPeripheral, MemoryMap};
+use crate::sndh::loader::SndhTimer;
 
 pub struct AtariSTe<'a>
 {
@@ -26,6 +27,12 @@ pub struct AtariSTe<'a>
 	mfp: MC68901,
 
 	clocked_peripherals: BTreeMap<*mut (dyn ClockedPeripheral<u32> + 'a), ClockManager>,
+}
+
+struct UDiv
+{
+	quotient: u32,
+	remainder: u32,
 }
 
 const SYSTEM_CLOCK_FREQUENCY: u32 = 8_000_000;
@@ -134,6 +141,124 @@ impl<'a> AtariSTe<'a>
 		);
 		// Add the device to the address map
 		self.memory_map.add_peripheral_at(mapping, peripheral);
+	}
+
+	pub fn configure_timer(&mut self, timer: SndhTimer, timer_frequency: u16)
+	{
+		// Convert the timer's letter code into a timer index
+		let Some(index) = timer.as_index() else {
+			return;
+		};
+		// Extract where the IRQ handler is for the required timer
+		let vector_address = TIMER_VECTOR_ADDRESSES[index];
+
+		// Now the vector slot is properly set up, enable the timer and set the call frequency
+		// Start by computing the integer number of cycles per second (and its error) the requested frequency
+		// will beat against the MFP
+		let cycle_rate = div_rem(self.mfp.clock_frequency(), timer_frequency as u32);
+		// Now figure out what divider is necessary to make that fit the 8-bit counter
+		let mode = {
+			let mut scaled_rate = UDiv::default();
+			let mut scale_factor = 7;
+			for factor in 0..8 {
+				// Calculate if this amount of prescaling results in a value that fits the timer counter
+				let counter = div_rem(cycle_rate.quotient, timer_prescaling_for(factor));
+				// If it does and the error is less than the previously calculated value,
+				// note the factor and store the value
+				if counter.quotient < 256 && counter.remainder < scaled_rate.remainder {
+					scaled_rate = counter;
+					scale_factor = factor;
+				}
+			}
+			scale_factor
+		};
+
+		// With a scale factor picked, write the counter value, prescaling, and error into memory for the
+		// timer IRQ handler to use to adjust for the error and maintain frequency accuracy
+		let prescaler = timer_prescaling_for(mode);
+		let counter = div_rem(cycle_rate.quotient, prescaler);
+		self.memory_map.write_address(0x001000, prescaler as u8);
+		self.memory_map.write_address(0x001001, counter.quotient as u8); // Reload value
+		self.memory_map.write_address(0x001002, counter.remainder as u8); // Residual error
+		self.memory_map.write_address(0x001003, 0u8);
+
+		// Write the IRQ handler routine into memory so it can be used to trampoline into the SNDH play routine
+		// Stack the registers we clobber
+		self.memory_map.write_address(0x001008, 0x48e7u16);
+		self.memory_map.write_address(0x00100a, 0xc080u16); // movem.l d0-d1,a0, -(sp)
+		// Prepare d0 to accept the accumulated error value
+		self.memory_map.write_address(0x00100c, 0x4240u16); // clr.w d0
+		// Grab the accumulated error value
+		self.memory_map.write_address(0x00100e, 0x103au16);
+		self.memory_map.write_address(0x001010, 0xfff3u16); // move.b $-0d(pc), d0
+		// Prepare d1 to accept the error residual value
+		self.memory_map.write_address(0x001012, 0x4241u16); // clr.w d1
+		// Grab the error residual value
+		self.memory_map.write_address(0x001014, 0x123au16);
+		self.memory_map.write_address(0x001016, 0xffecu16); // move.b $-14(pc), d1
+		// Add the two together to get a new accumulation
+		self.memory_map.write_address(0x001018, 0xd240u16); // add.w d0, d1
+		// Grab the prescaling value to compare the accumulation against
+		self.memory_map.write_address(0x00101a, 0x103au16);
+		self.memory_map.write_address(0x00101c, 0xffe4u16); // move.b $-1c(pc), d0
+		// Put the timer data register location in a0
+		self.memory_map.write_address(0x00101e, 0x307cu16);
+		self.memory_map.write_address(0x001020, 0xfa1fu16 + (index << 1) as u16); // movea.w #$fa1f, a0
+		// Compare to see if prescaler < accumulation
+		self.memory_map.write_address(0x001022, 0xb041u16); // cmp.w d1, d0
+		// Skip to non-adjustment code if false
+		self.memory_map.write_address(0x001024, 0x6c06u16); // bge +$06 (0x00102c)
+		// Otherwise, add one to the reload value
+		self.memory_map.write_address(0x001026, 0x5210u16); // addq.b #1, (a0)
+		// And subtract the prescaler off the accumulated error
+		self.memory_map.write_address(0x001028, 0x9240u16); // sub d1, d0
+		// Jump to where we store the accumulated error
+		self.memory_map.write_address(0x00102a, 0x6006u16); // bra +$06 (0x001032)
+		// If the accumulation has not yet exceeded the prescaler value, load the original reload value back
+		self.memory_map.write_address(0x00102c, 0x103au16);
+		self.memory_map.write_address(0x00102e, 0xffd3u16); // move.b $-2d(pc), d0
+		self.memory_map.write_address(0x001030, 0x1080u16); // move.b d0, (a0)
+		// Figure out where the accumulated error value is
+		self.memory_map.write_address(0x001032, 0x41fau16);
+		self.memory_map.write_address(0x001034, 0xffcfu16); // lea $-31(pc), a0
+		// Write the accumulated error back
+		self.memory_map.write_address(0x001036, 0x1081u16); // move.b d1, (a0)
+		// nstack the clobbered registers
+		self.memory_map.write_address(0x001038, 0x4cdfu16);
+		self.memory_map.write_address(0x00103a, 0x0103u16); // movew.l (sp)+, d0-d1,a0
+		// Jump into the play routine
+		self.memory_map.write_address(0x00103c, 0x207au16);
+		self.memory_map.write_address(0x00103e, 0xffc6u16); // movea $-3a(pc), a0
+		self.memory_map.write_address(0x001040, 0x4e90u16); // jsr (a0)
+		// Finally, return from the interrupt handler
+		self.memory_map.write_address(0x001042, 0x4e73u16); // rte
+
+		// Configure the IRQ handler to our routine, and write the entry address in the SNDH where it can
+		// get to it to `bsr` into the routine
+		self.memory_map.write_address(0x001004, 0x010008u32);
+		self.memory_map.write_address(vector_address, 0x001008u32);
+
+		// Write the initial timer settings to the timer
+		self.mfp.configure_timer(index, counter.quotient as u8, mode);
+	}
+}
+
+impl Default for UDiv
+{
+	fn default() -> Self
+	{
+		Self {
+			quotient: 0,
+			remainder: u32::MAX,
+		}
+	}
+}
+
+fn div_rem(numerator: u32, denominator: u32) -> UDiv
+{
+	UDiv {
+		quotient: numerator / denominator,
+		remainder: numerator % denominator,
 	}
 }
 

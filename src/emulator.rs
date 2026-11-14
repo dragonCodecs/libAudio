@@ -30,7 +30,6 @@ pub trait ClockedPeripheral<Address>: Peripheral<Address>
 where
 	Address: Unsigned,
 {
-	#[allow(unused)]
 	#[must_use]
 	fn clock_frequency(&self) -> u32;
 	#[must_use]
