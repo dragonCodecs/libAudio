@@ -122,6 +122,14 @@ impl<'a> From<MC68901> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 	}
 }
 
+impl<'a> From<MC68901> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
+{
+	fn from(mfp: MC68901) -> Self
+	{
+		mfp.inner.clone()
+	}
+}
+
 impl MC68901Inner
 {
 	pub fn new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> Self
