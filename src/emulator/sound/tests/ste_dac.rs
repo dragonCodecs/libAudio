@@ -75,3 +75,33 @@ fn microwire()
 	// Read the main volume to check what it's now set to (should be 0)
 	assert_eq!(dac.output_level(), 0);
 }
+
+#[test]
+fn dma_register_io()
+{
+	let mfp = MC68901::new(2_457_600, null_mut(), 6);
+	let mut dac = STeDac::new(50_066, mfp);
+
+	write_register_u16(&mut dac, 0x00, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x00), 0x0003);
+	write_register_u16(&mut dac, 0x02, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x02), 0x00ff);
+	write_register_u16(&mut dac, 0x04, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x04), 0x00ff);
+	write_register_u16(&mut dac, 0x06, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x06), 0x00fe);
+	write_register_u16(&mut dac, 0x08, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x08), 0x00ff);
+	write_register_u16(&mut dac, 0x0a, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x0a), 0x00ff);
+	write_register_u16(&mut dac, 0x0c, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x0c), 0x00fe);
+	write_register_u16(&mut dac, 0x0e, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x0e), 0x00ff);
+	write_register_u16(&mut dac, 0x10, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x10), 0x00ff);
+	write_register_u16(&mut dac, 0x12, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x12), 0x00fe);
+	write_register_u16(&mut dac, 0x20, 0xffff);
+	assert_eq!(read_register_u16(&dac, 0x20), 0x0083);
+}
