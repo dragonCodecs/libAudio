@@ -442,3 +442,9 @@ impl Deref for Register24b
 		&self.value
 	}
 }
+
+#[cfg(test)]
+mod tests
+{
+	include!("tests/ste_dac.rs");
+}
