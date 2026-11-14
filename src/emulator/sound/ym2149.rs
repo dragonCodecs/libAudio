@@ -16,7 +16,7 @@ pub struct YM2149
 	inner: Rc<RefCell<YM2149Inner>>,
 }
 
-pub struct YM2149Inner
+struct YM2149Inner
 {
 	clock_frequency: u32,
 

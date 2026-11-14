@@ -25,7 +25,7 @@ pub struct STeDac
 	inner: Rc<RefCell<STeDacInner>>,
 }
 
-pub struct STeDacInner
+struct STeDacInner
 {
 	clock_frequency: u32,
 	mfp: MC68901,
