@@ -3,11 +3,17 @@
 
 use std::cell::RefCell;
 use std::ffi::c_void;
+use std::rc::Rc;
 
 use crate::emulator::Peripheral;
 use crate::emulator::gemdos_alloc::GemdosAllocator;
 
 pub struct AtariSTeROMs
+{
+	inner: Rc<RefCell<AtariSTeROMsInner>>,
+}
+
+struct AtariSTeROMsInner
 {
 	cpu: *mut c_void,
 	peripherals: *mut c_void,
@@ -17,6 +23,37 @@ pub struct AtariSTeROMs
 pub const HANDLER_ADDRESS_GEMDOS: u32 = 0x000000;
 
 impl AtariSTeROMs
+{
+	pub fn new(cpu: *mut c_void, peripherals: *mut c_void, heap_base: u32, heap_size: u32) -> Self
+	{
+		Self {
+			inner: Rc::new(RefCell::new(AtariSTeROMsInner::new(cpu, peripherals, heap_base, heap_size))),
+		}
+	}
+}
+
+impl Peripheral<u32> for AtariSTeROMs
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
+	{
+		self.inner.borrow().read_address(address, data);
+	}
+
+	fn write_address(&mut self, address: u32, data: &[u8])
+	{
+		self.inner.borrow_mut().write_address(address, data);
+	}
+}
+
+impl<'a> From<AtariSTeROMs> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
+{
+	fn from(roms: AtariSTeROMs) -> Self
+	{
+		roms.inner.clone()
+	}
+}
+
+impl AtariSTeROMsInner
 {
 	pub fn new(cpu: *mut c_void, peripherals: *mut c_void, heap_base: u32, heap_size: u32) -> Self
 	{
@@ -76,7 +113,7 @@ impl AtariSTeROMs
 	}
 }
 
-impl Peripheral<u32> for AtariSTeROMs
+impl Peripheral<u32> for AtariSTeROMsInner
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
