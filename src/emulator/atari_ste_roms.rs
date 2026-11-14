@@ -8,6 +8,7 @@ use std::rc::Rc;
 use crate::emulator::Peripheral;
 use crate::emulator::gemdos_alloc::GemdosAllocator;
 
+#[derive(Clone)]
 pub struct AtariSTeROMs
 {
 	inner: Rc<RefCell<AtariSTeROMsInner>>,

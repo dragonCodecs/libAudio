@@ -9,6 +9,7 @@ use num_traits::{AsPrimitive, Unsigned};
 
 use crate::emulator::Peripheral;
 
+#[derive(Clone)]
 pub struct Ram<const N: usize>
 {
 	inner: Rc<RefCell<RamInner<N>>>,
