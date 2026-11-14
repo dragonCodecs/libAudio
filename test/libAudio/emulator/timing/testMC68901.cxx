@@ -35,20 +35,6 @@ class testMC68901 final : public testsuite, m68kMemoryMap_t
 	motorola68000_t cpu{*this, 8_MHz};
 	mc68901_t mfp{2457600U, cpu, 6U};
 
-	void testBadRegisterIO()
-	{
-		// Should be discarded as writing to an even address for an odd byte register
-		writeRegister(mfp, 0x00U, uint8_t{0xffU});
-		assertEqual(readRegister<uint8_t>(mfp, 0x00U), 0x00U);
-		assertEqual(readRegister<uint16_t>(mfp, 0x00U), 0x0000U);
-		// Should be discarded as writing 32 bits in a go is inadmissable
-		writeRegister(mfp, 0x00U, uint32_t{0xffffffffU});
-		assertEqual(readRegister<uint16_t>(mfp, 0x00U), 0x0000U);
-		assertEqual(readRegister<uint16_t>(mfp, 0x02U), 0x00ffU);
-		// Should be a no-op as reading 32 bits in a go is inadmissable
-		assertEqual(readRegister<uint32_t>(mfp, 0x00U), 0x00000000U);
-	}
-
 	void testConfigureTimer()
 	{
 		// Check that we can configure timer A for ~50Hz operation

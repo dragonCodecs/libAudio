@@ -30,6 +30,18 @@ fn read_register_u16(mfp: &impl Peripheral<u32>, reg: u32) -> u16
 	u16::from_be_bytes(value)
 }
 
+fn write_register_u32(mfp: &mut impl Peripheral<u32>, reg: u32, value: u32)
+{
+	mfp.write_address(reg, &value.to_be_bytes());
+}
+
+fn read_register_u32(mfp: &impl Peripheral<u32>, reg: u32) -> u32
+{
+	let mut value = [0; 4];
+	mfp.read_address(reg, &mut value);
+	u32::from_be_bytes(value)
+}
+
 #[test]
 fn register_io()
 {
@@ -102,6 +114,23 @@ fn register_io()
 	assert_eq!(read_register_u16(&mfp, 0x2c), 0x00ff);
 	write_register_u16(&mut mfp, 0x2e, 0xffff);
 	assert_eq!(read_register_u16(&mfp, 0x2e), 0x00ff);
+}
+
+#[test]
+fn bad_begister_io()
+{
+	let mut mfp = MC68901::new(2_457_600, null_mut(), 6);
+
+	// Should be discarded as writing to an even address for an odd byte register
+	write_register_u8(&mut mfp, 0x00, 0xff);
+	assert_eq!(read_register_u8(&mfp, 0x00), 0x00);
+	assert_eq!(read_register_u16(&mfp, 0x00), 0x0000);
+	// Should be discarded as writing 32 bits in a go is inadmissable
+	write_register_u32(&mut mfp, 0x00, u32::MAX);
+	assert_eq!(read_register_u16(&mfp, 0x00), 0x0000);
+	assert_eq!(read_register_u16(&mfp, 0x02), 0x0000);
+	// Should be a no-op as reading 32 bits in a go is inadmissable
+	assert_eq!(read_register_u32(&mfp, 0x02), 0x00000000);
 }
 
 #[test]
