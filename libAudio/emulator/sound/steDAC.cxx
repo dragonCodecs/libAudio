@@ -18,11 +18,6 @@ extern "C"
 	int16_t ste_dac_sample(STeDac *, const memoryMap_t<uint32_t, 0x00ffffffU> *);
 	bool ste_dac_clock_cycle(STeDac *);
 	uint8_t ste_dac_output_level(STeDac *);
-
-	int8_t memory_map_read_address_i8(const memoryMap_t<uint32_t, 0x00ffffffU> *self, const uint32_t address)
-	{
-		return self->readAddress<int8_t>(address);
-	}
 }
 
 /*

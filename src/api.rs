@@ -14,7 +14,7 @@ use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
 use crate::emulator::timing::mc68901::{self, MC68901};
-use crate::emulator::{ClockedPeripheral, Peripheral};
+use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
@@ -399,7 +399,7 @@ pub unsafe fn ste_dac_write_address(ste_dac: *mut STeDac, address: u32, slice: S
 /// # Safety
 /// As long as the pointer given is from `ste_dac_new`, this is safe
 #[unsafe(no_mangle)]
-pub unsafe fn ste_dac_sample(ste_dac: *mut STeDac, memory_map: *const c_void) -> i16
+pub unsafe fn ste_dac_sample(ste_dac: *mut STeDac, memory_map: &MemoryMap<u32>) -> i16
 {
 	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
 	unsafe { ste_dac.as_mut() }.sample(memory_map)

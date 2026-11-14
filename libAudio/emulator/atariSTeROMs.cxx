@@ -21,11 +21,6 @@ extern "C"
 		return cpu->readAddrRegister(reg);
 	}
 
-	void cpu_write_data_register(motorola68000_t *cpu, size_t reg, uint32_t value)
-	{
-		cpu->writeDataRegister(reg, value);
-	}
-
 	uint16_t peripherals_read_address_u16(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
 	{
 		return peripherals->readAddress<uint16_t>(address);

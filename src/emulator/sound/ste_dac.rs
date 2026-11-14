@@ -12,12 +12,11 @@
 // - STe and other schematics: https://docs.dev-docs.org/htm/search.php?find=_s
 
 use std::cell::RefCell;
-use std::ffi::c_void;
 use std::ops::{Add, AddAssign, Deref};
 use std::rc::Rc;
 
 use crate::emulator::timing::mc68901::MC68901;
-use crate::emulator::{ClockedPeripheral, Peripheral};
+use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 
 #[derive(Clone)]
 pub struct STeDac
@@ -62,7 +61,7 @@ impl STeDac
 		}
 	}
 
-	pub fn sample(&self, memory_map: *const c_void) -> i16
+	pub fn sample(&self, memory_map: &MemoryMap<u32>) -> i16
 	{
 		self.inner.borrow().sample(memory_map)
 	}
@@ -196,19 +195,19 @@ impl STeDacInner
 		*self.microwire_mask.borrow()
 	}
 
-	pub fn sample(&self, memory_map: *const c_void) -> i16
+	pub fn sample(&self, memory_map: &MemoryMap<u32>) -> i16
 	{
 		// If the DMA engine is currently active, grab a sample back and mix down to mono, otherwise return an idle
 		// value
 		if (self.control & 0x01) != 0 {
 			// Grab the sample for the first channel
-			let left = unsafe { memory_map_read_address_i8(memory_map, *self.sample_address) as i16 };
+			let left = memory_map.read_address::<i8>(*self.sample_address) as i16;
 			// Then grab the sample for the second
 			let right = {
 				if self.sample_mono {
 					left
 				} else {
-					unsafe { memory_map_read_address_i8(memory_map, *(self.sample_address + 1)) as i16 }
+					memory_map.read_address::<i8>(*self.sample_address + 1) as i16
 				}
 			};
 			(left + right) * 32
@@ -442,8 +441,4 @@ impl Deref for Register24b
 	{
 		&self.value
 	}
-}
-
-unsafe extern "C" {
-	fn memory_map_read_address_i8(this: *const c_void, address: u32) -> i8;
 }

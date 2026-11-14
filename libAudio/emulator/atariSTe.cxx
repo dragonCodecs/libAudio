@@ -59,9 +59,34 @@ extern "C"
 		cpu->registerInterruptRequester(*mfp.irqRequester(*cpu));
 	}
 
+	bool cpu_has_pending_interrupts(const motorola68000_t *cpu)
+	{
+		return cpu->hasPendingInterrupts();
+	}
+
+	bool cpu_trapped(const motorola68000_t *cpu)
+	{
+		return cpu->trapped();
+	}
+
+	void cpu_write_data_register(motorola68000_t *cpu, size_t reg, uint32_t value)
+	{
+		cpu->writeDataRegister(reg, value);
+	}
+
+	uint32_t cpu_read_program_counter(const motorola68000_t *cpu)
+	{
+		return cpu->readProgramCounter();
+	}
+
 	bool cpu_execute_to_return(motorola68000_t *cpu, uint32_t entryAddress, uint32_t stackTop, bool asUser)
 	{
 		return cpu->executeToReturn(entryAddress, stackTop, asUser);
+	}
+
+	bool cpu_advance_clock(motorola68000_t *cpu)
+	{
+		return cpu->advanceClock();
 	}
 
 	void console_debug(const char *message)

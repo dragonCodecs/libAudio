@@ -7,6 +7,7 @@ use std::ffi::c_void;
 use std::ops::Range;
 use std::rc::Rc;
 
+use crate::api::console;
 use crate::emulator::atari_ste_roms::{self, AtariSTeROMs};
 use crate::emulator::clock_manager::ClockManager;
 use crate::emulator::ram::Ram;
@@ -28,7 +29,7 @@ pub struct AtariSTe<'a>
 	dac: STeDac,
 	mfp: MC68901,
 
-	clocked_peripherals: BTreeMap<*mut (dyn ClockedPeripheral<u32> + 'a), ClockManager>,
+	clocked_peripherals: BTreeMap<*const RefCell<dyn ClockedPeripheral<u32> + 'a>, ClockManager>,
 }
 
 struct UDiv
@@ -145,7 +146,7 @@ impl<'a> AtariSTe<'a>
 	{
 		// Add the device to the clocking map according to the clocking ratio set up
 		self.clocked_peripherals.insert(
-			peripheral.as_ptr(),
+			Rc::into_raw(peripheral.clone()),
 			ClockManager::new(SYSTEM_CLOCK_FREQUENCY, peripheral.borrow().clock_frequency()),
 		);
 		// Add the device to the address map
@@ -286,6 +287,70 @@ impl<'a> AtariSTe<'a>
 		// Run the exit entry point to return
 		unsafe { cpu_execute_to_return(self.cpu, 0x010004, STACK_TOP, false) }
 	}
+
+	pub fn advance_clock(&mut self) -> bool
+	{
+		// The machine runs on a 32MHz (ish) clock, advance a cycle and run
+		// any events on any hardware that needs it
+
+		// For each peripheral in the clocked set, see if that peripheral should have a cycle run
+		for (peripheral, clock_manager) in self.clocked_peripherals.iter_mut() {
+			if clock_manager.advance_cycle() {
+				let peripheral = unsafe { Rc::from_raw(*peripheral) };
+				// We should try to advance a cycle, check to see if that worked
+				let result = !peripheral.borrow_mut().clock_cycle();
+				std::mem::forget(peripheral);
+				if result {
+					return false;
+				}
+			}
+		}
+
+		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
+		if unsafe { cpu_read_program_counter(self.cpu) } != 0xffffffff ||
+			unsafe { cpu_has_pending_interrupts(self.cpu) }
+		{
+			// Grab the program counter at the start
+			let program_counter = unsafe { cpu_read_program_counter(self.cpu) };
+			// Try to advance the clock and check if the CPU is in a trap state
+			if !unsafe { cpu_advance_clock(self.cpu) } || unsafe { cpu_trapped(self.cpu) } {
+				// Something bad happened, so display the program counter at the faulting instruction
+				console::debug(format!("Bad instruction at 0x{program_counter:06x}"));
+				return true;
+			}
+		}
+
+		true
+	}
+
+	pub fn sample_ready(&self) -> bool
+	{
+		self.psg.sample_ready()
+	}
+
+	pub fn read_sample(&mut self) -> i16
+	{
+		// Extract the sample from the PSG
+		let psg_sample = self.psg.sample();
+		// Extract the sample from the STe DMA DAC engine
+		let dma_sample = self.dac.sample(&self.memory_map);
+		// Combine the samples to generate the input to the scaling
+		let sample = i16::saturating_add(psg_sample, dma_sample);
+		// Scale the sample by the output level set via the DAC block LMC1992 and return
+		// NB: the max output level is 64, allowing this to be simplified by the compiler and fast
+		(((sample as i32) * (self.dac.output_level() as i32)) / 64) as i16
+	}
+}
+
+impl<'a> Drop for AtariSTe<'a>
+{
+	fn drop(&mut self)
+	{
+		for peripheral in self.clocked_peripherals.keys() {
+			let peripheral = unsafe { Rc::from_raw(*peripheral) };
+			drop(peripheral);
+		}
+	}
 }
 
 impl Default for UDiv
@@ -310,6 +375,12 @@ fn div_rem(numerator: u32, denominator: u32) -> UDiv
 unsafe extern "C" {
 	#[allow(improper_ctypes)]
 	fn cpu_register_interrupt_requester_mfp(cpu: *mut c_void, mfp: MC68901);
+	fn cpu_has_pending_interrupts(cpu: *const c_void) -> bool;
+	fn cpu_trapped(cpu: *const c_void) -> bool;
+
 	fn cpu_write_data_register(cpu: *mut c_void, reg: usize, value: u32);
+	fn cpu_read_program_counter(cpu: *const c_void) -> u32;
+
 	fn cpu_execute_to_return(cpu: *mut c_void, entry_address: u32, stack_top: u32, as_user: bool) -> bool;
+	fn cpu_advance_clock(cpu: *mut c_void) -> bool;
 }
