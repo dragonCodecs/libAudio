@@ -143,7 +143,69 @@ impl MC68901Inner
 		}
 	}
 
-	pub fn read_address(&self, address: u32, data: &mut [u8])
+	pub fn configure_timer(&mut self, timer_index: usize, reload_value: u8, mode: u8)
+	{
+		// Check this isn't a request for a completely nuts timer value
+		if timer_index >= self.timers.len() {
+			return;
+		}
+		let clock_frequency = self.clock_frequency();
+		// Extract the timer we care about
+		let timer = &mut self.timers[timer_index];
+		// Configure the reload value and mode
+		timer.write_data(reload_value);
+		timer.write_ctrl(mode, clock_frequency);
+	}
+
+	pub fn fire_dma_event(&mut self)
+	{
+		// Try to mark timer A for external event
+		self.timers[0].mark_external_event();
+		// Also try to mark GPIO7 as having had an external event
+		if (self.itr_enable & (1 << 15)) != 0 {
+			self.itr_pending |= 1 << 15;
+		}
+	}
+
+	pub fn request_interrupt(&mut self)
+	{
+		unsafe { cpu_request_interrupt(self.cpu, self.level) };
+	}
+
+	pub fn irq_cause(&mut self) -> u8
+	{
+		// Compute which IRQs are not masked
+		let interrupts = self.itr_pending & self.itr_mask;
+		// Look through the pending IRQs and find the highest priority one
+		let channel = (|| {
+			// For each interrupt request bit
+			for irq in 0..16 {
+				// Calculate the channel for this IRQ
+				let irq_channel = 15 - irq;
+				// If the channel has a pending IRQ set, then use it as the cause
+				if (interrupts & (1 << irq_channel)) != 0 {
+					return irq_channel;
+				}
+			}
+			16
+		})();
+		// If there was no reason to call this function, indicate a spurious interrupt error
+		if channel >= 16 {
+			return 0x18;
+		}
+		// Otherwise, clear pending on this IRQ and generate the vector number value
+		self.itr_pending &= !(1 << channel);
+		// Re-queue IRQ if there are still pending
+		if (self.itr_pending & self.itr_mask) != 0 {
+			self.request_interrupt();
+		}
+		(self.vector_reg & 0xf0) | channel
+	}
+}
+
+impl Peripheral<u32> for MC68901Inner
+{
+	fn read_address(&self, address: u32, data: &mut [u8])
 	{
 		// Extract how wide an access this is
 		let access_width = data.len();
@@ -206,7 +268,7 @@ impl MC68901Inner
 		}
 	}
 
-	pub fn write_address(&mut self, address: u32, data: &[u8])
+	fn write_address(&mut self, address: u32, data: &[u8])
 	{
 		// Extract how wide an access this is
 		let access_width = data.len();
@@ -298,27 +360,16 @@ impl MC68901Inner
 			_ => {},
 		}
 	}
+}
 
-	pub fn configure_timer(&mut self, timer_index: usize, reload_value: u8, mode: u8)
-	{
-		// Check this isn't a request for a completely nuts timer value
-		if timer_index >= self.timers.len() {
-			return;
-		}
-		let clock_frequency = self.clock_frequency();
-		// Extract the timer we care about
-		let timer = &mut self.timers[timer_index];
-		// Configure the reload value and mode
-		timer.write_data(reload_value);
-		timer.write_ctrl(mode, clock_frequency);
-	}
-
-	pub fn clock_frequency(&self) -> u32
+impl ClockedPeripheral<u32> for MC68901Inner
+{
+	fn clock_frequency(&self) -> u32
 	{
 		self.clock_frequency
 	}
 
-	pub fn clock_cycle(&mut self) -> bool
+	fn clock_cycle(&mut self) -> bool
 	{
 		// Go through each timer and try to advance them a clock cycle
 		for (index, timer) in self.timers.iter_mut().enumerate() {
@@ -345,51 +396,6 @@ impl MC68901Inner
 			self.request_interrupt();
 		}
 		true
-	}
-
-	pub fn fire_dma_event(&mut self)
-	{
-		// Try to mark timer A for external event
-		self.timers[0].mark_external_event();
-		// Also try to mark GPIO7 as having had an external event
-		if (self.itr_enable & (1 << 15)) != 0 {
-			self.itr_pending |= 1 << 15;
-		}
-	}
-
-	pub fn request_interrupt(&mut self)
-	{
-		unsafe { cpu_request_interrupt(self.cpu, self.level) };
-	}
-
-	pub fn irq_cause(&mut self) -> u8
-	{
-		// Compute which IRQs are not masked
-		let interrupts = self.itr_pending & self.itr_mask;
-		// Look through the pending IRQs and find the highest priority one
-		let channel = (|| {
-			// For each interrupt request bit
-			for irq in 0..16 {
-				// Calculate the channel for this IRQ
-				let irq_channel = 15 - irq;
-				// If the channel has a pending IRQ set, then use it as the cause
-				if (interrupts & (1 << irq_channel)) != 0 {
-					return irq_channel;
-				}
-			}
-			16
-		})();
-		// If there was no reason to call this function, indicate a spurious interrupt error
-		if channel >= 16 {
-			return 0x18;
-		}
-		// Otherwise, clear pending on this IRQ and generate the vector number value
-		self.itr_pending &= !(1 << channel);
-		// Re-queue IRQ if there are still pending
-		if (self.itr_pending & self.itr_mask) != 0 {
-			self.request_interrupt();
-		}
-		(self.vector_reg & 0xf0) | channel
 	}
 }
 
