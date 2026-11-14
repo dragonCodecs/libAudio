@@ -64,6 +64,23 @@ pub trait PeripheralValue
 		Address: Unsigned;
 }
 
+impl PeripheralValue for i8
+{
+	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
+	where
+		Address: Unsigned,
+	{
+		u8::read_from_be(peripheral, address) as i8
+	}
+
+	fn write_to_be<Address>(&self, peripheral: RefMut<'_, dyn Peripheral<Address>>, address: Address)
+	where
+		Address: Unsigned,
+	{
+		u8::write_to_be(&(*self as u8), peripheral, address);
+	}
+}
+
 impl PeripheralValue for u8
 {
 	fn read_from_be<Address>(peripheral: Ref<'_, dyn Peripheral<Address>>, address: Address) -> Self
@@ -223,7 +240,7 @@ where
 	#[allow(unused)]
 	pub fn read_address<Value>(&self, address: Address) -> Value
 	where
-		Value: Default + Unsigned + PeripheralValue,
+		Value: Default + PeripheralValue,
 	{
 		let adjusted_address = address & self.valid_address_mask;
 		// Try to find a peripheral mapped for the address
@@ -241,7 +258,7 @@ where
 
 	pub fn write_address<Value>(&mut self, address: Address, data: Value)
 	where
-		Value: Unsigned + PeripheralValue,
+		Value: PeripheralValue,
 	{
 		let adjusted_address = address & self.valid_address_mask;
 		// Try to find a peripheral to write the value to
