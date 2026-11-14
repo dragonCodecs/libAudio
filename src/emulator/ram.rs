@@ -31,12 +31,12 @@ impl<const N: usize> Ram<N>
 
 	pub fn index(&self, index: Range<usize>) -> Ref<'_, [u8]>
 	{
-		Ref::map(self.inner.borrow(), |inner| inner.index(index))
+		Ref::map(self.inner.borrow(), |inner| &inner[index])
 	}
 
 	pub fn index_mut(&mut self, index: Range<usize>) -> RefMut<'_, [u8]>
 	{
-		RefMut::map(self.inner.borrow_mut(), |inner| inner.index_mut(index))
+		RefMut::map(self.inner.borrow_mut(), |inner| &mut inner[index])
 	}
 }
 
