@@ -231,3 +231,36 @@ fn mono_50khz_sample_loop()
 		assert!(dac.clock_cycle());
 	}
 }
+
+#[test]
+fn mono_25khz_sample_no_loop()
+{
+	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	setup_ram(&mut memory_map.borrow_mut());
+	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
+	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+	let mut dac = STeDac::new(50_066, mfp);
+
+	// Set the DMA controller up to stream the first 254 bytes of RAM out, without looping,
+	// at the next playback rate (25033Hz, ~25kHz), marked as stopped initially
+	write_register_u8(&mut dac, 0x01, 0x00);
+	write_register_u8(&mut dac, 0x03, 0x00);
+	write_register_u8(&mut dac, 0x05, 0x00);
+	write_register_u8(&mut dac, 0x07, 0x00);
+	write_register_u8(&mut dac, 0x0f, 0x00);
+	write_register_u8(&mut dac, 0x11, 0x00);
+	write_register_u8(&mut dac, 0x13, 0xfe);
+	write_register_u8(&mut dac, 0x21, 0x82);
+	// Run one clock cycle and make sure the value emitted is a silence sample
+	assert!(dac.clock_cycle());
+	assert_eq!(dac.sample(&memory_map.borrow()), 0);
+	// Now enable playback
+	write_register_u8(&mut dac, 0x01, 0x01);
+	// Check that the sample sequence is returned at half speed
+	for sample in 1..255u8 {
+		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert!(dac.clock_cycle());
+		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert!(dac.clock_cycle());
+	}
+}
