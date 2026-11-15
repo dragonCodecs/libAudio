@@ -141,6 +141,12 @@ impl Peripheral<u32> for AtariSTeROMsInner<'_>
 }
 
 unsafe extern "C" {
-	fn cpu_read_addr_register(cpu: *mut c_void, reg: usize) -> u32;
+	fn cpu_read_addr_register(cpu: *const c_void, reg: usize) -> u32;
 	fn cpu_write_data_register(cpu: *mut c_void, reg: usize, value: u32);
+}
+
+#[cfg(test)]
+mod tests
+{
+	include!("tests/atari_ste_roms.rs");
 }
