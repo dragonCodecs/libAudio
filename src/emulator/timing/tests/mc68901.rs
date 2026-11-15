@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ptr::null_mut;
-use std::rc::Rc;
 
 use super::MC68901;
 use crate::emulator::cpu::m68k::IrqRequester;
@@ -160,7 +158,7 @@ fn configure_timer()
 #[test]
 fn irq_generation()
 {
-	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	let memory_map = MemoryMap::new(0x00ffffff);
 	let mut cpu = Box::new(Motorola68k::new(memory_map, 8_000_000));
 	let mut mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
 
@@ -236,7 +234,7 @@ fn irq_generation()
 #[test]
 fn gpio7_events()
 {
-	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	let memory_map = MemoryMap::new(0x00ffffff);
 	let mut cpu = Box::new(Motorola68k::new(memory_map, 8_000_000));
 	let mut mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
 
@@ -274,7 +272,7 @@ fn gpio7_events()
 #[test]
 fn timer_a_event_counting()
 {
-	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	let memory_map = MemoryMap::new(0x00ffffff);
 	let mut cpu = Box::new(Motorola68k::new(memory_map, 8_000_000));
 	let mut mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
 

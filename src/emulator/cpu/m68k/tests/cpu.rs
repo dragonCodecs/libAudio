@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ptr::NonNull;
-use std::rc::Rc;
 
 use bitmask_enum::bitmask;
 
@@ -13,7 +11,7 @@ use crate::emulator::MemoryMap;
 #[allow(unused)]
 pub struct Motorola68k<'a>
 {
-	peripherals: Rc<RefCell<MemoryMap<'a, u32>>>,
+	peripherals: MemoryMap<'a, u32>,
 	clock_frequency: u32,
 
 	status: M68kStatusBits,
@@ -39,7 +37,7 @@ enum M68kStatusBits
 
 impl<'a> Motorola68k<'a>
 {
-	pub fn new(peripherals: Rc<RefCell<MemoryMap<'a, u32>>>, clock_frequency: u32) -> Self
+	pub fn new(peripherals: MemoryMap<'a, u32>, clock_frequency: u32) -> Self
 	{
 		Self {
 			peripherals,

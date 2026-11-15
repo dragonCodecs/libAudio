@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::cell::RefCell;
 use std::ffi::c_void;
 use std::ptr::null_mut;
-use std::rc::Rc;
 
 use super::STeDac;
 use crate::emulator::cpu::m68k::tests::Motorola68k;
@@ -199,8 +197,8 @@ fn bad_dma_register_io()
 #[test]
 fn mono_50khz_sample_loop()
 {
-	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
-	setup_ram(&mut memory_map.borrow_mut());
+	let mut memory_map = MemoryMap::new(0x00ffffff);
+	setup_ram(&mut memory_map);
 	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
 	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
 	let mut dac = STeDac::new(50_066, mfp);
@@ -217,17 +215,17 @@ fn mono_50khz_sample_loop()
 	write_register_u8(&mut dac, 0x21, 0x83);
 	// Run one clock cycle and make sure the value emitted is a silence sample
 	assert!(dac.clock_cycle());
-	assert_eq!(dac.sample(&memory_map.borrow()), 0);
+	assert_eq!(dac.sample(&memory_map), 0);
 	// Now enable playback
 	write_register_u8(&mut dac, 0x01, 0x03);
 	// Check that the sample sequence is returned
 	for sample in 1..255u8 {
-		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert_eq!(dac.sample(&memory_map), (sample as i8) as i16 * 64);
 		assert!(dac.clock_cycle());
 	}
 	// Then that the second iteration through the loop works and does the same thing
 	for sample in 1..255u8 {
-		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert_eq!(dac.sample(&memory_map), (sample as i8) as i16 * 64);
 		assert!(dac.clock_cycle());
 	}
 }
@@ -235,8 +233,8 @@ fn mono_50khz_sample_loop()
 #[test]
 fn mono_25khz_sample_no_loop()
 {
-	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
-	setup_ram(&mut memory_map.borrow_mut());
+	let mut memory_map = MemoryMap::new(0x00ffffff);
+	setup_ram(&mut memory_map);
 	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
 	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
 	let mut dac = STeDac::new(50_066, mfp);
@@ -253,14 +251,14 @@ fn mono_25khz_sample_no_loop()
 	write_register_u8(&mut dac, 0x21, 0x82);
 	// Run one clock cycle and make sure the value emitted is a silence sample
 	assert!(dac.clock_cycle());
-	assert_eq!(dac.sample(&memory_map.borrow()), 0);
+	assert_eq!(dac.sample(&memory_map), 0);
 	// Now enable playback
 	write_register_u8(&mut dac, 0x01, 0x01);
 	// Check that the sample sequence is returned at half speed
 	for sample in 1..255u8 {
-		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert_eq!(dac.sample(&memory_map), (sample as i8) as i16 * 64);
 		assert!(dac.clock_cycle());
-		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert_eq!(dac.sample(&memory_map), (sample as i8) as i16 * 64);
 		assert!(dac.clock_cycle());
 	}
 }
@@ -268,8 +266,8 @@ fn mono_25khz_sample_no_loop()
 #[test]
 fn mono_50khz_sample_no_loop()
 {
-	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
-	setup_ram(&mut memory_map.borrow_mut());
+	let mut memory_map = MemoryMap::new(0x00ffffff);
+	setup_ram(&mut memory_map);
 	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
 	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
 	let mut dac = STeDac::new(50_066, mfp);
@@ -288,16 +286,16 @@ fn mono_50khz_sample_no_loop()
 	write_register_u8(&mut dac, 0x21, 0x03);
 	// Run one clock cycle and make sure the value emitted is a silence sample
 	assert!(dac.clock_cycle());
-	assert_eq!(dac.sample(&memory_map.borrow()), 0);
+	assert_eq!(dac.sample(&memory_map), 0);
 	// Now enable playback
 	write_register_u8(&mut dac, 0x01, 0x01);
 	// Check that the stereo sample sequence is returned split over 2 cycles per sample
 	for sample_base in 1..255u8 {
 		// Compute the stereo sample for this step
 		let sample = (sample_base as i8) as i16 + ((sample_base - 1) as i8) as i16;
-		assert_eq!(dac.sample(&memory_map.borrow()), sample * 32);
+		assert_eq!(dac.sample(&memory_map), sample * 32);
 		assert!(dac.clock_cycle());
-		assert_eq!(dac.sample(&memory_map.borrow()), sample * 32);
+		assert_eq!(dac.sample(&memory_map), sample * 32);
 		assert!(dac.clock_cycle());
 	}
 }

@@ -45,7 +45,15 @@ where
 	end: Address,
 }
 
+#[derive(Clone)]
 pub struct MemoryMap<'a, Address>
+where
+	Address: Copy + Unsigned + BitAnd<Output = Address> + PartialEq + Eq + PartialOrd + Ord,
+{
+	inner: Rc<RefCell<MemoryMapInner<'a, Address>>>,
+}
+
+struct MemoryMapInner<'a, Address>
 where
 	Address: Copy + Unsigned + BitAnd<Output = Address> + PartialEq + Eq + PartialOrd + Ord,
 {
@@ -241,6 +249,37 @@ where
 	pub fn new(valid_address_mask: Address) -> Self
 	{
 		Self {
+			inner: Rc::new(RefCell::new(MemoryMapInner::new(valid_address_mask))),
+		}
+	}
+
+	pub fn add_peripheral_at(&mut self, mapping: Range<Address>, peripheral: Rc<RefCell<dyn Peripheral<Address> + 'a>>)
+	{
+		self.inner.borrow_mut().add_peripheral_at(mapping, peripheral);
+	}
+
+	pub fn read_address<Value>(&self, address: Address) -> Value
+	where
+		Value: Default + PeripheralValue,
+	{
+		self.inner.borrow().read_address(address)
+	}
+
+	pub fn write_address<Value>(&mut self, address: Address, data: Value)
+	where
+		Value: PeripheralValue,
+	{
+		self.inner.borrow_mut().write_address(address, data);
+	}
+}
+
+impl<'a, Address> MemoryMapInner<'a, Address>
+where
+	Address: Copy + Unsigned + BitAnd<Output = Address> + PartialEq + Eq + PartialOrd + Ord,
+{
+	pub fn new(valid_address_mask: Address) -> Self
+	{
+		Self {
 			valid_address_mask,
 			address_map: BTreeMap::new(),
 		}
@@ -251,7 +290,6 @@ where
 		self.address_map.insert(mapping.into(), peripheral);
 	}
 
-	#[allow(unused)]
 	pub fn read_address<Value>(&self, address: Address) -> Value
 	where
 		Value: Default + PeripheralValue,
