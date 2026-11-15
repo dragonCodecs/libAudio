@@ -272,6 +272,34 @@ fn gpio7_events()
 }
 
 #[test]
+fn timer_a_event_counting()
+{
+	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	let mut cpu = Box::new(Motorola68k::new(memory_map, 8_000_000));
+	let mut mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+
+	// Enable timer A to set a pending interrupt
+	write_register_u8(&mut mfp, 0x07, 0x20);
+	mfp.configure_timer(0, 2, 8);
+
+	// Run a sequence to generate two events, checking between each one what the counter is doing
+	assert_eq!(read_register_u8(&mfp, 0x1f), 0x02);
+	assert!(mfp.clock_cycle());
+	assert_eq!(read_register_u8(&mfp, 0x1f), 0x02);
+	mfp.fire_dma_event();
+	assert_eq!(read_register_u8(&mfp, 0x1f), 0x02);
+	assert!(mfp.clock_cycle());
+	assert_eq!(read_register_u8(&mfp, 0x1f), 0x01);
+	mfp.fire_dma_event();
+	// Check there is no pending interrupt as the event's not yet processed
+	assert_eq!(read_register_u8(&mfp, 0x0b), 0x00);
+	assert!(mfp.clock_cycle());
+	// Check the timer reloads and generates a pending IRQ now it is
+	assert_eq!(read_register_u8(&mfp, 0x1f), 0x02);
+	assert_eq!(read_register_u8(&mfp, 0x0b), 0x20);
+}
+
+#[test]
 fn prescaling_mapping()
 {
 	assert_eq!(super::timer_prescaling_for(0), 1);

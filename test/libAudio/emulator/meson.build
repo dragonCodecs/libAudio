@@ -69,4 +69,3 @@ endforeach
 
 subdir('cpu')
 subdir('sound')
-subdir('timing')
