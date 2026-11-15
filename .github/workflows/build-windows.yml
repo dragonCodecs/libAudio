@@ -135,6 +135,7 @@ jobs:
           pacboy: >-
             toolchain:p
             lcov:p
+            rust:p
       - name: Runtime environment
         env:
           WORKSPACE: ${{ github.workspace }}
