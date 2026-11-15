@@ -18,7 +18,6 @@ testObjectMap = {
 		'libAudio': [
 			'emulator/atariSTe.cxx',
 			'emulator/atariSTeROMs.cxx',
-			'emulator/sound/steDAC.cxx',
 			'emulator/timing/mc68901.cxx',
 			'emulator/cpu/m68k.cxx',
 			'emulator/clockManager.cxx',

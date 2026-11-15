@@ -14,7 +14,6 @@ use crate::emulator::atari_ste::AtariSTe;
 use crate::emulator::atari_ste_roms::AtariSTeROMs;
 use crate::emulator::cpu::m68k::IrqRequester;
 use crate::emulator::ram::Ram;
-use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::timing::mc68901::{self, MC68901};
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
@@ -270,76 +269,6 @@ pub unsafe fn sndh_metadata_tune_name(metadata: *mut SndhMetadata, index: usize)
 {
 	let metadata = unsafe { NonNull::new_unchecked(metadata) };
 	Slice::from_slice(unsafe { metadata.as_ref() }.tune_names()[index].as_bytes())
-}
-
-/// Allocate a new [`STeDac`] and "leak" that pointer into C++ land
-#[unsafe(no_mangle)]
-pub fn ste_dac_new(clock_frequency: u32, mfp: MC68901) -> *mut STeDac
-{
-	let ste_dac = Box::new(STeDac::new(clock_frequency, mfp.clone()));
-	std::mem::forget(mfp);
-	Box::into_raw(ste_dac)
-}
-
-/// Consume the pointer for a [`STeDac`] allocated with `ste_dac_new`
-/// and deallocate it cleanly
-/// # Safety
-/// As long as the pointer given is from `ste_dac_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_dac_drop(ste_dac: *mut STeDac)
-{
-	let ste_dac = unsafe { Box::from_raw(ste_dac) };
-	drop(ste_dac);
-}
-
-/// Using the pointer from `ste_dac_new`, read data into the slice from the requested address
-/// # Safety
-/// As long as the pointer given is from `ste_dac_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_dac_read_address(ste_dac: *mut STeDac, address: u32, mut slice: MutSlice<u8>)
-{
-	let ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
-	unsafe { ste_dac.as_ref() }.read_address(address, slice.as_mut_slice());
-}
-
-/// Using the pointer from `ste_dac_new`, write data into the slice to the requested address
-/// # Safety
-/// As long as the pointer given is from `ste_dac_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_dac_write_address(ste_dac: *mut STeDac, address: u32, slice: Slice<u8>)
-{
-	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
-	unsafe { ste_dac.as_mut() }.write_address(address, slice.as_slice());
-}
-
-/// Using the pointer from `ste_dac_new`, generate a new sample
-/// # Safety
-/// As long as the pointer given is from `ste_dac_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_dac_sample(ste_dac: *mut STeDac, memory_map: &MemoryMap<u32>) -> i16
-{
-	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
-	unsafe { ste_dac.as_mut() }.sample(memory_map)
-}
-
-/// Using the pointer from `ste_dac_new`, run a clock cycle
-/// # Safety
-/// As long as the pointer given is from `ste_dac_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_dac_clock_cycle(ste_dac: *mut STeDac) -> bool
-{
-	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
-	unsafe { ste_dac.as_mut() }.clock_cycle()
-}
-
-/// Using the pointer from `ste_dac_new`, get the currently configured output level
-/// # Safety
-/// As long as the pointer given is from `ste_dac_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_dac_output_level(ste_dac: *mut STeDac) -> u8
-{
-	let mut ste_dac = unsafe { NonNull::new_unchecked(ste_dac) };
-	unsafe { ste_dac.as_mut() }.output_level()
 }
 
 /// Allocate a new [`MC68901`] and "leak" that pointer into C++ land
