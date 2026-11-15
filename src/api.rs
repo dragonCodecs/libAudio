@@ -95,7 +95,7 @@ pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
 #[unsafe(no_mangle)]
 pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
 {
-	let handle = _get_osfhandle(fd) as RawHandle;
+	let handle = unsafe { _get_osfhandle(fd) as RawHandle };
 	let mut file = unsafe { File::from_raw_handle(handle) };
 	let loader = SndhLoader::new(&mut file);
 	let _handle = file.into_raw_handle();
