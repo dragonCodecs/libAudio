@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::cell::RefCell;
+use std::ffi::c_void;
 use std::ptr::null_mut;
+use std::rc::Rc;
 
 use super::STeDac;
-use crate::emulator::Peripheral;
+use crate::emulator::cpu::m68k::tests::Motorola68k;
+use crate::emulator::ram::Ram;
 use crate::emulator::timing::mc68901::MC68901;
+use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 
 fn write_register_u8(periph: &mut impl Peripheral<u32>, reg: u32, value: u8)
 {
@@ -51,6 +56,24 @@ fn run_microwire_cycle(dac: &STeDac, mut mask: u16)
 		mask = mask.rotate_left(1);
 		// Read the mask register (which actions the transaction)
 		assert_eq!(read_register_u16(dac, 0x24), mask);
+	}
+}
+
+fn setup_ram(memory_map: &mut MemoryMap<u32>)
+{
+	// Register some memory for the sample tests, and fill with a couple of patterns that make it easy to see
+	// if things are working right within the sampler
+	memory_map.add_peripheral_at(0x000000..0x000800, Ram::<2048>::new().into());
+
+	// Write a mono stream to the first 254 bytes of RAM
+	for sample in 1..255 {
+		memory_map.write_address(sample - 1, sample as u8);
+	}
+	// Now a stereo stream to the upper 1KiB
+	for sample in 1..255 {
+		let offset = (sample - 1) * 2;
+		memory_map.write_address(0x000400 + offset, sample as u8);
+		memory_map.write_address(0x000401 + offset, (sample - 1) as u8);
 	}
 }
 
@@ -171,4 +194,40 @@ fn bad_dma_register_io()
 	assert_eq!(read_register_u16(&dac, 0x01), 0x0000);
 	// And 8-bit even reads
 	assert_eq!(read_register_u8(&dac, 0x00), 0x00);
+}
+
+#[test]
+fn mono_50khz_sample_loop()
+{
+	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	setup_ram(&mut memory_map.borrow_mut());
+	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
+	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+	let mut dac = STeDac::new(50_066, mfp);
+
+	// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
+	// the fastest playback rate (50066Hz, ~50kHz), marked as stopped initially
+	write_register_u8(&mut dac, 0x01, 0x02);
+	write_register_u8(&mut dac, 0x03, 0x00);
+	write_register_u8(&mut dac, 0x05, 0x00);
+	write_register_u8(&mut dac, 0x07, 0x00);
+	write_register_u8(&mut dac, 0x0f, 0x00);
+	write_register_u8(&mut dac, 0x11, 0x00);
+	write_register_u8(&mut dac, 0x13, 0xfe);
+	write_register_u8(&mut dac, 0x21, 0x83);
+	// Run one clock cycle and make sure the value emitted is a silence sample
+	assert!(dac.clock_cycle());
+	assert_eq!(dac.sample(&memory_map.borrow()), 0);
+	// Now enable playback
+	write_register_u8(&mut dac, 0x01, 0x03);
+	// Check that the sample sequence is returned
+	for sample in 1..255u8 {
+		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert!(dac.clock_cycle());
+	}
+	// Then that the second iteration through the loop works and does the same thing
+	for sample in 1..255u8 {
+		assert_eq!(dac.sample(&memory_map.borrow()), (sample as i8) as i16 * 64);
+		assert!(dac.clock_cycle());
+	}
 }
