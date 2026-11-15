@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use std::cell::RefCell;
+use std::ffi::c_void;
+use std::ptr::NonNull;
 use std::rc::Rc;
 
 use bitmask_enum::bitmask;
@@ -49,6 +51,14 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	pub(self) fn request_interrupt(&mut self, level: u8)
+	{
+		// Make sure the caller isn't asking for an insane interrupt level, then mark it pending
+		if level > 0 && level <= 7 {
+			self.pending_irqs |= 1 << level;
+		}
+	}
+
 	pub fn has_pending_interrupts(&self) -> bool
 	{
 		// Extract the current exception mask from the status register
@@ -59,4 +69,11 @@ impl<'a> Motorola68k<'a>
 		let unmasked_irqs = self.pending_irqs & (irq_mask | 0x80);
 		unmasked_irqs != 0
 	}
+}
+
+#[unsafe(no_mangle)]
+pub fn cpu_request_interrupt(cpu: *mut c_void, level: u8)
+{
+	let mut cpu = NonNull::new(cpu as *mut Motorola68k).expect("CPU is a valid instance");
+	unsafe { cpu.as_mut() }.request_interrupt(level);
 }
