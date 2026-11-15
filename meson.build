@@ -14,7 +14,7 @@ project(
 		'b_lto=true'
 	],
 	version: '0.7.0',
-	meson_version: '>= 1.0',
+	meson_version: '>= 1.11',
 	subproject_dir: 'deps',
 	license: 'BSD-3-Clause'
 )
