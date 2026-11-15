@@ -38,26 +38,6 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 	mc68901_t mfp{2457600U, cpu, 6U};
 	steDAC_t dac{50_kHz + 66U, mfp};
 
-	void testBadDMARegisterIO()
-	{
-		// 8-bit writes to even numbered registers should be discarded as all 8-bit registers here are odd byte
-		writeRegister(dac, 0x00U, uint8_t{0xffU});
-		assertEqual(readRegister<uint16_t>(dac, 0x00U), 0x0003U);
-		// 16-bit writes to odd addresses should be inadmissable
-		writeRegister(dac, 0x01U, uint16_t{0x0000U});
-		assertEqual(readRegister<uint8_t>(dac, 0x01U), 0x03U);
-		// 32-bit writes similarly are inadmissable and should be discarded
-		writeRegister(dac, 0x00U, uint32_t{0x00000000U});
-		assertEqual(readRegister<uint8_t>(dac, 0x01U), 0x03U);
-		assertEqual(readRegister<uint8_t>(dac, 0x03U), 0xffU);
-		// 32-bit reads should also be inadmissable and discarded
-		assertEqual(readRegister<uint32_t>(dac, 0x00U), 0x00000000U);
-		// Likewise 16-bit odd address reads
-		assertEqual(readRegister<uint16_t>(dac, 0x01U), 0x0000U);
-		// And 8-bit even reads
-		assertEqual(readRegister<uint8_t>(dac, 0x00U), 0x00U);
-	}
-
 	void test50kMonoSampleLoop()
 	{
 		// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
@@ -167,7 +147,6 @@ public:
 
 	void registerTests() final
 	{
-		CXX_TEST(testBadDMARegisterIO)
 		CXX_TEST(test50kMonoSampleLoop)
 		CXX_TEST(test25kMonoSampleNoLoop)
 		CXX_TEST(test50kStereoSampleNoLoop)

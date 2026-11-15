@@ -7,13 +7,11 @@ use super::STeDac;
 use crate::emulator::Peripheral;
 use crate::emulator::timing::mc68901::MC68901;
 
-#[allow(unused)]
 fn write_register_u8(periph: &mut impl Peripheral<u32>, reg: u32, value: u8)
 {
 	periph.write_address(reg, &[value]);
 }
 
-#[allow(unused)]
 fn read_register_u8(periph: &impl Peripheral<u32>, reg: u32) -> u8
 {
 	let mut value = [0; 1];
@@ -33,13 +31,11 @@ fn read_register_u16(periph: &impl Peripheral<u32>, reg: u32) -> u16
 	u16::from_be_bytes(value)
 }
 
-#[allow(unused)]
 fn write_register_u32(periph: &mut impl Peripheral<u32>, reg: u32, value: u32)
 {
 	periph.write_address(reg, &value.to_be_bytes());
 }
 
-#[allow(unused)]
 fn read_register_u32(periph: &impl Peripheral<u32>, reg: u32) -> u32
 {
 	let mut value = [0; 4];
@@ -151,4 +147,28 @@ fn dma_register_io()
 	assert_eq!(read_register_u16(&dac, 0x12), 0x00fe);
 	write_register_u16(&mut dac, 0x20, 0xffff);
 	assert_eq!(read_register_u16(&dac, 0x20), 0x0083);
+}
+
+#[test]
+fn bad_dma_register_io()
+{
+	let mfp = MC68901::new(2_457_600, null_mut(), 6);
+	let mut dac = STeDac::new(50_066, mfp);
+
+	// 8-bit writes to even numbered registers should be discarded as all 8-bit registers here are odd byte
+	write_register_u8(&mut dac, 0x00, 0xff);
+	assert_eq!(read_register_u16(&dac, 0x00), 0x0000);
+	// 16-bit writes to odd addresses should be inadmissable
+	write_register_u16(&mut dac, 0x01, 0xc33c);
+	assert_eq!(read_register_u8(&dac, 0x01), 0x00);
+	// 32-bit writes similarly are inadmissable and should be discarded
+	write_register_u32(&mut dac, 0x00, u32::MAX);
+	assert_eq!(read_register_u8(&dac, 0x01), 0x00);
+	assert_eq!(read_register_u8(&dac, 0x03), 0x00);
+	// 32-bit reads should also be inadmissable and discarded
+	assert_eq!(read_register_u32(&dac, 0x00), 0x00000000);
+	// Likewise 16-bit odd address reads
+	assert_eq!(read_register_u16(&dac, 0x01), 0x0000);
+	// And 8-bit even reads
+	assert_eq!(read_register_u8(&dac, 0x00), 0x00);
 }
