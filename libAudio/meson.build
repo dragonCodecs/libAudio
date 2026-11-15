@@ -388,7 +388,7 @@ if target_machine.system() == 'windows'
 	rcCfg.set_quoted('VERSION_STRING', meson.project_version())
 	rcCfg.set_quoted('NAME', meson.project_name())
 	rcCfg.set_quoted('COMPANY', 'https://github.com/dragonCodecs/libAudio')
-	rcCfg.set_quoted('COPYRIGHT', 'Copyright (c) 2009-2023 Rachel Mant @0@'.format(meson.project_license()))
+	rcCfg.set_quoted('COPYRIGHT', 'Copyright (c) 2009-2026 Rachel Mant @0@'.format(meson.project_license()))
 
 	libAudioResource = configure_file(
 		input: 'libAudio.rc.in',
@@ -410,25 +410,39 @@ libAudioRS = libAudioPackage.library(rust_abi: 'c')
 
 rust.test('libAudio-rs', libAudioRS)
 
-libAudioLibrary = library(
-	'libAudio',
-	libAudioSrcs + extraSrcs,
-	dependencies: requiredDependencies + extraDeps,
-	link_with: [libAudioRS],
-	cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'] + extraArgs,
-	cpp_static_args: ['-DlibAUDIO_STATIC'],
-	include_directories: includes,
-	gnu_symbol_visibility: 'inlineshidden',
-	name_prefix: '',
-	pic: true,
-	install: true,
-	version: meson.project_version()
-)
+if get_option('default_library') != 'static'
+	libAudioLibrary = library(
+		'libAudio',
+		libAudioSrcs + extraSrcs,
+		dependencies: requiredDependencies + extraDeps,
+		link_with: [libAudioRS],
+		cpp_args: ['-DHAVE_STDINT_H', '-DlibAUDIO'] + extraArgs,
+		cpp_static_args: ['-DlibAUDIO_STATIC'],
+		include_directories: includes,
+		gnu_symbol_visibility: 'inlineshidden',
+		name_prefix: '',
+		pic: true,
+		install: true,
+		version: meson.project_version()
+	)
+else
+	libAudioLibrary = static_library(
+		'libAudioCxx',
+		libAudioSrcs + extraSrcs,
+		dependencies: requiredDependencies + extraDeps,
+		cpp_args: ['-DlibAUDIO_STATIC'],
+		include_directories: includes,
+		gnu_symbol_visibility: 'inlineshidden',
+		name_prefix: '',
+		pic: true,
+		install: true
+	)
+endif
 libAudioIncludes = [meson.current_source_dir(), meson.current_build_dir()]
 
 libAudio = declare_dependency(
 	include_directories: include_directories('.'),
-	link_with: libAudioLibrary,
+	link_with: [libAudioLibrary, libAudioRS],
 	version: meson.project_version()
 )
 meson.override_dependency('libAudio', libAudio)
