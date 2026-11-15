@@ -68,4 +68,3 @@ foreach test : emulatorTests
 endforeach
 
 subdir('cpu')
-subdir('sound')

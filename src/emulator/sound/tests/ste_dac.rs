@@ -264,3 +264,40 @@ fn mono_25khz_sample_no_loop()
 		assert!(dac.clock_cycle());
 	}
 }
+
+#[test]
+fn mono_50khz_sample_no_loop()
+{
+	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	setup_ram(&mut memory_map.borrow_mut());
+	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
+	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+	let mut dac = STeDac::new(50_066, mfp);
+
+	// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
+	// the fastest playback rate (50066Hz, ~50kHz), marked as stopped initially
+	write_register_u8(&mut dac, 0x01, 0x00);
+	write_register_u8(&mut dac, 0x03, 0x00);
+	write_register_u8(&mut dac, 0x05, 0x04);
+	write_register_u8(&mut dac, 0x07, 0x00);
+	write_register_u8(&mut dac, 0x0f, 0x00);
+	write_register_u8(&mut dac, 0x11, 0x00);
+	write_register_u8(&mut dac, 0x13, 0x05);
+	write_register_u8(&mut dac, 0x21, 0xfc);
+	// Make sure playback is done in stereo.
+	write_register_u8(&mut dac, 0x21, 0x03);
+	// Run one clock cycle and make sure the value emitted is a silence sample
+	assert!(dac.clock_cycle());
+	assert_eq!(dac.sample(&memory_map.borrow()), 0);
+	// Now enable playback
+	write_register_u8(&mut dac, 0x01, 0x01);
+	// Check that the stereo sample sequence is returned split over 2 cycles per sample
+	for sample_base in 1..255u8 {
+		// Compute the stereo sample for this step
+		let sample = (sample_base as i8) as i16 + ((sample_base - 1) as i8) as i16;
+		assert_eq!(dac.sample(&memory_map.borrow()), sample * 32);
+		assert!(dac.clock_cycle());
+		assert_eq!(dac.sample(&memory_map.borrow()), sample * 32);
+		assert!(dac.clock_cycle());
+	}
+}
