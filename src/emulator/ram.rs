@@ -17,7 +17,7 @@ pub struct Ram<const N: usize>
 
 struct RamInner<const N: usize>
 {
-	memory: [u8; N],
+	memory: Box<[u8; N]>,
 }
 
 impl<const N: usize> Ram<N>
@@ -70,7 +70,7 @@ impl<const N: usize> RamInner<N>
 	pub fn new() -> Self
 	{
 		Self {
-			memory: [0; N],
+			memory: unsafe { Box::new_zeroed().assume_init() },
 		}
 	}
 }
