@@ -7,7 +7,7 @@ use std::fs::File;
 #[cfg(not(target_family = "windows"))]
 use std::os::fd::{FromRawFd, IntoRawFd};
 #[cfg(target_family = "windows")]
-use std::os::windows::{FromRawHandle, IntoRawHandle, RawHandle};
+use std::os::windows::io::{FromRawHandle, IntoRawHandle, RawHandle};
 use std::ptr::{NonNull, null_mut};
 
 use crate::emulator::atari_ste::AtariSTe;
