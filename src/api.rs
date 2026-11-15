@@ -4,7 +4,10 @@
 use core::slice;
 use std::ffi::{c_char, c_void};
 use std::fs::File;
+#[cfg(not(target_family = "windows"))]
 use std::os::fd::{FromRawFd, IntoRawFd};
+#[cfg(target_family = "windows")]
+use std::os::windows::{FromRawHandle, IntoRawHandle, RawHandle};
 use std::ptr::{NonNull, null_mut};
 
 use crate::emulator::atari_ste::AtariSTe;
@@ -68,12 +71,34 @@ where
 }
 
 /// Allocate a new [`SndhLoader`] and "leak" that pointer into C++ land
+#[cfg(not(target_family = "windows"))]
 #[unsafe(no_mangle)]
 pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
 {
 	let mut file = unsafe { File::from_raw_fd(fd) };
 	let loader = SndhLoader::new(&mut file);
 	let _fd = file.into_raw_fd();
+	match loader {
+		Ok(loader) => {
+			let loader = Box::new(loader);
+			Box::into_raw(loader)
+		},
+		Err(error) => {
+			console::error(format!("{error}"));
+			null_mut()
+		},
+	}
+}
+
+/// Allocate a new [`SndhLoader`] and "leak" that pointer into C++ land
+#[cfg(target_family = "windows")]
+#[unsafe(no_mangle)]
+pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
+{
+	let handle = _get_osfhandle(fd) as RawHandle;
+	let mut file = unsafe { File::from_raw_handle(handle) };
+	let loader = SndhLoader::new(&mut file);
+	let _handle = file.into_raw_handle();
 	match loader {
 		Ok(loader) => {
 			let loader = Box::new(loader);
@@ -730,4 +755,9 @@ pub(crate) mod console
 unsafe extern "C" {
 	fn console_error(message: *const c_char);
 	fn console_debug(message: *const c_char);
+}
+
+#[cfg(target_family = "windows")]
+unsafe extern "C" {
+	fn _get_osfhandle(fd: i32) -> isize;
 }
