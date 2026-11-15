@@ -19,5 +19,6 @@ members = [
 ]
 
 [dependencies]
+bitmask-enum = "2.2.5"
 num-traits = "0.2.19"
 rand = "0.10.3"

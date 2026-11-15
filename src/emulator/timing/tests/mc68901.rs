@@ -178,6 +178,7 @@ fn irq_generation()
 	// mark pending interrupts for the timers
 	write_register_u8(&mut mfp, 0x13, 0x20);
 	write_register_u8(&mut mfp, 0x15, 0x20);
+	assert!(!cpu.has_pending_interrupts());
 }
 
 #[test]
