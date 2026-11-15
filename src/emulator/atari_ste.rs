@@ -88,14 +88,13 @@ impl<'a> AtariSTe<'a>
 
 			clocked_peripherals: BTreeMap::new(),
 		};
-		let peripherals = Box::as_mut_ptr(&mut this.memory_map) as *mut c_void;
 
 		// Build the system memory map
 		this.memory_map
 			.add_peripheral_at(0x000000..0x800000, this.ram.clone().into());
 		this.memory_map.add_peripheral_at(
 			0xe00000..0xf00000,
-			AtariSTeROMs::new(cpu, peripherals, HEAP_BASE, HEAP_SIZE).into(),
+			AtariSTeROMs::new(cpu, (*this.memory_map).clone(), HEAP_BASE, HEAP_SIZE).into(),
 		);
 		// Cartridge ROM at 0xfa0000, 128KiB
 		// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
@@ -311,7 +310,7 @@ impl<'a> AtariSTe<'a>
 		}
 
 		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
-		if unsafe { cpu_read_program_counter(self.cpu) } != 0xffffffff ||
+		while unsafe { cpu_read_program_counter(self.cpu) } != u32::MAX ||
 			unsafe { cpu_has_pending_interrupts(self.cpu) }
 		{
 			// Grab the program counter at the start

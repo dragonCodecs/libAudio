@@ -5,35 +5,35 @@ use std::cell::RefCell;
 use std::ffi::c_void;
 use std::rc::Rc;
 
-use crate::emulator::Peripheral;
 use crate::emulator::gemdos_alloc::GemdosAllocator;
+use crate::emulator::{MemoryMap, Peripheral};
 
 #[derive(Clone)]
-pub struct AtariSTeROMs
+pub struct AtariSTeROMs<'a>
 {
-	inner: Rc<RefCell<AtariSTeROMsInner>>,
+	inner: Rc<RefCell<AtariSTeROMsInner<'a>>>,
 }
 
-struct AtariSTeROMsInner
+struct AtariSTeROMsInner<'a>
 {
 	cpu: *mut c_void,
-	peripherals: *mut c_void,
+	memory_map: MemoryMap<'a, u32>,
 	allocator: RefCell<GemdosAllocator>,
 }
 
 pub const HANDLER_ADDRESS_GEMDOS: u32 = 0x000000;
 
-impl AtariSTeROMs
+impl<'a> AtariSTeROMs<'a>
 {
-	pub fn new(cpu: *mut c_void, peripherals: *mut c_void, heap_base: u32, heap_size: u32) -> Self
+	pub fn new(cpu: *mut c_void, memory_map: MemoryMap<'a, u32>, heap_base: u32, heap_size: u32) -> Self
 	{
 		Self {
-			inner: Rc::new(RefCell::new(AtariSTeROMsInner::new(cpu, peripherals, heap_base, heap_size))),
+			inner: Rc::new(RefCell::new(AtariSTeROMsInner::new(cpu, memory_map, heap_base, heap_size))),
 		}
 	}
 }
 
-impl Peripheral<u32> for AtariSTeROMs
+impl Peripheral<u32> for AtariSTeROMs<'_>
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -46,21 +46,21 @@ impl Peripheral<u32> for AtariSTeROMs
 	}
 }
 
-impl<'a> From<AtariSTeROMs> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
+impl<'a> From<AtariSTeROMs<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
-	fn from(roms: AtariSTeROMs) -> Self
+	fn from(roms: AtariSTeROMs<'a>) -> Self
 	{
 		roms.inner
 	}
 }
 
-impl AtariSTeROMsInner
+impl<'a> AtariSTeROMsInner<'a>
 {
-	pub fn new(cpu: *mut c_void, peripherals: *mut c_void, heap_base: u32, heap_size: u32) -> Self
+	pub fn new(cpu: *mut c_void, memory_map: MemoryMap<'a, u32>, heap_base: u32, heap_size: u32) -> Self
 	{
 		Self {
 			cpu,
-			peripherals,
+			memory_map,
 			allocator: RefCell::new(GemdosAllocator::new(heap_base, heap_size)),
 		}
 	}
@@ -70,7 +70,7 @@ impl AtariSTeROMsInner
 		// Extract the current stack pointer
 		let stack_pointer = unsafe { cpu_read_addr_register(self.cpu, 7) };
 		// Figure out where on the stack the opcode value is and extract it
-		let opcode = unsafe { peripherals_read_address_u16(self.peripherals, stack_pointer + 8) };
+		let opcode = self.memory_map.read_address::<u16>(stack_pointer + 8);
 		// Dispatch the opcode requested
 		match opcode {
 			// GEMDOS version number, respond with being version 0.30 via D0
@@ -82,7 +82,7 @@ impl AtariSTeROMsInner
 				// Set D0 in case of failure to a NULL pointer for the platform
 				unsafe { cpu_write_data_register(self.cpu, 0, 0) };
 				// Extract how large and allocation is being requested
-				let amount = unsafe { peripherals_read_address_i32(self.peripherals, stack_pointer + 10) };
+				let amount = self.memory_map.read_address::<i32>(stack_pointer + 10);
 				// If the amount requested is the special value -1, return the largest free block
 				if amount == -1 {
 					unsafe { cpu_write_data_register(self.cpu, 0, self.allocator.borrow().largest_free_block()) };
@@ -99,7 +99,7 @@ impl AtariSTeROMsInner
 			// free
 			0x49 => {
 				// Extract the pointer for the allocation being released
-				let ptr = unsafe { peripherals_read_address_u32(self.peripherals, stack_pointer + 10) };
+				let ptr = self.memory_map.read_address::<u32>(stack_pointer + 10);
 				// Execute on that with our actual allocator
 				if self.allocator.borrow_mut().free(ptr) {
 					// Deallocation succeeded, so return 0 (E_OK)
@@ -114,7 +114,7 @@ impl AtariSTeROMsInner
 	}
 }
 
-impl Peripheral<u32> for AtariSTeROMsInner
+impl Peripheral<u32> for AtariSTeROMsInner<'_>
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -143,8 +143,4 @@ impl Peripheral<u32> for AtariSTeROMsInner
 unsafe extern "C" {
 	fn cpu_read_addr_register(cpu: *mut c_void, reg: usize) -> u32;
 	fn cpu_write_data_register(cpu: *mut c_void, reg: usize, value: u32);
-
-	fn peripherals_read_address_u16(peripherals: *mut c_void, address: u32) -> u16;
-	fn peripherals_read_address_i32(peripherals: *mut c_void, address: u32) -> i32;
-	fn peripherals_read_address_u32(peripherals: *mut c_void, address: u32) -> u32;
 }

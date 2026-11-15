@@ -20,21 +20,6 @@ extern "C"
 	{
 		return cpu->readAddrRegister(reg);
 	}
-
-	uint16_t peripherals_read_address_u16(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
-	{
-		return peripherals->readAddress<uint16_t>(address);
-	}
-
-	int32_t peripherals_read_address_i32(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
-	{
-		return peripherals->readAddress<int32_t>(address);
-	}
-
-	uint32_t peripherals_read_address_u32(memoryMap_t<uint32_t, 0x00ffffffU> *peripherals, uint32_t address)
-	{
-		return peripherals->readAddress<uint32_t>(address);
-	}
 }
 
 atariSTeROMs_t::atariSTeROMs_t(motorola68000_t &cpu, memoryMap_t<uint32_t, 0x00ffffffU> &peripherals,

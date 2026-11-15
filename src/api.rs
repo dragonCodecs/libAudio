@@ -440,12 +440,12 @@ pub unsafe fn ste_ram_slice(ste_ram: *mut Ram<STE_RAM_SIZE>, begin: usize, end: 
 
 /// Allocate a new [`AtariSTeROMs`] and "leak" that pointer into C++ land
 #[unsafe(no_mangle)]
-pub fn atari_ste_roms_new(
+pub fn atari_ste_roms_new<'a>(
 	cpu: *mut c_void,
-	peripherals: *mut c_void,
+	peripherals: MemoryMap<'a, u32>,
 	heap_base: u32,
 	heap_size: u32,
-) -> *mut AtariSTeROMs
+) -> *mut AtariSTeROMs<'a>
 {
 	let roms = Box::new(AtariSTeROMs::new(cpu, peripherals, heap_base, heap_size));
 	Box::into_raw(roms)
