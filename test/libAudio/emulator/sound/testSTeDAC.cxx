@@ -38,79 +38,6 @@ class testSTeDAC final : public testsuite, m68kMemoryMap_t
 	mc68901_t mfp{2457600U, cpu, 6U};
 	steDAC_t dac{50_kHz + 66U, mfp};
 
-	void runMicrowireCycle(uint16_t mask)
-	{
-		// Microwire cycles take 16 reads of the mask register
-		for (const auto &cycle : substrate::indexSequence_t{16U})
-		{
-			// Compute what the next mask value should be
-			mask = (mask << 1U) | (mask >> 15U);
-			// Read the mask register (which actions the transaction)
-			assertEqual(readRegister<uint16_t>(dac, 0x24U), mask);
-		}
-	}
-
-	void testMicrowire()
-	{
-		// Set up a write to the main volume register
-		writeRegister(dac, 0x24U, uint16_t{0x0ffeU});
-		assertEqual(readRegister<uint16_t>(dac, 0x24U), 0x0ffeU);
-		// Set the volume to 0
-		writeRegister(dac, 0x22U, uint16_t{0x0981U});
-		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x0981U);
-		// Execute the transaction
-		runMicrowireCycle(0x0ffeU);
-		// Read the main volume to check what it's now set to (should be 0)
-		assertEqual(dac.outputLevel(), 0x00U);
-
-		// Set up another write to the main volume register to set the volume to max (40 internally, 64 externally)
-		writeRegister(dac, 0x22U, uint16_t{0x09d1U});
-		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x09d1U);
-		// Execute the transaction
-		runMicrowireCycle(0x0ffeU);
-		// Read the main volume to check what it's now set to (should be 40)
-		assertEqual(dac.outputLevel(), 0x40U);
-
-		// Set up another write to the main volume register to set the volume to mid (20 internally, 32 externally)
-		writeRegister(dac, 0x22U, uint16_t{0x09a9U});
-		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x09a9U);
-		// Execute the transaction
-		runMicrowireCycle(0x0ffeU);
-		// Read the main volume to check what it's now set to (should be 40)
-		assertEqual(dac.outputLevel(), 0x20U);
-
-		// Set up another write to the main volume register to over-set the volume to 63
-		writeRegister(dac, 0x22U, uint16_t{0x09ffU});
-		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x09ffU);
-		// Execute the transaction
-		runMicrowireCycle(0x0ffeU);
-		// Read the main volume to check what it's now set to (should be 64)
-		assertEqual(dac.outputLevel(), 0x40U);
-
-		// Set up a write to the left front fader register
-		writeRegister(dac, 0x22U, uint16_t{0x0aa9U});
-		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x0aa9U);
-		// Execute the transaction
-		runMicrowireCycle(0x0ffeU);
-		// Read the main volume to check what it's now set to (should be 64)
-		assertEqual(dac.outputLevel(), 0x40U);
-
-		// Set up a write to the right front fader register
-		writeRegister(dac, 0x22U, uint16_t{0x0a29U});
-		assertEqual(readRegister<uint16_t>(dac, 0x22U), 0x0a29U);
-		// Execute the transaction
-		runMicrowireCycle(0x0ffeU);
-		// Read the main volume to check what it's now set to (should be 64)
-		assertEqual(dac.outputLevel(), 0x40U);
-
-		// Do a nonsense write with the wrong number of bits used (should be discarded)
-		writeRegister(dac, 0x24U, uint16_t{0x0ff0U});
-		writeRegister(dac, 0x22U, uint16_t{0x0981U});
-		runMicrowireCycle(0x0ff0U);
-		// Read the main volume to check what it's now set to (should be 64)
-		assertEqual(dac.outputLevel(), 0x40U);
-	}
-
 	void testBadDMARegisterIO()
 	{
 		// 8-bit writes to even numbered registers should be discarded as all 8-bit registers here are odd byte
@@ -240,7 +167,6 @@ public:
 
 	void registerTests() final
 	{
-		CXX_TEST(testMicrowire)
 		CXX_TEST(testBadDMARegisterIO)
 		CXX_TEST(test50kMonoSampleLoop)
 		CXX_TEST(test25kMonoSampleNoLoop)

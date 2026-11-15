@@ -74,6 +74,53 @@ fn microwire()
 	run_microwire_cycle(&dac, 0x0ffe);
 	// Read the main volume to check what it's now set to (should be 0)
 	assert_eq!(dac.output_level(), 0);
+
+	// Set up another write to the main volume register to set the volume to max (40 internally, 64 externally)
+	write_register_u16(&mut dac, 0x22, 0x09d1);
+	assert_eq!(read_register_u16(&dac, 0x22), 0x09d1);
+	// Execute the transaction
+	run_microwire_cycle(&dac, 0x0ffe);
+	// Read the main volume to check what it's now set to (should be 64)
+	assert_eq!(dac.output_level(), 0x40);
+
+	// Set up another write to the main volume register to set the volume to mid (20 internally, 32 externally)
+	write_register_u16(&mut dac, 0x22, 0x09a9);
+	assert_eq!(read_register_u16(&dac, 0x22), 0x09a9);
+	// Execute the transaction
+	run_microwire_cycle(&dac, 0x0ffe);
+	// Read the main volume to check what it's now set to (should be 32)
+	assert_eq!(dac.output_level(), 0x20);
+
+	// Set up another write to the main volume register to over-set the volume to 63
+	write_register_u16(&mut dac, 0x22, 0x09ff);
+	assert_eq!(read_register_u16(&dac, 0x22), 0x09ff);
+	// Execute the transaction
+	run_microwire_cycle(&dac, 0x0ffe);
+	// Read the main volume to check what it's now set to (should be 64)
+	assert_eq!(dac.output_level(), 0x40);
+
+	// Set up a write to the left front fader register
+	write_register_u16(&mut dac, 0x22, 0x0aa9);
+	assert_eq!(read_register_u16(&dac, 0x22), 0x0aa9);
+	// Execute the transaction
+	run_microwire_cycle(&dac, 0x0ffe);
+	// Read the main volume to check what it's now set to (should be 64)
+	assert_eq!(dac.output_level(), 0x40);
+
+	// Set up a write to the right front fader register
+	write_register_u16(&mut dac, 0x22, 0x0a29);
+	assert_eq!(read_register_u16(&dac, 0x22), 0x0a29);
+	// Execute the transaction
+	run_microwire_cycle(&dac, 0x0ffe);
+	// Read the main volume to check what it's now set to (should be 64)
+	assert_eq!(dac.output_level(), 0x40);
+
+	// Do a nonsense write with the wrong number of bits used (should be discarded)
+	write_register_u16(&mut dac, 0x24, 0x0ff0);
+	write_register_u16(&mut dac, 0x22, 0x0981);
+	run_microwire_cycle(&dac, 0x0ff0);
+	// Read the main volume to check what it's now set to (should be 64)
+	assert_eq!(dac.output_level(), 0x40);
 }
 
 #[test]
