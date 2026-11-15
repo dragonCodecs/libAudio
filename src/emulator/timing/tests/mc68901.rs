@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
+use std::cell::RefCell;
+use std::ffi::c_void;
 use std::ptr::null_mut;
+use std::rc::Rc;
 
 use super::MC68901;
-use crate::emulator::Peripheral;
+use crate::emulator::cpu::m68k::tests::Motorola68k;
+use crate::emulator::{MemoryMap, Peripheral};
 
 fn write_register_u8(periph: &mut impl Peripheral<u32>, reg: u32, value: u8)
 {
@@ -150,6 +154,30 @@ fn configure_timer()
 
 	// This call will be a no-op
 	mfp.configure_timer(4, 192, 5);
+}
+
+#[test]
+fn irq_generation()
+{
+	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	let mut cpu = Box::new(Motorola68k::new(memory_map, 8_000_000));
+	let mut mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+
+	// Reconfigure the interrupt registers so just timers A and C can generate events
+	// Enable just timer A and C IRQs
+	write_register_u8(&mut mfp, 0x07, 0x20);
+	write_register_u8(&mut mfp, 0x09, 0x20);
+	// Reset the pending and in-service status for both
+	write_register_u8(&mut mfp, 0x0b, 0x00);
+	write_register_u8(&mut mfp, 0x0d, 0x00);
+	write_register_u8(&mut mfp, 0x0f, 0x00);
+	write_register_u8(&mut mfp, 0x11, 0x00);
+	// Make sure IRQs will be delivered at the correct vector base address
+	write_register_u8(&mut mfp, 0x17, 0x40);
+	// Make sure the mask registers allow IRQ generation so we can
+	// mark pending interrupts for the timers
+	write_register_u8(&mut mfp, 0x13, 0x20);
+	write_register_u8(&mut mfp, 0x15, 0x20);
 }
 
 #[test]

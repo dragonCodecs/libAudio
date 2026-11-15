@@ -4,3 +4,9 @@
 mod irq;
 
 pub use irq::IrqRequester;
+
+#[cfg(test)]
+pub(crate) mod tests
+{
+	include!("tests/cpu.rs");
+}
