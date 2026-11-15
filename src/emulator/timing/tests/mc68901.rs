@@ -234,6 +234,44 @@ fn irq_generation()
 }
 
 #[test]
+fn gpio7_events()
+{
+	let memory_map = Rc::new(RefCell::new(MemoryMap::new(0x00ffffff)));
+	let mut cpu = Box::new(Motorola68k::new(memory_map, 8_000_000));
+	let mut mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+
+	// Enable IRQs for just GPIO7
+	write_register_u8(&mut mfp, 0x07, 0x80);
+	write_register_u8(&mut mfp, 0x09, 0x00);
+	// Reset the pending and in-service status for both
+	write_register_u8(&mut mfp, 0x0b, 0x00);
+	write_register_u8(&mut mfp, 0x0d, 0x00);
+	write_register_u8(&mut mfp, 0x0f, 0x00);
+	write_register_u8(&mut mfp, 0x11, 0x00);
+	// Make sure IRQs will be delivered at the correct vector base address
+	write_register_u8(&mut mfp, 0x17, 0x40);
+	// Make sure the mask registers do not allow any IRQ generation just yet
+	write_register_u8(&mut mfp, 0x13, 0x00);
+	write_register_u8(&mut mfp, 0x15, 0x00);
+
+	// Check that running the peripheral does nothing now
+	assert!(mfp.clock_cycle());
+	assert_eq!(read_register_u8(&mfp, 0x0b), 0x00);
+	assert_eq!(read_register_u8(&mfp, 0x0d), 0x00);
+
+	// Generate an interrupt on GPIO7
+	mfp.fire_dma_event();
+	assert!(mfp.clock_cycle());
+	assert_eq!(read_register_u8(&mfp, 0x0b), 0x80);
+	assert_eq!(read_register_u8(&mfp, 0x0d), 0x00);
+	// The interrupt is presently masked, so.. irqCause should report a spurious error
+	assert_eq!(mfp.irq_cause(), 0x18);
+	// Unmask and do that again..
+	write_register_u8(&mut mfp, 0x13, 0x80);
+	assert_eq!(mfp.irq_cause(), 0x4f);
+}
+
+#[test]
 fn prescaling_mapping()
 {
 	assert_eq!(super::timer_prescaling_for(0), 1);
