@@ -7,8 +7,9 @@ use std::ptr::null_mut;
 use std::rc::Rc;
 
 use super::MC68901;
+use crate::emulator::cpu::m68k::IrqRequester;
 use crate::emulator::cpu::m68k::tests::Motorola68k;
-use crate::emulator::{MemoryMap, Peripheral};
+use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 
 fn write_register_u8(periph: &mut impl Peripheral<u32>, reg: u32, value: u8)
 {
@@ -179,6 +180,57 @@ fn irq_generation()
 	write_register_u8(&mut mfp, 0x13, 0x20);
 	write_register_u8(&mut mfp, 0x15, 0x20);
 	assert!(!cpu.has_pending_interrupts());
+
+	// Configure and enable timer A for ~50Hz operation
+	mfp.configure_timer(0, 245, 7);
+	// Configure and enable timer C for 200Hz operation
+	mfp.configure_timer(2, 192, 5);
+	// Configure and enable timer B but not its IRQs generation
+	mfp.configure_timer(1, 2, 1);
+
+	// Cycle the clock until timer C fires and we generate an interrupt
+	for _ in 0..12288 {
+		// Make sure no interrupts are set yet
+		assert_eq!(read_register_u8(&mfp, 0x0b), 0x00);
+		assert_eq!(read_register_u8(&mfp, 0x0d), 0x00);
+		// Now wiggle the clock
+		assert!(mfp.clock_cycle());
+	}
+	// Now verify that it's TC's IRQ that's actually pending
+	assert_eq!(read_register_u8(&mfp, 0x0b), 0x00);
+	assert_eq!(read_register_u8(&mfp, 0x0d), 0x20);
+	assert!(cpu.has_pending_interrupts());
+	// Assert that the TC interrupt creates the proper cause number
+	assert_eq!(mfp.irq_cause(), 0x45);
+	// And that that reset the pending bit
+	assert_eq!(read_register_u8(&mfp, 0x0d), 0x00);
+
+	// Reconfigure timer A to be sensitive to external events
+	write_register_u8(&mut mfp, 0x19, 0x00);
+	mfp.configure_timer(0, 1, 8);
+
+	// Generate some more clock cycles so we're 50% of the way to timer C firing again
+	for _ in 0..6144 {
+		assert_eq!(read_register_u8(&mfp, 0x0b), 0x00);
+		assert_eq!(read_register_u8(&mfp, 0x0d), 0x00);
+		assert!(mfp.clock_cycle());
+	}
+	// Mark timer A with an external event
+	mfp.fire_dma_event();
+	assert!(mfp.clock_cycle());
+	// Generate some more clock cycles so we're so timer C fires again
+	for _ in 0..6143 {
+		assert_eq!(read_register_u8(&mfp, 0x0b), 0x20);
+		assert_eq!(read_register_u8(&mfp, 0x0d), 0x00);
+		assert!(mfp.clock_cycle());
+	}
+
+	// Check we now have two pending interrupts
+	assert_eq!(read_register_u8(&mfp, 0x0b), 0x20);
+	assert_eq!(read_register_u8(&mfp, 0x0d), 0x20);
+	// Verify that A's pops before C's
+	assert_eq!(mfp.irq_cause(), 0x4d);
+	assert_eq!(mfp.irq_cause(), 0x45);
 }
 
 #[test]
