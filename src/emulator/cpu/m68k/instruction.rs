@@ -1499,6 +1499,19 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0xf800 if
+				// TBLU/TBLS is not allowed with address registers, or with post-inc register modification
+				ea_mode != 1 && ea_mode != 3 &&
+				// TBLU/TBLS is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::TblsTblu,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit instruction continuation follows, containing Dx, Dyn, size.
+						// Bit 8 determines DReg (0) vs TLB (1), bit 11 determines TLBS (1) vs TBLU (0)
+					);
+				},
 			_ => {},
 		};
 
