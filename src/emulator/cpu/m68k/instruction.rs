@@ -466,6 +466,25 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				}
+			0xb0c0 | 0xb1c0  if
+				// CMPA is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation {
+						operation: Instruction::Cmpa,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						// Decode whether 16- or 32-bit operation
+						operation_size: if (insn & 0x01c0) == 0x00c0 {
+							2
+						} else {
+							4
+						},
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
 			_ => {},
 		};
 
