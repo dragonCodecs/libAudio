@@ -873,6 +873,18 @@ impl From<u16> for DecodedOperation
 						2, // 16-bit {offset:width}, Dn follows
 					);
 				},
+			0xedc0 if
+				// BFFFO is not allowed with address registers, or with register modification
+				ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
+				// BFFFO is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Bfffo,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit {offset:width}, Dn follows
+					);
+				},
 			_ => {},
 		};
 
