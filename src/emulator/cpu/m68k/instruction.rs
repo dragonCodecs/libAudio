@@ -245,6 +245,7 @@ enum Instruction
 
 const INSN_MASK_EA: u16 = 0xf1c0;
 const INSN_MASK_EA_NO_REG: u16 = 0xffc0;
+const INSN_MASK_VECTOR_REG: u16 = 0xfff8;
 const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
 const SIZE_MASK: u16 = 0x00c0;
@@ -253,6 +254,7 @@ const CONDITION_MASK: u16 = 0x0f00;
 const CONDITION_SHIFT: usize = 8;
 const EA_MODE_MASK: u16 = 0x0038;
 const EA_MODE_SHIFT: usize = 3;
+const VECTOR_MASK: u16 = 0x0007;
 
 impl DecodedOperation
 {
@@ -309,6 +311,20 @@ impl DecodedOperation
 			op_mode: 0,
 			mode,
 			trailing_bytes,
+		}
+	}
+
+	fn new_simple(operation: Instruction, rx: u8, ry: u8) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes: 0,
 		}
 	}
 }
@@ -1522,6 +1538,19 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			_ => {},
+		};
+
+		// Decode instructions that specify only a vector or register field
+		match insn & INSN_MASK_VECTOR_REG {
+			0x4848 => return DecodedOperation::new_simple(Instruction::Bkpt, (insn & VECTOR_MASK) as u8, 0),
+			0xf408 | 0xf448 | 0xf488 | 0xf4c8 => {
+				return DecodedOperation::new_simple(
+					Instruction::Cinvl,
+					(insn & REG_MASK) as u8,
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		};
 
