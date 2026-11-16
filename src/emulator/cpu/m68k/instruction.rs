@@ -389,6 +389,21 @@ impl DecodedOperation
 		}
 	}
 
+	fn new_simple_flags_sized(operation: Instruction, rx: u8, ry: u8, flags: OperationFlags, operation_size: u8)
+	-> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags,
+			operation_size,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes: 0,
+		}
+	}
+
 	fn new_with_displacement(operation: Instruction, displacement: u8, op_mode: u8) -> Self
 	{
 		Self {
@@ -1916,6 +1931,21 @@ impl From<u16> for DecodedOperation
 							OperationFlags::none()
 						}
 					},
+				);
+			},
+			0xd100 | 0xd108 | 0xd140 | 0xd148 | 0xd180 | 0xd188 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Addx,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					{
+						if (insn & RM_MASK) != 0 {
+							OperationFlags::MemoryNotRegister
+						} else {
+							OperationFlags::none()
+						}
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
 			_ => {},
