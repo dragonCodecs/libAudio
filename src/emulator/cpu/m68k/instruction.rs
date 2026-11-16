@@ -2191,7 +2191,36 @@ impl From<u16> for DecodedOperation
 				);
 			},
 			_ => {},
-		}
+		};
+
+		// Decode instructions that have exact matches
+		match insn {
+			0x023c => {
+				return DecodedOperation {
+					operation: Instruction::Andi,
+					rx: 0,
+					ry: 8, // 8 is a special register number (not otherwise valid) indicating CCR.
+					flags: OperationFlags::none(),
+					operation_size: 1,
+					op_mode: 0,
+					mode: 0,
+					trailing_bytes: 2, // 16-bit immediate follows (8 bits used)
+				};
+			},
+			0x027c => {
+				return DecodedOperation {
+					operation: Instruction::Andi,
+					rx: 0,
+					ry: 9, // 9 is a special register number (not otherwise valid) indicating SR.
+					flags: OperationFlags::none(),
+					operation_size: 1,
+					op_mode: 0,
+					mode: 0,
+					trailing_bytes: 2, // 16-bit immediate follows
+				};
+			},
+			_ => {},
+		};
 
 		DecodedOperation::default()
 	}
