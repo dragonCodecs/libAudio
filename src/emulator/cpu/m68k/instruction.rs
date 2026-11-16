@@ -1698,6 +1698,22 @@ impl From<u16> for DecodedOperation
 					trailing_bytes: 4, // 32-bit absolute address follows
 				};
 			},
+			0x4e60 => {
+				// MOVE to USP
+				return DecodedOperation::new_simple(
+					Instruction::Move,
+					(insn & REG_MASK) as u8,
+					10, // 10 is a special register number (not otherwise valid) indicating USP
+				);
+			},
+			0x4e68 => {
+				// MOVE from USP
+				return DecodedOperation::new_simple(
+					Instruction::Move,
+					10, // 10 is a special register number (not otherwise valid) indicating USP
+					(insn & REG_MASK) as u8,
+				);
+			},
 			_ => {},
 		};
 
