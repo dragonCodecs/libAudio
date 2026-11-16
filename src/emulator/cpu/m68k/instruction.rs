@@ -1769,6 +1769,15 @@ impl From<u16> for DecodedOperation
 					};
 				}
 			},
+			0x06c0 | 0x06c8 => {
+				return DecodedOperation::new_simple_with_op_mode(
+					Instruction::Rtm,
+					0,
+					(insn & REG_MASK) as u8,
+					// Extract the data-or-address bit for what flavour the register in ry is
+					((insn & 0x0008) >> 3) as u8,
+				);
+			},
 			_ => {},
 		};
 
