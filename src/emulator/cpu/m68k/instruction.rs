@@ -1446,6 +1446,33 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0xe4c0 if
+				// ROXR is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// ROXR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Roxr,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
+			0xe5c0 if
+				// ROXL is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// ROXL is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Roxl,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
+
 			_ => {},
 		};
 
