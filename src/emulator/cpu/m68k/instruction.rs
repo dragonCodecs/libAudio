@@ -574,7 +574,7 @@ impl From<u16> for DecodedOperation
 				},
 			0x41c0 if
 				// LEA is not allowed with direct register usage, or with register modification
-				!(ea_mode == 0 || ea_mode == 1 || ea_mode == 3 || ea_mode == 4) &&
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
 				// LEA is not allowed with `#<data>` mode 7
 				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
 					return DecodedOperation::new_unsized(
@@ -951,7 +951,7 @@ impl From<u16> for DecodedOperation
 				},
 			0x06c0 if
 				// CALLM is not allowed with direct register usage, or with register modification
-				!(ea_mode == 0 || ea_mode == 1 || ea_mode == 3 || ea_mode == 4) &&
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
 				// CALLM is not allowed with `#<data>` mode 7
 				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
 					return DecodedOperation::new_immediate_trailing(
@@ -980,7 +980,7 @@ impl From<u16> for DecodedOperation
 				},
 			0x00c0 | 0x02c0 | 0x04c0 if
 				// Only non-altering indirection modes are allowed for CHK2/CMP2
-				!(ea_mode == 0 || ea_mode == 1 || ea_mode == 3 || ea_mode == 4) &&
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
 				// CHK2/CMP2 is not allowed with `#<data>` mode 7
 				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
 					return DecodedOperation {
@@ -1073,6 +1073,31 @@ impl From<u16> for DecodedOperation
 						ea_reg,
 						ea_mode,
 						2, // 16-bit instruction continuation follows
+					);
+				},
+			0xf340 if
+				// FRESTORE is not allowed with direct register usage, or with pre-dec register modification
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 4 &&
+				// FRESTORE is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Frestore,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
+			0xf300 if
+				// FSAVE is not allowed with direct register usage, or with pre-dec register modification
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 4 &&
+				// FSAVE is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Fsave,
+						ea_reg,
+						ea_mode,
+						0,
 					);
 				},
 			_ => {},
