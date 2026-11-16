@@ -1256,6 +1256,19 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 2, // 16-bit register list mask follows
 					};
 				},
+			0x0e00 | 0x0e40 | 0x0e80 if
+				// MOVES is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// MOVES is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Moves,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
