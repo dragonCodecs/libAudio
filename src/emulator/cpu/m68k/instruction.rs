@@ -2177,6 +2177,19 @@ impl From<u16> for DecodedOperation
 					};
 				}
 			},
+			0x8180 | 0x8188 => {
+				return DecodedOperation::new_simple_flags_with_trailing(
+					Instruction::Unpk,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					if (insn & RM_MASK) != 0 {
+						OperationFlags::MemoryNotRegister
+					} else {
+						OperationFlags::none()
+					},
+					2, // 16-bit adjustment extension follows
+				);
+			},
 			_ => {},
 		}
 
