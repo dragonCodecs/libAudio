@@ -1565,6 +1565,27 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0xf428 | 0xf468 | 0xf4a8 | 0xf4e8 => {
+				return DecodedOperation::new_simple(
+					Instruction::Cpushl,
+					(insn & REG_MASK) as u8,
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
+			0xf430 | 0xf470 | 0xf4b0 | 0xf4f0 => {
+				return DecodedOperation::new_simple(
+					Instruction::Cpushp,
+					(insn & REG_MASK) as u8,
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
+			0xf438 | 0xf478 | 0xf4b8 | 0xf4f8 => {
+				return DecodedOperation::new_simple(
+					Instruction::Cpusha,
+					(insn & REG_MASK) as u8,
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		};
 
