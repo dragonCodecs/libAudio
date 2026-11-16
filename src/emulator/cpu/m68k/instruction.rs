@@ -1714,6 +1714,14 @@ impl From<u16> for DecodedOperation
 					(insn & REG_MASK) as u8,
 				);
 			},
+			0xf048 => {
+				return DecodedOperation::new_simple_with_trailing(
+					Instruction::Pdbcc,
+					0,
+					(insn & REG_MASK) as u8,
+					4, // 16-bit instruction continuation + 16-bit displacement follows
+				);
+			},
 			_ => {},
 		};
 
