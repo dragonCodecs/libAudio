@@ -1376,6 +1376,18 @@ impl From<u16> for DecodedOperation
 						}, // 16- or 32-bit of displacement follows
 					};
 				},
+			0xf140 if
+				// PRESTORE is not allowed with direct register usage, or with pre-dec register modification
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 4 &&
+				// PRESTORE is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Prestore,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
 			_ => {},
 		};
 
