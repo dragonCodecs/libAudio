@@ -539,6 +539,25 @@ impl From<u16> for DecodedOperation
 						ea_mode
 					);
 				}
+			0x2040 | 0x3040 if
+				// MOVEA is allowed all valid modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation {
+						operation: Instruction::Movea,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						// Extract whether this is a u16 or u32 operation
+						operation_size: if (insn & 0x1000) != 0 {
+							2
+						} else {
+							4
+						},
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
 			_ => {},
 		};
 
