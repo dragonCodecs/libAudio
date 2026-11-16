@@ -527,6 +527,18 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				},
+			0x41c0 if
+				// LEA is not allowed with direct register usage, or with register modification
+				!(ea_mode == 0 || ea_mode == 1 || ea_mode == 3 || ea_mode == 4) &&
+				// LEA is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Lea,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				}
 			_ => {},
 		};
 
