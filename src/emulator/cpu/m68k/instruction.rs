@@ -1657,6 +1657,22 @@ impl From<u16> for DecodedOperation
 					};
 				}
 			},
+			0x4e50 => {
+				return DecodedOperation::new_simple_with_trailing(
+					Instruction::Link,
+					(insn & REG_MASK) as u8,
+					0,
+					2, // 16-bit displayment follows
+				);
+			},
+			0x4808 => {
+				return DecodedOperation::new_simple_with_trailing(
+					Instruction::Link,
+					(insn & REG_MASK) as u8,
+					0,
+					4, // 32-bit displayment follows
+				);
+			},
 			_ => {},
 		};
 
