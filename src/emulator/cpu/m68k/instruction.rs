@@ -1281,6 +1281,19 @@ impl From<u16> for DecodedOperation
 						2, // 16-bit Dh - Dl follows, bit 11 determines of MULS (1) or MULU (0)
 					);
 				},
+			0x4800 if
+				// NBCD is not allowed with address registers
+				ea_mode != 1 &&
+				// NBCD is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Nbcd,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
 			_ => {},
 		};
 
