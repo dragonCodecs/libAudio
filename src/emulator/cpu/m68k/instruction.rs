@@ -1877,6 +1877,15 @@ impl From<u16> for DecodedOperation
 			_ => {},
 		}
 
+		// Decode moveq - special case
+		if (insn & 0xf100) == 0x7000 {
+			return DecodedOperation::new_simple(
+				Instruction::Moveq,
+				((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+				(insn & DISPLACEMENT_MASK) as u8,
+			);
+		}
+
 		DecodedOperation::default()
 	}
 }
