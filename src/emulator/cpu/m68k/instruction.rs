@@ -2008,6 +2008,21 @@ impl From<u16> for DecodedOperation
 					((insn & 0x00f8) >> 3) as u8,
 				);
 			},
+			0xe008 | 0xe028 | 0xe038 | 0xe068 | 0xe088 | 0xe0a8 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Lsr,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					{
+						if (insn & IR_MASK) == 0 {
+							OperationFlags::ImmediateNotRegister
+						} else {
+							OperationFlags::none()
+						}
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		}
 
