@@ -355,6 +355,20 @@ impl DecodedOperation
 			trailing_bytes,
 		}
 	}
+
+	fn new_simple_with_op_mode(operation: Instruction, rx: u8, ry: u8, op_mode: u8) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode,
+			mode: 0,
+			trailing_bytes: 0,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -1726,6 +1740,14 @@ impl From<u16> for DecodedOperation
 			0xf508 => return DecodedOperation::new_simple(Instruction::Pflush, (insn & REG_MASK) as u8, 0),
 			0xf510 => return DecodedOperation::new_simple(Instruction::Pflushan, (insn & REG_MASK) as u8, 0),
 			0xf518 => return DecodedOperation::new_simple(Instruction::Pflusha, (insn & REG_MASK) as u8, 0),
+			0xf548 | 0xf568 => {
+				return DecodedOperation::new_simple_with_op_mode(
+					Instruction::Ptest,
+					(insn & REG_MASK) as u8,
+					0,
+					((insn & 0x0020) >> 5) as u8, // Extract read vs write
+				);
+			},
 			_ => {},
 		};
 
