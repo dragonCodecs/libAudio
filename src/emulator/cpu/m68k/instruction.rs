@@ -1636,6 +1636,27 @@ impl From<u16> for DecodedOperation
 					4, // 16-bit instruction continuation + 16-bit displacement follows
 				);
 			},
+			0xf278 => {
+				let op_mode = (insn & REG_MASK) as u8;
+				if op_mode == 2 || op_mode == 3 || op_mode == 4 {
+					return DecodedOperation {
+						operation: Instruction::Ftrapcc,
+						rx: 0,
+						ry: 0,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						op_mode,
+						mode: 0,
+						trailing_bytes: if op_mode == 2 {
+							2 // Instruction followed by 1 operand u16
+						} else if op_mode == 3 {
+							4 // Instruction followed by 2 operand u16's
+						} else {
+							0 // Instruction followed by no operand u16's
+						} + 2, // 16-bit conditionial predicate (5 bits used) follows
+					};
+				}
+			},
 			_ => {},
 		};
 
