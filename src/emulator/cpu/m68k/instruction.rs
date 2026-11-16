@@ -251,7 +251,22 @@ const SIZE_SHIFT: usize = 6;
 const EA_MODE_MASK: u16 = 0x0038;
 const EA_MODE_SHIFT: usize = 3;
 
-impl DecodedOperation {}
+impl DecodedOperation
+{
+	fn new_unsized(operation: Instruction, rx: u8, ry: u8, mode: u8) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode: 0,
+			mode,
+			trailing_bytes: 0,
+		}
+	}
+}
 
 impl Default for DecodedOperation
 {
@@ -372,18 +387,25 @@ impl From<u16> for DecodedOperation
 				// BCHG is not allowed with address registers
 				ea_mode != 1 &&
 				// BCHG uses only the u16 and u32 indirect modes for mode 7
-				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
-				=> {
-					return DecodedOperation {
-						operation: Instruction::Bchg,
-						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
-						ry: ea_reg,
-						flags: OperationFlags::none(),
-						operation_size: 0,
-						op_mode: 0,
-						mode: ea_mode,
-						trailing_bytes: 0,
-					};
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Bchg,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
+			0x0180 if
+				// BCLR is not allowed with address registers
+				ea_mode != 1 &&
+				// BCLR uses only the u16 and u32 indirect modes for mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Bclr,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
 				},
 			_ => {},
 		};
