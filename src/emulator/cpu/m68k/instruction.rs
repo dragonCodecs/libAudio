@@ -1673,6 +1673,31 @@ impl From<u16> for DecodedOperation
 					4, // 32-bit displayment follows
 				);
 			},
+			0xf620 => {
+				return DecodedOperation {
+					operation: Instruction::Move16,
+					rx: (insn & REG_MASK) as u8,
+					ry: 0,
+					flags: OperationFlags::Postincrement,
+					operation_size: 0,
+					op_mode: 0,
+					mode: 0,
+					trailing_bytes: 2, // 16-bit instruction continuation follows, containing Ay
+				};
+			},
+			0xf600 | 0xf608 | 0xf610 | 0xf618 => {
+				return DecodedOperation {
+					operation: Instruction::Move16,
+					rx: 0,
+					ry: (insn & REG_MASK) as u8,
+					flags: OperationFlags::none(),
+					operation_size: 0,
+					// Extract out the operation mode
+					op_mode: ((insn & 0x0018) >> 3) as u8,
+					mode: 0,
+					trailing_bytes: 4, // 32-bit absolute address follows
+				};
+			},
 			_ => {},
 		};
 
