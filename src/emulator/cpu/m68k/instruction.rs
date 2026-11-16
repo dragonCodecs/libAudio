@@ -246,6 +246,7 @@ enum Instruction
 const INSN_MASK_EA: u16 = 0xf1c0;
 const INSN_MASK_EA_NO_REG: u16 = 0xffc0;
 const INSN_MASK_VECTOR_REG: u16 = 0xfff8;
+const INSN_MASK_DISPLACEMENT: u16 = 0xff00;
 const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
 const SIZE_MASK: u16 = 0x00c0;
@@ -255,6 +256,7 @@ const CONDITION_SHIFT: usize = 8;
 const EA_MODE_MASK: u16 = 0x0038;
 const EA_MODE_SHIFT: usize = 3;
 const VECTOR_MASK: u16 = 0x0007;
+const DISPLACEMENT_MASK: u16 = 0x00ff;
 
 impl DecodedOperation
 {
@@ -367,6 +369,32 @@ impl DecodedOperation
 			op_mode,
 			mode: 0,
 			trailing_bytes: 0,
+		}
+	}
+
+	fn new_with_displacement(operation: Instruction, displacement: u8, op_mode: u8) -> Self
+	{
+		Self {
+			operation,
+			rx: displacement,
+			ry: 0,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode,
+			mode: 0,
+			trailing_bytes:
+				// There are two special displacement values. A displacement of 0 means a 16-bit one follows
+				if displacement == 0 {
+					2
+				}
+				// A displacement value of 255 means a 32-bit one follows
+				else if displacement == 0xff {
+					4
+				}
+				// Otherwise nothing follows.
+				else {
+					0
+				},
 		}
 	}
 }
@@ -1781,6 +1809,20 @@ impl From<u16> for DecodedOperation
 			0x4840 => return DecodedOperation::new_simple(Instruction::Swap, (insn & REG_MASK) as u8, 0),
 			0x4e40 | 0x4e48 => return DecodedOperation::new_simple(Instruction::Trap, (insn & 0x000f) as u8, 0),
 			0x4e58 => return DecodedOperation::new_simple(Instruction::Unlk, (insn & REG_MASK) as u8, 0),
+			_ => {},
+		};
+
+		// Decode instructions that specify an 8-bit displacement
+		match insn & INSN_MASK_DISPLACEMENT {
+			0x6200 | 0x6300 | 0x6400 | 0x6500 | 0x6600 | 0x6700 | 0x6800 | 0x6900 | 0x6a00 | 0x6b00 | 0x6c00 |
+			0x6d00 | 0x6e00 | 0x6f00 => {
+				return DecodedOperation::new_with_displacement(
+					Instruction::Bcc,
+					(insn & DISPLACEMENT_MASK) as u8,
+					((insn & CONDITION_MASK) >> CONDITION_SHIFT) as u8,
+				);
+			},
+			0x6000 => {},
 			_ => {},
 		};
 
