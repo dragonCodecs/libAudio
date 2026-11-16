@@ -1171,6 +1171,31 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0
 					};
 				},
+			0x42c0 if
+				// MOVE from CCR is not allowed with address registers
+				ea_mode != 1 &&
+				// MOVE from CCR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Move,
+						8, // 8 is a special register number (not otherwise valid) indicating CCR.
+						ea_reg,
+						ea_mode,
+					);
+				},
+			0x44c0 if
+				// MOVE to CCR is not allowed with address registers
+				ea_mode != 1 &&
+				// MOVE to CCR is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Move,
+						ea_reg,
+						8, // 8 is a special register number (not otherwise valid) indicating CCR.
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
