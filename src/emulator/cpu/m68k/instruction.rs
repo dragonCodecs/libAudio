@@ -431,6 +431,27 @@ impl From<u16> for DecodedOperation
 						ea_mode
 					);
 				},
+			0x4100 | 0x4180 if
+				// CHK is not allowed with address registers
+				ea_mode != 1 &&
+				// CHK is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation {
+						operation: Instruction::Chk,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						// Decode whether 16- or 32-bit operation
+						operation_size: if (insn & 0x0080) != 0 {
+							2
+						} else {
+							4
+						},
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
 			_ => {},
 		};
 
