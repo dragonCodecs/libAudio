@@ -2129,6 +2129,18 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0x8100 | 0x8108 => {
+				return DecodedOperation::new_simple_flags(
+					Instruction::Sbcd,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					if (insn & RM_MASK) != 0 {
+						OperationFlags::MemoryNotRegister
+					} else {
+						OperationFlags::none()
+					},
+				);
+			},
 			_ => {},
 		}
 
