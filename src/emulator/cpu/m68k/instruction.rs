@@ -1979,6 +1979,14 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0xb108 | 0xb148 | 0xb188 => {
+				return DecodedOperation::new_simple_sized(
+					Instruction::Cmpm,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		}
 
