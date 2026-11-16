@@ -247,6 +247,7 @@ const INSN_MASK_EA: u16 = 0xf1c0;
 const INSN_MASK_EA_NO_REG: u16 = 0xffc0;
 const INSN_MASK_VECTOR_REG: u16 = 0xfff8;
 const INSN_MASK_DISPLACEMENT: u16 = 0xff00;
+const INSN_MASK_SIZE_ONLY: u16 = 0xf000;
 const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
 const SIZE_MASK: u16 = 0x00c0;
@@ -1830,6 +1831,51 @@ impl From<u16> for DecodedOperation
 			},
 			_ => {},
 		};
+
+		// Decode move - special case
+		match insn & INSN_MASK_SIZE_ONLY {
+			0x1000 | 0x2000 | 0x3000 => {
+				// Extract out the effective addressing mode for the source
+				let src_ea_mode = ((insn & EA_MODE_MASK) >> EA_MODE_SHIFT) as u8;
+				let src_ea_reg = (insn & REG_MASK) as u8;
+				// Extract out the effective addressing mode for the destination
+				let dst_ea_mode = ((insn & 0x01c0) >> 6) as u8;
+				let dst_ea_reg = ((insn >> REG_X_SHIFT) & REG_MASK) as u8;
+
+				if
+				// MOVE is allowed all valid modes for the source
+				!(src_ea_mode == 7 && src_ea_reg > 4) &&
+					// MOVE is not allowed with a destination address register
+					dst_ea_mode != 1 &&
+					// MOVE is not allowed with `#<data>` mode or PC-rel destination data register usage,
+					// only u16 and u32 indirect mode 7
+					!(dst_ea_mode == 7 && !(dst_ea_reg == 0 || dst_ea_reg == 1))
+				{
+					return DecodedOperation {
+						operation: Instruction::Move,
+						rx: dst_ea_reg,
+						ry: src_ea_reg,
+						flags: OperationFlags::none(),
+						// Extract out whether we're to do a u8, u16 or u32 move
+						operation_size: {
+							let size = (insn & 0x3000) >> 12;
+							if size == 1 {
+								1 // u8 move
+							} else if size == 3 {
+								2 // u16 move
+							} else {
+								4 // u32 move
+							}
+						},
+						op_mode: 0,
+						// Extract out both destination and source mode bits
+						mode: ((insn & 0x01f8) >> 3) as u8,
+						trailing_bytes: 0,
+					};
+				}
+			},
+			_ => {},
+		}
 
 		DecodedOperation::default()
 	}
