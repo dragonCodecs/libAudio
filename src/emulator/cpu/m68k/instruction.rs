@@ -994,6 +994,19 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 2, // 16-bit Rn follows, bit 11 determines if chk2 (1) or cmp2 (0)
 					};
 				},
+			0x4200 | 0x4240 | 0x4280 if
+				// CLR is not allowed with address registers
+				ea_mode != 1 &&
+				// CLR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Clr,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
