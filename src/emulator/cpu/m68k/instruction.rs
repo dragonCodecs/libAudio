@@ -1388,6 +1388,25 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0xf000 | 0xf040 if
+				// P* instruction is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) &&
+				// Filter out PDBcc
+				!((insn & 0x00c0) == 0x0040 && ea_mode == 1) &&
+				// filter out PTRAPcc
+				!((insn & 0x00c0) == 0x0040 && ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Privileged,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						// Extract which block of privileged instructions this one belongs to
+						op_mode: ((insn & 0x00c0) >> 6) as u8,
+						mode: ea_mode,
+						trailing_bytes: 2, // 16-bit instruction continuation follows
+					};
+				},
 			0xf100 if
 				// PSAVE is not allowed with direct register usage, or with pre-dec register modification
 				ea_mode != 0 && ea_mode != 1 && ea_mode != 4 &&
