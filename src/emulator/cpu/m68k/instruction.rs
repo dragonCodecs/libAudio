@@ -289,14 +289,10 @@ impl From<u16> for DecodedOperation
 				// Otherwise if it's a target, the requirements are much stricter
 				else {
 					// ADD is not allowed with direct register usage
-					if ea_mode == 0 || ea_mode == 1 {
-						false
-					}
+					ea_mode != 0 && ea_mode != 1 &&
 					// ADD is not allowed with `#<data>` mode or PC-rel data register
 					// usage, only u16 and u32 indirect mode 7
-					else {
-						!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
-					}
+					!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
 				} => {
 					return DecodedOperation {
 						operation: Instruction::Add,
@@ -340,6 +336,34 @@ impl From<u16> for DecodedOperation
 						flags: OperationFlags::ImmediateNotRegister,
 						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
+			0xc000 | 0xc040 | 0xc080 | 0xc100 | 0xc140 | 0xc180 if
+				// If the effective address target is used only as a source operand
+				if (insn & 0x0100) == 0 {
+					// AND is not allowed with address registers
+					ea_mode != 1 &&
+					// AND is allowed all valid mode 7 modes
+					!(ea_mode == 7 && ea_reg > 4)
+				}
+				// Otherwise if it's a target, the requirements are much stricter
+				else {
+					// AND is not allowed with direct register usage
+					ea_mode != 0 && ea_mode != 1 &&
+					// AND is not allowed with `#<data>` mode or PC-rel data register
+					// usage, only u16 and u32 indirect mode 7
+					!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
+				} => {
+					return DecodedOperation {
+						operation: Instruction::And,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						// Extract the operation direction information
+						op_mode: ((insn & 0x0100) >> 8) as u8,
 						mode: ea_mode,
 						trailing_bytes: 0,
 					};
