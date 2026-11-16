@@ -949,6 +949,18 @@ impl From<u16> for DecodedOperation
 						2, // 16-bit number follows (8 bits used)
 					);
 				},
+			0x06c0 if
+				// CALLM is not allowed with direct register usage, or with register modification
+				!(ea_mode == 0 || ea_mode == 1 || ea_mode == 3 || ea_mode == 4) &&
+				// CALLM is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_immediate_trailing(
+						Instruction::Callm,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit argument count follows (8 bits used)
+					);
+				},
 			_ => {},
 		};
 
