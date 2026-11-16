@@ -1722,6 +1722,10 @@ impl From<u16> for DecodedOperation
 					4, // 16-bit instruction continuation + 16-bit displacement follows
 				);
 			},
+			0xf500 => return DecodedOperation::new_simple(Instruction::Pflushn, (insn & REG_MASK) as u8, 0),
+			0xf508 => return DecodedOperation::new_simple(Instruction::Pflush, (insn & REG_MASK) as u8, 0),
+			0xf510 => return DecodedOperation::new_simple(Instruction::Pflushan, (insn & REG_MASK) as u8, 0),
+			0xf518 => return DecodedOperation::new_simple(Instruction::Pflusha, (insn & REG_MASK) as u8, 0),
 			_ => {},
 		};
 
