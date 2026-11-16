@@ -12,12 +12,6 @@ edition = "2024"
 [lib]
 crate-type = ["staticlib", "rlib"]
 
-[workspace]
-resolver = "2"
-members = [
-	"."
-]
-
 [dependencies]
 bitmask-enum = "2.2.5"
 num-traits = "0.2.19"
