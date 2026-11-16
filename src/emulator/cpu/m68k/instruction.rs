@@ -407,6 +407,18 @@ impl From<u16> for DecodedOperation
 						ea_mode
 					);
 				},
+			0x01c0 if
+				// BSET is not allowed with address registers
+				ea_mode != 1 &&
+				// BSET uses only the u16 and u32 indirect modes for mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Bset,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
 			_ => {},
 		};
 
