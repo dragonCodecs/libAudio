@@ -419,6 +419,18 @@ impl From<u16> for DecodedOperation
 						ea_mode
 					);
 				},
+			0x0100 if
+				// BTST is not allowed with address registers
+				ea_mode != 1 &&
+				// BTST doesn't use a couple of the mode 7 modes
+				!(ea_mode == 7 && (ea_reg == 5 || ea_reg == 6 || ea_reg == 7)) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Btst,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
 			_ => {},
 		};
 
