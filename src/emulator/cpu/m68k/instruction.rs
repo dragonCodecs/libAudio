@@ -1512,6 +1512,16 @@ impl From<u16> for DecodedOperation
 						// Bit 8 determines DReg (0) vs TLB (1), bit 11 determines TLBS (1) vs TBLU (0)
 					);
 				},
+			0x4a00 | 0x4a40 | 0x4a80 if
+				// TST is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Tst,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
