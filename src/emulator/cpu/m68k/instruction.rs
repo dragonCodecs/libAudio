@@ -1063,6 +1063,18 @@ impl From<u16> for DecodedOperation
 						}, // 16- or 32-bit of displacement follows
 					};
 				},
+			0xf200 if
+				// F* instructions are not allowed with address registers
+				ea_mode != 1 &&
+				// F* instructions are allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Fpu,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit instruction continuation follows
+					);
+				},
 			_ => {},
 		};
 
