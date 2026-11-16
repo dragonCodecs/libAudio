@@ -655,6 +655,40 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				},
+			0x90c0 | 0x91c0 if
+				// SUBA is allowed all valid modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation {
+						operation: Instruction::Suba,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						// Decode whether 16- or 32-bit operation
+						operation_size: if (insn & 0x01c0) == 0x00c0 {
+							2
+						} else {
+							4
+						},
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
+			0x5100 | 0x5140 | 0x5180 if
+				// SUBQ is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Subq,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::ImmediateNotRegister,
+						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
 			_ => {},
 		};
 
