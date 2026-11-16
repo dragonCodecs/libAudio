@@ -297,6 +297,20 @@ impl DecodedOperation
 			trailing_bytes,
 		}
 	}
+
+	fn new_unsized_with_trailing(operation: Instruction, ry: u8, mode: u8, trailing_bytes: u8) -> Self
+	{
+		Self {
+			operation,
+			rx: 0,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode: 0,
+			mode,
+			trailing_bytes,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -833,6 +847,30 @@ impl From<u16> for DecodedOperation
 						ea_reg,
 						ea_mode,
 						2, // 16-bit {offset:width} follows
+					);
+				},
+			0xebc0 if
+				// BFEXTS is not allowed with address registers, or with register modification
+				ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
+				// BFEXTS is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Bfexts,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit {offset:width}, Dn follows
+					);
+				},
+			0xe9c0 if
+				// BFEXTU is not allowed with address registers, or with register modification
+				ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
+				// BFEXTU is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Bfextu,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit {offset:width}, Dn follows
 					);
 				},
 			_ => {},
