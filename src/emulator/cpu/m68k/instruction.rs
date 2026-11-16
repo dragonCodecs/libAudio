@@ -1269,6 +1269,18 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0x4c00 if
+				// MULS/MULU is not allowed with address registers
+				ea_mode != 1 &&
+				// MULS/MULU is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::MulsMulu,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit Dh - Dl follows, bit 11 determines of MULS (1) or MULU (0)
+					);
+				},
 			_ => {},
 		};
 
