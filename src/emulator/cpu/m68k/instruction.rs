@@ -244,6 +244,7 @@ enum Instruction
 }
 
 const INSN_MASK_EA: u16 = 0xf1c0;
+const INSN_MASK_EA_NO_REG: u16 = 0xffc0;
 const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
 const SIZE_MASK: u16 = 0x00c0;
@@ -263,6 +264,20 @@ impl DecodedOperation
 			ry,
 			flags: OperationFlags::none(),
 			operation_size: 0,
+			op_mode: 0,
+			mode,
+			trailing_bytes: 0,
+		}
+	}
+
+	fn new_immediate(operation: Instruction, ry: u8, operation_size: u8, mode: u8) -> Self
+	{
+		Self {
+			operation,
+			rx: 0,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size,
 			op_mode: 0,
 			mode,
 			trailing_bytes: 0,
@@ -688,6 +703,24 @@ impl From<u16> for DecodedOperation
 						mode: ea_mode,
 						trailing_bytes: 0,
 					};
+				},
+			_ => {},
+		};
+
+		// Decode instructions that use the effective address form without an Rx register
+		match insn & INSN_MASK_EA_NO_REG {
+			0x0600 | 0x0640 | 0x0680 if
+				// ADDI is not allowed with address registers
+				ea_mode != 1 &&
+				// ADDI is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Addi,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
 				},
 			_ => {},
 		};
