@@ -1032,6 +1032,19 @@ impl From<u16> for DecodedOperation
 						2, // 16-bit Dr:Dq follows, bit 11 determines if DIVSL (1) or DIVUL (0)
 					);
 				}
+			0x0a00 | 0x0a40 | 0x0a80 if
+				// EORI is not allowed with address registers
+				ea_mode != 1 &&
+				// EORI is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Eori,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
