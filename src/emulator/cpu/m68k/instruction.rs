@@ -1221,6 +1221,41 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0x4880 | 0x48c0 | 0x4c80 | 0x4cc0 if
+				// MOVEM is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// If this is a reg -> mem MOVEM
+				if (insn & 0x0400) == 0 {
+					// MOVEM is not allowed with postincrement mode
+					ea_mode != 3 &&
+					// MOVEM is not allowed with `#<data>` mode or PC-rel data register
+					// usage, only u16 and u32 indirect mode 7
+					!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
+				}
+				// Otherwise if this is a mem -> reg MOVEM
+				else {
+					// MOVEM is not allowed with predecrement mode
+					ea_mode != 4 &&
+					// MOVEM is not allowed with `#<data>` mode 7
+					!(ea_mode == 7 && (ea_reg & 0x04) != 0)
+				} => {
+					return DecodedOperation {
+						operation: Instruction::Movem,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						// Extract whether the registers should be moved as u16's or u32's
+						operation_size: if (insn & 0x0040) == 0 {
+							2
+						} else {
+							4
+						},
+						// Extract out the transfer direction
+						op_mode: ((insn & 0x0400) >> 10) as u8,
+						mode: ea_mode,
+						trailing_bytes: 2, // 16-bit register list mask follows
+					};
+				},
 			_ => {},
 		};
 
