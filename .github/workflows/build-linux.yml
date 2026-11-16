@@ -88,6 +88,8 @@ jobs:
         run: |
           sudo python3 -m pip install --break-system-packages meson ninja gcovr
         working-directory: ${{ runner.temp }}
+      - name: Install LLVM code coverage tools
+        uses: taiki-e/install-action@cargo-llvm-cov
       - name: Version tools
         run: |
           $CC --version
@@ -125,6 +127,9 @@ jobs:
           meson compile -C build
           meson test -C build
           gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
+          cargo llvm-cov b
+          cargo llvm-cov t
+          cargo llvm-cov report --codecov --output-path `pwd`/build/meson-logs/codecov.json
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@v4
@@ -137,5 +142,5 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           directory: ./build/meson-logs/
-          files: coverage.xml
+          files: coverage.xml,codecov.json
           token: ${{ secrets.CODECOV_TOKEN }}
