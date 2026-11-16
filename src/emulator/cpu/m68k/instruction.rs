@@ -485,6 +485,30 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				},
+			0x81c0 if
+				// DIVS is not allowed with address registers
+				ea_mode != 1 &&
+				// DIVS is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Divs,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
+			0x80c0 if
+				// DIVU is not allowed with address registers
+				ea_mode != 1 &&
+				// DIVU is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Divu,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
 			_ => {},
 		};
 
