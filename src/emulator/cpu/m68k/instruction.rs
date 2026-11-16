@@ -2038,6 +2038,24 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0x0108 | 0x0148 | 0x0188 | 0x01c8 => {
+				return DecodedOperation {
+					operation: Instruction::Movep,
+					rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					ry: (insn & REG_MASK) as u8,
+					flags: OperationFlags::MemoryNotRegister,
+					// Extract whether we're working with a u16 or a u32
+					operation_size: if (insn & 0x0040) == 0 {
+						2
+					} else {
+						4
+					},
+					// Extract the operation direction information
+					op_mode: ((insn & 0x0080) >> 7) as u8,
+					mode: 0,
+					trailing_bytes: 2, // 16-bit displacement follows
+				};
+			},
 			_ => {},
 		}
 
