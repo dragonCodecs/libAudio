@@ -2023,6 +2023,21 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0xe108 | 0xe128 | 0xe138 | 0xe168 | 0xe188 | 0xe1a8 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Lsl,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					{
+						if (insn & IR_MASK) == 0 {
+							OperationFlags::ImmediateNotRegister
+						} else {
+							OperationFlags::none()
+						}
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		}
 
