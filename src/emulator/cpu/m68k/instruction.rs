@@ -1100,6 +1100,19 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0xf240 if
+				// FScc instruction is not allowed with address registers
+				ea_mode != 1 &&
+				// FScc is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Fscc,
+						ea_reg,
+						ea_mode,
+						2, // 16-bits follow (5 bits used) for conditional predicate
+					);
+				},
 			_ => {},
 		};
 
