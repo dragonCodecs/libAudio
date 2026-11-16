@@ -1778,6 +1778,7 @@ impl From<u16> for DecodedOperation
 					((insn & 0x0008) >> 3) as u8,
 				);
 			},
+			0x4840 => return DecodedOperation::new_simple(Instruction::Swap, (insn & REG_MASK) as u8, 0),
 			_ => {},
 		};
 
