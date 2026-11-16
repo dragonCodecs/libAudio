@@ -1748,6 +1748,27 @@ impl From<u16> for DecodedOperation
 					((insn & 0x0020) >> 5) as u8, // Extract read vs write
 				);
 			},
+			0xf078 => {
+				let op_mode = (insn & REG_MASK) as u8;
+				if op_mode == 2 || op_mode == 3 || op_mode == 4 {
+					return DecodedOperation {
+						operation: Instruction::Ptrapcc,
+						rx: 0,
+						ry: 0,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						op_mode,
+						mode: 0,
+						trailing_bytes: if op_mode == 2 {
+							2 // Instruction followed by 1 operand u16
+						} else if op_mode == 3 {
+							4 // Instruction followed by 2 operand u16's
+						} else {
+							0 // Instruction followed by no operand u16's
+						} + 2, // 16-bit coprocessor condition follows
+					};
+				}
+			},
 			_ => {},
 		};
 
