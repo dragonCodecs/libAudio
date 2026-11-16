@@ -243,6 +243,7 @@ enum Instruction
 	Fpu,
 }
 
+const INSN_MASK_SIMPLE_REGS: u16 = 0xf1f8;
 const INSN_MASK_EA: u16 = 0xf1c0;
 const INSN_MASK_EA_NO_REG: u16 = 0xffc0;
 const INSN_MASK_VECTOR_REG: u16 = 0xfff8;
@@ -250,6 +251,7 @@ const INSN_MASK_DISPLACEMENT: u16 = 0xff00;
 const INSN_MASK_SIZE_ONLY: u16 = 0xf000;
 const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
+const RM_MASK: u16 = 0x0008;
 const SIZE_MASK: u16 = 0x00c0;
 const SIZE_SHIFT: usize = 6;
 const CONDITION_MASK: u16 = 0x0f00;
@@ -368,6 +370,20 @@ impl DecodedOperation
 			flags: OperationFlags::none(),
 			operation_size: 0,
 			op_mode,
+			mode: 0,
+			trailing_bytes: 0,
+		}
+	}
+
+	fn new_simple_flags(operation: Instruction, rx: u8, ry: u8, flags: OperationFlags) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags,
+			operation_size: 0,
+			op_mode: 0,
 			mode: 0,
 			trailing_bytes: 0,
 		}
@@ -1884,6 +1900,25 @@ impl From<u16> for DecodedOperation
 				((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 				(insn & DISPLACEMENT_MASK) as u8,
 			);
+		}
+
+		// Decode instructions that use the `insn Ry, Rx` basic form
+		match insn & INSN_MASK_SIMPLE_REGS {
+			0xc100 | 0xc108 => {
+				return DecodedOperation::new_simple_flags(
+					Instruction::Abcd,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					{
+						if (insn & RM_MASK) != 0 {
+							OperationFlags::MemoryNotRegister
+						} else {
+							OperationFlags::none()
+						}
+					},
+				);
+			},
+			_ => {},
 		}
 
 		DecodedOperation::default()
