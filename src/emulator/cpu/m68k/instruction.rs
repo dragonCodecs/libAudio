@@ -242,3 +242,77 @@ enum Instruction
 	TblsTblu,
 	Fpu,
 }
+
+const INSN_MASK_EA: u16 = 0xf1c0;
+const REG_X_SHIFT: usize = 9;
+const REG_MASK: u16 = 0x0007;
+const SIZE_MASK: u16 = 0x00c0;
+const SIZE_SHIFT: usize = 6;
+const EA_MODE_MASK: u16 = 0x0038;
+const EA_MODE_SHIFT: usize = 3;
+
+impl DecodedOperation {}
+
+impl Default for DecodedOperation
+{
+	fn default() -> Self
+	{
+		Self {
+			operation: Instruction::Illegal,
+			rx: 0,
+			ry: 0,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes: 0,
+		}
+	}
+}
+
+impl From<u16> for DecodedOperation
+{
+	fn from(insn: u16) -> Self
+	{
+		// Extract out the effective addressing mode
+		let ea_mode = ((insn & EA_MODE_MASK) >> EA_MODE_SHIFT) as u8;
+		let ea_reg = (insn & REG_MASK) as u8;
+
+		// Decode instructions that use the effective address form
+		match insn & INSN_MASK_EA {
+			0xd000 | 0xd040 | 0xd080 | 0xd100 | 0xd140 | 0xd180 if
+				// If the effective address target is used only as a source operand
+				if (insn & 0x0100) == 0 {
+					// ADD is allowed all valid modes
+					!(ea_mode == 7 && ea_reg > 4)
+				}
+				// Otherwise if it's a target, the requirements are much stricter
+				else {
+					// ADD is not allowed with direct register usage
+					if ea_mode == 0 || ea_mode == 1 {
+						false
+					}
+					// ADD is not allowed with `#<data>` mode or PC-rel data register usage,
+					// only u16 and u32 indirect mode 7
+					else {
+						!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
+					}
+				} => {
+					return DecodedOperation {
+						operation: Instruction::Add,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						// Extract the operation direction information
+						op_mode: ((insn & 0x0100) >> 8) as u8,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
+			_ => {},
+		};
+
+		DecodedOperation::default()
+	}
+}
