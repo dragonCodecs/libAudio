@@ -341,6 +341,20 @@ impl DecodedOperation
 			trailing_bytes: 0,
 		}
 	}
+
+	fn new_simple_with_trailing(operation: Instruction, rx: u8, ry: u8, trailing_bytes: u8) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -1614,6 +1628,14 @@ impl From<u16> for DecodedOperation
 				);
 			},
 			0x49c0 => return DecodedOperation::new_simple(Instruction::Extb, (insn & REG_MASK) as u8, 0),
+			0xf248 => {
+				return DecodedOperation::new_simple_with_trailing(
+					Instruction::Fdbcc,
+					0,
+					(insn & REG_MASK) as u8,
+					4, // 16-bit instruction continuation + 16-bit displacement follows
+				);
+			},
 			_ => {},
 		};
 
