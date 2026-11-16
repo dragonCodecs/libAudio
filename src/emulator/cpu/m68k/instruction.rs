@@ -1420,6 +1420,32 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0xe6c0 if
+				// ROR is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// ROR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Ror,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
+			0xe7c0 if
+				// ROL is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// ROL is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Rol,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
 			_ => {},
 		};
 
