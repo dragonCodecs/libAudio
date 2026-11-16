@@ -252,6 +252,7 @@ const INSN_MASK_SIZE_ONLY: u16 = 0xf000;
 const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
 const RM_MASK: u16 = 0x0008;
+const IR_MASK: u16 = 0x0020;
 const SIZE_MASK: u16 = 0x00c0;
 const SIZE_SHIFT: usize = 6;
 const CONDITION_MASK: u16 = 0x0f00;
@@ -1941,6 +1942,21 @@ impl From<u16> for DecodedOperation
 					{
 						if (insn & RM_MASK) != 0 {
 							OperationFlags::MemoryNotRegister
+						} else {
+							OperationFlags::none()
+						}
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
+			0xe000 | 0xe020 | 0xe040 | 0xe060 | 0xe080 | 0xe0a0 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Asr,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					{
+						if (insn & IR_MASK) == 0 {
+							OperationFlags::ImmediateNotRegister
 						} else {
 							OperationFlags::none()
 						}
