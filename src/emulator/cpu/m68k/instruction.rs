@@ -1987,6 +1987,18 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0x50c8 | 0x51c8 => {
+				return DecodedOperation {
+					operation: Instruction::Dbcc,
+					rx: 0,
+					ry: (insn & REG_MASK) as u8,
+					flags: OperationFlags::none(),
+					operation_size: 0,
+					op_mode: ((insn & CONDITION_MASK) >> CONDITION_SHIFT) as u8,
+					mode: 0,
+					trailing_bytes: 2, // 16-bit displacement follows
+				};
+			},
 			_ => {},
 		}
 
