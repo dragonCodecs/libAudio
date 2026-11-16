@@ -19,6 +19,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "callisto"
+version = "0.7.0"
+dependencies = [
+ "bitmask-enum",
+ "num-traits",
+ "rand",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -54,15 +63,6 @@ dependencies = [
  "libc",
  "r-efi",
  "rand_core",
-]
-
-[[package]]
-name = "libAudio"
-version = "0.7.0"
-dependencies = [
- "bitmask-enum",
- "num-traits",
- "rand",
 ]
 
 [[package]]
