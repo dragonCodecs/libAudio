@@ -405,6 +405,26 @@ impl DecodedOperation
 		}
 	}
 
+	fn new_simple_flags_with_trailing(
+		operation: Instruction,
+		rx: u8,
+		ry: u8,
+		flags: OperationFlags,
+		trailing_bytes: u8,
+	) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags,
+			operation_size: 0,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes,
+		}
+	}
+
 	fn new_with_displacement(operation: Instruction, displacement: u8, op_mode: u8) -> Self
 	{
 		Self {
@@ -1925,12 +1945,10 @@ impl From<u16> for DecodedOperation
 					Instruction::Abcd,
 					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 					(insn & REG_MASK) as u8,
-					{
-						if (insn & RM_MASK) != 0 {
-							OperationFlags::MemoryNotRegister
-						} else {
-							OperationFlags::none()
-						}
+					if (insn & RM_MASK) != 0 {
+						OperationFlags::MemoryNotRegister
+					} else {
+						OperationFlags::none()
 					},
 				);
 			},
@@ -1939,12 +1957,10 @@ impl From<u16> for DecodedOperation
 					Instruction::Addx,
 					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 					(insn & REG_MASK) as u8,
-					{
-						if (insn & RM_MASK) != 0 {
-							OperationFlags::MemoryNotRegister
-						} else {
-							OperationFlags::none()
-						}
+					if (insn & RM_MASK) != 0 {
+						OperationFlags::MemoryNotRegister
+					} else {
+						OperationFlags::none()
 					},
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
@@ -1954,12 +1970,10 @@ impl From<u16> for DecodedOperation
 					Instruction::Asr,
 					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 					(insn & REG_MASK) as u8,
-					{
-						if (insn & IR_MASK) == 0 {
-							OperationFlags::ImmediateNotRegister
-						} else {
-							OperationFlags::none()
-						}
+					if (insn & IR_MASK) == 0 {
+						OperationFlags::ImmediateNotRegister
+					} else {
+						OperationFlags::none()
 					},
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
@@ -1969,12 +1983,10 @@ impl From<u16> for DecodedOperation
 					Instruction::Asl,
 					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 					(insn & REG_MASK) as u8,
-					{
-						if (insn & IR_MASK) == 0 {
-							OperationFlags::ImmediateNotRegister
-						} else {
-							OperationFlags::none()
-						}
+					if (insn & IR_MASK) == 0 {
+						OperationFlags::ImmediateNotRegister
+					} else {
+						OperationFlags::none()
 					},
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
@@ -2013,12 +2025,10 @@ impl From<u16> for DecodedOperation
 					Instruction::Lsr,
 					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 					(insn & REG_MASK) as u8,
-					{
-						if (insn & IR_MASK) == 0 {
-							OperationFlags::ImmediateNotRegister
-						} else {
-							OperationFlags::none()
-						}
+					if (insn & IR_MASK) == 0 {
+						OperationFlags::ImmediateNotRegister
+					} else {
+						OperationFlags::none()
 					},
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
@@ -2028,12 +2038,10 @@ impl From<u16> for DecodedOperation
 					Instruction::Lsl,
 					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 					(insn & REG_MASK) as u8,
-					{
-						if (insn & IR_MASK) == 0 {
-							OperationFlags::ImmediateNotRegister
-						} else {
-							OperationFlags::none()
-						}
+					if (insn & IR_MASK) == 0 {
+						OperationFlags::ImmediateNotRegister
+					} else {
+						OperationFlags::none()
 					},
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
@@ -2055,6 +2063,19 @@ impl From<u16> for DecodedOperation
 					mode: 0,
 					trailing_bytes: 2, // 16-bit displacement follows
 				};
+			},
+			0x8140 | 0x8148 => {
+				return DecodedOperation::new_simple_flags_with_trailing(
+					Instruction::Pack,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					if (insn & RM_MASK) != 0 {
+						OperationFlags::MemoryNotRegister
+					} else {
+						OperationFlags::none()
+					},
+					2, // 16-bit adjustment extension follows
+				);
 			},
 			_ => {},
 		}
