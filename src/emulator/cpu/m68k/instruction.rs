@@ -1320,6 +1320,19 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0x4600 | 0x4640 | 0x4680 if
+				// NOT is not allowed with address registers
+				ea_mode != 1 &&
+				// NOT is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Not,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
