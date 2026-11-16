@@ -1137,6 +1137,40 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0xe2c0 if
+				// LSR is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// LSR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Lsr,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::MemoryNotRegister,
+						operation_size: 1,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0
+					};
+				},
+			0xe3c0 if
+				// LSL is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// LSL is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Lsl,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::MemoryNotRegister,
+						operation_size: 1,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0
+					};
+				},
 			_ => {},
 		};
 
