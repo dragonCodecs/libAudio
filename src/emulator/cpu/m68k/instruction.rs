@@ -2154,6 +2154,29 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0x50f8 | 0x51f8 => {
+				let op_mode = (insn & REG_MASK) as u8;
+				// Only 3 of the opmode combinations are valid for this instruction
+				if op_mode == 2 || op_mode == 3 || op_mode == 4 {
+					return DecodedOperation {
+						operation: Instruction::Trapcc,
+						rx: 0,
+						ry: 0,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						// Extract the operation condition code
+						op_mode: ((insn & 0x0f00) >> 8) as u8,
+						mode: 0,
+						trailing_bytes: if op_mode == 2 {
+							2 // u16 operand follows
+						} else if op_mode == 3 {
+							4 // u32 operand follows
+						} else {
+							0 // No operand follows
+						},
+					};
+				}
+			},
 			_ => {},
 		}
 
