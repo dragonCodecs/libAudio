@@ -924,6 +924,31 @@ impl From<u16> for DecodedOperation
 						2, // 16-bit {offset:width}, Dn follows
 					);
 				},
+			0x08c0 if
+				// BSET is not allowed with address registers
+				ea_mode != 1 &&
+				// BSET is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate_trailing(
+						Instruction::Bset,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit number follows (8 bits used)
+					);
+				},
+			0x0800 if
+				// BTST is not allowed with address registers
+				ea_mode != 1 &&
+				// BTST is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_immediate_trailing(
+						Instruction::Btst,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit number follows (8 bits used)
+					);
+				},
 			_ => {},
 		};
 
