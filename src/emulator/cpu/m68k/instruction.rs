@@ -292,8 +292,8 @@ impl From<u16> for DecodedOperation
 					if ea_mode == 0 || ea_mode == 1 {
 						false
 					}
-					// ADD is not allowed with `#<data>` mode or PC-rel data register usage,
-					// only u16 and u32 indirect mode 7
+					// ADD is not allowed with `#<data>` mode or PC-rel data register
+					// usage, only u16 and u32 indirect mode 7
 					else {
 						!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
 					}
@@ -306,6 +306,21 @@ impl From<u16> for DecodedOperation
 						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 						// Extract the operation direction information
 						op_mode: ((insn & 0x0100) >> 8) as u8,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
+			0xd0c0 | 0xd1c0 if
+				// ADDA is allowed all valid modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation {
+						operation: Instruction::Adda,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						// Decode whether 16- or 32-bit operation
+						operation_size: if (insn & 0x01c0) == 0x00c0 {2} else {4},
+						op_mode: 0,
 						mode: ea_mode,
 						trailing_bytes: 0,
 					};
