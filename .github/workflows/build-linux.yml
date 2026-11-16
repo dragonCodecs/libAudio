@@ -127,8 +127,7 @@ jobs:
           meson compile -C build
           meson test -C build
           gcovr -r . -x -o `pwd`/build/meson-logs/coverage.xml -e `pwd`/deps -e `pwd`/test --exclude-directories `pwd`/build/deps
-          cargo llvm-cov b
-          cargo llvm-cov t
+          cargo llvm-cov test
           cargo llvm-cov report --codecov --output-path `pwd`/build/meson-logs/codecov.json
       - name: Upload failure logs
         if: failure()
