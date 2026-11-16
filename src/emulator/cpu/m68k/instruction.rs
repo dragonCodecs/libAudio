@@ -629,6 +629,32 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				},
+			0x9000 | 0x9040 | 0x9080 | 0x9100 | 0x9140 | 0x9180 if
+				// If the effective address target is used only as a source operand
+				if (insn & 0x0100) == 0 {
+					// SUB is allowed all valid modes
+					!(ea_mode == 7 && ea_reg > 4)
+				}
+				// Otherwise if it's a target, the requirements are much stricter
+				else {
+					// SUB is not allowed with direct register usage
+					ea_mode != 0 && ea_mode != 1 &&
+					// SUB is not allowed with `#<data>` mode or PC-rel data register
+					// usage, only u16 and u32 indirect mode 7
+					!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
+				} => {
+					return DecodedOperation {
+						operation: Instruction::Sub,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						// Extract the operation direction information
+						op_mode: ((insn & 0x0100) >> 8) as u8,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
 			_ => {},
 		};
 
