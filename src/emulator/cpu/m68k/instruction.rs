@@ -2141,6 +2141,19 @@ impl From<u16> for DecodedOperation
 					},
 				);
 			},
+			0x9100 | 0x9108 | 0x9140 | 0x9148 | 0x9180 | 0x9188 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Subx,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					if (insn & RM_MASK) != 0 {
+						OperationFlags::MemoryNotRegister
+					} else {
+						OperationFlags::none()
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		}
 
