@@ -1486,6 +1486,19 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0x4ac0 if
+				// TAS is not allowed with address registers
+				ea_mode != 1 &&
+				// TAS is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Tas,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
 			_ => {},
 		};
 
