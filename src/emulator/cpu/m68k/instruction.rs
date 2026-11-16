@@ -2116,6 +2116,19 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0xe110 | 0xe130 | 0xe150 | 0xe170 | 0xe190 | 0xe1b0 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Roxl,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					if (insn & IR_MASK) == 0 {
+						OperationFlags::ImmediateNotRegister
+					} else {
+						OperationFlags::none()
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		}
 
