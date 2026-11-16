@@ -1294,6 +1294,19 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0x4400 | 0x4440 | 0x4480 if
+				// NEG is not allowed with address registers
+				ea_mode != 1 &&
+				// NEG is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate(
+						Instruction::Neg,
+						ea_reg,
+						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
