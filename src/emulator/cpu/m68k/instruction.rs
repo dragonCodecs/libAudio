@@ -368,6 +368,23 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				},
+			0x0140 if
+				// BCHG is not allowed with address registers
+				ea_mode != 1 &&
+				// BCHG uses only the u16 and u32 indirect modes for mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1))
+				=> {
+					return DecodedOperation {
+						operation: Instruction::Bchg,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
 			_ => {},
 		};
 
