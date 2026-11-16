@@ -319,7 +319,26 @@ impl From<u16> for DecodedOperation
 						ry: ea_reg,
 						flags: OperationFlags::none(),
 						// Decode whether 16- or 32-bit operation
-						operation_size: if (insn & 0x01c0) == 0x00c0 {2} else {4},
+						operation_size: if (insn & 0x01c0) == 0x00c0 {
+							2
+						} else {
+							4
+						},
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
+			0x5000 | 0x5040 | 0x5080 if
+				// ADDQ is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Addq,
+						rx: ((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ry: ea_reg,
+						flags: OperationFlags::ImmediateNotRegister,
+						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 						op_mode: 0,
 						mode: ea_mode,
 						trailing_bytes: 0,
