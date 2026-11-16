@@ -1045,6 +1045,24 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0xf280 | 0xf2c0 if
+				// Only condition codes up to (and including) 0x1f are valid
+				(ea_mode & 0x04) != 0 => {
+					return DecodedOperation {
+						operation: Instruction::Fbcc,
+						rx: 0,
+						ry: 0,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						op_mode: (ea_mode << 3) | ea_reg, // Rebuild the condition code
+						mode: 0,
+						trailing_bytes: if (insn & 0x0040) == 0 {
+							2
+						} else {
+							4
+						}, // 16- or 32-bit of displacement follows
+					};
+				},
 			_ => {},
 		};
 
