@@ -1999,6 +1999,15 @@ impl From<u16> for DecodedOperation
 					trailing_bytes: 2, // 16-bit displacement follows
 				};
 			},
+			0xc140 | 0xc148 | 0xc188 => {
+				return DecodedOperation::new_simple_with_op_mode(
+					Instruction::Exg,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					// Extract out the operating mode
+					((insn & 0x00f8) >> 3) as u8,
+				);
+			},
 			_ => {},
 		}
 
