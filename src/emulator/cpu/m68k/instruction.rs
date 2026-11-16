@@ -558,6 +558,18 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 0,
 					};
 				},
+			0xc1c0 if
+				// MULS is not allowed with address registers
+				ea_mode != 1 &&
+				// MULS is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Muls,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
 			_ => {},
 		};
 
