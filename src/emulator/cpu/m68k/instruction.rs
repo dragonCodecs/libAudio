@@ -1113,6 +1113,18 @@ impl From<u16> for DecodedOperation
 						2, // 16-bits follow (5 bits used) for conditional predicate
 					);
 				},
+			0x4ec0 if
+				// Only non-altering indirection modes are allowed for JMP
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
+				// JMP is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Jmp,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
 			_ => {},
 		};
 
