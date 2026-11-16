@@ -327,6 +327,20 @@ impl DecodedOperation
 			trailing_bytes: 0,
 		}
 	}
+
+	fn new_simple_sized(operation: Instruction, rx: u8, ry: u8, operation_size: u8) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes: 0,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -1584,6 +1598,19 @@ impl From<u16> for DecodedOperation
 					Instruction::Cpusha,
 					(insn & REG_MASK) as u8,
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
+			0x4880 | 0x48c0 => {
+				return DecodedOperation::new_simple_sized(
+					Instruction::Ext,
+					(insn & REG_MASK) as u8,
+					0,
+					// Decode whether this is a i8 or i16 we're sign extending (to i16 and i32 respectively)
+					if (insn & 0x0040) == 0 {
+						1
+					} else {
+						2
+					},
 				);
 			},
 			_ => {},
