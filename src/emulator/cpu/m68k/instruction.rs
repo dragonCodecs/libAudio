@@ -1964,6 +1964,21 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0xe100 | 0xe120 | 0xe140 | 0xe160 | 0xe180 | 0xe1a0 => {
+				return DecodedOperation::new_simple_flags_sized(
+					Instruction::Asl,
+					((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+					(insn & REG_MASK) as u8,
+					{
+						if (insn & IR_MASK) == 0 {
+							OperationFlags::ImmediateNotRegister
+						} else {
+							OperationFlags::none()
+						}
+					},
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		}
 
