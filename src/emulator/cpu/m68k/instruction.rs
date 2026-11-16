@@ -1822,7 +1822,9 @@ impl From<u16> for DecodedOperation
 					((insn & CONDITION_MASK) >> CONDITION_SHIFT) as u8,
 				);
 			},
-			0x6000 => {},
+			0x6000 => {
+				return DecodedOperation::new_with_displacement(Instruction::Bra, (insn & DISPLACEMENT_MASK) as u8, 0);
+			},
 			_ => {},
 		};
 
