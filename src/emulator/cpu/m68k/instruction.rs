@@ -961,6 +961,23 @@ impl From<u16> for DecodedOperation
 						2, // 16-bit argument count follows (8 bits used)
 					);
 				},
+			0x0ac0 | 0x0cc0 | 0x0ec0 if
+				// CAS is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// CAS is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Cas,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::ImmediateNotRegister,
+						operation_size: ((insn & 0x0600) >> 9) as u8,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 2, // 16-bit Dc, Du follows
+					};
+				},
 			_ => {},
 		};
 
