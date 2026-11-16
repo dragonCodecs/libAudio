@@ -1020,6 +1020,18 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0x4c40 if
+				// DIVSL/DIVUL is not allowed with address registers
+				ea_mode != 1 &&
+				// DIVSL/DIVUL is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::DivslDivul,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit Dr:Dq follows, bit 11 determines if DIVSL (1) or DIVUL (0)
+					);
+				}
 			_ => {},
 		};
 
