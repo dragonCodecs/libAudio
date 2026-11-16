@@ -570,6 +570,18 @@ impl From<u16> for DecodedOperation
 						ea_mode
 					);
 				},
+			0xc0c0 if
+				// MULU is not allowed with address registers
+				ea_mode != 1 &&
+				// MULU is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Mulu,
+						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
+						ea_reg,
+						ea_mode
+					);
+				},
 			_ => {},
 		};
 
