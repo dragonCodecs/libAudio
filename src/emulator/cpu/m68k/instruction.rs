@@ -735,6 +735,40 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0xe0c0 if
+				// ASR is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// ASR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Asr,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::MemoryNotRegister,
+						operation_size: 1,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0
+					};
+				},
+			0xe1c0 if
+				// ASL is not allowed with direct register usage
+				ea_mode != 0 && ea_mode != 1 &&
+				// ASL is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Asl,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::MemoryNotRegister,
+						operation_size: 1,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 0
+					};
+				},
 			_ => {},
 		};
 
