@@ -283,6 +283,20 @@ impl DecodedOperation
 			trailing_bytes: 0,
 		}
 	}
+
+	fn new_immediate_trailing(operation: Instruction, ry: u8, mode: u8, trailing_bytes: u8) -> Self
+	{
+		Self {
+			operation,
+			rx: 0,
+			ry,
+			flags: OperationFlags::ImmediateNotRegister,
+			operation_size: 0,
+			op_mode: 0,
+			mode,
+			trailing_bytes,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -409,7 +423,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Bchg,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0x0180 if
@@ -421,7 +435,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Bclr,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0x01c0 if
@@ -433,7 +447,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Bset,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0x0100 if
@@ -445,7 +459,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Btst,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0x4100 | 0x4180 if
@@ -511,7 +525,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Divs,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0x80c0 if
@@ -523,7 +537,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Divu,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0xb100 | 0xb140 | 0xb180 if
@@ -553,7 +567,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Lea,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				}
 			0x2040 | 0x3040 if
@@ -584,7 +598,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Muls,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0xc0c0 if
@@ -596,7 +610,7 @@ impl From<u16> for DecodedOperation
 						Instruction::Mulu,
 						((insn >> REG_X_SHIFT) & REG_MASK) as u8,
 						ea_reg,
-						ea_mode
+						ea_mode,
 					);
 				},
 			0x8000 | 0x8040 | 0x8080 | 0x8100 | 0x8140 | 0x8180 if
@@ -768,6 +782,19 @@ impl From<u16> for DecodedOperation
 						mode: ea_mode,
 						trailing_bytes: 0
 					};
+				},
+			0x0840 if
+				// BCHG is not allowed with address registers
+				ea_mode != 1 &&
+				// BCHG is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_immediate_trailing(
+						Instruction::Bchg,
+						ea_reg,
+						ea_mode,
+						2, // 16-bit bit number follows (8 bits used)
+					);
 				},
 			_ => {},
 		};
