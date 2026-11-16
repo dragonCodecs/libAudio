@@ -1125,6 +1125,18 @@ impl From<u16> for DecodedOperation
 						0,
 					);
 				},
+			0x4e80 if
+				// Only non-altering indirection modes are allowed for JSR
+				ea_mode != 0 && ea_mode != 1 && ea_mode != 3 && ea_mode != 4 &&
+				// JSR is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation::new_unsized_with_trailing(
+						Instruction::Jsr,
+						ea_reg,
+						ea_mode,
+						0,
+					);
+				},
 			_ => {},
 		};
 
