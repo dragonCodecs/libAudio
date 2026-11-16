@@ -1196,6 +1196,31 @@ impl From<u16> for DecodedOperation
 						ea_mode,
 					);
 				},
+			0x40c0 if
+				// MOVE from SR is not allowed with address registers
+				ea_mode != 1 &&
+				// MOVE from SR is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Move,
+						9, // 9 is a special register number (not otherwise valid) indicating SR.
+						ea_reg,
+						ea_mode,
+					);
+				},
+			0x46c0 if
+				// MOVE to SR is not allowed with address registers
+				ea_mode != 1 &&
+				// MOVE to SR is allowed all valid mode 7 modes
+				!(ea_mode == 7 && ea_reg > 4) => {
+					return DecodedOperation::new_unsized(
+						Instruction::Move,
+						ea_reg,
+						9, // 9 is a special register number (not otherwise valid) indicating SR.
+						ea_mode,
+					);
+				},
 			_ => {},
 		};
 
