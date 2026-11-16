@@ -1613,6 +1613,7 @@ impl From<u16> for DecodedOperation
 					},
 				);
 			},
+			0x49c0 => return DecodedOperation::new_simple(Instruction::Extb, (insn & REG_MASK) as u8, 0),
 			_ => {},
 		};
 
