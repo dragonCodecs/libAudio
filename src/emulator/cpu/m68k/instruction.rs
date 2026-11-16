@@ -978,6 +978,22 @@ impl From<u16> for DecodedOperation
 						trailing_bytes: 2, // 16-bit Dc, Du follows
 					};
 				},
+			0x00c0 | 0x02c0 | 0x04c0 if
+				// Only non-altering indirection modes are allowed for CHK2/CMP2
+				!(ea_mode == 0 || ea_mode == 1 || ea_mode == 3 || ea_mode == 4) &&
+				// CHK2/CMP2 is not allowed with `#<data>` mode 7
+				!(ea_mode == 7 && (ea_reg & 0x04) != 0) => {
+					return DecodedOperation {
+						operation: Instruction::Chk2Cmp2,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::ImmediateNotRegister,
+						operation_size: ((insn & 0x0600) >> 9) as u8,
+						op_mode: 0,
+						mode: ea_mode,
+						trailing_bytes: 2, // 16-bit Rn follows, bit 11 determines if chk2 (1) or cmp2 (0)
+					};
+				},
 			_ => {},
 		};
 
