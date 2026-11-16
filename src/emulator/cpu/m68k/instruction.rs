@@ -1558,6 +1558,13 @@ impl From<u16> for DecodedOperation
 					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 				);
 			},
+			0xf418 | 0xf458 | 0xf498 | 0xf4d8 => {
+				return DecodedOperation::new_simple(
+					Instruction::Cinva,
+					(insn & REG_MASK) as u8,
+					((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
+				);
+			},
 			_ => {},
 		};
 
