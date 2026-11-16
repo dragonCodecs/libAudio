@@ -1825,6 +1825,9 @@ impl From<u16> for DecodedOperation
 			0x6000 => {
 				return DecodedOperation::new_with_displacement(Instruction::Bra, (insn & DISPLACEMENT_MASK) as u8, 0);
 			},
+			0x6100 => {
+				return DecodedOperation::new_with_displacement(Instruction::Bsr, (insn & DISPLACEMENT_MASK) as u8, 0);
+			},
 			_ => {},
 		};
 
