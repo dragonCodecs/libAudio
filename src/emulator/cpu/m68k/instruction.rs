@@ -248,6 +248,8 @@ const REG_X_SHIFT: usize = 9;
 const REG_MASK: u16 = 0x0007;
 const SIZE_MASK: u16 = 0x00c0;
 const SIZE_SHIFT: usize = 6;
+const CONDITION_MASK: u16 = 0x0f00;
+const CONDITION_SHIFT: usize = 8;
 const EA_MODE_MASK: u16 = 0x0038;
 const EA_MODE_SHIFT: usize = 3;
 
@@ -606,6 +608,23 @@ impl From<u16> for DecodedOperation
 						operation_size: ((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 						// Extract the operation direction information
 						op_mode: ((insn & 0x0100) >> 8) as u8,
+						mode: ea_mode,
+						trailing_bytes: 0,
+					};
+				},
+			0x50c0 | 0x51c0 if
+				// Scc is not allowed with address registers
+				ea_mode != 1 &&
+				// Scc is not allowed with `#<data>` mode or PC-rel data register
+				// usage, only u16 and u32 indirect mode 7
+				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
+					return DecodedOperation {
+						operation: Instruction::Scc,
+						rx: 0,
+						ry: ea_reg,
+						flags: OperationFlags::none(),
+						operation_size: 0,
+						op_mode: ((insn & CONDITION_MASK) >> CONDITION_SHIFT) as u8,
 						mode: ea_mode,
 						trailing_bytes: 0,
 					};
