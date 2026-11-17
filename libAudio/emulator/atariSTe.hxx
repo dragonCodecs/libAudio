@@ -3,8 +3,6 @@
 #ifndef EMULATOR_ATARI_STE_HXX
 #define EMULATOR_ATARI_STE_HXX
 
-#include "memoryMap.hxx"
-#include "cpu/m68k.hxx"
 #include "unitsHelpers.hxx"
 
 struct SndhDecruncher;

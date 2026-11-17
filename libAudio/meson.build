@@ -327,16 +327,8 @@ formats += {
 	'WAV': true,
 }
 
-emulatorSrcs = [
-	'emulator/cpu/m68k.cxx',
-	'emulator/cpu/m68kInstruction.cxx',
-	'emulator/clockManager.cxx',
-]
-
 sndhSrcs = [
 	'emulator/atariSTe.cxx',
-	'emulator/atariSTeROMs.cxx',
-	'emulator/timing/mc68901.cxx',
 	'sndh/loader.cxx',
 	'loadSNDH.cpp',
 ]
@@ -359,7 +351,6 @@ genericModuleSrcs = [
 
 libAudioSrcs = [
 	genericModuleSrcs,
-	emulatorSrcs,
 	'loadAudio.cpp',
 	'saveAudio.cpp',
 	'fileInfo.cxx',
