@@ -9,10 +9,10 @@ pub use irq::IrqRequester;
 
 use crate::emulator::MemoryMap;
 
-#[allow(unused)]
 pub struct Motorola68k<'a>
 {
 	peripherals: MemoryMap<'a, u32>,
+	#[allow(unused)]
 	clock_frequency: u32,
 
 	// There are 8 data registers, 7 address registers, 3 stack pointers,
@@ -20,6 +20,7 @@ pub struct Motorola68k<'a>
 	d: [u32; 8],
 	a: [u32; 7],
 	system_stack_pointer: u32,
+	#[allow(unused)]
 	interrupt_stack_pointer: u32,
 	user_stack_pointer: u32,
 	program_counter: u32,
@@ -65,6 +66,24 @@ impl<'a> Motorola68k<'a>
 			status: M68kStatusBits::Supervisor,
 			pending_irqs: 0,
 		}
+	}
+
+	pub fn execute_from(&mut self, entry_address: u32, stack_top: u32, as_user: bool)
+	{
+		// Copy in the new program counter value, and set up the stack pointer and CPU state
+		self.program_counter = entry_address;
+		if as_user {
+			self.user_stack_pointer = stack_top;
+			self.status &= !M68kStatusBits::Supervisor;
+		} else {
+			self.system_stack_pointer = stack_top;
+			self.status |= M68kStatusBits::Supervisor;
+		}
+		// Set up a sentinel value on the stack for RTS to hit to tell us we're done
+		let stack_pointer = self.active_stack_pointer_mut();
+		*stack_pointer -= 4;
+		let stack_pointer = *stack_pointer;
+		self.peripherals.write_address::<u32>(stack_pointer, 0xffffffff);
 	}
 
 	pub(self) fn request_interrupt(&mut self, level: u8)
