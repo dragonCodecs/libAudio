@@ -2321,9 +2321,9 @@ impl From<u16> for DecodedOperation
 					2, // 16-bit SR value follows
 				);
 			},
+			0x4e76 => return DecodedOperation::new(Instruction::Trapv),
 			_ => {},
 		};
-
 		DecodedOperation::default()
 	}
 }
