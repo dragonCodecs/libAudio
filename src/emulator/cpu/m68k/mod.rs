@@ -121,7 +121,7 @@ impl<'a> Motorola68k<'a>
 		true
 	}
 
-	pub(self) fn request_interrupt(&mut self, level: u8)
+	pub fn request_interrupt(&mut self, level: u8)
 	{
 		// Make sure the caller isn't asking for an insane interrupt level, then mark it pending
 		if level > 0 && level <= 7 {
