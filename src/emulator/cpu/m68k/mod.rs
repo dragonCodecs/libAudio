@@ -297,6 +297,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
+			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
 			_ => {},
 		}
@@ -685,6 +686,29 @@ impl<'a> Motorola68k<'a>
 		self.program_counter = self.compute_effective_address(insn.mode, insn.ry, 4);
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
+	}
+
+	fn dispatch_rte(&mut self) -> StepResult
+	{
+		// Grab the current stack pointer
+		let mut stack_pointer = *self.active_stack_pointer();
+		// Unstack the status register and adjust the stack pointer
+		self.status.bits = self.peripherals.read_address(stack_pointer);
+		stack_pointer += 2;
+		// Unstack the program counter and adjust the stack pointer
+		self.program_counter = self.peripherals.read_address(stack_pointer);
+		stack_pointer += 4;
+		// Unstack the frame format and offset
+		let format = self.peripherals.read_address::<u16>(stack_pointer);
+		stack_pointer += 2;
+		*self.active_stack_pointer_mut() = stack_pointer;
+		let frame_type = format >> 12;
+		// For now, explode if this is not a format 0 or 1 frame
+		if frame_type != 0 && frame_type != 1 {
+			StepResult::Invalid
+		} else {
+			StepResult::Valid
+		}
 	}
 
 	fn dispatch_rts(&mut self) -> StepResult
