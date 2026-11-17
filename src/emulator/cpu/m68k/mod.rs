@@ -286,6 +286,7 @@ impl<'a> Motorola68k<'a>
 		self.program_counter += 2;
 		// Now we have an instruction to run, try to dispatch it
 		match instruction.operation {
+			Instruction::Bra => return self.dispatch_bra(&instruction),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rts => return self.dispatch_rts(),
 			_ => {},
@@ -310,6 +311,29 @@ impl<'a> Motorola68k<'a>
 		} else {
 			&mut self.user_stack_pointer
 		}
+	}
+
+	fn read_immediate_displacement(&mut self, insn: &DecodedOperation) -> i32
+	{
+		if insn.trailing_bytes == 0 {
+			// If the branch includes the displacement in the instruction itself, extract and sign extend it
+			(insn.rx as i8) as i32
+		} else if insn.trailing_bytes == 2 {
+			// If the branch is for a 16-bit displacement, extract, and sign-extend it
+			self.peripherals.read_address::<i16>(self.program_counter) as i32
+		} else {
+			// Otherwise, extract a 32-bit displacement
+			self.peripherals.read_address(self.program_counter)
+		}
+	}
+
+	fn dispatch_bra(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the displacement for this instruction
+		let displacement = self.read_immediate_displacement(insn);
+		// Now we have a displacement, update the program counter and get done
+		self.program_counter = self.program_counter.wrapping_add_signed(displacement);
+		StepResult::Valid
 	}
 
 	fn dispatch_rts(&mut self) -> StepResult
