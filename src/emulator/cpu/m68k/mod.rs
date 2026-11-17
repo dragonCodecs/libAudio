@@ -91,10 +91,9 @@ impl<'a> Motorola68k<'a>
 			self.status |= M68kStatusBits::Supervisor;
 		}
 		// Set up a sentinel value on the stack for RTS to hit to tell us we're done
-		let stack_pointer = self.active_stack_pointer_mut();
-		*stack_pointer -= 4;
-		let stack_pointer = *stack_pointer;
+		let stack_pointer = *self.active_stack_pointer() - 4;
 		self.peripherals.write_address::<u32>(stack_pointer, 0xffffffff);
+		*self.active_stack_pointer_mut() = stack_pointer;
 	}
 
 	pub fn execute_to_return(&mut self, entry_address: u32, stack_top: u32, as_user: bool) -> bool
