@@ -4,6 +4,9 @@
 mod instruction;
 mod irq;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use bitmask_enum::bitmask;
 use instruction::{DecodedOperation, Instruction};
 pub use irq::IrqRequester;
@@ -13,7 +16,7 @@ use crate::emulator::MemoryMap;
 pub struct Motorola68k<'a>
 {
 	peripherals: MemoryMap<'a, u32>,
-	interrupt_requesters: [Option<Box<dyn IrqRequester + 'a>>; 7],
+	interrupt_requesters: [Option<Rc<RefCell<dyn IrqRequester + 'a>>>; 7],
 	#[allow(unused)]
 	clock_frequency: u32,
 
@@ -129,10 +132,10 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
-	pub fn register_interrupt_requester(&mut self, requester: Box<dyn IrqRequester + 'a>)
+	pub fn register_interrupt_requester(&mut self, requester: Rc<RefCell<dyn IrqRequester + 'a>>)
 	{
 		// Extract what IRQ level this is for
-		let level = requester.irq_level();
+		let level = requester.borrow().irq_level();
 		// Stick it in the requesters array
 		self.interrupt_requesters[level as usize] = Some(requester);
 	}
@@ -165,7 +168,7 @@ impl<'a> Motorola68k<'a>
 			let requester = &mut self.interrupt_requesters[level as usize];
 			if let Some(requester) = requester {
 				// Identify the IRQ cause and stack the associated vector address
-				let cause = requester.irq_cause();
+				let cause = requester.borrow_mut().irq_cause();
 				self.stage_irq_call((cause as u32) << 2);
 			} else {
 				// Turn this IRQ level into a request for the associated autovector slot and stack that
