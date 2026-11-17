@@ -2258,6 +2258,7 @@ impl From<u16> for DecodedOperation
 					2, // 16-bit immediate follows
 				);
 			},
+			0x4afc => return DecodedOperation::new_simple(Instruction::Illegal, 0, 0),
 			_ => {},
 		};
 
