@@ -5,7 +5,7 @@ use std::ffi::c_void;
 
 use super::AtariSTeROMs;
 use crate::emulator::MemoryMap;
-use crate::emulator::cpu::m68k::tests::Motorola68k;
+use crate::emulator::cpu::m68k::Motorola68k;
 use crate::emulator::ram::Ram;
 
 const RAM_SIZE: usize = 1024 * 1024;

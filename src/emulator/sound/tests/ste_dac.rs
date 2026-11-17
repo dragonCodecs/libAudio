@@ -5,7 +5,7 @@ use std::ffi::c_void;
 use std::ptr::null_mut;
 
 use super::STeDac;
-use crate::emulator::cpu::m68k::tests::Motorola68k;
+use crate::emulator::cpu::m68k::Motorola68k;
 use crate::emulator::ram::Ram;
 use crate::emulator::timing::mc68901::MC68901;
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};

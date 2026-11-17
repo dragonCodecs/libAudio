@@ -5,8 +5,7 @@ use std::ffi::c_void;
 use std::ptr::null_mut;
 
 use super::MC68901;
-use crate::emulator::cpu::m68k::IrqRequester;
-use crate::emulator::cpu::m68k::tests::Motorola68k;
+use crate::emulator::cpu::m68k::{IrqRequester, Motorola68k};
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 
 fn write_register_u8(periph: &mut impl Peripheral<u32>, reg: u32, value: u8)
