@@ -30,6 +30,8 @@ pub struct Motorola68k<'a>
 	status: M68kStatusBits,
 	// What IRQs are pending execution (7 levels, masked by the status register IRQ bits)
 	pending_irqs: u8,
+
+	trap_state: bool,
 }
 
 #[bitmask(u16)]
@@ -77,6 +79,8 @@ impl<'a> Motorola68k<'a>
 			// By default the system starts up in supervisor (system) mode
 			status: M68kStatusBits::Supervisor,
 			pending_irqs: 0,
+
+			trap_state: false,
 		}
 	}
 
@@ -294,6 +298,11 @@ impl<'a> Motorola68k<'a>
 		}
 
 		StepResult::Invalid
+	}
+
+	pub fn trapped(&self) -> bool
+	{
+		self.trap_state
 	}
 
 	fn active_stack_pointer(&self) -> &u32
