@@ -78,7 +78,7 @@ impl<'a> Motorola68k<'a>
 	pub fn has_pending_interrupts(&self) -> bool
 	{
 		// Extract the current exception mask from the status register
-		let min_irq_priority = ((self.status.bits() & 0x0700) >> 8) as u8;
+		let min_irq_priority = ((self.status.bits & 0x0700) >> 8) as u8;
 		// Calculate a mask from this number
 		let irq_mask = !((1 << (min_irq_priority + 1)) - 1) as u8;
 		// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
@@ -132,6 +132,16 @@ impl<'a> Motorola68k<'a>
 	pub fn write_addr_register(&mut self, reg: usize, value: u32)
 	{
 		*self.addr_register_mut(reg) = value;
+	}
+
+	pub fn read_program_counter(&self) -> u32
+	{
+		self.program_counter
+	}
+
+	pub fn read_status(&self) -> u16
+	{
+		self.status.bits
 	}
 
 	fn active_stack_pointer(&self) -> &u32
