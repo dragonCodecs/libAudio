@@ -300,6 +300,21 @@ impl<'a> Motorola68k<'a>
 		StepResult::Invalid
 	}
 
+	pub fn advance_clock(&mut self) -> bool
+	{
+		// Let's run an instruction
+		let result = self.step();
+		// Unpack if the instruction trapped
+		self.trap_state = result == StepResult::Trap;
+		// If this was not a trap instruction and was not a valid instruction, reset the program counter back
+		// an instruction so display works right
+		if result == StepResult::Invalid {
+			self.program_counter -= 2;
+		}
+		// Return if the instruction was valid
+		result == StepResult::Valid
+	}
+
 	pub fn trapped(&self) -> bool
 	{
 		self.trap_state
