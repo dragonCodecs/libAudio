@@ -2259,6 +2259,15 @@ impl From<u16> for DecodedOperation
 				);
 			},
 			0x4afc => return DecodedOperation::new_simple(Instruction::Illegal, 0, 0),
+			0x4e7a | 0x4e7b => {
+				return DecodedOperation::new_simple_with_op_mode(
+					Instruction::Movec,
+					0,
+					0,
+					// Extract out the transfer direction
+					(insn & 0x0001) as u8,
+				);
+			},
 			_ => {},
 		};
 
