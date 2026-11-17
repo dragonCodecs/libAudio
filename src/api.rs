@@ -10,7 +10,6 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::windows::io::{FromRawHandle, IntoRawHandle, RawHandle};
 use std::ptr::{NonNull, null_mut};
 
-use crate::emulator::MemoryMap;
 use crate::emulator::atari_ste::AtariSTe;
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
@@ -371,126 +370,6 @@ pub unsafe fn atari_ste_display_cpu_state(atari_ste: *mut AtariSTe)
 {
 	let atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
 	unsafe { atari_ste.as_ref() }.display_cpu_state();
-}
-
-/// Using the pointer from passed to `cpu_new`, read an i8 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_read_address_i8(memory_map: *mut MemoryMap<u32>, address: u32) -> i8
-{
-	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_ref() }.read_address(address)
-}
-
-/// Using the pointer from passed to `cpu_new`, read an u8 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_read_address_u8(memory_map: *mut MemoryMap<u32>, address: u32) -> u8
-{
-	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_ref() }.read_address(address)
-}
-
-/// Using the pointer from passed to `cpu_new`, read an i16 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_read_address_i16(memory_map: *mut MemoryMap<u32>, address: u32) -> i16
-{
-	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_ref() }.read_address(address)
-}
-
-/// Using the pointer from passed to `cpu_new`, read an u16 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_read_address_u16(memory_map: *mut MemoryMap<u32>, address: u32) -> u16
-{
-	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_ref() }.read_address(address)
-}
-
-/// Using the pointer from passed to `cpu_new`, read an i32 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_read_address_i32(memory_map: *mut MemoryMap<u32>, address: u32) -> i32
-{
-	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_ref() }.read_address(address)
-}
-
-/// Using the pointer from passed to `cpu_new`, read an u32 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_read_address_u32(memory_map: *mut MemoryMap<u32>, address: u32) -> u32
-{
-	let memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_ref() }.read_address(address)
-}
-
-/// Using the pointer from passed to `cpu_new`, write an i8 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_write_address_i8(memory_map: *mut MemoryMap<u32>, address: u32, data: i8)
-{
-	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_mut() }.write_address(address, data);
-}
-
-/// Using the pointer from passed to `cpu_new`, write an u8 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_write_address_u8(memory_map: *mut MemoryMap<u32>, address: u32, data: u8)
-{
-	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_mut() }.write_address(address, data);
-}
-
-/// Using the pointer from passed to `cpu_new`, write an i16 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_write_address_i16(memory_map: *mut MemoryMap<u32>, address: u32, data: i16)
-{
-	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_mut() }.write_address(address, data);
-}
-
-/// Using the pointer from passed to `cpu_new`, write an u16 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_write_address_u16(memory_map: *mut MemoryMap<u32>, address: u32, data: u16)
-{
-	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_mut() }.write_address(address, data);
-}
-
-/// Using the pointer from passed to `cpu_new`, write an i32 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_write_address_i32(memory_map: *mut MemoryMap<u32>, address: u32, data: i32)
-{
-	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_mut() }.write_address(address, data);
-}
-
-/// Using the pointer from passed to `cpu_new`, write an u32 from an address in the memory map
-/// # Safety
-/// As long as the pointer given is from the call to `cpu_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn memory_map_write_address_u32(memory_map: *mut MemoryMap<u32>, address: u32, data: u32)
-{
-	let mut memory_map = unsafe { NonNull::new_unchecked(memory_map) };
-	unsafe { memory_map.as_mut() }.write_address(address, data);
 }
 
 pub(crate) mod console
