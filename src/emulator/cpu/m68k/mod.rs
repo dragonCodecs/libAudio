@@ -36,21 +36,22 @@ pub struct Motorola68k<'a>
 enum M68kStatusBits
 {
 	// User byte bit meanings
-	Carry = 0,
-	Overflow = 1,
-	Zero = 2,
-	Negative = 3,
-	Extend = 4,
+	Carry = 1 << 0,
+	Overflow = 1 << 1,
+	Zero = 1 << 2,
+	Negative = 1 << 3,
+	Extend = 1 << 4,
 
 	// System byte bit meanings
 	// 8-10 are interrupt bits
-	Supervisor = 13,
-	Trace = 15,
+	Supervisor = 1 << 13,
+	Trace = 1 << 15,
 }
 
 pub enum StepResult
 {
 	Valid,
+	#[allow(unused)]
 	Trap,
 	Invalid,
 }
