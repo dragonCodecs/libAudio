@@ -12,6 +12,7 @@ use crate::emulator::MemoryMap;
 pub struct Motorola68k<'a>
 {
 	peripherals: MemoryMap<'a, u32>,
+	interrupt_requesters: [Option<Box<dyn IrqRequester + 'a>>; 7],
 	#[allow(unused)]
 	clock_frequency: u32,
 
@@ -60,6 +61,7 @@ impl<'a> Motorola68k<'a>
 	{
 		Self {
 			peripherals,
+			interrupt_requesters: [const { None }; 7],
 			clock_frequency,
 
 			d: [0; 8],
@@ -119,6 +121,14 @@ impl<'a> Motorola68k<'a>
 		if level > 0 && level <= 7 {
 			self.pending_irqs |= 1 << level;
 		}
+	}
+
+	pub fn register_interrupt_requester(&mut self, requester: Box<dyn IrqRequester + 'a>)
+	{
+		// Extract what IRQ level this is for
+		let level = requester.irq_level();
+		// Stick it in the requesters array
+		self.interrupt_requesters[level as usize] = Some(requester);
 	}
 
 	pub fn has_pending_interrupts(&self) -> bool
