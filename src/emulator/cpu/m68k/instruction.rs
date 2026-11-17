@@ -2283,6 +2283,24 @@ impl From<u16> for DecodedOperation
 				);
 			},
 			0x4e71 => return DecodedOperation::new(Instruction::Nop),
+			0x003c => {
+				return DecodedOperation::new_sized_with_trailing(
+					Instruction::Ori,
+					0,
+					8, // 8 is a special register number (not otherwise valid) indicating CCR.
+					1,
+					2, // 16-bit immediate follows (8 bits used)
+				);
+			},
+			0x007c => {
+				return DecodedOperation::new_sized_with_trailing(
+					Instruction::Ori,
+					0,
+					9, // 9 is a special register number (not otherwise valid) indicating SR.
+					1,
+					2, // 16-bit immediate follows
+				);
+			},
 			_ => {},
 		};
 
