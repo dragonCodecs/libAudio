@@ -4,20 +4,20 @@
 use bitmask_enum::bitmask;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-struct DecodedOperation
+pub struct DecodedOperation
 {
-	operation: Instruction,
-	rx: u8,
-	ry: u8,
-	flags: OperationFlags,
-	operation_size: u8,
-	op_mode: u8,
-	mode: u8,
-	trailing_bytes: u8,
+	pub operation: Instruction,
+	pub rx: u8,
+	pub ry: u8,
+	pub flags: OperationFlags,
+	pub operation_size: u8,
+	pub op_mode: u8,
+	pub mode: u8,
+	pub trailing_bytes: u8,
 }
 
 #[bitmask(u8)]
-enum OperationFlags
+pub enum OperationFlags
 {
 	/// Operation is on memory, not a register
 	MemoryNotRegister,
@@ -28,7 +28,7 @@ enum OperationFlags
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Instruction
+pub enum Instruction
 {
 	// Data movement instructions
 	Exg,
