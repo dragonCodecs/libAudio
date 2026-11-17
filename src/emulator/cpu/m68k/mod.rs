@@ -48,6 +48,7 @@ enum M68kStatusBits
 	Trace = 1 << 15,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum StepResult
 {
 	Valid,

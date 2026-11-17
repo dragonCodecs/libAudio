@@ -33,45 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testBRA()
-	{
-		// Set up 3 branches in each of the 3 instruction encoding forms, checking they jump properly to each other
-		// Start with the 8-bit immediate form, then use the 16-bit immediate form, and finally the 32-bit immediate
-		// form (6 bytes to encode)
-		writeAddress(0x000100U, uint16_t{0x6050U}); // Jump to +0x50 from end of instruction
-		writeAddress(0x000152U, uint16_t{0x6000U});
-		writeAddress(0x000154U, uint16_t{0xfefcU}); // Jump to -0x104 from end of instruction
-		writeAddress(0x000050U, uint16_t{0x60ffU});
-		writeAddress(0x000052U, uint32_t{0x000100aeU}); // Jump to +0x100ae from end of instruction
-		writeAddress(0x010100U, uint16_t{0x4e75U}); // rts to end the test
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000100U, 0x00800000U);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000100U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000152U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000050U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00010100U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the fourth and final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-	}
-
 	void testBSR()
 	{
 		// Set up 3 branches in each of the 3 instruction encoding forms, checking they jump properly and then return
@@ -2749,7 +2710,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testBRA)
 		CXX_TEST(testBSR)
 		CXX_TEST(testJMP)
 		CXX_TEST(testRTS)

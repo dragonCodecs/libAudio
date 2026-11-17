@@ -4,7 +4,7 @@
 use std::ffi::c_void;
 use std::ptr::NonNull;
 
-use super::Motorola68k;
+use super::{Motorola68k, StepResult};
 use crate::emulator::MemoryMap;
 use crate::emulator::ram::Ram;
 
@@ -31,8 +31,59 @@ fn new_m68k<'a>() -> (Motorola68k<'a>, MemoryMap<'a, u32>)
 	(cpu, memory_map)
 }
 
+fn run_step(cpu: &mut Motorola68k<'_>, expecting_trap: bool)
+{
+	let result = cpu.step();
+	if expecting_trap {
+		assert_eq!(result, StepResult::Trap);
+	} else {
+		assert_eq!(result, StepResult::Valid);
+	}
+}
+
 #[test]
-fn rts()
+fn run_bra()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	// Set up 3 branches in each of the 3 instruction encoding forms, checking they jump properly to each other
+	// Start with the 8-bit immediate form, then use the 16-bit immediate form, and finally the 32-bit immediate
+	// form (6 bytes to encode)
+	memory_map.write_address(0x000100, 0x6050u16); // bra $50.b ; Jump to +0x50 from end of instruction
+	memory_map.write_address(0x000152, 0x6000u16);
+	memory_map.write_address(0x000154, 0xfefcu16); // bra -$0104.w ; Jump to -0x104 from end of instruction
+	memory_map.write_address(0x000050, 0x60ffu16);
+	memory_map.write_address(0x000052, 0x000100aeu32); // bra $0100ae.l ; Jump to +0x100ae from end of instruction
+	memory_map.write_address(0x010100, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000100, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000100);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000152);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000050);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00010100);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the fourth and final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+	assert_eq!(cpu.read_status(), 0x0000);
+}
+
+#[test]
+fn run_rts()
 {
 	let (mut cpu, mut memory_map) = new_m68k();
 	memory_map.write_address(0x000000, 0x4e75u16); // rts
