@@ -47,7 +47,7 @@ namespace m68k
 struct motorola68000_t final
 {
 private:
-	memoryMap_t<uint32_t, 0x00ffffffU> _peripherals;
+	memoryMap_t<uint32_t, 0x00ffffffU> &_peripherals;
 	std::array<m68k::irqRequester_t *, 7U> interruptRequesters{};
 	uint32_t clockFrequency;
 	uint32_t waitCycles{0U};
@@ -186,7 +186,7 @@ private:
 	[[nodiscard]] stepResult_t dispatchTST(const decodedOperation_t &insn) noexcept;
 
 public:
-	motorola68000_t(memoryMap_t<uint32_t, 0x00ffffffU> peripherals, uint32_t clockFreq) noexcept;
+	motorola68000_t(memoryMap_t<uint32_t, 0x00ffffffU> &peripherals, uint32_t clockFreq) noexcept;
 
 	void executeFrom(uint32_t entryAddress, uint32_t stackTop, bool asUser = true) noexcept;
 	void executeFromException(uint32_t entryAddress, uint32_t stackTop, uint8_t vectorNumber) noexcept;
