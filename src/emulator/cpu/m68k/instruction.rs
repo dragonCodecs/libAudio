@@ -2313,6 +2313,14 @@ impl From<u16> for DecodedOperation
 			0x4e73 => return DecodedOperation::new(Instruction::Rte),
 			0x4e77 => return DecodedOperation::new(Instruction::Rtr),
 			0x4e75 => return DecodedOperation::new(Instruction::Rts),
+			0x4e72 => {
+				return DecodedOperation::new_simple_with_trailing(
+					Instruction::Stop,
+					0,
+					0,
+					2, // 16-bit SR value follows
+				);
+			},
 			_ => {},
 		};
 
