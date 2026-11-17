@@ -450,6 +450,20 @@ impl DecodedOperation
 				},
 		}
 	}
+
+	fn new_sized_with_trailing(operation: Instruction, rx: u8, ry: u8, operation_size: u8, trailing_bytes: u8) -> Self
+	{
+		Self {
+			operation,
+			rx,
+			ry,
+			flags: OperationFlags::none(),
+			operation_size,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -2218,6 +2232,19 @@ impl From<u16> for DecodedOperation
 					mode: 0,
 					trailing_bytes: 2, // 16-bit immediate follows
 				};
+			},
+			0x0cfc | 0x0efc => {
+				return DecodedOperation::new_sized_with_trailing(
+					Instruction::Cas2,
+					0,
+					0,
+					if (insn & 0x0200) == 0 {
+						2
+					} else {
+						4
+					},
+					4, // 32-bit Dc1:Dc2, Du1:Du2, (Rn1):(Rn2) follows
+				);
 			},
 			_ => {},
 		};
