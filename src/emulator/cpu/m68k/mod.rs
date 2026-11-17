@@ -57,7 +57,6 @@ enum M68kStatusBits
 pub enum StepResult
 {
 	Valid,
-	#[allow(unused)]
 	Trap,
 	Invalid,
 }
@@ -321,6 +320,59 @@ impl<'a> Motorola68k<'a>
 	pub fn trapped(&self) -> bool
 	{
 		self.trap_state
+	}
+
+	pub fn display_regs(&self)
+	{
+		// Start by displaying the d-regs
+		for idx in 0..8 {
+			if (idx & 3) == 0 {
+				print!(" [DBG] ");
+			}
+			print!("  d{idx}: {:08x}", self.d[idx]);
+
+			if (idx & 3) == 3 {
+				println!()
+			} else {
+				print!(" ");
+			}
+		}
+
+		// Now the a-regs, including the active the stack pointer
+		for idx in 0..8 {
+			if (idx & 3) == 0 {
+				print!(" [DBG] ");
+			}
+			if idx != 7 {
+				print!("  a{idx}: {:08x}", self.d[idx]);
+			} else {
+				print!(
+					"  a7: {:08x}",
+					if self.status.contains(M68kStatusBits::Supervisor) {
+						self.system_stack_pointer
+					} else {
+						self.user_stack_pointer
+					}
+				);
+			}
+
+			if (idx & 3) == 3 {
+				println!()
+			} else {
+				print!(" ");
+			}
+		}
+
+		// Now display the stack pointers, program counter, and finally the status register
+		println!(
+			" [DBG]  ssp: {:08x}  usp: {:08x}   pc: {:08x}   sr: {:04x}",
+			self.system_stack_pointer, self.user_stack_pointer, self.program_counter, self.status.bits
+		);
+
+		// Display the current instruction pointed to by the program counter
+		let raw_instruction = self.peripherals.read_address::<u16>(self.program_counter);
+		let instruction: DecodedOperation = raw_instruction.into();
+		println!(" [DBG] insn: {raw_instruction:04x}");
 	}
 
 	fn active_stack_pointer(&self) -> &u32
