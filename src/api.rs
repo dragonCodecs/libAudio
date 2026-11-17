@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use core::slice;
-use std::ffi::{c_char, c_void};
+use std::ffi::c_char;
 use std::fs::File;
 #[cfg(not(target_family = "windows"))]
 use std::os::fd::{FromRawFd, IntoRawFd};
@@ -10,12 +10,8 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::windows::io::{FromRawHandle, IntoRawHandle, RawHandle};
 use std::ptr::{NonNull, null_mut};
 
+use crate::emulator::MemoryMap;
 use crate::emulator::atari_ste::AtariSTe;
-use crate::emulator::atari_ste_roms::AtariSTeROMs;
-use crate::emulator::cpu::m68k::IrqRequester;
-use crate::emulator::ram::Ram;
-use crate::emulator::timing::mc68901::{self, MC68901};
-use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
 
@@ -269,171 +265,6 @@ pub unsafe fn sndh_metadata_tune_name(metadata: *mut SndhMetadata, index: usize)
 {
 	let metadata = unsafe { NonNull::new_unchecked(metadata) };
 	Slice::from_slice(unsafe { metadata.as_ref() }.tune_names()[index].as_bytes())
-}
-
-/// Allocate a new [`MC68901`] and "leak" that pointer into C++ land
-#[unsafe(no_mangle)]
-pub fn mc68901_new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> MC68901
-{
-	MC68901::new(clock_frequency, cpu, level)
-}
-
-/// Consume the pointer for a [`MC68901`] allocated with `mc68901_new` and deallocate it cleanly
-#[unsafe(no_mangle)]
-pub fn mc68901_drop(mc68901: MC68901)
-{
-	drop(mc68901);
-}
-
-/// Using the pointer from `mc68901_new`, read data into the slice from the requested address
-#[unsafe(no_mangle)]
-pub fn mc68901_read_address(mc68901: &MC68901, address: u32, mut slice: MutSlice<u8>)
-{
-	mc68901.read_address(address, slice.as_mut_slice());
-}
-
-/// Using the pointer from `mc68901_new`, write data into the slice to the requested address
-#[unsafe(no_mangle)]
-pub fn mc68901_write_address(mc68901: &mut MC68901, address: u32, slice: Slice<u8>)
-{
-	mc68901.write_address(address, slice.as_slice());
-}
-
-/// Using the pointer from `mc68901_new`, configure one of the timers
-#[unsafe(no_mangle)]
-pub fn mc68901_configure_timer(mc68901: &mut MC68901, timer_index: usize, reload_value: u8, mode: u8)
-{
-	mc68901.configure_timer(timer_index, reload_value, mode);
-}
-
-/// Using the pointer from `mc68901_new`, run a clock cycle
-#[unsafe(no_mangle)]
-pub fn mc68901_clock_cycle(mc68901: &mut MC68901) -> bool
-{
-	mc68901.clock_cycle()
-}
-
-/// Using the pointer from `mc68901_new`, fire a DMA event
-#[unsafe(no_mangle)]
-pub fn mc68901_fire_dma_event(mc68901: &mut MC68901)
-{
-	mc68901.fire_dma_event();
-}
-
-/// Using the pointer from `mc68901_new`, retrieve the priorty level of IRQs for the device
-#[unsafe(no_mangle)]
-pub fn mc68901_irq_level(mc68901: &MC68901) -> u8
-{
-	mc68901.irq_level()
-}
-
-/// Using the pointer from `mc68901_new`, retrieve the cause of an IRQ
-#[unsafe(no_mangle)]
-pub fn mc68901_irq_cause(mc68901: &mut MC68901) -> u8
-{
-	mc68901.irq_cause()
-}
-
-/// Calculate the prescaling for the given timer mode
-#[unsafe(no_mangle)]
-pub fn mc68901_timer_prescaling_for(mode: u8) -> u32
-{
-	mc68901::timer_prescaling_for(mode)
-}
-
-const STE_RAM_SIZE: usize = 8 * 1024 * 1024;
-
-/// Allocate a new [`Ram<STE_RAM_SIZE>`] and "leak" that pointer into C++ land
-#[unsafe(no_mangle)]
-pub fn ste_ram_new() -> *mut Ram<STE_RAM_SIZE>
-{
-	let ste_ram = Box::new(Ram::new());
-	Box::into_raw(ste_ram)
-}
-
-/// Consume the pointer for a [`Ram<STE_RAM_SIZE>`] allocated with `ste_ram_new`
-/// and deallocate it cleanly
-/// # Safety
-/// As long as the pointer given is from `ste_ram_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_ram_drop(ste_ram: *mut Ram<STE_RAM_SIZE>)
-{
-	let ste_ram = unsafe { Box::from_raw(ste_ram) };
-	drop(ste_ram);
-}
-
-/// Using the pointer from `ste_ram_new`, read data into the slice from the requested address
-/// # Safety
-/// As long as the pointer given is from `ste_ram_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_ram_read_address(ste_ram: *mut Ram<STE_RAM_SIZE>, address: u32, mut slice: MutSlice<u8>)
-{
-	let ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
-	unsafe { ste_ram.as_ref() }.read_address(address, slice.as_mut_slice());
-}
-
-/// Using the pointer from `ste_ram_new`, write data into the slice to the requested address
-/// # Safety
-/// As long as the pointer given is from `ste_ram_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_ram_write_address(ste_ram: *mut Ram<STE_RAM_SIZE>, address: u32, slice: Slice<u8>)
-{
-	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
-	unsafe { ste_ram.as_mut() }.write_address(address, slice.as_slice());
-}
-
-/// Using the pointer from `ste_ram_new`, grab a slice of the memory
-/// # Safety
-/// As long as the pointer given is from `ste_ram_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn ste_ram_slice(ste_ram: *mut Ram<STE_RAM_SIZE>, begin: usize, end: usize) -> MutSlice<u8>
-{
-	let mut ste_ram = unsafe { NonNull::new_unchecked(ste_ram) };
-	MutSlice::from_mut_slice(&mut unsafe { ste_ram.as_mut() }.index_mut(begin..end))
-}
-
-/// Allocate a new [`AtariSTeROMs`] and "leak" that pointer into C++ land
-#[unsafe(no_mangle)]
-pub fn atari_ste_roms_new<'a>(
-	cpu: *mut c_void,
-	peripherals: MemoryMap<'a, u32>,
-	heap_base: u32,
-	heap_size: u32,
-) -> *mut AtariSTeROMs<'a>
-{
-	let roms = Box::new(AtariSTeROMs::new(cpu, peripherals, heap_base, heap_size));
-	Box::into_raw(roms)
-}
-
-/// Consume the pointer for a [`AtariSTeROMs`] allocated with `atari_ste_roms_new`
-/// and deallocate it cleanly
-/// # Safety
-/// As long as the pointer given is from `atari_ste_roms_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn atari_ste_roms_drop(roms: *mut AtariSTeROMs)
-{
-	let roms = unsafe { Box::from_raw(roms) };
-	drop(roms);
-}
-
-/// Using the pointer from `atari_ste_roms_new`, read data into the slice from the requested address
-/// # Safety
-/// As long as the pointer given is from `atari_ste_roms_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn atari_ste_roms_read_address(roms: *mut AtariSTeROMs, address: u32, mut slice: MutSlice<u8>)
-{
-	let roms = unsafe { NonNull::new_unchecked(roms) };
-	unsafe { roms.as_ref() }.read_address(address, slice.as_mut_slice());
-}
-
-/// Using the pointer from `atari_ste_roms_new`, write data into the slice to the requested address
-/// # Safety
-/// As long as the pointer given is from `atari_ste_roms_new`, this is safe
-#[unsafe(no_mangle)]
-pub unsafe fn atari_ste_roms_write_address(roms: *mut AtariSTeROMs, address: u32, slice: Slice<u8>)
-{
-	let mut roms = unsafe { NonNull::new_unchecked(roms) };
-	unsafe { roms.as_mut() }.write_address(address, slice.as_slice());
 }
 
 /// Allocate a new [`AtariSTe`] and "leak" that pointer into C++ land

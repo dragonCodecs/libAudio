@@ -19,15 +19,15 @@ use crate::emulator::timing::mc68901::MC68901;
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
 
 #[derive(Clone)]
-pub struct STeDac
+pub struct STeDac<'a>
 {
-	inner: Rc<RefCell<STeDacInner>>,
+	inner: Rc<RefCell<STeDacInner<'a>>>,
 }
 
-struct STeDacInner
+struct STeDacInner<'a>
 {
 	clock_frequency: u32,
-	mfp: MC68901,
+	mfp: MC68901<'a>,
 
 	// Values that control the DMA engine
 	begin_address: Register24b,
@@ -52,9 +52,9 @@ struct Register24b
 	value: u32,
 }
 
-impl STeDac
+impl<'a> STeDac<'a>
 {
-	pub fn new(clock_frequency: u32, mfp: MC68901) -> Self
+	pub fn new(clock_frequency: u32, mfp: MC68901<'a>) -> Self
 	{
 		Self {
 			inner: Rc::new(RefCell::new(STeDacInner::new(clock_frequency, mfp))),
@@ -72,7 +72,7 @@ impl STeDac
 	}
 }
 
-impl Peripheral<u32> for STeDac
+impl Peripheral<u32> for STeDac<'_>
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -85,7 +85,7 @@ impl Peripheral<u32> for STeDac
 	}
 }
 
-impl ClockedPeripheral<u32> for STeDac
+impl ClockedPeripheral<u32> for STeDac<'_>
 {
 	fn clock_frequency(&self) -> u32
 	{
@@ -98,25 +98,25 @@ impl ClockedPeripheral<u32> for STeDac
 	}
 }
 
-impl<'a> From<STeDac> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
+impl<'a> From<STeDac<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
-	fn from(ste_dac: STeDac) -> Self
+	fn from(ste_dac: STeDac<'a>) -> Self
 	{
 		ste_dac.inner
 	}
 }
 
-impl<'a> From<STeDac> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
+impl<'a> From<STeDac<'a>> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
-	fn from(ste_dac: STeDac) -> Self
+	fn from(ste_dac: STeDac<'a>) -> Self
 	{
 		ste_dac.inner
 	}
 }
 
-impl STeDacInner
+impl<'a> STeDacInner<'a>
 {
-	pub fn new(clock_frequency: u32, mfp: MC68901) -> Self
+	pub fn new(clock_frequency: u32, mfp: MC68901<'a>) -> Self
 	{
 		Self {
 			clock_frequency,
@@ -222,7 +222,7 @@ impl STeDacInner
 	}
 }
 
-impl Peripheral<u32> for STeDacInner
+impl Peripheral<u32> for STeDacInner<'_>
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -337,7 +337,7 @@ impl Peripheral<u32> for STeDacInner
 	}
 }
 
-impl ClockedPeripheral<u32> for STeDacInner
+impl ClockedPeripheral<u32> for STeDacInner<'_>
 {
 	fn clock_frequency(&self) -> u32
 	{

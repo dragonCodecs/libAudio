@@ -2,25 +2,24 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use std::cell::RefCell;
-use std::ffi::c_void;
 use std::rc::Rc;
 
 use crate::emulator::clock_manager::ClockManager;
-use crate::emulator::cpu::m68k::{IrqRequester as M68kIrqRequester};
+use crate::emulator::cpu::m68k::{IrqRequester as M68kIrqRequester, Motorola68k};
 use crate::emulator::{ClockedPeripheral, Peripheral};
 
 #[derive(Clone)]
 #[repr(C)]
-pub struct MC68901
+pub struct MC68901<'a>
 {
-	inner: Rc<RefCell<MC68901Inner>>,
+	inner: Rc<RefCell<MC68901Inner<'a>>>,
 }
 
-struct MC68901Inner
+struct MC68901Inner<'a>
 {
 	clock_frequency: u32,
 
-	cpu: *mut c_void,
+	cpu: Rc<RefCell<Motorola68k<'a>>>,
 	level: u8,
 
 	gpio: u8,
@@ -50,9 +49,9 @@ pub struct Timer
 	external_event: bool,
 }
 
-impl MC68901
+impl<'a> MC68901<'a>
 {
-	pub fn new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> Self
+	pub fn new(clock_frequency: u32, cpu: Rc<RefCell<Motorola68k<'a>>>, level: u8) -> Self
 	{
 		Self {
 			inner: Rc::new(RefCell::new(MC68901Inner::new(clock_frequency, cpu, level))),
@@ -70,7 +69,7 @@ impl MC68901
 	}
 }
 
-impl Peripheral<u32> for MC68901
+impl Peripheral<u32> for MC68901<'_>
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -83,7 +82,7 @@ impl Peripheral<u32> for MC68901
 	}
 }
 
-impl ClockedPeripheral<u32> for MC68901
+impl ClockedPeripheral<u32> for MC68901<'_>
 {
 	fn clock_frequency(&self) -> u32
 	{
@@ -96,7 +95,7 @@ impl ClockedPeripheral<u32> for MC68901
 	}
 }
 
-impl m68k::IrqRequester for MC68901
+impl M68kIrqRequester for MC68901<'_>
 {
 	fn request_interrupt(&mut self)
 	{
@@ -114,33 +113,33 @@ impl m68k::IrqRequester for MC68901
 	}
 }
 
-impl<'a> From<MC68901> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
+impl<'a> From<MC68901<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
-	fn from(mfp: MC68901) -> Self
+	fn from(mfp: MC68901<'a>) -> Self
 	{
 		mfp.inner
 	}
 }
 
-impl<'a> From<MC68901> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
+impl<'a> From<MC68901<'a>> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
-	fn from(mfp: MC68901) -> Self
+	fn from(mfp: MC68901<'a>) -> Self
 	{
 		mfp.inner
 	}
 }
 
-impl<'a> From<MC68901> for Rc<RefCell<dyn M68kIrqRequester + 'a>>
+impl<'a> From<MC68901<'a>> for Rc<RefCell<dyn M68kIrqRequester + 'a>>
 {
-	fn from(mfp: MC68901) -> Self
+	fn from(mfp: MC68901<'a>) -> Self
 	{
 		mfp.inner
 	}
 }
 
-impl MC68901Inner
+impl<'a> MC68901Inner<'a>
 {
-	pub fn new(clock_frequency: u32, cpu: *mut c_void, level: u8) -> Self
+	pub fn new(clock_frequency: u32, cpu: Rc<RefCell<Motorola68k<'a>>>, level: u8) -> Self
 	{
 		Self {
 			clock_frequency,
@@ -192,7 +191,7 @@ impl MC68901Inner
 	}
 }
 
-impl Peripheral<u32> for MC68901Inner
+impl Peripheral<u32> for MC68901Inner<'_>
 {
 	fn read_address(&self, address: u32, data: &mut [u8])
 	{
@@ -351,7 +350,7 @@ impl Peripheral<u32> for MC68901Inner
 	}
 }
 
-impl ClockedPeripheral<u32> for MC68901Inner
+impl ClockedPeripheral<u32> for MC68901Inner<'_>
 {
 	fn clock_frequency(&self) -> u32
 	{
@@ -388,7 +387,7 @@ impl ClockedPeripheral<u32> for MC68901Inner
 	}
 }
 
-impl M68kIrqRequester for MC68901Inner
+impl M68kIrqRequester for MC68901Inner<'_>
 {
 	fn request_interrupt(&mut self)
 	{
@@ -538,10 +537,6 @@ impl Timer
 			false
 		}
 	}
-}
-
-unsafe extern "C" {
-	fn cpu_request_interrupt(cpu: *mut c_void, level: u8);
 }
 
 #[cfg(test)]

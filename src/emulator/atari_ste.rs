@@ -3,13 +3,13 @@
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::ffi::c_void;
 use std::ops::Range;
 use std::rc::Rc;
 
 use crate::api::console;
 use crate::emulator::atari_ste_roms::{self, AtariSTeROMs};
 use crate::emulator::clock_manager::ClockManager;
+use crate::emulator::cpu::m68k::Motorola68k;
 use crate::emulator::ram::Ram;
 use crate::emulator::sound::ste_dac::STeDac;
 use crate::emulator::sound::ym2149::YM2149;
@@ -21,13 +21,13 @@ use crate::sndh::loader::SndhTimer;
 pub struct AtariSTe<'a>
 {
 	// m68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.
-	memory_map: Box<MemoryMap<'a, u32>>,
+	memory_map: MemoryMap<'a, u32>,
 
-	cpu: *mut c_void,
+	cpu: Rc<RefCell<Motorola68k<'a>>>,
 	ram: StRam,
 	psg: YM2149,
-	dac: STeDac,
-	mfp: MC68901,
+	dac: STeDac<'a>,
+	mfp: MC68901<'a>,
 
 	clocked_peripherals: BTreeMap<*const RefCell<dyn ClockedPeripheral<u32> + 'a>, ClockManager>,
 }
@@ -67,13 +67,13 @@ impl<'a> AtariSTe<'a>
 	pub fn new() -> Self
 	{
 		// Prep a blank memory map and instance the CPU
-		let mut memory_map = Box::new(MemoryMap::new(0x00ffffff));
-		let cpu = unsafe { cpu_new(Box::as_mut_ptr(&mut memory_map)) };
+		let memory_map = MemoryMap::new(0x00ffffff);
+		let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
 
 		// Build instances of all the peripherals, including their interlinking
 		let ram = StRam::new();
 		let psg = YM2149::new(2_000_000, SAMPLE_RATE);
-		let mfp = MC68901::new(2_457_600, cpu, 6);
+		let mfp = MC68901::new(2_457_600, cpu.clone(), 6);
 		let dac = STeDac::new(50_066, mfp.clone());
 
 		// Create an instance of the STe to work with
@@ -94,7 +94,7 @@ impl<'a> AtariSTe<'a>
 			.add_peripheral_at(0x000000..0x800000, this.ram.clone().into());
 		this.memory_map.add_peripheral_at(
 			0xe00000..0xf00000,
-			AtariSTeROMs::new(cpu, (*this.memory_map).clone(), HEAP_BASE, HEAP_SIZE).into(),
+			AtariSTeROMs::new(this.cpu.clone(), this.memory_map.clone(), HEAP_BASE, HEAP_SIZE).into(),
 		);
 		// Cartridge ROM at 0xfa0000, 128KiB
 		// pre-TOS 2.0 OS ROMs at 0xfc0000, 128KiB
@@ -140,7 +140,9 @@ impl<'a> AtariSTe<'a>
 		// Tell the MFP its vector number information and that we're in automatic mode
 		this.memory_map.write_address(0xfffa17, 0x40u8);
 		// Register it as an interrupt source
-		unsafe { cpu_register_interrupt_requester_mfp(cpu, this.mfp.clone()) };
+		this.cpu
+			.borrow_mut()
+			.register_interrupt_requester(this.mfp.clone().into());
 
 		this
 	}
@@ -280,15 +282,15 @@ impl<'a> AtariSTe<'a>
 		self.memory_map.write_address(0x000610, 0u32);
 
 		// Set up the calling context
-		unsafe { cpu_write_data_register(self.cpu, 0, subtune as u32 + 1) };
+		self.cpu.borrow_mut().write_data_register(0, subtune as u32 + 1);
 		// And run the init entry point to return
-		unsafe { cpu_execute_to_return(self.cpu, 0x010000, STACK_TOP, false) }
+		self.cpu.borrow_mut().execute_to_return(0x010000, STACK_TOP, false)
 	}
 
 	pub fn exit(&mut self) -> bool
 	{
 		// Run the exit entry point to return
-		unsafe { cpu_execute_to_return(self.cpu, 0x010004, STACK_TOP, false) }
+		self.cpu.borrow_mut().execute_to_return(0x010004, STACK_TOP, false)
 	}
 
 	pub fn advance_clock(&mut self) -> bool
@@ -310,13 +312,12 @@ impl<'a> AtariSTe<'a>
 		}
 
 		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
-		while unsafe { cpu_read_program_counter(self.cpu) } != u32::MAX ||
-			unsafe { cpu_has_pending_interrupts(self.cpu) }
-		{
+		let mut cpu = self.cpu.borrow_mut();
+		while cpu.read_program_counter() != u32::MAX || cpu.has_pending_interrupts() {
 			// Grab the program counter at the start
-			let program_counter = unsafe { cpu_read_program_counter(self.cpu) };
+			let program_counter = cpu.read_program_counter();
 			// Try to advance the clock and check if the CPU is in a trap state
-			if !unsafe { cpu_advance_clock(self.cpu) } || unsafe { cpu_trapped(self.cpu) } {
+			if cpu.advance_clock() || cpu.trapped() {
 				// Something bad happened, so display the program counter at the faulting instruction
 				console::debug(format!("Bad instruction at 0x{program_counter:06x}"));
 				return true;
@@ -346,7 +347,7 @@ impl<'a> AtariSTe<'a>
 
 	pub fn display_cpu_state(&self)
 	{
-		unsafe { cpu_display_regs(self.cpu) };
+		self.cpu.borrow().display_regs();
 	}
 }
 
@@ -354,7 +355,6 @@ impl<'a> Drop for AtariSTe<'a>
 {
 	fn drop(&mut self)
 	{
-		unsafe { cpu_drop(self.cpu) };
 		for peripheral in self.clocked_peripherals.keys() {
 			let peripheral = unsafe { Rc::from_raw(*peripheral) };
 			drop(peripheral);
@@ -379,22 +379,4 @@ fn div_rem(numerator: u32, denominator: u32) -> UDiv
 		quotient: numerator / denominator,
 		remainder: numerator % denominator,
 	}
-}
-
-unsafe extern "C" {
-	#[allow(improper_ctypes)]
-	fn cpu_new<'a>(memory_map: *mut MemoryMap<'a, u32>) -> *mut c_void;
-	fn cpu_drop(cpu: *mut c_void);
-
-	#[allow(improper_ctypes)]
-	fn cpu_register_interrupt_requester_mfp(cpu: *mut c_void, mfp: MC68901);
-	fn cpu_has_pending_interrupts(cpu: *const c_void) -> bool;
-	fn cpu_trapped(cpu: *const c_void) -> bool;
-	fn cpu_display_regs(cpu: *const c_void);
-
-	fn cpu_write_data_register(cpu: *mut c_void, reg: usize, value: u32);
-	fn cpu_read_program_counter(cpu: *const c_void) -> u32;
-
-	fn cpu_execute_to_return(cpu: *mut c_void, entry_address: u32, stack_top: u32, as_user: bool) -> bool;
-	fn cpu_advance_clock(cpu: *mut c_void) -> bool;
 }

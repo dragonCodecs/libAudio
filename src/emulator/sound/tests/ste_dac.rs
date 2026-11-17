@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::ffi::c_void;
-use std::ptr::null_mut;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use super::STeDac;
 use crate::emulator::cpu::m68k::Motorola68k;
@@ -78,7 +78,9 @@ fn setup_ram(memory_map: &mut MemoryMap<u32>)
 #[test]
 fn microwire()
 {
-	let mfp = MC68901::new(2_457_600, null_mut(), 6);
+	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
+	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
 	// Set up a write to the main volume register
@@ -143,7 +145,9 @@ fn microwire()
 #[test]
 fn dma_register_io()
 {
-	let mfp = MC68901::new(2_457_600, null_mut(), 6);
+	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
+	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
 	write_register_u16(&mut dac, 0x00, 0xffff);
@@ -173,7 +177,9 @@ fn dma_register_io()
 #[test]
 fn bad_dma_register_io()
 {
-	let mfp = MC68901::new(2_457_600, null_mut(), 6);
+	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
+	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
 	// 8-bit writes to even numbered registers should be discarded as all 8-bit registers here are odd byte
@@ -199,8 +205,8 @@ fn mono_50khz_sample_loop()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
 	setup_ram(&mut memory_map);
-	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
-	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
 	// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
@@ -235,8 +241,8 @@ fn mono_25khz_sample_no_loop()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
 	setup_ram(&mut memory_map);
-	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
-	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
 	// Set the DMA controller up to stream the first 254 bytes of RAM out, without looping,
@@ -268,8 +274,8 @@ fn mono_50khz_sample_no_loop()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
 	setup_ram(&mut memory_map);
-	let mut cpu = Box::new(Motorola68k::new(memory_map.clone(), 8_000_000));
-	let mfp = MC68901::new(2_457_600, Box::as_mut_ptr(&mut cpu) as *mut c_void, 6);
+	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
 	// Set the DMA controller up to stream the first 254 bytes of RAM out in a loop at
