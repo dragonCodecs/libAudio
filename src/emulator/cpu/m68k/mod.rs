@@ -47,7 +47,7 @@ enum M68kStatusBits
 	Trace = 15,
 }
 
-enum StepResult
+pub enum StepResult
 {
 	Valid,
 	Trap,
@@ -131,6 +131,48 @@ impl<'a> Motorola68k<'a>
 		self.interrupt_requesters[level as usize] = Some(requester);
 	}
 
+	fn check_pending_irqs(&mut self) -> bool
+	{
+		// Extract the current exception mask from the status register
+		let min_irq_priority = ((self.status.bits & 0x0700) >> 8) as u8;
+		// Calculate a mask from this number
+		let irq_mask = !((1 << (min_irq_priority + 1)) - 1);
+		// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
+		let unmasked_irqs = self.pending_irqs & (irq_mask | 0x80);
+		// If there are no bits set, we're done here..
+		if unmasked_irqs == 0 {
+			return false;
+		}
+
+		// Otherwise, figure out which priorty level of IRQ to stack
+		for slot in 0..7 - min_irq_priority {
+			let level = 7 - slot;
+			// Check if this priorty is pending (level is a number from 0 to 7, but we have
+			// to step backwards through the priorities)
+			let irq_pending = unmasked_irqs & (1 << level);
+			if irq_pending == 0 {
+				continue;
+			}
+			// Ok, we've identified the current most high priority pending interrupt, clear it from pending
+			self.pending_irqs &= !(1 << level);
+			// Dispatch it using any available interrupt requester
+			let requester = &mut self.interrupt_requesters[level as usize];
+			if let Some(requester) = requester {
+				// Identify the IRQ cause and stack the associated vector address
+				let cause = requester.irq_cause();
+				self.stage_irq_call((cause as u32) << 2);
+			} else {
+				// Turn this IRQ level into a request for the associated autovector slot and stack that
+				self.stage_irq_call((level as u32 + 24) << 2);
+			}
+			// Mask any further IRQs at this level till the IRQ is handled
+			self.mask_irqs(level);
+		}
+
+		// We entered an IRQ in this cycle, so step needs to stop here
+		true
+	}
+
 	pub fn has_pending_interrupts(&self) -> bool
 	{
 		// Extract the current exception mask from the status register
@@ -140,6 +182,37 @@ impl<'a> Motorola68k<'a>
 		// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
 		let unmasked_irqs = self.pending_irqs & (irq_mask | 0x80);
 		unmasked_irqs != 0
+	}
+
+	fn mask_irqs(&mut self, level: u8)
+	{
+		// Extract the status register minus the current mask value
+		let status_reg = self.status.bits & 0xf8ff;
+		// Set the new one masking the new IRQ level
+		self.status.bits = status_reg | (((level & 0x07) as u16) << 8);
+	}
+
+	fn stage_irq_call(&mut self, vector_address: u32)
+	{
+		// Grab the old status register value
+		let status_reg = self.status.bits;
+		// Force supervisor mode
+		self.status |= M68kStatusBits::Supervisor;
+		// Grab the active stack and start stacking up a throwaway exception frame
+		let mut stack_pointer = *self.active_stack_pointer();
+		// Stack the start of a throwaway frame for the selected vector number
+		stack_pointer -= 2;
+		self.peripherals
+			.write_address(stack_pointer, (0x1000 | (vector_address & 0x0fff)) as u16);
+		// Push the current program counter to the stack and set it to value at the requested vector address
+		stack_pointer -= 4;
+		self.peripherals.write_address(stack_pointer, self.program_counter);
+		self.program_counter = self.peripherals.read_address(vector_address);
+		// Stack up the previous status register to be restored on RTE
+		stack_pointer -= 2;
+		self.peripherals.write_address(stack_pointer, status_reg);
+		// Write the stack pointer back now we're done modifying it
+		*self.active_stack_pointer_mut() = stack_pointer;
 	}
 
 	fn data_register(&self, reg: usize) -> &u32
@@ -202,6 +275,11 @@ impl<'a> Motorola68k<'a>
 
 	pub fn step(&mut self) -> StepResult
 	{
+		// See if there are any pending interrupt requests
+		if self.check_pending_irqs() {
+			// There was, so return a step result indicating we "executed" an "instruction"
+			return StepResult::Valid;
+		}
 		StepResult::Invalid
 	}
 
