@@ -32,9 +32,13 @@ pub enum Instruction
 {
 	// Data movement instructions
 	Exg,
+	#[allow(unused)]
 	Fmove,
+	#[allow(unused)]
 	Fsmove,
+	#[allow(unused)]
 	Fdmove,
+	#[allow(unused)]
 	Fmovem,
 	Lea,
 	Link,
@@ -128,17 +132,20 @@ pub enum Instruction
 	Jmp,
 	Jsr,
 	Nop,
+	#[allow(unused)]
 	Fnop,
 	Rtd,
 	Rtm,
 	Rtr,
 	Rts,
 	Tst,
+	#[allow(unused)]
 	Ftst,
 
 	// System control instructioons
 	Frestore,
 	Fsave,
+	#[allow(unused)]
 	Moveusp,
 	Movec,
 	Moves,
@@ -165,12 +172,19 @@ pub enum Instruction
 	Cas,
 	Cas2,
 	Tas,
+	#[allow(unused)]
 	Cpbcc,
+	#[allow(unused)]
 	Cpdbcc,
+	#[allow(unused)]
 	Cpgen,
+	#[allow(unused)]
 	Cprestore,
+	#[allow(unused)]
 	Cpsave,
+	#[allow(unused)]
 	Cpscc,
+	#[allow(unused)]
 	Cptrapcc,
 
 	// MMU instructions
@@ -180,58 +194,105 @@ pub enum Instruction
 	Pflush,
 	Pflushn,
 	Pflushan,
+	#[allow(unused)]
 	Pflushs,
+	#[allow(unused)]
 	Pflushr,
+	#[allow(unused)]
 	Pload,
+	#[allow(unused)]
 	Pmove,
 	Prestore,
 	Psave,
+	#[allow(unused)]
 	Pscc,
 	Ptest,
 	Ptrapcc,
 
 	// FPU operation instructions
+	#[allow(unused)]
 	Fadd,
+	#[allow(unused)]
 	Fsadd,
+	#[allow(unused)]
 	Fdadd,
+	#[allow(unused)]
 	Fcmp,
+	#[allow(unused)]
 	Fdiv,
+	#[allow(unused)]
 	Fsdiv,
+	#[allow(unused)]
 	Fddiv,
+	#[allow(unused)]
 	Fmod,
+	#[allow(unused)]
 	Fmul,
+	#[allow(unused)]
 	Fsmul,
+	#[allow(unused)]
 	Fdmul,
+	#[allow(unused)]
 	Frem,
+	#[allow(unused)]
 	Fscale,
+	#[allow(unused)]
 	Fsub,
+	#[allow(unused)]
 	Fssub,
+	#[allow(unused)]
 	Fdsub,
+	#[allow(unused)]
 	Fsgldiv,
+	#[allow(unused)]
 	Fsglmul,
+	#[allow(unused)]
 	Fabs,
+	#[allow(unused)]
 	Facos,
+	#[allow(unused)]
 	Fasin,
+	#[allow(unused)]
 	Fatan,
+	#[allow(unused)]
 	Fcos,
+	#[allow(unused)]
 	Fcosh,
+	#[allow(unused)]
 	Fetox,
+	#[allow(unused)]
 	Fetoxm1,
+	#[allow(unused)]
 	Fgetexp,
+	#[allow(unused)]
 	Fgetman,
+	#[allow(unused)]
 	Fint,
+	#[allow(unused)]
 	Fintrz,
+	#[allow(unused)]
 	Flogn,
+	#[allow(unused)]
 	Flognp1,
+	#[allow(unused)]
 	Flog10,
+	#[allow(unused)]
 	Flog2,
+	#[allow(unused)]
 	Fneg,
+	#[allow(unused)]
 	Fsin,
+	#[allow(unused)]
 	Fsinh,
+	#[allow(unused)]
 	Fsqrt,
+	#[allow(unused)]
 	Ftan,
+	#[allow(unused)]
 	Ftanh,
+	#[allow(unused)]
 	Ftentox,
+	#[allow(unused)]
 	Ftwotox,
 
 	// Instructions determined by a bit in their trailing bytes
