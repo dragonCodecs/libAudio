@@ -464,6 +464,20 @@ impl DecodedOperation
 			trailing_bytes,
 		}
 	}
+
+	fn new(operation: Instruction) -> Self
+	{
+		Self {
+			operation,
+			rx: 0,
+			ry: 0,
+			flags: OperationFlags::none(),
+			operation_size: 0,
+			op_mode: 0,
+			mode: 0,
+			trailing_bytes: 0,
+		}
+	}
 }
 
 impl Default for DecodedOperation
@@ -2258,7 +2272,7 @@ impl From<u16> for DecodedOperation
 					2, // 16-bit immediate follows
 				);
 			},
-			0x4afc => return DecodedOperation::new_simple(Instruction::Illegal, 0, 0),
+			0x4afc => return DecodedOperation::new(Instruction::Illegal),
 			0x4e7a | 0x4e7b => {
 				return DecodedOperation::new_simple_with_op_mode(
 					Instruction::Movec,
@@ -2268,6 +2282,7 @@ impl From<u16> for DecodedOperation
 					(insn & 0x0001) as u8,
 				);
 			},
+			0x4e71 => return DecodedOperation::new(Instruction::Nop),
 			_ => {},
 		};
 
