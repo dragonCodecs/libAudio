@@ -46,6 +46,13 @@ enum M68kStatusBits
 	Trace = 15,
 }
 
+enum StepResult
+{
+	Valid,
+	Trap,
+	Invalid,
+}
+
 #[allow(unused)]
 impl<'a> Motorola68k<'a>
 {
@@ -84,6 +91,26 @@ impl<'a> Motorola68k<'a>
 		*stack_pointer -= 4;
 		let stack_pointer = *stack_pointer;
 		self.peripherals.write_address::<u32>(stack_pointer, 0xffffffff);
+	}
+
+	pub fn execute_to_return(&mut self, entry_address: u32, stack_top: u32, as_user: bool) -> bool
+	{
+		// Set up where we're going to execute from
+		self.execute_from(entry_address, stack_top, as_user);
+		// Now run till we RTS and hit the sentinel program counter state
+		loop {
+			// Try and run another instruction
+			let result = self.step();
+			// Check that something bad didn't happen
+			if matches!(result, StepResult::Trap | StepResult::Invalid) {
+				return false;
+			}
+			// Check for the sentinel program counter value
+			if self.program_counter == 0xffffffff {
+				break;
+			}
+		}
+		true
 	}
 
 	pub(self) fn request_interrupt(&mut self, level: u8)
@@ -161,6 +188,11 @@ impl<'a> Motorola68k<'a>
 	pub fn read_status(&self) -> u16
 	{
 		self.status.bits
+	}
+
+	pub fn step(&mut self) -> StepResult
+	{
+		StepResult::Invalid
 	}
 
 	fn active_stack_pointer(&self) -> &u32
