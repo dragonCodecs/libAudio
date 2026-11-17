@@ -295,6 +295,7 @@ impl<'a> Motorola68k<'a>
 		match insn.operation {
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
+			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rts => return self.dispatch_rts(),
 			_ => {},
@@ -376,6 +377,252 @@ impl<'a> Motorola68k<'a>
 		println!(" [DBG] insn: {raw_instruction:04x}");
 	}
 
+	fn read_index(&mut self, extension: u16) -> i32
+	{
+		// Get the index value that will be used
+		let index = {
+			let needs_extending = (extension & 0x0800) == 0;
+			// Extract out the register value that will be used to construct this index
+			let value = {
+				// Determine data or address, then extract that register's value
+				if (extension & 0x8000) != 0 {
+					self.a[((extension & 0x7000) >> 12) as usize]
+				} else {
+					self.d[((extension & 0x7000) >> 12) as usize]
+				}
+			};
+			// Fix up anything that we need to fix up
+			if needs_extending {
+				value as i16 as i32
+			} else {
+				value as i32
+			}
+		};
+		// Extract what scaling it needs, and dispatch
+		match extension & 0x0600 {
+			// * 1
+			0x0000 => index,
+			// * 2
+			0x0200 => index * 2,
+			// * 4
+			0x0400 => index * 4,
+			// * 8
+			0x0600 => index * 8,
+			_ => unreachable!(),
+		}
+	}
+
+	fn read_extra_displacement(&mut self, displacement_size: u16) -> i32
+	{
+		match displacement_size {
+			// s16 displacement follows
+			2 => {
+				let result = self.peripherals.read_address::<i16>(self.program_counter);
+				self.program_counter += 2;
+				result as i32
+			},
+			// s32 displacement follows
+			3 => {
+				let result = self.peripherals.read_address::<i32>(self.program_counter);
+				self.program_counter += 4;
+				result
+			},
+			// No displacement follows (or we got the reserved size)
+			_ => 0,
+		}
+	}
+
+	fn compute_indrect(&mut self, base_address: u32) -> u32
+	{
+		let extra = self.peripherals.read_address::<u16>(self.program_counter);
+		self.program_counter += 2;
+		// Determine which extension mode we're in
+		if (extra & 0x0100) != 0 {
+			// Figure out what do for the base displacement
+			let base_displacement = {
+				// If it's suppressed, make it 0
+				if (extra & 0x0080) != 0 {
+					0
+				} else {
+					// Otherwise, determine how many bytes follow and read them
+					self.read_extra_displacement((extra & 0x0030) >> 4)
+				}
+			};
+			// Now the index, which can also be suppressed
+			let index = if (extra & 0x0040) == 0 {
+				self.read_index(extra)
+			} else {
+				0
+			};
+			// Extract the indirection action selection
+			let action = extra & 0x0007;
+			let outer_displacement = {
+				// If it is 4, for any reason, that is reserved and should be ignored
+				if action == 4 {
+					0
+				}
+				// If the index is being suppressed, it changes what happens next
+				else if (extra & 0x0040) != 0 {
+					// If the action is above 4, it is reserved in this mode
+					if action > 4 {
+						0
+					} else {
+						self.read_extra_displacement(action)
+					}
+				}
+				// All combinations are allowed, get the displacement back
+				else {
+					self.read_extra_displacement(action & 0x0003)
+				}
+			};
+
+			// If indexing is being suppressed
+			if (extra & 0x0040) != 0 {
+				// Determine what outer displacement needs applying (treat reserved modes as no memory indirection)
+				// Memory Indirect with Outer Displacement
+				if let 1..=3 = action {
+					// Start by pulling back the indirect memory address to use
+					let indirect_address = self
+						.peripherals
+						.read_address::<u32>(base_address.wrapping_add_signed(base_displacement));
+					// Now compute the final address
+					return indirect_address.wrapping_add_signed(outer_displacement);
+				}
+			} else {
+				// Determine what outer displacement needs applying (treat reserved modes as no memory indirection)
+				match action {
+					// Indirect Pre-Indexed with Outer Displacement
+					1..=3 => {
+						// Start by pulling back the indexed indirect memory address to use
+						let indirect_address = self.peripherals.read_address::<u32>(
+							base_address
+								.wrapping_add_signed(base_displacement)
+								.wrapping_add_signed(index),
+						);
+						// Now build the final address
+						return indirect_address.wrapping_add_signed(outer_displacement);
+					},
+					// Indirect Post-Indexed with Outer Displacement
+					5..=7 => {
+						// Start by pulling back the indirect memory address to use
+						let indirect_address = self
+							.peripherals
+							.read_address::<u32>(base_address.wrapping_add_signed(base_displacement));
+						// Now build the indexed final address
+						return indirect_address
+							.wrapping_add_signed(index)
+							.wrapping_add_signed(outer_displacement);
+					},
+					_ => {},
+				}
+			}
+
+			base_address
+				.wrapping_add_signed(base_displacement)
+				.wrapping_add_signed(index)
+		} else {
+			let index = self.read_index(extra);
+			let displacement = extra as i8;
+			base_address
+				.wrapping_add_signed(displacement as i32)
+				.wrapping_add_signed(index)
+		}
+	}
+
+	fn compute_effective_address(&mut self, mode: u8, reg: u8, operand_size: usize) -> u32
+	{
+		match mode {
+			// (An)
+			2 => *self.addr_register(reg as usize),
+			// (An)+
+			3 => {
+				let ptr = *self.addr_register(reg as usize);
+				// Special-case for the stack pointer to maintain alignment
+				if reg == 7 && operand_size == 1 {
+					*self.addr_register_mut(reg as usize) = ptr + 2;
+				} else {
+					*self.addr_register_mut(reg as usize) = ptr + operand_size as u32;
+				}
+				ptr
+			},
+			// -(An)
+			4 => {
+				let ptr = *self.addr_register(reg as usize) - {
+					// Special-case for the stack pointer to maintain alignment
+					if reg == 7 && operand_size == 1 {
+						2
+					} else {
+						operand_size as u32
+					}
+				};
+				*self.addr_register_mut(reg as usize) = ptr;
+				ptr
+			},
+			// (d16,An)
+			5 => {
+				let displacement = self.peripherals.read_address::<i16>(self.program_counter);
+				self.program_counter += 2;
+				self.addr_register(reg as usize)
+					.wrapping_add_signed(displacement as i32)
+			},
+			// (d8,An,Xn.SIZE*SCALE), (bd,An,Xn.SIZE*SCALE),
+			// ([bd,An],Xn.SIZE*SCALE,od), and ([bd,An,Xn.SIZE*SCALE].od)
+			6 => self.compute_indrect(*self.addr_register(reg as usize)),
+			// PC-rel and absolute modes
+			7 => match reg {
+				// (xxx).W
+				0 => {
+					let ptr = self.peripherals.read_address::<i16>(self.program_counter);
+					self.program_counter += 2;
+					ptr as i32 as u32
+				},
+				// (xxx).L
+				1 => {
+					let ptr = self.peripherals.read_address::<i32>(self.program_counter);
+					self.program_counter += 4;
+					ptr as u32
+				},
+				// (d16,PC)
+				2 => {
+					let ptr = self
+						.program_counter
+						.wrapping_add_signed(self.peripherals.read_address::<i16>(self.program_counter) as i32);
+					self.program_counter += 2;
+					ptr
+				},
+				// (d8,PC,Xn.SIZE*SCALE), (bd,PC,Xn.SIZE*SCALE),
+				// ([bd,PC],Xn.SIZE*SCALE,od), and ([bd,PC,Xn.SIZE*SCALE],od)
+				3 => self.compute_indrect(self.program_counter),
+				// #<xxx>
+				4 => {
+					// u8 and u16 operation is trivial enough
+					if operand_size == 1 || operand_size == 2 {
+						// Read the u16 that follows the instruction
+						let value = self.peripherals.read_address::<u16>(self.program_counter);
+						self.program_counter += 2;
+						// Truncate if only a byte is needed
+						if operand_size == 1 {
+							value as u8 as u32
+						} else {
+							value as u32
+						}
+					}
+					// u32 is even easier, just read the u32 and return it
+					else if operand_size == 4 {
+						let value = self.peripherals.read_address::<u32>(self.program_counter);
+						self.program_counter += 4;
+						value
+					} else {
+						// TODO: Deal with float modes
+						todo!()
+					}
+				},
+				_ => unreachable!(),
+			},
+			_ => unreachable!(),
+		}
+	}
+
 	fn active_stack_pointer(&self) -> &u32
 	{
 		if self.status.contains(M68kStatusBits::Supervisor) {
@@ -428,6 +675,15 @@ impl<'a> Motorola68k<'a>
 		*self.active_stack_pointer_mut() = stack_pointer;
 		// Now update the program counter to the new execution address and get done
 		self.program_counter = self.program_counter.wrapping_add_signed(displacement);
+		StepResult::Valid
+	}
+
+	fn dispatch_jmp(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the address to jump to from the effective address for the instruction
+		// and then load that into the program counter, competing the jump
+		self.program_counter = self.compute_effective_address(insn.mode, insn.ry, 4);
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 
