@@ -33,64 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testBSR()
-	{
-		// Set up 3 branches in each of the 3 instruction encoding forms, checking they jump properly and then return
-		// Start with the 8-bit immediate form, then use the 16-bit immediate form, and finally the 32-bit immediate
-		// form (6 bytes to encode)
-		writeAddress(0x000200U, uint16_t{0x6150U}); // Jump to +0x50 from end of instruction
-		writeAddress(0x000202U, uint16_t{0x6100U});
-		writeAddress(0x000204U, uint16_t{0xfefcU}); // Jump to -0x104 from end of instruction u16
-		writeAddress(0x000206U, uint16_t{0x61ffU});
-		writeAddress(0x000208U, uint32_t{0x000100aeU}); // Jump to +0x100ae from end of instruction u16
-		writeAddress(0x00020cU, uint16_t{0x4e75U}); // rts to end the test
-		// RTS's for each of the BSRs to hit
-		writeAddress(0x000252U, uint16_t{0x4e75U});
-		writeAddress(0x000100U, uint16_t{0x4e75U});
-		writeAddress(0x0102b6U, uint16_t{0x4e75U});
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000200U, 0x00800000U);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000200U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000252U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffff8U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the RTS for that and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000202U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000100U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffff8U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the RTS for that and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000206U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x000102b6U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffff8U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the RTS for that and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x0000020cU);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the fourth and final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-	}
-
 	void testJMP()
 	{
 		// NB: We don't test all EA's here as we get through them in other tests.
@@ -2710,7 +2652,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testBSR)
 		CXX_TEST(testJMP)
 		CXX_TEST(testRTS)
 		CXX_TEST(testRTE)

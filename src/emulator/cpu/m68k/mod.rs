@@ -289,11 +289,12 @@ impl<'a> Motorola68k<'a>
 			return StepResult::Valid;
 		}
 		// Start by fetching a uint16_t for the instruction and trying to decode it
-		let instruction: DecodedOperation = self.peripherals.read_address::<u16>(self.program_counter).into();
+		let insn: DecodedOperation = self.peripherals.read_address::<u16>(self.program_counter).into();
 		self.program_counter += 2;
 		// Now we have an instruction to run, try to dispatch it
-		match instruction.operation {
-			Instruction::Bra => return self.dispatch_bra(&instruction),
+		match insn.operation {
+			Instruction::Bra => return self.dispatch_bra(&insn),
+			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rts => return self.dispatch_rts(),
 			_ => {},
@@ -412,6 +413,20 @@ impl<'a> Motorola68k<'a>
 		// Extract the displacement for this instruction
 		let displacement = self.read_immediate_displacement(insn);
 		// Now we have a displacement, update the program counter and get done
+		self.program_counter = self.program_counter.wrapping_add_signed(displacement);
+		StepResult::Valid
+	}
+
+	fn dispatch_bsr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the displacement for this instruction
+		let displacement = self.read_immediate_displacement(insn);
+		// Now we have the displacement, calculate the post-instruction program counter, and push it to stack
+		let stack_pointer = *self.active_stack_pointer() - 4;
+		self.peripherals
+			.write_address(stack_pointer, self.program_counter + insn.trailing_bytes as u32);
+		*self.active_stack_pointer_mut() = stack_pointer;
+		// Now update the program counter to the new execution address and get done
 		self.program_counter = self.program_counter.wrapping_add_signed(displacement);
 		StepResult::Valid
 	}
