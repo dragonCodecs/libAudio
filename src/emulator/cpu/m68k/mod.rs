@@ -5,6 +5,7 @@ mod instruction;
 mod irq;
 
 use bitmask_enum::bitmask;
+use instruction::{DecodedOperation, Instruction};
 pub use irq::IrqRequester;
 
 use crate::emulator::MemoryMap;
@@ -280,6 +281,16 @@ impl<'a> Motorola68k<'a>
 			// There was, so return a step result indicating we "executed" an "instruction"
 			return StepResult::Valid;
 		}
+		// Start by fetching a uint16_t for the instruction and trying to decode it
+		let instruction: DecodedOperation = self.peripherals.read_address::<u16>(self.program_counter).into();
+		self.program_counter += 2;
+		// Now we have an instruction to run, try to dispatch it
+		match instruction.operation {
+			Instruction::Nop => return StepResult::Valid,
+			Instruction::Rts => return self.dispatch_rts(),
+			_ => {},
+		}
+
 		StepResult::Invalid
 	}
 
@@ -299,6 +310,17 @@ impl<'a> Motorola68k<'a>
 		} else {
 			&mut self.user_stack_pointer
 		}
+	}
+
+	fn dispatch_rts(&mut self) -> StepResult
+	{
+		// Extract the new program counter value from the current stack pointer
+		let stack_pointer = *self.active_stack_pointer();
+		self.program_counter = self.peripherals.read_address(stack_pointer);
+		// Now adjust the stack pointer by the size of an address
+		*self.active_stack_pointer_mut() = stack_pointer + 4;
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
 	}
 }
 
