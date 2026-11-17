@@ -2302,6 +2302,14 @@ impl From<u16> for DecodedOperation
 				);
 			},
 			0x4e70 => return DecodedOperation::new(Instruction::Reset),
+			0x4e74 => {
+				return DecodedOperation::new_simple_with_trailing(
+					Instruction::Rtd,
+					0,
+					0,
+					2, // 16-bit displacement follows
+				);
+			},
 			_ => {},
 		};
 
