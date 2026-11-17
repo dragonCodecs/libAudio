@@ -140,6 +140,55 @@ fn run_bsr()
 }
 
 #[test]
+fn run_jmp()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	// NB: We don't test all EA's here as we get through them in other tests.
+	memory_map.write_address(0x000000, 0x4ed0u16); // jmp (a0)
+	memory_map.write_address(0x000004, 0x4ee8u16);
+	memory_map.write_address(0x000006, 0x0100u16); // jmp $0100(a0)
+	memory_map.write_address(0x000104, 0x4ef8u16);
+	memory_map.write_address(0x000106, 0x0110u16); // jmp $0110.w
+	memory_map.write_address(0x000110, 0x4ef9u16);
+	memory_map.write_address(0x000112, 0x0001u16);
+	memory_map.write_address(0x000114, 0x0000u16); // jmp $00010000.l
+	memory_map.write_address(0x010000, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	cpu.write_addr_register(0, 0x00000004);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(0), 0x00000004);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000104);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000110);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00010000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the fifth and final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+	assert_eq!(cpu.read_status(), 0x0000);
+}
+
+#[test]
 fn run_rts()
 {
 	let (mut cpu, mut memory_map) = new_m68k();
