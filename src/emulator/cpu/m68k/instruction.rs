@@ -2310,6 +2310,9 @@ impl From<u16> for DecodedOperation
 					2, // 16-bit displacement follows
 				);
 			},
+			0x4e73 => return DecodedOperation::new(Instruction::Rte),
+			0x4e77 => return DecodedOperation::new(Instruction::Rtr),
+			0x4e75 => return DecodedOperation::new(Instruction::Rts),
 			_ => {},
 		};
 
