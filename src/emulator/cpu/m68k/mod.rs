@@ -564,7 +564,7 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
-	fn compute_effective_address(&mut self, mode: u8, reg: u8, operand_size: usize) -> u32
+	fn compute_effective_address(&mut self, mode: u8, reg: u8, operation_size: usize) -> u32
 	{
 		match mode {
 			// (An)
@@ -573,10 +573,10 @@ impl<'a> Motorola68k<'a>
 			3 => {
 				let ptr = *self.addr_register(reg as usize);
 				// Special-case for the stack pointer to maintain alignment
-				if reg == 7 && operand_size == 1 {
+				if reg == 7 && operation_size == 1 {
 					*self.addr_register_mut(reg as usize) = ptr + 2;
 				} else {
-					*self.addr_register_mut(reg as usize) = ptr + operand_size as u32;
+					*self.addr_register_mut(reg as usize) = ptr + operation_size as u32;
 				}
 				ptr
 			},
@@ -584,10 +584,10 @@ impl<'a> Motorola68k<'a>
 			4 => {
 				let ptr = *self.addr_register(reg as usize) - {
 					// Special-case for the stack pointer to maintain alignment
-					if reg == 7 && operand_size == 1 {
+					if reg == 7 && operation_size == 1 {
 						2
 					} else {
-						operand_size as u32
+						operation_size as u32
 					}
 				};
 				*self.addr_register_mut(reg as usize) = ptr;
@@ -631,19 +631,19 @@ impl<'a> Motorola68k<'a>
 				// #<xxx>
 				4 => {
 					// u8 and u16 operation is trivial enough
-					if operand_size == 1 || operand_size == 2 {
+					if operation_size == 1 || operation_size == 2 {
 						// Read the u16 that follows the instruction
 						let value = self.peripherals.read_address::<u16>(self.program_counter);
 						self.program_counter += 2;
 						// Truncate if only a byte is needed
-						if operand_size == 1 {
+						if operation_size == 1 {
 							value as u8 as u32
 						} else {
 							value as u32
 						}
 					}
 					// u32 is even easier, just read the u32 and return it
-					else if operand_size == 4 {
+					else if operation_size == 4 {
 						let value = self.peripherals.read_address::<u32>(self.program_counter);
 						self.program_counter += 4;
 						value
