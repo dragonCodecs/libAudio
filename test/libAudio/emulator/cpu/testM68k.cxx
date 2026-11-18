@@ -33,67 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testASL()
-	{
-		writeAddress(0x000000U, uint16_t{0xe501U}); // asl.b #2, d1
-		writeAddress(0x000002U, uint16_t{0xe161U}); // asl.w d0, d1
-		writeAddress(0x000004U, uint16_t{0xe521U}); // asl.b d2, d1
-		writeAddress(0x000006U, uint16_t{0xe181U}); // asl.l #8, d1
-		writeAddress(0x000008U, uint16_t{0xe1d0U}); // asl (a0)
-		writeAddress(0x00000aU, uint16_t{0xe903U}); // asl.b #4, d3
-		writeAddress(0x00000cU, uint16_t{0x4e75U}); // rts to end the test
-		writeAddress(0x000100U, uint16_t{0x55aaU});
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up a0, d0, d1, d2 and d3 to sensible values
-		cpu.writeAddrRegister(0U, 0x00000100U);
-		cpu.writeDataRegister(0U, 0x00000004U);
-		cpu.writeDataRegister(1U, 0x00000060U);
-		cpu.writeDataRegister(2U, 0x00000000U);
-		cpu.writeDataRegister(3U, 0x00000045U);
-		// Set the status register to some improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x0006U);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000000U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000002U);
-		assertEqual(cpu.readDataRegister(1U), 0x00000080U);
-		assertEqual(cpu.readStatus(), 0x001bU);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000004U);
-		assertEqual(cpu.readDataRegister(1U), 0x00000800U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Set the status register to some improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x001bU);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000006U);
-		assertEqual(cpu.readDataRegister(1U), 0x00000800U);
-		assertEqual(cpu.readStatus(), 0x0004U); // XXX: X bit should actually be unaffacted by this.
-		// Step the fourth instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000008U);
-		assertEqual(cpu.readDataRegister(1U), 0x00080000U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the fifth instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
-		assertEqual(readAddress<uint16_t>(0x000100U), uint16_t{0xab54U});
-		assertEqual(cpu.readStatus(), 0x000aU);
-		// Step the sixth instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
-		assertEqual(cpu.readDataRegister(3U), 0x00000050U);
-		assertEqual(cpu.readStatus(), 0x0002U);
-		// Step the final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-	}
-
 	void testASR()
 	{
 		writeAddress(0x000000U, uint16_t{0xe401U}); // asr.b #2, d1
@@ -2243,7 +2182,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testASL)
 		CXX_TEST(testASR)
 		CXX_TEST(testBcc)
 		CXX_TEST(testBCLR)

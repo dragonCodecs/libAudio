@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use bitmask_enum::bitmask;
-use instruction::{DecodedOperation, Instruction};
+use instruction::{DecodedOperation, Instruction, OperationFlags};
 pub use irq::IrqRequester;
 
 use crate::emulator::{MemoryMap, PeripheralValue};
@@ -338,6 +338,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Addq => return self.dispatch_addq(&insn),
 			Instruction::And => return self.dispatch_and(&insn),
 			Instruction::Andi => return self.dispatch_andi(&insn),
+			Instruction::Asl => return self.dispatch_asl(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -882,6 +883,34 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	fn recompute_status_flags_arithmetic(&mut self, result: u32, carry: bool, overflow: bool, sign_bit: u32)
+	{
+		// Recompute all the status bits, starting with negative
+		if (result & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Now check for zero
+		if result == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Overflow happens if the sign bit changes during shift, but this is computed in advance and passed in to us
+		if overflow {
+			self.status |= M68kStatusBits::Overflow;
+		} else {
+			self.status &= !M68kStatusBits::Overflow;
+		}
+		// And finally, set carry and extend accordingly
+		if carry {
+			self.status |= M68kStatusBits::Extend | M68kStatusBits::Carry;
+		} else {
+			self.status &= !(M68kStatusBits::Extend | M68kStatusBits::Carry);
+		}
+	}
+
 	fn read_data_register_signed(&self, reg: u8, size: usize) -> i32
 	{
 		// Extract the register's value
@@ -1103,6 +1132,90 @@ impl<'a> Motorola68k<'a>
 		self.status.bits = lhs & rhs;
 
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_asl(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// ASL has 3 forms, check if this is the effective addressed form
+		if insn.flags.contains(OperationFlags::MemoryNotRegister) {
+			return self.dispatch_asl_memory(insn);
+		}
+
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		let operation_bits = operation_size * 8;
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1u32 << ((8 * operation_size) - 1);
+		// Convert that into a mask to apply to the value
+		let mask = sign_bit | (sign_bit - 1);
+
+		// Figure out the shift amount to use
+		let shift = if insn.flags.contains(OperationFlags::ImmediateNotRegister) {
+			// Unpack the immediate as the shift amount (remapping 0 as 8)
+			if insn.rx == 0 {
+				8
+			} else {
+				insn.rx
+			}
+		} else {
+			// Otherwise, extract the data register specified and bound the shift
+			(self.data_register(insn.rx as usize) & 0x3f) as u8
+		} as usize;
+
+		// Extract the data to shift from the data register, and mask it
+		let value = self.data_register(insn.ry as usize) & mask;
+		// Extract the value to use as the new carry and extend bits
+		let carry = if shift == 0 {
+			0
+		} else {
+			(value >> (operation_bits - shift)) & 1
+		} != 0;
+		// Now actually do the shift on the value
+		let result = (value << shift) & mask;
+		// Figure out if the conditions for overflow (sign bit changing at *any* time during calculation) were met
+		let overflow = {
+			// Build a bit fill of the new sign bit to detect changes with
+			let sign_fill = if (result & sign_bit) == 0 {
+				0
+			} else {
+				u32::MAX
+			};
+			// Build a mask for the bits shifted through the sign bit
+			let sign_mask = ((1 << shift) - 1) << (operation_bits - shift);
+			// Extract the sign bits and compare them
+			(value & sign_mask) != (sign_fill & sign_mask)
+		};
+
+		// Recompute all the status bits
+		self.recompute_status_flags_arithmetic(result, carry, overflow, sign_bit);
+
+		// Finally, write the result back and get done
+		self.write_data_register_sized(insn.ry, operation_size, result);
+		StepResult::Valid
+	}
+
+	fn dispatch_asl_memory(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		// Extract the address of the manipulation target
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Extract the data to shift from the EA target
+		let value = self.read_value::<u16>(insn.mode, insn.ry, effective_address);
+		// Extract the value to use as the new carry and extend bits
+		let carry = ((value >> 15) & 1) != 0;
+		// Extract the old sign bit value for flags recomputation
+		let old_sign = value & sign_bit;
+		// Now actually do the shift on the value
+		let result = value << 1;
+		// Recompute all the status bits
+		self.recompute_status_flags_arithmetic(result as u32, carry, old_sign != sign_bit, sign_bit as u32);
+
+		// Finally, write the result back to the EA target and get done
+		self.write_value(insn.mode, insn.ry, effective_address, result);
 		StepResult::Valid
 	}
 
