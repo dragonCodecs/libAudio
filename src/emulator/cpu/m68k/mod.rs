@@ -337,6 +337,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Addi => return self.dispatch_addi(&insn),
 			Instruction::Addq => return self.dispatch_addq(&insn),
 			Instruction::And => return self.dispatch_and(&insn),
+			Instruction::Andi => return self.dispatch_andi(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -475,6 +476,24 @@ impl<'a> Motorola68k<'a>
 			// No displacement follows (or we got the reserved size)
 			_ => 0,
 		}
+	}
+
+	fn read_immediate_unsigned(&mut self, immediate_size: usize) -> u32
+	{
+		// Extract the immediate from just after the instruction
+		let immedate = match immediate_size {
+			1 => self.peripherals.read_address::<u16>(self.program_counter) as u8 as u32,
+			2 => self.peripherals.read_address::<u16>(self.program_counter) as u32,
+			_ => self.peripherals.read_address::<u32>(self.program_counter),
+		};
+
+		// Adjust the program counter by the number of u16's just consumed
+		self.program_counter += if immediate_size == 4 {
+			4
+		} else {
+			2
+		};
+		immedate
 	}
 
 	fn read_immediate_signed(&mut self, immediate_size: usize) -> i32
@@ -1020,6 +1039,43 @@ impl<'a> Motorola68k<'a>
 		} else {
 			self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result);
 		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_andi(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Extract the immediate that follows this instruction
+		let rhs = self.read_immediate_unsigned(operation_size);
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the LHS using the computed address
+		let lhs = self.read_value_sized::<u32>(insn.mode, insn.ry, effective_address, operation_size);
+		// With the two values retreived, do the logical and
+		let result = lhs & rhs;
+
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		// Recompute all the flags, starting with the negative bit
+		if (result & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Then the zero bit
+		if result == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// The overflow and carry bits are always cleared by this instruction
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+
+		// Store the result back
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
