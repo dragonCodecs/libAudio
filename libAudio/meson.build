@@ -178,7 +178,7 @@ if not forcedFallback and not forceFallbackFor.contains('faac')
 		else
 			faacVersion = '0'
 		endif
-		if faacVersion.to_int() < 1
+		if faacVersion == '' or faacVersion.to_int() < 1
 			libFAAC = disabler()
 		endif
 	endif
