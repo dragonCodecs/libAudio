@@ -167,7 +167,7 @@ else
 	libFAAC = disabler()
 endif
 if not libFAAC.found()
-	libFAAC = dependency('faac', version: '>= 1.30', required: requiresAAC, allow_fallback: true)
+	libFAAC = dependency('faac', version: '>= 2.0', required: requiresAAC, allow_fallback: true)
 endif
 # Try and find FAAD2 if we're not forcing fallback here
 if not forcedFallback and not forceFallbackFor.contains('faad2')

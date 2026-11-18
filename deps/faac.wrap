@@ -1,7 +1,8 @@
 [wrap-git]
-url = https://github.com/dragonCodecs/faac.git
-revision = head
+url = https://github.com/FreewareAdvancedAudio/faac
+revision = faac-2.2
 clone-recursive = false
+patch_directory = faac
 
 [provide]
 faac = faac_dep
