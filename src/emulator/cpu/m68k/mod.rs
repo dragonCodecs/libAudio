@@ -341,6 +341,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Asl => return self.dispatch_asl(&insn),
 			Instruction::Asr => return self.dispatch_asr(&insn),
 			Instruction::Bcc => return self.dispatch_bcc(&insn),
+			Instruction::Bclr => return self.dispatch_bclr(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -1401,6 +1402,39 @@ impl<'a> Motorola68k<'a>
 			self.program_counter += insn.trailing_bytes as u32;
 		}
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_bclr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Determine if the target is a data register or not
+		let is_data_reg = insn.mode == 0;
+		let operation_size = if is_data_reg {
+			4
+		} else {
+			1
+		};
+		// Grab the bit number to poke at - if the bit number is coming from a trailing immediate
+		let bit_index = if insn.flags.contains(OperationFlags::ImmediateNotRegister) {
+			// Read the 8-bit immediate
+			self.read_immediate_unsigned(1) as u8
+		} else {
+			// Otherwise, if the bit number is coming from a register, extract that
+			*self.data_register(insn.rx as usize) as u8
+		} & ((((operation_size as u16) * 8) - 1) as u8); // Make sure the bit number is in range for the destination width
+		// Now extract the address of the manipulation target
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Read back the value at the destination
+		let value = self.read_value_sized::<u32>(insn.mode, insn.ry, effective_address, operation_size);
+
+		// Test to see if the bit at the requested position is zero or not
+		if (value & (1 << bit_index)) == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Now clear that bit position and write it back, then return
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, value & !(1 << bit_index));
 		StepResult::Valid
 	}
 
