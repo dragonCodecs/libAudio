@@ -339,6 +339,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::And => return self.dispatch_and(&insn),
 			Instruction::Andi => return self.dispatch_andi(&insn),
 			Instruction::Asl => return self.dispatch_asl(&insn),
+			Instruction::Asr => return self.dispatch_asr(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -883,6 +884,36 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	fn recompute_status_flags_shift(&mut self, result: u32, carry: bool, sign_bit: u32, zero: bool)
+	{
+		// Recompute all the status bits, starting with negative
+		if (result & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Now check for zero
+		if result == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Overflow is always cleared
+		self.status &= !M68kStatusBits::Overflow;
+		// Check if the shift amount was zero or not (inihibits extend changes)
+		if zero {
+			// Shits of zero always clear the carry bit
+			self.status &= !M68kStatusBits::Carry;
+		} else {
+			// And finally, set carry and extend accordingly
+			if carry {
+				self.status |= M68kStatusBits::Extend | M68kStatusBits::Carry;
+			} else {
+				self.status &= !(M68kStatusBits::Extend | M68kStatusBits::Carry);
+			}
+		}
+	}
+
 	fn recompute_status_flags_arithmetic(&mut self, result: u32, carry: bool, overflow: bool, sign_bit: u32)
 	{
 		// Recompute all the status bits, starting with negative
@@ -1213,6 +1244,80 @@ impl<'a> Motorola68k<'a>
 		let result = value << 1;
 		// Recompute all the status bits
 		self.recompute_status_flags_arithmetic(result as u32, carry, old_sign != sign_bit, sign_bit as u32);
+
+		// Finally, write the result back to the EA target and get done
+		self.write_value(insn.mode, insn.ry, effective_address, result);
+		StepResult::Valid
+	}
+
+	fn dispatch_asr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// ASR has 3 forms, check if this is the effective addressed form
+		if insn.flags.contains(OperationFlags::MemoryNotRegister) {
+			return self.dispatch_asr_memory(insn);
+		}
+
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		let operation_bits = operation_size * 8;
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1u32 << ((8 * operation_size) - 1);
+		// Convert that into a mask to apply to the value
+		let mask = sign_bit | (sign_bit - 1);
+
+		// Figure out the shift amount to use
+		let shift = if insn.flags.contains(OperationFlags::ImmediateNotRegister) {
+			// Unpack the immediate as the shift amount (remapping 0 as 8)
+			if insn.rx == 0 {
+				8
+			} else {
+				insn.rx
+			}
+		} else {
+			// Otherwise, extract the data register specified and bound the shift
+			(self.data_register(insn.rx as usize) & 0x3f) as u8
+		} as usize;
+
+		// Extract the data to shift from the data register, and mask it
+		let value = self.data_register(insn.ry as usize) & mask;
+		// Extract the value to use as the new carry and extend bits
+		let carry = if shift == 0 {
+			0
+		} else {
+			(value >> (shift - 1)) & 1
+		} != 0;
+		// Build the new sign bits to use in the shifting
+		let extension_bits = if (value & sign_bit) == 0 {
+			0
+		} else {
+			u32::MAX
+		};
+		// Now actually do the shift on the value, sign extending it appropriately
+		let result = ((value >> shift) | (extension_bits << (operation_bits - shift))) & mask;
+		// Recompute all the status bits
+		self.recompute_status_flags_shift(result, carry, sign_bit, shift == 0);
+
+		// Finally, write the result back and get done
+		self.write_data_register_sized(insn.ry, operation_size, result);
+		StepResult::Valid
+	}
+
+	fn dispatch_asr_memory(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		// Extract the address of the manipulation target
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Extract the data to shift from the EA target
+		let value = self.read_value::<u16>(insn.mode, insn.ry, effective_address);
+		// Extract the value to use as the new carry and extend bits
+		let carry = (value & 1) != 0;
+		// Now actually do the shift on the value
+		let result = (value >> 1) | (value & sign_bit);
+		// Recompute all the status bits
+		self.recompute_status_flags_shift(result as u32, carry, sign_bit as u32, false);
 
 		// Finally, write the result back to the EA target and get done
 		self.write_value(insn.mode, insn.ry, effective_address, result);
