@@ -349,6 +349,12 @@ impl<'a> AtariSTe<'a>
 	{
 		self.cpu.borrow().display_regs();
 	}
+
+	#[cfg(test)]
+	pub(self) fn memory_map(&self) -> MemoryMap<'a, u32>
+	{
+		self.memory_map.clone()
+	}
 }
 
 impl<'a> Drop for AtariSTe<'a>
@@ -379,4 +385,10 @@ fn div_rem(numerator: u32, denominator: u32) -> UDiv
 		quotient: numerator / denominator,
 		remainder: numerator % denominator,
 	}
+}
+
+#[cfg(test)]
+mod tests
+{
+	include!("tests/atari_ste.rs");
 }
