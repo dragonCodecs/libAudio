@@ -154,8 +154,25 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 	if (!tags || info.bitsPerSample() != 16U)
 		return false;
 
-	ctx.encoder = faacEncOpen(info.bitRate(), info.channels(), &ctx.inputSamples, &ctx.outputBytes);
-	if (!ctx.encoder)
+	faac_params encoderParams{};
+	if (faac_params_init(&encoderParams, sizeof(faac_params)) != FAAC_OK)
+		return false;
+	encoderParams.sample_rate = info.bitRate();
+	encoderParams.num_channels = info.channels();
+	encoderParams.mpeg_version = FAAC_MPEG4;
+	encoderParams.object_type = FAAC_OBJ_LOW;//MAIN;
+	encoderParams.joint_mode = FAAC_JOINT_NONE;
+	encoderParams.use_lfe = false;
+	encoderParams.use_tns = false;
+	encoderParams.use_pns = false;
+	encoderParams.bit_rate = 128000;
+//	encoderParams.bit_rate = 64000;
+	encoderParams.bandwidth = 0;
+	encoderParams.quant_quality = 100;
+	encoderParams.output_format = FAAC_STREAM_RAW;
+	encoderParams.input_format = FAAC_INPUT_16BIT;
+
+	if (faac_encoder_open(&encoderParams, &ctx.encoder) != FAAC_OK || !ctx.encoder)
 		return false;
 	ctx.buffer = make_unique_nothrow<uint8_t []>(ctx.outputBytes);
 	if (!ctx.buffer)
@@ -176,27 +193,11 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 	MP4TagsStore(tags, ctx.mp4Stream);
 	MP4TagsFree(tags);
 
-	auto config = faacEncGetCurrentConfiguration(ctx.encoder);
-	if (!config)
-		return ctx.valid = false;
-	config->inputFormat = FAAC_INPUT_16BIT;
-	config->mpegVersion = MPEG4;
-	config->bitRate = 128000;
-//	config->bitRate = 64000;
-	config->outputFormat = 0;
-	config->useLfe = config->useTns = config->allowMidside = 0;
-	config->aacObjectType = LOW;//MAIN;
-	config->bandWidth = 0;
-	config->quantqual = 100;
-	if (!faacEncSetConfiguration(ctx.encoder, config))
-		return ctx.valid = false;
-
-	uint8_t *ascBuffer = nullptr;
-	unsigned long ascLength = 0;
-	if (faacEncGetDecoderSpecificInfo(ctx.encoder, &ascBuffer, &ascLength))
+	const uint8_t *ascBuffer = nullptr;
+	uint32_t ascLength = 0;
+	if (faac_encoder_asc(ctx.encoder, &ascBuffer, &ascLength) != FAAC_OK)
 		return ctx.valid = false;
 	MP4SetTrackESConfiguration(ctx.mp4Stream, ctx.track, ascBuffer, ascLength);
-	free(ascBuffer);
 
 	fileInfo() = info;
 	return true;
@@ -220,14 +221,15 @@ int64_t m4a_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 		return -4;
 	else if (rawLength == -2 || rawLength <= 0)
 	{
-		int32_t sampleCount{};
+		uint32_t sampleCount{};
+		faac_status status{FAAC_OK};
 		do
 		{
-			sampleCount = faacEncEncode(ctx.encoder, nullptr, 0, ctx.buffer.get(), ctx.outputBytes);
-			if (sampleCount > 0)
+			status = faac_encoder_encode(ctx.encoder, nullptr, 0, ctx.buffer.get(), ctx.outputBytes, &sampleCount);
+			if (status == FAAC_OK)
 				MP4WriteSample(ctx.mp4Stream, ctx.track, ctx.buffer.get(), sampleCount);
 		}
-		while (sampleCount > 0);
+		while (sampleCount == FAAC_OK);
 		return -2;
 	}
 
@@ -235,12 +237,12 @@ int64_t m4a_t::writeBuffer(const void *const bufferPtr, const int64_t rawLength)
 	while (offset < length)
 	{
 		const uint32_t samplesMax = std::min((length - offset) >> 1U, uint32_t(ctx.inputSamples));
-		int sampleCount = faacEncEncode(ctx.encoder,
-			const_cast<int32_t *>(reinterpret_cast<const int32_t *>(buffer + offset)),
-			samplesMax, ctx.buffer.get(), ctx.outputBytes);
+		uint32_t sampleCount{};
+		const auto status = faac_encoder_encode(ctx.encoder, buffer + offset, samplesMax, ctx.buffer.get(),
+			ctx.outputBytes, &sampleCount);
 		if (!sampleCount)
 			continue;
-		else if (sampleCount < 0)
+		else if (status != FAAC_OK)
 			break;
 		MP4WriteSample(ctx.mp4Stream, ctx.track, ctx.buffer.get(), ctx.outputBytes);
 		offset += samplesMax << 1U;
@@ -252,5 +254,5 @@ m4a_t::encoderContext_t::~encoderContext_t() noexcept
 {
 	MP4Close(mp4Stream);
 	if (encoder)
-		faacEncClose(encoder);
+		faac_encoder_close(&encoder);
 }

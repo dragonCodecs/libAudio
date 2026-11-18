@@ -75,7 +75,7 @@ struct m4a_t::encoderContext_t final
 	 * @internal
 	 * The encoder context handle
 	 */
-	faacEncHandle encoder;
+	faac_encoder *encoder;
 	/*!
 	 * @internal
 	 * The MP4v2 handle for the MP4 file being written to
