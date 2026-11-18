@@ -345,6 +345,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bset => return self.dispatch_bset(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
+			Instruction::Btst => return self.dispatch_btst(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1492,6 +1493,36 @@ impl<'a> Motorola68k<'a>
 		*self.active_stack_pointer_mut() = stack_pointer;
 		// Now update the program counter to the new execution address and get done
 		self.program_counter = self.program_counter.wrapping_add_signed(displacement);
+		StepResult::Valid
+	}
+
+	fn dispatch_btst(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Determine if the target is a data register or not
+		let is_data_reg = insn.mode == 0;
+		let operation_size = if is_data_reg {
+			4
+		} else {
+			1
+		};
+		// Grab the bit number to poke at - if the bit number is coming from a trailing immediate
+		let bit_index = if insn.flags.contains(OperationFlags::ImmediateNotRegister) {
+			// Read the 8-bit immediate
+			self.read_immediate_unsigned(1) as u8
+		} else {
+			// Otherwise, if the bit number is coming from a register, extract that
+			*self.data_register(insn.rx as usize) as u8
+		} & ((((operation_size as u16) * 8) - 1) as u8); // Make sure the bit number is in range for the destination width
+		// Read the data to test a bit in from the EA target
+		let value = self.read_effective_address::<u32>(insn.mode, insn.ry, operation_size);
+
+		// Test to see if the bit at the requested position is zero or not
+		if (value & (1 << bit_index)) == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 

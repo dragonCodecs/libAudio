@@ -954,3 +954,51 @@ fn run_bset()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_btst()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x0800u16);
+	memory_map.write_address(0x000002, 0x0002u16); // btst #2, d0
+	memory_map.write_address(0x000004, 0x0300u16); // btst d1, d0
+	memory_map.write_address(0x000006, 0x0310u16); // btst d1, (a0)
+	memory_map.write_address(0x000008, 0x0810u16);
+	memory_map.write_address(0x00000a, 0x0007u16); // btst #7, (a0)
+	memory_map.write_address(0x00000c, 0x4e75u16); // rts to end the test
+	memory_map.write_address(0x000100, 0xa5u8);
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up a0, d0 and d1 to sensible values
+	cpu.write_addr_register(0, 0x00000100);
+	cpu.write_data_register(0, 0xcafef00d);
+	cpu.write_data_register(1, 0x00000004);
+	// Set the status register to some improbable value that makes it easy to how it changes
+	cpu.write_status(0x001f);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(0), 0xcafef00d);
+	assert_eq!(cpu.read_status(), 0x001b);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_data_register(0), 0xcafef00d);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Reset the status register to a different value that makes it easy to see if it changes
+	cpu.write_status(0x0000);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(memory_map.read_address::<u8>(0x000100), 0xa5);
+	assert_eq!(cpu.read_status(), 0x0004);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000c);
+	assert_eq!(memory_map.read_address::<u8>(0x000100), 0xa5);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
