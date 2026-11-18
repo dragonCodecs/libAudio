@@ -327,6 +327,7 @@ impl<'a> Motorola68k<'a>
 		self.program_counter += 2;
 		// Now we have an instruction to run, try to dispatch it
 		match insn.operation {
+			Instruction::Add => return self.dispatch_add(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -773,6 +774,56 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	fn recompute_status_flags(&mut self, lhs: u32, rhs: u32, result: u64, operation_size: usize, inhibit_extend: bool)
+	{
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+
+		// Recompute all the flags, starting with the negative bit
+		if ((result as u32) & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Then the zero bit
+		if result == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if overflow occurred during the calculation
+		let overflow = {
+			// If the sign bits of the inputs disagree, this can't overflow
+			if (lhs & sign_bit) != (rhs & sign_bit) {
+				false
+			} else {
+				// However, if they do agree and the sign of the output is different, we did
+				(lhs & sign_bit) != ((result as u32) & sign_bit)
+			}
+		};
+		if overflow {
+			self.status |= M68kStatusBits::Overflow;
+		} else {
+			self.status &= !M68kStatusBits::Overflow;
+		}
+		// Check if we should not be modifying the extend bit
+		if inhibit_extend {
+			// And finally check and see if the calculation would generate a carry
+			if (result & (1 << 32)) != 0 {
+				self.status |= M68kStatusBits::Carry;
+			} else {
+				self.status &= !M68kStatusBits::Carry;
+			}
+		} else {
+			// And finally check and see if the calculation would generate a carry
+			if (result & (1 << 32)) != 0 {
+				self.status |= M68kStatusBits::Extend | M68kStatusBits::Carry;
+			} else {
+				self.status &= !(M68kStatusBits::Extend | M68kStatusBits::Carry);
+			}
+		}
+	}
+
 	fn read_data_register_signed(&self, reg: u8, size: usize) -> i32
 	{
 		// Extract the register's value
@@ -802,6 +853,34 @@ impl<'a> Motorola68k<'a>
 				value
 			}
 		};
+	}
+
+	fn dispatch_add(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the data register value used as one of the operands (add is commutative, so don't care
+		// which order we grab them here.. unlike for subtract which matters)
+		let lhs = self.read_data_register_signed(insn.rx, operation_size) as u32;
+		// Grab the other operand using the computed address
+		let rhs = self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size) as u32;
+		// With the two values retreived, do the addition
+		let result = (lhs as u64) + (rhs as u64);
+
+		// Recompute all the flags
+		self.recompute_status_flags(lhs, rhs, result, operation_size, false);
+
+		// Store the result back
+		if insn.op_mode == 0 {
+			self.write_data_register_sized(insn.rx, operation_size, result as u32);
+		} else {
+			self.write_value_sized::<u32>(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
 	}
 
 	fn dispatch_bra(&mut self, insn: &DecodedOperation) -> StepResult

@@ -539,6 +539,20 @@ impl DecodedOperation
 			trailing_bytes: 0,
 		}
 	}
+
+	pub fn unpack_size(&self) -> usize
+	{
+		if self.operation_size == 0 {
+			// u8 operation size
+			1
+		} else if self.operation_size == 1 {
+			// u16 operation size
+			2
+		} else {
+			// u32 operation size
+			4
+		}
+	}
 }
 
 impl Default for DecodedOperation
