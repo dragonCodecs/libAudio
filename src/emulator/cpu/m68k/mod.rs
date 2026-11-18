@@ -333,6 +333,7 @@ impl<'a> Motorola68k<'a>
 		// Now we have an instruction to run, try to dispatch it
 		match insn.operation {
 			Instruction::Add => return self.dispatch_add(&insn),
+			Instruction::Adda => return self.dispatch_adda(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -703,6 +704,18 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	fn read_effective_address<T>(&mut self, mode: u8, reg: u8, width: u8) -> T
+	where
+		T: UnderlyingStorageFor,
+		u32: Cast<<T as UnderlyingStorageFor>::Width8>
+			+ Cast<<T as UnderlyingStorageFor>::Width16>
+			+ Cast<<T as UnderlyingStorageFor>::Width32>,
+	{
+		// Compute the effective address to use and read
+		let effective_address = self.compute_effective_address(mode, reg, width as usize);
+		self.read_value_sized(mode, reg, effective_address, width as usize)
+	}
+
 	fn write_value<T>(&mut self, mode: u8, reg: u8, address: u32, value: T)
 	where
 		T: PeripheralValue,
@@ -884,6 +897,16 @@ impl<'a> Motorola68k<'a>
 			self.write_value_sized::<u32>(insn.mode, insn.ry, effective_address, operation_size, result as u32);
 		}
 
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_adda(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the value to be added to the target address register
+		let value = self.read_effective_address::<i32>(insn.mode, insn.ry, insn.operation_size);
+		// Now update the target address register
+		*self.addr_register_mut(insn.rx as usize) = self.addr_register(insn.rx as usize).wrapping_add_signed(value);
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
