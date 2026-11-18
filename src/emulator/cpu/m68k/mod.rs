@@ -11,7 +11,7 @@ use bitmask_enum::bitmask;
 use instruction::{DecodedOperation, Instruction};
 pub use irq::IrqRequester;
 
-use crate::emulator::MemoryMap;
+use crate::emulator::{MemoryMap, PeripheralValue};
 
 pub struct Motorola68k<'a>
 {
@@ -59,6 +59,19 @@ pub enum StepResult
 	Valid,
 	Trap,
 	Invalid,
+}
+
+trait Cast<T>: Sized
+{
+	fn cast_into(self) -> T;
+	fn cast_from(value: T) -> Self;
+}
+
+trait UnderlyingStorageFor: Sized
+{
+	type Width8: Default + PeripheralValue + Into<Self>;
+	type Width16: Default + PeripheralValue + Into<Self>;
+	type Width32: Default + PeripheralValue + Into<Self>;
 }
 
 #[allow(unused)]
@@ -742,6 +755,98 @@ impl<'a> Motorola68k<'a>
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
+}
+
+impl Cast<i8> for u32
+{
+	fn cast_into(self) -> i8
+	{
+		self as i8
+	}
+
+	fn cast_from(value: i8) -> Self
+	{
+		value as u32
+	}
+}
+
+impl Cast<i16> for u32
+{
+	fn cast_into(self) -> i16
+	{
+		self as i16
+	}
+
+	fn cast_from(value: i16) -> Self
+	{
+		value as u32
+	}
+}
+
+impl Cast<i32> for u32
+{
+	fn cast_into(self) -> i32
+	{
+		self as i32
+	}
+
+	fn cast_from(value: i32) -> Self
+	{
+		value as u32
+	}
+}
+
+impl Cast<u8> for u32
+{
+	fn cast_into(self) -> u8
+	{
+		self as u8
+	}
+
+	fn cast_from(value: u8) -> Self
+	{
+		value as u32
+	}
+}
+
+impl Cast<u16> for u32
+{
+	fn cast_into(self) -> u16
+	{
+		self as u16
+	}
+
+	fn cast_from(value: u16) -> Self
+	{
+		value as u32
+	}
+}
+
+impl Cast<u32> for u32
+{
+	fn cast_into(self) -> u32
+	{
+		self
+	}
+
+	fn cast_from(value: u32) -> Self
+	{
+		value
+	}
+}
+
+impl UnderlyingStorageFor for i32
+{
+	type Width16 = i16;
+	type Width32 = i32;
+	type Width8 = i8;
+}
+
+impl UnderlyingStorageFor for u32
+{
+	type Width16 = u16;
+	type Width32 = u32;
+	type Width8 = u8;
 }
 
 #[cfg(test)]
