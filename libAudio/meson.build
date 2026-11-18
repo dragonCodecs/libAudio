@@ -164,11 +164,20 @@ endif
 if not forcedFallback and not forceFallbackFor.contains('faac')
 	libFAAC = cxx.find_library('faac', required: false, has_headers: ['faac.h'])
 	if libFAAC.found()
-		faacVersion = cxx.get_define(
-			'FAAC_VERISON_MAJOR',
+		faacVersionDefined = cxx.has_define(
+		'FAAC_VERSION_MAJOR',
 			dependencies: libFAAC,
 			prefix: '#include <faac.h>'
 		)
+		if faacVersionDefined
+			faacVersion = cxx.get_define(
+				'FAAC_VERISON_MAJOR',
+				dependencies: libFAAC,
+				prefix: '#include <faac.h>'
+			)
+		else
+			faacVersion = '0'
+		endif
 		if faacVersion.to_int() < 1
 			libFAAC = disabler()
 		endif
