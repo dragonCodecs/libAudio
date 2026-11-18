@@ -103,6 +103,27 @@ impl<'a> Motorola68k<'a>
 		*self.active_stack_pointer_mut() = stack_pointer;
 	}
 
+	#[cfg(test)]
+	pub(self) fn execute_from_exception(&mut self, entry_address: u32, stack_top: u32, vector_number: u8)
+	{
+		// Copy in the new program counter value
+		self.program_counter = entry_address;
+		// Force supervisor mode
+		self.status |= M68kStatusBits::Supervisor;
+		// Start stacking up a throwaway exception frame at the new stack top
+		let mut stack_pointer = stack_top - 2;
+		// Stack the start of a throwaway frame for the selected vector number
+		self.peripherals
+			.write_address(stack_pointer, 0x1000 | ((vector_number as u16) << 2));
+		// Set up a sentinel value on the stack for RTE to hit to tell us we're done
+		stack_pointer -= 4;
+		self.peripherals.write_address(stack_pointer, u32::MAX);
+		// Set up a dummy status register to complete the exception frame
+		stack_pointer -= 2;
+		self.peripherals.write_address::<u16>(stack_pointer, 0x0000);
+		*self.active_stack_pointer_mut() = stack_pointer;
+	}
+
 	pub fn execute_to_return(&mut self, entry_address: u32, stack_top: u32, as_user: bool) -> bool
 	{
 		// Set up where we're going to execute from

@@ -200,3 +200,12 @@ fn run_rts()
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 	assert_eq!(cpu.read_status(), 0x2000);
 }
+
+#[test]
+fn run_rte()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000100, 0x4e73u16); // rte
+	// Set up to execute an exception vector
+	cpu.execute_from_exception(0x00000100, 0x00800000, 1);
+}
