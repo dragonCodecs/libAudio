@@ -334,6 +334,7 @@ impl<'a> Motorola68k<'a>
 		match insn.operation {
 			Instruction::Add => return self.dispatch_add(&insn),
 			Instruction::Adda => return self.dispatch_adda(&insn),
+			Instruction::Addi => return self.dispatch_addi(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -472,6 +473,24 @@ impl<'a> Motorola68k<'a>
 			// No displacement follows (or we got the reserved size)
 			_ => 0,
 		}
+	}
+
+	fn read_immediate_signed(&mut self, immediate_size: usize) -> i32
+	{
+		// Extract the immediate from just after the instruction
+		let immedate = match immediate_size {
+			1 => self.peripherals.read_address::<i16>(self.program_counter) as i8 as i32,
+			2 => self.peripherals.read_address::<i16>(self.program_counter) as i32,
+			_ => self.peripherals.read_address::<i32>(self.program_counter),
+		};
+
+		// Adjust the program counter by the number of u16's just consumed
+		self.program_counter += if immediate_size == 4 {
+			4
+		} else {
+			2
+		};
+		immedate
 	}
 
 	fn compute_indrect(&mut self, base_address: u32) -> u32
@@ -688,7 +707,7 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
-	fn read_value_sized<T>(&self, mode: u8, reg: u8, address: u32, width: usize) -> T
+	fn read_value_sized<T>(&self, mode: u8, reg: u8, address: u32, operation_size: usize) -> T
 	where
 		T: UnderlyingStorageFor,
 		u32: Cast<<T as UnderlyingStorageFor>::Width8>
@@ -696,7 +715,7 @@ impl<'a> Motorola68k<'a>
 			+ Cast<<T as UnderlyingStorageFor>::Width32>,
 	{
 		// Dispatch the access width requested
-		match width {
+		match operation_size {
 			1 => self.read_value::<T::Width8>(mode, reg, address).into(),
 			2 => self.read_value::<T::Width16>(mode, reg, address).into(),
 			4 => self.read_value::<T::Width32>(mode, reg, address).into(),
@@ -704,7 +723,7 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
-	fn read_effective_address<T>(&mut self, mode: u8, reg: u8, width: u8) -> T
+	fn read_effective_address<T>(&mut self, mode: u8, reg: u8, operation_size: u8) -> T
 	where
 		T: UnderlyingStorageFor,
 		u32: Cast<<T as UnderlyingStorageFor>::Width8>
@@ -712,8 +731,8 @@ impl<'a> Motorola68k<'a>
 			+ Cast<<T as UnderlyingStorageFor>::Width32>,
 	{
 		// Compute the effective address to use and read
-		let effective_address = self.compute_effective_address(mode, reg, width as usize);
-		self.read_value_sized(mode, reg, effective_address, width as usize)
+		let effective_address = self.compute_effective_address(mode, reg, operation_size as usize);
+		self.read_value_sized(mode, reg, effective_address, operation_size as usize)
 	}
 
 	fn write_value<T>(&mut self, mode: u8, reg: u8, address: u32, value: T)
@@ -741,7 +760,7 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
-	fn write_value_sized<T>(&mut self, mode: u8, reg: u8, address: u32, width: usize, value: T)
+	fn write_value_sized<T>(&mut self, mode: u8, reg: u8, address: u32, operation_size: usize, value: T)
 	where
 		T: UnderlyingStorageFor
 			+ Cast<<T as UnderlyingStorageFor>::Width8>
@@ -752,7 +771,7 @@ impl<'a> Motorola68k<'a>
 			+ Cast<<T as UnderlyingStorageFor>::Width32>,
 	{
 		// Dispatch the access width requested
-		match width {
+		match operation_size {
 			1 => self.write_value::<T::Width8>(mode, reg, address, value.cast_into()),
 			2 => self.write_value::<T::Width16>(mode, reg, address, value.cast_into()),
 			4 => self.write_value::<T::Width32>(mode, reg, address, value.cast_into()),
@@ -804,7 +823,7 @@ impl<'a> Motorola68k<'a>
 			self.status &= !M68kStatusBits::Negative;
 		}
 		// Then the zero bit
-		if result == 0 {
+		if (result & (u32::MAX as u64)) == 0 {
 			self.status |= M68kStatusBits::Zero;
 		} else {
 			self.status &= !M68kStatusBits::Zero;
@@ -908,6 +927,27 @@ impl<'a> Motorola68k<'a>
 		// Now update the target address register
 		*self.addr_register_mut(insn.rx as usize) = self.addr_register(insn.rx as usize).wrapping_add_signed(value);
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_addi(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Extract the immediate that follows this instruction
+		let lhs = self.read_immediate_signed(operation_size) as u32;
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the RHS using the computed address
+		let rhs = self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size) as u32;
+		// With the two values retreived, do the addition
+		let result = (lhs as u64) + (rhs as u64);
+
+		// Recompute all the flags
+		self.recompute_status_flags(lhs, rhs, result, operation_size, false);
+
+		// Store the result back and return that this instruction succeeded and was valid
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
 		StepResult::Valid
 	}
 
