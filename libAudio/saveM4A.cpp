@@ -155,7 +155,11 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 		return false;
 
 	faac_params encoderParams{};
+#if FAAC_VERSION_MAJOR >= 2
 	if (faac_params_init(&encoderParams, sizeof(faac_params)) != FAAC_OK)
+#else
+	if (faac_params_init(&encoderParams) != FAAC_OK)
+#endif
 		return false;
 	encoderParams.sample_rate = info.bitRate();
 	encoderParams.num_channels = info.channels();
@@ -164,7 +168,11 @@ bool m4a_t::fileInfo(const fileInfo_t &info)
 	encoderParams.joint_mode = FAAC_JOINT_NONE;
 	encoderParams.use_lfe = false;
 	encoderParams.use_tns = false;
+#if FAAC_VERSION_MAJOR >= 2
 	encoderParams.use_pns = false;
+#else
+	encoderParams.pns_level = 0;
+#endif
 	encoderParams.bit_rate = 128000;
 //	encoderParams.bit_rate = 64000;
 	encoderParams.bandwidth = 0;
