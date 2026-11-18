@@ -178,7 +178,7 @@ impl<'a> Motorola68k<'a>
 		// Extract the current exception mask from the status register
 		let min_irq_priority = ((self.status.bits & 0x0700) >> 8) as u8;
 		// Calculate a mask from this number
-		let irq_mask = !((1 << (min_irq_priority + 1)) - 1);
+		let irq_mask = !((1u16 << (min_irq_priority + 1)) - 1) as u8;
 		// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
 		let unmasked_irqs = self.pending_irqs & (irq_mask | 0x80);
 		// If there are no bits set, we're done here..
@@ -1046,6 +1046,10 @@ impl<'a> Motorola68k<'a>
 
 	fn dispatch_andi(&mut self, insn: &DecodedOperation) -> StepResult
 	{
+		// Deal with the special register forms first
+		if insn.ry == 8 || insn.ry == 9 {
+			return self.dispatch_addi_special_ccr(insn);
+		}
 		// Unpack the operation size to a value in bytes
 		let operation_size = insn.unpack_size();
 		// Extract the immediate that follows this instruction
@@ -1076,6 +1080,27 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result back
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result);
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_addi_special_ccr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// If this instruction is for the SR specifically, it is privileged, so check that
+		if insn.ry == 9 && !self.status.contains(M68kStatusBits::Supervisor) {
+			return StepResult::Trap;
+		}
+		// Extract the immediate that follows this instruction and widen it to 16-bit
+		let rhs = if insn.ry == 9 {
+			self.read_immediate_unsigned(2) as u16
+		} else {
+			self.read_immediate_unsigned(1) as u16 | 0xff00
+		};
+		// Grab the SR
+		let lhs = self.status.bits;
+		// Apply the mask and write it back
+		self.status.bits = lhs & rhs;
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid

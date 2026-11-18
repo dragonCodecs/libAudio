@@ -513,3 +513,56 @@ fn run_andi()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_andi_special()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x023cu16);
+	memory_map.write_address(0x000002, 0x00ffu16); // andi #$ff, ccr
+	memory_map.write_address(0x000004, 0x023cu16);
+	memory_map.write_address(0x000006, 0x0005u16); // andi #$05, ccr
+	memory_map.write_address(0x000008, 0x027cu16);
+	memory_map.write_address(0x00000a, 0xf00fu16); // andi #$f00f, sr
+	memory_map.write_address(0x00000c, 0x027cu16);
+	memory_map.write_address(0x00000e, 0x070au16); // andi #$070a, sr
+	memory_map.write_address(0x000010, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Set the status register to some improbable value that makes it easy to how it changes
+	cpu.write_status(0x271f);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_status(), 0x271f);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_status(), 0x2705);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000c);
+	assert_eq!(cpu.read_status(), 0x2005);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000010);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+
+	// This sequence should trap
+	memory_map.write_address(0x000000, 0x027cu16);
+	memory_map.write_address(0x000002, 0xffffu16); // andi #$ffff, sr
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Step the first instruction and validate
+	run_step(&mut cpu, true);
+}

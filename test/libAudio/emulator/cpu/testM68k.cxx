@@ -33,57 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testANDISpecial()
-	{
-		writeAddress(0x000000U, uint16_t{0x023cU});
-		writeAddress(0x000002U, uint16_t{0x00ffU}); // andi #$ff, ccr
-		writeAddress(0x000004U, uint16_t{0x023cU});
-		writeAddress(0x000006U, uint16_t{0x0005U}); // andi #$05, ccr
-		writeAddress(0x000008U, uint16_t{0x027cU});
-		writeAddress(0x00000aU, uint16_t{0xf00fU}); // andi #$f00f, sr
-		writeAddress(0x00000cU, uint16_t{0x027cU});
-		writeAddress(0x00000eU, uint16_t{0x070aU}); // andi #$070a, sr
-		writeAddress(0x000010U, uint16_t{0x4e75U}); // rts to end the test
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000000U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		// Set the status register to some improbable value that makes it easy to how it changes
-		cpu.writeStatus(0x271fU);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000004U);
-		assertEqual(cpu.readStatus(), 0x271fU);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000008U);
-		assertEqual(cpu.readStatus(), 0x2705U);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x0000000cU);
-		assertEqual(cpu.readStatus(), 0x2005U);
-		// Step the fourth instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000010U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-
-		// This sequence should trap
-		writeAddress(0x000000U, uint16_t{0x027cU});
-		writeAddress(0x000002U, uint16_t{0xffffU}); // andi #$ffff, sr
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000000U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		// Step the first instruction and validate
-		runStep(true);
-	}
-
 	void testASL()
 	{
 		writeAddress(0x000000U, uint16_t{0xe501U}); // asl.b #2, d1
@@ -2294,7 +2243,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testANDISpecial)
 		CXX_TEST(testASL)
 		CXX_TEST(testASR)
 		CXX_TEST(testBcc)
