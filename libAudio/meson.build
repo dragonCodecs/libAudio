@@ -162,7 +162,17 @@ if not libMP4v2.found()
 endif
 # Try and find FAAC if we're not forcing fallback here
 if not forcedFallback and not forceFallbackFor.contains('faac')
-	libFAAC = cxx.find_library('faac', required: false)
+	libFAAC = cxx.find_library('faac', required: false, has_headers: ['faac.h'])
+	if libFAAC.found()
+		faacVersion = cxx.get_define(
+			'FAAC_VERISON_MAJOR',
+			dependencies: libFAAC,
+			prefix: '#include <faac.h>'
+		)
+		if faacVersion.to_int() < 1
+			libFAAC = disabler()
+		endif
+	endif
 else
 	libFAAC = disabler()
 endif
