@@ -340,6 +340,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Andi => return self.dispatch_andi(&insn),
 			Instruction::Asl => return self.dispatch_asl(&insn),
 			Instruction::Asr => return self.dispatch_asr(&insn),
+			Instruction::Bcc => return self.dispatch_bcc(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -834,6 +835,68 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	fn check_condition(&self, condition: u8) -> bool
+	{
+		match condition {
+			// T
+			0x0 => true,
+			// F
+			0x1 => false,
+			// HI
+			0x2 => self.status.excludes(M68kStatusBits::Carry | M68kStatusBits::Zero),
+			// LS
+			0x3 => self.status.includes(M68kStatusBits::Carry) || self.status.includes(M68kStatusBits::Zero),
+			// CC
+			0x4 => self.status.excludes(M68kStatusBits::Carry),
+			// CS
+			0x5 => self.status.includes(M68kStatusBits::Carry),
+			// NE
+			0x6 => self.status.excludes(M68kStatusBits::Zero),
+			// EQ
+			0x7 => self.status.includes(M68kStatusBits::Zero),
+			// VC
+			0x8 => self.status.excludes(M68kStatusBits::Overflow),
+			// VS
+			0x9 => self.status.includes(M68kStatusBits::Overflow),
+			// PL
+			0xa => self.status.excludes(M68kStatusBits::Negative),
+			// MI
+			0xb => self.status.includes(M68kStatusBits::Negative),
+			// GE
+			0xc => {
+				println!("BGE");
+				self.status
+					.includes(M68kStatusBits::Negative | M68kStatusBits::Overflow) ||
+					self.status
+						.excludes(M68kStatusBits::Negative | M68kStatusBits::Overflow)
+			},
+			// LT
+			0xd => {
+				(self.status.includes(M68kStatusBits::Negative) && self.status.excludes(M68kStatusBits::Overflow)) ||
+					(self.status.excludes(M68kStatusBits::Negative) &&
+						self.status.includes(M68kStatusBits::Overflow))
+			},
+			// GT
+			0xe => {
+				(self
+					.status
+					.includes(M68kStatusBits::Negative | M68kStatusBits::Overflow) ||
+					self.status
+						.excludes(M68kStatusBits::Negative | M68kStatusBits::Overflow)) &&
+					self.status.excludes(M68kStatusBits::Zero)
+			},
+			// LE
+			0xf => {
+				self.status.includes(M68kStatusBits::Zero) ||
+					(self.status.includes(M68kStatusBits::Negative) &&
+						self.status.excludes(M68kStatusBits::Overflow)) ||
+					(self.status.excludes(M68kStatusBits::Negative) &&
+						self.status.includes(M68kStatusBits::Overflow))
+			},
+			_ => unreachable!(),
+		}
+	}
+
 	fn recompute_status_flags(&mut self, lhs: u32, rhs: u32, result: u64, operation_size: usize, inhibit_extend: bool)
 	{
 		// Compute which bit is the sign bit of the result
@@ -1324,6 +1387,23 @@ impl<'a> Motorola68k<'a>
 		StepResult::Valid
 	}
 
+	fn dispatch_bcc(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the displacement for this instruction
+		let displacement = self.read_immediate_displacement(insn);
+		// Determine if the branch condition is met
+		let branch = self.check_condition(insn.op_mode);
+		if branch {
+			// If we should branch, update the program counter with the displacement
+			self.program_counter = self.program_counter.wrapping_add_signed(displacement);
+		} else {
+			// Otherwise, update it with the size of the displacement to get past the trailing bytes
+			self.program_counter += insn.trailing_bytes as u32;
+		}
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
 	fn dispatch_bra(&mut self, insn: &DecodedOperation) -> StepResult
 	{
 		// Extract the displacement for this instruction
@@ -1388,6 +1468,19 @@ impl<'a> Motorola68k<'a>
 		*self.active_stack_pointer_mut() = stack_pointer + 4;
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
+	}
+}
+
+impl M68kStatusBits
+{
+	pub fn includes(&self, flags: Self) -> bool
+	{
+		self.and(flags) == flags
+	}
+
+	pub fn excludes(&self, flags: Self) -> bool
+	{
+		self.and(flags) == 0
 	}
 }
 

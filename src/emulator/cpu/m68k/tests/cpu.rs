@@ -691,3 +691,170 @@ fn run_asr()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_bcc()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	// This jump sled requires the status register be changed in each step to a suitable value
+	// to variously trigger and not trigger the different jumps.
+	memory_map.write_address(0x000000, 0x6240u16); // bhi +$40 (0x000042)
+	memory_map.write_address(0x000002, 0x6202u16); // bhi +$02 (0x000006)
+	memory_map.write_address(0x000006, 0x6340u16); // bls +$40 (0x000048)
+	memory_map.write_address(0x000008, 0x6302u16); // bls +$02 (0x00000c)
+	memory_map.write_address(0x00000c, 0x6440u16); // bcc +$40 (0x00004e)
+	memory_map.write_address(0x00000e, 0x6402u16); // bcc +$02 (0x000012)
+	memory_map.write_address(0x000012, 0x6540u16); // bcs +$40 (0x000054)
+	memory_map.write_address(0x000014, 0x6502u16); // bcs +$02 (0x000018)
+	memory_map.write_address(0x000018, 0x6640u16); // bne +$40 (0x00005a)
+	memory_map.write_address(0x00001a, 0x6602u16); // bne +$02 (0x00001e)
+	memory_map.write_address(0x00001e, 0x6740u16); // beq +$40 (0x000060)
+	memory_map.write_address(0x000020, 0x6702u16); // beq +$02 (0x000024)
+	memory_map.write_address(0x000024, 0x6840u16); // bvc +$40 (0x000066)
+	memory_map.write_address(0x000026, 0x6802u16); // bvc +$02 (0x00002a)
+	memory_map.write_address(0x00002a, 0x6940u16); // bvs +$40 (0x00006c)
+	memory_map.write_address(0x00002c, 0x6902u16); // bvs +$02 (0x000030)
+	memory_map.write_address(0x000030, 0x6a40u16); // bpl +$40 (0x000072)
+	memory_map.write_address(0x000032, 0x6a02u16); // bpl +$02 (0x000036)
+	memory_map.write_address(0x000036, 0x6b40u16); // bmi +$40 (0x000078)
+	memory_map.write_address(0x000038, 0x6b02u16); // bmi +$02 (0x00003c)
+	memory_map.write_address(0x00003c, 0x6c40u16); // bge +$40 (0x00007e)
+	memory_map.write_address(0x00003e, 0x6c02u16); // bge +$02 (0x000042)
+	memory_map.write_address(0x000042, 0x6d40u16); // blt +$40 (0x000084)
+	memory_map.write_address(0x000044, 0x6d02u16); // blt +$02 (0x000048)
+	memory_map.write_address(0x000048, 0x6e40u16); // bgt +$40 (0x00008a)
+	memory_map.write_address(0x00004a, 0x6e02u16); // bgt +$02 (0x00004e)
+	memory_map.write_address(0x00004e, 0x6f00u16);
+	memory_map.write_address(0x000050, 0x0100u16); // ble +$0100 (0x000152)
+	memory_map.write_address(0x000052, 0x6f00u16);
+	memory_map.write_address(0x000054, 0x00acu16); // ble +$00aa (0x000100)
+	memory_map.write_address(0x000100, 0x4e75u16); // rts to end the test
+
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Set up the status register to skip the first jump
+	cpu.write_status(0x001f);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	// Set up the status register to not skip the second jump
+	cpu.write_status(0x001a);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000c);
+	// Step the fifth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000e);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001e);
+	// Step the sixth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000012);
+	// Step the seventh instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000014);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the eighth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000018);
+	// Step the nineth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000001a);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001b);
+	// Step the tenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000001e);
+	// Step the eleventh instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000020);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the twelveth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000024);
+	// Step the thirteenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000026);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001d);
+	// Step the fourteenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000002a);
+	// Step the fiftheenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000002c);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the sixtheenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000030);
+	// Step the seventheenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000032);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x0017);
+	// Step the eigtheenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000036);
+	// Step the ninteenth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000038);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the twenthieth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000003c);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x0017);
+	// Step the twentyfirst instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000003e);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the twentysecond instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000042);
+	// Step the twentythird instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000044);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x0017);
+	// Step the twentyfourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000048);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001f);
+	// Step the twentyfifth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000004a);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x001b);
+	// Step the twentysixth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000004e);
+	// Step the twentyseventh instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000052);
+	// Set up the status register to not skip the next jump
+	cpu.write_status(0x0013);
+	// Step the twentyeigth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000100);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
