@@ -658,6 +658,89 @@ impl<'a> Motorola68k<'a>
 		}
 	}
 
+	fn read_value<T>(&self, mode: u8, reg: u8, address: u32) -> T
+	where
+		T: Default + PeripheralValue,
+		u32: Cast<T>,
+	{
+		// Dispatch the effective addressing mode used
+		match mode {
+			// Dn
+			0 => (*self.data_register(reg as usize)).cast_into(),
+			// An
+			1 => (*self.addr_register(reg as usize)).cast_into(),
+			_ => {
+				if mode == 7 && reg == 4 {
+					// #<xxx> form so just return the value
+					address.cast_into()
+				} else {
+					// Everything else needs us to actually access memory
+					self.peripherals.read_address(address)
+				}
+			},
+		}
+	}
+
+	fn read_value_sized<T>(&self, mode: u8, reg: u8, address: u32, width: usize) -> T
+	where
+		T: UnderlyingStorageFor,
+		u32: Cast<<T as UnderlyingStorageFor>::Width8>
+			+ Cast<<T as UnderlyingStorageFor>::Width16>
+			+ Cast<<T as UnderlyingStorageFor>::Width32>,
+	{
+		// Dispatch the access width requested
+		match width {
+			1 => self.read_value::<T::Width8>(mode, reg, address).into(),
+			2 => self.read_value::<T::Width16>(mode, reg, address).into(),
+			4 => self.read_value::<T::Width32>(mode, reg, address).into(),
+			_ => unreachable!(),
+		}
+	}
+
+	fn write_value<T>(&mut self, mode: u8, reg: u8, address: u32, value: T)
+	where
+		T: PeripheralValue,
+		u32: Cast<T>,
+	{
+		let mask = ((1u64 << (size_of::<T>() * 8)) - 1) as u32;
+		match mode {
+			// Dn
+			0 => {
+				// Mask out bits that need touching for this write, then put the new value for the register
+				// in via bitwise or to preserve the value of the untouched bits
+				*self.data_register_mut(reg as usize) &= !mask;
+				*self.data_register_mut(reg as usize) |= u32::cast_from(value);
+			},
+			// An
+			1 => {
+				// Mask out bits that need touching for this write, then put the new value for the register
+				// in via bitwise or to preserve the value of the untouched bits
+				*self.addr_register_mut(reg as usize) &= !mask;
+				*self.addr_register_mut(reg as usize) |= u32::cast_from(value);
+			},
+			_ => self.peripherals.write_address(address, value),
+		}
+	}
+
+	fn write_value_sized<T>(&mut self, mode: u8, reg: u8, address: u32, width: usize, value: T)
+	where
+		T: UnderlyingStorageFor
+			+ Cast<<T as UnderlyingStorageFor>::Width8>
+			+ Cast<<T as UnderlyingStorageFor>::Width16>
+			+ Cast<<T as UnderlyingStorageFor>::Width32>,
+		u32: Cast<<T as UnderlyingStorageFor>::Width8>
+			+ Cast<<T as UnderlyingStorageFor>::Width16>
+			+ Cast<<T as UnderlyingStorageFor>::Width32>,
+	{
+		// Dispatch the access width requested
+		match width {
+			1 => self.write_value::<T::Width8>(mode, reg, address, value.cast_into()),
+			2 => self.write_value::<T::Width16>(mode, reg, address, value.cast_into()),
+			4 => self.write_value::<T::Width32>(mode, reg, address, value.cast_into()),
+			_ => unreachable!(),
+		}
+	}
+
 	fn active_stack_pointer(&self) -> &u32
 	{
 		if self.status.contains(M68kStatusBits::Supervisor) {
@@ -688,6 +771,37 @@ impl<'a> Motorola68k<'a>
 			// Otherwise, extract a 32-bit displacement
 			self.peripherals.read_address(self.program_counter)
 		}
+	}
+
+	fn read_data_register_signed(&self, reg: u8, size: usize) -> i32
+	{
+		// Extract the register's value
+		let value = self.d[reg as usize];
+		// Properly sign extend it to int32_t based on the operation size to be performed
+		if size == 1 {
+			value as i8 as i32
+		} else if size == 2 {
+			value as i16 as i32
+		} else {
+			value as i32
+		}
+	}
+
+	fn write_data_register_sized(&mut self, reg: u8, size: usize, value: u32)
+	{
+		// Write the result back to the register, preserving bits not touched by the width of the operation
+		*self.data_register_mut(reg as usize) = {
+			// Extract the current register value
+			let data = *self.data_register(reg as usize);
+			// Narrow the result and overwrite just those bits in the register value
+			if size == 1 {
+				(data & 0xffffff00) | ((value as u8) as u32)
+			} else if size == 2 {
+				(data & 0xffff0000) | ((value as u16) as u32)
+			} else {
+				value
+			}
+		};
 	}
 
 	fn dispatch_bra(&mut self, insn: &DecodedOperation) -> StepResult
