@@ -208,4 +208,17 @@ fn run_rte()
 	memory_map.write_address(0x000100, 0x4e73u16); // rte
 	// Set up to execute an exception vector
 	cpu.execute_from_exception(0x00000100, 0x00800000, 1);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000100);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffff8);
+	assert_eq!(cpu.read_status(), 0x2000);
+	// Check that the stacked exception frame is okay
+	assert_eq!(memory_map.read_address::<u16>(0x007ffffe), 0x1004); // Frame type and vector info
+	assert_eq!(memory_map.read_address::<u32>(0x007ffffa), u32::MAX); // Return program counter
+	assert_eq!(memory_map.read_address::<u16>(0x007ffff8), 0x0000); // Return status register
+	// Step the CPU and validate the results line up
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+	assert_eq!(cpu.read_status(), 0x0000);
 }
