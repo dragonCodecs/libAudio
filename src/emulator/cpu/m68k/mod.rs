@@ -335,6 +335,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Add => return self.dispatch_add(&insn),
 			Instruction::Adda => return self.dispatch_adda(&insn),
 			Instruction::Addi => return self.dispatch_addi(&insn),
+			Instruction::Addq => return self.dispatch_addq(&insn),
 			Instruction::Bra => return self.dispatch_bra(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
@@ -948,6 +949,35 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result back and return that this instruction succeeded and was valid
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+		StepResult::Valid
+	}
+
+	fn dispatch_addq(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the LHS using the computed address
+		let lhs = self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size) as u32;
+		// Unpack the value to add as the RHS (remapping 0 as 8)
+		let rhs = if insn.rx == 0 {
+			8
+		} else {
+			insn.rx as u32
+		};
+		// With the two values retreived, do the addition
+		let result = (lhs as u64) + (rhs as u64);
+
+		// Recompute all the flags if not poking an address register
+		if insn.mode != 1 {
+			self.recompute_status_flags(lhs, rhs, result, operation_size, false);
+		}
+
+		// Store the result back
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 
