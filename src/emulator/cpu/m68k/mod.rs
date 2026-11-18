@@ -346,6 +346,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Bset => return self.dispatch_bset(&insn),
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Btst => return self.dispatch_btst(&insn),
+			Instruction::Clr => return self.dispatch_clr(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -804,6 +805,21 @@ impl<'a> Motorola68k<'a>
 			4 => self.write_value::<T::Width32>(mode, reg, address, value.cast_into()),
 			_ => unreachable!(),
 		}
+	}
+
+	fn write_effective_address<T>(&mut self, mode: u8, reg: u8, operation_size: usize, value: T)
+	where
+		T: UnderlyingStorageFor
+			+ Cast<<T as UnderlyingStorageFor>::Width8>
+			+ Cast<<T as UnderlyingStorageFor>::Width16>
+			+ Cast<<T as UnderlyingStorageFor>::Width32>,
+		u32: Cast<<T as UnderlyingStorageFor>::Width8>
+			+ Cast<<T as UnderlyingStorageFor>::Width16>
+			+ Cast<<T as UnderlyingStorageFor>::Width32>,
+	{
+		// Compute the effective address to use and write
+		let effective_address = self.compute_effective_address(mode, reg, operation_size);
+		self.write_value_sized(mode, reg, effective_address, operation_size, value);
 	}
 
 	fn active_stack_pointer(&self) -> &u32
@@ -1522,6 +1538,20 @@ impl<'a> Motorola68k<'a>
 		} else {
 			self.status &= !M68kStatusBits::Zero;
 		}
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_clr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Clear (0) the target of the effective address
+		self.write_effective_address(insn.mode, insn.ry, operation_size, 0u32);
+		// Set the condition flags for zero
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow | M68kStatusBits::Negative);
+		self.status |= M68kStatusBits::Zero;
+
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
