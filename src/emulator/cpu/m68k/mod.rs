@@ -315,6 +315,11 @@ impl<'a> Motorola68k<'a>
 		self.status.bits
 	}
 
+	pub(self) fn write_status(&mut self, value: u16)
+	{
+		self.status.bits = value;
+	}
+
 	pub fn step(&mut self) -> StepResult
 	{
 		// See if there are any pending interrupt requests
@@ -655,7 +660,7 @@ impl<'a> Motorola68k<'a>
 				},
 				_ => unreachable!(),
 			},
-			_ => unreachable!(),
+			_ => u32::MAX,
 		}
 	}
 
