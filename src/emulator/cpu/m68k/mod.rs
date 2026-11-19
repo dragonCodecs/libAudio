@@ -349,6 +349,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Clr => return self.dispatch_clr(&insn),
 			Instruction::Cmp => return self.dispatch_cmp(&insn),
 			Instruction::Cmpa => return self.dispatch_cmpa(&insn),
+			Instruction::Cmpi => return self.dispatch_cmpi(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1589,6 +1590,25 @@ impl<'a> Motorola68k<'a>
 
 		// Recompute all the flags
 		self.recompute_status_flags(lhs, !rhs + 1, result, insn.operation_size as usize, true);
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_cmpi(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Grab the address register to be used as the LHS
+		let rhs = self.read_immediate_signed(operation_size) as u32;
+		// Grab the data to be used on the RHS of the subtraction from the EA
+		let lhs = self.read_effective_address::<i32>(insn.mode, insn.ry, operation_size as u8) as u32;
+		// With the two values retreived, do the subtraction
+		// We do the subtraction unsigned so we don't UB on overflow
+		let result = (lhs as u64).wrapping_sub(rhs as u64);
+
+		// Recompute all the flags
+		self.recompute_status_flags(lhs, !rhs + 1, result, operation_size, true);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid

@@ -33,51 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testCMPI()
-	{
-		writeAddress(0x000000U, uint16_t{0x0c80U});
-		writeAddress(0x000002U, uint32_t{0x0badf00dU}); // cmpi.l #$0badf00d, d0
-		writeAddress(0x000006U, uint16_t{0x0c00U});
-		writeAddress(0x000008U, uint16_t{0x007fU}); // cmpi.b #$7f, d0
-		writeAddress(0x00000aU, uint16_t{0x0c40U});
-		writeAddress(0x00000cU, uint16_t{0xaca7U}); // cmpi.w #$aca7, d0
-		writeAddress(0x00000eU, uint16_t{0x0c02U});
-		writeAddress(0x000010U, uint16_t{0x0001U}); // cmpi.b #1, d2
-		writeAddress(0x000012U, uint16_t{0x4e75U}); // rts to end the test
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up d0 and d2 to sensible values
-		cpu.writeDataRegister(0U, 0x0badf00dU);
-		cpu.writeDataRegister(2U, 0x00000080U);
-		// Set the status register to some improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x001bU);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000000U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000006U);
-		assertEqual(cpu.readStatus(), 0x0014U);
-		// Set the status register to some other improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x000fU);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x0000000aU);
-		assertEqual(cpu.readStatus(), 0x0009U);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x0000000eU);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the fourth instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000012U);
-		assertEqual(cpu.readStatus(), 0x0002U);
-		// Step the final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-	}
-
 	void testDBcc()
 	{
 		writeAddress(0x000000U, uint16_t{0x51c8U});
@@ -1689,7 +1644,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testCMPI)
 		CXX_TEST(testDBcc)
 		CXX_TEST(testDIVS)
 		CXX_TEST(testDIVU)
