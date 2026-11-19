@@ -347,6 +347,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Bsr => return self.dispatch_bsr(&insn),
 			Instruction::Btst => return self.dispatch_btst(&insn),
 			Instruction::Clr => return self.dispatch_clr(&insn),
+			Instruction::Cmp => return self.dispatch_cmp(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1551,6 +1552,25 @@ impl<'a> Motorola68k<'a>
 		// Set the condition flags for zero
 		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow | M68kStatusBits::Negative);
 		self.status |= M68kStatusBits::Zero;
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_cmp(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Grab the data register to be used on the LHS of the subtraction
+		let lhs = self.read_data_register_signed(insn.rx, operation_size) as u32;
+		// Grab the data to be used on the RHS of the subtraction from the EA
+		let rhs = self.read_effective_address::<i32>(insn.mode, insn.ry, operation_size as u8) as u32;
+		// With the two values retreived, do the subtraction
+		// We do the subtraction unsigned so we don't UB on overflow
+		let result = (lhs as u64).wrapping_sub(rhs as u64);
+
+		// Recompute all the flags
+		self.recompute_status_flags(lhs, !rhs + 1, result, operation_size, true);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
