@@ -350,6 +350,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Cmp => return self.dispatch_cmp(&insn),
 			Instruction::Cmpa => return self.dispatch_cmpa(&insn),
 			Instruction::Cmpi => return self.dispatch_cmpi(&insn),
+			Instruction::Dbcc => return self.dispatch_dbcc(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1609,6 +1610,31 @@ impl<'a> Motorola68k<'a>
 
 		// Recompute all the flags
 		self.recompute_status_flags(lhs, !rhs + 1, result, operation_size, true);
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_dbcc(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Grab the current program counter value as this is used as the base value for the displacement calculation
+		let branch_base = self.program_counter;
+		// Extract the displacement specified by the instruction and
+		// set the program counter for just after the instruction
+		let displacement = self.read_immediate_displacement(insn);
+		self.program_counter += insn.trailing_bytes as u32;
+		// Now test the condition for the instruction
+		let condition = self.check_condition(insn.op_mode);
+		// If it is false, then we decrement the data register for the instruction
+		if !condition {
+			// Decrement the target register and write back the result to only the bottom 16 bits
+			let value = *self.data_register(insn.ry as usize) as i16 - 1;
+			self.write_data_register_sized(insn.ry, 2, value as u32);
+			// If the result of that calculation is not -1, adjust the program counter by the displacement
+			if value != -1 {
+				self.program_counter = branch_base.wrapping_add_signed(displacement);
+			}
+		}
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid

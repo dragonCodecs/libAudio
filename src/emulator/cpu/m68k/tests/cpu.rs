@@ -1185,3 +1185,49 @@ fn run_cmpi()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_dbcc()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x51c8u16);
+	memory_map.write_address(0x000002, 0xfffeu16); // dbf d0, #-2
+	memory_map.write_address(0x000004, 0x5dc9u16);
+	memory_map.write_address(0x000006, 0xfffcu16); // dblt d1, #-4
+	memory_map.write_address(0x000008, 0x50c9u16);
+	memory_map.write_address(0x00000a, 0xfff8u16); // dbt d1, #-8
+	memory_map.write_address(0x00000c, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up d0, and d1 to sensible values
+	cpu.write_data_register(0, 0x08080001);
+	cpu.write_data_register(1, 0x00068000);
+	// Set the status register to the a valid less-than condition configuration
+	cpu.write_status(0x0008);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_data_register(0), 0x08080000);
+	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(0), 0x0808ffff);
+	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_data_register(1), 0x00068000);
+	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000c);
+	assert_eq!(cpu.read_data_register(1), 0x00068000);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
