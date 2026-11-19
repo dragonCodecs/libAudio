@@ -351,6 +351,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Cmpa => return self.dispatch_cmpa(&insn),
 			Instruction::Cmpi => return self.dispatch_cmpi(&insn),
 			Instruction::Dbcc => return self.dispatch_dbcc(&insn),
+			Instruction::Divs => return self.dispatch_divs(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1634,6 +1635,59 @@ impl<'a> Motorola68k<'a>
 			if value != -1 {
 				self.program_counter = branch_base.wrapping_add_signed(displacement);
 			}
+		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_divs(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// This form of DIVS is required to be in s32/s16 mode, so grab the register to operate on as the LHS
+		let lhs = *self.data_register(insn.rx as usize) as i32;
+		// And then the RHS from the target of the EA as a s16
+		let rhs = self.read_effective_address::<i32>(insn.mode, insn.ry, 2) as i16;
+		// Check that we're not about to try dividing by zero (if we are, trap)
+		if rhs == 0 {
+			return StepResult::Trap;
+		}
+		// If we're about to try dividing the smallest negative number by -1, special-case
+		if lhs == i32::MIN && rhs == -1 {
+			// Set up the flags for a zero result and no other special conditions
+			self.status |= M68kStatusBits::Zero;
+			self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow | M68kStatusBits::Negative);
+			// Turn the result of this operation into 0
+			*self.data_register_mut(insn.rx as usize) = 0;
+			return StepResult::Valid;
+		}
+		// Now do the division, getting both the quotient and remainder
+		let quotient = lhs / rhs as i32;
+		let remainder = lhs % rhs as i32;
+		// Recompute the flags, starting by clearing carry
+		self.status &= !M68kStatusBits::Carry;
+		// Now do zero
+		if quotient as i16 == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check for negative
+		if (quotient as i16) < 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// And finally, if any of the upper 16 bits of the quotient are anything other than the sign bit
+		// (This works by converting the quotient to a 16-bit integer and then making it sign extend to
+		// compare it against the 32-bit one - if any of the upper bits are different, the comparison fails)
+		if (quotient as i16) as i32 != quotient {
+			self.status |= M68kStatusBits::Overflow;
+		} else {
+			self.status &= !M68kStatusBits::Overflow;
+			// Now, as overflow hasn't occured, write the result back to the target register,
+			// packing the remainder in the upper 16 bits and the quotient in the lower
+			*self.data_register_mut(insn.rx as usize) =
+				((quotient as u16) as u32) | (((remainder as u16) as u32) << 16);
 		}
 
 		// Say that this instruction succeeded and was valid
