@@ -1865,3 +1865,47 @@ fn run_move_special_ccr()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_move_special_sr()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x46c0u16); // move d0, sr
+	memory_map.write_address(0x000002, 0x40c2u16); // move sr, d2
+	memory_map.write_address(0x000004, 0x46c1u16); // move d1, sr
+	memory_map.write_address(0x000006, 0x40c2u16); // move sr, d2
+	memory_map.write_address(0x000008, 0x46c0u16); // move d0, sr
+	// Set the CPU to execute this sequence in supervisor mode
+	cpu.write_status(0x0000);
+	cpu.execute_from(0x00000000, 0x00800000, false);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x2000);
+	// Set up d0 and d1 to sensible values
+	cpu.write_data_register(0, 0x0000270f);
+	cpu.write_data_register(1, 0x00000015);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_status(), 0x270f);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_status(), 0x270f);
+	assert_eq!(cpu.read_data_register(2), 0x0000270f);
+	// Step the third instruction and validate
+	// this transitions us out of supervisor mode
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_status(), 0x0015);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_status(), 0x0015);
+	assert_eq!(cpu.read_data_register(2), 0x00000015);
+	// Step the fifth instruction and validate (this should trap)
+	run_step(&mut cpu, true);
+	assert_eq!(cpu.read_program_counter(), 0x0000000a);
+	assert_eq!(cpu.read_status(), 0x0015);
+}

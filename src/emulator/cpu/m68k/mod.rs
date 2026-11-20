@@ -2120,7 +2120,23 @@ impl<'a> Motorola68k<'a>
 
 	fn dispatch_move_special_sr(&mut self, insn: &DecodedOperation) -> StepResult
 	{
-		StepResult::Invalid
+		// Determine if this is a from (true) or to (false) move
+		let direction = insn.rx == 9;
+		// Using that, dispatch the move
+		if direction {
+			// Copy the SR to the target location
+			self.write_effective_address(insn.mode, insn.ry, 2, self.status.bits as u32);
+		} else {
+			// Check that we're in supervisor state, and if not, abort
+			if !self.status.contains(M68kStatusBits::Supervisor) {
+				return StepResult::Trap;
+			}
+			// Grab the new SR value and stuff it into the register
+			self.status.bits = self.read_effective_address::<u32>(insn.mode, insn.rx, 2) as u16;
+		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
 	}
 
 	fn dispatch_move_special_usp(&mut self, insn: &DecodedOperation) -> StepResult
