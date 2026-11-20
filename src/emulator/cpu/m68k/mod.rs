@@ -368,6 +368,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Movep => return self.dispatch_movep(&insn),
 			Instruction::Moveq => return self.dispatch_moveq(&insn),
 			Instruction::Muls => return self.dispatch_muls(&insn),
+			Instruction::Mulu => return self.dispatch_mulu(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2362,6 +2363,34 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result in the target data register and return
 		*self.data_register_mut(insn.rx as usize) = result as u32;
+		StepResult::Valid
+	}
+
+	fn dispatch_mulu(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// This form of MULU is required to be in u16 mode, so grab the target of the EA as the LHS
+		let lhs = self.read_effective_address::<u32>(insn.mode, insn.ry, 2) as u16;
+		// And then the RHS from the destination register, truncated to a u16
+		let rhs = *self.data_register(insn.rx as usize) as u16;
+		// Multiply the two together to make a u32 result
+		let result = lhs as u32 * rhs as u32;
+		// This form can never overflow, so clear that and the carry bits in the flags
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Check if the result is zero
+		if result == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if the result is negative
+		if (result & 0x80000000) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+
+		// Store the result in the target data register and return
+		*self.data_register_mut(insn.rx as usize) = result;
 		StepResult::Valid
 	}
 

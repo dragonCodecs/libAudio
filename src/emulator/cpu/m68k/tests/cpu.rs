@@ -2225,3 +2225,46 @@ fn run_muls()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_mulu()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0xc0fcu16);
+	memory_map.write_address(0x000002, 0x0003u16); // mulu.w #3, d0
+	memory_map.write_address(0x000004, 0xc2c0u16); // mulu.w d0, d1
+	memory_map.write_address(0x000006, 0xc4c2u16); // mulu.w d2, d2
+	memory_map.write_address(0x000008, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up d0 and d1 to sensible values
+	cpu.write_data_register(0, 0x0ca78132);
+	cpu.write_data_register(1, 0x00010000);
+	cpu.write_data_register(2, 0x0000ffff);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Set the status register to some improbable value that makes it easy to see if it changes
+	cpu.write_status(0x001f);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(0), 0x00018396);
+	assert_eq!(cpu.read_status(), 0x0010);
+	// Set the status register to some other improbable value that makes it easy to see if it changes
+	cpu.write_status(0x0001);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_data_register(1), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x0004);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_data_register(2), 0xfffe0001);
+	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
