@@ -1586,3 +1586,76 @@ fn run_jsr()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_lea()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x43d0u16); // lea (a0), a1
+	memory_map.write_address(0x000002, 0x43e8u16);
+	memory_map.write_address(0x000004, 0xfeedu16); // lea $feed(a0), a1
+	memory_map.write_address(0x000006, 0x43f0u16);
+	memory_map.write_address(0x000008, 0x0c10u16); // lea $10(a0, d0.l*4), a1
+	memory_map.write_address(0x00000a, 0x43f8u16);
+	memory_map.write_address(0x00000c, 0xca15u16); // lea ($ca15).w, a1
+	memory_map.write_address(0x00000e, 0x43f9u16);
+	memory_map.write_address(0x000010, 0x0badf00du32); // lea ($0badf00d).l, a1
+	memory_map.write_address(0x000014, 0x43fau16);
+	memory_map.write_address(0x000016, 0xfffau16); // lea -6(pc), a1
+	memory_map.write_address(0x000018, 0x43fbu16);
+	memory_map.write_address(0x00001a, 0x0727u16);
+	memory_map.write_address(0x00001c, 0x0026u16);
+	memory_map.write_address(0x00001e, 0xf00daca1u32); // lea $f00daca1($26[pc], d0.w*8), a1
+	memory_map.write_address(0x000022, 0x4e75u16); // rts to end the test
+	memory_map.write_address(0x000040, 0xdeadbeefu32);
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up a0 and d0 to sensible values
+	cpu.write_addr_register(0, 0x00000100);
+	cpu.write_data_register(0, 0x00000200);
+	// Set the status register to some improbable value that makes it easy to see if it changes
+	cpu.write_status(0x001f);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_addr_register(1), 0x00000100);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_addr_register(1), 0xffffffed);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000a);
+	assert_eq!(cpu.read_addr_register(1), 0x00000910);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000e);
+	assert_eq!(cpu.read_addr_register(1), 0xffffca15);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the fifth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000014);
+	assert_eq!(cpu.read_addr_register(1), 0x0badf00d);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the sixth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000018);
+	assert_eq!(cpu.read_addr_register(1), 0x00000010);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the seventh instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000022);
+	// 0xdeadbeef + 0x00000200 * 8 + 0xf00daca1
+	assert_eq!(cpu.read_addr_register(1), 0xcebb7b90);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}

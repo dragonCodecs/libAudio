@@ -359,6 +359,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Extb => return self.dispatch_extb(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Jsr => return self.dispatch_jsr(&insn),
+			Instruction::Lea => return self.dispatch_lea(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -1907,6 +1908,15 @@ impl<'a> Motorola68k<'a>
 		*self.active_stack_pointer_mut() = stack_pointer;
 		// Now update the program counter to the new execution address and get done
 		self.program_counter = destination;
+		StepResult::Valid
+	}
+
+	fn dispatch_lea(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Determine the effective address that would be accessed by this instruction
+		// and then write it to the indicated address register from the instruction
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, 0);
+		self.write_addr_register(insn.rx as usize, effective_address);
 		StepResult::Valid
 	}
 
