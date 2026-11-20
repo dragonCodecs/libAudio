@@ -38,19 +38,6 @@ impl<'a> AtariSTeROMs<'a>
 	}
 }
 
-impl Peripheral<u32> for AtariSTeROMs<'_>
-{
-	fn read_address(&self, address: u32, data: &mut [u8])
-	{
-		self.inner.borrow().read_address(address, data);
-	}
-
-	fn write_address(&mut self, address: u32, data: &[u8])
-	{
-		self.inner.borrow_mut().write_address(address, data);
-	}
-}
-
 impl<'a> From<AtariSTeROMs<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 {
 	fn from(roms: AtariSTeROMs<'a>) -> Self

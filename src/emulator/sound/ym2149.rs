@@ -118,14 +118,6 @@ impl ClockedPeripheral<u32> for YM2149
 	}
 }
 
-impl<'a> From<YM2149> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
-{
-	fn from(psg: YM2149) -> Self
-	{
-		psg.inner
-	}
-}
-
 impl<'a> From<YM2149> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
 	fn from(psg: YM2149) -> Self

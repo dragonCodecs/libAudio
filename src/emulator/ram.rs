@@ -40,21 +40,6 @@ impl<const N: usize> Ram<N>
 	}
 }
 
-impl<Address, const N: usize> Peripheral<Address> for Ram<N>
-where
-	Address: Unsigned + AsPrimitive<usize>,
-{
-	fn read_address(&self, address: Address, data: &mut [u8])
-	{
-		self.inner.borrow().read_address(address, data);
-	}
-
-	fn write_address(&mut self, address: Address, data: &[u8])
-	{
-		self.inner.borrow_mut().write_address(address, data);
-	}
-}
-
 impl<'a, Address, const N: usize> From<Ram<N>> for Rc<RefCell<dyn Peripheral<Address> + 'a>>
 where
 	Address: Unsigned + AsPrimitive<usize>,

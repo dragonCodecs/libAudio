@@ -113,14 +113,6 @@ impl M68kIrqRequester for MC68901<'_>
 	}
 }
 
-impl<'a> From<MC68901<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
-{
-	fn from(mfp: MC68901<'a>) -> Self
-	{
-		mfp.inner
-	}
-}
-
 impl<'a> From<MC68901<'a>> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
 	fn from(mfp: MC68901<'a>) -> Self

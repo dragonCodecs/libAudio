@@ -98,14 +98,6 @@ impl ClockedPeripheral<u32> for STeDac<'_>
 	}
 }
 
-impl<'a> From<STeDac<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
-{
-	fn from(ste_dac: STeDac<'a>) -> Self
-	{
-		ste_dac.inner
-	}
-}
-
 impl<'a> From<STeDac<'a>> for Rc<RefCell<dyn ClockedPeripheral<u32> + 'a>>
 {
 	fn from(ste_dac: STeDac<'a>) -> Self
