@@ -2099,7 +2099,23 @@ impl<'a> Motorola68k<'a>
 
 	fn dispatch_move_special_ccr(&mut self, insn: &DecodedOperation) -> StepResult
 	{
-		StepResult::Invalid
+		// Determine if this is a from (true) or to (false) move
+		let direction = insn.rx == 8;
+		// Using that, dispatch the move
+		if direction {
+			// Grab the CCR portion of the SR
+			let ccr = self.status.bits as u8;
+			// Write it to the target location, 0-extended
+			self.write_effective_address(insn.mode, insn.ry, 2, ccr as u32);
+		} else {
+			// Grab the value from the target location and truncate to just the CCR byte
+			let ccr = self.read_effective_address::<u32>(insn.mode, insn.rx, 2) as u8;
+			// Get back the status register value and patch
+			self.status.bits = (self.status.bits & 0xff00) | (ccr as u16);
+		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
 	}
 
 	fn dispatch_move_special_sr(&mut self, insn: &DecodedOperation) -> StepResult
