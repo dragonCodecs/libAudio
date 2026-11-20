@@ -352,6 +352,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Cmpi => return self.dispatch_cmpi(&insn),
 			Instruction::Dbcc => return self.dispatch_dbcc(&insn),
 			Instruction::Divs => return self.dispatch_divs(&insn),
+			Instruction::Divu => return self.dispatch_divu(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1681,6 +1682,48 @@ impl<'a> Motorola68k<'a>
 		// (This works by converting the quotient to a 16-bit integer and then making it sign extend to
 		// compare it against the 32-bit one - if any of the upper bits are different, the comparison fails)
 		if (quotient as i16) as i32 != quotient {
+			self.status |= M68kStatusBits::Overflow;
+		} else {
+			self.status &= !M68kStatusBits::Overflow;
+			// Now, as overflow hasn't occured, write the result back to the target register,
+			// packing the remainder in the upper 16 bits and the quotient in the lower
+			*self.data_register_mut(insn.rx as usize) =
+				((quotient as u16) as u32) | (((remainder as u16) as u32) << 16);
+		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_divu(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// This form of DIVU is required to be in u32/u16 mode, so grab the register to operate on as the LHS
+		let lhs = *self.data_register(insn.rx as usize);
+		// And then the RHS from the target of the EA
+		let rhs = self.read_effective_address::<u32>(insn.mode, insn.ry, 2) as u16;
+		// Check that we're not about to try dividing by zero (if we are, trap)
+		if rhs == 0 {
+			return StepResult::Trap;
+		}
+		// Now do the division, getting both the quotient and remainder
+		let quotient = lhs / rhs as u32;
+		let remainder = lhs % rhs as u32;
+		// Recompute the flags, starting by clearing carry
+		self.status &= !M68kStatusBits::Carry;
+		// Now do zero
+		if quotient == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// As this is a 32-bit LHS, 16-bit RHS division, negative is if bit 15 is set in the quotient
+		if (quotient & 0x8000) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// And finally, if any of the upper 16 bits of the quotient is set, we overflowed
+		if (quotient & 0xffff0000) != 0 {
 			self.status |= M68kStatusBits::Overflow;
 		} else {
 			self.status &= !M68kStatusBits::Overflow;
