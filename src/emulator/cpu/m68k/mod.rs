@@ -1778,6 +1778,10 @@ impl<'a> Motorola68k<'a>
 
 	fn dispatch_eori(&mut self, insn: &DecodedOperation) -> StepResult
 	{
+		// Deal with the special register forms first
+		if insn.ry == 8 || insn.ry == 9 {
+			return self.dispatch_eori_special_ccr(insn);
+		}
 		// Unpack the operation size to a value in bytes
 		let operation_size = insn.unpack_size();
 		// Extract the immediate that follows this instruction
@@ -1808,6 +1812,27 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result back
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result);
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_eori_special_ccr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// If this instruction is for the SR specifically, it is privileged, so check that
+		if insn.ry == 9 && !self.status.contains(M68kStatusBits::Supervisor) {
+			return StepResult::Trap;
+		}
+		// Extract the immediate that follows this instruction and widen it to 16-bit
+		let rhs = if insn.ry == 9 {
+			self.read_immediate_unsigned(2) as u16
+		} else {
+			self.read_immediate_unsigned(1) as u16
+		};
+		// Grab the SR
+		let lhs = self.status.bits;
+		// Apply the exclusive or and write it back
+		self.status.bits = lhs ^ rhs;
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid

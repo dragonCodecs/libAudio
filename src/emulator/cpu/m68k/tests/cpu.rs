@@ -1441,3 +1441,53 @@ fn run_eori()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_eori_special()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x0a3cu16);
+	memory_map.write_address(0x000002, 0x000au16); // eori #$0a, ccr
+	memory_map.write_address(0x000004, 0x0a3cu16);
+	memory_map.write_address(0x000006, 0xff15u16); // eori #$15, ccr w/ intentional value misencode
+	memory_map.write_address(0x000008, 0x0a7cu16);
+	memory_map.write_address(0x00000a, 0x070eu16); // eori #$070e, sr
+	memory_map.write_address(0x00000c, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Set the status register to some improbable value that makes it easy to how it changes
+	cpu.write_status(0x000c);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_status(), 0x0006);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_status(), 0x0013);
+	// Switch the processor into supervisor mode
+	cpu.write_status(0x2700);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000c);
+	assert_eq!(cpu.read_status(), 0x200e);
+	// Switch the processor back out into user mode
+	cpu.write_status(0x0000);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+
+	// This sequence should trap
+	memory_map.write_address(0x000000, 0x0a7cu16);
+	memory_map.write_address(0x000002, 0x2705u16); // eori #$2705, sr
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	run_step(&mut cpu, true);
+}
