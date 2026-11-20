@@ -1909,3 +1909,48 @@ fn run_move_special_sr()
 	assert_eq!(cpu.read_program_counter(), 0x0000000a);
 	assert_eq!(cpu.read_status(), 0x0015);
 }
+
+#[test]
+fn run_move_special_usp()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x4e60u16); // move a0, usp
+	memory_map.write_address(0x000002, 0x4e69u16); // move usp, a1
+	memory_map.write_address(0x000004, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence in supervisor mode
+	cpu.write_status(0x0000);
+	assert_eq!(cpu.read_addr_register(7), 0x00000000);
+	cpu.execute_from(0x00000000, 0x00800000, false);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x2000);
+	// Set up a0 to a sensible value
+	cpu.write_addr_register(0, 0x1234abcd);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	// Switch into user mode
+	cpu.write_status(0x0000);
+	assert_eq!(cpu.read_addr_register(7), 0x1234abcd);
+	// Update the USP with a new value then switch back into supervisor mode
+	cpu.write_addr_register(7, 0xdeadbeef);
+	cpu.write_status(0x2000);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_addr_register(1), 0xdeadbeef);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+
+	// Set the CPU back up to execute the same sequence in user mode
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the first instruction and validate that it traps
+	run_step(&mut cpu, true);
+}

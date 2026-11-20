@@ -2141,7 +2141,24 @@ impl<'a> Motorola68k<'a>
 
 	fn dispatch_move_special_usp(&mut self, insn: &DecodedOperation) -> StepResult
 	{
-		StepResult::Invalid
+		// Check that we're in supervisor state, and if not, abort
+		if !self.status.contains(M68kStatusBits::Supervisor) {
+			return StepResult::Trap;
+		}
+
+		// Determine if this is a from (true) or to (false) move
+		let direction = insn.rx == 10;
+		// Using that, dispatch the move
+		if direction {
+			// Copy the USP to the target address register
+			*self.addr_register_mut(insn.ry as usize) = self.user_stack_pointer;
+		} else {
+			// Grab the new stack pointer value and stuff it into the register
+			self.user_stack_pointer = *self.addr_register(insn.rx as usize);
+		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
 	}
 
 	fn dispatch_rte(&mut self) -> StepResult
