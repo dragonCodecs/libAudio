@@ -1198,7 +1198,7 @@ impl<'a> Motorola68k<'a>
 	{
 		// Deal with the special register forms first
 		if insn.ry == 8 || insn.ry == 9 {
-			return self.dispatch_addi_special_ccr(insn);
+			return self.dispatch_andi_special_ccr(insn);
 		}
 		// Unpack the operation size to a value in bytes
 		let operation_size = insn.unpack_size();
@@ -1235,7 +1235,7 @@ impl<'a> Motorola68k<'a>
 		StepResult::Valid
 	}
 
-	fn dispatch_addi_special_ccr(&mut self, insn: &DecodedOperation) -> StepResult
+	fn dispatch_andi_special_ccr(&mut self, insn: &DecodedOperation) -> StepResult
 	{
 		// If this instruction is for the SR specifically, it is privileged, so check that
 		if insn.ry == 9 && !self.status.contains(M68kStatusBits::Supervisor) {
