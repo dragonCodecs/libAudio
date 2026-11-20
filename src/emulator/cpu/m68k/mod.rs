@@ -362,6 +362,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Lea => return self.dispatch_lea(&insn),
 			Instruction::Lsl => return self.dispatch_lsl(&insn),
 			Instruction::Lsr => return self.dispatch_lsr(&insn),
+			Instruction::Move => return self.dispatch_move(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2055,6 +2056,60 @@ impl<'a> Motorola68k<'a>
 		// Finally, write the result back to the EA target and get done
 		self.write_value(insn.mode, insn.ry, effective_address, result);
 		StepResult::Valid
+	}
+
+	fn dispatch_move(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Detect and handle the special MOVE instructions (USP, CCR, and SR)
+		match u8::max(insn.rx, insn.ry) {
+			8 => return self.dispatch_move_special_ccr(insn),
+			9 => return self.dispatch_move_special_sr(insn),
+			10 => return self.dispatch_move_special_usp(insn),
+			_ => {},
+		};
+
+		// Extract out the mode parts of the effective addresses
+		let src_ea_mode = insn.mode & 0x07;
+		let dst_ea_mode = (insn.mode & 0x38) >> 3;
+		// Read the data to be moved, unsigned so as not to cause problems on write back
+		let value = self.read_effective_address::<u32>(src_ea_mode, insn.ry, insn.operation_size);
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * insn.operation_size) - 1);
+		// Clear flags that are always cleared
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Check if the value is zero
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if the value is negative
+		if (value & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+
+		// Now put the value into the destination location
+		self.write_effective_address(dst_ea_mode, insn.rx, insn.operation_size as usize, value);
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_move_special_ccr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		StepResult::Invalid
+	}
+
+	fn dispatch_move_special_sr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		StepResult::Invalid
+	}
+
+	fn dispatch_move_special_usp(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		StepResult::Invalid
 	}
 
 	fn dispatch_rte(&mut self) -> StepResult
