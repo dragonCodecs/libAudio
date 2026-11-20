@@ -2189,3 +2189,39 @@ fn run_moveq()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_muls()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0xc1fcu16);
+	memory_map.write_address(0x000002, 0x0003u16); // muls.w #3, d0
+	memory_map.write_address(0x000004, 0xc3c0u16); // muls.w d0, d1
+	memory_map.write_address(0x000006, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up d0 and d1 to sensible values
+	cpu.write_data_register(0, 0x0ca78132);
+	cpu.write_data_register(1, 0x00010000);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Set the status register to some improbable value that makes it easy to see if it changes
+	cpu.write_status(0x001f);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(0), 0xfffe8396);
+	assert_eq!(cpu.read_status(), 0x0018);
+	// Set the status register to some other improbable value that makes it easy to see if it changes
+	cpu.write_status(0x0001);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_data_register(1), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x0004);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
