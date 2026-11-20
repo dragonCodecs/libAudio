@@ -1491,3 +1491,65 @@ fn run_eori_special()
 	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
 	run_step(&mut cpu, true);
 }
+
+#[test]
+fn run_ext()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x4880u16); // ext.w d0
+	memory_map.write_address(0x000002, 0x4881u16); // ext.w d1
+	memory_map.write_address(0x000004, 0x48c0u16); // ext.l d0
+	memory_map.write_address(0x000006, 0x48c1u16); // ext.l d1
+	memory_map.write_address(0x000008, 0x49c0u16); // extb.l d0
+	memory_map.write_address(0x00000a, 0x49c2u16); // extb.l d2
+	memory_map.write_address(0x00000c, 0x4e75u16); // rts to end the test
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up d0, d1 and d2 to sensible values
+	cpu.write_data_register(0, 0x00000000);
+	cpu.write_data_register(1, 0x000000c3);
+	cpu.write_data_register(2, 0x000000f0);
+	// Set the status register to some improbable value that makes it easy to see if it changes
+	cpu.write_status(0x001b);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_data_register(0), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x0014);
+	// Set the status register to some other improbable value that makes it easy to see if it changes
+	cpu.write_status(0x0007);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(1), 0x0000ffc3);
+	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_data_register(0), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x0004);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_data_register(1), 0xffffffc3);
+	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the fifth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000a);
+	assert_eq!(cpu.read_data_register(0), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x0004);
+	// Set the status register to a third improbable value that makes it easy to see if it changes
+	cpu.write_status(0x0017);
+	// Step the sixth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000c);
+	assert_eq!(cpu.read_data_register(2), 0xfffffff0);
+	assert_eq!(cpu.read_status(), 0x0018);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}

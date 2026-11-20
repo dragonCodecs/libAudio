@@ -355,6 +355,8 @@ impl<'a> Motorola68k<'a>
 			Instruction::Divu => return self.dispatch_divu(&insn),
 			Instruction::Eor => return self.dispatch_eor(&insn),
 			Instruction::Eori => return self.dispatch_eori(&insn),
+			Instruction::Ext => return self.dispatch_ext(&insn),
+			Instruction::Extb => return self.dispatch_extb(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1835,6 +1837,53 @@ impl<'a> Motorola68k<'a>
 		self.status.bits = lhs ^ rhs;
 
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_ext(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Grab the s8 or s16 to extend and extend it
+		let value = self.read_data_register_signed(insn.rx, insn.operation_size as usize);
+		// Recompute status flags, starting by clearing carry and overflow
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Check if the result is zero
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if the result is negative
+		if value < 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Write the result back at double the starting width and mark as success and valid
+		// (EXT does s8 -> s16, and s16 -> s32, EXTB does s8 -> s32)
+		self.write_data_register_sized(insn.rx, insn.operation_size as usize * 2, value as u32);
+		StepResult::Valid
+	}
+
+	fn dispatch_extb(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Grab the byte from the register to extend (as signed) and extend it
+		let value = self.read_data_register_signed(insn.rx, 1);
+		// Recompute status flags, starting by clearing carry and overflow
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Check if the result is zero
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if the result is negative
+		if value < 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Write the result back and say that this instruction succeeded and was valid
+		*self.data_register_mut(insn.rx as usize) = value as u32;
 		StepResult::Valid
 	}
 
