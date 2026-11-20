@@ -365,6 +365,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Move => return self.dispatch_move(&insn),
 			Instruction::Movea => return self.dispatch_movea(&insn),
 			Instruction::Movem => return self.dispatch_movem(&insn),
+			Instruction::Movep => return self.dispatch_movep(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2257,6 +2258,54 @@ impl<'a> Motorola68k<'a>
 			}
 		}
 
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_movep(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the displacement for this instruction
+		let displacement = self.read_immediate_displacement(insn);
+		// Adjust the program counter past the instruction
+		self.program_counter += insn.trailing_bytes as u32;
+		// Grab the address to be used with memory (and apply the displacement)
+		let unaligned_address = self.addr_register(insn.ry as usize).wrapping_add_signed(displacement);
+		let address = unaligned_address & 0xfffffffe;
+		// Figure out if the address is even or odd so we put the bytes in the right locations in memory
+		let u16_shift = if (unaligned_address & 1) == 0 {
+			8
+		} else {
+			0
+		};
+		// Figure out the starting offset for (un)packing the register
+		let start_offset = insn.operation_size - 1;
+		// Are we moving reg -> mem or mem -> reg?
+		if insn.op_mode != 0 {
+			// reg -> mem, okay - grab the data from the register to move into memory
+			let data = *self.data_register(insn.rx as usize);
+			// Start looping through the bytes to move
+			for byte in 0..insn.operation_size {
+				// Compute the shift for this byte
+				let shift = (start_offset - byte) * 8;
+				// Extract the byte and get it in the right location for the destination
+				let value = (((data >> shift) as u8) as u16) << u16_shift;
+				// Store the extracted data to the target memory address
+				self.peripherals.write_address(address + (byte * 2) as u32, value);
+			}
+		} else {
+			// mem -> reg, start looping through the bytes to move
+			let mut data = 0;
+			for byte in 0..insn.operation_size {
+				// Read the value at the target memory address
+				let value = (self.peripherals.read_address::<u16>(address + (byte * 2) as u32) >> u16_shift) as u8;
+				// Compute the shift for this byte
+				let shift = (start_offset - byte) * 8;
+				// Shift the value into the right place in the register data
+				data |= (value as u32) << shift;
+			}
+			// Now store the resulting value in the register
+			*self.data_register_mut(insn.rx as usize) = data;
+		}
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
