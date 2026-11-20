@@ -363,6 +363,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Lsl => return self.dispatch_lsl(&insn),
 			Instruction::Lsr => return self.dispatch_lsr(&insn),
 			Instruction::Move => return self.dispatch_move(&insn),
+			Instruction::Movea => return self.dispatch_movea(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2158,6 +2159,15 @@ impl<'a> Motorola68k<'a>
 		}
 
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_movea(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Read the data to be moved, allowing it to sign extend to fill the whole target address register
+		let value = self.read_effective_address::<i32>(insn.mode, insn.ry, insn.operation_size);
+		// Store the value into the target address register and report as success of a valid instruction
+		*self.addr_register_mut(insn.rx as usize) = value as u32;
 		StepResult::Valid
 	}
 
