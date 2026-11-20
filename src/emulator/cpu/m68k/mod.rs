@@ -353,6 +353,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Dbcc => return self.dispatch_dbcc(&insn),
 			Instruction::Divs => return self.dispatch_divs(&insn),
 			Instruction::Divu => return self.dispatch_divu(&insn),
+			Instruction::Eor => return self.dispatch_eor(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
@@ -1732,6 +1733,43 @@ impl<'a> Motorola68k<'a>
 			*self.data_register_mut(insn.rx as usize) =
 				((quotient as u16) as u32) | (((remainder as u16) as u32) << 16);
 		}
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_eor(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the LHS using the computed address
+		let lhs = self.read_value_sized::<u32>(insn.mode, insn.ry, effective_address, operation_size);
+		// Grab the data to use for the RHS
+		let rhs = self.read_data_register(insn.rx as usize);
+		// Apply the exclusive or operation
+		let result = lhs ^ rhs;
+
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		// Recompute all the flags, starting with the negative bit
+		if (result & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Then the zero bit
+		if result == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// The overflow and carry bits are always cleared by this instruction
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+
+		// Store the result back
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
