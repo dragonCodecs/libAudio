@@ -358,6 +358,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Ext => return self.dispatch_ext(&insn),
 			Instruction::Extb => return self.dispatch_extb(&insn),
 			Instruction::Jmp => return self.dispatch_jmp(&insn),
+			Instruction::Jsr => return self.dispatch_jsr(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -1893,6 +1894,19 @@ impl<'a> Motorola68k<'a>
 		// and then load that into the program counter, competing the jump
 		self.program_counter = self.compute_effective_address(insn.mode, insn.ry, 4);
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_jsr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the address to jump to from the effective address for the instruction
+		let destination = self.compute_effective_address(insn.mode, insn.ry, 4);
+		// Now we have the target, push the post-instruction program counter to stack
+		let stack_pointer = *self.active_stack_pointer() - 4;
+		self.peripherals.write_address(stack_pointer, self.program_counter);
+		*self.active_stack_pointer_mut() = stack_pointer;
+		// Now update the program counter to the new execution address and get done
+		self.program_counter = destination;
 		StepResult::Valid
 	}
 
