@@ -369,6 +369,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Moveq => return self.dispatch_moveq(&insn),
 			Instruction::Muls => return self.dispatch_muls(&insn),
 			Instruction::Mulu => return self.dispatch_mulu(&insn),
+			Instruction::Neg => return self.dispatch_neg(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2391,6 +2392,51 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result in the target data register and return
 		*self.data_register_mut(insn.rx as usize) = result;
+		StepResult::Valid
+	}
+
+	fn dispatch_neg(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the value to negate and do so
+		let rhs = self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size);
+		let result = -rhs;
+
+		// Compute which bit is the sign bit of the result and build a value mask from it
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		let mask = sign_bit | (sign_bit - 1);
+		// Convert the result to unsigned for flags recomputation, and mask it
+		let value = (result as u32) & mask;
+		// Recompute all the flags bits, starting with the zero bit
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+			// Spec says carry and extend are cleared in this case
+			self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Extend);
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+			// Spec says carry and extend are set in this case
+			self.status |= M68kStatusBits::Carry | M68kStatusBits::Extend;
+		}
+		// Check if the result is negative
+		if (value & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Now check for overflow - negation is a special-case, where the only overflow
+		// that can occur is where one tries to negate the smallest negative integer of
+		// a given width from itself, so check for that using masking!
+		if value == sign_bit {
+			self.status |= M68kStatusBits::Overflow;
+		} else {
+			self.status &= !M68kStatusBits::Overflow;
+		}
+
+		// Store the result back and return success for a valid instruction
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, value);
 		StepResult::Valid
 	}
 
