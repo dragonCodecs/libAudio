@@ -364,6 +364,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Lsr => return self.dispatch_lsr(&insn),
 			Instruction::Move => return self.dispatch_move(&insn),
 			Instruction::Movea => return self.dispatch_movea(&insn),
+			Instruction::Movem => return self.dispatch_movem(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2168,6 +2169,95 @@ impl<'a> Motorola68k<'a>
 		let value = self.read_effective_address::<i32>(insn.mode, insn.ry, insn.operation_size);
 		// Store the value into the target address register and report as success of a valid instruction
 		*self.addr_register_mut(insn.rx as usize) = value as u32;
+		StepResult::Valid
+	}
+
+	fn dispatch_movem(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the list of registers to move
+		let register_list = self.peripherals.read_address::<u16>(self.program_counter);
+		self.program_counter += 2;
+		// Determine whether we're in postincrement mode or not
+		let is_postincrement = insn.mode == 3;
+		// Determine whether we're in predecrement mode or not
+		let is_predecrement = insn.mode == 4;
+		// Determine whether we're in a complex EA mode (something that has instruction-trailing addressing bytes)
+		let complex_mode = !(is_postincrement || is_predecrement);
+		// Figure out the base address for where to move the registers to if in a complex EA mode
+		let mut address = if complex_mode {
+			self.compute_effective_address(insn.mode, insn.ry, insn.operation_size as usize)
+		} else {
+			0
+		};
+		// Loop through all 16 possible register slots
+		for idx in 0..16 {
+			// Check if this register should be moved or not
+			if (register_list & (1 << idx)) == 0 {
+				continue;
+			}
+			// For the simple EA modes, figure out to what address we should move this register
+			if !complex_mode {
+				address = self.compute_effective_address(insn.mode, insn.ry, insn.operation_size as usize);
+			}
+			// Determine transfer direction (1 = mem -> reg, 0 = reg -> mem)
+			if insn.op_mode != 0 {
+				// Grab the value to update the register to from memory
+				let value = if insn.operation_size == 2 {
+					self.peripherals.read_address::<i16>(address) as i32
+				} else {
+					self.peripherals.read_address::<i32>(address)
+				};
+				// And update the selected register with that value
+				// If it's predecrement, the whole lot is backwards - a7-a0, then d7-d0
+				*if is_predecrement {
+					if idx < 8 {
+						self.addr_register_mut(7 - idx)
+					} else {
+						self.data_register_mut(7 - (idx - 8))
+					}
+				}
+				// Otherwise, if it's any other mode, it's d0-d7, then a0-a7
+				else {
+					if idx < 8 {
+						self.data_register_mut(idx)
+					} else {
+						self.addr_register_mut(idx - 8)
+					}
+				} = value as u32;
+			} else {
+				// Determine which register to move
+				let reg =
+					// If it's predecrement, the whole lot is backwards - a7-a0, then d7-d0
+					if is_predecrement {
+						if idx < 8 {
+							*self.addr_register(7 - idx)
+						} else {
+							*self.data_register(7 - (idx - 8))
+						}
+					}
+					// Otherwise, if it's any other mode, it's d0-d7, then a0-a7
+					else {
+						if idx < 8 {
+							*self.data_register(idx)
+						} else {
+							*self.addr_register(idx - 8)
+						}
+					};
+				// Put the register's value to memory
+				if insn.operation_size == 2 {
+					self.peripherals.write_address(address, reg as u16);
+				} else {
+					self.peripherals.write_address(address, reg);
+				}
+			}
+
+			// If we're in a complex mode, treat it as postincrement
+			if complex_mode {
+				address += insn.operation_size as u32;
+			}
+		}
+
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 
