@@ -361,6 +361,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Jsr => return self.dispatch_jsr(&insn),
 			Instruction::Lea => return self.dispatch_lea(&insn),
 			Instruction::Lsl => return self.dispatch_lsl(&insn),
+			Instruction::Lsr => return self.dispatch_lsr(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -1981,6 +1982,73 @@ impl<'a> Motorola68k<'a>
 		let carry = ((value >> 15) & 1) != 0;
 		// Now actually do the shift on the value
 		let result = value << 1;
+		// Recompute all the status bits
+		self.recompute_status_flags_shift(result as u32, carry, sign_bit, false);
+
+		// Finally, write the result back to the EA target and get done
+		self.write_value(insn.mode, insn.ry, effective_address, result);
+		StepResult::Valid
+	}
+
+	fn dispatch_lsr(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// LSL has 3 forms, check if this is the effective addressed form
+		if insn.flags.contains(OperationFlags::MemoryNotRegister) {
+			return self.dispatch_lsr_memory(insn);
+		}
+
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1u32 << ((8 * operation_size) - 1);
+		// Convert that into a mask to apply to the value
+		let mask = sign_bit | (sign_bit - 1);
+
+		// Figure out the shift amount to use
+		let shift = if insn.flags.contains(OperationFlags::ImmediateNotRegister) {
+			// Unpack the immediate as the shift amount (remapping 0 as 8)
+			if insn.rx == 0 {
+				8
+			} else {
+				insn.rx
+			}
+		} else {
+			// Otherwise, extract the data register specified and bound the shift
+			(self.data_register(insn.rx as usize) & 0x3f) as u8
+		} as usize;
+
+		// Extract the data to shift from the data register, and mask it
+		let value = self.data_register(insn.ry as usize) & mask;
+		// Extract the value to use as the new carry and extend bits
+		let carry = if shift == 0 {
+			0
+		} else {
+			(value >> (shift - 1)) & 1
+		} != 0;
+		// Now actually do the shift on the value
+		let result = (value >> shift) & mask;
+		// Recompute all the status bits
+		self.recompute_status_flags_shift(result, carry, sign_bit, shift == 0);
+
+		// Finally, write the result back and get done
+		self.write_data_register_sized(insn.ry, operation_size, result);
+		StepResult::Valid
+	}
+
+	fn dispatch_lsr_memory(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out the operation width
+		let operation_size = insn.unpack_size();
+		// Compute which bit is the sign bit of the result
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		// Extract the address of the manipulation target
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Extract the data to shift from the EA target
+		let value = self.read_value::<u16>(insn.mode, insn.ry, effective_address);
+		// Extract the value to use as the new carry and extend bits
+		let carry = (value & 1) != 0;
+		// Now actually do the shift on the value
+		let result = value >> 1;
 		// Recompute all the status bits
 		self.recompute_status_flags_shift(result as u32, carry, sign_bit, false);
 
