@@ -366,6 +366,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Movea => return self.dispatch_movea(&insn),
 			Instruction::Movem => return self.dispatch_movem(&insn),
 			Instruction::Movep => return self.dispatch_movep(&insn),
+			Instruction::Moveq => return self.dispatch_moveq(&insn),
 			Instruction::Nop => return StepResult::Valid,
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
@@ -2307,6 +2308,31 @@ impl<'a> Motorola68k<'a>
 			*self.data_register_mut(insn.rx as usize) = data;
 		}
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_moveq(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Make the value signed so when we copy it to the target register, it sign-extends
+		// and so that flags generation works propeprly
+		let value = insn.ry as i8 as i32;
+		// Clear flags that are always cleared
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Check if the value is zero
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if the value is negative
+		if value < 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+
+		// Move the value to the target data register and return
+		*self.data_register_mut(insn.rx as usize) = value as u32;
 		StepResult::Valid
 	}
 
