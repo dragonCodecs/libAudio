@@ -459,6 +459,7 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Bset => return self.dispatch_bset(insn),
 			Instruction::Bsr => return self.dispatch_bsr(insn),
 			Instruction::Btst => return self.dispatch_btst(insn),
+			Instruction::Cinva | Instruction::Cinvl | Instruction::Cinvp => return self.dispatch_cinv(insn),
 			Instruction::Clr => return self.dispatch_clr(insn),
 			Instruction::Cmp => return self.dispatch_cmp(insn),
 			Instruction::Cmpa => return self.dispatch_cmpa(insn),
@@ -1671,6 +1672,12 @@ impl<'a> Motorola68kInner<'a>
 			self.status &= !M68kStatusBits::Zero;
 		}
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_cinv(&mut self, _insn: &DecodedOperation) -> StepResult
+	{
+		// This instruction is (for now) a no-op
 		StepResult::Valid
 	}
 
