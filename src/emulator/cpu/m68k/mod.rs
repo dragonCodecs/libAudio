@@ -449,6 +449,7 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Adda => return self.dispatch_adda(insn),
 			Instruction::Addi => return self.dispatch_addi(insn),
 			Instruction::Addq => return self.dispatch_addq(insn),
+			Instruction::Addx => return self.dispatch_addx(insn),
 			Instruction::And => return self.dispatch_and(insn),
 			Instruction::Andi => return self.dispatch_andi(insn),
 			Instruction::Asl => return self.dispatch_asl(insn),
@@ -1271,6 +1272,40 @@ impl<'a> Motorola68kInner<'a>
 
 		// Store the result back
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_addx(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Convert the instruction flags into an EA mode value (`-(An)` form if memory, `Dn` if register)
+		let mode = if insn.flags.contains(OperationFlags::MemoryNotRegister) {
+			4
+		} else {
+			0
+		};
+		// Figure out the effective addresses for the operands as much as possible so we know where to go poking
+		let lhs_effective_address = self.compute_effective_address(mode, insn.ry, operation_size);
+		let rhs_effective_address = self.compute_effective_address(mode, insn.rx, operation_size);
+		// Grab the LHS as being the value held using the source register
+		let lhs = self.read_value_sized::<u32>(mode, insn.ry, lhs_effective_address, operation_size);
+		// Now do the same for the RHS using the value held using the destination register
+		let rhs = self.read_value_sized::<u32>(mode, insn.rx, rhs_effective_address, operation_size);
+		// Do the addition with the extend bit too
+		let result = (lhs as u64).wrapping_add(rhs as u64).wrapping_add(
+			if self.status.includes(M68kStatusBits::Extend) {
+				1
+			} else {
+				0
+			},
+		);
+
+		// Recompute all the flags bits and store the result back
+		self.recompute_status_flags(lhs, rhs, result, operation_size, false);
+		self.write_value_sized(mode, insn.rx, rhs_effective_address, operation_size, result as u32);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
