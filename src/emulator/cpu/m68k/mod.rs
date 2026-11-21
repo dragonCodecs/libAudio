@@ -363,7 +363,7 @@ impl<'a> Motorola68kInner<'a>
 	fn stage_irq_call(&mut self, vector_address: u32)
 	{
 		// Grab the old status register value
-		let status_reg = self.status.bits;
+		let status = self.status.bits;
 		// Force supervisor mode
 		self.status |= M68kStatusBits::Supervisor;
 		// Grab the active stack and start stacking up a throwaway exception frame
@@ -378,7 +378,7 @@ impl<'a> Motorola68kInner<'a>
 		self.program_counter = self.peripherals.read_address(vector_address);
 		// Stack up the previous status register to be restored on RTE
 		stack_pointer -= 2;
-		self.peripherals.write_address(stack_pointer, status_reg);
+		self.peripherals.write_address(stack_pointer, status);
 		// Write the stack pointer back now we're done modifying it
 		*self.active_stack_pointer_mut() = stack_pointer;
 	}

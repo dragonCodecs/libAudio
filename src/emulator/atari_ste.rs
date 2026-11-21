@@ -312,7 +312,7 @@ impl<'a> AtariSTe<'a>
 		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
 		while self.cpu.read_program_counter() != u32::MAX || self.cpu.has_pending_interrupts() {
 			// Try to advance the clock and check if the CPU is in a trap state
-			if self.cpu.advance_clock() || self.cpu.trapped() {
+			if !self.cpu.advance_clock() || self.cpu.trapped() {
 				// Something bad happened, so display the program counter at the faulting instruction
 				let program_counter = self.cpu.read_program_counter();
 				console::debug(format!("Bad instruction at 0x{program_counter:06x}"));
