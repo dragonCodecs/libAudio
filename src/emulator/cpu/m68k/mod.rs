@@ -111,10 +111,14 @@ impl<'a> Motorola68k<'a>
 		self.execute_from(entry_address, stack_top, as_user);
 		// Now run till we RTS and hit the sentinel program counter state
 		loop {
+			// Grab the program counter at the start
+			let program_counter = self.read_program_counter();
 			// Try and run another instruction
 			let result = self.step();
 			// Check that something bad didn't happen
 			if matches!(result, StepResult::Trap | StepResult::Invalid) {
+				// Something bad happened, so display the program counter at the faulting instruction
+				println!(" [DBG] Bad instruction at {program_counter:06x}");
 				return false;
 			}
 			// Check for the sentinel program counter value
@@ -183,11 +187,12 @@ impl<'a> Motorola68k<'a>
 			return StepResult::Valid;
 		}
 		// Start by fetching a uint16_t for the instruction and trying to decode it
-		let insn: DecodedOperation = self.peripherals.read_address::<u16>(self.read_program_counter()).into();
+		let raw_insn = self.peripherals.read_address::<u16>(self.read_program_counter());
+		let insn: DecodedOperation = raw_insn.into();
 		let mut inner = self.inner.borrow_mut();
 		inner.program_counter += 2;
 		// Now we have an instruction to run, try to dispatch it
-		inner.step(&insn)
+		inner.step(raw_insn, &insn)
 	}
 
 	pub fn advance_clock(&mut self) -> bool
@@ -442,7 +447,7 @@ impl<'a> Motorola68kInner<'a>
 		self.status.bits = value;
 	}
 
-	pub fn step(&mut self, insn: &DecodedOperation) -> StepResult
+	pub fn step(&mut self, raw_insn: u16, insn: &DecodedOperation) -> StepResult
 	{
 		match insn.operation {
 			Instruction::Add => return self.dispatch_add(insn),
@@ -500,7 +505,9 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Swap => return self.dispatch_swap(insn),
 			Instruction::Trap => return self.dispatch_trap(insn),
 			Instruction::Tst => return self.dispatch_tst(insn),
-			_ => {},
+			_ => {
+				println!(" [DBG] Unimplemented instruction {raw_insn:04} encountered, aborting");
+			},
 		}
 
 		StepResult::Invalid
