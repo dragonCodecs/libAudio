@@ -376,6 +376,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
 			Instruction::Scc => return self.dispatch_scc(&insn),
+			Instruction::Sub => return self.dispatch_sub(&insn),
 			_ => {},
 		}
 
@@ -1594,7 +1595,7 @@ impl<'a> Motorola68k<'a>
 		let result = (lhs as u64).wrapping_sub(rhs as u64);
 
 		// Recompute all the flags
-		self.recompute_status_flags(lhs, !rhs + 1, result, operation_size, true);
+		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, true);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
@@ -1611,7 +1612,7 @@ impl<'a> Motorola68k<'a>
 		let result = (lhs as u64).wrapping_sub(rhs as u64);
 
 		// Recompute all the flags
-		self.recompute_status_flags(lhs, !rhs + 1, result, insn.operation_size as usize, true);
+		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, insn.operation_size as usize, true);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
@@ -1630,7 +1631,7 @@ impl<'a> Motorola68k<'a>
 		let result = (lhs as u64).wrapping_sub(rhs as u64);
 
 		// Recompute all the flags
-		self.recompute_status_flags(lhs, !rhs + 1, result, operation_size, true);
+		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, true);
 
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
@@ -2597,6 +2598,47 @@ impl<'a> Motorola68k<'a>
 				0
 			} as u32,
 		);
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_sub(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Figure out which direction the operation is going in
+		let ea_as_source = insn.op_mode == 0;
+		// Grab the LHS operand - if the EA operand is the destination, it is also the LHS operand
+		let lhs = if !ea_as_source {
+			self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size)
+		}
+		// Otherwise the LHS is the data register
+		else {
+			self.read_data_register_signed(insn.rx, operation_size)
+		} as u32;
+		// Grab the RHS operand - if the EA operand is the source, it is then the RHS operand
+		let rhs = if ea_as_source {
+			self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size)
+		}
+		// Otherwise the RHS is the data register
+		else {
+			self.read_data_register_signed(insn.rx, operation_size)
+		} as u32;
+		// With the two values retreived, do the subtraction
+		let result = (lhs as u64).wrapping_sub(rhs as u64);
+
+		// Recompute all the flags
+		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, false);
+
+		// Store the result back
+		if ea_as_source {
+			self.write_data_register_sized(insn.rx, operation_size, result as u32);
+		} else {
+			self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+		}
+
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
