@@ -377,6 +377,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Rts => return self.dispatch_rts(),
 			Instruction::Scc => return self.dispatch_scc(&insn),
 			Instruction::Sub => return self.dispatch_sub(&insn),
+			Instruction::Suba => return self.dispatch_suba(&insn),
 			_ => {},
 		}
 
@@ -2639,6 +2640,16 @@ impl<'a> Motorola68k<'a>
 			self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
 		}
 
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_suba(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the value to be subtracted from the target address register
+		let value = self.read_effective_address::<i32>(insn.mode, insn.ry, insn.operation_size);
+		// Now update the target address register
+		*self.addr_register_mut(insn.rx as usize) = self.addr_register(insn.rx as usize).wrapping_sub_signed(value);
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}

@@ -2583,3 +2583,37 @@ fn run_sub()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_suba()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x90e1u16); // suba.w -(a1), a0
+	memory_map.write_address(0x000002, 0x93c0u16); // suba.l d0, a1
+	memory_map.write_address(0x000004, 0x4e75u16); // rts to end the test
+	memory_map.write_address(0x000100, 0xc100u16);
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up a0, a1 and d0 to sensible values
+	cpu.write_addr_register(0, 0x00000010);
+	cpu.write_addr_register(1, 0x00000102);
+	cpu.write_data_register(0, 0x40000004);
+	// Set the status register to some improbable value that makes it easy to see if it changes
+	cpu.write_status(0x001f);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_addr_register(0), 0x00003f10);
+	assert_eq!(cpu.read_addr_register(1), 0x00000100);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_addr_register(1), 0xc00000fc);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
