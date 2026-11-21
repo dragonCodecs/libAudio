@@ -429,7 +429,7 @@ impl<'a> Motorola68k<'a>
 				print!(" [DBG] ");
 			}
 			if idx != 7 {
-				print!("  a{idx}: {:08x}", self.d[idx]);
+				print!("  a{idx}: {:08x}", self.a[idx]);
 			} else {
 				print!(
 					"  a7: {:08x}",
