@@ -1017,7 +1017,6 @@ impl<'a> Motorola68kInner<'a>
 			0xb => self.status.includes(M68kStatusBits::Negative),
 			// GE
 			0xc => {
-				println!("BGE");
 				self.status
 					.includes(M68kStatusBits::Negative | M68kStatusBits::Overflow) ||
 					self.status
