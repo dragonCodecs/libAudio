@@ -378,6 +378,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Scc => return self.dispatch_scc(&insn),
 			Instruction::Sub => return self.dispatch_sub(&insn),
 			Instruction::Suba => return self.dispatch_suba(&insn),
+			Instruction::Subi => return self.dispatch_subi(&insn),
 			_ => {},
 		}
 
@@ -2651,6 +2652,27 @@ impl<'a> Motorola68k<'a>
 		// Now update the target address register
 		*self.addr_register_mut(insn.rx as usize) = self.addr_register(insn.rx as usize).wrapping_sub_signed(value);
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_subi(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Extract the immediate that follows this instruction
+		let rhs = self.read_immediate_signed(operation_size) as u32;
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the LHS using the computed address
+		let lhs = self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size) as u32;
+		// With the two values retreived, do the subtraction
+		let result = (lhs as u64).wrapping_sub(rhs as u64);
+
+		// Recompute all the flags
+		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, false);
+
+		// Store the result back and aay that this instruction succeeded and was valid
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
 		StepResult::Valid
 	}
 }
