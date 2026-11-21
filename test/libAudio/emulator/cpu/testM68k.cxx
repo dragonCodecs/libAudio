@@ -33,45 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testSUBQ()
-	{
-		writeAddress(0x000000U, uint16_t{0x5183U}); // subq.l #8, d3
-		writeAddress(0x000002U, uint16_t{0x5948U}); // subq.w #4, a0
-		writeAddress(0x000004U, uint16_t{0x5b04U}); // subq.b #5, d4
-		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up a0, d3 and d4 to sensible values
-		cpu.writeAddrRegister(0U, 0x00000100U);
-		cpu.writeDataRegister(3U, 0x80000000U);
-		cpu.writeDataRegister(4U, 0x00000004U);
-		// Set the status register to some improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x001fU);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000000U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000002U);
-		assertEqual(cpu.readDataRegister(3U), 0x7ffffff8U);
-		assertEqual(cpu.readStatus(), 0x0002U);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000004U);
-		assertEqual(cpu.readAddrRegister(0U), 0x000000fcU);
-		// As this is done to an address register, the status flags should not change
-		assertEqual(cpu.readStatus(), 0x0002U);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000006U);
-		assertEqual(cpu.readDataRegister(4U), 0x000000ffU);
-		assertEqual(cpu.readStatus(), 0x0019U);
-		// Step the final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-	}
-
 	void testSWAP()
 	{
 		writeAddress(0x000000U, uint16_t{0x4840U}); // swap d0
@@ -221,7 +182,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testSUBQ)
 		CXX_TEST(testSWAP)
 		CXX_TEST(testTRAP)
 		CXX_TEST(testTST)

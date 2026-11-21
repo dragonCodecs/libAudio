@@ -379,6 +379,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Sub => return self.dispatch_sub(&insn),
 			Instruction::Suba => return self.dispatch_suba(&insn),
 			Instruction::Subi => return self.dispatch_subi(&insn),
+			Instruction::Subq => return self.dispatch_subq(&insn),
 			_ => {},
 		}
 
@@ -2673,6 +2674,35 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result back and aay that this instruction succeeded and was valid
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+		StepResult::Valid
+	}
+
+	fn dispatch_subq(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the LHS using the computed address
+		let lhs = self.read_value_sized::<i32>(insn.mode, insn.ry, effective_address, operation_size) as u32;
+		// Unpack the value to add as the RHS (remapping 0 as 8)
+		let rhs = if insn.rx == 0 {
+			8
+		} else {
+			insn.rx
+		} as u32;
+		// With the two values retreived, do the subtraction
+		let result = (lhs as u64).wrapping_sub(rhs as u64);
+
+		// Recompute all the flags if not poking an address register
+		if insn.mode != 1 {
+			self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, false);
+		}
+
+		// Store the result back
+		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
+
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 }
