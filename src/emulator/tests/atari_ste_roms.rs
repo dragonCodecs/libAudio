@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use super::AtariSTeROMs;
+use super::{AtariSTeROMs, HANDLER_ADDRESS_GEMDOS};
 use crate::emulator::MemoryMap;
 use crate::emulator::cpu::m68k::Motorola68k;
 use crate::emulator::ram::Ram;
@@ -18,6 +18,9 @@ fn setup_memory_map<'a>(cpu: Motorola68k<'a>, memory_map: &mut MemoryMap<'a, u32
 		0x100000..0x200000,
 		AtariSTeROMs::new(cpu, memory_map.clone(), HEAP_BASE, HEAP_SIZE).into(),
 	);
+
+	// Set up the GEMDOS TRAP handler so we can use it in the tests
+	memory_map.write_address(0x000084, 0x100000 + HANDLER_ADDRESS_GEMDOS);
 }
 
 #[test]
@@ -33,10 +36,10 @@ fn allocator()
 	memory_map.write_address(0x000106, 0x3f3cu16);
 	memory_map.write_address(0x000108, 0x0048u16); // move.w #$48, -(sp)
 	memory_map.write_address(0x00010a, 0x4e41u16); // trap #1
-	memory_map.write_address(0x000106, 0x5c8fu16); // addq.l #6, sp
-	memory_map.write_address(0x000106, 0x4e75u16); // rts
+	memory_map.write_address(0x00010c, 0x5c8fu16); // addq.l #6, sp
+	memory_map.write_address(0x00010e, 0x4e75u16); // rts
 	// Set the CPU to execute this sequence and run it
-	// assert!(cpu.execute_to_return(0x00000100, 0x00080000, false));
+	assert!(cpu.execute_to_return(0x00000100, 0x00080000, false));
 	// Extract the allocation address returned and check it's correct
-	// assert_eq!(cpu.read_data_register(0), 0x00080000);
+	assert_eq!(cpu.read_data_register(0), 0x00080000);
 }
