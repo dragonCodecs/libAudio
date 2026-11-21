@@ -182,7 +182,7 @@ impl<'a> Motorola68k<'a>
 	pub fn step(&mut self) -> StepResult
 	{
 		// See if there are any pending interrupt requests
-		if self.inner.borrow_mut().check_pending_irqs() {
+		if Motorola68kInner::check_pending_irqs(&self.inner) {
 			// There was, so return a step result indicating we "executed" an "instruction"
 			return StepResult::Valid;
 		}
@@ -299,14 +299,14 @@ impl<'a> Motorola68kInner<'a>
 		self.interrupt_requesters[level as usize] = Some(requester);
 	}
 
-	fn check_pending_irqs(&mut self) -> bool
+	fn check_pending_irqs(this: &Rc<RefCell<Self>>) -> bool
 	{
 		// Extract the current exception mask from the status register
-		let min_irq_priority = ((self.status.bits & 0x0700) >> 8) as u8;
+		let min_irq_priority = ((this.borrow().status.bits & 0x0700) >> 8) as u8;
 		// Calculate a mask from this number
 		let irq_mask = !((1u16 << (min_irq_priority + 1)) - 1) as u8;
 		// Now see which (if any) pending IRQ bits are still set (level 7 is always allowed, it is NMI)
-		let unmasked_irqs = self.pending_irqs & (irq_mask | 0x80);
+		let unmasked_irqs = this.borrow().pending_irqs & (irq_mask | 0x80);
 		// If there are no bits set, we're done here..
 		if unmasked_irqs == 0 {
 			return false;
@@ -322,19 +322,19 @@ impl<'a> Motorola68kInner<'a>
 				continue;
 			}
 			// Ok, we've identified the current most high priority pending interrupt, clear it from pending
-			self.pending_irqs &= !(1 << level);
+			this.borrow_mut().pending_irqs &= !(1 << level);
 			// Dispatch it using any available interrupt requester
-			let requester = &mut self.interrupt_requesters[level as usize];
+			let requester = this.borrow().interrupt_requesters[level as usize].clone();
 			if let Some(requester) = requester {
 				// Identify the IRQ cause and stack the associated vector address
 				let cause = requester.borrow_mut().irq_cause();
-				self.stage_irq_call((cause as u32) << 2);
+				this.borrow_mut().stage_irq_call((cause as u32) << 2);
 			} else {
 				// Turn this IRQ level into a request for the associated autovector slot and stack that
-				self.stage_irq_call((level as u32 + 24) << 2);
+				this.borrow_mut().stage_irq_call((level as u32 + 24) << 2);
 			}
 			// Mask any further IRQs at this level till the IRQ is handled
-			self.mask_irqs(level);
+			this.borrow_mut().mask_irqs(level);
 		}
 
 		// We entered an IRQ in this cycle, so step needs to stop here
