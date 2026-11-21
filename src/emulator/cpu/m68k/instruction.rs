@@ -1582,7 +1582,7 @@ impl From<u16> for DecodedOperation
 				// usage, only u16 and u32 indirect mode 7
 				!(ea_mode == 7 && !(ea_reg == 0 || ea_reg == 1)) => {
 					return DecodedOperation::new_immediate(
-						Instruction::Not,
+						Instruction::Ori,
 						ea_reg,
 						((insn & SIZE_MASK) >> SIZE_SHIFT) as u8,
 						ea_mode,
