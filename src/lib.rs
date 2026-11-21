@@ -4,5 +4,7 @@
 #![allow(non_snake_case)]
 
 pub mod api;
+#[allow(unused)]
+pub(crate) mod console;
 pub(crate) mod emulator;
 pub(crate) mod sndh;

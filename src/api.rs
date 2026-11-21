@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
 use core::slice;
-use std::ffi::c_char;
 use std::fs::File;
 #[cfg(not(target_family = "windows"))]
 use std::os::fd::{FromRawFd, IntoRawFd};
@@ -10,6 +9,7 @@ use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::windows::io::{FromRawHandle, IntoRawHandle, RawHandle};
 use std::ptr::{NonNull, null_mut};
 
+use crate::console;
 use crate::emulator::atari_ste::AtariSTe;
 use crate::sndh::ice_decrunch::SndhDecruncher;
 use crate::sndh::loader::{SndhLoader, SndhMetadata, SndhTimer};
@@ -78,7 +78,7 @@ pub fn sndh_loader_new(fd: i32) -> *mut SndhLoader
 			Box::into_raw(loader)
 		},
 		Err(error) => {
-			console::error(format!("{error}"));
+			console::error!("{error}");
 			null_mut()
 		},
 	}
@@ -306,7 +306,7 @@ pub unsafe fn atari_ste_copy_to_ram(atari_ste: *mut AtariSTe, decruncher: *mut S
 	match unsafe { atari_ste.as_mut() }.copy_to_ram(unsafe { decruncher.as_mut() }) {
 		Ok(()) => true,
 		Err(error) => {
-			console::error(format!("{error}"));
+			console::error!("{error}");
 			false
 		},
 	}
@@ -370,30 +370,6 @@ pub unsafe fn atari_ste_display_cpu_state(atari_ste: *mut AtariSTe)
 {
 	let atari_ste = unsafe { NonNull::new_unchecked(atari_ste) };
 	unsafe { atari_ste.as_ref() }.display_cpu_state();
-}
-
-pub(crate) mod console
-{
-	use std::ffi::CString;
-
-	use super::{console_debug, console_error};
-
-	pub fn error(message: String)
-	{
-		let message = unsafe { CString::from_vec_unchecked(message.into_bytes()) };
-		unsafe { console_error(message.into_raw()) };
-	}
-
-	pub fn debug(message: String)
-	{
-		let message = unsafe { CString::from_vec_unchecked(message.into_bytes()) };
-		unsafe { console_debug(message.into_raw()) };
-	}
-}
-
-unsafe extern "C" {
-	fn console_error(message: *const c_char);
-	fn console_debug(message: *const c_char);
 }
 
 #[cfg(target_family = "windows")]

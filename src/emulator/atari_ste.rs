@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use std::ops::Range;
 use std::rc::Rc;
 
-use crate::api::console;
+use crate::console;
 use crate::emulator::atari_ste_roms::{self, AtariSTeROMs};
 use crate::emulator::clock_manager::ClockManager;
 use crate::emulator::cpu::m68k::Motorola68k;
@@ -315,7 +315,7 @@ impl<'a> AtariSTe<'a>
 			if !self.cpu.advance_clock() || self.cpu.trapped() {
 				// Something bad happened, so display the program counter at the faulting instruction
 				let program_counter = self.cpu.read_program_counter();
-				console::debug(format!("Bad instruction at 0x{program_counter:06x}"));
+				console::debug!("Bad instruction at 0x{program_counter:06x}");
 				return false;
 			}
 		}
