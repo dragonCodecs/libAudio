@@ -2347,3 +2347,59 @@ fn run_nop()
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
+
+#[test]
+fn run_or()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x8080u16); // or.l d0, d0
+	memory_map.write_address(0x000002, 0x8050u16); // or.w (a0), d0
+	memory_map.write_address(0x000004, 0x803cu16);
+	memory_map.write_address(0x000006, 0x0040u16); // or.b #$40, d0
+	memory_map.write_address(0x000008, 0x8199u16); // or.l d0, (a1)+
+	memory_map.write_address(0x00000a, 0x4e75u16); // rts to end the test
+	memory_map.write_address(0x000100, 0x84000000u32);
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Re-use the 3rd instruction as the data for the 2nd, and set a reasonable destination for the 4th
+	cpu.write_addr_register(0, 0x00000004);
+	cpu.write_addr_register(1, 0x00000100);
+	// Make sure d0 starts out as 0 for this sequence
+	cpu.write_data_register(0, 0x00000000);
+	// Set the carry and overflow bits in the status register so we can observe them being cleared
+	// And the extend bit to make sure that's left alone
+	cpu.write_status(0x0013);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_data_register(0), 0x00000000);
+	assert_eq!(cpu.read_addr_register(0), 0x00000004);
+	assert_eq!(cpu.read_addr_register(1), 0x00000100);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0013);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_data_register(0), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x0014);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(0), 0x0000803c);
+	assert_eq!(cpu.read_status(), 0x0018);
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000008);
+	assert_eq!(cpu.read_data_register(0), 0x0000807c);
+	assert_eq!(cpu.read_status(), 0x0010);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x0000000a);
+	assert_eq!(cpu.read_data_register(0), 0x0000807c);
+	assert_eq!(cpu.read_addr_register(1), 0x00000104);
+	assert_eq!(memory_map.read_address::<u32>(0x000100), 0x8400807c);
+	assert_eq!(cpu.read_status(), 0x0018);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}

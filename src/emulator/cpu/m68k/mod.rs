@@ -371,6 +371,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Mulu => return self.dispatch_mulu(&insn),
 			Instruction::Neg => return self.dispatch_neg(&insn),
 			Instruction::Nop => return StepResult::Valid,
+			Instruction::Or => return self.dispatch_or(&insn),
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
 			_ => {},
@@ -2437,6 +2438,49 @@ impl<'a> Motorola68k<'a>
 
 		// Store the result back and return success for a valid instruction
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, value);
+		StepResult::Valid
+	}
+
+	fn dispatch_or(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Figure out the effective address operand as much as possible so we know where to go poking
+		let effective_address = self.compute_effective_address(insn.mode, insn.ry, operation_size);
+		// Grab the data register value used as one of the operands (logical or is commutative, so don't
+		// care which order we grab them here..)
+		let lhs = self.read_data_register(insn.rx as usize);
+		// Grab the other operand using the computed address
+		let rhs = self.read_value_sized::<u32>(insn.mode, insn.ry, effective_address, operation_size);
+		// With the two values retreived, do the logical or
+		let result = lhs | rhs;
+
+		// Compute which bit is the sign bit of the result and build a value mask from it
+		let sign_bit = 1 << ((8 * operation_size) - 1);
+		let mask = sign_bit | (sign_bit - 1);
+		// Recompute all the flags, starting with the negative bit
+		if (result & sign_bit) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Then the zero bit
+		if (result & mask) == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// The overflow and carry bits are always cleared by this instruction
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+
+		// Store the result back
+		if insn.op_mode == 0 {
+			self.write_data_register_sized(insn.rx, operation_size, result);
+		} else {
+			self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result);
+		}
+
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 
