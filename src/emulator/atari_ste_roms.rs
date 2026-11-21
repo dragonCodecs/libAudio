@@ -16,7 +16,7 @@ pub struct AtariSTeROMs<'a>
 
 struct AtariSTeROMsInner<'a>
 {
-	cpu: Rc<RefCell<Motorola68k<'a>>>,
+	cpu: Motorola68k<'a>,
 	memory_map: MemoryMap<'a, u32>,
 	allocator: RefCell<GemdosAllocator>,
 }
@@ -25,12 +25,7 @@ pub const HANDLER_ADDRESS_GEMDOS: u32 = 0x000000;
 
 impl<'a> AtariSTeROMs<'a>
 {
-	pub fn new(
-		cpu: Rc<RefCell<Motorola68k<'a>>>,
-		memory_map: MemoryMap<'a, u32>,
-		heap_base: u32,
-		heap_size: u32,
-	) -> Self
+	pub fn new(cpu: Motorola68k<'a>, memory_map: MemoryMap<'a, u32>, heap_base: u32, heap_size: u32) -> Self
 	{
 		Self {
 			inner: Rc::new(RefCell::new(AtariSTeROMsInner::new(cpu, memory_map, heap_base, heap_size))),
@@ -48,12 +43,7 @@ impl<'a> From<AtariSTeROMs<'a>> for Rc<RefCell<dyn Peripheral<u32> + 'a>>
 
 impl<'a> AtariSTeROMsInner<'a>
 {
-	pub fn new(
-		cpu: Rc<RefCell<Motorola68k<'a>>>,
-		memory_map: MemoryMap<'a, u32>,
-		heap_base: u32,
-		heap_size: u32,
-	) -> Self
+	pub fn new(cpu: Motorola68k<'a>, memory_map: MemoryMap<'a, u32>, heap_base: u32, heap_size: u32) -> Self
 	{
 		Self {
 			cpu,
@@ -65,31 +55,31 @@ impl<'a> AtariSTeROMsInner<'a>
 	fn handle_gemdos_access(&self)
 	{
 		// Extract the current stack pointer
-		let stack_pointer = self.cpu.borrow().read_addr_register(7);
+		let stack_pointer = self.cpu.read_addr_register(7);
 		// Figure out where on the stack the opcode value is and extract it
 		let opcode = self.memory_map.read_address::<u16>(stack_pointer + 8);
 		// Dispatch the opcode requested
 		match opcode {
 			// GEMDOS version number, respond with being version 0.30 via D0
-			0x30 => self.cpu.borrow_mut().write_data_register(0, 0x3000),
+			0x30 => self.cpu.write_data_register(0, 0x3000),
 			// mxalloc (we ignore the mode value.. sp + 14U)
 			0x44 |
 			// malloc
 			0x48 => {
 				// Set D0 in case of failure to a NULL pointer for the platform
-				self.cpu.borrow_mut().write_data_register(0, 0);
+				self.cpu.write_data_register(0, 0);
 				// Extract how large and allocation is being requested
 				let amount = self.memory_map.read_address::<i32>(stack_pointer + 10);
 				// If the amount requested is the special value -1, return the largest free block
 				if amount == -1 {
-					self.cpu.borrow_mut().write_data_register(0, self.allocator.borrow().largest_free_block());
+					self.cpu.write_data_register(0, self.allocator.borrow().largest_free_block());
 				}
 				// Otherwise if it's a non-zero positive amount to allocate, actually try to
 				else if amount > 0 {
 					let result = self.allocator.borrow_mut().alloc(amount as usize);
 					// Check if it succeeded, and if so then write the new pointer into D0
 					if let Some(ptr) = result {
-						self.cpu.borrow_mut().write_data_register(0, ptr);
+						self.cpu.write_data_register(0, ptr);
 					}
 				}
 			},
@@ -100,10 +90,10 @@ impl<'a> AtariSTeROMsInner<'a>
 				// Execute on that with our actual allocator
 				if self.allocator.borrow_mut().free(ptr) {
 					// Deallocation succeeded, so return 0 (E_OK)
-					self.cpu.borrow_mut().write_data_register(0, 0);
+					self.cpu.write_data_register(0, 0);
 				} else {
 					// Deallocation failed, signal this with a failure code
-					self.cpu.borrow_mut().write_data_register(0, u16::MAX as u32);
+					self.cpu.write_data_register(0, u16::MAX as u32);
 				}
 			},
 			_ => panic!("Unimplemented GEMDOS operation"),

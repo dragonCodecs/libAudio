@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use super::AtariSTeROMs;
 use crate::emulator::MemoryMap;
 use crate::emulator::cpu::m68k::Motorola68k;
@@ -14,7 +11,7 @@ const RAM_SIZE: usize = 1024 * 1024;
 const HEAP_BASE: u32 = 0x080000;
 const HEAP_SIZE: u32 = 0x080000;
 
-fn setup_memory_map<'a>(cpu: Rc<RefCell<Motorola68k<'a>>>, memory_map: &mut MemoryMap<'a, u32>)
+fn setup_memory_map<'a>(cpu: Motorola68k<'a>, memory_map: &mut MemoryMap<'a, u32>)
 {
 	memory_map.add_peripheral_at(0x000000..0x100000, Ram::<RAM_SIZE>::new().into());
 	memory_map.add_peripheral_at(
@@ -27,7 +24,7 @@ fn setup_memory_map<'a>(cpu: Rc<RefCell<Motorola68k<'a>>>, memory_map: &mut Memo
 fn allocator()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let mut cpu = Motorola68k::new(memory_map.clone(), 8_000_000);
 	setup_memory_map(cpu.clone(), &mut memory_map);
 
 	// Set up to allocate 4KiB with Malloc()

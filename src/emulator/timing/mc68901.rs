@@ -19,7 +19,7 @@ struct MC68901Inner<'a>
 {
 	clock_frequency: u32,
 
-	cpu: Rc<RefCell<Motorola68k<'a>>>,
+	cpu: Motorola68k<'a>,
 	level: u8,
 
 	gpio: u8,
@@ -51,7 +51,7 @@ pub struct Timer
 
 impl<'a> MC68901<'a>
 {
-	pub fn new(clock_frequency: u32, cpu: Rc<RefCell<Motorola68k<'a>>>, level: u8) -> Self
+	pub fn new(clock_frequency: u32, cpu: Motorola68k<'a>, level: u8) -> Self
 	{
 		Self {
 			inner: Rc::new(RefCell::new(MC68901Inner::new(clock_frequency, cpu, level))),
@@ -131,7 +131,7 @@ impl<'a> From<MC68901<'a>> for Rc<RefCell<dyn M68kIrqRequester + 'a>>
 
 impl<'a> MC68901Inner<'a>
 {
-	pub fn new(clock_frequency: u32, cpu: Rc<RefCell<Motorola68k<'a>>>, level: u8) -> Self
+	pub fn new(clock_frequency: u32, cpu: Motorola68k<'a>, level: u8) -> Self
 	{
 		Self {
 			clock_frequency,
@@ -383,7 +383,7 @@ impl M68kIrqRequester for MC68901Inner<'_>
 {
 	fn request_interrupt(&mut self)
 	{
-		self.cpu.borrow_mut().request_interrupt(self.level);
+		self.cpu.request_interrupt(self.level);
 	}
 
 	fn irq_cause(&mut self) -> u8

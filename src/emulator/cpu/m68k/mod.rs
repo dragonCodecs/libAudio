@@ -13,12 +13,19 @@ pub use irq::IrqRequester;
 
 use crate::emulator::{MemoryMap, PeripheralValue};
 
+#[derive(Clone)]
 pub struct Motorola68k<'a>
 {
 	peripherals: MemoryMap<'a, u32>,
-	interrupt_requesters: [Option<Rc<RefCell<dyn IrqRequester + 'a>>>; 7],
 	#[allow(unused)]
 	clock_frequency: u32,
+	inner: Rc<RefCell<Motorola68kInner<'a>>>,
+}
+
+struct Motorola68kInner<'a>
+{
+	peripherals: MemoryMap<'a, u32>,
+	interrupt_requesters: [Option<Rc<RefCell<dyn IrqRequester + 'a>>>; 7],
 
 	// There are 8 data registers, 7 address registers, 3 stack pointers,
 	// a program counter and a status register in a m68k
@@ -74,15 +81,149 @@ trait UnderlyingStorageFor: Sized
 	type Width32: Default + PeripheralValue + Into<Self>;
 }
 
-#[allow(unused)]
 impl<'a> Motorola68k<'a>
 {
 	pub fn new(peripherals: MemoryMap<'a, u32>, clock_frequency: u32) -> Self
 	{
 		Self {
+			peripherals: peripherals.clone(),
+			clock_frequency,
+			inner: Rc::new(RefCell::new(Motorola68kInner::new(peripherals))),
+		}
+	}
+
+	pub fn execute_from(&mut self, entry_address: u32, stack_top: u32, as_user: bool)
+	{
+		self.inner.borrow_mut().execute_from(entry_address, stack_top, as_user);
+	}
+
+	#[cfg(test)]
+	pub(self) fn execute_from_exception(&mut self, entry_address: u32, stack_top: u32, vector_number: u8)
+	{
+		self.inner
+			.borrow_mut()
+			.execute_from_exception(entry_address, stack_top, vector_number);
+	}
+
+	pub fn execute_to_return(&mut self, entry_address: u32, stack_top: u32, as_user: bool) -> bool
+	{
+		// Set up where we're going to execute from
+		self.execute_from(entry_address, stack_top, as_user);
+		// Now run till we RTS and hit the sentinel program counter state
+		loop {
+			// Try and run another instruction
+			let result = self.step();
+			// Check that something bad didn't happen
+			if matches!(result, StepResult::Trap | StepResult::Invalid) {
+				return false;
+			}
+			// Check for the sentinel program counter value
+			if self.inner.borrow().program_counter == 0xffffffff {
+				return true;
+			}
+		}
+	}
+
+	pub fn request_interrupt(&mut self, level: u8)
+	{
+		self.inner.borrow_mut().request_interrupt(level);
+	}
+
+	pub fn register_interrupt_requester(&mut self, requester: Rc<RefCell<dyn IrqRequester + 'a>>)
+	{
+		self.inner.borrow_mut().register_interrupt_requester(requester);
+	}
+
+	pub fn has_pending_interrupts(&self) -> bool
+	{
+		self.inner.borrow().has_pending_interrupts()
+	}
+
+	pub fn read_data_register(&self, reg: usize) -> u32
+	{
+		self.inner.borrow().read_data_register(reg)
+	}
+
+	pub fn write_data_register(&self, reg: usize, value: u32)
+	{
+		self.inner.borrow_mut().write_data_register(reg, value);
+	}
+
+	pub fn read_addr_register(&self, reg: usize) -> u32
+	{
+		self.inner.borrow().read_addr_register(reg)
+	}
+
+	pub fn write_addr_register(&self, reg: usize, value: u32)
+	{
+		self.inner.borrow_mut().write_addr_register(reg, value);
+	}
+
+	pub fn read_program_counter(&self) -> u32
+	{
+		self.inner.borrow().read_program_counter()
+	}
+
+	pub fn read_status(&self) -> u16
+	{
+		self.inner.borrow().read_status()
+	}
+
+	#[cfg(test)]
+	pub(self) fn write_status(&mut self, value: u16)
+	{
+		self.inner.borrow_mut().write_status(value);
+	}
+
+	pub fn step(&mut self) -> StepResult
+	{
+		// See if there are any pending interrupt requests
+		if self.inner.borrow_mut().check_pending_irqs() {
+			// There was, so return a step result indicating we "executed" an "instruction"
+			return StepResult::Valid;
+		}
+		// Start by fetching a uint16_t for the instruction and trying to decode it
+		let insn: DecodedOperation = self.peripherals.read_address::<u16>(self.read_program_counter()).into();
+		let mut inner = self.inner.borrow_mut();
+		inner.program_counter += 2;
+		// Now we have an instruction to run, try to dispatch it
+		inner.step(&insn)
+	}
+
+	pub fn advance_clock(&mut self) -> bool
+	{
+		// Let's run an instruction
+		let result = self.step();
+		let mut inner = self.inner.borrow_mut();
+		// Unpack if the instruction trapped
+		inner.trap_state = result == StepResult::Trap;
+		// If this was not a trap instruction and was not a valid instruction, reset the program counter back
+		// an instruction so display works right
+		if result == StepResult::Invalid {
+			inner.program_counter -= 2;
+		}
+		// Return if the instruction was valid
+		result == StepResult::Valid
+	}
+
+	pub fn trapped(&mut self) -> bool
+	{
+		self.inner.borrow_mut().trapped()
+	}
+
+	pub fn display_regs(&self)
+	{
+		self.inner.borrow().display_regs()
+	}
+}
+
+impl<'a> Motorola68kInner<'a>
+{
+	pub fn new(peripherals: MemoryMap<'a, u32>) -> Self
+	{
+		Self {
 			peripherals,
 			interrupt_requesters: [const { None }; 7],
-			clock_frequency,
 
 			d: [0; 8],
 			a: [0; 7],
@@ -135,25 +276,6 @@ impl<'a> Motorola68k<'a>
 		stack_pointer -= 2;
 		self.peripherals.write_address::<u16>(stack_pointer, 0x0000);
 		*self.active_stack_pointer_mut() = stack_pointer;
-	}
-
-	pub fn execute_to_return(&mut self, entry_address: u32, stack_top: u32, as_user: bool) -> bool
-	{
-		// Set up where we're going to execute from
-		self.execute_from(entry_address, stack_top, as_user);
-		// Now run till we RTS and hit the sentinel program counter state
-		loop {
-			// Try and run another instruction
-			let result = self.step();
-			// Check that something bad didn't happen
-			if matches!(result, StepResult::Trap | StepResult::Invalid) {
-				return false;
-			}
-			// Check for the sentinel program counter value
-			if self.program_counter == 0xffffffff {
-				return true;
-			}
-		}
 	}
 
 	pub fn request_interrupt(&mut self, level: u8)
@@ -314,92 +436,69 @@ impl<'a> Motorola68k<'a>
 		self.status.bits
 	}
 
+	#[cfg(test)]
 	pub(self) fn write_status(&mut self, value: u16)
 	{
 		self.status.bits = value;
 	}
 
-	pub fn step(&mut self) -> StepResult
+	pub fn step(&mut self, insn: &DecodedOperation) -> StepResult
 	{
-		// See if there are any pending interrupt requests
-		if self.check_pending_irqs() {
-			// There was, so return a step result indicating we "executed" an "instruction"
-			return StepResult::Valid;
-		}
-		// Start by fetching a uint16_t for the instruction and trying to decode it
-		let insn: DecodedOperation = self.peripherals.read_address::<u16>(self.program_counter).into();
-		self.program_counter += 2;
-		// Now we have an instruction to run, try to dispatch it
 		match insn.operation {
-			Instruction::Add => return self.dispatch_add(&insn),
-			Instruction::Adda => return self.dispatch_adda(&insn),
-			Instruction::Addi => return self.dispatch_addi(&insn),
-			Instruction::Addq => return self.dispatch_addq(&insn),
-			Instruction::And => return self.dispatch_and(&insn),
-			Instruction::Andi => return self.dispatch_andi(&insn),
-			Instruction::Asl => return self.dispatch_asl(&insn),
-			Instruction::Asr => return self.dispatch_asr(&insn),
-			Instruction::Bcc => return self.dispatch_bcc(&insn),
-			Instruction::Bclr => return self.dispatch_bclr(&insn),
-			Instruction::Bra => return self.dispatch_bra(&insn),
-			Instruction::Bset => return self.dispatch_bset(&insn),
-			Instruction::Bsr => return self.dispatch_bsr(&insn),
-			Instruction::Btst => return self.dispatch_btst(&insn),
-			Instruction::Clr => return self.dispatch_clr(&insn),
-			Instruction::Cmp => return self.dispatch_cmp(&insn),
-			Instruction::Cmpa => return self.dispatch_cmpa(&insn),
-			Instruction::Cmpi => return self.dispatch_cmpi(&insn),
-			Instruction::Dbcc => return self.dispatch_dbcc(&insn),
-			Instruction::Divs => return self.dispatch_divs(&insn),
-			Instruction::Divu => return self.dispatch_divu(&insn),
-			Instruction::Eor => return self.dispatch_eor(&insn),
-			Instruction::Eori => return self.dispatch_eori(&insn),
-			Instruction::Ext => return self.dispatch_ext(&insn),
-			Instruction::Extb => return self.dispatch_extb(&insn),
-			Instruction::Jmp => return self.dispatch_jmp(&insn),
-			Instruction::Jsr => return self.dispatch_jsr(&insn),
-			Instruction::Lea => return self.dispatch_lea(&insn),
-			Instruction::Lsl => return self.dispatch_lsl(&insn),
-			Instruction::Lsr => return self.dispatch_lsr(&insn),
-			Instruction::Move => return self.dispatch_move(&insn),
-			Instruction::Movea => return self.dispatch_movea(&insn),
-			Instruction::Movem => return self.dispatch_movem(&insn),
-			Instruction::Movep => return self.dispatch_movep(&insn),
-			Instruction::Moveq => return self.dispatch_moveq(&insn),
-			Instruction::Muls => return self.dispatch_muls(&insn),
-			Instruction::Mulu => return self.dispatch_mulu(&insn),
-			Instruction::Neg => return self.dispatch_neg(&insn),
+			Instruction::Add => return self.dispatch_add(insn),
+			Instruction::Adda => return self.dispatch_adda(insn),
+			Instruction::Addi => return self.dispatch_addi(insn),
+			Instruction::Addq => return self.dispatch_addq(insn),
+			Instruction::And => return self.dispatch_and(insn),
+			Instruction::Andi => return self.dispatch_andi(insn),
+			Instruction::Asl => return self.dispatch_asl(insn),
+			Instruction::Asr => return self.dispatch_asr(insn),
+			Instruction::Bcc => return self.dispatch_bcc(insn),
+			Instruction::Bclr => return self.dispatch_bclr(insn),
+			Instruction::Bra => return self.dispatch_bra(insn),
+			Instruction::Bset => return self.dispatch_bset(insn),
+			Instruction::Bsr => return self.dispatch_bsr(insn),
+			Instruction::Btst => return self.dispatch_btst(insn),
+			Instruction::Clr => return self.dispatch_clr(insn),
+			Instruction::Cmp => return self.dispatch_cmp(insn),
+			Instruction::Cmpa => return self.dispatch_cmpa(insn),
+			Instruction::Cmpi => return self.dispatch_cmpi(insn),
+			Instruction::Dbcc => return self.dispatch_dbcc(insn),
+			Instruction::Divs => return self.dispatch_divs(insn),
+			Instruction::Divu => return self.dispatch_divu(insn),
+			Instruction::Eor => return self.dispatch_eor(insn),
+			Instruction::Eori => return self.dispatch_eori(insn),
+			Instruction::Ext => return self.dispatch_ext(insn),
+			Instruction::Extb => return self.dispatch_extb(insn),
+			Instruction::Jmp => return self.dispatch_jmp(insn),
+			Instruction::Jsr => return self.dispatch_jsr(insn),
+			Instruction::Lea => return self.dispatch_lea(insn),
+			Instruction::Lsl => return self.dispatch_lsl(insn),
+			Instruction::Lsr => return self.dispatch_lsr(insn),
+			Instruction::Move => return self.dispatch_move(insn),
+			Instruction::Movea => return self.dispatch_movea(insn),
+			Instruction::Movem => return self.dispatch_movem(insn),
+			Instruction::Movep => return self.dispatch_movep(insn),
+			Instruction::Moveq => return self.dispatch_moveq(insn),
+			Instruction::Muls => return self.dispatch_muls(insn),
+			Instruction::Mulu => return self.dispatch_mulu(insn),
+			Instruction::Neg => return self.dispatch_neg(insn),
 			Instruction::Nop => return StepResult::Valid,
-			Instruction::Or => return self.dispatch_or(&insn),
-			Instruction::Ori => return self.dispatch_ori(&insn),
+			Instruction::Or => return self.dispatch_or(insn),
+			Instruction::Ori => return self.dispatch_ori(insn),
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
-			Instruction::Scc => return self.dispatch_scc(&insn),
-			Instruction::Sub => return self.dispatch_sub(&insn),
-			Instruction::Suba => return self.dispatch_suba(&insn),
-			Instruction::Subi => return self.dispatch_subi(&insn),
-			Instruction::Subq => return self.dispatch_subq(&insn),
-			Instruction::Swap => return self.dispatch_swap(&insn),
-			Instruction::Trap => return self.dispatch_trap(&insn),
+			Instruction::Scc => return self.dispatch_scc(insn),
+			Instruction::Sub => return self.dispatch_sub(insn),
+			Instruction::Suba => return self.dispatch_suba(insn),
+			Instruction::Subi => return self.dispatch_subi(insn),
+			Instruction::Subq => return self.dispatch_subq(insn),
+			Instruction::Swap => return self.dispatch_swap(insn),
+			Instruction::Trap => return self.dispatch_trap(insn),
 			_ => {},
 		}
 
 		StepResult::Invalid
-	}
-
-	pub fn advance_clock(&mut self) -> bool
-	{
-		// Let's run an instruction
-		let result = self.step();
-		// Unpack if the instruction trapped
-		self.trap_state = result == StepResult::Trap;
-		// If this was not a trap instruction and was not a valid instruction, reset the program counter back
-		// an instruction so display works right
-		if result == StepResult::Invalid {
-			self.program_counter -= 2;
-		}
-		// Return if the instruction was valid
-		result == StepResult::Valid
 	}
 
 	pub fn trapped(&self) -> bool
@@ -456,7 +555,7 @@ impl<'a> Motorola68k<'a>
 
 		// Display the current instruction pointed to by the program counter
 		let raw_instruction = self.peripherals.read_address::<u16>(self.program_counter);
-		let instruction: DecodedOperation = raw_instruction.into();
+		let _instruction: DecodedOperation = raw_instruction.into();
 		println!(" [DBG] insn: {raw_instruction:04x}");
 	}
 

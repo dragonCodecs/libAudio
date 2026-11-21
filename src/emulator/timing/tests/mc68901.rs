@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use super::MC68901;
 use crate::emulator::cpu::m68k::{IrqRequester, Motorola68k};
 use crate::emulator::{ClockedPeripheral, MemoryMap, Peripheral};
@@ -48,7 +45,7 @@ fn read_register_u32(periph: &impl Peripheral<u32>, reg: u32) -> u32
 fn register_io()
 {
 	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mut mfp = MC68901::new(2_457_600, cpu, 6);
 
 	// Verify the function of the GPIO registers
@@ -124,7 +121,7 @@ fn register_io()
 fn bad_begister_io()
 {
 	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mut mfp = MC68901::new(2_457_600, cpu, 6);
 
 	// Should be discarded as writing to an even address for an odd byte register
@@ -143,7 +140,7 @@ fn bad_begister_io()
 fn configure_timer()
 {
 	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mut mfp = MC68901::new(2_457_600, cpu, 6);
 
 	// Check that we can configure timer A for ~50Hz operation
@@ -164,7 +161,7 @@ fn configure_timer()
 fn irq_generation()
 {
 	let memory_map = MemoryMap::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mut mfp = MC68901::new(2_457_600, cpu.clone(), 6);
 
 	// Reconfigure the interrupt registers so just timers A and C can generate events
@@ -182,7 +179,7 @@ fn irq_generation()
 	// mark pending interrupts for the timers
 	write_register_u8(&mut mfp, 0x13, 0x20);
 	write_register_u8(&mut mfp, 0x15, 0x20);
-	assert!(!cpu.borrow().has_pending_interrupts());
+	assert!(!cpu.has_pending_interrupts());
 
 	// Configure and enable timer A for ~50Hz operation
 	mfp.configure_timer(0, 245, 7);
@@ -202,7 +199,7 @@ fn irq_generation()
 	// Now verify that it's TC's IRQ that's actually pending
 	assert_eq!(read_register_u8(&mfp, 0x0b), 0x00);
 	assert_eq!(read_register_u8(&mfp, 0x0d), 0x20);
-	assert!(cpu.borrow().has_pending_interrupts());
+	assert!(cpu.has_pending_interrupts());
 	// Assert that the TC interrupt creates the proper cause number
 	assert_eq!(mfp.irq_cause(), 0x45);
 	// And that that reset the pending bit
@@ -240,7 +237,7 @@ fn irq_generation()
 fn gpio7_events()
 {
 	let memory_map = MemoryMap::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mut mfp = MC68901::new(2_457_600, cpu, 6);
 
 	// Enable IRQs for just GPIO7
@@ -278,7 +275,7 @@ fn gpio7_events()
 fn timer_a_event_counting()
 {
 	let memory_map = MemoryMap::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mut mfp = MC68901::new(2_457_600, cpu, 6);
 
 	// Enable timer A to set a pending interrupt

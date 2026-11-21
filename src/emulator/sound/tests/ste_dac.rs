@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // SPDX-FileCopyrightText: 2026 Rachel Mant <git@dragonmux.network>
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use super::STeDac;
 use crate::emulator::cpu::m68k::Motorola68k;
 use crate::emulator::ram::Ram;
@@ -79,7 +76,7 @@ fn setup_ram(memory_map: &mut MemoryMap<u32>)
 fn microwire()
 {
 	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
@@ -146,7 +143,7 @@ fn microwire()
 fn dma_register_io()
 {
 	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
@@ -178,7 +175,7 @@ fn dma_register_io()
 fn bad_dma_register_io()
 {
 	let memory_map = MemoryMap::<u32>::new(0x00ffffff);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map, 8_000_000)));
+	let cpu = Motorola68k::new(memory_map, 8_000_000);
 	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
@@ -205,7 +202,7 @@ fn mono_50khz_sample_loop()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
 	setup_ram(&mut memory_map);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let cpu = Motorola68k::new(memory_map.clone(), 8_000_000);
 	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
@@ -241,7 +238,7 @@ fn mono_25khz_sample_no_loop()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
 	setup_ram(&mut memory_map);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let cpu = Motorola68k::new(memory_map.clone(), 8_000_000);
 	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 
@@ -274,7 +271,7 @@ fn mono_50khz_sample_no_loop()
 {
 	let mut memory_map = MemoryMap::new(0x00ffffff);
 	setup_ram(&mut memory_map);
-	let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+	let cpu = Motorola68k::new(memory_map.clone(), 8_000_000);
 	let mfp = MC68901::new(2_457_600, cpu, 6);
 	let mut dac = STeDac::new(50_066, mfp);
 

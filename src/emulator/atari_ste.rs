@@ -23,7 +23,7 @@ pub struct AtariSTe<'a>
 	// m68k has a 24-bit address bus, but we can't directly represent that, so use a 32-bit address value instead.
 	memory_map: MemoryMap<'a, u32>,
 
-	cpu: Rc<RefCell<Motorola68k<'a>>>,
+	cpu: Motorola68k<'a>,
 	ram: StRam,
 	psg: YM2149,
 	dac: STeDac<'a>,
@@ -68,7 +68,7 @@ impl<'a> AtariSTe<'a>
 	{
 		// Prep a blank memory map and instance the CPU
 		let memory_map = MemoryMap::new(0x00ffffff);
-		let cpu = Rc::new(RefCell::new(Motorola68k::new(memory_map.clone(), 8_000_000)));
+		let cpu = Motorola68k::new(memory_map.clone(), 8_000_000);
 
 		// Build instances of all the peripherals, including their interlinking
 		let ram = StRam::new();
@@ -140,9 +140,7 @@ impl<'a> AtariSTe<'a>
 		// Tell the MFP its vector number information and that we're in automatic mode
 		this.memory_map.write_address(0xfffa17, 0x40u8);
 		// Register it as an interrupt source
-		this.cpu
-			.borrow_mut()
-			.register_interrupt_requester(this.mfp.clone().into());
+		this.cpu.register_interrupt_requester(this.mfp.clone().into());
 
 		this
 	}
@@ -282,15 +280,15 @@ impl<'a> AtariSTe<'a>
 		self.memory_map.write_address(0x000610, 0u32);
 
 		// Set up the calling context
-		self.cpu.borrow_mut().write_data_register(0, subtune as u32 + 1);
+		self.cpu.write_data_register(0, subtune as u32 + 1);
 		// And run the init entry point to return
-		self.cpu.borrow_mut().execute_to_return(0x010000, STACK_TOP, false)
+		self.cpu.execute_to_return(0x010000, STACK_TOP, false)
 	}
 
 	pub fn exit(&mut self) -> bool
 	{
 		// Run the exit entry point to return
-		self.cpu.borrow_mut().execute_to_return(0x010004, STACK_TOP, false)
+		self.cpu.execute_to_return(0x010004, STACK_TOP, false)
 	}
 
 	pub fn advance_clock(&mut self) -> bool
@@ -312,12 +310,11 @@ impl<'a> AtariSTe<'a>
 		}
 
 		// If the CPU isn't halted, run another instruction and see how many cycles that advanced us by
-		let mut cpu = self.cpu.borrow_mut();
-		while cpu.read_program_counter() != u32::MAX || cpu.has_pending_interrupts() {
+		while self.cpu.read_program_counter() != u32::MAX || self.cpu.has_pending_interrupts() {
 			// Grab the program counter at the start
-			let program_counter = cpu.read_program_counter();
+			let program_counter = self.cpu.read_program_counter();
 			// Try to advance the clock and check if the CPU is in a trap state
-			if cpu.advance_clock() || cpu.trapped() {
+			if self.cpu.advance_clock() || self.cpu.trapped() {
 				// Something bad happened, so display the program counter at the faulting instruction
 				console::debug(format!("Bad instruction at 0x{program_counter:06x}"));
 				return true;
@@ -347,7 +344,7 @@ impl<'a> AtariSTe<'a>
 
 	pub fn display_cpu_state(&self)
 	{
-		self.cpu.borrow().display_regs();
+		self.cpu.display_regs();
 	}
 
 	#[cfg(test)]
