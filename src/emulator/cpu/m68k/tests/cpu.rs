@@ -1189,6 +1189,8 @@ fn run_cmpi()
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
 
+// XXX: Build a test for the `CPUSH*` instructions
+
 #[test]
 fn run_dbcc()
 {

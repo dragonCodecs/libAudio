@@ -463,6 +463,7 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Cmp => return self.dispatch_cmp(insn),
 			Instruction::Cmpa => return self.dispatch_cmpa(insn),
 			Instruction::Cmpi => return self.dispatch_cmpi(insn),
+			Instruction::Cpusha | Instruction::Cpushl | Instruction::Cpushp => return self.dispatch_cpush(insn),
 			Instruction::Dbcc => return self.dispatch_dbcc(insn),
 			Instruction::Divs => return self.dispatch_divs(insn),
 			Instruction::Divu => return self.dispatch_divu(insn),
@@ -1739,6 +1740,12 @@ impl<'a> Motorola68kInner<'a>
 		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, true);
 
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_cpush(&mut self, _insn: &DecodedOperation) -> StepResult
+	{
+		// This instruction is (for now) a no-op
 		StepResult::Valid
 	}
 
