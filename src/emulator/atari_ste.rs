@@ -317,7 +317,7 @@ impl<'a> AtariSTe<'a>
 			if self.cpu.advance_clock() || self.cpu.trapped() {
 				// Something bad happened, so display the program counter at the faulting instruction
 				console::debug(format!("Bad instruction at 0x{program_counter:06x}"));
-				return true;
+				return false;
 			}
 		}
 
