@@ -151,10 +151,9 @@ impl<'a> Motorola68k<'a>
 			}
 			// Check for the sentinel program counter value
 			if self.program_counter == 0xffffffff {
-				break;
+				return true;
 			}
 		}
-		true
 	}
 
 	pub fn request_interrupt(&mut self, level: u8)
