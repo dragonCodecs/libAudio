@@ -470,6 +470,7 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Eori => return self.dispatch_eori(insn),
 			Instruction::Ext => return self.dispatch_ext(insn),
 			Instruction::Extb => return self.dispatch_extb(insn),
+			Instruction::Illegal => return self.dispatch_illegal(),
 			Instruction::Jmp => return self.dispatch_jmp(insn),
 			Instruction::Jsr => return self.dispatch_jsr(insn),
 			Instruction::Lea => return self.dispatch_lea(insn),
@@ -2004,6 +2005,31 @@ impl<'a> Motorola68kInner<'a>
 		}
 		// Write the result back and say that this instruction succeeded and was valid
 		*self.data_register_mut(insn.rx as usize) = value as u32;
+		StepResult::Valid
+	}
+
+	fn dispatch_illegal(&mut self) -> StepResult
+	{
+		// Compute where the TRAP handler is (vector 4)
+		let vector_address = 4 << 2;
+		// Grab the old status register value
+		let status = self.status.bits;
+		// Force supervisor mode
+		self.status |= M68kStatusBits::Supervisor;
+		// Grab the active stack and start stacking up an exception frame
+		let mut stack_pointer = *self.active_stack_pointer() - 2;
+		// Stack the start of a frame for the selected vector number
+		self.peripherals.write_address(stack_pointer, vector_address as u16);
+		// Push the current program counter to the stack and set it to value at the requested vector address
+		stack_pointer -= 4;
+		self.peripherals.write_address(stack_pointer, self.program_counter);
+		self.program_counter = self.peripherals.read_address(vector_address);
+		// Stack up the previous status register to be restored on RTE
+		stack_pointer -= 2;
+		self.peripherals.write_address(stack_pointer, status);
+		// Write the adjusted stack pointer back
+		*self.active_stack_pointer_mut() = stack_pointer;
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 

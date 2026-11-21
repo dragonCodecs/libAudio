@@ -1559,6 +1559,8 @@ fn run_ext()
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
 
+// XXX: Build a test for the `ILLEGAL` instruction
+
 #[test]
 fn run_jsr()
 {
