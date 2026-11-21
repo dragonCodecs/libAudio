@@ -495,6 +495,7 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Subq => return self.dispatch_subq(insn),
 			Instruction::Swap => return self.dispatch_swap(insn),
 			Instruction::Trap => return self.dispatch_trap(insn),
+			Instruction::Tst => return self.dispatch_tst(insn),
 			_ => {},
 		}
 
@@ -2852,6 +2853,31 @@ impl<'a> Motorola68kInner<'a>
 		self.peripherals.write_address(stack_pointer, status);
 		// Store back the modified stack pointer
 		*self.active_stack_pointer_mut() = stack_pointer;
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_tst(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Unpack the operation size to a value in bytes
+		let operation_size = insn.unpack_size();
+		// Get the value to test (sign-extended to make negative testing easier)
+		let value = self.read_effective_address::<i32>(insn.mode, insn.ry, operation_size as u8);
+		// Clear flags that are always cleared
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Check if the value is zero
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Check if the value is negative
+		if value < 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
