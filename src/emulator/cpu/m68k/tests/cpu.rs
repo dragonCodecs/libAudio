@@ -1397,6 +1397,8 @@ fn run_divu()
 	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
 
+// XXX: Need to implement a test for EOR execution here (normal and CCR/SR forms)
+
 #[test]
 fn run_eori()
 {
@@ -2498,4 +2500,34 @@ fn run_ori_special()
 	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
 	// Step the first instruction and validate
 	run_step(&mut cpu, true);
+}
+
+#[test]
+fn run_scc()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x50c0u16); // st d0
+	memory_map.write_address(0x000002, 0x51c0u16); // sf d0
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Set up d0 so we can observe which bits change with the condition tests
+	cpu.write_data_register(0, 0x00000000);
+	// Set up the status bits in a way where it's trivial to observe if they change
+	cpu.write_status(0x001f);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_data_register(0), 0x000000ff);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_data_register(0), 0x00000000);
+	assert_eq!(cpu.read_status(), 0x001f);
+	// Switch up the status bits in a way where it's trivial to observe if they change
+	cpu.write_status(0x0010);
+	// XXX: Need to finish writing this test sequence
 }

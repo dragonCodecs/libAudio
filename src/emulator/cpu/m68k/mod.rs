@@ -375,6 +375,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Ori => return self.dispatch_ori(&insn),
 			Instruction::Rte => return self.dispatch_rte(),
 			Instruction::Rts => return self.dispatch_rts(),
+			Instruction::Scc => return self.dispatch_scc(&insn),
 			_ => {},
 		}
 
@@ -2577,6 +2578,25 @@ impl<'a> Motorola68k<'a>
 		self.program_counter = self.peripherals.read_address(stack_pointer);
 		// Now adjust the stack pointer by the size of an address
 		*self.active_stack_pointer_mut() = stack_pointer + 4;
+		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_scc(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Figure out what state the condition for this instruction is in
+		let state = self.check_condition(insn.op_mode);
+		// Turn that into either all-highs (true) or lows (false) and write it to the EA specified
+		self.write_effective_address(
+			insn.mode,
+			insn.ry,
+			1,
+			if state {
+				u8::MAX
+			} else {
+				0
+			} as u32,
+		);
 		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
