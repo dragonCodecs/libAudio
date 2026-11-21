@@ -380,6 +380,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Suba => return self.dispatch_suba(&insn),
 			Instruction::Subi => return self.dispatch_subi(&insn),
 			Instruction::Subq => return self.dispatch_subq(&insn),
+			Instruction::Swap => return self.dispatch_swap(&insn),
 			_ => {},
 		}
 
@@ -2672,7 +2673,7 @@ impl<'a> Motorola68k<'a>
 		// Recompute all the flags
 		self.recompute_status_flags(lhs, (!rhs).wrapping_add(1), result, operation_size, false);
 
-		// Store the result back and aay that this instruction succeeded and was valid
+		// Store the result back and say that this instruction succeeded and was valid
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
 		StepResult::Valid
 	}
@@ -2703,6 +2704,29 @@ impl<'a> Motorola68k<'a>
 		self.write_value_sized(insn.mode, insn.ry, effective_address, operation_size, result as u32);
 
 		// Say that this instruction succeeded and was valid
+		StepResult::Valid
+	}
+
+	fn dispatch_swap(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Extract the data register to swap the contents of and do the swapping
+		let value = self.data_register(insn.rx as usize).rotate_left(16);
+		// Now recompute the flag bits, starting with negative
+		if (value & (1 << 31)) != 0 {
+			self.status |= M68kStatusBits::Negative;
+		} else {
+			self.status &= !M68kStatusBits::Negative;
+		}
+		// Now check if the result is zero
+		if value == 0 {
+			self.status |= M68kStatusBits::Zero;
+		} else {
+			self.status &= !M68kStatusBits::Zero;
+		}
+		// Overflow and carry are both always cleared
+		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
+		// Write the result back and say that this instruction succeeded and was valid
+		*self.data_register_mut(insn.rx as usize) = value;
 		StepResult::Valid
 	}
 }

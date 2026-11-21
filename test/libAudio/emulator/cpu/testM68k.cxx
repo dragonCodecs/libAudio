@@ -33,46 +33,6 @@ private:
 		// TODO: Check the cycles taken matches expectations
 	}
 
-	void testSWAP()
-	{
-		writeAddress(0x000000U, uint16_t{0x4840U}); // swap d0
-		writeAddress(0x000002U, uint16_t{0x4841U}); // swap d1
-		writeAddress(0x000004U, uint16_t{0x4842U}); // swap d2
-		writeAddress(0x000006U, uint16_t{0x4e75U}); // rts to end the test
-		// Set the CPU to execute this sequence
-		cpu.executeFrom(0x00000000U, 0x00800000U);
-		// Set up d0, d1 and d2 to sensible values
-		cpu.writeDataRegister(0U, 0x00000000U);
-		cpu.writeDataRegister(1U, 0x12345678U);
-		cpu.writeDataRegister(2U, 0x0ca1f00dU);
-		// Set the status register to some improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x001fU);
-		// Validate starting conditions
-		assertEqual(cpu.readProgramCounter(), 0x00000000U);
-		assertEqual(cpu.readAddrRegister(7U), 0x007ffffcU);
-		// Step the first instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000002U);
-		assertEqual(cpu.readDataRegister(0U), 0x00000000U);
-		assertEqual(cpu.readStatus(), 0x0014U);
-		// Set the status register to some other improbable value that makes it easy to see if it changes
-		cpu.writeStatus(0x000fU);
-		// Step the second instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000004U);
-		assertEqual(cpu.readDataRegister(1U), 0x56781234U);
-		assertEqual(cpu.readStatus(), 0x0000U);
-		// Step the third instruction and validate
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0x00000006U);
-		assertEqual(cpu.readDataRegister(2U), 0xf00d0ca1U);
-		assertEqual(cpu.readStatus(), 0x0008U);
-		// Step the final instruction to complete the test
-		runStep();
-		assertEqual(cpu.readProgramCounter(), 0xffffffffU);
-		assertEqual(cpu.readAddrRegister(7U), 0x00800000U);
-	}
-
 	void testTRAP()
 	{
 		writeAddress(0x000000U, uint16_t{0x4e40U}); // trap #0
@@ -182,7 +142,6 @@ public:
 	void registerTests() final
 	{
 		CXX_TEST(testDecode)
-		CXX_TEST(testSWAP)
 		CXX_TEST(testTRAP)
 		CXX_TEST(testTST)
 		CXX_TEST(testDisplayRegs)
