@@ -381,6 +381,7 @@ impl<'a> Motorola68k<'a>
 			Instruction::Subi => return self.dispatch_subi(&insn),
 			Instruction::Subq => return self.dispatch_subq(&insn),
 			Instruction::Swap => return self.dispatch_swap(&insn),
+			Instruction::Trap => return self.dispatch_trap(&insn),
 			_ => {},
 		}
 
@@ -2558,7 +2559,7 @@ impl<'a> Motorola68k<'a>
 		// Grab the current stack pointer
 		let mut stack_pointer = *self.active_stack_pointer();
 		// Unstack the status register and adjust the stack pointer
-		self.status.bits = self.peripherals.read_address(stack_pointer);
+		let status = self.peripherals.read_address(stack_pointer);
 		stack_pointer += 2;
 		// Unstack the program counter and adjust the stack pointer
 		self.program_counter = self.peripherals.read_address(stack_pointer);
@@ -2566,7 +2567,9 @@ impl<'a> Motorola68k<'a>
 		// Unstack the frame format and offset
 		let format = self.peripherals.read_address::<u16>(stack_pointer);
 		stack_pointer += 2;
+		// Only adjust the status register after writing the adjusted stack pointer back
 		*self.active_stack_pointer_mut() = stack_pointer;
+		self.status.bits = status;
 		let frame_type = format >> 12;
 		// For now, explode if this is not a format 0 or 1 frame
 		if frame_type != 0 && frame_type != 1 {
@@ -2727,6 +2730,31 @@ impl<'a> Motorola68k<'a>
 		self.status &= !(M68kStatusBits::Carry | M68kStatusBits::Overflow);
 		// Write the result back and say that this instruction succeeded and was valid
 		*self.data_register_mut(insn.rx as usize) = value;
+		StepResult::Valid
+	}
+
+	fn dispatch_trap(&mut self, insn: &DecodedOperation) -> StepResult
+	{
+		// Compute where the TRAP handler is
+		let vector_address = 0x0080 | ((insn.rx as u16) << 2);
+		// Grab the old status register value
+		let status = self.status.bits;
+		// Force supervisor mode
+		self.status |= M68kStatusBits::Supervisor;
+		// Grab the active stack and start stacking up an exception frame
+		let mut stack_pointer = *self.active_stack_pointer() - 2;
+		// Stack the start of a frame for the selected vector number
+		self.peripherals.write_address(stack_pointer, vector_address);
+		// Push the current program counter to the stack and set it to value at the requested vector address
+		stack_pointer -= 4;
+		self.peripherals.write_address(stack_pointer, self.program_counter);
+		self.program_counter = self.peripherals.read_address(vector_address as u32);
+		// Stack up the previous status register to be restored on RTE
+		stack_pointer -= 2;
+		self.peripherals.write_address(stack_pointer, status);
+		// Store back the modified stack pointer
+		*self.active_stack_pointer_mut() = stack_pointer;
+		// Say that this instruction succeeded and was valid
 		StepResult::Valid
 	}
 }

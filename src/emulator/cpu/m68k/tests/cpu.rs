@@ -219,8 +219,11 @@ fn run_rte()
 	// Step the CPU and validate the results line up
 	run_step(&mut cpu, false);
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
-	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+	assert_eq!(cpu.read_addr_register(7), 0x00000000);
 	assert_eq!(cpu.read_status(), 0x0000);
+	// Switch to supervisor mode to check the system stack pointer
+	cpu.write_status(0x2000);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
 }
 
 #[test]
@@ -2750,6 +2753,58 @@ fn run_swap()
 	assert_eq!(cpu.read_program_counter(), 0x00000006);
 	assert_eq!(cpu.read_data_register(2), 0xf00d0ca1);
 	assert_eq!(cpu.read_status(), 0x0008);
+	// Step the final instruction to complete the test
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0xffffffff);
+	assert_eq!(cpu.read_addr_register(7), 0x00800000);
+}
+
+#[test]
+fn run_trap()
+{
+	let (mut cpu, mut memory_map) = new_m68k();
+	memory_map.write_address(0x000000, 0x4e40u16); // trap #0
+	memory_map.write_address(0x000002, 0x4e75u16); // rts to end the test
+	memory_map.write_address(0x000004, 0x4e44u16); // trap #4
+	memory_map.write_address(0x000006, 0x4e73u16); // rte
+	// TRAP handler vector pointers
+	memory_map.write_address(0x000080, 0x00000004u32);
+	memory_map.write_address(0x000090, 0x00000006u32);
+	// Set up the supervisor-mode stack pointer
+	cpu.write_status(0x2000);
+	cpu.write_addr_register(7, 0x00700000);
+	// Set the CPU to execute this sequence
+	cpu.execute_from(0x00000000, 0x00800000, true);
+	// Validate starting conditions
+	assert_eq!(cpu.read_program_counter(), 0x00000000);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
+	// Step the first instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000004);
+	assert_eq!(cpu.read_addr_register(7), 0x006ffff8);
+	assert_eq!(cpu.read_status(), 0x2000);
+	assert_eq!(memory_map.read_address::<u16>(0x6ffffe), 0x0080); // Frame type and vector info
+	assert_eq!(memory_map.read_address::<u32>(0x6ffffa), 0x00000002); // Return program counter
+	assert_eq!(memory_map.read_address::<u16>(0x6ffff8), 0x0000); // Return status register
+	// Step the second instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_addr_register(7), 0x006ffff0);
+	assert_eq!(cpu.read_status(), 0x2000);
+	assert_eq!(memory_map.read_address::<u16>(0x6ffff6), 0x0090); // Frame type and vector info
+	assert_eq!(memory_map.read_address::<u32>(0x6ffff2), 0x00000006); // Return program counter
+	assert_eq!(memory_map.read_address::<u16>(0x6ffff0), 0x2000); // Return status register
+	// Step the third instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000006);
+	assert_eq!(cpu.read_addr_register(7), 0x006ffff8);
+	assert_eq!(cpu.read_status(), 0x2000);
+	// Step the fourth instruction and validate
+	run_step(&mut cpu, false);
+	assert_eq!(cpu.read_program_counter(), 0x00000002);
+	assert_eq!(cpu.read_addr_register(7), 0x007ffffc);
+	assert_eq!(cpu.read_status(), 0x0000);
 	// Step the final instruction to complete the test
 	run_step(&mut cpu, false);
 	assert_eq!(cpu.read_program_counter(), 0xffffffff);
