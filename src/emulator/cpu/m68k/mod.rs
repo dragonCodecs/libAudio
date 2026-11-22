@@ -11,6 +11,7 @@ use bitmask_enum::bitmask;
 use instruction::{DecodedOperation, Instruction, OperationFlags};
 pub use irq::IrqRequester;
 
+use crate::console;
 use crate::emulator::{MemoryMap, PeripheralValue};
 
 #[derive(Clone)]
@@ -118,7 +119,7 @@ impl<'a> Motorola68k<'a>
 			// Check that something bad didn't happen
 			if matches!(result, StepResult::Trap | StepResult::Invalid) {
 				// Something bad happened, so display the program counter at the faulting instruction
-				println!(" [DBG] Bad instruction at {program_counter:06x}");
+				console::debug!("Bad instruction at {program_counter:06x}");
 				return false;
 			}
 			// Check for the sentinel program counter value
@@ -506,7 +507,7 @@ impl<'a> Motorola68kInner<'a>
 			Instruction::Trap => return self.dispatch_trap(insn),
 			Instruction::Tst => return self.dispatch_tst(insn),
 			_ => {
-				println!(" [DBG] Unimplemented instruction {raw_insn:04} encountered, aborting");
+				console::debug!("Unimplemented instruction {raw_insn:04} encountered, aborting");
 			},
 		}
 
@@ -560,15 +561,18 @@ impl<'a> Motorola68kInner<'a>
 		}
 
 		// Now display the stack pointers, program counter, and finally the status register
-		println!(
-			" [DBG]  ssp: {:08x}  usp: {:08x}   pc: {:08x}   sr: {:04x}",
-			self.system_stack_pointer, self.user_stack_pointer, self.program_counter, self.status.bits
+		console::debug!(
+			" ssp: {:08x}  usp: {:08x}   pc: {:08x}   sr: {:04x}",
+			self.system_stack_pointer,
+			self.user_stack_pointer,
+			self.program_counter,
+			self.status.bits
 		);
 
 		// Display the current instruction pointed to by the program counter
 		let raw_instruction = self.peripherals.read_address::<u16>(self.program_counter);
 		let _instruction: DecodedOperation = raw_instruction.into();
-		println!(" [DBG] insn: {raw_instruction:04x}");
+		console::debug!("insn: {raw_instruction:04x}");
 	}
 
 	fn read_index(&mut self, extension: u16) -> i32
