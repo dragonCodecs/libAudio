@@ -127,6 +127,11 @@ extern "C"
 		console.error(std::string_view{reinterpret_cast<char *>(message.ptr), message.len});
 	}
 
+	void console_info(const stringSlice_t message)
+	{
+		console.info(std::string_view{reinterpret_cast<char *>(message.ptr), message.len});
+	}
+
 	void console_debug(const stringSlice_t message)
 	{
 		console.debug(std::string_view{reinterpret_cast<char *>(message.ptr), message.len});

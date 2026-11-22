@@ -12,6 +12,12 @@ macro_rules! error {
 	};
 }
 
+macro_rules! info {
+	($($arg:tt)+) => {
+		$crate::console::_info($crate::console::format_args!($($arg)+))
+	};
+}
+
 macro_rules! debug {
 	($($arg:tt)+) => {
 		$crate::console::_debug($crate::console::format_args!($($arg)+))
@@ -39,6 +45,13 @@ pub fn _error(args: Arguments)
 }
 
 #[cfg(not(test))]
+pub fn _info(args: Arguments)
+{
+	let message = to_message(args);
+	unsafe { console_info(Slice::from_slice(message.as_bytes())) };
+}
+
+#[cfg(not(test))]
 pub fn _debug(args: Arguments)
 {
 	let message = to_message(args);
@@ -52,6 +65,12 @@ pub fn _error(args: Arguments)
 }
 
 #[cfg(test)]
+pub fn _info(args: Arguments)
+{
+	println!("{args}");
+}
+
+#[cfg(test)]
 pub fn _debug(args: Arguments)
 {
 	println!("{args}");
@@ -59,5 +78,6 @@ pub fn _debug(args: Arguments)
 
 unsafe extern "C" {
 	fn console_error(message: Slice<u8>);
+	fn console_info(message: Slice<u8>);
 	fn console_debug(message: Slice<u8>);
 }
