@@ -29,11 +29,6 @@ extern "C"
 	slice_t<uint32_t> sndh_metadata_tune_frame_counts(const SndhMetadata *);
 	size_t sndh_metadata_tune_names_count(const SndhMetadata *);
 	stringSlice_t sndh_metadata_tune_name(const SndhMetadata *, size_t);
-
-	void console_error(const char *message)
-	{
-		console.error(message);
-	}
 }
 
 sndhLoader_t::sndhLoader_t(const fd_t &file)

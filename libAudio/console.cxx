@@ -14,6 +14,7 @@
 using substrate::make_unique_nothrow;
 #endif
 #include "console.hxx"
+#include "rustAPI.hxx"
 
 using namespace libAudio::console;
 using charTraits = std::char_traits<char>;
@@ -117,4 +118,17 @@ void console_t::_debug() const noexcept
 	outputStream.write(' ');
 #else
 #endif
+}
+
+extern "C"
+{
+	void console_error(const stringSlice_t message)
+	{
+		console.error(std::string_view{reinterpret_cast<char *>(message.ptr), message.len});
+	}
+
+	void console_debug(const stringSlice_t message)
+	{
+		console.debug(std::string_view{reinterpret_cast<char *>(message.ptr), message.len});
+	}
 }

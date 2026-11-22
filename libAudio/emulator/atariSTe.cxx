@@ -20,11 +20,6 @@ extern "C"
 	bool atari_ste_sample_ready(const AtariSTe *);
 	int16_t atari_ste_read_sample(AtariSTe *);
 	void atari_ste_display_cpu_state(const AtariSTe *);
-
-	void console_debug(const char *message)
-	{
-		console.debug(message);
-	}
 }
 
 atariSTe_t::atariSTe_t() noexcept : self{atari_ste_new()} { }
