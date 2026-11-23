@@ -197,6 +197,10 @@ libAUDIO_API bool isWMA(const char *fileName);
 libAUDIO_API void *wmaOpenR(const char *fileName);
 #endif
 
+// AIFF API
+libAUDIO_API bool isAIFF(const char *fileName);
+libAUDIO_API void *aiffOpenR(const char *fileName);
+
 // Master Audio API
 
 // General
